@@ -9,7 +9,9 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
+        @fluxAppearance
     </head>
+
     <body>
         <main class="mx-auto max-w-lg space-y-6 px-6 py-12">
             {{ $slot ?? '' }}
@@ -17,5 +19,6 @@
         </main>
 
         @livewireScripts
+        @fluxScripts
     </body>
 </html>
