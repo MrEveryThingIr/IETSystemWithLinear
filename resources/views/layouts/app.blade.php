@@ -11,7 +11,10 @@
         @livewireStyles
     </head>
     <body>
-        {{ $slot }}
+        <main class="mx-auto max-w-lg space-y-6 px-6 py-12">
+            {{ $slot ?? '' }}
+            @yield('content')
+        </main>
 
         @livewireScripts
     </body>
