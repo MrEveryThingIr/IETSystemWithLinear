@@ -1,14 +1,14 @@
 <section class="space-y-6">
-    <h1 class="text-2xl font-semibold">Verify your email</h1>
-    <p>Use the link in your verification email to access your dashboard.</p>
-    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
-    <form wire:submit="resend">
-        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Resend verification email</button>
-        @error('resend') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+    <flux:heading size="xl" level="1">Verify your email</flux:heading>
+    <flux:text>Use the link in your verification email to access your dashboard.</flux:text>
+    <x-app.flash-message />
+    <form wire:submit="resend" class="space-y-3">
+        <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="resend">Resend verification email</flux:button>
+        <flux:error name="resend" />
     </form>
-    <a href="{{ route('dashboard') }}" class="underline">Continue to dashboard</a>
+    <flux:link :href="route('dashboard')">Continue to dashboard</flux:link>
     <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button type="submit" class="underline">Log out</button>
+        <flux:button type="submit" variant="ghost">Log out</flux:button>
     </form>
 </section>

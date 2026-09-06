@@ -6,9 +6,11 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.auth')]
+#[Title('Verify your email')]
 class VerifyEmailNotice extends Component
 {
     public function resend(): void
