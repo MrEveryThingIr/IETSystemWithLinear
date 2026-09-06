@@ -1,7 +1,30 @@
 <?php
 
+use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Auth\VerifyEmailNotice;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::middleware('guest')->group(function (): void {
+    Route::livewire('/register', Register::class)->name('register');
+    Route::livewire('/login', Login::class)->name('login');
+    Route::livewire('/forgot-password', ForgotPassword::class)->name('password.request');
+    Route::livewire('/reset-password/{token}', ResetPassword::class)->name('password.reset');
+});
+
+Route::post('/logout', LogoutController::class)->middleware('auth')->name('logout');
+
+Route::middleware(['auth', 'account.active'])->group(function (): void {
+    Route::livewire('/email/verify', VerifyEmailNotice::class)->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+    Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
 });

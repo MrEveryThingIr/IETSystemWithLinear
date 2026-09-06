@@ -1,0 +1,1048 @@
+diff --git a/app/Models/User.php b/app/Models/User.php
+index 65307d5..e9b6915 100644
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -2,8 +2,8 @@
+ 
+ namespace App\Models;
+ 
+-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+ use Database\Factories\UserFactory;
++use Illuminate\Contracts\Auth\MustVerifyEmail;
+ use Illuminate\Database\Eloquent\Attributes\Fillable;
+ use Illuminate\Database\Eloquent\Attributes\Hidden;
+ use Illuminate\Database\Eloquent\Factories\HasFactory;
+@@ -12,7 +12,7 @@
+ 
+ #[Fillable(['username', 'email', 'password'])]
+ #[Hidden(['password', 'remember_token'])]
+-class User extends Authenticatable
++class User extends Authenticatable implements MustVerifyEmail
+ {
+     /** @use HasFactory<UserFactory> */
+     use HasFactory, Notifiable;
+diff --git a/app/Providers/AppServiceProvider.php b/app/Providers/AppServiceProvider.php
+index 452e6b6..bcd7544 100644
+--- a/app/Providers/AppServiceProvider.php
++++ b/app/Providers/AppServiceProvider.php
+@@ -2,23 +2,25 @@
+ 
+ namespace App\Providers;
+ 
++use App\Http\Middleware\EnsureAccountIsActive;
++use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
++use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+ use Illuminate\Support\ServiceProvider;
++use Livewire\Livewire;
+ 
+ class AppServiceProvider extends ServiceProvider
+ {
+-    /**
+-     * Register any application services.
+-     */
+     public function register(): void
+     {
+         //
+     }
+ 
+-    /**
+-     * Bootstrap any application services.
+-     */
+     public function boot(): void
+     {
+-        //
++        Livewire::addPersistentMiddleware([
++            RedirectIfAuthenticated::class,
++            EnsureEmailIsVerified::class,
++            EnsureAccountIsActive::class,
++        ]);
+     }
+ }
+diff --git a/bootstrap/app.php b/bootstrap/app.php
+index 1085719..897e922 100644
+--- a/bootstrap/app.php
++++ b/bootstrap/app.php
+@@ -1,5 +1,6 @@
+ <?php
+ 
++use App\Http\Middleware\EnsureAccountIsActive;
+ use Illuminate\Foundation\Application;
+ use Illuminate\Foundation\Configuration\Exceptions;
+ use Illuminate\Foundation\Configuration\Middleware;
+@@ -12,7 +13,7 @@
+         health: '/up',
+     )
+     ->withMiddleware(function (Middleware $middleware): void {
+-        //
++        $middleware->alias(['account.active' => EnsureAccountIsActive::class]);
+     })
+     ->withExceptions(function (Exceptions $exceptions): void {
+         $exceptions->shouldRenderJsonWhen(
+diff --git a/resources/views/layouts/app.blade.php b/resources/views/layouts/app.blade.php
+index 5100c31..7f362e8 100644
+--- a/resources/views/layouts/app.blade.php
++++ b/resources/views/layouts/app.blade.php
+@@ -11,7 +11,10 @@
+         @livewireStyles
+     </head>
+     <body>
+-        {{ $slot }}
++        <main class="mx-auto max-w-lg space-y-6 px-6 py-12">
++            {{ $slot ?? '' }}
++            @yield('content')
++        </main>
+ 
+         @livewireScripts
+     </body>
+diff --git a/routes/web.php b/routes/web.php
+index 86a06c5..5f1dfb4 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -1,7 +1,30 @@
+ <?php
+ 
++use App\Http\Controllers\Auth\LogoutController;
++use App\Http\Controllers\Auth\VerifyEmailController;
++use App\Livewire\Auth\ForgotPassword;
++use App\Livewire\Auth\Login;
++use App\Livewire\Auth\Register;
++use App\Livewire\Auth\ResetPassword;
++use App\Livewire\Auth\VerifyEmailNotice;
+ use Illuminate\Support\Facades\Route;
+ 
+ Route::get('/', function () {
+     return view('welcome');
+ });
++
++Route::middleware('guest')->group(function (): void {
++    Route::livewire('/register', Register::class)->name('register');
++    Route::livewire('/login', Login::class)->name('login');
++    Route::livewire('/forgot-password', ForgotPassword::class)->name('password.request');
++    Route::livewire('/reset-password/{token}', ResetPassword::class)->name('password.reset');
++});
++
++Route::post('/logout', LogoutController::class)->middleware('auth')->name('logout');
++
++Route::middleware(['auth', 'account.active'])->group(function (): void {
++    Route::livewire('/email/verify', VerifyEmailNotice::class)->name('verification.notice');
++    Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
++        ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
++    Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
++});
+--- /dev/null
++++ b/app/Actions/Auth/RegisterUser.php
+@@ -0,0 +1,34 @@
++<?php
++
++namespace App\Actions\Auth;
++
++use App\Models\User;
++use Illuminate\Auth\Events\Registered;
++use Illuminate\Support\Facades\DB;
++use Illuminate\Support\Facades\Validator;
++use Illuminate\Validation\Rules\Password;
++
++class RegisterUser
++{
++    /** @param array<string, mixed> $input */
++    public function handle(array $input): User
++    {
++        $data = Validator::make($input, [
++            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
++            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
++            'password' => ['required', 'string', 'confirmed', Password::defaults()],
++        ])->validate();
++
++        return DB::transaction(function () use ($data): User {
++            $user = User::create([
++                'username' => $data['username'],
++                'email' => $data['email'],
++                'password' => $data['password'],
++            ]);
++
++            DB::afterCommit(fn () => event(new Registered($user)));
++
++            return $user;
++        });
++    }
++}
+--- /dev/null
++++ b/app/Http/Controllers/Auth/LogoutController.php
+@@ -0,0 +1,20 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use App\Http\Controllers\Controller;
++use Illuminate\Http\RedirectResponse;
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Auth;
++
++class LogoutController extends Controller
++{
++    public function __invoke(Request $request): RedirectResponse
++    {
++        Auth::logout();
++        $request->session()->invalidate();
++        $request->session()->regenerateToken();
++
++        return redirect()->route('login');
++    }
++}
+--- /dev/null
++++ b/app/Http/Controllers/Auth/VerifyEmailController.php
+@@ -0,0 +1,17 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use App\Http\Controllers\Controller;
++use Illuminate\Foundation\Auth\EmailVerificationRequest;
++use Illuminate\Http\RedirectResponse;
++
++class VerifyEmailController extends Controller
++{
++    public function __invoke(EmailVerificationRequest $request): RedirectResponse
++    {
++        $request->fulfill();
++
++        return redirect()->route('dashboard');
++    }
++}
+--- /dev/null
++++ b/app/Http/Middleware/EnsureAccountIsActive.php
+@@ -0,0 +1,29 @@
++<?php
++
++namespace App\Http\Middleware;
++
++use Closure;
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Auth;
++use Symfony\Component\HttpFoundation\Response;
++
++class EnsureAccountIsActive
++{
++    /** @param Closure(Request): Response $next */
++    public function handle(Request $request, Closure $next): Response
++    {
++        if ($request->user()?->fresh()?->status !== 'active') {
++            Auth::logout();
++            $request->session()->invalidate();
++            $request->session()->regenerateToken();
++
++            if ($request->expectsJson()) {
++                abort(403, 'Your account is not active.');
++            }
++
++            return redirect()->route('login')->withErrors(['email' => 'Your account is not active.']);
++        }
++
++        return $next($request);
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Auth/ForgotPassword.php
+@@ -0,0 +1,33 @@
++<?php
++
++namespace App\Livewire\Auth;
++
++use Illuminate\Contracts\View\View;
++use Illuminate\Support\Facades\Password;
++use Illuminate\Support\Facades\RateLimiter;
++use Illuminate\Validation\ValidationException;
++use Livewire\Attributes\Layout;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++class ForgotPassword extends Component
++{
++    public string $email = '';
++
++    public function sendResetLink(): void
++    {
++        $data = $this->validate(['email' => ['required', 'string', 'email', 'max:255']]);
++        $key = 'password-email:'.request()->ip();
++        if (RateLimiter::tooManyAttempts($key, 5)) {
++            throw ValidationException::withMessages(['email' => 'Too many attempts. Please try again in a minute.']);
++        }
++        RateLimiter::hit($key, 60);
++        Password::sendResetLink($data);
++        session()->flash('status', 'If an account matches that email, a password reset link will be sent.');
++    }
++
++    public function render(): View
++    {
++        return view('livewire.auth.forgot-password');
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Auth/Login.php
+@@ -0,0 +1,49 @@
++<?php
++
++namespace App\Livewire\Auth;
++
++use Illuminate\Contracts\View\View;
++use Illuminate\Support\Facades\Auth;
++use Illuminate\Support\Facades\RateLimiter;
++use Illuminate\Support\Str;
++use Illuminate\Validation\ValidationException;
++use Livewire\Attributes\Layout;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++class Login extends Component
++{
++    public string $email = '';
++
++    public string $password = '';
++
++    public bool $remember = false;
++
++    public function login(): void
++    {
++        $data = $this->validate([
++            'email' => ['required', 'string', 'email'],
++            'password' => ['required', 'string'],
++            'remember' => ['boolean'],
++        ]);
++        $key = 'login:'.Str::lower($this->email).'|'.request()->ip();
++        if (RateLimiter::tooManyAttempts($key, 5)) {
++            throw ValidationException::withMessages(['email' => 'Too many login attempts. Please try again in a minute.']);
++        }
++
++        if (! Auth::attempt(['email' => $data['email'], 'password' => $data['password'], 'status' => 'active'], $this->remember)) {
++            RateLimiter::hit($key, 60);
++            throw ValidationException::withMessages(['email' => 'These credentials do not match our records.']);
++        }
++
++        RateLimiter::clear($key);
++        session()->regenerate();
++        $this->reset('password');
++        $this->redirectIntended(route('dashboard'));
++    }
++
++    public function render(): View
++    {
++        return view('livewire.auth.login');
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Auth/Register.php
+@@ -0,0 +1,43 @@
++<?php
++
++namespace App\Livewire\Auth;
++
++use App\Actions\Auth\RegisterUser;
++use Illuminate\Contracts\View\View;
++use Illuminate\Support\Facades\Auth;
++use Illuminate\Support\Facades\RateLimiter;
++use Illuminate\Validation\ValidationException;
++use Livewire\Attributes\Layout;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++class Register extends Component
++{
++    public string $username = '';
++
++    public string $email = '';
++
++    public string $password = '';
++
++    public string $password_confirmation = '';
++
++    public function register(RegisterUser $register): void
++    {
++        $key = 'register:'.request()->ip();
++        if (RateLimiter::tooManyAttempts($key, 5)) {
++            throw ValidationException::withMessages(['email' => 'Too many attempts. Please try again in a minute.']);
++        }
++        RateLimiter::hit($key, 60);
++
++        $user = $register->handle($this->only(['username', 'email', 'password', 'password_confirmation']));
++        Auth::login($user);
++        session()->regenerate();
++        $this->reset('password', 'password_confirmation');
++        $this->redirectRoute('verification.notice');
++    }
++
++    public function render(): View
++    {
++        return view('livewire.auth.register');
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Auth/ResetPassword.php
+@@ -0,0 +1,67 @@
++<?php
++
++namespace App\Livewire\Auth;
++
++use App\Models\User;
++use Illuminate\Auth\Events\PasswordReset;
++use Illuminate\Contracts\View\View;
++use Illuminate\Support\Facades\Password;
++use Illuminate\Support\Facades\RateLimiter;
++use Illuminate\Support\Str;
++use Illuminate\Validation\Rules\Password as PasswordRule;
++use Illuminate\Validation\ValidationException;
++use Livewire\Attributes\Layout;
++use Livewire\Attributes\Locked;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++class ResetPassword extends Component
++{
++    #[Locked]
++    public string $token = '';
++
++    public string $email = '';
++
++    public string $password = '';
++
++    public string $password_confirmation = '';
++
++    public function mount(string $token): void
++    {
++        $this->token = $token;
++        $this->email = request()->string('email')->toString();
++    }
++
++    public function resetPassword(): void
++    {
++        $data = $this->validate([
++            'token' => ['required', 'string'],
++            'email' => ['required', 'string', 'email', 'max:255'],
++            'password' => ['required', 'string', 'confirmed', PasswordRule::defaults()],
++        ]);
++        $key = 'password-reset:'.request()->ip();
++        if (RateLimiter::tooManyAttempts($key, 5)) {
++            throw ValidationException::withMessages(['email' => 'Too many attempts. Please try again in a minute.']);
++        }
++        RateLimiter::hit($key, 60);
++        $status = Password::reset($data, function (User $user, string $password): void {
++            $user->password = $password;
++            $user->setRememberToken(Str::random(60));
++            $user->save();
++            event(new PasswordReset($user));
++        });
++
++        if ($status !== Password::PASSWORD_RESET) {
++            throw ValidationException::withMessages(['email' => __($status)]);
++        }
++
++        $this->reset('password', 'password_confirmation');
++        session()->flash('status', __($status));
++        $this->redirectRoute('login');
++    }
++
++    public function render(): View
++    {
++        return view('livewire.auth.reset-password');
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Auth/VerifyEmailNotice.php
+@@ -0,0 +1,38 @@
++<?php
++
++namespace App\Livewire\Auth;
++
++use Illuminate\Contracts\View\View;
++use Illuminate\Support\Facades\RateLimiter;
++use Illuminate\Validation\ValidationException;
++use Livewire\Attributes\Layout;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++class VerifyEmailNotice extends Component
++{
++    public function resend(): void
++    {
++        $user = request()->user();
++        abort_unless($user !== null, 401);
++
++        if ($user->hasVerifiedEmail()) {
++            $this->redirectRoute('dashboard');
++
++            return;
++        }
++
++        $key = 'verification-resend:'.$user->getAuthIdentifier();
++        if (RateLimiter::tooManyAttempts($key, 1)) {
++            throw ValidationException::withMessages(['resend' => 'Please wait a minute before requesting another verification email.']);
++        }
++        RateLimiter::hit($key, 60);
++        $user->sendEmailVerificationNotification();
++        session()->flash('status', 'A new verification link has been sent.');
++    }
++
++    public function render(): View
++    {
++        return view('livewire.auth.verify-email-notice');
++    }
++}
+--- /dev/null
++++ b/resources/views/dashboard.blade.php
+@@ -0,0 +1,11 @@
++@extends('layouts.app')
++
++@section('content')
++    <h1 class="text-2xl font-semibold">Dashboard</h1>
++    <p>Welcome, {{ auth()->user()->username }}.</p>
++    <p>Your email is verified.</p>
++    <form method="POST" action="{{ route('logout') }}">
++        @csrf
++        <button type="submit" class="underline">Log out</button>
++    </form>
++@endsection
+--- /dev/null
++++ b/resources/views/livewire/auth/forgot-password.blade.php
+@@ -0,0 +1,14 @@
++<section class="space-y-6">
++    <h1 class="text-2xl font-semibold">Forgot password</h1>
++    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <form wire:submit="sendResetLink" class="space-y-4">
++    <div>
++        <label for="email" class="block font-medium">Email</label>
++        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++
++        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Send reset link</button>
++    </form>
++    <a href="{{ route('login') }}" class="underline">Back to login</a>
++</section>
+--- /dev/null
++++ b/resources/views/livewire/auth/login.blade.php
+@@ -0,0 +1,19 @@
++<section class="space-y-6">
++    <h1 class="text-2xl font-semibold">Log in</h1>
++    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <form wire:submit="login" class="space-y-4">
++    <div>
++        <label for="email" class="block font-medium">Email</label>
++        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++    <div>
++        <label for="password" class="block font-medium">Password</label>
++        <input id="password" type="password" wire:model="password" autocomplete="current-password" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('password') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++<label class="flex gap-2"><input type="checkbox" wire:model="remember"> Remember me</label>
++        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Log in</button>
++    </form>
++    <nav class="flex gap-4"><a href="{{ route('password.request') }}" class="underline">Forgot password?</a><a href="{{ route('register') }}" class="underline">Create account</a></nav>
++</section>
+--- /dev/null
++++ b/resources/views/livewire/auth/register.blade.php
+@@ -0,0 +1,29 @@
++<section class="space-y-6">
++    <h1 class="text-2xl font-semibold">Create your account</h1>
++    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <form wire:submit="register" class="space-y-4">
++    <div>
++        <label for="username" class="block font-medium">Username</label>
++        <input id="username" type="text" wire:model="username" autocomplete="username" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('username') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++    <div>
++        <label for="email" class="block font-medium">Email</label>
++        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++    <div>
++        <label for="password" class="block font-medium">Password</label>
++        <input id="password" type="password" wire:model="password" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('password') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++    <div>
++        <label for="password_confirmation" class="block font-medium">Confirm password</label>
++        <input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('password_confirmation') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++
++        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Create account</button>
++    </form>
++    <a href="{{ route('login') }}" class="underline">Already registered? Log in</a>
++</section>
+--- /dev/null
++++ b/resources/views/livewire/auth/reset-password.blade.php
+@@ -0,0 +1,24 @@
++<section class="space-y-6">
++    <h1 class="text-2xl font-semibold">Reset password</h1>
++    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <form wire:submit="resetPassword" class="space-y-4">
++    <div>
++        <label for="email" class="block font-medium">Email</label>
++        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++    <div>
++        <label for="password" class="block font-medium">Password</label>
++        <input id="password" type="password" wire:model="password" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('password') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++    <div>
++        <label for="password_confirmation" class="block font-medium">Confirm password</label>
++        <input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
++        @error('password_confirmation') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </div>
++
++        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Reset password</button>
++    </form>
++    <a href="{{ route('login') }}" class="underline">Back to login</a>
++</section>
+--- /dev/null
++++ b/resources/views/livewire/auth/verify-email-notice.blade.php
+@@ -0,0 +1,14 @@
++<section class="space-y-6">
++    <h1 class="text-2xl font-semibold">Verify your email</h1>
++    <p>Use the link in your verification email to access your dashboard.</p>
++    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <form wire:submit="resend">
++        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Resend verification email</button>
++        @error('resend') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    </form>
++    <a href="{{ route('dashboard') }}" class="underline">Continue to dashboard</a>
++    <form method="POST" action="{{ route('logout') }}">
++        @csrf
++        <button type="submit" class="underline">Log out</button>
++    </form>
++</section>
+--- /dev/null
++++ b/tests/Feature/Auth/AuthenticationTest.php
+@@ -0,0 +1,121 @@
++<?php
++
++namespace Tests\Feature\Auth;
++
++use App\Livewire\Auth\Login;
++use App\Models\User;
++use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
++use Livewire\Livewire;
++use PHPUnit\Framework\Attributes\DataProvider;
++use Tests\TestCase;
++
++class AuthenticationTest extends TestCase
++{
++    use LazilyRefreshDatabase;
++
++    public function test_login_authenticates_active_account_and_regenerates_session(): void
++    {
++        $user = User::factory()->create();
++        session()->start();
++        $sessionId = session()->getId();
++        Livewire::test(Login::class)->set('email', $user->email)->set('password', 'password')
++            ->set('remember', true)->call('login')->assertRedirect(route('dashboard'));
++        $this->assertAuthenticatedAs($user);
++        $this->assertNotSame($sessionId, session()->getId());
++        $this->assertNotEmpty($user->refresh()->getRememberToken());
++    }
++
++    #[DataProvider('inactiveStatuses')]
++    public function test_inactive_account_cannot_login(string $status): void
++    {
++        $user = User::factory()->create(['status' => $status]);
++        Livewire::test(Login::class)->set('email', $user->email)->set('password', 'password')
++            ->call('login')->assertHasErrors('email');
++        $this->assertGuest();
++    }
++
++    public static function inactiveStatuses(): array
++    {
++        return ['suspended' => ['suspended'], 'closed' => ['closed']];
++    }
++
++    public function test_login_is_rate_limited_even_with_correct_password_after_failures(): void
++    {
++        $user = User::factory()->create();
++        $component = Livewire::test(Login::class)->set('email', $user->email)->set('password', 'incorrect');
++        for ($attempt = 0; $attempt < 5; $attempt++) {
++            $component->call('login')->assertHasErrors('email');
++        }
++        $component->set('password', 'password')->call('login')
++            ->assertSee('Too many login attempts. Please try again in a minute.');
++        $this->assertGuest();
++        $this->travel(61)->seconds();
++        $component->call('login')->assertRedirect(route('dashboard'));
++        $this->assertAuthenticatedAs($user);
++    }
++
++    #[DataProvider('inactiveStatuses')]
++    public function test_existing_session_loses_access_after_status_change(string $status): void
++    {
++        $user = User::factory()->create();
++        $this->actingAs($user)->withSession(['private' => 'value']);
++        $user->status = $status;
++        $user->save();
++        $this->get('/dashboard')->assertRedirect(route('login'))->assertSessionMissing('private');
++        $this->assertGuest();
++    }
++
++    public function test_logout_invalidates_session_and_is_available_to_inactive_unverified_users(): void
++    {
++        $user = User::factory()->unverified()->create(['status' => 'closed']);
++        $this->actingAs($user)->withSession(['private' => 'value', '_token' => 'old-token']);
++        $this->post('/logout')->assertRedirect(route('login'))->assertSessionMissing('private');
++        $this->assertGuest();
++        $this->assertNotSame('old-token', session()->token());
++    }
++
++    public function test_dashboard_requires_authentication(): void
++    {
++        $this->get('/dashboard')->assertRedirect(route('login'));
++    }
++
++    public function test_dashboard_requires_verified_email(): void
++    {
++        $this->actingAs(User::factory()->unverified()->create())->get('/dashboard')
++            ->assertRedirect(route('verification.notice'));
++    }
++
++    public function test_active_verified_account_can_view_dashboard(): void
++    {
++        $this->withoutVite();
++        $this->actingAs(User::factory()->create())->get('/dashboard')->assertSee('Your email is verified.');
++    }
++
++    public function test_guest_pages_render_and_authenticated_users_are_redirected(): void
++    {
++        $this->withoutVite();
++        foreach (['/register', '/login', '/forgot-password', '/reset-password/example-token'] as $path) {
++            $this->get($path)->assertOk();
++        }
++        $this->actingAs(User::factory()->create())->get('/login')->assertRedirect(route('dashboard'));
++    }
++
++    public function test_login_through_livewire_http_endpoint_creates_a_protected_session(): void
++    {
++        $this->withoutVite();
++        $user = User::factory()->create();
++        $page = $this->get('/login')->assertOk();
++        preg_match('/wire:snapshot="([^"]+)"/', $page->getContent(), $matches);
++        $this->assertArrayHasKey(1, $matches);
++        $this->postJson(app('livewire')->getUpdateUri(), [
++            'components' => [[
++                'snapshot' => html_entity_decode($matches[1], ENT_QUOTES),
++                'updates' => ['email' => $user->email, 'password' => 'password'],
++                'calls' => [['method' => 'login', 'params' => [], 'path' => '']],
++            ]],
++        ], ['X-Livewire' => 'true'])->assertOk()
++            ->assertJsonPath('components.0.effects.redirect', route('dashboard'));
++        $this->get('/dashboard')->assertOk();
++        $this->assertAuthenticatedAs($user);
++    }
++}
+--- /dev/null
++++ b/tests/Feature/Auth/PasswordResetTest.php
+@@ -0,0 +1,69 @@
++<?php
++
++namespace Tests\Feature\Auth;
++
++use App\Livewire\Auth\ForgotPassword;
++use App\Livewire\Auth\ResetPassword;
++use App\Models\User;
++use Illuminate\Auth\Events\PasswordReset;
++use Illuminate\Auth\Notifications\ResetPassword as ResetNotification;
++use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
++use Illuminate\Support\Facades\Event;
++use Illuminate\Support\Facades\Hash;
++use Illuminate\Support\Facades\Notification;
++use Livewire\Livewire;
++use PHPUnit\Framework\Attributes\DataProvider;
++use Tests\TestCase;
++
++class PasswordResetTest extends TestCase
++{
++    use LazilyRefreshDatabase;
++
++    #[DataProvider('statuses')]
++    public function test_password_broker_flow_preserves_status_and_does_not_login(string $status): void
++    {
++        Notification::fake();
++        Event::fake([PasswordReset::class]);
++        $user = User::factory()->create(['status' => $status]);
++        $oldRememberToken = $user->remember_token;
++        Livewire::test(ForgotPassword::class)->set('email', $user->email)->call('sendResetLink')->assertHasNoErrors();
++        $notification = Notification::sent($user, ResetNotification::class)->sole();
++        $component = Livewire::test(ResetPassword::class, ['token' => $notification->token])
++            ->set('email', $user->email)->set('password', 'new-secure-password')
++            ->set('password_confirmation', 'new-secure-password');
++        $component->call('resetPassword')->assertHasNoErrors()->assertRedirect(route('login'));
++
++        $user->refresh();
++        $this->assertTrue(Hash::check('new-secure-password', $user->password));
++        $this->assertSame($status, $user->status);
++        $this->assertNotSame($oldRememberToken, $user->remember_token);
++        $this->assertGuest();
++        Event::assertDispatched(PasswordReset::class, fn (PasswordReset $event): bool => $event->user->is($user));
++        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);
++        $component->set('password', 'another-password')->set('password_confirmation', 'another-password')
++            ->call('resetPassword')->assertHasErrors('email');
++    }
++
++    public static function statuses(): array
++    {
++        return ['active' => ['active'], 'suspended' => ['suspended'], 'closed' => ['closed']];
++    }
++
++    public function test_invalid_reset_token_does_not_change_password(): void
++    {
++        $user = User::factory()->create();
++        $hash = $user->password;
++        Livewire::test(ResetPassword::class, ['token' => 'invalid'])
++            ->set('email', $user->email)->set('password', 'new-secure-password')
++            ->set('password_confirmation', 'new-secure-password')->call('resetPassword')->assertHasErrors('email');
++        $this->assertSame($hash, $user->refresh()->password);
++    }
++
++    public function test_forgot_password_does_not_disclose_missing_accounts(): void
++    {
++        Notification::fake();
++        Livewire::test(ForgotPassword::class)->set('email', 'missing@example.com')->call('sendResetLink')
++            ->assertHasNoErrors()->assertSee('If an account matches that email, a password reset link will be sent.');
++        Notification::assertNothingSent();
++    }
++}
+--- /dev/null
++++ b/tests/Feature/Auth/RegistrationTest.php
+@@ -0,0 +1,115 @@
++<?php
++
++namespace Tests\Feature\Auth;
++
++use App\Actions\Auth\RegisterUser;
++use App\Livewire\Auth\Register;
++use App\Models\User;
++use Illuminate\Auth\Events\Registered;
++use Illuminate\Auth\Notifications\VerifyEmail;
++use Illuminate\Foundation\Testing\DatabaseMigrations;
++use Illuminate\Support\Facades\DB;
++use Illuminate\Support\Facades\Event;
++use Illuminate\Support\Facades\Hash;
++use Illuminate\Support\Facades\Notification;
++use Livewire\Livewire;
++use PHPUnit\Framework\Attributes\DataProvider;
++use RuntimeException;
++use Tests\TestCase;
++
++class RegistrationTest extends TestCase
++{
++    use DatabaseMigrations;
++
++    private function input(): array
++    {
++        return ['username' => 'new_user', 'email' => 'new@example.com',
++            'password' => 'secure-password', 'password_confirmation' => 'secure-password'];
++    }
++
++    public function test_registration_creates_active_unverified_account_and_logs_in(): void
++    {
++        Notification::fake();
++        Livewire::test(Register::class)->set($this->input())->call('register')
++            ->assertHasNoErrors()->assertRedirect(route('verification.notice'));
++
++        $user = User::sole();
++        $this->assertAuthenticatedAs($user);
++        $this->assertSame('active', $user->status);
++        $this->assertNull($user->email_verified_at);
++        $this->assertTrue(Hash::check('secure-password', $user->password));
++        Notification::assertSentToTimes($user, VerifyEmail::class, 1);
++    }
++
++    #[DataProvider('identifiers')]
++    public function test_registration_rejects_duplicate_identifiers(string $field): void
++    {
++        User::factory()->create([$field => $this->input()[$field]]);
++        Livewire::test(Register::class)->set($this->input())->call('register')
++            ->assertHasErrors([$field => 'unique']);
++        $this->assertDatabaseCount('users', 1);
++        $this->assertGuest();
++    }
++
++    public static function identifiers(): array
++    {
++        return ['username' => ['username'], 'email' => ['email']];
++    }
++
++    public function test_registration_rejects_unconfirmed_password(): void
++    {
++        Livewire::test(Register::class)->set($this->input())->set('password_confirmation', 'different')
++            ->call('register')->assertHasErrors(['password' => 'confirmed']);
++        $this->assertDatabaseCount('users', 0);
++    }
++
++    public function test_action_ignores_privileged_input(): void
++    {
++        Notification::fake();
++        $user = app(RegisterUser::class)->handle($this->input() + ['status' => 'closed', 'email_verified_at' => now()]);
++        $this->assertSame('active', $user->refresh()->status);
++        $this->assertNull($user->email_verified_at);
++    }
++
++    public function test_registered_is_dispatched_only_after_outer_commit(): void
++    {
++        Event::fake([Registered::class]);
++        DB::beginTransaction();
++        $user = app(RegisterUser::class)->handle($this->input());
++        Event::assertNotDispatched(Registered::class);
++        DB::commit();
++
++        Event::assertDispatched(Registered::class, fn (Registered $event): bool => $event->user->is($user));
++        Event::assertDispatchedTimes(Registered::class, 1);
++    }
++
++    public function test_outer_rollback_discards_user_and_registered_event(): void
++    {
++        Event::fake([Registered::class]);
++        DB::beginTransaction();
++        app(RegisterUser::class)->handle($this->input());
++        DB::rollBack();
++
++        $this->assertDatabaseCount('users', 0);
++        Event::assertNotDispatched(Registered::class);
++    }
++
++    public function test_creation_failure_rolls_back_the_action_transaction(): void
++    {
++        Event::fake([Registered::class]);
++        Event::listen('eloquent.created: '.User::class, function (): void {
++            throw new RuntimeException('Provisioning failure');
++        });
++
++        try {
++            app(RegisterUser::class)->handle($this->input());
++            $this->fail('Expected creation to fail.');
++        } catch (RuntimeException $exception) {
++            $this->assertSame('Provisioning failure', $exception->getMessage());
++        }
++
++        $this->assertDatabaseCount('users', 0);
++        $this->assertSame(0, DB::transactionLevel());
++        Event::assertNotDispatched(Registered::class);
++    }
++}
+--- /dev/null
++++ b/tests/Feature/Auth/VerificationTest.php
+@@ -0,0 +1,114 @@
++<?php
++
++namespace Tests\Feature\Auth;
++
++use App\Livewire\Auth\VerifyEmailNotice;
++use App\Models\User;
++use Illuminate\Auth\Events\Verified;
++use Illuminate\Auth\Notifications\VerifyEmail;
++use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
++use Illuminate\Support\Facades\Event;
++use Illuminate\Support\Facades\Notification;
++use Illuminate\Support\Facades\URL;
++use Livewire\Livewire;
++use Tests\TestCase;
++
++class VerificationTest extends TestCase
++{
++    use LazilyRefreshDatabase;
++
++    private function verificationUrl(User $user): string
++    {
++        return URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
++            'id' => $user->id, 'hash' => sha1($user->email),
++        ]);
++    }
++
++    public function test_notice_requires_auth_and_allows_active_unverified_accounts(): void
++    {
++        $this->withoutVite();
++        $this->get('/email/verify')->assertRedirect(route('login'));
++        $this->actingAs(User::factory()->unverified()->create())->get('/email/verify')
++            ->assertSee('Verify your email');
++    }
++
++    public function test_notice_rejects_inactive_accounts(): void
++    {
++        $this->actingAs(User::factory()->unverified()->create(['status' => 'suspended']))
++            ->get('/email/verify')->assertRedirect(route('login'));
++        $this->assertGuest();
++    }
++
++    public function test_signed_callback_verifies_account_and_dispatches_event_once(): void
++    {
++        Event::fake([Verified::class]);
++        $user = User::factory()->unverified()->create();
++        $url = $this->verificationUrl($user);
++        $this->actingAs($user)->get($url)->assertRedirect(route('dashboard'));
++        $this->assertTrue($user->refresh()->hasVerifiedEmail());
++        $this->get($url)->assertRedirect(route('dashboard'));
++        Event::assertDispatchedTimes(Verified::class, 1);
++    }
++
++    public function test_invalid_signature_is_rejected(): void
++    {
++        $user = User::factory()->unverified()->create();
++        $this->actingAs($user)->get($this->verificationUrl($user).'tampered')->assertForbidden();
++        $this->assertFalse($user->refresh()->hasVerifiedEmail());
++    }
++
++    public function test_expired_link_and_another_users_link_are_rejected(): void
++    {
++        $this->freezeTime();
++        $user = User::factory()->unverified()->create();
++        $other = User::factory()->unverified()->create();
++        $this->actingAs($user)->get($this->verificationUrl($other))->assertForbidden();
++        $url = $this->verificationUrl($user);
++        $this->travel(61)->minutes();
++        $this->get($url)->assertForbidden();
++        $this->assertFalse($user->refresh()->hasVerifiedEmail());
++    }
++
++    public function test_resend_is_throttled_and_available_again_after_delay(): void
++    {
++        Notification::fake();
++        $user = User::factory()->unverified()->create();
++        $component = Livewire::actingAs($user)->test(VerifyEmailNotice::class);
++        $component->call('resend')->assertHasNoErrors();
++        $component->call('resend')->assertHasErrors('resend');
++        Notification::assertSentToTimes($user, VerifyEmail::class, 1);
++        $this->travel(61)->seconds();
++        $component->call('resend')->assertHasNoErrors();
++        Notification::assertSentToTimes($user, VerifyEmail::class, 2);
++    }
++
++    public function test_verified_account_does_not_receive_another_verification_email(): void
++    {
++        Notification::fake();
++        Livewire::actingAs(User::factory()->create())->test(VerifyEmailNotice::class)
++            ->call('resend')->assertRedirect(route('dashboard'));
++        Notification::assertNothingSent();
++    }
++
++    public function test_livewire_update_rechecks_account_status_after_page_load(): void
++    {
++        $this->withoutVite();
++        Notification::fake();
++        $user = User::factory()->unverified()->create();
++        $page = $this->actingAs($user)->get('/email/verify')->assertOk();
++        preg_match('/wire:snapshot="([^"]+)"/', $page->getContent(), $matches);
++        $this->assertArrayHasKey(1, $matches);
++        $snapshot = html_entity_decode($matches[1], ENT_QUOTES);
++        User::whereKey($user->id)->update(['status' => 'suspended']);
++
++        $this->postJson(app('livewire')->getUpdateUri(), [
++            'components' => [[
++                'snapshot' => $snapshot, 'updates' => [],
++                'calls' => [['method' => 'resend', 'params' => [], 'path' => '']],
++            ]],
++        ], ['X-Livewire' => 'true'])->assertForbidden();
++
++        $this->assertGuest();
++        Notification::assertNothingSent();
++    }
++}
