@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.auth')]
+#[Title('Forgot password')]
 class ForgotPassword extends Component
 {
     public string $email = '';

@@ -12,9 +12,11 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.auth')]
+#[Title('Reset password')]
 class ResetPassword extends Component
 {
     #[Locked]
