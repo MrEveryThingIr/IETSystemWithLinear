@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[Fillable(['group_id', 'invited_by_actor_id', 'email', 'content', 'token', 'expires_at', 'accepted_at', 'accepted_by_actor_id'])]
 class GroupInvitation extends Model
 {
     use HasFactory;

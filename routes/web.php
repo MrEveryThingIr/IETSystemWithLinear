@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\GroupInvitationController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Edit;
 use App\Livewire\Actors\Index;
@@ -18,6 +19,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/invitations/{token}', [GroupInvitationController::class, 'show'])->name('invitations.show');
+Route::post('/invitations/{token}/accept', [GroupInvitationController::class, 'accept'])
+    ->middleware(['auth', 'account.active', 'verified'])
+    ->name('invitations.accept');
 
 Route::middleware('guest')->group(function (): void {
     Route::livewire('/register', Register::class)->name('register');

@@ -4,7 +4,7 @@
     </x-app.page-header>
 
     @if (session('status'))
-        <flux:callout variant="success">{{ session('status') }}</flux:callout>
+        <flux:callout variant="success" class="break-all">{{ session('status') }}</flux:callout>
     @endif
 
     @if ($memberships->isEmpty())
@@ -18,6 +18,9 @@
                         <flux:badge>{{ ucfirst($membership->role) }}</flux:badge>
                     </div>
                     <flux:text>{{ $membership->group->description ?: 'No description yet.' }}</flux:text>
+                    @if ($membership->role === 'owner')
+                        <flux:button wire:click="createInvitation({{ $membership->group->id }})" wire:loading.attr="disabled" size="sm" variant="ghost">Create invitation link</flux:button>
+                    @endif
                 </flux:card>
             @endforeach
         </div>
