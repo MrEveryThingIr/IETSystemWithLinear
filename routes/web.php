@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Livewire\Actors\Create;
+use App\Livewire\Actors\Edit;
+use App\Livewire\Actors\Index;
+use App\Livewire\Actors\Show;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -27,4 +31,11 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
     Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
+});
+
+Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
+    Route::livewire('/actors', Index::class)->name('actors.index');
+    Route::livewire('/actors/create', Create::class)->name('actors.create');
+    Route::livewire('/actors/{actor}', Show::class)->name('actors.show');
+    Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
 });

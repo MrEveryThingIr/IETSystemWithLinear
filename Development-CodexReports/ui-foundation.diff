@@ -1,0 +1,437 @@
+diff --git a/app/Livewire/Auth/ForgotPassword.php b/app/Livewire/Auth/ForgotPassword.php
+index a7c2f2c..a38a5da 100644
+--- a/app/Livewire/Auth/ForgotPassword.php
++++ b/app/Livewire/Auth/ForgotPassword.php
+@@ -7,9 +7,11 @@
+ use Illuminate\Support\Facades\RateLimiter;
+ use Illuminate\Validation\ValidationException;
+ use Livewire\Attributes\Layout;
++use Livewire\Attributes\Title;
+ use Livewire\Component;
+ 
+-#[Layout('layouts.app')]
++#[Layout('layouts.auth')]
++#[Title('Forgot password')]
+ class ForgotPassword extends Component
+ {
+     public string $email = '';
+diff --git a/app/Livewire/Auth/Login.php b/app/Livewire/Auth/Login.php
+index 8fc31bb..c2d4120 100644
+--- a/app/Livewire/Auth/Login.php
++++ b/app/Livewire/Auth/Login.php
+@@ -8,9 +8,11 @@
+ use Illuminate\Support\Str;
+ use Illuminate\Validation\ValidationException;
+ use Livewire\Attributes\Layout;
++use Livewire\Attributes\Title;
+ use Livewire\Component;
+ 
+-#[Layout('layouts.app')]
++#[Layout('layouts.auth')]
++#[Title('Log in')]
+ class Login extends Component
+ {
+     public string $email = '';
+diff --git a/app/Livewire/Auth/Register.php b/app/Livewire/Auth/Register.php
+index 298200a..6a4bf8d 100644
+--- a/app/Livewire/Auth/Register.php
++++ b/app/Livewire/Auth/Register.php
+@@ -8,9 +8,11 @@
+ use Illuminate\Support\Facades\RateLimiter;
+ use Illuminate\Validation\ValidationException;
+ use Livewire\Attributes\Layout;
++use Livewire\Attributes\Title;
+ use Livewire\Component;
+ 
+-#[Layout('layouts.app')]
++#[Layout('layouts.auth')]
++#[Title('Create your account')]
+ class Register extends Component
+ {
+     public string $username = '';
+diff --git a/app/Livewire/Auth/ResetPassword.php b/app/Livewire/Auth/ResetPassword.php
+index 0195dc5..f1ca16a 100644
+--- a/app/Livewire/Auth/ResetPassword.php
++++ b/app/Livewire/Auth/ResetPassword.php
+@@ -12,9 +12,11 @@
+ use Illuminate\Validation\ValidationException;
+ use Livewire\Attributes\Layout;
+ use Livewire\Attributes\Locked;
++use Livewire\Attributes\Title;
+ use Livewire\Component;
+ 
+-#[Layout('layouts.app')]
++#[Layout('layouts.auth')]
++#[Title('Reset password')]
+ class ResetPassword extends Component
+ {
+     #[Locked]
+diff --git a/app/Livewire/Auth/VerifyEmailNotice.php b/app/Livewire/Auth/VerifyEmailNotice.php
+index 9694dac..289641f 100644
+--- a/app/Livewire/Auth/VerifyEmailNotice.php
++++ b/app/Livewire/Auth/VerifyEmailNotice.php
+@@ -6,9 +6,11 @@
+ use Illuminate\Support\Facades\RateLimiter;
+ use Illuminate\Validation\ValidationException;
+ use Livewire\Attributes\Layout;
++use Livewire\Attributes\Title;
+ use Livewire\Component;
+ 
+-#[Layout('layouts.app')]
++#[Layout('layouts.auth')]
++#[Title('Verify your email')]
+ class VerifyEmailNotice extends Component
+ {
+     public function resend(): void
+diff --git a/resources/views/dashboard.blade.php b/resources/views/dashboard.blade.php
+index e49b726..2dc522d 100644
+--- a/resources/views/dashboard.blade.php
++++ b/resources/views/dashboard.blade.php
+@@ -1,11 +1,8 @@
+ @extends('layouts.app')
+ 
++@section('title', 'Dashboard')
++
+ @section('content')
+-    <h1 class="text-2xl font-semibold">Dashboard</h1>
+-    <p>Welcome, {{ auth()->user()->username }}.</p>
+-    <p>Your email is verified.</p>
+-    <form method="POST" action="{{ route('logout') }}">
+-        @csrf
+-        <button type="submit" class="underline">Log out</button>
+-    </form>
++    <x-app.page-header title="Dashboard" :description="'Welcome, '.auth()->user()->username.'.'" />
++    <x-app.empty-state title="You’re all set" description="Your email is verified." icon="check-circle" />
+ @endsection
+diff --git a/resources/views/layouts/app.blade.php b/resources/views/layouts/app.blade.php
+index 3e9e4c0..f8ae1a0 100644
+--- a/resources/views/layouts/app.blade.php
++++ b/resources/views/layouts/app.blade.php
+@@ -1,24 +1,20 @@
++@php($pageTitle = $title ?? trim($__env->yieldContent('title', 'Dashboard')))
+ <!DOCTYPE html>
+ <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+     <head>
+         <meta charset="utf-8">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-
+-        <title>{{ $title ?? config('app.name') }}</title>
+-
++        <title>{{ $pageTitle }} &mdash; {{ config('app.name') }}</title>
+         @vite(['resources/css/app.css', 'resources/js/app.js'])
+-
+         @livewireStyles
+         @fluxAppearance
+     </head>
+-
+-    <body>
+-        <main class="mx-auto max-w-lg space-y-6 px-6 py-12">
++    <body class="min-h-dvh bg-white text-zinc-900 antialiased dark:bg-zinc-900 dark:text-zinc-100">
++        <x-app.shell :title="$pageTitle">
+             {{ $slot ?? '' }}
+             @yield('content')
+-        </main>
+-
++        </x-app.shell>
+         @livewireScripts
+         @fluxScripts
+     </body>
+-</html>
+\ No newline at end of file
++</html>
+diff --git a/resources/views/livewire/auth/forgot-password.blade.php b/resources/views/livewire/auth/forgot-password.blade.php
+index 50c7fde..f2db00c 100644
+--- a/resources/views/livewire/auth/forgot-password.blade.php
++++ b/resources/views/livewire/auth/forgot-password.blade.php
+@@ -1,14 +1,9 @@
+ <section class="space-y-6">
+-    <h1 class="text-2xl font-semibold">Forgot password</h1>
+-    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <flux:heading size="xl" level="1">Forgot password</flux:heading>
++    <x-app.flash-message />
+     <form wire:submit="sendResetLink" class="space-y-4">
+-    <div>
+-        <label for="email" class="block font-medium">Email</label>
+-        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-
+-        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Send reset link</button>
++        <flux:input wire:model="email" label="Email" type="email" autocomplete="email" required />
++        <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="sendResetLink">Send reset link</flux:button>
+     </form>
+-    <a href="{{ route('login') }}" class="underline">Back to login</a>
++    <flux:link :href="route('login')">Back to login</flux:link>
+ </section>
+diff --git a/resources/views/livewire/auth/login.blade.php b/resources/views/livewire/auth/login.blade.php
+index 5fa42ec..ffeae3f 100644
+--- a/resources/views/livewire/auth/login.blade.php
++++ b/resources/views/livewire/auth/login.blade.php
+@@ -1,19 +1,11 @@
+ <section class="space-y-6">
+-    <h1 class="text-2xl font-semibold">Log in</h1>
+-    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <flux:heading size="xl" level="1">Log in</flux:heading>
++    <x-app.flash-message />
+     <form wire:submit="login" class="space-y-4">
+-    <div>
+-        <label for="email" class="block font-medium">Email</label>
+-        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-    <div>
+-        <label for="password" class="block font-medium">Password</label>
+-        <input id="password" type="password" wire:model="password" autocomplete="current-password" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('password') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-<label class="flex gap-2"><input type="checkbox" wire:model="remember"> Remember me</label>
+-        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Log in</button>
++        <flux:input wire:model="email" label="Email" type="email" autocomplete="email" required />
++        <flux:input wire:model="password" label="Password" type="password" autocomplete="current-password" required />
++        <flux:checkbox wire:model="remember" label="Remember me" />
++        <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="login">Log in</flux:button>
+     </form>
+-    <nav class="flex gap-4"><a href="{{ route('password.request') }}" class="underline">Forgot password?</a><a href="{{ route('register') }}" class="underline">Create account</a></nav>
++    <div class="flex flex-wrap justify-between gap-3"><flux:link :href="route('password.request')">Forgot password?</flux:link><flux:link :href="route('register')">Create account</flux:link></div>
+ </section>
+diff --git a/resources/views/livewire/auth/register.blade.php b/resources/views/livewire/auth/register.blade.php
+index 09b6b30..718e62d 100644
+--- a/resources/views/livewire/auth/register.blade.php
++++ b/resources/views/livewire/auth/register.blade.php
+@@ -1,29 +1,12 @@
+ <section class="space-y-6">
+-    <h1 class="text-2xl font-semibold">Create your account</h1>
+-    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <flux:heading size="xl" level="1">Create your account</flux:heading>
++    <x-app.flash-message />
+     <form wire:submit="register" class="space-y-4">
+-    <div>
+-        <label for="username" class="block font-medium">Username</label>
+-        <input id="username" type="text" wire:model="username" autocomplete="username" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('username') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-    <div>
+-        <label for="email" class="block font-medium">Email</label>
+-        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-    <div>
+-        <label for="password" class="block font-medium">Password</label>
+-        <input id="password" type="password" wire:model="password" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('password') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-    <div>
+-        <label for="password_confirmation" class="block font-medium">Confirm password</label>
+-        <input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('password_confirmation') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-
+-        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Create account</button>
++        <flux:input wire:model="username" label="Username" type="text" autocomplete="username" required />
++        <flux:input wire:model="email" label="Email" type="email" autocomplete="email" required />
++        <flux:input wire:model="password" label="Password" type="password" autocomplete="new-password" required />
++        <flux:input wire:model="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" required />
++        <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="register">Create account</flux:button>
+     </form>
+-    <a href="{{ route('login') }}" class="underline">Already registered? Log in</a>
++    <flux:text>Already registered? <flux:link :href="route('login')">Log in</flux:link></flux:text>
+ </section>
+diff --git a/resources/views/livewire/auth/reset-password.blade.php b/resources/views/livewire/auth/reset-password.blade.php
+index 954953d..b0d4351 100644
+--- a/resources/views/livewire/auth/reset-password.blade.php
++++ b/resources/views/livewire/auth/reset-password.blade.php
+@@ -1,24 +1,11 @@
+ <section class="space-y-6">
+-    <h1 class="text-2xl font-semibold">Reset password</h1>
+-    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
++    <flux:heading size="xl" level="1">Reset password</flux:heading>
++    <x-app.flash-message />
+     <form wire:submit="resetPassword" class="space-y-4">
+-    <div>
+-        <label for="email" class="block font-medium">Email</label>
+-        <input id="email" type="email" wire:model="email" autocomplete="email" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('email') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-    <div>
+-        <label for="password" class="block font-medium">Password</label>
+-        <input id="password" type="password" wire:model="password" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('password') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-    <div>
+-        <label for="password_confirmation" class="block font-medium">Confirm password</label>
+-        <input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required class="mt-1 w-full rounded border px-3 py-2">
+-        @error('password_confirmation') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
+-    </div>
+-
+-        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Reset password</button>
++        <flux:input wire:model="email" label="Email" type="email" autocomplete="email" required />
++        <flux:input wire:model="password" label="Password" type="password" autocomplete="new-password" required />
++        <flux:input wire:model="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" required />
++        <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="resetPassword">Reset password</flux:button>
+     </form>
+-    <a href="{{ route('login') }}" class="underline">Back to login</a>
++    <flux:link :href="route('login')">Back to login</flux:link>
+ </section>
+diff --git a/resources/views/livewire/auth/verify-email-notice.blade.php b/resources/views/livewire/auth/verify-email-notice.blade.php
+index 48703f1..cf3f1ee 100644
+--- a/resources/views/livewire/auth/verify-email-notice.blade.php
++++ b/resources/views/livewire/auth/verify-email-notice.blade.php
+@@ -1,14 +1,14 @@
+ <section class="space-y-6">
+-    <h1 class="text-2xl font-semibold">Verify your email</h1>
+-    <p>Use the link in your verification email to access your dashboard.</p>
+-    @if (session('status')) <p role="status">{{ session('status') }}</p> @endif
+-    <form wire:submit="resend">
+-        <button type="submit" wire:loading.attr="disabled" class="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">Resend verification email</button>
+-        @error('resend') <p role="alert" class="text-red-700">{{ $message }}</p> @enderror
++    <flux:heading size="xl" level="1">Verify your email</flux:heading>
++    <flux:text>Use the link in your verification email to access your dashboard.</flux:text>
++    <x-app.flash-message />
++    <form wire:submit="resend" class="space-y-3">
++        <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="resend">Resend verification email</flux:button>
++        <flux:error name="resend" />
+     </form>
+-    <a href="{{ route('dashboard') }}" class="underline">Continue to dashboard</a>
++    <flux:link :href="route('dashboard')">Continue to dashboard</flux:link>
+     <form method="POST" action="{{ route('logout') }}">
+         @csrf
+-        <button type="submit" class="underline">Log out</button>
++        <flux:button type="submit" variant="ghost">Log out</flux:button>
+     </form>
+ </section>
+--- /dev/null
++++ b/resources/views/components/app/empty-state.blade.php
+@@ -0,0 +1,12 @@
++@props(['title', 'description' => null, 'icon' => 'inbox'])
++
++<section {{ $attributes->class('rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center dark:border-zinc-700') }}>
++    <flux:icon :name="$icon" class="mx-auto mb-4 size-8 text-zinc-400" />
++    <flux:heading size="lg" level="2">{{ $title }}</flux:heading>
++    @if ($description)
++        <flux:text class="mx-auto mt-2 max-w-md">{{ $description }}</flux:text>
++    @endif
++    @isset($actions)
++        <div class="mt-6 flex flex-wrap justify-center gap-2">{{ $actions }}</div>
++    @endisset
++</section>
+--- /dev/null
++++ b/resources/views/components/app/flash-message.blade.php
+@@ -0,0 +1,7 @@
++@foreach (['status' => 'success', 'success' => 'success', 'error' => 'danger'] as $key => $variant)
++    @if (session()->has($key))
++        <flux:callout :variant="$variant" :role="$variant === 'danger' ? 'alert' : 'status'">
++            <flux:callout.text>{{ session($key) }}</flux:callout.text>
++        </flux:callout>
++    @endif
++@endforeach
+--- /dev/null
++++ b/resources/views/components/app/navbar.blade.php
+@@ -0,0 +1,8 @@
++@props(['title'])
++
++<flux:header class="gap-3 border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
++    <flux:sidebar.toggle class="lg:hidden" icon="bars-2" aria-label="Open navigation" />
++    <flux:text class="min-w-0 truncate font-medium text-zinc-900 dark:text-white">{{ $title }}</flux:text>
++    <flux:spacer />
++    <x-app.user-menu />
++</flux:header>
+--- /dev/null
++++ b/resources/views/components/app/page-header.blade.php
+@@ -0,0 +1,13 @@
++@props(['title', 'description' => null])
++
++<header {{ $attributes->class('flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between') }}>
++    <div class="min-w-0 space-y-2">
++        <flux:heading size="xl" level="1">{{ $title }}</flux:heading>
++        @if ($description)
++            <flux:text>{{ $description }}</flux:text>
++        @endif
++    </div>
++    @isset($actions)
++        <div class="flex flex-wrap items-center gap-2">{{ $actions }}</div>
++    @endisset
++</header>
+--- /dev/null
++++ b/resources/views/components/app/shell.blade.php
+@@ -0,0 +1,12 @@
++@props(['title'])
++
++<div {{ $attributes->class('min-h-dvh') }}>
++    <x-app.sidebar />
++    <x-app.navbar :title="$title" />
++    <flux:main class="min-w-0">
++        <main id="main-content" class="mx-auto w-full max-w-7xl space-y-6">
++            <x-app.flash-message />
++            {{ $slot }}
++        </main>
++    </flux:main>
++</div>
+--- /dev/null
++++ b/resources/views/components/app/sidebar.blade.php
+@@ -0,0 +1,11 @@
++<flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
++    <flux:sidebar.header>
++        <flux:sidebar.brand :href="route('dashboard')" :name="config('app.name')" />
++        <flux:sidebar.toggle class="lg:hidden" icon="x-mark" aria-label="Close navigation" />
++    </flux:sidebar.header>
++    <flux:sidebar.nav aria-label="Main navigation">
++        <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" icon="home">
++            Dashboard
++        </flux:sidebar.item>
++    </flux:sidebar.nav>
++</flux:sidebar>
+--- /dev/null
++++ b/resources/views/components/app/user-menu.blade.php
+@@ -0,0 +1,24 @@
++<div x-data>
++    <flux:dropdown position="bottom" align="end">
++        <flux:button variant="ghost" icon="user-circle" icon:trailing="chevron-down" aria-label="Account menu">
++            <span class="hidden max-w-40 truncate sm:block">{{ auth()->user()->username }}</span>
++        </flux:button>
++        <flux:menu class="w-64 max-w-[calc(100vw-2rem)]">
++            <div class="px-2 py-2">
++                <flux:text class="truncate font-medium text-zinc-900 dark:text-white">{{ auth()->user()->username }}</flux:text>
++                <flux:text size="sm" class="break-all">{{ auth()->user()->email }}</flux:text>
++            </div>
++            <flux:menu.separator />
++            <flux:menu.radio.group x-model="$flux.appearance" aria-label="Appearance">
++                <flux:menu.radio value="system" icon="computer-desktop">System</flux:menu.radio>
++                <flux:menu.radio value="light" icon="sun">Light</flux:menu.radio>
++                <flux:menu.radio value="dark" icon="moon">Dark</flux:menu.radio>
++            </flux:menu.radio.group>
++            <flux:menu.separator />
++            <flux:menu.item type="submit" form="app-logout" icon="arrow-right-start-on-rectangle">Log out</flux:menu.item>
++        </flux:menu>
++    </flux:dropdown>
++    <form id="app-logout" method="POST" action="{{ route('logout') }}">
++        @csrf
++    </form>
++</div>
+--- /dev/null
++++ b/resources/views/layouts/auth.blade.php
+@@ -0,0 +1,25 @@
++<!DOCTYPE html>
++<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
++    <head>
++        <meta charset="utf-8">
++        <meta name="viewport" content="width=device-width, initial-scale=1.0">
++        <title>{{ $title ?? 'Account' }} &mdash; {{ config('app.name') }}</title>
++        @vite(['resources/css/app.css', 'resources/js/app.js'])
++        @livewireStyles
++        @fluxAppearance
++    </head>
++    <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
++        <main class="flex min-h-dvh items-center justify-center px-4 py-10 sm:px-6">
++            <div class="w-full max-w-md space-y-8">
++                <div class="flex justify-center">
++                    <flux:brand :href="route('dashboard')" :name="config('app.name')" />
++                </div>
++                <div class="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
++                    {{ $slot ?? '' }}
++                </div>
++            </div>
++        </main>
++        @livewireScripts
++        @fluxScripts
++    </body>
++</html>

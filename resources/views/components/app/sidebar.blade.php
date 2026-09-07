@@ -7,5 +7,8 @@
         <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" icon="home">
             Dashboard
         </flux:sidebar.item>
+        <flux:sidebar.item :href="route('actors.index')" :current="request()->routeIs('actors.*')" icon="users">
+            Actors
+        </flux:sidebar.item>
     </flux:sidebar.nav>
 </flux:sidebar>

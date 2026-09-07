@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Actions\Auth\RegisterUser;
 use App\Livewire\Auth\Register;
+use App\Models\Actor;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -34,6 +35,8 @@ class RegistrationTest extends TestCase
             ->assertHasNoErrors()->assertRedirect(route('verification.notice'));
 
         $user = User::sole();
+        $this->assertDatabaseCount('actors', 1);
+        $this->assertTrue($user->actor->is(Actor::sole()));
         $this->assertAuthenticatedAs($user);
         $this->assertSame('active', $user->status);
         $this->assertNull($user->email_verified_at);
@@ -61,6 +64,7 @@ class RegistrationTest extends TestCase
         Livewire::test(Register::class)->set($this->input())->set('password_confirmation', 'different')
             ->call('register')->assertHasErrors(['password' => 'confirmed']);
         $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('actors', 0);
     }
 
     public function test_action_ignores_privileged_input(): void
@@ -77,7 +81,9 @@ class RegistrationTest extends TestCase
         DB::beginTransaction();
         $user = app(RegisterUser::class)->handle($this->input());
         Event::assertNotDispatched(Registered::class);
+        $this->assertDatabaseCount('actors', 1);
         DB::commit();
+        $this->assertTrue($user->actor->is(Actor::sole()));
 
         Event::assertDispatched(Registered::class, fn (Registered $event): bool => $event->user->is($user));
         Event::assertDispatchedTimes(Registered::class, 1);
@@ -91,6 +97,7 @@ class RegistrationTest extends TestCase
         DB::rollBack();
 
         $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('actors', 0);
         Event::assertNotDispatched(Registered::class);
     }
 
@@ -109,7 +116,27 @@ class RegistrationTest extends TestCase
         }
 
         $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('actors', 0);
         $this->assertSame(0, DB::transactionLevel());
+        Event::assertNotDispatched(Registered::class);
+    }
+
+    public function test_actor_creation_failure_rolls_back_user_and_suppresses_registered(): void
+    {
+        Event::fake([Registered::class]);
+        Event::listen('eloquent.created: '.Actor::class, function (): void {
+            throw new RuntimeException('Actor provisioning failed');
+        });
+
+        try {
+            app(RegisterUser::class)->handle($this->input());
+            $this->fail('Expected Actor creation failure.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Actor provisioning failed', $exception->getMessage());
+        }
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('actors', 0);
         Event::assertNotDispatched(Registered::class);
     }
 }

@@ -26,6 +26,8 @@ class RegisterUser
                 'password' => $data['password'],
             ]);
 
+            $user->actor()->create([]);
+
             DB::afterCommit(fn () => event(new Registered($user)));
 
             return $user;

@@ -1,0 +1,741 @@
+diff --git a/app/Actions/Auth/RegisterUser.php b/app/Actions/Auth/RegisterUser.php
+index 9715d9b..c3de8ed 100644
+--- a/app/Actions/Auth/RegisterUser.php
++++ b/app/Actions/Auth/RegisterUser.php
+@@ -26,6 +26,8 @@ public function handle(array $input): User
+                 'password' => $data['password'],
+             ]);
+ 
++            $user->actor()->create([]);
++
+             DB::afterCommit(fn () => event(new Registered($user)));
+ 
+             return $user;
+diff --git a/app/Models/User.php b/app/Models/User.php
+index e9b6915..276c67a 100644
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -7,6 +7,7 @@
+ use Illuminate\Database\Eloquent\Attributes\Fillable;
+ use Illuminate\Database\Eloquent\Attributes\Hidden;
+ use Illuminate\Database\Eloquent\Factories\HasFactory;
++use Illuminate\Database\Eloquent\Relations\HasOne;
+ use Illuminate\Foundation\Auth\User as Authenticatable;
+ use Illuminate\Notifications\Notifiable;
+ 
+@@ -29,4 +30,10 @@ protected function casts(): array
+             'password' => 'hashed',
+         ];
+     }
++
++    /** @return HasOne<Actor, $this> */
++    public function actor(): HasOne
++    {
++        return $this->hasOne(Actor::class);
++    }
+ }
+diff --git a/database/seeders/DatabaseSeeder.php b/database/seeders/DatabaseSeeder.php
+index 3958c39..537a0fa 100644
+--- a/database/seeders/DatabaseSeeder.php
++++ b/database/seeders/DatabaseSeeder.php
+@@ -17,9 +17,11 @@ public function run(): void
+     {
+         // User::factory(10)->create();
+ 
+-        User::factory()->create([
++        $user = User::factory()->create([
+             'username' => 'testuser',
+             'email' => 'test@example.com',
+         ]);
++
++        $user->actor()->create([]);
+     }
+ }
+diff --git a/resources/views/components/app/sidebar.blade.php b/resources/views/components/app/sidebar.blade.php
+index 1126ce2..8fb88b6 100644
+--- a/resources/views/components/app/sidebar.blade.php
++++ b/resources/views/components/app/sidebar.blade.php
+@@ -7,5 +7,8 @@
+         <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" icon="home">
+             Dashboard
+         </flux:sidebar.item>
++        <flux:sidebar.item :href="route('actors.index')" :current="request()->routeIs('actors.*')" icon="users">
++            Actors
++        </flux:sidebar.item>
+     </flux:sidebar.nav>
+ </flux:sidebar>
+diff --git a/routes/web.php b/routes/web.php
+index 5f1dfb4..4519906 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -2,6 +2,10 @@
+ 
+ use App\Http\Controllers\Auth\LogoutController;
+ use App\Http\Controllers\Auth\VerifyEmailController;
++use App\Livewire\Actors\Create;
++use App\Livewire\Actors\Edit;
++use App\Livewire\Actors\Index;
++use App\Livewire\Actors\Show;
+ use App\Livewire\Auth\ForgotPassword;
+ use App\Livewire\Auth\Login;
+ use App\Livewire\Auth\Register;
+@@ -28,3 +32,10 @@
+         ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+     Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
+ });
++
++Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
++    Route::livewire('/actors', Index::class)->name('actors.index');
++    Route::livewire('/actors/create', Create::class)->name('actors.create');
++    Route::livewire('/actors/{actor}', Show::class)->name('actors.show');
++    Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
++});
+diff --git a/tests/Feature/Auth/RegistrationTest.php b/tests/Feature/Auth/RegistrationTest.php
+index e316a45..e691aa8 100644
+--- a/tests/Feature/Auth/RegistrationTest.php
++++ b/tests/Feature/Auth/RegistrationTest.php
+@@ -4,6 +4,7 @@
+ 
+ use App\Actions\Auth\RegisterUser;
+ use App\Livewire\Auth\Register;
++use App\Models\Actor;
+ use App\Models\User;
+ use Illuminate\Auth\Events\Registered;
+ use Illuminate\Auth\Notifications\VerifyEmail;
+@@ -34,6 +35,8 @@ public function test_registration_creates_active_unverified_account_and_logs_in(
+             ->assertHasNoErrors()->assertRedirect(route('verification.notice'));
+ 
+         $user = User::sole();
++        $this->assertDatabaseCount('actors', 1);
++        $this->assertTrue($user->actor->is(Actor::sole()));
+         $this->assertAuthenticatedAs($user);
+         $this->assertSame('active', $user->status);
+         $this->assertNull($user->email_verified_at);
+@@ -61,6 +64,7 @@ public function test_registration_rejects_unconfirmed_password(): void
+         Livewire::test(Register::class)->set($this->input())->set('password_confirmation', 'different')
+             ->call('register')->assertHasErrors(['password' => 'confirmed']);
+         $this->assertDatabaseCount('users', 0);
++        $this->assertDatabaseCount('actors', 0);
+     }
+ 
+     public function test_action_ignores_privileged_input(): void
+@@ -77,7 +81,9 @@ public function test_registered_is_dispatched_only_after_outer_commit(): void
+         DB::beginTransaction();
+         $user = app(RegisterUser::class)->handle($this->input());
+         Event::assertNotDispatched(Registered::class);
++        $this->assertDatabaseCount('actors', 1);
+         DB::commit();
++        $this->assertTrue($user->actor->is(Actor::sole()));
+ 
+         Event::assertDispatched(Registered::class, fn (Registered $event): bool => $event->user->is($user));
+         Event::assertDispatchedTimes(Registered::class, 1);
+@@ -91,6 +97,7 @@ public function test_outer_rollback_discards_user_and_registered_event(): void
+         DB::rollBack();
+ 
+         $this->assertDatabaseCount('users', 0);
++        $this->assertDatabaseCount('actors', 0);
+         Event::assertNotDispatched(Registered::class);
+     }
+ 
+@@ -109,7 +116,27 @@ public function test_creation_failure_rolls_back_the_action_transaction(): void
+         }
+ 
+         $this->assertDatabaseCount('users', 0);
++        $this->assertDatabaseCount('actors', 0);
+         $this->assertSame(0, DB::transactionLevel());
+         Event::assertNotDispatched(Registered::class);
+     }
++
++    public function test_actor_creation_failure_rolls_back_user_and_suppresses_registered(): void
++    {
++        Event::fake([Registered::class]);
++        Event::listen('eloquent.created: '.Actor::class, function (): void {
++            throw new RuntimeException('Actor provisioning failed');
++        });
++
++        try {
++            app(RegisterUser::class)->handle($this->input());
++            $this->fail('Expected Actor creation failure.');
++        } catch (RuntimeException $exception) {
++            $this->assertSame('Actor provisioning failed', $exception->getMessage());
++        }
++
++        $this->assertDatabaseCount('users', 0);
++        $this->assertDatabaseCount('actors', 0);
++        Event::assertNotDispatched(Registered::class);
++    }
+ }
+--- /dev/null
++++ b/app/Livewire/Actors/Create.php
+@@ -0,0 +1,50 @@
++<?php
++
++namespace App\Livewire\Actors;
++
++use App\Models\Actor;
++use App\Models\User;
++use Illuminate\Contracts\View\View;
++use Illuminate\Database\UniqueConstraintViolationException;
++use Illuminate\Validation\Rule;
++use Illuminate\Validation\ValidationException;
++use Livewire\Attributes\Layout;
++use Livewire\Attributes\Title;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++#[Title('Create Actor')]
++class Create extends Component
++{
++    public string $userId = '';
++
++    public function save(): void
++    {
++        $data = $this->validate([
++            'userId' => ['nullable', 'integer', 'exists:users,id', Rule::unique('actors', 'user_id')],
++        ], ['userId.unique' => 'This user already has an Actor.']);
++
++        $actor = new Actor;
++        if ($data['userId'] === '' || $data['userId'] === null) {
++            $actor->user()->dissociate();
++        } else {
++            $actor->user()->associate(User::findOrFail($data['userId']));
++        }
++
++        try {
++            $actor->save();
++        } catch (UniqueConstraintViolationException) {
++            throw ValidationException::withMessages(['userId' => 'This user already has an Actor.']);
++        }
++
++        session()->flash('status', 'Actor created.');
++        $this->redirectRoute('actors.show', ['actor' => $actor->id]);
++    }
++
++    public function render(): View
++    {
++        return view('livewire.actors.create', [
++            'users' => User::query()->whereDoesntHave('actor')->orderBy('username')->get(['id', 'username', 'email']),
++        ]);
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Actors/Edit.php
+@@ -0,0 +1,60 @@
++<?php
++
++namespace App\Livewire\Actors;
++
++use App\Models\Actor;
++use App\Models\User;
++use Illuminate\Contracts\View\View;
++use Illuminate\Database\UniqueConstraintViolationException;
++use Illuminate\Validation\Rule;
++use Illuminate\Validation\ValidationException;
++use Livewire\Attributes\Layout;
++use Livewire\Attributes\Locked;
++use Livewire\Attributes\Title;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++#[Title('Edit Actor')]
++class Edit extends Component
++{
++    public string $userId = '';
++
++    #[Locked]
++    public Actor $actor;
++
++    public function mount(Actor $actor): void
++    {
++        $this->actor = $actor;
++        $this->userId = $actor->user_id === null ? '' : (string) $actor->user_id;
++    }
++
++    public function save(): void
++    {
++        $data = $this->validate([
++            'userId' => ['nullable', 'integer', 'exists:users,id', Rule::unique('actors', 'user_id')->ignore($this->actor->id)],
++        ], ['userId.unique' => 'This user already has an Actor.']);
++
++        $actor = $this->actor->refresh();
++        if ($data['userId'] === '' || $data['userId'] === null) {
++            $actor->user()->dissociate();
++        } else {
++            $actor->user()->associate(User::findOrFail($data['userId']));
++        }
++
++        try {
++            $actor->save();
++        } catch (UniqueConstraintViolationException) {
++            throw ValidationException::withMessages(['userId' => 'This user already has an Actor.']);
++        }
++
++        session()->flash('status', 'Actor updated.');
++        $this->redirectRoute('actors.show', ['actor' => $actor->id]);
++    }
++
++    public function render(): View
++    {
++        return view('livewire.actors.edit', [
++            'users' => User::query()->where(fn ($query) => $query->whereDoesntHave('actor')->orWhere('id', $this->actor->user_id))->orderBy('username')->get(['id', 'username', 'email']),
++        ]);
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Actors/Index.php
+@@ -0,0 +1,24 @@
++<?php
++
++namespace App\Livewire\Actors;
++
++use App\Models\Actor;
++use Illuminate\Contracts\View\View;
++use Livewire\Attributes\Layout;
++use Livewire\Attributes\Title;
++use Livewire\Component;
++use Livewire\WithPagination;
++
++#[Layout('layouts.app')]
++#[Title('Actors')]
++class Index extends Component
++{
++    use WithPagination;
++
++    public function render(): View
++    {
++        return view('livewire.actors.index', [
++            'actors' => Actor::with('user')->latest('id')->paginate(15),
++        ]);
++    }
++}
+--- /dev/null
++++ b/app/Livewire/Actors/Show.php
+@@ -0,0 +1,30 @@
++<?php
++
++namespace App\Livewire\Actors;
++
++use App\Models\Actor;
++use Illuminate\Contracts\View\View;
++use Livewire\Attributes\Layout;
++use Livewire\Attributes\Locked;
++use Livewire\Attributes\Title;
++use Livewire\Component;
++
++#[Layout('layouts.app')]
++#[Title('Actor')]
++class Show extends Component
++{
++    #[Locked]
++    public Actor $actor;
++
++    public function delete(): void
++    {
++        $this->actor->delete();
++        session()->flash('status', 'Actor deleted. The associated account was not deleted.');
++        $this->redirectRoute('actors.index');
++    }
++
++    public function render(): View
++    {
++        return view('livewire.actors.show', ['actor' => $this->actor->load('user')]);
++    }
++}
+--- /dev/null
++++ b/app/Models/Actor.php
+@@ -0,0 +1,20 @@
++<?php
++
++namespace App\Models;
++
++use Database\Factories\ActorFactory;
++use Illuminate\Database\Eloquent\Factories\HasFactory;
++use Illuminate\Database\Eloquent\Model;
++use Illuminate\Database\Eloquent\Relations\BelongsTo;
++
++class Actor extends Model
++{
++    /** @use HasFactory<ActorFactory> */
++    use HasFactory;
++
++    /** @return BelongsTo<User, $this> */
++    public function user(): BelongsTo
++    {
++        return $this->belongsTo(User::class);
++    }
++}
+--- /dev/null
++++ b/database/factories/ActorFactory.php
+@@ -0,0 +1,22 @@
++<?php
++
++namespace Database\Factories;
++
++use App\Models\Actor;
++use App\Models\User;
++use Illuminate\Database\Eloquent\Factories\Factory;
++
++/** @extends Factory<Actor> */
++class ActorFactory extends Factory
++{
++    /** @return array<string, mixed> */
++    public function definition(): array
++    {
++        return ['user_id' => User::factory()];
++    }
++
++    public function withoutUser(): static
++    {
++        return $this->state(fn (): array => ['user_id' => null]);
++    }
++}
+--- /dev/null
++++ b/database/migrations/2026_09_07_182924_create_actors_table.php
+@@ -0,0 +1,22 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    public function up(): void
++    {
++        Schema::create('actors', function (Blueprint $table): void {
++            $table->id();
++            $table->foreignId('user_id')->nullable()->unique()->constrained()->nullOnDelete();
++            $table->timestamps();
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::dropIfExists('actors');
++    }
++};
+--- /dev/null
++++ b/resources/views/livewire/actors/create.blade.php
+@@ -0,0 +1,15 @@
++<section class="space-y-6">
++    <x-app.page-header title="Create Actor" description="An Actor may exist without an account." />
++    <form wire:submit="save" class="max-w-xl space-y-6">
++        <flux:select wire:model="userId" label="User association" description="Only accounts without another Actor can be assigned.">
++            <flux:select.option value="">No account</flux:select.option>
++            @foreach ($users as $user)
++                <flux:select.option :value="$user->id">{{ $user->username }} ({{ $user->email }})</flux:select.option>
++            @endforeach
++        </flux:select>
++        <div class="flex flex-wrap gap-3">
++            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">Save Actor</flux:button>
++            <flux:button :href="route('actors.index')" variant="ghost">Cancel</flux:button>
++        </div>
++    </form>
++</section>
+--- /dev/null
++++ b/resources/views/livewire/actors/edit.blade.php
+@@ -0,0 +1,15 @@
++<section class="space-y-6">
++    <x-app.page-header title="Edit Actor" description="An Actor may exist without an account." />
++    <form wire:submit="save" class="max-w-xl space-y-6">
++        <flux:select wire:model="userId" label="User association" description="Only accounts without another Actor can be assigned.">
++            <flux:select.option value="">No account</flux:select.option>
++            @foreach ($users as $user)
++                <flux:select.option :value="$user->id">{{ $user->username }} ({{ $user->email }})</flux:select.option>
++            @endforeach
++        </flux:select>
++        <div class="flex flex-wrap gap-3">
++            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">Save Actor</flux:button>
++            <flux:button :href="route('actors.index')" variant="ghost">Cancel</flux:button>
++        </div>
++    </form>
++</section>
+--- /dev/null
++++ b/resources/views/livewire/actors/index.blade.php
+@@ -0,0 +1,33 @@
++<section class="space-y-6">
++    <x-app.page-header title="Actors" description="Domain participants and their account associations.">
++        <x-slot:actions><flux:button :href="route('actors.create')" variant="primary" icon="plus">Create Actor</flux:button></x-slot:actions>
++    </x-app.page-header>
++    @if ($actors->isEmpty())
++        <x-app.empty-state title="No Actors yet" description="Create an accountless participant or associate an available account." />
++    @else
++        <flux:table :paginate="$actors">
++            <flux:table.columns>
++                <flux:table.column>Actor</flux:table.column>
++                <flux:table.column>User association</flux:table.column>
++                <flux:table.column>Created</flux:table.column>
++                <flux:table.column><span class="sr-only">Actions</span></flux:table.column>
++            </flux:table.columns>
++            <flux:table.rows>
++                @foreach ($actors as $actor)
++                    <flux:table.row :key="$actor->id">
++                        <flux:table.cell><flux:link :href="route('actors.show', $actor)">#{{ $actor->id }}</flux:link></flux:table.cell>
++                        <flux:table.cell>
++                            @if ($actor->user)
++                                {{ $actor->user->username }} <flux:text size="sm">{{ $actor->user->email }}</flux:text>
++                            @else
++                                <flux:badge>Accountless</flux:badge>
++                            @endif
++                        </flux:table.cell>
++                        <flux:table.cell>{{ $actor->created_at?->format('Y-m-d H:i') }}</flux:table.cell>
++                        <flux:table.cell><flux:button :href="route('actors.edit', $actor)" size="sm" variant="ghost">Edit</flux:button></flux:table.cell>
++                    </flux:table.row>
++                @endforeach
++            </flux:table.rows>
++        </flux:table>
++    @endif
++</section>
+--- /dev/null
++++ b/resources/views/livewire/actors/show.blade.php
+@@ -0,0 +1,28 @@
++<section class="space-y-6">
++    <x-app.page-header :title="'Actor #'.$actor->id">
++        <x-slot:actions>
++            <flux:button :href="route('actors.index')" variant="ghost">All Actors</flux:button>
++            <flux:button :href="route('actors.edit', $actor)">Edit</flux:button>
++        </x-slot:actions>
++    </x-app.page-header>
++    <dl class="max-w-xl space-y-4">
++        <div><dt class="font-medium">User association</dt><dd>
++            @if ($actor->user)
++                {{ $actor->user->username }} ({{ $actor->user->email }})
++            @else
++                <flux:badge>Accountless</flux:badge>
++            @endif
++        </dd></div>
++        <div><dt class="font-medium">Created</dt><dd>{{ $actor->created_at?->format('Y-m-d H:i:s') }}</dd></div>
++        <div><dt class="font-medium">Updated</dt><dd>{{ $actor->updated_at?->format('Y-m-d H:i:s') }}</dd></div>
++    </dl>
++    <flux:modal.trigger name="delete-actor"><flux:button variant="danger">Delete Actor</flux:button></flux:modal.trigger>
++    <flux:modal name="delete-actor" class="space-y-6 md:w-96">
++        <flux:heading size="lg">Delete Actor #{{ $actor->id }}?</flux:heading>
++        <flux:text>This permanently deletes this participant. The associated account will remain.</flux:text>
++        <div class="flex justify-end gap-3">
++            <flux:modal.close><flux:button variant="ghost">Cancel</flux:button></flux:modal.close>
++            <flux:button variant="danger" wire:click="delete" wire:loading.attr="disabled" wire:target="delete">Confirm deletion</flux:button>
++        </div>
++    </flux:modal>
++</section>
+--- /dev/null
++++ b/tests/Feature/Actors/ActorManagementTest.php
+@@ -0,0 +1,139 @@
++<?php
++
++namespace Tests\Feature\Actors;
++
++use App\Livewire\Actors\Create;
++use App\Livewire\Actors\Edit;
++use App\Livewire\Actors\Index;
++use App\Livewire\Actors\Show;
++use App\Models\Actor;
++use App\Models\User;
++use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
++use Livewire\Livewire;
++use PHPUnit\Framework\Attributes\DataProvider;
++use Tests\TestCase;
++
++class ActorManagementTest extends TestCase
++{
++    use LazilyRefreshDatabase;
++
++    private function paths(Actor $actor): array
++    {
++        return ['/actors', '/actors/create', '/actors/'.$actor->id, '/actors/'.$actor->id.'/edit'];
++    }
++
++    public function test_guests_cannot_access_actor_pages(): void
++    {
++        foreach ($this->paths(Actor::factory()->withoutUser()->create()) as $path) {
++            $this->get($path)->assertRedirect(route('login'));
++        }
++    }
++
++    public function test_unverified_users_cannot_access_actor_pages(): void
++    {
++        $this->actingAs(User::factory()->unverified()->create());
++        foreach ($this->paths(Actor::factory()->withoutUser()->create()) as $path) {
++            $this->get($path)->assertRedirect(route('verification.notice'));
++        }
++    }
++
++    #[DataProvider('inactiveStatuses')]
++    public function test_inactive_users_cannot_access_actor_pages(string $status): void
++    {
++        $user = User::factory()->create(['status' => $status]);
++        foreach ($this->paths(Actor::factory()->withoutUser()->create()) as $path) {
++            $this->actingAs($user)->get($path)->assertRedirect(route('login'));
++            $this->assertGuest();
++        }
++    }
++
++    public static function inactiveStatuses(): array
++    {
++        return ['suspended' => ['suspended'], 'closed' => ['closed']];
++    }
++
++    public function test_verified_active_users_can_view_all_actor_pages(): void
++    {
++        $this->withoutVite();
++        $this->actingAs(User::factory()->create());
++        $actor = Actor::factory()->create();
++        foreach ($this->paths($actor) as $path) {
++            $this->get($path)->assertOk();
++        }
++        Livewire::test(Index::class)->assertSee($actor->user->username);
++    }
++
++    public function test_creates_accountless_actor(): void
++    {
++        Livewire::actingAs(User::factory()->create())->test(Create::class)->call('save')->assertHasNoErrors();
++        $this->assertNull(Actor::sole()->user_id);
++    }
++
++    public function test_creates_actor_linked_to_available_user(): void
++    {
++        $user = User::factory()->create();
++        Livewire::actingAs($user)->test(Create::class)->set('userId', (string) $user->id)->call('save')
++            ->assertHasNoErrors()->assertRedirect(route('actors.show', Actor::sole()));
++        $this->assertSame($user->id, Actor::sole()->user_id);
++    }
++
++    public function test_duplicate_associations_are_rejected_on_create_and_edit(): void
++    {
++        $actor = Actor::factory()->create();
++        $other = Actor::factory()->withoutUser()->create();
++        Livewire::actingAs($actor->user)->test(Create::class)->set('userId', (string) $actor->user_id)
++            ->call('save')->assertHasErrors(['userId' => 'unique']);
++        Livewire::test(Edit::class, ['actor' => $other])->set('userId', (string) $actor->user_id)
++            ->call('save')->assertHasErrors(['userId' => 'unique']);
++        $this->assertDatabaseCount('actors', 2);
++        $this->assertNull($other->refresh()->user_id);
++    }
++
++    public function test_attach_change_and_detach_association(): void
++    {
++        $user = User::factory()->create();
++        $other = User::factory()->create();
++        $actor = Actor::factory()->withoutUser()->create();
++        $component = Livewire::actingAs($user)->test(Edit::class, ['actor' => $actor]);
++        $component->set('userId', (string) $user->id)->call('save')->assertHasNoErrors();
++        $this->assertSame($user->id, $actor->refresh()->user_id);
++        $component->call('save')->assertHasNoErrors();
++        $component->set('userId', (string) $other->id)->call('save')->assertHasNoErrors();
++        $this->assertSame($other->id, $actor->refresh()->user_id);
++        $component->set('userId', '')->call('save')->assertHasNoErrors();
++        $this->assertNull($actor->refresh()->user_id);
++    }
++
++    public function test_delete_leaves_the_associated_user_intact(): void
++    {
++        $actor = Actor::factory()->create();
++        $user = $actor->user;
++        Livewire::actingAs($user)->test(Show::class, ['actor' => $actor])->call('delete')
++            ->assertRedirect(route('actors.index'));
++        $this->assertModelMissing($actor);
++        $this->assertModelExists($user);
++    }
++
++    public function test_nonexistent_association_is_rejected(): void
++    {
++        Livewire::actingAs(User::factory()->create())->test(Create::class)->set('userId', '999')
++            ->call('save')->assertHasErrors(['userId' => 'exists']);
++        $this->assertDatabaseCount('actors', 0);
++    }
++
++    public function test_livewire_mutation_rechecks_verification_after_page_load(): void
++    {
++        $this->withoutVite();
++        $user = User::factory()->create();
++        $page = $this->actingAs($user)->get('/actors/create')->assertOk();
++        preg_match('/wire:snapshot="([^"]+)"/', $page->getContent(), $matches);
++        $this->assertArrayHasKey(1, $matches);
++        $user->email_verified_at = null;
++        $user->save();
++        $this->postJson(app('livewire')->getUpdateUri(), ['components' => [[
++            'snapshot' => html_entity_decode($matches[1], ENT_QUOTES), 'updates' => [],
++            'calls' => [['method' => 'save', 'params' => [], 'path' => '']],
++        ]]], ['X-Livewire' => 'true'])->assertForbidden();
++        $this->assertDatabaseCount('actors', 0);
++    }
++}
+--- /dev/null
++++ b/tests/Feature/Models/ActorTest.php
+@@ -0,0 +1,77 @@
++<?php
++
++namespace Tests\Feature\Models;
++
++use App\Models\Actor;
++use App\Models\User;
++use Illuminate\Database\QueryException;
++use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
++use Illuminate\Support\Facades\Schema;
++use Tests\TestCase;
++
++class ActorTest extends TestCase
++{
++    use LazilyRefreshDatabase;
++
++    public function test_actor_has_only_kernel_columns(): void
++    {
++        $this->assertEqualsCanonicalizing(['id', 'user_id', 'created_at', 'updated_at'], Schema::getColumnListing('actors'));
++    }
++
++    public function test_multiple_accountless_actors_are_allowed(): void
++    {
++        $actors = Actor::factory()->withoutUser()->count(2)->create();
++        $this->assertDatabaseCount('actors', 2);
++        $this->assertDatabaseCount('users', 0);
++        foreach ($actors as $actor) {
++            $this->assertNull($actor->user_id);
++            $this->assertNull($actor->user);
++        }
++    }
++
++    public function test_both_relationships_resolve(): void
++    {
++        $user = User::factory()->create();
++        $actor = Actor::factory()->for($user)->create();
++        $this->assertTrue($actor->user->is($user));
++        $this->assertTrue($user->actor->is($actor));
++    }
++
++    public function test_rejects_nonexistent_user(): void
++    {
++        $this->expectException(QueryException::class);
++        Actor::factory()->create(['user_id' => 999]);
++    }
++
++    public function test_rejects_duplicate_user_association(): void
++    {
++        $actor = Actor::factory()->create();
++        $this->expectException(QueryException::class);
++        Actor::factory()->create(['user_id' => $actor->user_id]);
++    }
++
++    public function test_deleting_user_detaches_and_preserves_actor(): void
++    {
++        $actor = Actor::factory()->create();
++        $actor->user->delete();
++        $this->assertModelExists($actor);
++        $this->assertNull($actor->refresh()->user_id);
++        $this->assertDatabaseCount('users', 0);
++    }
++
++    public function test_deleting_actor_preserves_user(): void
++    {
++        $actor = Actor::factory()->create();
++        $user = $actor->user;
++        $actor->delete();
++        $this->assertModelExists($user);
++        $this->assertNull($user->refresh()->actor);
++    }
++
++    public function test_default_seeder_explicitly_creates_an_actor(): void
++    {
++        $this->seed();
++        $this->assertDatabaseCount('actors', 1);
++        $this->assertTrue(Actor::sole()->user->is(User::sole()));
++    }
++}
