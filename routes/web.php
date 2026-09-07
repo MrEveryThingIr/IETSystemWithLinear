@@ -11,6 +11,8 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Groups\Create as CreateGroup;
+use App\Livewire\Groups\Index as GroupIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -38,4 +40,6 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/actors/create', Create::class)->name('actors.create');
     Route::livewire('/actors/{actor}', Show::class)->name('actors.show');
     Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
+    Route::livewire('/groups', GroupIndex::class)->name('groups.index');
+    Route::livewire('/groups/create', CreateGroup::class)->name('groups.create');
 });
