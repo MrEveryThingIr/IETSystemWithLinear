@@ -3,6 +3,21 @@
         <x-slot:actions><flux:button :href="route('groups.index')" variant="ghost">All groups</flux:button></x-slot:actions>
     </x-app.page-header>
 
+    @if (session('status'))
+        <flux:callout variant="success" class="break-all">{{ session('status') }}</flux:callout>
+    @endif
+
+    @if ($isOwner)
+        <flux:card class="space-y-4">
+            <flux:heading size="lg">Group settings</flux:heading>
+            <form wire:submit="save" class="space-y-4">
+                <flux:input wire:model="name" label="Group name" />
+                <flux:textarea wire:model="description" label="Description" rows="3" />
+                <div class="flex flex-col gap-2 sm:flex-row"><flux:button type="submit" variant="primary">Save details</flux:button><flux:button wire:click="createInvitation" variant="ghost">Create invitation link</flux:button></div>
+            </form>
+        </flux:card>
+    @endif
+
     <flux:card class="space-y-4">
         <flux:heading size="lg">Members</flux:heading>
         <div class="space-y-3">
