@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Edit;
