@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['group_id', 'actor_id', 'role', 'status'])]
+#[Fillable(['group_id', 'actor_id', 'status'])]
 class GroupMembership extends Model
 {
     use HasFactory;

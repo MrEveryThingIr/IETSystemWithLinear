@@ -15,12 +15,10 @@
                 <flux:card class="space-y-3">
                     <div class="flex items-start justify-between gap-3">
                         <flux:heading size="lg">{{ $membership->group->name }}</flux:heading>
-                        <flux:badge>{{ ucfirst($membership->role) }}</flux:badge>
+                        <flux:badge>{{ $roles[$membership->group_id] }}</flux:badge>
                     </div>
                     <flux:text>{{ $membership->group->description ?: 'No description yet.' }}</flux:text>
-                    @if ($membership->role === 'owner')
-                        <flux:button wire:click="createInvitation({{ $membership->group->id }})" wire:loading.attr="disabled" size="sm" variant="ghost">Create invitation link</flux:button>
-                    @endif
+                    <flux:button :href="route('groups.show', $membership->group)" class="w-full sm:w-auto" size="sm" variant="primary">Open group</flux:button>
                 </flux:card>
             @endforeach
         </div>

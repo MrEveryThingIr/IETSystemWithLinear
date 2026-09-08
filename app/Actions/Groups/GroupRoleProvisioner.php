@@ -11,27 +11,15 @@ use Spatie\Permission\PermissionRegistrar;
 class GroupRoleProvisioner
 {
     /** @var list<string> */
-    private const OWNER_PERMISSIONS = [
-        'manage_group',
-        'manage_members',
-        'manage_roles',
-        'manage_invitations',
-        'approve_role_changes',
-        'participate',
-    ];
+    private const OWNER_PERMISSIONS = ['manage_group', 'manage_members', 'manage_roles', 'manage_invitations', 'approve_role_changes', 'participate'];
 
     /** @var list<string> */
-    private const MEMBER_PERMISSIONS = [
-        'participate',
-    ];
+    private const MEMBER_PERMISSIONS = ['participate'];
 
     /** @return list<string> */
     public static function permissionNames(): array
     {
-        return array_values(array_unique([
-            ...self::OWNER_PERMISSIONS,
-            ...self::MEMBER_PERMISSIONS,
-        ]));
+        return array_values(array_unique([...self::OWNER_PERMISSIONS, ...self::MEMBER_PERMISSIONS]));
     }
 
     public function seedPermissions(): void
@@ -51,7 +39,6 @@ class GroupRoleProvisioner
         return $this->withinGroup($group, function (): array {
             $owner = Role::findOrCreate('Owner', 'web');
             $member = Role::findOrCreate('Member', 'web');
-
             $owner->syncPermissions(self::OWNER_PERMISSIONS);
             $member->syncPermissions(self::MEMBER_PERMISSIONS);
 
@@ -66,6 +53,16 @@ class GroupRoleProvisioner
         });
     }
 
+    public function hasRole(Actor $actor, Group $group, string $role): bool
+    {
+        return $this->withinGroup($group, fn (): bool => $actor->hasRole($role));
+    }
+
+    public function roleName(Actor $actor, Group $group): ?string
+    {
+        return $this->withinGroup($group, fn (): ?string => $actor->getRoleNames()->first());
+    }
+
     /** @template T
      * @param callable(): T $callback
      * @return T
@@ -74,7 +71,6 @@ class GroupRoleProvisioner
     {
         $registrar = app(PermissionRegistrar::class);
         $currentGroupId = $registrar->getPermissionsTeamId();
-
         $registrar->setPermissionsTeamId($group->getKey());
 
         try {
