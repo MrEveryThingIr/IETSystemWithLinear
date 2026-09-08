@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Administration\GlobalAccess;
 use App\Actions\Groups\GroupRoleProvisioner;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -14,6 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         app(GroupRoleProvisioner::class)->seedPermissions();
+        app(GlobalAccess::class)->seed();
 
         $user = User::factory()->create([
             'username' => 'testuser',
@@ -21,5 +23,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $user->actor()->create([]);
+        app(GlobalAccess::class)->sync($user, true, []);
     }
 }

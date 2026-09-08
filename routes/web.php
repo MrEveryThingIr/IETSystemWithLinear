@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Edit;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
+use App\Livewire\Administration\Index as AdministrationIndex;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -36,11 +36,16 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
 });
 
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
-    Route::livewire('/actors', Index::class)->name('actors.index');
-    Route::livewire('/actors/create', Create::class)->name('actors.create');
-    Route::livewire('/actors/{actor}', Show::class)->name('actors.show');
-    Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
     Route::livewire('/groups', GroupIndex::class)->name('groups.index');
     Route::livewire('/groups/create', CreateGroup::class)->name('groups.create');
     Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show');
+
+    Route::middleware('global.permission:actors.manage')->group(function (): void {
+        Route::livewire('/actors', Index::class)->name('actors.index');
+        Route::livewire('/actors/create', Create::class)->name('actors.create');
+        Route::livewire('/actors/{actor}', Show::class)->name('actors.show');
+        Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
+    });
+
+    Route::livewire('/administration', AdministrationIndex::class)->middleware('global.permission:rbac.manage')->name('administration.index');
 });
