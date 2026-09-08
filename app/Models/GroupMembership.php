@@ -7,12 +7,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['group_id', 'actor_id', 'group_role_id', 'role', 'status'])]
+#[Fillable(['group_id', 'actor_id', 'role', 'status'])]
 class GroupMembership extends Model
 {
     use HasFactory;
 
-    public function group(): BelongsTo { return $this->belongsTo(Group::class); }
-    public function actor(): BelongsTo { return $this->belongsTo(Actor::class); }
-    public function groupRole(): BelongsTo { return $this->belongsTo(GroupRole::class); }
+    /** @return BelongsTo<Group, $this> */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    /** @return BelongsTo<Actor, $this> */
+    public function actor(): BelongsTo
+    {
+        return $this->belongsTo(Actor::class);
+    }
 }

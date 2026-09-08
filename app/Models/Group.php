@@ -13,8 +13,21 @@ class Group extends Model
 {
     use HasFactory;
 
-    public function creator(): BelongsTo { return $this->belongsTo(Actor::class, 'created_by_actor_id'); }
-    public function memberships(): HasMany { return $this->hasMany(GroupMembership::class); }
-    public function invitations(): HasMany { return $this->hasMany(GroupInvitation::class); }
-    public function roles(): HasMany { return $this->hasMany(GroupRole::class); }
+    /** @return BelongsTo<Actor, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(Actor::class, 'created_by_actor_id');
+    }
+
+    /** @return HasMany<GroupMembership, $this> */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(GroupMembership::class);
+    }
+
+    /** @return HasMany<GroupInvitation, $this> */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(GroupInvitation::class);
+    }
 }
