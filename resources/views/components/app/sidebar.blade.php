@@ -9,6 +9,9 @@
         @if (auth()->check() && app(\App\Actions\Administration\GlobalAccess::class)->can(auth()->user(), 'actors.manage'))
             <flux:sidebar.item :href="route('actors.index')" :current="request()->routeIs('actors.*')" icon="users">Actors</flux:sidebar.item>
         @endif
+        @if (auth()->check() && app(\App\Actions\Administration\GlobalAccess::class)->can(auth()->user(), 'users.manage'))
+            <flux:sidebar.item :href="route('users.index')" :current="request()->routeIs('users.*')" icon="user-group">Users</flux:sidebar.item>
+        @endif
         @if (auth()->check() && app(\App\Actions\Administration\GlobalAccess::class)->can(auth()->user(), 'rbac.manage'))
             <flux:sidebar.item :href="route('administration.index')" :current="request()->routeIs('administration.*')" icon="cog-6-tooth">Administration</flux:sidebar.item>
         @endif

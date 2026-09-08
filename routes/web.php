@@ -7,6 +7,7 @@ use App\Livewire\Actors\Edit;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
 use App\Livewire\Administration\Index as AdministrationIndex;
+use App\Livewire\Administration\Users as AdministrationUsers;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -47,5 +48,6 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
     });
 
+    Route::livewire('/users', AdministrationUsers::class)->middleware('global.permission:users.manage')->name('users.index');
     Route::livewire('/administration', AdministrationIndex::class)->middleware('global.permission:rbac.manage')->name('administration.index');
 });
