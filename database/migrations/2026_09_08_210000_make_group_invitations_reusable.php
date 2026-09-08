@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('accepted_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->timestamp('accepted_at');
             $table->timestamps();
-            $table->unique(['group_invitation_id', 'accepted_by_actor_id']);
+            $table->unique(['group_invitation_id', 'accepted_by_actor_id'], 'invitation_actor_unique');
         });
     }
 
