@@ -30,4 +30,10 @@ class Group extends Model
     {
         return $this->hasMany(GroupInvitation::class);
     }
+
+    /** @return HasMany<Story, $this> */
+    public function stories(): HasMany
+    {
+        return $this->hasMany(Story::class);
+    }
 }

@@ -45,7 +45,11 @@ class GroupInvitationController
 
     private function findUsableInvitation(string $token): GroupInvitation
     {
-        return GroupInvitation::query()->with('group')->where('token', $token)->whereNull('revoked_at')->firstOrFail(fn (): bool => false);
+        return GroupInvitation::query()->with('group')->where('token', $token)->whereNull('revoked_at')->where(function ($query): void {
+            $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+        })->where(function ($query): void {
+            $query->whereNull('max_uses')->orWhereColumn('uses_count', '<', 'max_uses');
+        })->firstOrFail();
     }
 
     private function isUsable(GroupInvitation $invitation): bool
