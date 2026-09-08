@@ -16,7 +16,7 @@ class GroupInvitationController
         $invitation = $this->findUsableInvitation($token);
         $request->session()->put('url.intended', route('invitations.show', ['token' => $invitation->token]));
 
-        return view('invitations.show', ['invitation' => $invitation]);
+        return view('invitations.show', compact('invitation'));
     }
 
     public function accept(Request $request, string $token, GroupRoleProvisioner $groupRoles): RedirectResponse
@@ -29,27 +29,27 @@ class GroupInvitationController
         }
 
         DB::transaction(function () use ($invitation, $actor, $groupRoles): void {
+            $invitation = GroupInvitation::query()->with('group')->lockForUpdate()->findOrFail($invitation->id);
+            abort_unless($this->isUsable($invitation), 404);
+            $acceptance = $invitation->acceptances()->firstOrCreate(['accepted_by_actor_id' => $actor->id], ['accepted_at' => now()]);
+            if ($acceptance->wasRecentlyCreated) {
+                $invitation->increment('uses_count');
+            }
             $roles = $groupRoles->provision($invitation->group);
             $groupRoles->assign($actor, $invitation->group, $roles['member']);
-            $invitation->group->memberships()->firstOrCreate(
-                ['actor_id' => $actor->id],
-                ['role' => 'member', 'status' => 'active'],
-            );
-            $invitation->update(['accepted_at' => now(), 'accepted_by_actor_id' => $actor->id]);
+            $invitation->group->memberships()->firstOrCreate(['actor_id' => $actor->id], ['status' => 'active']);
         });
 
-        return to_route('groups.index')->with('status', "You joined {$invitation->group->name} as a Member.");
+        return to_route('groups.show', $invitation->group)->with('status', "You joined {$invitation->group->name} as a Member.");
     }
 
     private function findUsableInvitation(string $token): GroupInvitation
     {
-        return GroupInvitation::query()
-            ->with('group')
-            ->where('token', $token)
-            ->whereNull('accepted_at')
-            ->where(function ($query): void {
-                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->firstOrFail();
+        return GroupInvitation::query()->with('group')->where('token', $token)->whereNull('revoked_at')->firstOrFail(fn (): bool => false);
+    }
+
+    private function isUsable(GroupInvitation $invitation): bool
+    {
+        return $invitation->revoked_at === null && ($invitation->expires_at === null || $invitation->expires_at->isFuture()) && ($invitation->max_uses === null || $invitation->uses_count < $invitation->max_uses);
     }
 }
