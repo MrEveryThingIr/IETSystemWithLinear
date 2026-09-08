@@ -16,7 +16,7 @@ class Index extends Component
     public string $userId = '';
     public bool $fullAdministration = false;
 
-    /** @var array<string, bool> */
+    /** @var list<string> */
     public array $permissions = [];
 
     public function updatedUserId(GlobalAccess $access): void
@@ -25,14 +25,14 @@ class Index extends Component
         if ($this->userId !== '') {
             $user = User::findOrFail($this->userId);
             $this->fullAdministration = $access->isFullAdministrator($user);
-            $this->permissions = array_fill_keys($access->permissionsFor($user), true);
+            $this->permissions = $access->permissionsFor($user);
         }
     }
 
     public function save(GlobalAccess $access): void
     {
         $data = $this->validate(['userId' => ['required', 'integer', 'exists:users,id']]);
-        $access->sync(User::findOrFail($data['userId']), $this->fullAdministration, array_keys(array_filter($this->permissions)));
+        $access->sync(User::findOrFail($data['userId']), $this->fullAdministration, $this->permissions);
         session()->flash('status', 'Global access updated.');
     }
 

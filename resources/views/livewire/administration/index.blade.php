@@ -21,7 +21,7 @@
                 <fieldset @class(['space-y-3', 'opacity-50' => $fullAdministration]) @disabled($fullAdministration)>
                     <flux:heading size="sm">Partial permissions</flux:heading>
                     @foreach ($permissionNames as $permissionName)
-                        <flux:checkbox wire:model="permissions.{{ $permissionName }}" :label="$permissionName" />
+                        <flux:checkbox wire:model="permissions" :value="$permissionName" :label="$permissionName" />
                     @endforeach
                 </fieldset>
                 <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
