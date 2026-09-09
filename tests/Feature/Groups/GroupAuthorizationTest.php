@@ -7,12 +7,31 @@ use App\Livewire\Groups\Show;
 use App\Models\Actor;
 use App\Models\Group;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class GroupAuthorizationTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    public function test_group_mutation_rechecks_active_user_and_actor_after_mount(): void
+    {
+        $owner = Actor::factory()->create();
+        $group = $this->createOwnedGroup($owner);
+
+        $component = Livewire::actingAs($owner->user)
+            ->test(Show::class, ['group' => $group])
+            ->set('name', 'Unauthorized change');
+
+        $owner->user()->update(['status' => 'suspended']);
+
+        $this->assertFalse(Gate::forUser($owner->user)->allows('update', $group));
+
+        $component->call('save')->assertStatus(403);
+
+        $this->assertSame('First group', $group->refresh()->name);
+    }
 
     public function test_group_mutation_rechecks_active_membership_after_mount(): void
     {
@@ -25,6 +44,8 @@ class GroupAuthorizationTest extends TestCase
             ->set('name', 'Unauthorized change');
 
         $membership->update(['status' => 'removed']);
+
+        $this->assertFalse(Gate::forUser($owner->user)->allows('update', $group));
 
         $component->call('save')->assertStatus(403);
 
@@ -47,6 +68,11 @@ class GroupAuthorizationTest extends TestCase
         $editor = $roles->createRole($firstGroup, 'Editor', ['participate', 'manage_group']);
         $roles->assign($member, $firstGroup, $editor);
         $roles->assign($member, $secondGroup, $roles->provision($secondGroup)['member']);
+
+        $this->assertTrue($roles->hasPermission($member, $firstGroup, 'manage_group'));
+        $this->assertFalse($roles->hasPermission($member, $secondGroup, 'manage_group'));
+        $this->assertTrue(Gate::forUser($member->user)->allows('update', $firstGroup));
+        $this->assertFalse(Gate::forUser($member->user)->allows('update', $secondGroup));
 
         Livewire::actingAs($member->user)
             ->test(Show::class, ['group' => $firstGroup])
