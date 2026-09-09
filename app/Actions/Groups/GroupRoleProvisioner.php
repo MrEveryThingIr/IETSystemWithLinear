@@ -26,7 +26,6 @@ class GroupRoleProvisioner
     public function seedPermissions(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-
         foreach (self::permissionNames() as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
@@ -38,8 +37,8 @@ class GroupRoleProvisioner
         $this->seedPermissions();
 
         return $this->withinGroup($group, function (): array {
-            $owner = Role::findOrCreate('Owner', 'web');
-            $member = Role::findOrCreate('Member', 'web');
+            $owner = $this->findOrCreateRole('Owner');
+            $member = $this->findOrCreateRole('Member');
             $owner->syncPermissions(self::OWNER_PERMISSIONS);
             $member->syncPermissions(self::MEMBER_PERMISSIONS);
 
@@ -50,8 +49,6 @@ class GroupRoleProvisioner
     /** @return Collection<int, Role> */
     public function roles(Group $group): Collection
     {
-        $this->provision($group);
-
         return $this->withinGroup($group, fn (): Collection => Role::query()->where('group_id', $group->id)->with('permissions')->orderBy('name')->get());
     }
 
@@ -66,6 +63,11 @@ class GroupRoleProvisioner
 
         return $this->withinGroup($group, function () use ($name, $permissions): Role {
             $role = Role::create(['name' => $name, 'guard_name' => 'web']);
+
+            if (! $role instanceof Role) {
+                throw new \LogicException('The configured permission role model must extend '.Role::class.'.');
+            }
+
             $role->syncPermissions($permissions);
 
             return $role;
@@ -92,19 +94,42 @@ class GroupRoleProvisioner
     public function assign(Actor $actor, Group $group, Role $role): void
     {
         $this->withinGroup($group, function () use ($actor, $group, $role): void {
-            abort_unless((int) $role->group_id === (int) $group->id, 422);
+            abort_unless((int) $role->getAttribute('group_id') === (int) $group->id, 422);
             $actor->syncRoles([$role]);
         });
     }
 
     public function hasRole(Actor $actor, Group $group, string $role): bool
     {
-        return $this->withinGroup($group, fn (): bool => $actor->hasRole($role));
+        return $this->withinGroup($group, function () use ($actor, $role): bool {
+            $this->forgetLoadedAuthorizationRelations($actor);
+
+            return $actor->hasRole($role);
+        });
+    }
+
+    public function hasPermission(Actor $actor, Group $group, string $permission): bool
+    {
+        return $this->withinGroup($group, function () use ($actor, $permission): bool {
+            $this->forgetLoadedAuthorizationRelations($actor);
+
+            return $actor->hasPermissionTo($permission);
+        });
     }
 
     public function roleName(Actor $actor, Group $group): ?string
     {
-        return $this->withinGroup($group, fn (): ?string => $actor->getRoleNames()->first());
+        return $this->withinGroup($group, function () use ($actor): ?string {
+            $this->forgetLoadedAuthorizationRelations($actor);
+
+            return $actor->getRoleNames()->first();
+        });
+    }
+
+    private function forgetLoadedAuthorizationRelations(Actor $actor): void
+    {
+        $actor->unsetRelation('roles');
+        $actor->unsetRelation('permissions');
     }
 
     private function assertManagedRole(Role $role): void
@@ -112,8 +137,21 @@ class GroupRoleProvisioner
         abort_if(in_array($role->name, ['Owner', 'Member'], true), 422, 'Built-in roles cannot be changed.');
     }
 
-    /** @template T
-     * @param callable(): T $callback
+    private function findOrCreateRole(string $name): Role
+    {
+        $role = Role::findOrCreate($name, 'web');
+
+        if (! $role instanceof Role) {
+            throw new \LogicException('The configured permission role model must extend '.Role::class.'.');
+        }
+
+        return $role;
+    }
+
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $callback
      * @return T
      */
     private function withinGroup(Group $group, callable $callback): mixed
@@ -121,7 +159,6 @@ class GroupRoleProvisioner
         $registrar = app(PermissionRegistrar::class);
         $currentGroupId = $registrar->getPermissionsTeamId();
         $registrar->setPermissionsTeamId($group->getKey());
-
         try {
             return $callback();
         } finally {
