@@ -4,6 +4,7 @@ namespace App\Actions\Groups;
 
 use App\Models\Actor;
 use App\Models\Group;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -46,17 +47,17 @@ class GroupRoleProvisioner
         });
     }
 
-    /** @return \Illuminate\Support\Collection<int, Role> */
-    public function roles(Group $group): \Illuminate\Support\Collection
+    /** @return Collection<int, Role> */
+    public function roles(Group $group): Collection
     {
         $this->provision($group);
 
-        return $this->withinGroup($group, fn (): \Illuminate\Support\Collection => Role::query()->orderBy('name')->get());
+        return $this->withinGroup($group, fn (): Collection => Role::query()->where('group_id', $group->id)->with('permissions')->orderBy('name')->get());
     }
 
     public function role(Group $group, int $roleId): Role
     {
-        return $this->withinGroup($group, fn (): Role => Role::query()->findOrFail($roleId));
+        return $this->withinGroup($group, fn (): Role => Role::query()->where('group_id', $group->id)->with('permissions')->findOrFail($roleId));
     }
 
     public function createRole(Group $group, string $name, array $permissions): Role
@@ -90,7 +91,7 @@ class GroupRoleProvisioner
 
     public function assign(Actor $actor, Group $group, Role $role): void
     {
-        $this->withinGroup($group, function () use ($actor, $role): void {
+        $this->withinGroup($group, function () use ($actor, $group, $role): void {
             abort_unless((int) $role->group_id === (int) $group->id, 422);
             $actor->syncRoles([$role]);
         });
