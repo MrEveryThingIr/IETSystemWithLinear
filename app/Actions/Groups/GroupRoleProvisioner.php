@@ -17,6 +17,8 @@ class GroupRoleProvisioner
     /** @var list<string> */
     private const MEMBER_PERMISSIONS = ['participate'];
 
+    public function __construct(private GroupOwnerIntegrity $ownerIntegrity) {}
+
     /** @return list<string> */
     public static function permissionNames(): array
     {
@@ -93,9 +95,11 @@ class GroupRoleProvisioner
 
     public function assign(Actor $actor, Group $group, Role $role): void
     {
-        $this->withinGroup($group, function () use ($actor, $group, $role): void {
-            abort_unless((int) $role->getAttribute('group_id') === (int) $group->id, 422);
-            $actor->syncRoles([$role]);
+        $this->ownerIntegrity->execute($group, function () use ($actor, $group, $role): void {
+            $this->withinGroup($group, function () use ($actor, $group, $role): void {
+                abort_unless((int) $role->getAttribute('group_id') === (int) $group->id, 422);
+                $actor->syncRoles([$role]);
+            });
         });
     }
 

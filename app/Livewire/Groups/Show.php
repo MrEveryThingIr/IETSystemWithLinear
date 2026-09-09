@@ -3,6 +3,8 @@
 namespace App\Livewire\Groups;
 
 use App\Actions\Groups\GroupRoleProvisioner;
+use App\Actions\Groups\RemoveGroupMember;
+use App\Exceptions\CannotLeaveGroupWithoutOwner;
 use App\Models\Group;
 use App\Models\GroupInvitation;
 use App\Models\GroupMembership;
@@ -115,27 +117,36 @@ class Show extends Component
         Gate::authorize('approveRoleChanges', $this->group);
         $request = GroupRoleChangeRequest::query()->where('group_id', $this->group->id)->where('status', 'pending')->with(['membership.actor', 'requestedRole'])->findOrFail($requestId);
         abort_unless($request->membership->status === 'active' && (int) $request->requestedRole->getAttribute('group_id') === (int) $this->group->id, 422);
-        DB::transaction(function () use ($request, $approved, $groupRoles): void {
-            if ($approved) {
-                $groupRoles->assign($request->membership->actor, $this->group, $request->requestedRole);
-            }
+        try {
+            DB::transaction(function () use ($request, $approved, $groupRoles): void {
+                if ($approved) {
+                    $groupRoles->assign($request->membership->actor, $this->group, $request->requestedRole);
+                }
 
-            $request->update(['status' => $approved ? 'approved' : 'rejected', 'reviewed_by_actor_id' => auth()->user()->actor->id, 'reviewed_at' => now()]);
-        });
-        session()->flash('status', $approved ? 'Role change approved.' : 'Role change rejected.');
-    }
-
-    public function removeMember(int $membershipId, GroupRoleProvisioner $groupRoles): void
-    {
-        Gate::authorize('manageMembers', $this->group);
-        $membership = $this->group->memberships()->with('actor')->findOrFail($membershipId);
-        if ($groupRoles->hasRole($membership->actor, $this->group, 'Owner') && $this->ownerCount($groupRoles) === 1) {
-            session()->flash('error', 'Add another Owner before removing this member.');
+                $request->update(['status' => $approved ? 'approved' : 'rejected', 'reviewed_by_actor_id' => auth()->user()->actor->id, 'reviewed_at' => now()]);
+            });
+        } catch (CannotLeaveGroupWithoutOwner $exception) {
+            session()->flash('error', $exception->getMessage());
 
             return;
         }
 
-        $membership->update(['status' => 'removed']);
+        session()->flash('status', $approved ? 'Role change approved.' : 'Role change rejected.');
+    }
+
+    public function removeMember(int $membershipId, RemoveGroupMember $removeGroupMember): void
+    {
+        Gate::authorize('manageMembers', $this->group);
+        $membership = $this->group->memberships()->findOrFail($membershipId);
+
+        try {
+            $removeGroupMember->handle($membership);
+        } catch (CannotLeaveGroupWithoutOwner $exception) {
+            session()->flash('error', $exception->getMessage());
+
+            return;
+        }
+
         session()->flash('status', 'Member removed.');
     }
 
@@ -150,10 +161,5 @@ class Show extends Component
         $permissionNames = GroupRoleProvisioner::permissionNames();
 
         return view('livewire.groups.show', compact('memberships', 'roles', 'isOwner', 'availableRoles', 'pendingRequests', 'permissionNames'));
-    }
-
-    private function ownerCount(GroupRoleProvisioner $groupRoles): int
-    {
-        return $this->group->memberships()->with('actor')->where('status', 'active')->get()->filter(fn (GroupMembership $membership): bool => $groupRoles->hasRole($membership->actor, $this->group, 'Owner'))->count();
     }
 }

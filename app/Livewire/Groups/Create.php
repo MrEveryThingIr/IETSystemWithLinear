@@ -15,6 +15,7 @@ use Livewire\Component;
 class Create extends Component
 {
     public string $name = '';
+
     public string $description = '';
 
     public function save(GroupRoleProvisioner $groupRoles): void
@@ -24,8 +25,9 @@ class Create extends Component
             $actor = auth()->user()->actor;
             $group = Group::create(['name' => $data['name'], 'description' => $data['description'] ?: null, 'created_by_actor_id' => $actor->id]);
             $roles = $groupRoles->provision($group);
-            $groupRoles->assign($actor, $group, $roles['owner']);
             $group->memberships()->create(['actor_id' => $actor->id, 'status' => 'active']);
+            $groupRoles->assign($actor, $group, $roles['owner']);
+
             return $group;
         });
         $this->redirectRoute('groups.show', $group);
