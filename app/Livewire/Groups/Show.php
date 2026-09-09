@@ -13,7 +13,6 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Permission\Models\Role;
 
 #[Layout('layouts.app')]
 #[Title('Group')]
@@ -97,7 +96,6 @@ class Show extends Component
         $roleId = (int) ($this->requestedRoles[$membershipId] ?? 0);
         abort_if($roleId === 0, 422, 'Choose a role first.');
         $role = $groupRoles->role($this->group, $roleId);
-        abort_if(in_array($role->name, ['Owner'], true), 422, 'Owner assignments require an existing Owner to approve the request.');
         GroupRoleChangeRequest::updateOrCreate(['membership_id' => $membership->id, 'status' => 'pending'], ['group_id' => $this->group->id, 'requested_role_id' => $role->id]);
         session()->flash('status', 'Role change requested.');
     }
@@ -122,6 +120,7 @@ class Show extends Component
         $membership = $this->group->memberships()->with('actor')->findOrFail($membershipId);
         if ($groupRoles->hasRole($membership->actor, $this->group, 'Owner') && $this->ownerCount($groupRoles) === 1) {
             session()->flash('error', 'Add another Owner before removing this member.');
+
             return;
         }
         $membership->update(['status' => 'removed']);
