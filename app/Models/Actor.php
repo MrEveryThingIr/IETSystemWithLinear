@@ -13,9 +13,30 @@ class Actor extends Model
 {
     /** @use HasFactory<ActorFactory> */
     use HasFactory, HasRoles;
+
     protected string $guard_name = 'web';
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function groupMemberships(): HasMany { return $this->hasMany(GroupMembership::class); }
-    public function admissions(): HasMany { return $this->hasMany(Admission::class, 'candidate_actor_id'); }
-    public function createdGroups(): HasMany { return $this->hasMany(Group::class, 'created_by_actor_id'); }
+
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /** @return HasMany<GroupMembership, $this> */
+    public function groupMemberships(): HasMany
+    {
+        return $this->hasMany(GroupMembership::class);
+    }
+
+    /** @return HasMany<Admission, $this> */
+    public function admissions(): HasMany
+    {
+        return $this->hasMany(Admission::class, 'candidate_actor_id');
+    }
+
+    /** @return HasMany<Group, $this> */
+    public function createdGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'created_by_actor_id');
+    }
 }

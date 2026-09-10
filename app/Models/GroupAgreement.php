@@ -10,6 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['group_id', 'name', 'required_for_admission'])]
 class GroupAgreement extends Model
 {
-    public function group(): BelongsTo { return $this->belongsTo(Group::class); }
-    public function versions(): HasMany { return $this->hasMany(GroupAgreementVersion::class); }
+    /** @return BelongsTo<Group, $this> */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    /** @return HasMany<GroupAgreementVersion, $this> */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(GroupAgreementVersion::class);
+    }
 }
