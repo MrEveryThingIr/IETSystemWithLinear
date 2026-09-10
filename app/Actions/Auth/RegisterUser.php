@@ -23,6 +23,7 @@ class RegisterUser
             $user = User::create([
                 'username' => $data['username'],
                 'email' => $data['email'],
+                'locale' => app()->getLocale(),
                 'password' => $data['password'],
             ]);
 

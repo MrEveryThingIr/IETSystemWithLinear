@@ -56,7 +56,7 @@ class Show extends Component
         Gate::authorize('update', $this->group);
         $data = $this->validate(['name' => ['required', 'string', 'max:120'], 'description' => ['nullable', 'string', 'max:2000']]);
         $this->group->update(['name' => $data['name'], 'description' => $data['description'] ?: null]);
-        session()->flash('status', 'Group details updated.');
+        session()->flash('status', __('ui.messages.group_updated'));
     }
 
     public function createRole(GroupRoleProvisioner $groupRoles): void
@@ -65,7 +65,7 @@ class Show extends Component
         $data = $this->validate(['newRoleName' => ['required', 'string', 'max:80'], 'newRolePermissions' => ['array'], 'newRolePermissions.*' => ['string', 'in:'.implode(',', GroupRoleProvisioner::permissionNames())]]);
         $groupRoles->createRole($this->group, $data['newRoleName'], $data['newRolePermissions']);
         $this->reset('newRoleName', 'newRolePermissions');
-        session()->flash('status', 'Role created.');
+        session()->flash('status', __('ui.messages.role_created'));
     }
 
     public function editRole(int $roleId, GroupRoleProvisioner $groupRoles): void
@@ -84,14 +84,14 @@ class Show extends Component
         $data = $this->validate(['editingRoleId' => ['required', 'integer'], 'editingRoleName' => ['required', 'string', 'max:80'], 'editingRolePermissions' => ['array'], 'editingRolePermissions.*' => ['string', 'in:'.implode(',', GroupRoleProvisioner::permissionNames())]]);
         $groupRoles->updateRole($this->group, $groupRoles->role($this->group, $data['editingRoleId']), $data['editingRoleName'], $data['editingRolePermissions']);
         $this->reset('editingRoleId', 'editingRoleName', 'editingRolePermissions');
-        session()->flash('status', 'Role updated.');
+        session()->flash('status', __('ui.messages.role_updated'));
     }
 
     public function deleteRole(int $roleId, GroupRoleProvisioner $groupRoles): void
     {
         Gate::authorize('manageRoles', $this->group);
         $groupRoles->deleteRole($this->group, $groupRoles->role($this->group, $roleId));
-        session()->flash('status', 'Role deleted.');
+        session()->flash('status', __('ui.messages.role_deleted'));
     }
 
     public function requestRole(int $membershipId, GroupRoleProvisioner $groupRoles): void
@@ -103,7 +103,7 @@ class Show extends Component
         abort_if($roleId === 0, 422, 'Choose a role first.');
         $role = $groupRoles->role($this->group, $roleId);
         GroupRoleChangeRequest::updateOrCreate(['membership_id' => $membership->id, 'status' => 'pending'], ['group_id' => $this->group->id, 'requested_role_id' => $role->id]);
-        session()->flash('status', 'Role change requested.');
+        session()->flash('status', __('ui.messages.role_change_requested'));
     }
 
     public function reviewRoleRequest(int $requestId, bool $approved, GroupRoleProvisioner $groupRoles): void
@@ -123,7 +123,7 @@ class Show extends Component
             session()->flash('error', $exception->getMessage());
 
             return;
-        } session()->flash('status', $approved ? 'Role change approved.' : 'Role change rejected.');
+        } session()->flash('status', $approved ? __('ui.messages.role_change_approved') : __('ui.messages.role_change_rejected'));
     }
 
     public function removeMember(int $membershipId, RemoveGroupMember $removeGroupMember): void
@@ -136,7 +136,7 @@ class Show extends Component
             session()->flash('error', $exception->getMessage());
 
             return;
-        } session()->flash('status', 'Member removed.');
+        } session()->flash('status', __('ui.messages.member_removed'));
     }
 
     public function render(GroupRoleProvisioner $groupRoles): View

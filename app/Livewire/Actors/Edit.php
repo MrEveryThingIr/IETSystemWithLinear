@@ -44,10 +44,10 @@ class Edit extends Component
         try {
             $actor->save();
         } catch (UniqueConstraintViolationException) {
-            throw ValidationException::withMessages(['userId' => 'This user already has an Actor.']);
+            throw ValidationException::withMessages(['userId' => __('ui.messages.user_has_actor')]);
         }
 
-        session()->flash('status', 'Actor updated.');
+        session()->flash('status', __('ui.messages.actor_updated'));
         $this->redirectRoute('actors.show', ['actor' => $actor->id]);
     }
 

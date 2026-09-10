@@ -21,7 +21,7 @@ class ManageAdmission
 
             abort_unless((int) $lockedAdmission->candidate_actor_id === (int) $actor->id, 403);
             if (in_array($lockedAdmission->status, ['finalized', 'rejected', 'cancelled'], true)) {
-                throw ValidationException::withMessages(['agreements' => 'Agreements cannot be accepted for a closed admission.']);
+                throw ValidationException::withMessages(['agreements' => __('ui.messages.closed_admission_agreement')]);
             }
             abort_unless((int) $lockedVersion->agreement->group_id === (int) $lockedAdmission->group_id && $lockedVersion->agreement->required_for_admission && $lockedVersion->isActiveAt(), 422);
 

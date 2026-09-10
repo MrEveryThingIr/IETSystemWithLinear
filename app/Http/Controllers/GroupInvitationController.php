@@ -24,6 +24,6 @@ class GroupInvitationController
     {
         $admission = $redemption->execute($token, $request->user()->actor, $request->user()->email);
 
-        return to_route('admissions.show', $admission)->with('status', 'Your admission application has been created.');
+        return to_route('admissions.show', $admission)->with('status', __('ui.messages.admission_created'));
     }
 }

@@ -63,7 +63,7 @@ class Admission extends Model
     {
         if (! in_array($status, self::TRANSITIONS[$this->status] ?? [], true)) {
             throw ValidationException::withMessages([
-                'admission' => 'That admission action is no longer available. Refresh the page and try again.',
+                'admission' => __('ui.messages.admission_action_unavailable'),
             ]);
         }
         $timestamps = match ($status) {
