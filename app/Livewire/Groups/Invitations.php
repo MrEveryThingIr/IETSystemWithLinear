@@ -33,6 +33,7 @@ class Invitations extends Component
         $actor = $this->actor();
         GroupInvitation::create(['group_id' => $this->group->id, 'invited_by_actor_id' => $actor->id, 'email' => $data['email'] ?: null, 'token' => Str::random(48), 'expires_at' => now()->addDays(14), 'max_uses' => $data['maxUses'], 'uses_count' => 0]);
         $this->reset('email');
+        session()->flash('status', 'Invitation created. It will remain available in this list until revoked or expired.');
     }
 
     public function revoke(int $id, RevokeGroupInvitation $revoker): void
@@ -42,7 +43,14 @@ class Invitations extends Component
 
     public function render(): View
     {
-        return view('livewire.groups.invitations', ['invitations' => GroupInvitation::query()->where('group_id', $this->group->id)->latest()->get()]);
+        return view('livewire.groups.invitations', [
+            'invitations' => GroupInvitation::query()
+                ->with(['admissions.candidate.user'])
+                ->withCount('acceptances')
+                ->where('group_id', $this->group->id)
+                ->latest()
+                ->get(),
+        ]);
     }
 
     private function actor(): Actor

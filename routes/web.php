@@ -25,7 +25,8 @@ Route::get('/', fn () => view('welcome'));
 Route::get('/invitations/{token}', [GroupInvitationController::class, 'show'])->name('invitations.show');
 Route::post('/invitations/{token}/accept', [GroupInvitationController::class, 'accept'])->middleware(['auth', 'account.active', 'verified'])->name('invitations.accept');
 Route::middleware('guest')->group(function (): void {
-    Route::livewire('/register', Register::class)->name('register');
+    Route::livewire('/invitations/{token}/register', Register::class)->name('invitations.register');
+    Route::livewire('/invitations/{token}/login', Login::class)->name('invitations.login');
     Route::livewire('/login', Login::class)->name('login');
     Route::livewire('/forgot-password', ForgotPassword::class)->name('password.request');
     Route::livewire('/reset-password/{token}', ResetPassword::class)->name('password.reset');

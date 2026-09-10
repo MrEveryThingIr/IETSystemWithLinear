@@ -16,7 +16,10 @@
             <form wire:submit="save" class="space-y-4">
                 <flux:input wire:model="name" label="Group name" />
                 <flux:textarea wire:model="description" label="Description" rows="3" />
-                <div class="flex flex-col gap-2 sm:flex-row"><flux:button type="submit" variant="primary">Save details</flux:button><flux:button wire:click="createInvitation" variant="ghost">Create invitation link</flux:button></div>
+                <div class="flex flex-col gap-2 sm:flex-row">
+                    <flux:button type="submit" variant="primary">Save details</flux:button>
+                    <flux:button :href="route('groups.invitations', $group)" variant="ghost">Manage invitations</flux:button>
+                </div>
             </form>
         </flux:card>
 

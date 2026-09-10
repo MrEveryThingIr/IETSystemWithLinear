@@ -19,12 +19,28 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('group_role_change_requests', function (Blueprint $table): void {
-            $table->dropIndex(['group_id', 'membership_id', 'status']);
-            $table->dropColumn('review_locked_at');
-        });
-        Schema::table('group_invitations', function (Blueprint $table): void {
-            $table->dropIndex(['group_id', 'revoked_at', 'expires_at']);
-        });
+        if (Schema::hasIndex('group_role_change_requests', ['group_id', 'membership_id', 'status'])) {
+            Schema::table('group_role_change_requests', function (Blueprint $table): void {
+                $table->dropIndex(['group_id', 'membership_id', 'status']);
+            });
+        }
+
+        if (Schema::hasColumn('group_role_change_requests', 'review_locked_at')) {
+            Schema::table('group_role_change_requests', function (Blueprint $table): void {
+                $table->dropColumn('review_locked_at');
+            });
+        }
+
+        if (! Schema::hasIndex('group_invitations', 'group_invitations_group_id_index')) {
+            Schema::table('group_invitations', function (Blueprint $table): void {
+                $table->index('group_id');
+            });
+        }
+
+        if (Schema::hasIndex('group_invitations', ['group_id', 'revoked_at', 'expires_at'])) {
+            Schema::table('group_invitations', function (Blueprint $table): void {
+                $table->dropIndex(['group_id', 'revoked_at', 'expires_at']);
+            });
+        }
     }
 };

@@ -94,9 +94,10 @@ class AuthenticationTest extends TestCase
     public function test_guest_pages_render_and_authenticated_users_are_redirected(): void
     {
         $this->withoutVite();
-        foreach (['/register', '/login', '/forgot-password', '/reset-password/example-token'] as $path) {
+        foreach (['/login', '/forgot-password', '/reset-password/example-token'] as $path) {
             $this->get($path)->assertOk();
         }
+        $this->get('/register')->assertNotFound();
         $this->actingAs(User::factory()->create())->get('/login')->assertRedirect(route('dashboard'));
     }
 

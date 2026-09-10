@@ -3,6 +3,8 @@
 namespace App\Livewire\Groups;
 
 use App\Actions\Groups\GroupRoleProvisioner;
+use App\Models\Admission;
+use App\Models\GroupInvitation;
 use App\Models\GroupMembership;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -18,7 +20,19 @@ class Index extends Component
         $actor = auth()->user()->actor;
         $memberships = GroupMembership::query()->with('group')->where('actor_id', $actor->id)->where('status', 'active')->latest()->get();
         $roles = $memberships->mapWithKeys(fn (GroupMembership $membership): array => [$membership->group_id => $groupRoles->roleName($actor, $membership->group) ?? 'Member']);
+        $receivedInvitations = Admission::query()
+            ->with(['group', 'sourceInvitation.inviter.user'])
+            ->where('candidate_actor_id', $actor->id)
+            ->whereNotNull('source_invitation_id')
+            ->latest()
+            ->get();
+        $sentInvitations = GroupInvitation::query()
+            ->with(['group', 'admissions.candidate.user'])
+            ->withCount('acceptances')
+            ->where('invited_by_actor_id', $actor->id)
+            ->latest()
+            ->get();
 
-        return view('livewire.groups.index', compact('memberships', 'roles'));
+        return view('livewire.groups.index', compact('memberships', 'roles', 'receivedInvitations', 'sentInvitations'));
     }
 }

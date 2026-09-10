@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 #[Fillable(['group_id', 'candidate_actor_id', 'source_invitation_id', 'status', 'submitted_at', 'approved_at', 'rejected_at', 'cancelled_at', 'decision_note'])]
 class Admission extends Model
@@ -27,26 +28,31 @@ class Admission extends Model
         });
     }
 
+    /** @return BelongsTo<Group, $this> */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
     }
 
+    /** @return BelongsTo<Actor, $this> */
     public function candidate(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'candidate_actor_id');
     }
 
+    /** @return BelongsTo<GroupInvitation, $this> */
     public function sourceInvitation(): BelongsTo
     {
         return $this->belongsTo(GroupInvitation::class, 'source_invitation_id');
     }
 
+    /** @return HasMany<AgreementAcceptance, $this> */
     public function acceptances(): HasMany
     {
         return $this->hasMany(AgreementAcceptance::class);
     }
 
+    /** @return HasMany<AdmissionEvent, $this> */
     public function events(): HasMany
     {
         return $this->hasMany(AdmissionEvent::class);
@@ -54,7 +60,11 @@ class Admission extends Model
 
     public function transitionTo(string $status, ?Actor $actor = null, ?string $note = null): void
     {
-        abort_unless(in_array($status, self::TRANSITIONS[$this->status] ?? [], true), 422, 'Invalid admission transition.');
+        if (! in_array($status, self::TRANSITIONS[$this->status] ?? [], true)) {
+            throw ValidationException::withMessages([
+                'admission' => 'That admission action is no longer available. Refresh the page and try again.',
+            ]);
+        }
         $timestamps = match ($status) {
             'submitted' => ['submitted_at' => now()], 'approved' => ['approved_at' => now()], 'rejected' => ['rejected_at' => now()], 'cancelled' => ['cancelled_at' => now()], default => []
         };

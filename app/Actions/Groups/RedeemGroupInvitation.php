@@ -11,6 +11,21 @@ use Illuminate\Validation\ValidationException;
 
 class RedeemGroupInvitation
 {
+    public function preview(string $token): GroupInvitation
+    {
+        return GroupInvitation::query()
+            ->with(['group', 'inviter.user'])
+            ->where('token', $token)
+            ->whereNull('revoked_at')
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->where(function ($query): void {
+                $query->whereNull('max_uses')->orWhereColumn('uses_count', '<', 'max_uses');
+            })
+            ->firstOrFail();
+    }
+
     public function execute(string $token, Actor $actor, string $email): Admission
     {
         return DB::transaction(function () use ($token, $actor, $email): Admission {

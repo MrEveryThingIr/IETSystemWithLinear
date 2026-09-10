@@ -43,7 +43,10 @@ return new class extends Migration
             $table->foreignId('created_by_actor_id')->nullable()->constrained('actors')->nullOnDelete();
             $table->timestamps();
             $table->unique(['group_agreement_id', 'version']);
-            $table->index(['status', 'effective_from', 'effective_until']);
+            $table->index(
+                ['status', 'effective_from', 'effective_until'],
+                'agreement_versions_effective_period_index',
+            );
         });
 
         Schema::create('agreement_acceptances', function (Blueprint $table): void {
@@ -54,7 +57,10 @@ return new class extends Migration
             $table->timestamp('accepted_at');
             $table->string('evidence_hash', 64)->nullable();
             $table->timestamps();
-            $table->unique(['admission_id', 'group_agreement_version_id']);
+            $table->unique(
+                ['admission_id', 'group_agreement_version_id'],
+                'agreement_acceptances_admission_version_unique',
+            );
         });
 
         Schema::create('admission_events', function (Blueprint $table): void {

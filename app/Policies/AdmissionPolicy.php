@@ -14,6 +14,6 @@ class AdmissionPolicy
 
     public function update(User $user, Admission $admission): bool
     {
-        return $this->view($user, $admission);
+        return $user->status === 'active' && (int) $user->actor?->id === (int) $admission->candidate_actor_id;
     }
 }

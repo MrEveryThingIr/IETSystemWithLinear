@@ -18,21 +18,25 @@ class GroupInvitation extends Model
         return ['expires_at' => 'datetime', 'revoked_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Group, $this> */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
     }
 
+    /** @return BelongsTo<Actor, $this> */
     public function inviter(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'invited_by_actor_id');
     }
 
+    /** @return HasMany<GroupInvitationAcceptance, $this> */
     public function acceptances(): HasMany
     {
         return $this->hasMany(GroupInvitationAcceptance::class);
     }
 
+    /** @return HasMany<Admission, $this> */
     public function admissions(): HasMany
     {
         return $this->hasMany(Admission::class, 'source_invitation_id');

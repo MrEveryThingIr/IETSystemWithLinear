@@ -79,7 +79,7 @@ class ManageGroupAgreement
                 $this->event($agreement, $version, null, 'agreement.revision.activated', ['superseded_version_id' => $active?->id]);
             }
 
-return $versions->count();
+            return $versions->count();
         });
     }
 
@@ -99,10 +99,22 @@ return $versions->count();
                 $this->event($this->agreementForVersion($version), $version, $actor, 'agreement.membership_accepted', ['membership_id' => $membership->id, 'acceptance_id' => $acceptance->id, 'evidence_hash' => $acceptance->evidence_hash]);
             }
 
-return $acceptance;
+            return $acceptance;
         });
     }
 
+    /**
+     * @param  string|list<string>  $from
+     * @param  array<string, mixed>  $metadata
+     * @param  array{
+     *     decision_note?: string,
+     *     approved_by_actor_id?: int,
+     *     approved_at?: \DateTimeInterface,
+     *     effective_from?: \DateTimeInterface,
+     *     effective_until?: \DateTimeInterface|null,
+     *     published_at?: \DateTimeInterface
+     * }  $attributes
+     */
     private function transition(GroupAgreementVersion $version, Actor $actor, string|array $from, string $to, string $event, array $metadata = [], array $attributes = []): void
     {
         DB::transaction(function () use ($version, $actor, $from, $to, $event, $metadata, $attributes): void { /** @var GroupAgreementVersion $version */ $version = GroupAgreementVersion::query()->lockForUpdate()->findOrFail($version->id);

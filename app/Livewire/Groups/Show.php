@@ -7,14 +7,12 @@ use App\Actions\Groups\RemoveGroupMember;
 use App\Exceptions\CannotLeaveGroupWithoutOwner;
 use App\Models\Actor;
 use App\Models\Group;
-use App\Models\GroupInvitation;
 use App\Models\GroupMembership;
 use App\Models\GroupRoleChangeRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -58,14 +56,6 @@ class Show extends Component
         $data = $this->validate(['name' => ['required', 'string', 'max:120'], 'description' => ['nullable', 'string', 'max:2000']]);
         $this->group->update(['name' => $data['name'], 'description' => $data['description'] ?: null]);
         session()->flash('status', 'Group details updated.');
-    }
-
-    public function createInvitation(GroupRoleProvisioner $groupRoles): void
-    {
-        Gate::authorize('createInvitation', $this->group);
-        $actor = $this->actor();
-        $invitation = GroupInvitation::create(['group_id' => $this->group->id, 'invited_by_actor_id' => $actor->id, 'token' => Str::random(48), 'expires_at' => now()->addDays(14), 'max_uses' => 100]);
-        session()->flash('status', 'Invitation link: '.route('invitations.show', $invitation->token));
     }
 
     public function createRole(GroupRoleProvisioner $groupRoles): void

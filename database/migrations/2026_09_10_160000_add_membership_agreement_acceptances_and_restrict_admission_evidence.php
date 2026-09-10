@@ -21,12 +21,18 @@ return new class extends Migration
         Schema::create('membership_agreement_acceptances', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('group_membership_id')->constrained()->restrictOnDelete();
-            $table->foreignId('group_agreement_version_id')->constrained()->restrictOnDelete();
+            $table->foreignId('group_agreement_version_id')->constrained(
+                table: 'group_agreement_versions',
+                indexName: 'membership_acceptances_version_id_foreign',
+            )->restrictOnDelete();
             $table->foreignId('accepted_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->timestamp('accepted_at');
             $table->string('evidence_hash', 64)->nullable();
             $table->timestamps();
-            $table->unique(['group_membership_id', 'group_agreement_version_id']);
+            $table->unique(
+                ['group_membership_id', 'group_agreement_version_id'],
+                'membership_acceptances_membership_version_unique',
+            );
         });
     }
 

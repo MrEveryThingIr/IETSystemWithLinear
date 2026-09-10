@@ -2,7 +2,8 @@
 
 namespace App\Livewire\Auth;
 
-use App\Actions\Auth\RegisterUser;
+use App\Actions\Auth\RegisterInvitedUser;
+use App\Actions\Groups\RedeemGroupInvitation;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,6 +16,10 @@ use Livewire\Component;
 #[Title('Create your account')]
 class Register extends Component
 {
+    public string $invitationToken = '';
+
+    public string $groupName = '';
+
     public string $username = '';
 
     public string $email = '';
@@ -23,7 +28,15 @@ class Register extends Component
 
     public string $password_confirmation = '';
 
-    public function register(RegisterUser $register): void
+    public function mount(string $token, RedeemGroupInvitation $redemption): void
+    {
+        $invitation = $redemption->preview($token);
+        $this->invitationToken = $invitation->token;
+        $this->groupName = $invitation->group->name;
+        $this->email = $invitation->email ?? '';
+    }
+
+    public function register(RegisterInvitedUser $register): void
     {
         $key = 'register:'.request()->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
@@ -31,9 +44,13 @@ class Register extends Component
         }
         RateLimiter::hit($key, 60);
 
-        $user = $register->handle($this->only(['username', 'email', 'password', 'password_confirmation']));
+        [$user, $admission] = $register->handle(
+            $this->only(['username', 'email', 'password', 'password_confirmation']),
+            $this->invitationToken,
+        );
         Auth::login($user);
         session()->regenerate();
+        session()->put('url.intended', route('admissions.show', $admission));
         $this->reset('password', 'password_confirmation');
         $this->redirectRoute('verification.notice');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Actions\Groups\RedeemGroupInvitation;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,19 +16,46 @@ use Livewire\Component;
 #[Title('Log in')]
 class Login extends Component
 {
+    public ?string $invitationToken = null;
+
+    public ?string $groupName = null;
+
     public string $email = '';
 
     public string $password = '';
 
     public bool $remember = false;
 
-    public function login(): void
+    public function mount(RedeemGroupInvitation $redemption, ?string $token = null): void
+    {
+        if ($token === null) {
+            return;
+        }
+
+        $invitation = $redemption->preview($token);
+        $this->invitationToken = $invitation->token;
+        $this->groupName = $invitation->group->name;
+        $this->email = $invitation->email ?? '';
+    }
+
+    public function login(RedeemGroupInvitation $redemption): void
     {
         $data = $this->validate([
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'remember' => ['boolean'],
         ]);
+
+        if ($this->invitationToken !== null) {
+            $invitation = $redemption->preview($this->invitationToken);
+
+            if ($invitation->email !== null && strcasecmp($invitation->email, $data['email']) !== 0) {
+                throw ValidationException::withMessages([
+                    'email' => 'This invitation was issued to a different email address.',
+                ]);
+            }
+        }
+
         $key = 'login:'.Str::lower($this->email).'|'.request()->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
             throw ValidationException::withMessages(['email' => 'Too many login attempts. Please try again in a minute.']);
@@ -41,6 +69,23 @@ class Login extends Component
         RateLimiter::clear($key);
         session()->regenerate();
         $this->reset('password');
+
+        if ($this->invitationToken !== null) {
+            $user = Auth::user();
+            $admission = $redemption->execute($this->invitationToken, $user->actor, $user->email);
+            session()->put('url.intended', route('admissions.show', $admission));
+
+            if (! $user->hasVerifiedEmail()) {
+                $this->redirectRoute('verification.notice');
+
+                return;
+            }
+
+            $this->redirectRoute('admissions.show', ['admission' => $admission]);
+
+            return;
+        }
+
         $this->redirectIntended(route('dashboard'));
     }
 

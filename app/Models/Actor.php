@@ -39,4 +39,16 @@ class Actor extends Model
     {
         return $this->hasMany(Group::class, 'created_by_actor_id');
     }
+
+    /** @return HasMany<GroupInvitation, $this> */
+    public function sentGroupInvitations(): HasMany
+    {
+        return $this->hasMany(GroupInvitation::class, 'invited_by_actor_id');
+    }
+
+    /** @return HasMany<GroupInvitationAcceptance, $this> */
+    public function acceptedGroupInvitations(): HasMany
+    {
+        return $this->hasMany(GroupInvitationAcceptance::class, 'accepted_by_actor_id');
+    }
 }
