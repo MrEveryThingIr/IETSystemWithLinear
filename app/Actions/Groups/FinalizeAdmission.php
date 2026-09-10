@@ -8,6 +8,7 @@ use App\Models\AgreementAcceptance;
 use App\Models\Group;
 use App\Models\GroupAgreementVersion;
 use App\Models\GroupMembership;
+use App\Models\MembershipAgreementAcceptance;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -33,7 +34,7 @@ class FinalizeAdmission
                 ->get()
                 ->filter(fn (GroupAgreementVersion $version) => $version->isActiveAt())
                 ->pluck('id');
-            $accepted = AgreementAcceptance::query()->where('admission_id', $admission->id)->whereIn('group_agreement_version_id', $requiredVersionIds)->count();
+            $accepted = AgreementAcceptance::query()->where('admission_id', $admission->id)->where('accepted_by_actor_id', $actor->id)->whereIn('group_agreement_version_id', $requiredVersionIds)->count();
             if ($accepted !== $requiredVersionIds->count()) {
                 throw ValidationException::withMessages(['agreements' => 'Every active required agreement version must be accepted before finalization.']);
             }
@@ -45,9 +46,20 @@ class FinalizeAdmission
             $membership->status = 'active';
             $membership->save();
 
+            AgreementAcceptance::query()
+                ->where('admission_id', $admission->id)
+                ->where('accepted_by_actor_id', $actor->id)
+                ->whereIn('group_agreement_version_id', $requiredVersionIds)
+                ->each(function (AgreementAcceptance $acceptance) use ($membership, $actor): void {
+                    MembershipAgreementAcceptance::query()->firstOrCreate(
+                        ['group_membership_id' => $membership->id, 'group_agreement_version_id' => $acceptance->group_agreement_version_id],
+                        ['accepted_by_actor_id' => $actor->id, 'accepted_at' => $acceptance->accepted_at, 'evidence_hash' => $acceptance->evidence_hash],
+                    );
+                });
+
             $roles = $this->roles->provision($group);
             $this->roles->assign($actor, $group, $roles['member']);
-            $admission->events()->create(['event' => 'admission.finalized', 'metadata' => ['membership_id' => $membership->id]]);
+            $admission->transitionTo('finalized', null, null, ['membership_id' => $membership->id]);
 
             return $membership;
         });

@@ -30,11 +30,13 @@ class GroupAgreementVersion extends Model
         });
     }
 
+    /** @return BelongsTo<GroupAgreement, $this> */
     public function agreement(): BelongsTo
     {
         return $this->belongsTo(GroupAgreement::class, 'group_agreement_id');
     }
 
+    /** @return BelongsTo<Actor, $this> */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'created_by_actor_id');

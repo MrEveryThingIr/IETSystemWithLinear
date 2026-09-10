@@ -5,6 +5,7 @@ namespace Tests\Feature\Groups;
 use App\Actions\Groups\GroupRoleProvisioner;
 use App\Actions\Groups\ManageGroupAgreement;
 use App\Livewire\Groups\AcceptAgreements;
+use App\Livewire\Groups\Index as GroupIndex;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupAgreement;
@@ -42,8 +43,17 @@ class AgreementReacceptanceTest extends TestCase
         $this->assertFalse(Gate::forUser($owner->user)->allows('view', $group));
         $this->assertFalse(Gate::forUser($member->user)->allows('view', $group));
 
+        Livewire::actingAs($member->user)
+            ->test(GroupIndex::class)
+            ->assertSee('Review agreements')
+            ->assertSee(route('groups.accept-agreements', $group), false);
+
         Livewire::actingAs($owner->user)->test(AcceptAgreements::class, ['group' => $group])->call('accept', $scheduled->id)->assertStatus(200);
-        Livewire::actingAs($member->user)->test(AcceptAgreements::class, ['group' => $group])->call('accept', $scheduled->id)->assertStatus(200);
+        Livewire::actingAs($member->user)
+            ->test(AcceptAgreements::class, ['group' => $group])
+            ->call('accept', $scheduled->id)
+            ->assertStatus(200)
+            ->assertSee('Open group');
 
         $this->assertTrue(Gate::forUser($owner->user)->allows('view', $group));
         $this->assertTrue(Gate::forUser($member->user)->allows('view', $group));

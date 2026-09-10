@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['group_id', 'name', 'required_for_admission'])]
 class GroupAgreement extends Model
 {
+    protected function casts(): array
+    {
+        return ['required_for_admission' => 'boolean'];
+    }
+
     /** @return BelongsTo<Group, $this> */
     public function group(): BelongsTo
     {

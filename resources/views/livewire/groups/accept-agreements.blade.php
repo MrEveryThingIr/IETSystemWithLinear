@@ -6,11 +6,14 @@
     </flux:card>
     @forelse($versions as $version)
         <flux:card class="space-y-4">
-            <flux:heading>{{ $version->agreement->name }} · v{{ $version->version }}</flux:heading>
+            <flux:heading>{{ $version->agreement->name }} · version {{ $version->version }}</flux:heading>
             <div class="whitespace-pre-wrap break-words text-sm leading-6">{{ $version->content }}</div>
             <flux:button wire:click="accept({{ $version->id }})" variant="primary" class="w-full sm:w-auto">Accept this version</flux:button>
         </flux:card>
     @empty
-        <flux:card><flux:text>All current agreements have been accepted. You can return to the group.</flux:text></flux:card>
+        <flux:card class="space-y-3">
+            <flux:text>All current agreements have been accepted. You can return to the group.</flux:text>
+            <flux:button :href="route('groups.show', $group)" variant="primary">Open group</flux:button>
+        </flux:card>
     @endforelse
 </section>

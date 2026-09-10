@@ -48,9 +48,11 @@
                         <p class="mb-2 text-sm font-medium">Invitees</p>
                         <div class="flex flex-wrap gap-2">
                             @foreach ($invitation->admissions as $admission)
-                                <flux:badge>
-                                    {{ $admission->candidate->user?->username ?? 'Unknown account' }} · {{ str($admission->status)->replace('_', ' ')->title() }}
-                                </flux:badge>
+                                <a href="{{ route('admissions.show', $admission) }}" class="rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <flux:badge>
+                                        {{ $admission->candidate->user?->username ?? 'Unknown account' }} · {{ str($admission->status)->replace('_', ' ')->title() }}
+                                    </flux:badge>
+                                </a>
                             @endforeach
                         </div>
                     </div>

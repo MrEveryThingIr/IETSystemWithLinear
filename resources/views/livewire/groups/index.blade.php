@@ -20,7 +20,12 @@
                             <flux:badge>{{ $roles[$membership->group_id] }}</flux:badge>
                         </div>
                         <flux:text>{{ $membership->group->description ?: 'No description yet.' }}</flux:text>
-                        <flux:button :href="route('groups.show', $membership->group)" class="w-full sm:w-auto" size="sm" variant="primary">Open group</flux:button>
+                        @if ($requiresAgreementAcceptance[$membership->group_id])
+                            <flux:callout variant="warning">A new agreement version needs your acceptance.</flux:callout>
+                            <flux:button :href="route('groups.accept-agreements', $membership->group)" class="w-full sm:w-auto" size="sm" variant="primary">Review agreements</flux:button>
+                        @else
+                            <flux:button :href="route('groups.show', $membership->group)" class="w-full sm:w-auto" size="sm" variant="primary">Open group</flux:button>
+                        @endif
                     </flux:card>
                 @endforeach
             </div>
@@ -63,7 +68,9 @@
                         @if ($invitation->admissions->isNotEmpty())
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($invitation->admissions as $admission)
-                                    <flux:badge>{{ $admission->candidate->user?->username ?? 'Unknown account' }} · {{ str($admission->status)->replace('_', ' ')->title() }}</flux:badge>
+                                    <a href="{{ route('admissions.show', $admission) }}" class="rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        <flux:badge>{{ $admission->candidate->user?->username ?? 'Unknown account' }} · {{ str($admission->status)->replace('_', ' ')->title() }}</flux:badge>
+                                    </a>
                                 @endforeach
                             </div>
                         @endif

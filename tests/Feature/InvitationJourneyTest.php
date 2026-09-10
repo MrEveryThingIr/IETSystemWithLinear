@@ -8,8 +8,11 @@ use App\Livewire\Admissions\Show as AdmissionShow;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Groups\Index as GroupIndex;
+use App\Livewire\Groups\Show as GroupShow;
 use App\Models\Actor;
 use App\Models\Admission;
+use App\Models\GroupAgreement;
+use App\Models\GroupAgreementVersion;
 use App\Models\GroupInvitation;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -159,6 +162,53 @@ class InvitationJourneyTest extends TestCase
             ->assertSee('People you invited')
             ->assertSee($candidate->user->username)
             ->assertSee($invitation->group->name);
+    }
+
+    public function test_submitted_message_is_visible_to_both_sides_and_the_owner_has_a_review_queue(): void
+    {
+        [$owner, $invitation] = $this->invitation();
+        $candidate = Actor::factory()->create();
+        $admission = app(RedeemGroupInvitation::class)->execute($invitation->token, $candidate, $candidate->user->email);
+
+        Livewire::actingAs($candidate->user)
+            ->test(AdmissionShow::class, ['admission' => $admission])
+            ->set('note', 'I would like to share my daily learning notes with this group.')
+            ->call('submit')
+            ->assertHasNoErrors()
+            ->assertSee('I would like to share my daily learning notes with this group.');
+
+        Livewire::actingAs($owner->user)
+            ->test(GroupShow::class, ['group' => $invitation->group])
+            ->assertSee('Admissions to review')
+            ->assertSee($candidate->user->username)
+            ->assertSee(route('admissions.show', $admission), false);
+
+        Livewire::actingAs($owner->user)
+            ->test(AdmissionShow::class, ['admission' => $admission->refresh()])
+            ->assertSee('I would like to share my daily learning notes with this group.')
+            ->assertSee('Submitted');
+    }
+
+    public function test_admission_shows_only_required_active_agreements_and_acceptance_is_idempotent(): void
+    {
+        [, $invitation] = $this->invitation();
+        $candidate = Actor::factory()->create();
+        $admission = app(RedeemGroupInvitation::class)->execute($invitation->token, $candidate, $candidate->user->email);
+        $requiredAgreement = GroupAgreement::create(['group_id' => $invitation->group_id, 'name' => 'Required rules', 'required_for_admission' => true]);
+        $requiredVersion = GroupAgreementVersion::create(['group_agreement_id' => $requiredAgreement->id, 'version' => 1, 'content' => 'Required terms', 'status' => 'active', 'effective_from' => now()->subMinute()]);
+        $optionalAgreement = GroupAgreement::create(['group_id' => $invitation->group_id, 'name' => 'Optional pledge', 'required_for_admission' => false]);
+        GroupAgreementVersion::create(['group_agreement_id' => $optionalAgreement->id, 'version' => 1, 'content' => 'Optional terms', 'status' => 'active', 'effective_from' => now()->subMinute()]);
+
+        Livewire::actingAs($candidate->user)
+            ->test(AdmissionShow::class, ['admission' => $admission])
+            ->assertSee('Required terms')
+            ->assertDontSee('Optional terms')
+            ->call('acceptVersion', $requiredVersion->id)
+            ->call('acceptVersion', $requiredVersion->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseCount('agreement_acceptances', 1);
+        $this->assertSame(1, $admission->events()->where('event', 'agreement.accepted')->count());
     }
 
     public function test_admission_page_exposes_only_valid_actor_and_state_actions(): void

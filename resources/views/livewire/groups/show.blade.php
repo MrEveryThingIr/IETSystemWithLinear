@@ -1,6 +1,16 @@
 <section class="space-y-6">
     <x-app.page-header :title="$group->name" :description="$group->description ?: 'No description yet.'">
-        <x-slot:actions><flux:button :href="route('groups.index')" variant="ghost">All groups</flux:button></x-slot:actions>
+        <x-slot:actions>
+            <div class="flex flex-wrap gap-2">
+                @can('manageAgreements', $group)
+                    <flux:button :href="route('groups.agreements', $group)" variant="ghost">Agreements</flux:button>
+                @endcan
+                @can('createInvitation', $group)
+                    <flux:button :href="route('groups.invitations', $group)" variant="ghost">Invitations</flux:button>
+                @endcan
+                <flux:button :href="route('groups.index')" variant="ghost">All groups</flux:button>
+            </div>
+        </x-slot:actions>
     </x-app.page-header>
 
     @if (session('status'))
@@ -18,7 +28,6 @@
                 <flux:textarea wire:model="description" label="Description" rows="3" />
                 <div class="flex flex-col gap-2 sm:flex-row">
                     <flux:button type="submit" variant="primary">Save details</flux:button>
-                    <flux:button :href="route('groups.invitations', $group)" variant="ghost">Manage invitations</flux:button>
                 </div>
             </form>
         </flux:card>
@@ -51,6 +60,31 @@
             </div>
         </flux:card>
     @endif
+
+    @can('manageAdmissions', $group)
+        <flux:card class="space-y-4">
+            <div>
+                <flux:heading size="lg">Admissions to review</flux:heading>
+                <flux:text>Submitted applications, clarification requests, and approved applications awaiting finalization appear here.</flux:text>
+            </div>
+            @forelse ($admissions as $admission)
+                <div class="flex flex-col gap-3 border-b border-zinc-200 pb-3 last:border-0 last:pb-0 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1">
+                        <flux:heading>{{ $admission->candidate->user?->username ?? 'Unknown applicant' }}</flux:heading>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <flux:badge>{{ str($admission->status)->replace('_', ' ')->title() }}</flux:badge>
+                            @if ($admission->submitted_at)
+                                <flux:text class="text-sm">Submitted {{ $admission->submitted_at->diffForHumans() }}</flux:text>
+                            @endif
+                        </div>
+                    </div>
+                    <flux:button :href="route('admissions.show', $admission)" size="sm" variant="primary">Review admission</flux:button>
+                </div>
+            @empty
+                <flux:text>No admissions currently need reviewer attention.</flux:text>
+            @endforelse
+        </flux:card>
+    @endcan
 
     <flux:card class="space-y-4">
         <flux:heading size="lg">Members</flux:heading>

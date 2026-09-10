@@ -7,6 +7,7 @@ use App\Models\Admission;
 use App\Models\GroupInvitation;
 use App\Models\GroupMembership;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -20,6 +21,9 @@ class Index extends Component
         $actor = auth()->user()->actor;
         $memberships = GroupMembership::query()->with('group')->where('actor_id', $actor->id)->where('status', 'active')->latest()->get();
         $roles = $memberships->mapWithKeys(fn (GroupMembership $membership): array => [$membership->group_id => $groupRoles->roleName($actor, $membership->group) ?? 'Member']);
+        $requiresAgreementAcceptance = $memberships->mapWithKeys(fn (GroupMembership $membership): array => [
+            $membership->group_id => Gate::forUser(auth()->user())->denies('view', $membership->group),
+        ]);
         $receivedInvitations = Admission::query()
             ->with(['group', 'sourceInvitation.inviter.user'])
             ->where('candidate_actor_id', $actor->id)
@@ -33,6 +37,6 @@ class Index extends Component
             ->latest()
             ->get();
 
-        return view('livewire.groups.index', compact('memberships', 'roles', 'receivedInvitations', 'sentInvitations'));
+        return view('livewire.groups.index', compact('memberships', 'roles', 'requiresAgreementAcceptance', 'receivedInvitations', 'sentInvitations'));
     }
 }

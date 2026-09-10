@@ -6,6 +6,7 @@ use App\Actions\Groups\GroupRoleProvisioner;
 use App\Actions\Groups\RemoveGroupMember;
 use App\Exceptions\CannotLeaveGroupWithoutOwner;
 use App\Models\Actor;
+use App\Models\Admission;
 use App\Models\Group;
 use App\Models\GroupMembership;
 use App\Models\GroupRoleChangeRequest;
@@ -149,9 +150,18 @@ class Show extends Component
         $isOwner = $groupRoles->hasRole($this->actor(), $this->group, 'Owner');
         $availableRoles = $groupRoles->roles($this->group);
         $pendingRequests = $isOwner ? GroupRoleChangeRequest::query()->where('group_id', $this->group->id)->where('status', 'pending')->with(['membership.actor.user', 'requestedRole'])->latest()->get() : collect();
+        $admissions = Gate::allows('manageAdmissions', $this->group)
+            ? Admission::query()
+                ->where('group_id', $this->group->id)
+                ->whereIn('status', ['submitted', 'under_review', 'clarification_required', 'approved'])
+                ->with('candidate.user')
+                ->latest('submitted_at')
+                ->latest('id')
+                ->get()
+            : collect();
         $permissionNames = GroupRoleProvisioner::permissionNames();
 
-        return view('livewire.groups.show', compact('memberships', 'roles', 'isOwner', 'availableRoles', 'pendingRequests', 'permissionNames'));
+        return view('livewire.groups.show', compact('memberships', 'roles', 'isOwner', 'availableRoles', 'pendingRequests', 'admissions', 'permissionNames'));
     }
 
     private function actor(): Actor

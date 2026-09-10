@@ -64,12 +64,41 @@ class ManageGroupAgreement
         $this->transition($version, $actor, 'approved', 'scheduled', 'agreement.revision.scheduled', ['effective_from' => $from->format(DATE_ATOM), 'effective_until' => $until?->format(DATE_ATOM)], ['effective_from' => $from, 'effective_until' => $until, 'published_at' => now()]);
     }
 
+    public function activate(GroupAgreementVersion $version, Actor $actor): void
+    {
+        DB::transaction(function () use ($version, $actor): void {
+            /** @var GroupAgreementVersion $version */
+            $version = GroupAgreementVersion::query()->lockForUpdate()->findOrFail($version->id);
+            abort_unless(in_array($version->status, ['approved', 'scheduled'], true), 422, 'Only an approved or scheduled agreement version can be activated.');
+
+            $agreement = $this->agreementForVersion($version);
+            /** @var GroupAgreementVersion|null $active */
+            $active = GroupAgreementVersion::query()
+                ->where('group_agreement_id', $agreement->id)
+                ->where('status', 'active')
+                ->lockForUpdate()
+                ->first();
+
+            if ($active !== null) {
+                $active->update(['status' => 'superseded', 'effective_until' => now(), 'superseded_by_version_id' => $version->id]);
+            }
+
+            $version->update([
+                'status' => 'active',
+                'effective_from' => now(),
+                'published_at' => $version->published_at ?? now(),
+                'activated_at' => now(),
+            ]);
+            $this->event($agreement, $version, $actor, 'agreement.revision.activated', ['superseded_version_id' => $active?->id]);
+        });
+    }
+
     public function activateDue(?\DateTimeInterface $at = null): int
     {
         $at = Carbon::instance($at ?? now());
 
         return DB::transaction(function () use ($at): int {
-            $versions = GroupAgreementVersion::query()->where('status', 'scheduled')->where('effective_from', '<=', $at)->lockForUpdate()->get();
+            $versions = GroupAgreementVersion::query()->where('status', 'scheduled')->where('effective_from', '<=', $at)->orderBy('effective_from')->orderBy('version')->orderBy('id')->lockForUpdate()->get();
             foreach ($versions as $version) {
                 $agreement = $this->agreementForVersion($version);
                 /** @var GroupAgreementVersion|null $active */ $active = GroupAgreementVersion::query()->where('group_agreement_id', $agreement->id)->where('status', 'active')->lockForUpdate()->first();

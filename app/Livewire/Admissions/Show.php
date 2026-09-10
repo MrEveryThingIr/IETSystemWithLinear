@@ -21,13 +21,14 @@ class Show extends Component
     public function mount(Admission $admission): void
     {
         Gate::authorize('view', $admission);
-        $this->admission = $admission;
+        $this->admission = $admission->load(['group', 'candidate.user']);
     }
 
     public function submit(ManageAdmission $manager): void
     {
         Gate::authorize('update', $this->admission);
         $manager->candidateTransition($this->admission, auth()->user()->actor, 'submitted', $this->note ?: null);
+        $this->reset('note');
         $this->admission->refresh();
     }
 
@@ -35,6 +36,7 @@ class Show extends Component
     {
         Gate::authorize('update', $this->admission);
         $manager->candidateTransition($this->admission, auth()->user()->actor, 'cancelled', $this->note ?: null);
+        $this->reset('note');
         $this->admission->refresh();
     }
 
@@ -49,6 +51,7 @@ class Show extends Component
     {
         Gate::authorize('manageAdmissions', $this->admission->group);
         $manager->review($this->admission, auth()->user()->actor, $status, $this->note ?: null);
+        $this->reset('note');
         $this->admission->refresh();
     }
 
@@ -63,11 +66,14 @@ class Show extends Component
     {
         $versions = GroupAgreementVersion::query()
             ->with('agreement')
-            ->whereHas('agreement', fn ($query) => $query->where('group_id', $this->admission->group_id))
+            ->whereHas('agreement', fn ($query) => $query->where('group_id', $this->admission->group_id)->where('required_for_admission', true))
+            ->orderBy('group_agreement_id')
+            ->orderByDesc('version')
             ->get()
             ->filter(fn (GroupAgreementVersion $version): bool => $version->isActiveAt());
         $acceptedVersionIds = $this->admission->acceptances()->pluck('group_agreement_version_id');
+        $events = $this->admission->events()->with('actor.user')->oldest()->get();
 
-        return view('livewire.admissions.show', compact('versions', 'acceptedVersionIds'));
+        return view('livewire.admissions.show', compact('versions', 'acceptedVersionIds', 'events'));
     }
 }

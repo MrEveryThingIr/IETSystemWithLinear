@@ -14,6 +14,7 @@ use App\Models\GroupAgreementVersion;
 use App\Models\GroupInvitation;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class AdmissionAgreementTest extends TestCase
@@ -59,7 +60,18 @@ class AdmissionAgreementTest extends TestCase
         $membership = app(FinalizeAdmission::class)->execute($admission);
 
         $this->assertSame('active', $membership->status);
+        $this->assertSame('finalized', $admission->refresh()->status);
+        $this->assertNotNull($admission->finalized_at);
+        $this->assertDatabaseHas('membership_agreement_acceptances', [
+            'group_membership_id' => $membership->id,
+            'group_agreement_version_id' => $version->id,
+            'accepted_by_actor_id' => $candidate->id,
+        ]);
         $this->assertDatabaseHas('admission_events', ['admission_id' => $admission->id, 'event' => 'admission.finalized']);
+
+        $this->expectException(HttpException::class);
+
+        app(FinalizeAdmission::class)->execute($admission);
     }
 
     /** @return array{Actor, Admission, GroupAgreementVersion} */

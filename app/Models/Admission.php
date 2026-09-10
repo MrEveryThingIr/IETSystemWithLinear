@@ -9,16 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\ValidationException;
 
-#[Fillable(['group_id', 'candidate_actor_id', 'source_invitation_id', 'status', 'submitted_at', 'approved_at', 'rejected_at', 'cancelled_at', 'decision_note'])]
+#[Fillable(['group_id', 'candidate_actor_id', 'source_invitation_id', 'status', 'submitted_at', 'approved_at', 'finalized_at', 'rejected_at', 'cancelled_at', 'decision_note'])]
 class Admission extends Model
 {
     use HasFactory;
 
-    public const TRANSITIONS = ['draft' => ['submitted', 'cancelled'], 'submitted' => ['clarification_required', 'under_review', 'rejected', 'cancelled'], 'clarification_required' => ['submitted', 'cancelled'], 'under_review' => ['clarification_required', 'approved', 'rejected'], 'approved' => [], 'rejected' => [], 'cancelled' => []];
+    public const TRANSITIONS = ['draft' => ['submitted', 'cancelled'], 'submitted' => ['clarification_required', 'under_review', 'rejected', 'cancelled'], 'clarification_required' => ['submitted', 'cancelled'], 'under_review' => ['clarification_required', 'approved', 'rejected'], 'approved' => ['finalized'], 'finalized' => [], 'rejected' => [], 'cancelled' => []];
 
     protected function casts(): array
     {
-        return ['submitted_at' => 'datetime', 'approved_at' => 'datetime', 'rejected_at' => 'datetime', 'cancelled_at' => 'datetime'];
+        return ['submitted_at' => 'datetime', 'approved_at' => 'datetime', 'finalized_at' => 'datetime', 'rejected_at' => 'datetime', 'cancelled_at' => 'datetime'];
     }
 
     protected static function booted(): void
@@ -58,7 +58,8 @@ class Admission extends Model
         return $this->hasMany(AdmissionEvent::class);
     }
 
-    public function transitionTo(string $status, ?Actor $actor = null, ?string $note = null): void
+    /** @param array<string, mixed> $metadata */
+    public function transitionTo(string $status, ?Actor $actor = null, ?string $note = null, array $metadata = []): void
     {
         if (! in_array($status, self::TRANSITIONS[$this->status] ?? [], true)) {
             throw ValidationException::withMessages([
@@ -66,9 +67,9 @@ class Admission extends Model
             ]);
         }
         $timestamps = match ($status) {
-            'submitted' => ['submitted_at' => now()], 'approved' => ['approved_at' => now()], 'rejected' => ['rejected_at' => now()], 'cancelled' => ['cancelled_at' => now()], default => []
+            'submitted' => ['submitted_at' => now()], 'approved' => ['approved_at' => now()], 'finalized' => ['finalized_at' => now()], 'rejected' => ['rejected_at' => now()], 'cancelled' => ['cancelled_at' => now()], default => []
         };
         $this->update(['status' => $status, 'decision_note' => $note, ...$timestamps]);
-        $this->events()->create(['actor_id' => $actor?->id, 'event' => "admission.{$status}", 'note' => $note]);
+        $this->events()->create(['actor_id' => $actor?->id, 'event' => "admission.{$status}", 'note' => $note, 'metadata' => $metadata ?: null]);
     }
 }
