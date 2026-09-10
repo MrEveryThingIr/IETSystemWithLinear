@@ -42,14 +42,26 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('agreement_events');
+
         Schema::table('agreement_acceptances', function (Blueprint $table): void {
             $table->dropForeign(['group_agreement_version_id']);
             $table->foreign('group_agreement_version_id')->references('id')->on('group_agreement_versions')->cascadeOnDelete();
         });
+
         Schema::table('group_agreement_versions', function (Blueprint $table): void {
+            $table->dropForeign(['approved_by_actor_id']);
+            $table->dropForeign(['superseded_by_version_id']);
             $table->dropIndex(['group_agreement_id', 'status']);
-            $table->dropConstrainedForeignId('superseded_by_version_id');
-            $table->dropColumn(['rationale', 'decision_note', 'reacceptance_required', 'approved_by_actor_id', 'approved_at', 'published_at', 'activated_at']);
+            $table->dropColumn([
+                'rationale',
+                'decision_note',
+                'reacceptance_required',
+                'approved_by_actor_id',
+                'approved_at',
+                'published_at',
+                'activated_at',
+                'superseded_by_version_id',
+            ]);
             $table->dropForeign(['group_agreement_id']);
             $table->foreign('group_agreement_id')->references('id')->on('group_agreements')->cascadeOnDelete();
         });
