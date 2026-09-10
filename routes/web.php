@@ -7,6 +7,7 @@ use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Edit;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
+use App\Livewire\Admissions\Show as AdmissionShow;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -20,27 +21,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => view('welcome'));
 Route::get('/invitations/{token}', [GroupInvitationController::class, 'show'])->name('invitations.show');
 Route::post('/invitations/{token}/accept', [GroupInvitationController::class, 'accept'])->middleware(['auth', 'account.active', 'verified'])->name('invitations.accept');
-
-Route::middleware('guest')->group(function (): void {
-    Route::livewire('/register', Register::class)->name('register');
-    Route::livewire('/login', Login::class)->name('login');
-    Route::livewire('/forgot-password', ForgotPassword::class)->name('password.request');
-    Route::livewire('/reset-password/{token}', ResetPassword::class)->name('password.reset');
-});
-
+Route::middleware('guest')->group(function (): void { Route::livewire('/register', Register::class)->name('register'); Route::livewire('/login', Login::class)->name('login'); Route::livewire('/forgot-password', ForgotPassword::class)->name('password.request'); Route::livewire('/reset-password/{token}', ResetPassword::class)->name('password.reset'); });
 Route::post('/logout', LogoutController::class)->middleware('auth')->name('logout');
-Route::middleware(['auth', 'account.active'])->group(function (): void {
-    Route::livewire('/email/verify', VerifyEmailNotice::class)->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
-    Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
-});
-
+Route::middleware(['auth', 'account.active'])->group(function (): void { Route::livewire('/email/verify', VerifyEmailNotice::class)->name('verification.notice'); Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify'); Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard'); });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
-    Route::livewire('/actors', Index::class)->name('actors.index');
-    Route::livewire('/actors/create', Create::class)->name('actors.create');
-    Route::livewire('/actors/{actor}', Show::class)->name('actors.show');
-    Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
-    Route::livewire('/groups', GroupIndex::class)->name('groups.index');
-    Route::livewire('/groups/create', CreateGroup::class)->name('groups.create');
-    Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show');
+    Route::livewire('/actors', Index::class)->name('actors.index'); Route::livewire('/actors/create', Create::class)->name('actors.create'); Route::livewire('/actors/{actor}', Show::class)->name('actors.show'); Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
+    Route::livewire('/groups', GroupIndex::class)->name('groups.index'); Route::livewire('/groups/create', CreateGroup::class)->name('groups.create'); Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show'); Route::livewire('/admissions/{admission}', AdmissionShow::class)->name('admissions.show');
 });
