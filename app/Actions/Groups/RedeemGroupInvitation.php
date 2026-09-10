@@ -14,21 +14,17 @@ class RedeemGroupInvitation
     {
         return DB::transaction(function () use ($token, $actor, $email): Admission {
             $invitation = GroupInvitation::query()->where('token', $token)->lockForUpdate()->firstOrFail();
-            if ($invitation->email !== null && $invitation->email !== $email) {
-                throw ValidationException::withMessages(['invitation' => 'This invitation is reserved for a different email address.']);
-            }
-            $acceptance = $invitation->acceptances()->where('accepted_by_actor_id', $actor->id)->first();
-            if ($acceptance === null) {
-                abort_if($invitation->revoked_at !== null || ($invitation->expires_at !== null && $invitation->expires_at->isPast()) || ($invitation->max_uses !== null && $invitation->uses_count >= $invitation->max_uses), 404);
+            abort_if($invitation->revoked_at !== null || ($invitation->expires_at !== null && $invitation->expires_at->isPast()) || ($invitation->max_uses !== null && $invitation->uses_count >= $invitation->max_uses), 404);
+            if ($invitation->email !== null && strcasecmp($invitation->email, $email) !== 0) throw ValidationException::withMessages(['invitation' => 'This invitation is reserved for a different email address.']);
+            $admission = Admission::query()->where('group_id', $invitation->group_id)->where('candidate_actor_id', $actor->id)->lockForUpdate()->first();
+            abort_if($admission !== null && in_array($admission->status, ['rejected', 'cancelled'], true), 422, 'This admission is closed.');
+            if ($invitation->acceptances()->where('accepted_by_actor_id', $actor->id)->doesntExist()) {
                 $invitation->acceptances()->create(['accepted_by_actor_id' => $actor->id, 'accepted_at' => now()]);
                 $invitation->increment('uses_count');
             }
-            $admission = Admission::query()->where('group_id', $invitation->group_id)->where('candidate_actor_id', $actor->id)->lockForUpdate()->first();
             if ($admission === null) {
                 $admission = Admission::create(['group_id' => $invitation->group_id, 'candidate_actor_id' => $actor->id, 'source_invitation_id' => $invitation->id, 'status' => 'draft']);
-                $admission->events()->create(['actor_id' => $actor->id, 'event' => 'admission.created_from_invitation']);
-            } elseif (in_array($admission->status, ['rejected', 'cancelled'], true)) {
-                $admission->transitionTo('draft', $actor, 'Resumed through invitation redemption.');
+                $admission->events()->create(['actor_id' => $actor->id, 'event' => 'admission.created_from_invitation', 'metadata' => ['invitation_id' => $invitation->id]]);
             }
             return $admission;
         });
