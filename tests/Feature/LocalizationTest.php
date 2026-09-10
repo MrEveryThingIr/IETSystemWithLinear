@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\Localization;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Arr;
@@ -21,6 +22,28 @@ class LocalizationTest extends TestCase
             ->assertHeader('Content-Language', 'ar')
             ->assertSee('dir="rtl"', false)
             ->assertSee('تسجيل الدخول');
+    }
+
+    public function test_guest_browser_language_negotiation_renders_chinese(): void
+    {
+        $response = $this->withHeader('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8')->get(route('login'));
+
+        $response
+            ->assertOk()
+            ->assertHeader('Content-Language', 'zh-CN')
+            ->assertSee('dir="ltr"', false)
+            ->assertSee('登录');
+    }
+
+    public function test_guest_browser_language_negotiation_renders_persian_with_rtl_direction(): void
+    {
+        $response = $this->withHeader('Accept-Language', 'fa-IR,fa;q=0.9,en;q=0.8')->get(route('login'));
+
+        $response
+            ->assertOk()
+            ->assertHeader('Content-Language', 'fa')
+            ->assertSee('dir="rtl"', false)
+            ->assertSee('ورود');
     }
 
     public function test_guest_can_switch_locale_and_the_session_preference_wins_over_browser_language(): void
@@ -67,32 +90,38 @@ class LocalizationTest extends TestCase
 
     public function test_an_additional_configured_locale_works_without_routing_or_schema_changes(): void
     {
-        config()->set('localization.locales.zh_CN', [
-            'name' => 'Chinese',
-            'native_name' => '简体中文',
+        config()->set('localization.locales.fr', [
+            'name' => 'French',
+            'native_name' => 'Français',
             'direction' => 'ltr',
         ]);
 
         $this->from(route('login'))
-            ->post(route('locale.update'), ['locale' => 'zh_CN'])
+            ->post(route('locale.update'), ['locale' => 'fr'])
             ->assertRedirect(route('login'))
-            ->assertSessionHas('locale', 'zh_CN');
+            ->assertSessionHas('locale', 'fr');
 
         $this->get(route('login'))
-            ->assertHeader('Content-Language', 'zh-CN')
+            ->assertHeader('Content-Language', 'fr')
             ->assertSee('dir="ltr"', false)
             ->assertSee('Log in');
     }
 
-    public function test_arabic_ui_catalog_has_the_same_keys_as_english(): void
+    public function test_every_configured_locale_ui_catalog_has_the_same_keys_as_english(): void
     {
         $englishKeys = array_keys(Arr::dot(require lang_path('en/ui.php')));
-        $arabicKeys = array_keys(Arr::dot(require lang_path('ar/ui.php')));
-
         sort($englishKeys);
-        sort($arabicKeys);
 
-        $this->assertSame($englishKeys, $arabicKeys);
+        foreach (Localization::codes() as $code) {
+            if ($code === 'en') {
+                continue;
+            }
+
+            $localeKeys = array_keys(Arr::dot(require lang_path($code.'/ui.php')));
+            sort($localeKeys);
+
+            $this->assertSame($englishKeys, $localeKeys, "The [{$code}] UI catalog must match the English key structure.");
+        }
     }
 
     public function test_user_locale_is_used_for_framework_notifications(): void

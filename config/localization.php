@@ -14,5 +14,15 @@ return [
             'native_name' => 'العربية',
             'direction' => 'rtl',
         ],
+        'zh_CN' => [
+            'name' => 'Chinese',
+            'native_name' => '简体中文',
+            'direction' => 'ltr',
+        ],
+        'fa' => [
+            'name' => 'Persian',
+            'native_name' => 'فارسی',
+            'direction' => 'rtl',
+        ],
     ],
 ];
