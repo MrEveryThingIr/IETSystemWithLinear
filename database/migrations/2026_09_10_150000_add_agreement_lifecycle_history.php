@@ -30,17 +30,10 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['group_agreement_version_id', 'event']);
         });
-
-        Schema::table('agreement_acceptances', function (Blueprint $table): void {
-            $table->foreign('group_agreement_version_id')->references('id')->on('group_agreement_versions')->restrictOnDelete();
-        });
     }
 
     public function down(): void
     {
-        Schema::table('agreement_acceptances', function (Blueprint $table): void {
-            $table->dropForeign(['group_agreement_version_id']);
-        });
         Schema::dropIfExists('agreement_events');
         Schema::table('group_agreement_versions', function (Blueprint $table): void {
             $table->dropIndex(['group_agreement_id', 'status']);
