@@ -1,0 +1,52 @@
+<?php
+
+namespace Tests\Feature\Groups;
+
+use App\Actions\Groups\FinalizeAdmission;
+use App\Actions\Groups\RedeemGroupInvitation;
+use App\Models\Actor;
+use App\Models\Admission;
+use App\Models\AgreementAcceptance;
+use App\Models\Group;
+use App\Models\GroupAgreement;
+use App\Models\GroupAgreementVersion;
+use App\Models\GroupInvitation;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\TestCase;
+
+class AdmissionAgreementTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    public function test_redemption_creates_one_resumable_admission_without_membership(): void
+    {
+        $owner = Actor::factory()->create();
+        $candidate = Actor::factory()->create();
+        $group = Group::create(['name' => 'Group', 'created_by_actor_id' => $owner->id]);
+        $invitation = GroupInvitation::create(['group_id' => $group->id, 'invited_by_actor_id' => $owner->id, 'token' => 'admission-token', 'uses_count' => 0]);
+        $redemption = app(RedeemGroupInvitation::class);
+
+        $first = $redemption->execute($invitation->token, $candidate, $candidate->user->email);
+        $second = $redemption->execute($invitation->token, $candidate, $candidate->user->email);
+
+        $this->assertSame($first->id, $second->id);
+        $this->assertSame('draft', $first->status);
+        $this->assertDatabaseCount('group_memberships', 0);
+        $this->assertSame(1, $invitation->refresh()->uses_count);
+    }
+
+    public function test_finalization_requires_approval_and_exact_active_agreement_acceptance(): void
+    {
+        $owner = Actor::factory()->create();
+        $candidate = Actor::factory()->create();
+        $group = Group::create(['name' => 'Group', 'created_by_actor_id' => $owner->id]);
+        $admission = Admission::create(['group_id' => $group->id, 'candidate_actor_id' => $candidate->id, 'status' => 'approved']);
+        $agreement = GroupAgreement::create(['group_id' => $group->id, 'name' => 'Rules', 'required_for_admission' => true]);
+        $version = GroupAgreementVersion::create(['group_agreement_id' => $agreement->id, 'version' => 1, 'content' => 'Terms', 'status' => 'active']);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        app(FinalizeAdmission::class)->execute($admission);
+
+        AgreementAcceptance::create(['admission_id' => $admission->id, 'group_agreement_version_id' => $version->id, 'accepted_by_actor_id' => $candidate->id, 'accepted_at' => now(), 'evidence_hash' => hash('sha256', 'Terms')]);
+    }
+}
