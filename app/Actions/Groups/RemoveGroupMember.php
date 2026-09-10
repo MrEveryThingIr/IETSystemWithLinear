@@ -7,6 +7,7 @@ use App\Models\GroupMembership;
 class RemoveGroupMember
 {
     public function __construct(private GroupOwnerIntegrity $ownerIntegrity, private GroupRoleProvisioner $roles) {}
+
     public function handle(GroupMembership $membership): void
     {
         $group = $membership->group()->firstOrFail();

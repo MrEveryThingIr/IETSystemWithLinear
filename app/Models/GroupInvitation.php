@@ -12,9 +12,29 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class GroupInvitation extends Model
 {
     use HasFactory;
-    protected function casts(): array { return ['expires_at' => 'datetime', 'revoked_at' => 'datetime']; }
-    public function group(): BelongsTo { return $this->belongsTo(Group::class); }
-    public function inviter(): BelongsTo { return $this->belongsTo(Actor::class, 'invited_by_actor_id'); }
-    public function acceptances(): HasMany { return $this->hasMany(GroupInvitationAcceptance::class); }
-    public function admissions(): HasMany { return $this->hasMany(Admission::class, 'source_invitation_id'); }
+
+    protected function casts(): array
+    {
+        return ['expires_at' => 'datetime', 'revoked_at' => 'datetime'];
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function inviter(): BelongsTo
+    {
+        return $this->belongsTo(Actor::class, 'invited_by_actor_id');
+    }
+
+    public function acceptances(): HasMany
+    {
+        return $this->hasMany(GroupInvitationAcceptance::class);
+    }
+
+    public function admissions(): HasMany
+    {
+        return $this->hasMany(Admission::class, 'source_invitation_id');
+    }
 }

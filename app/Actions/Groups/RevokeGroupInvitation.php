@@ -11,7 +11,9 @@ class RevokeGroupInvitation
     {
         DB::transaction(function () use ($invitation): void {
             $locked = GroupInvitation::query()->lockForUpdate()->findOrFail($invitation->id);
-            if ($locked->revoked_at === null) $locked->update(['revoked_at' => now()]);
+            if ($locked->revoked_at === null) {
+                $locked->update(['revoked_at' => now()]);
+            }
         });
     }
 }

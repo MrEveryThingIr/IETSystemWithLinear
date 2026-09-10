@@ -16,9 +16,15 @@ return new class extends Migration
             $table->index(['group_id', 'revoked_at', 'expires_at']);
         });
     }
+
     public function down(): void
     {
-        Schema::table('group_role_change_requests', function (Blueprint $table): void { $table->dropIndex(['group_id', 'membership_id', 'status']); $table->dropColumn('review_locked_at'); });
-        Schema::table('group_invitations', function (Blueprint $table): void { $table->dropIndex(['group_id', 'revoked_at', 'expires_at']); });
+        Schema::table('group_role_change_requests', function (Blueprint $table): void {
+            $table->dropIndex(['group_id', 'membership_id', 'status']);
+            $table->dropColumn('review_locked_at');
+        });
+        Schema::table('group_invitations', function (Blueprint $table): void {
+            $table->dropIndex(['group_id', 'revoked_at', 'expires_at']);
+        });
     }
 };

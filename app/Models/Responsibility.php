@@ -5,7 +5,9 @@ namespace App\Models;
 final class Responsibility
 {
     public const Author = 'author';
+
     public const Editor = 'editor';
+
     public const Contributor = 'contributor';
 
     /** @return list<string> */
