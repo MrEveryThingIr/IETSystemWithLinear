@@ -3,9 +3,12 @@
 namespace App\Actions\Groups;
 
 use App\Models\Actor;
+use App\Models\AgreementAcceptance;
+use App\Models\AgreementEvent;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ManageGroupAgreement
@@ -14,22 +17,87 @@ class ManageGroupAgreement
     {
         return DB::transaction(function () use ($group, $actor, $name, $required, $content): GroupAgreement {
             $agreement = GroupAgreement::create(['group_id' => $group->id, 'name' => $name, 'required_for_admission' => $required]);
-            $agreement->versions()->create(['version' => 1, 'content' => $content, 'status' => 'draft', 'created_by_actor_id' => $actor->id]);
+            $version = $agreement->versions()->create(['version' => 1, 'content' => $content, 'status' => 'draft', 'created_by_actor_id' => $actor->id]);
+            $this->event($agreement, $version, $actor, 'agreement.version.created');
+
             return $agreement;
         });
     }
-    public function revise(GroupAgreement $agreement, Actor $actor, string $content): GroupAgreementVersion
+
+    public function revise(GroupAgreement $agreement, Actor $actor, string $content, string $rationale, bool $reacceptanceRequired): GroupAgreementVersion
     {
-        return DB::transaction(function () use ($agreement, $actor, $content): GroupAgreementVersion {
+        return DB::transaction(function () use ($agreement, $actor, $content, $rationale, $reacceptanceRequired): GroupAgreementVersion {
             $next = ((int) $agreement->versions()->lockForUpdate()->max('version')) + 1;
-            return $agreement->versions()->create(['version' => $next, 'content' => $content, 'status' => 'draft', 'created_by_actor_id' => $actor->id]);
+            $version = $agreement->versions()->create(compact('content', 'rationale') + ['version' => $next, 'status' => 'draft', 'reacceptance_required' => $reacceptanceRequired, 'created_by_actor_id' => $actor->id]);
+            $this->event($agreement, $version, $actor, 'agreement.revision.created', ['rationale' => $rationale]);
+
+            return $version;
         });
     }
-    public function schedule(GroupAgreementVersion $version, ?\DateTimeInterface $from, ?\DateTimeInterface $until): void
+
+    public function propose(GroupAgreementVersion $version, Actor $actor): void
     {
-        abort_if(in_array($version->status, ['active', 'superseded'], true), 422, 'Published versions cannot be edited.');
-        $active = $from === null || $from <= now();
-        $version->update(['status' => $active ? 'active' : 'scheduled', 'effective_from' => $from, 'effective_until' => $until]);
-        if ($active) $version->agreement->versions()->whereKeyNot($version->id)->where('status', 'active')->update(['status' => 'superseded', 'effective_until' => now()]);
+        $this->transition($version, $actor, 'draft', 'proposed', 'agreement.revision.proposed');
+    }
+
+    public function requestClarification(GroupAgreementVersion $version, Actor $actor, string $note): void
+    {
+        $this->transition($version, $actor, 'proposed', 'clarification_requested', 'agreement.revision.clarification_requested', ['note' => $note], ['decision_note' => $note]);
+    }
+
+    public function approve(GroupAgreementVersion $version, Actor $actor): void
+    {
+        $this->transition($version, $actor, 'proposed', 'approved', 'agreement.revision.approved', [], ['approved_by_actor_id' => $actor->id, 'approved_at' => now()]);
+    }
+
+    public function reject(GroupAgreementVersion $version, Actor $actor, string $note): void
+    {
+        $this->transition($version, $actor, ['proposed', 'clarification_requested'], 'rejected', 'agreement.revision.rejected', ['note' => $note], ['decision_note' => $note]);
+    }
+
+    public function schedule(GroupAgreementVersion $version, Actor $actor, \DateTimeInterface $from, ?\DateTimeInterface $until = null): void
+    {
+        abort_unless($from > now(), 422, 'Approved revisions must be scheduled in the future.');
+        abort_if($until !== null && $until <= $from, 422, 'The effective period is invalid.');
+        $this->transition($version, $actor, 'approved', 'scheduled', 'agreement.revision.scheduled', ['effective_from' => $from->format(DATE_ATOM), 'effective_until' => $until?->format(DATE_ATOM)], ['effective_from' => $from, 'effective_until' => $until, 'published_at' => now()]);
+    }
+
+    public function activateDue(?\DateTimeInterface $at = null): int
+    {
+        $at = Carbon::instance($at ?? now());
+
+        return DB::transaction(function () use ($at): int {
+            $versions = GroupAgreementVersion::query()->where('status', 'scheduled')->where('effective_from', '<=', $at)->lockForUpdate()->get();
+            foreach ($versions as $version) {
+                $active = $version->agreement->versions()->where('status', 'active')->lockForUpdate()->first();
+                if ($active !== null) {
+                    $active->update(['status' => 'superseded', 'effective_until' => $at, 'superseded_by_version_id' => $version->id]);
+                }
+                $version->update(['status' => 'active', 'activated_at' => $at]);
+                $this->event($version->agreement, $version, null, 'agreement.revision.activated', ['superseded_version_id' => $active?->id]);
+            }
+
+            return $versions->count();
+        });
+    }
+
+    public function accept(AgreementAcceptance $acceptance, Actor $actor): void
+    {
+        $this->event($acceptance->version->agreement, $acceptance->version, $actor, 'agreement.accepted', ['admission_id' => $acceptance->admission_id, 'acceptance_id' => $acceptance->id, 'evidence_hash' => $acceptance->evidence_hash]);
+    }
+
+    private function transition(GroupAgreementVersion $version, Actor $actor, string|array $from, string $to, string $event, array $metadata = [], array $attributes = []): void
+    {
+        DB::transaction(function () use ($version, $actor, $from, $to, $event, $metadata, $attributes): void {
+            $version = GroupAgreementVersion::query()->lockForUpdate()->findOrFail($version->id);
+            abort_unless(in_array($version->status, (array) $from, true), 422, 'Invalid agreement lifecycle transition.');
+            $version->update(['status' => $to] + $attributes);
+            $this->event($version->agreement, $version, $actor, $event, $metadata);
+        });
+    }
+
+    private function event(GroupAgreement $agreement, ?GroupAgreementVersion $version, ?Actor $actor, string $event, array $metadata = []): void
+    {
+        AgreementEvent::create(['group_agreement_id' => $agreement->id, 'group_agreement_version_id' => $version?->id, 'actor_id' => $actor?->id, 'event' => $event, 'metadata' => $metadata]);
     }
 }
