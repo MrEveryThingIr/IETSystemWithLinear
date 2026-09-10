@@ -12,28 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Group extends Model
 {
     use HasFactory;
-
-    /** @return BelongsTo<Actor, $this> */
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(Actor::class, 'created_by_actor_id');
-    }
-
-    /** @return HasMany<GroupMembership, $this> */
-    public function memberships(): HasMany
-    {
-        return $this->hasMany(GroupMembership::class);
-    }
-
-    /** @return HasMany<GroupInvitation, $this> */
-    public function invitations(): HasMany
-    {
-        return $this->hasMany(GroupInvitation::class);
-    }
-
-    /** @return HasMany<Story, $this> */
-    public function stories(): HasMany
-    {
-        return $this->hasMany(Story::class);
-    }
+    public function creator(): BelongsTo { return $this->belongsTo(Actor::class, 'created_by_actor_id'); }
+    public function memberships(): HasMany { return $this->hasMany(GroupMembership::class); }
+    public function invitations(): HasMany { return $this->hasMany(GroupInvitation::class); }
+    public function admissions(): HasMany { return $this->hasMany(Admission::class); }
+    public function agreements(): HasMany { return $this->hasMany(GroupAgreement::class); }
+    public function stories(): HasMany { return $this->hasMany(Story::class); }
 }
