@@ -28,7 +28,8 @@ class ManageGroupAgreement
     public function schedule(GroupAgreementVersion $version, ?\DateTimeInterface $from, ?\DateTimeInterface $until): void
     {
         abort_if(in_array($version->status, ['active', 'superseded'], true), 422, 'Published versions cannot be edited.');
-        $version->update(['status' => $from !== null && $from->isFuture() ? 'scheduled' : 'active', 'effective_from' => $from, 'effective_until' => $until]);
-        if ($version->status === 'active') $version->agreement->versions()->whereKeyNot($version->id)->where('status', 'active')->update(['status' => 'superseded', 'effective_until' => now()]);
+        $active = $from === null || $from <= now();
+        $version->update(['status' => $active ? 'active' : 'scheduled', 'effective_from' => $from, 'effective_until' => $until]);
+        if ($active) $version->agreement->versions()->whereKeyNot($version->id)->where('status', 'active')->update(['status' => 'superseded', 'effective_until' => now()]);
     }
 }
