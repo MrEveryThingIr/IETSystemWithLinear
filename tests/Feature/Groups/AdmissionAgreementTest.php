@@ -82,7 +82,7 @@ class AdmissionAgreementTest extends TestCase
         $group = Group::create(['name' => 'Group', 'created_by_actor_id' => $owner->id]);
         $roles = app(GroupRoleProvisioner::class);
         $group->memberships()->create(['actor_id' => $owner->id, 'status' => 'active']);
-        $roles->assign($owner, $group, $roles->provision($group)['owner']);
+        $roles->grant($owner, $group, $roles->provision($group)['owner']);
         $admission = Admission::create(['group_id' => $group->id, 'candidate_actor_id' => $candidate->id, 'status' => 'approved']);
         $agreement = GroupAgreement::create(['group_id' => $group->id, 'name' => 'Rules', 'required_for_admission' => true]);
         $version = GroupAgreementVersion::create(['group_agreement_id' => $agreement->id, 'version' => 1, 'content' => 'Terms', 'status' => 'active']);

@@ -72,9 +72,9 @@ class GroupOwnerConcurrencyTest extends TestCase
         $roles = app(GroupRoleProvisioner::class);
         $ownerRole = $roles->provision($group)['owner'];
         $firstMembership = $group->memberships()->create(['actor_id' => $firstOwner->id, 'status' => 'active']);
-        $roles->assign($firstOwner, $group, $ownerRole);
+        $roles->grant($firstOwner, $group, $ownerRole);
         $secondMembership = $group->memberships()->create(['actor_id' => $secondOwner->id, 'status' => 'active']);
-        $roles->assign($secondOwner, $group, $ownerRole);
+        $roles->grant($secondOwner, $group, $ownerRole);
         $barrierPrefix = $this->barrierPrefix;
         $groupId = $group->id;
 

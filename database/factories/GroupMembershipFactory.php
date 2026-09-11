@@ -31,4 +31,14 @@ class GroupMembershipFactory extends Factory
     {
         return $this->state(fn (): array => ['status' => 'removed']);
     }
+
+    public function suspended(): static
+    {
+        return $this->state(fn (): array => ['status' => 'suspended']);
+    }
+
+    public function left(): static
+    {
+        return $this->state(fn (): array => ['status' => 'left']);
+    }
 }

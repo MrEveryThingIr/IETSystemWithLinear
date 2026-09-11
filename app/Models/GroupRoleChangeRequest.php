@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Permission\Models\Role;
 
-#[Fillable(['group_id', 'membership_id', 'requested_role_id', 'status', 'reviewed_by_actor_id', 'reviewed_at'])]
+#[Fillable(['group_id', 'membership_id', 'requested_role_id', 'request_type', 'pending_key', 'status', 'reviewed_by_actor_id', 'reviewed_at'])]
 class GroupRoleChangeRequest extends Model
 {
     use HasFactory;

@@ -13,6 +13,7 @@ use App\Models\GroupAgreementVersion;
 use App\Models\GroupInvitation;
 use App\Models\GroupInvitationAcceptance;
 use App\Models\GroupMembership;
+use App\Models\GroupMembershipEvent;
 use App\Models\GroupRoleChangeRequest;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\PlatformAccessGrant;
@@ -34,6 +35,7 @@ class ModelFactoryTest extends TestCase
             Actor::factory()->create(),
             Group::factory()->create(),
             GroupMembership::factory()->create(),
+            GroupMembershipEvent::factory()->create(),
             GroupInvitation::factory()->create(),
             GroupInvitationAcceptance::factory()->create(),
             Admission::factory()->create(),
@@ -67,6 +69,8 @@ class ModelFactoryTest extends TestCase
         $this->assertNotNull(GroupInvitation::factory()->revoked()->create()->revoked_at);
         $this->assertSame(1, GroupInvitation::factory()->exhausted()->create()->uses_count);
         $this->assertSame('removed', GroupMembership::factory()->removed()->create()->status);
+        $this->assertSame('suspended', GroupMembership::factory()->suspended()->create()->status);
+        $this->assertSame('left', GroupMembership::factory()->left()->create()->status);
         $this->assertSame('suspended', User::factory()->suspended()->create()->status);
         $this->assertSame('closed', User::factory()->closed()->create()->status);
         $this->assertSame('archived', Actor::factory()->withoutUser()->archived()->create()->status);

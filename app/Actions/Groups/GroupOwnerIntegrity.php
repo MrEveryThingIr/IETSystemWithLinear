@@ -46,7 +46,7 @@ class GroupOwnerIntegrity
             ->join('roles', function (JoinClause $join) use ($groupId): void {
                 $join->on('roles.id', '=', 'model_has_roles.role_id')
                     ->where('roles.group_id', '=', $groupId)
-                    ->where('roles.name', '=', 'Owner');
+                    ->where('roles.system_key', '=', 'owner');
             })
             ->where('group_memberships.group_id', $groupId)
             ->where('group_memberships.status', 'active')

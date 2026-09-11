@@ -3,11 +3,14 @@
 namespace App\Policies;
 
 use App\Actions\Groups\GroupRoleProvisioner;
+use App\GroupPermission;
+use App\GroupRoleKey;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupAgreementVersion;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\User;
+use App\PlatformCapability;
 
 class GroupPolicy
 {
@@ -15,47 +18,71 @@ class GroupPolicy
 
     public function view(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'participate');
+        return $this->allows($user, $group, GroupPermission::Participate->value);
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->hasPlatformCapability(PlatformCapability::CreateGroups);
     }
 
     public function update(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'manage_group');
+        return $this->allows($user, $group, GroupPermission::ManageGroup->value);
     }
 
     public function createInvitation(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'manage_invitations');
+        return $this->allows($user, $group, GroupPermission::ManageInvitations->value);
     }
 
     public function manageRoles(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'manage_roles');
+        return $this->allows($user, $group, GroupPermission::ManageRoles->value);
     }
 
     public function requestRole(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'participate');
+        return $this->allows($user, $group, GroupPermission::Participate->value);
     }
 
     public function approveRoleChanges(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'approve_role_changes');
+        return $this->allows($user, $group, GroupPermission::ApproveRoleChanges->value);
     }
 
     public function manageMembers(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'manage_members');
+        return $this->allows($user, $group, GroupPermission::ManageMembers->value);
     }
 
     public function manageAdmissions(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'manage_members');
+        return $this->allows($user, $group, GroupPermission::ManageAdmissions->value);
     }
 
     public function manageAgreements(User $user, Group $group): bool
     {
-        return $this->allows($user, $group, 'manage_group');
+        return $this->allows($user, $group, GroupPermission::ManageAgreements->value);
+    }
+
+    public function viewGroupAudit(User $user, Group $group): bool
+    {
+        return $this->allows($user, $group, GroupPermission::ViewGroupAudit->value);
+    }
+
+    public function manageSimulations(User $user, Group $group): bool
+    {
+        return $this->allows($user, $group, GroupPermission::ManageSimulations->value);
+    }
+
+    public function transferOwnership(User $user, Group $group): bool
+    {
+        $actor = $user->actor;
+
+        return $actor instanceof Actor
+            && $this->allows($user, $group, GroupPermission::TransferOwnership->value)
+            && $this->groupRoles->hasBuiltInRole($actor, $group, GroupRoleKey::Owner);
     }
 
     private function allows(User $user, Group $group, string $permission): bool
@@ -70,7 +97,7 @@ class GroupPolicy
             return false;
         }
 
-        return $permission !== 'participate' || ! $this->requiresReacceptance($group, $membership->id);
+        return $permission !== GroupPermission::Participate->value || ! $this->requiresReacceptance($group, $membership->id);
     }
 
     private function requiresReacceptance(Group $group, int $membershipId): bool

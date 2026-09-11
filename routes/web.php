@@ -20,6 +20,7 @@ use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
 use App\Models\Actor;
+use App\Models\Group;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'));
@@ -44,7 +45,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
     Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');
     Route::livewire('/groups', GroupIndex::class)->name('groups.index');
-    Route::livewire('/groups/create', CreateGroup::class)->name('groups.create');
+    Route::livewire('/groups/create', CreateGroup::class)->can('create', Group::class)->name('groups.create');
     Route::livewire('/groups/{group}/accept-agreements', AcceptAgreements::class)->name('groups.accept-agreements');
     Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show');
     Route::livewire('/groups/{group}/agreements', Agreements::class)->name('groups.agreements');

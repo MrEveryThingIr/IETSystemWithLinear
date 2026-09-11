@@ -8,15 +8,19 @@ use Illuminate\Support\Facades\DB;
 
 class CreateGroup
 {
-    public function __construct(private GroupRoleProvisioner $roles) {}
+    public function __construct(
+        private GroupRoleProvisioner $roles,
+        private TransitionGroupMembership $memberships,
+    ) {}
 
     public function execute(Actor $actor, string $name, ?string $description): Group
     {
         return DB::transaction(function () use ($actor, $name, $description): Group {
             $group = Group::create(['name' => $name, 'description' => $description, 'created_by_actor_id' => $actor->id]);
             $role = $this->roles->provision($group)['owner'];
-            $group->memberships()->create(['actor_id' => $actor->id, 'status' => 'active']);
-            $this->roles->assign($actor, $group, $role);
+            $membership = $group->memberships()->create(['actor_id' => $actor->id, 'status' => 'active']);
+            $this->roles->grant($actor, $group, $role);
+            $this->memberships->recordInitial($membership, $actor, 'Group creator membership established.');
 
             return $group;
         });

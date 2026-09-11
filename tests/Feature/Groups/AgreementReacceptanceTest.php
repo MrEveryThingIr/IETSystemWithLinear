@@ -28,8 +28,8 @@ class AgreementReacceptanceTest extends TestCase
         $ownerMembership = $group->memberships()->create(['actor_id' => $owner->id, 'status' => 'active']);
         $memberMembership = $group->memberships()->create(['actor_id' => $member->id, 'status' => 'active']);
         $provisioned = $roles->provision($group);
-        $roles->assign($owner, $group, $provisioned['owner']);
-        $roles->assign($member, $group, $provisioned['member']);
+        $roles->grant($owner, $group, $provisioned['owner']);
+        $roles->grant($member, $group, $provisioned['member']);
 
         $agreement = GroupAgreement::create(['group_id' => $group->id, 'name' => 'Rules']);
         $first = GroupAgreementVersion::create(['group_agreement_id' => $agreement->id, 'version' => 1, 'content' => 'First rules', 'status' => 'active', 'reacceptance_required' => true, 'effective_from' => now()->subMinute()]);

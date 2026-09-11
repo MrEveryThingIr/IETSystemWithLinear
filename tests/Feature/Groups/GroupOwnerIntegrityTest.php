@@ -5,12 +5,12 @@ namespace Tests\Feature\Groups;
 use App\Actions\Groups\GroupRoleProvisioner;
 use App\Actions\Groups\RemoveGroupMember;
 use App\Exceptions\CannotLeaveGroupWithoutOwner;
+use App\GroupRoleKey;
 use App\Livewire\Groups\Show;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupInvitation;
 use App\Models\GroupMembership;
-use App\Models\GroupRoleChangeRequest;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -47,23 +47,20 @@ class GroupOwnerIntegrityTest extends TestCase
         $this->assertSame(1, $this->activeOwnerCount($group));
     }
 
-    public function test_approving_a_request_that_demotes_the_last_owner_is_rejected(): void
+    public function test_revoking_the_last_owner_role_is_rejected(): void
     {
         [$group, $owner, $roles] = $this->ownedGroup();
-        $membership = $group->memberships()->where('actor_id', $owner->id)->sole();
-        $request = GroupRoleChangeRequest::create([
-            'group_id' => $group->id,
-            'membership_id' => $membership->id,
-            'requested_role_id' => $roles->provision($group)['member']->id,
-            'status' => 'pending',
-        ]);
 
-        Livewire::actingAs($owner->user)
-            ->test(Show::class, ['group' => $group])
-            ->call('reviewRoleRequest', $request->id, true)
-            ->assertStatus(200);
+        $rejected = false;
 
-        $this->assertSame('pending', $request->refresh()->status);
+        try {
+            $roles->revoke($owner, $group, $roles->builtInRole($group, GroupRoleKey::Owner));
+            $this->fail('The final active Owner role was revoked.');
+        } catch (CannotLeaveGroupWithoutOwner) {
+            $rejected = true;
+        }
+
+        $this->assertTrue($rejected);
         $this->assertTrue($roles->hasRole($owner, $group, 'Owner'));
         $this->assertSame(1, $this->activeOwnerCount($group));
     }
@@ -76,14 +73,14 @@ class GroupOwnerIntegrityTest extends TestCase
         $removeGroupMember->handle($firstGroup->memberships()->where('actor_id', $firstOwner->id)->sole());
 
         try {
-            $roles->assign($secondOwner, $firstGroup, $roles->provision($firstGroup)['member']);
-            $this->fail('The final active Owner was demoted.');
+            $roles->revoke($secondOwner, $firstGroup, $roles->builtInRole($firstGroup, GroupRoleKey::Owner));
+            $this->fail('The final active Owner role was revoked.');
         } catch (CannotLeaveGroupWithoutOwner) {
             $this->assertSame(1, $this->activeOwnerCount($firstGroup));
         }
 
         [$secondGroup, $thirdOwner, $fourthOwner, $roles] = $this->groupWithTwoOwners();
-        $roles->assign($thirdOwner, $secondGroup, $roles->provision($secondGroup)['member']);
+        $roles->revoke($thirdOwner, $secondGroup, $roles->builtInRole($secondGroup, GroupRoleKey::Owner));
 
         try {
             $removeGroupMember->handle($secondGroup->memberships()->where('actor_id', $fourthOwner->id)->sole());
@@ -123,7 +120,7 @@ class GroupOwnerIntegrityTest extends TestCase
         $group = Group::create(['name' => 'Owner integrity', 'description' => null, 'created_by_actor_id' => $owner->id]);
         $roles = app(GroupRoleProvisioner::class);
         $group->memberships()->create(['actor_id' => $owner->id, 'status' => 'active']);
-        $roles->assign($owner, $group, $roles->provision($group)['owner']);
+        $roles->grant($owner, $group, $roles->provision($group)['owner']);
 
         return [$group, $owner, $roles];
     }
@@ -134,7 +131,7 @@ class GroupOwnerIntegrityTest extends TestCase
         [$group, $firstOwner, $roles] = $this->ownedGroup();
         $secondOwner = Actor::factory()->create();
         $group->memberships()->create(['actor_id' => $secondOwner->id, 'status' => 'active']);
-        $roles->assign($secondOwner, $group, $roles->provision($group)['owner']);
+        $roles->grant($secondOwner, $group, $roles->provision($group)['owner']);
 
         return [$group, $firstOwner, $secondOwner, $roles];
     }

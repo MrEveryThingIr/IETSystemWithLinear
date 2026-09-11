@@ -20,7 +20,7 @@
         <flux:callout variant="danger" class="break-all">{{ session('error') }}</flux:callout>
     @endif
 
-    @if ($isOwner)
+    @if ($canManageGroup)
         <flux:card class="space-y-4">
             <flux:heading size="lg">{{ __('ui.groups.settings') }}</flux:heading>
             <form wire:submit="save" class="space-y-4">
@@ -31,14 +31,16 @@
                 </div>
             </form>
         </flux:card>
+    @endif
 
+    @if ($canManageRoles)
         <flux:card class="space-y-4">
             <flux:heading size="lg">{{ __('ui.groups.roles_permissions') }}</flux:heading>
             <form wire:submit="createRole" class="space-y-3">
                 <flux:input wire:model="newRoleName" :label="__('ui.groups.new_role_name')" />
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     @foreach ($permissionNames as $permission)
-                        <flux:checkbox wire:model="newRolePermissions" value="{{ $permission }}" label="{{ str($permission)->replace('_', ' ')->title() }}" />
+                        <flux:checkbox wire:model="newRolePermissions" value="{{ $permission }}" label="{{ $permissionLabels[$permission] }}" />
                     @endforeach
                 </div>
                 <flux:button type="submit" variant="primary">{{ __('ui.groups.create_role') }}</flux:button>
@@ -49,11 +51,11 @@
                         @if ($editingRoleId === $role->id)
                             <form wire:submit="updateRole" class="space-y-3">
                                 <flux:input wire:model="editingRoleName" :label="__('ui.groups.role_name')" />
-                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">@foreach ($permissionNames as $permission)<flux:checkbox wire:model="editingRolePermissions" value="{{ $permission }}" label="{{ str($permission)->replace('_', ' ')->title() }}" />@endforeach</div>
+                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">@foreach ($permissionNames as $permission)<flux:checkbox wire:model="editingRolePermissions" value="{{ $permission }}" label="{{ $permissionLabels[$permission] }}" />@endforeach</div>
                                 <div class="flex gap-2"><flux:button type="submit" variant="primary">{{ __('ui.groups.save_role') }}</flux:button><flux:button wire:click="$set('editingRoleId', null)" variant="ghost">{{ __('ui.common.cancel') }}</flux:button></div>
                             </form>
                         @else
-                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><flux:heading>{{ $role->name }}</flux:heading><flux:text>{{ $role->permissions->pluck('name')->join(', ') ?: __('ui.groups.no_permissions') }}</flux:text></div>@unless (in_array($role->name, ['Owner', 'Member'], true))<div class="flex gap-2"><flux:button wire:click="editRole({{ $role->id }})" size="sm" variant="ghost">{{ __('ui.groups.edit') }}</flux:button><flux:button wire:click="deleteRole({{ $role->id }})" size="sm" variant="danger">{{ __('ui.groups.delete') }}</flux:button></div>@endunless</div>
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><flux:heading>{{ $role->name }}</flux:heading><div class="flex flex-wrap gap-1">@forelse ($role->permissions as $permission)<flux:badge>{{ $permissionLabels[$permission->name] ?? $permission->name }}</flux:badge>@empty<flux:text>{{ __('ui.groups.no_permissions') }}</flux:text>@endforelse</div></div>@if ($role->getAttribute('system_key') === null)<div class="flex gap-2"><flux:button wire:click="editRole({{ $role->id }})" size="sm" variant="ghost">{{ __('ui.groups.edit') }}</flux:button><flux:button wire:click="deleteRole({{ $role->id }})" size="sm" variant="danger">{{ __('ui.groups.delete') }}</flux:button></div>@endif</div>
                         @endif
                     </div>
                 @endforeach
@@ -91,30 +93,52 @@
         <div class="space-y-3">
             @foreach ($memberships as $membership)
                 <div class="flex flex-col gap-3 border-b border-zinc-200 pb-3 last:border-0 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
-                    <div><flux:heading>{{ $membership->actor->user?->username ?? __('ui.groups.unknown_member') }}</flux:heading><flux:text>{{ $roles[$membership->id] }}</flux:text></div>
-                    @if ($membership->actor_id === auth()->user()->actor->id && $roles[$membership->id] !== 'Owner')
-                        <div class="flex flex-col gap-2 sm:flex-row"><flux:select wire:model="requestedRoles.{{ $membership->id }}" :aria-label="__('ui.groups.requested_role')"><option value="">{{ __('ui.groups.request_role') }}</option>@foreach ($availableRoles->where('name', '!=', 'Owner') as $role)<option value="{{ $role->id }}">{{ $role->name }}</option>@endforeach</flux:select><flux:button wire:click="requestRole({{ $membership->id }})" size="sm" variant="ghost">{{ __('ui.groups.request_change') }}</flux:button></div>
+                    <div class="space-y-1"><flux:heading>{{ $membership->actor->user?->username ?? __('ui.groups.unknown_member') }}</flux:heading><div class="flex flex-wrap gap-2"><flux:text>{{ $roles[$membership->id] }}</flux:text><flux:badge :color="$membership->status === 'active' ? 'green' : 'amber'">{{ __('ui.status.'.$membership->status) }}</flux:badge></div></div>
+                    @if ($membership->status === 'active' && $membership->actor_id === auth()->user()->actor->id && $availableRoles->whereNull('system_key')->isNotEmpty())
+                        <div class="flex flex-col gap-2 sm:flex-row"><flux:select wire:model="requestedRoleTypes.{{ $membership->id }}" :aria-label="__('ui.groups.role_request_type')"><option value="grant">{{ __('ui.groups.grant_role') }}</option><option value="revoke">{{ __('ui.groups.revoke_role') }}</option></flux:select><flux:select wire:model="requestedRoles.{{ $membership->id }}" :aria-label="__('ui.groups.requested_role')"><option value="">{{ __('ui.groups.request_role') }}</option>@foreach ($availableRoles->whereNull('system_key') as $role)<option value="{{ $role->id }}">{{ $role->name }}</option>@endforeach</flux:select><flux:button wire:click="requestRole({{ $membership->id }})" size="sm" variant="ghost">{{ __('ui.groups.request_change') }}</flux:button></div>
                     @endif
-                    @if ($isOwner)
-                        <flux:button wire:click="removeMember({{ $membership->id }})" size="sm" variant="danger">{{ __('ui.groups.remove') }}</flux:button>
+                    @if ($canManageMembers)
+                        <div class="flex flex-wrap gap-2">
+                            @if ($membership->status === 'active')
+                                <flux:button wire:click="suspendMember({{ $membership->id }})" size="sm" variant="ghost">{{ __('ui.groups.suspend') }}</flux:button>
+                                <flux:button wire:click="removeMember({{ $membership->id }})" size="sm" variant="danger">{{ __('ui.groups.remove') }}</flux:button>
+                            @else
+                                <flux:button wire:click="reactivateMember({{ $membership->id }})" size="sm" variant="primary">{{ __('ui.groups.reactivate') }}</flux:button>
+                            @endif
+                        </div>
                     @endif
                 </div>
             @endforeach
         </div>
     </flux:card>
 
-    @if ($isOwner && $pendingRequests->isNotEmpty())
+    @if ($canApproveRoleChanges && $pendingRequests->isNotEmpty())
         <flux:card class="space-y-4">
             <flux:heading size="lg">{{ __('ui.groups.pending_role_changes') }}</flux:heading>
             @foreach ($pendingRequests as $request)
                 <div class="flex flex-col gap-2 border-b border-zinc-200 pb-3 last:border-0 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
-                    <flux:text>{{ __('ui.groups.role_request', ['username' => $request->membership->actor->user?->username ?? __('ui.common.unknown_account'), 'role' => $request->requestedRole->name]) }}</flux:text>
+                    <flux:text>{{ __('ui.groups.role_request', ['username' => $request->membership->actor->user?->username ?? __('ui.common.unknown_account'), 'type' => __('ui.groups.'.$request->request_type.'_role'), 'role' => $request->requestedRole->name]) }}</flux:text>
                     <div class="flex gap-2">
                         <flux:button wire:click="reviewRoleRequest({{ $request->id }}, true)" size="sm" variant="primary">{{ __('ui.admission.approve') }}</flux:button>
                         <flux:button wire:click="reviewRoleRequest({{ $request->id }}, false)" size="sm" variant="ghost">{{ __('ui.admission.reject') }}</flux:button>
                     </div>
                 </div>
             @endforeach
+        </flux:card>
+    @endif
+
+    @if ($canTransferOwnership)
+        <flux:card class="space-y-4">
+            <div><flux:heading size="lg">{{ __('ui.groups.transfer_ownership') }}</flux:heading><flux:text>{{ __('ui.groups.transfer_ownership_help') }}</flux:text></div>
+            <form wire:submit="transferOwnership" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <flux:select wire:model="transferMembershipId" :label="__('ui.groups.new_owner')">
+                    <option value="">{{ __('ui.groups.choose_member') }}</option>
+                    @foreach ($memberships->where('status', 'active')->where('actor_id', '!=', auth()->user()->actor->id) as $membership)
+                        <option value="{{ $membership->id }}">{{ $membership->actor->user?->username ?? __('ui.groups.unknown_member') }}</option>
+                    @endforeach
+                </flux:select>
+                <flux:button type="submit" variant="danger">{{ __('ui.groups.transfer') }}</flux:button>
+            </form>
         </flux:card>
     @endif
 </section>

@@ -2,7 +2,7 @@
 
 ## Task state
 
-- **Status:** F1 validated; commit pending
+- **Status:** F2 validated; commit pending
 - **Responsible arm:** Codex escalation arm; human owner remains product authority
 - **Risk:** High across the full program; milestones are committed and validated independently
 
@@ -66,8 +66,8 @@ Implement the accepted identity, authority, Membership, Group, workflow, deliver
 | Milestone | State | Commit | Validation |
 | --- | --- | --- | --- |
 | F0 — Preserve/baseline | Complete | `663a64b` | PHPUnit 115/658; PHPStan 0; Vite build passed |
-| F1 — Actor lockdown | Validated; commit pending | Pending | Focused 36/173; full PHPUnit 129/692; PHPStan 0; Vite build passed |
-| F2 — Membership/RBAC | Not started | — | — |
+| F1 — Actor lockdown | Complete | `fee708d` | Focused 36/173; full PHPUnit 129/692; PHPStan 0; Vite build passed |
+| F2 — Membership/RBAC | Validated; commit pending | Pending | Focused/regression 46/190; full PHPUnit 149/745; PHPStan 0; MySQL migrations and Vite build passed |
 | F3 — Workflow integrity | Not started | — | — |
 | F4 — Delivery reliability | Not started | — | — |
 | S1 — Simulation boundary | Blocked by F0–F4 | — | — |
@@ -94,6 +94,13 @@ Implement the accepted identity, authority, Membership, Group, workflow, deliver
 - Added authorized Actor archival with timestamp, administrator, and required reason while protecting active User identities.
 - Hid Actor administration navigation from unauthorized accounts and localized the revised interface in all four registered locales.
 - Recorded durable application and Actor identity rules under `.ai/rules`.
+- Added immutable built-in Group role identities, the frozen permission catalog, baseline Member plus additive contextual roles, and permission-union resolution isolated by Group.
+- Replaced role-replacement semantics with explicit grant/revoke operations and prohibited custom roles from receiving ownership-transfer authority.
+- Added database-enforced idempotence for pending grant/revoke requests, self-review protection, locked review, and single-role mutation semantics.
+- Added the `active`, `suspended`, `left`, and `removed` Membership transition matrix with immutable events, authority suspension, role preservation on suspension, and baseline-only readmission behavior.
+- Added dedicated atomic ownership transfer and extended last-active-Owner protection to role revocation, suspension, removal, and leave paths.
+- Made Group creation require the User-scoped `create_groups` platform capability and aligned Group policies and rendered management surfaces with contextual capabilities.
+- Localized all Group permission labels and new Membership, role-request, and ownership interface text across English, Arabic, Persian, and Simplified Chinese.
 
 ## Tests and commands actually run
 
@@ -108,10 +115,16 @@ Implement the accepted identity, authority, Membership, Group, workflow, deliver
 - `npm.cmd run build` — production Vite build passed after F1.
 - Actor route inspection confirms only authorized index, create, and show routes; the generic edit route is absent.
 - Read-only schema inspection confirmed the platform grant foreign keys, audit fields, indexes, and correlation-ID uniqueness.
+- `php artisan migrate --no-interaction` — F2 upgrade migrations passed on MySQL 8.4.3.
+- Focused/regression F2 and localization suite — 46 tests passed with 190 assertions.
+- Full `php artisan test --compact --do-not-cache-result` — 149 tests passed with 745 assertions.
+- `vendor/bin/phpstan analyse --memory-limit=1G` — passed with 0 errors after F2.
+- `npm.cmd run build` — production Vite build passed after the F2 Blade changes.
+- `vendor/bin/pint --dirty --format agent` and `git diff --check` — passed.
 
 ## Risks and unresolved questions
 
-- F2–F4 alter security and lifecycle semantics and require narrow adversarial tests before the full suite.
+- F3–F4 alter admission, invitation, evidence, concurrency, privacy, time, and delivery semantics and require narrow adversarial tests before the full suite.
 - Existing Farsi seed work has not yet been attributed or validated and must not be silently overwritten.
 - Simulation implementation remains prohibited until the complete foundation exit gate passes.
 

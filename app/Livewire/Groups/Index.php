@@ -20,7 +20,9 @@ class Index extends Component
     {
         $actor = auth()->user()->actor;
         $memberships = GroupMembership::query()->with('group')->where('actor_id', $actor->id)->where('status', 'active')->latest()->get();
-        $roles = $memberships->mapWithKeys(fn (GroupMembership $membership): array => [$membership->group_id => $groupRoles->roleName($actor, $membership->group) ?? 'Member']);
+        $roles = $memberships->mapWithKeys(fn (GroupMembership $membership): array => [
+            $membership->group_id => $groupRoles->roleNames($actor, $membership->group)->join(', '),
+        ]);
         $requiresAgreementAcceptance = $memberships->mapWithKeys(fn (GroupMembership $membership): array => [
             $membership->group_id => Gate::forUser(auth()->user())->denies('view', $membership->group),
         ]);

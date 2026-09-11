@@ -28,6 +28,8 @@ class GroupRoleChangeRequestFactory extends Factory
                 'name' => 'Requested role '.fake()->unique()->numerify('#####'),
                 'guard_name' => 'web',
             ])->id,
+            'request_type' => 'grant',
+            'pending_key' => fake()->unique()->uuid(),
             'status' => 'pending',
             'reviewed_by_actor_id' => null,
             'reviewed_at' => null,
@@ -39,6 +41,7 @@ class GroupRoleChangeRequestFactory extends Factory
     {
         return $this->state(fn (): array => [
             'status' => 'approved',
+            'pending_key' => null,
             'reviewed_by_actor_id' => $reviewer?->id ?? Actor::factory(),
             'reviewed_at' => now(),
             'review_locked_at' => now(),
@@ -49,9 +52,20 @@ class GroupRoleChangeRequestFactory extends Factory
     {
         return $this->state(fn (): array => [
             'status' => 'rejected',
+            'pending_key' => null,
             'reviewed_by_actor_id' => $reviewer?->id ?? Actor::factory(),
             'reviewed_at' => now(),
             'review_locked_at' => now(),
         ]);
+    }
+
+    public function revoke(): static
+    {
+        return $this->state(fn (): array => ['request_type' => 'revoke']);
+    }
+
+    public function cancelled(): static
+    {
+        return $this->state(fn (): array => ['status' => 'cancelled', 'pending_key' => null]);
     }
 }

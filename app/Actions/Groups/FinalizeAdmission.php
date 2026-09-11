@@ -14,7 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class FinalizeAdmission
 {
-    public function __construct(private GroupRoleProvisioner $roles) {}
+    public function __construct(
+        private GroupRoleProvisioner $roles,
+        private TransitionGroupMembership $memberships,
+    ) {}
 
     public function execute(Admission $admission): GroupMembership
     {
@@ -41,10 +44,17 @@ class FinalizeAdmission
 
             /** @var GroupMembership|null $membership */
             $membership = GroupMembership::query()->where('group_id', $group->id)->where('actor_id', $actor->id)->lockForUpdate()->first();
-            abort_if($membership !== null && $membership->status === 'active', 422, 'Candidate already has an active membership.');
-            $membership ??= new GroupMembership(['group_id' => $group->id, 'actor_id' => $actor->id]);
-            $membership->status = 'active';
-            $membership->save();
+            abort_if($membership !== null && in_array($membership->status, ['active', 'suspended'], true), 422, 'Candidate already has a current membership.');
+            $roles = $this->roles->provision($group);
+
+            if ($membership instanceof GroupMembership) {
+                $membership = $this->memberships->readmit($membership, null, 'Membership restored through an approved admission.');
+            } else {
+                $membership = new GroupMembership(['group_id' => $group->id, 'actor_id' => $actor->id, 'status' => 'active']);
+                $membership->save();
+                $this->roles->grant($actor, $group, $roles['member']);
+                $this->memberships->recordInitial($membership, null, 'Membership created through an approved admission.');
+            }
 
             AgreementAcceptance::query()
                 ->where('admission_id', $admission->id)
@@ -57,8 +67,6 @@ class FinalizeAdmission
                     );
                 });
 
-            $roles = $this->roles->provision($group);
-            $this->roles->assign($actor, $group, $roles['member']);
             $admission->transitionTo('finalized', null, null, ['membership_id' => $membership->id]);
 
             return $membership;

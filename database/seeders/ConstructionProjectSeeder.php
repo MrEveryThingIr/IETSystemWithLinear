@@ -101,7 +101,7 @@ class ConstructionProjectSeeder extends Seeder
 
         $owners->skip(1)->each(function (Actor $owner) use ($group, $roleProvisioner, $builtInRoles): void {
             GroupMembership::factory()->for($group)->for($owner)->create();
-            $roleProvisioner->assign($owner, $group, $builtInRoles['owner']);
+            $roleProvisioner->grant($owner, $group, $builtInRoles['owner']);
         });
 
         $projectRoles = collect(self::PROJECT_ROLES)->mapWithKeys(
@@ -116,7 +116,7 @@ class ConstructionProjectSeeder extends Seeder
             GroupMembership::factory()->for($group)->for($actor)->create();
             /** @var Role $role */
             $role = $projectRoles->values()[($number - 1) % $projectRoles->count()];
-            $roleProvisioner->assign($actor, $group, $role);
+            $roleProvisioner->grant($actor, $group, $role);
 
             return $actor;
         });
@@ -367,7 +367,7 @@ class ConstructionProjectSeeder extends Seeder
             ]);
 
             if ($status === 'approved') {
-                $roleProvisioner->assign($worker, $group, $requestedRole);
+                $roleProvisioner->grant($worker, $group, $requestedRole);
             }
         }
     }
