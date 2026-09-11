@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -51,5 +52,12 @@ class UserFactory extends Factory
     public function closed(): static
     {
         return $this->state(fn (): array => ['status' => 'closed']);
+    }
+
+    public function superadmin(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            PlatformAccessGrant::factory()->for($user)->create();
+        });
     }
 }

@@ -10,8 +10,10 @@
         <flux:sidebar.item :href="route('groups.index')" :current="request()->routeIs('groups.*')" icon="users">
             {{ __('ui.navigation.groups') }}
         </flux:sidebar.item>
-        <flux:sidebar.item :href="route('actors.index')" :current="request()->routeIs('actors.*')" icon="users">
-            {{ __('ui.navigation.actors') }}
-        </flux:sidebar.item>
+        @can('viewAny', App\Models\Actor::class)
+            <flux:sidebar.item :href="route('actors.index')" :current="request()->routeIs('actors.*')" icon="users">
+                {{ __('ui.navigation.actors') }}
+            </flux:sidebar.item>
+        @endcan
     </flux:sidebar.nav>
 </flux:sidebar>

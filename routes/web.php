@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Livewire\Actors\Create;
-use App\Livewire\Actors\Edit;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
 use App\Livewire\Admissions\Show as AdmissionShow;
@@ -20,6 +19,7 @@ use App\Livewire\Groups\Create as CreateGroup;
 use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
+use App\Models\Actor;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'));
@@ -40,10 +40,9 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
     Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
-    Route::livewire('/actors', Index::class)->name('actors.index');
-    Route::livewire('/actors/create', Create::class)->name('actors.create');
-    Route::livewire('/actors/{actor}', Show::class)->name('actors.show');
-    Route::livewire('/actors/{actor}/edit', Edit::class)->name('actors.edit');
+    Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
+    Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
+    Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');
     Route::livewire('/groups', GroupIndex::class)->name('groups.index');
     Route::livewire('/groups/create', CreateGroup::class)->name('groups.create');
     Route::livewire('/groups/{group}/accept-agreements', AcceptAgreements::class)->name('groups.accept-agreements');

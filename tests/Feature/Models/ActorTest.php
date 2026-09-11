@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use LogicException;
 use Tests\TestCase;
 
 class ActorTest extends TestCase
@@ -15,7 +16,16 @@ class ActorTest extends TestCase
 
     public function test_actor_has_only_kernel_columns(): void
     {
-        $this->assertEqualsCanonicalizing(['id', 'user_id', 'created_at', 'updated_at'], Schema::getColumnListing('actors'));
+        $this->assertEqualsCanonicalizing([
+            'id',
+            'user_id',
+            'status',
+            'archived_at',
+            'archived_by_user_id',
+            'archive_reason',
+            'created_at',
+            'updated_at',
+        ], Schema::getColumnListing('actors'));
     }
 
     public function test_multiple_accountless_actors_are_allowed(): void
@@ -50,6 +60,26 @@ class ActorTest extends TestCase
         Actor::factory()->create(['user_id' => $actor->user_id]);
     }
 
+    public function test_existing_actor_identity_link_cannot_be_reassigned_or_detached(): void
+    {
+        $actor = Actor::factory()->create();
+        $originalUser = $actor->user;
+        $otherUser = User::factory()->create();
+
+        foreach ([$otherUser->id, null] as $replacementUserId) {
+            try {
+                $actor->user_id = $replacementUserId;
+                $actor->save();
+                $this->fail('Actor identity reassignment unexpectedly succeeded.');
+            } catch (LogicException $exception) {
+                $this->assertSame('Actor identity links cannot be changed through ordinary model updates.', $exception->getMessage());
+                $actor->refresh();
+            }
+        }
+
+        $this->assertSame($originalUser->id, $actor->user_id);
+    }
+
     public function test_deleting_user_detaches_and_preserves_actor(): void
     {
         $actor = Actor::factory()->create();
@@ -59,13 +89,21 @@ class ActorTest extends TestCase
         $this->assertDatabaseCount('users', 0);
     }
 
-    public function test_deleting_actor_preserves_user(): void
+    public function test_actor_cannot_be_physically_deleted(): void
     {
         $actor = Actor::factory()->create();
         $user = $actor->user;
-        $actor->delete();
+
+        try {
+            $actor->delete();
+            $this->fail('Actor deletion unexpectedly succeeded.');
+        } catch (LogicException $exception) {
+            $this->assertSame('Actors cannot be deleted; archive them instead.', $exception->getMessage());
+        }
+
+        $this->assertModelExists($actor);
         $this->assertModelExists($user);
-        $this->assertNull($user->refresh()->actor);
+        $this->assertTrue($user->refresh()->actor->is($actor));
     }
 
     public function test_default_seeder_associates_the_seed_account_with_an_actor(): void

@@ -2,7 +2,7 @@
 
 ## Task state
 
-- **Status:** F0 validated; commit pending
+- **Status:** F1 validated; commit pending
 - **Responsible arm:** Codex escalation arm; human owner remains product authority
 - **Risk:** High across the full program; milestones are committed and validated independently
 
@@ -65,8 +65,8 @@ Implement the accepted identity, authority, Membership, Group, workflow, deliver
 
 | Milestone | State | Commit | Validation |
 | --- | --- | --- | --- |
-| F0 — Preserve/baseline | Validated; commit pending | Pending | PHPUnit 115/658; PHPStan 0; Vite build passed |
-| F1 — Actor lockdown | Not started | — | — |
+| F0 — Preserve/baseline | Complete | `663a64b` | PHPUnit 115/658; PHPStan 0; Vite build passed |
+| F1 — Actor lockdown | Validated; commit pending | Pending | Focused 36/173; full PHPUnit 129/692; PHPStan 0; Vite build passed |
 | F2 — Membership/RBAC | Not started | — | — |
 | F3 — Workflow integrity | Not started | — | — |
 | F4 — Delivery reliability | Not started | — | — |
@@ -85,17 +85,33 @@ Implement the accepted identity, authority, Membership, Group, workflow, deliver
 
 - Added accepted ADR-001 as the durable architecture decision.
 - Added this single program handoff for milestone-by-milestone evidence.
+- Preserved discarded security work on `recovery/a2da29d-actor-security`.
+- Added auditable User-scoped `platform_access_grants` with the frozen Superadmin capability map.
+- Added the transactional, one-time, console-only `platform:bootstrap-superadmin {email}` workflow.
+- Added `ActorPolicy` and matching route, Livewire-render, and Livewire-mutation authorization.
+- Removed generic Actor identity editing and restricted generic creation to accountless Actors.
+- Added model-level identity-link immutability and prohibition of physical Actor deletion.
+- Added authorized Actor archival with timestamp, administrator, and required reason while protecting active User identities.
+- Hid Actor administration navigation from unauthorized accounts and localized the revised interface in all four registered locales.
+- Recorded durable application and Actor identity rules under `.ai/rules`.
 
 ## Tests and commands actually run
 
 - Laravel Boost application inspection confirmed Laravel 13.29.0, PHP 8.4, and MySQL.
 - Git ancestry inspection confirmed the foundation branch currently equals `milestones`.
 - Configuration inspection confirmed UTC application time.
-- Filesystem ACL inspection confirmed writable project cache/view directories; behavioral baseline validation remains pending.
+- Filesystem ACL and full-suite execution confirmed writable project cache/view directories.
+- `php artisan migrate --no-interaction` — F1 upgrade migrations passed on MySQL 8.4.3.
+- Focused F1 suite — 36 tests passed with 173 assertions.
+- Full `php artisan test --compact --do-not-cache-result` — 129 tests passed with 692 assertions.
+- `vendor/bin/phpstan analyse --no-progress` — passed with 0 errors after F1.
+- `npm.cmd run build` — production Vite build passed after F1.
+- Actor route inspection confirms only authorized index, create, and show routes; the generic edit route is absent.
+- Read-only schema inspection confirmed the platform grant foreign keys, audit fields, indexes, and correlation-ID uniqueness.
 
 ## Risks and unresolved questions
 
-- F1–F4 alter security and lifecycle semantics and require narrow adversarial tests before the full suite.
+- F2–F4 alter security and lifecycle semantics and require narrow adversarial tests before the full suite.
 - Existing Farsi seed work has not yet been attributed or validated and must not be silently overwritten.
 - Simulation implementation remains prohibited until the complete foundation exit gate passes.
 

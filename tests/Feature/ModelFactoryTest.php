@@ -15,6 +15,7 @@ use App\Models\GroupInvitationAcceptance;
 use App\Models\GroupMembership;
 use App\Models\GroupRoleChangeRequest;
 use App\Models\MembershipAgreementAcceptance;
+use App\Models\PlatformAccessGrant;
 use App\Models\Story;
 use App\Models\StoryRole;
 use App\Models\User;
@@ -45,6 +46,7 @@ class ModelFactoryTest extends TestCase
             GroupRoleChangeRequest::factory()->create(),
             Story::factory()->create(),
             StoryRole::factory()->create(),
+            PlatformAccessGrant::factory()->create(),
         ];
 
         foreach ($models as $model) {
@@ -67,5 +69,7 @@ class ModelFactoryTest extends TestCase
         $this->assertSame('removed', GroupMembership::factory()->removed()->create()->status);
         $this->assertSame('suspended', User::factory()->suspended()->create()->status);
         $this->assertSame('closed', User::factory()->closed()->create()->status);
+        $this->assertSame('archived', Actor::factory()->withoutUser()->archived()->create()->status);
+        $this->assertNotNull(PlatformAccessGrant::factory()->revoked()->create()->revoked_at);
     }
 }

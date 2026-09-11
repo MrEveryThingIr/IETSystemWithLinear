@@ -19,4 +19,14 @@ class ActorFactory extends Factory
     {
         return $this->state(fn (): array => ['user_id' => null]);
     }
+
+    public function archived(?User $administrator = null): static
+    {
+        return $this->state(fn (): array => [
+            'status' => 'archived',
+            'archived_at' => now(),
+            'archived_by_user_id' => $administrator?->id ?? User::factory(),
+            'archive_reason' => 'Archived by an authorized platform administrator.',
+        ]);
+    }
 }

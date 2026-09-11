@@ -9,6 +9,7 @@
             <flux:table.columns>
                 <flux:table.column>{{ __('ui.actors.actor') }}</flux:table.column>
                 <flux:table.column>{{ __('ui.actors.association') }}</flux:table.column>
+                <flux:table.column>{{ __('ui.actors.status') }}</flux:table.column>
                 <flux:table.column>{{ __('ui.actors.created') }}</flux:table.column>
                 <flux:table.column><span class="sr-only">{{ __('ui.actors.actions') }}</span></flux:table.column>
             </flux:table.columns>
@@ -23,8 +24,11 @@
                                 <flux:badge>{{ __('ui.actors.accountless') }}</flux:badge>
                             @endif
                         </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge :color="$actor->status === 'active' ? 'green' : 'zinc'">{{ __('ui.actors.statuses.'.$actor->status) }}</flux:badge>
+                        </flux:table.cell>
                         <flux:table.cell>{{ $actor->created_at?->translatedFormat('Y-m-d H:i') }}</flux:table.cell>
-                        <flux:table.cell><flux:button :href="route('actors.edit', $actor)" size="sm" variant="ghost">{{ __('ui.groups.edit') }}</flux:button></flux:table.cell>
+                        <flux:table.cell><flux:button :href="route('actors.show', $actor)" size="sm" variant="ghost">{{ __('ui.actors.view') }}</flux:button></flux:table.cell>
                     </flux:table.row>
                 @endforeach
             </flux:table.rows>

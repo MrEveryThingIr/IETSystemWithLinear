@@ -4,6 +4,7 @@ namespace App\Livewire\Actors;
 
 use App\Models\Actor;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -17,6 +18,8 @@ class Index extends Component
 
     public function render(): View
     {
+        Gate::authorize('viewAny', Actor::class);
+
         return view('livewire.actors.index', [
             'actors' => Actor::with('user')->latest('id')->paginate(15),
         ]);
