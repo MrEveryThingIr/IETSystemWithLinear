@@ -1,0 +1,125 @@
+# BOOTSTRAP-004 — Kernel security and simulation delivery program
+
+## Task state
+
+- **Status:** F0 validated; commit pending
+- **Responsible arm:** Codex escalation arm; human owner remains product authority
+- **Risk:** High across the full program; milestones are committed and validated independently
+
+## Objective
+
+Implement the accepted identity, authority, Membership, Group, workflow, delivery, and simulation architecture in ordered milestones F0–F4 and S1–S4 without crossing frozen boundaries or promoting simulated activity into live truth.
+
+## Authoritative inputs
+
+1. Human-approved evaluation and final settled decisions supplied on 2026-09-11.
+2. `docs/ADR-001-identity-authority-and-simulation-boundaries.md`.
+3. `docs/PROJECT_COMPASS.md` and `docs/DEVELOPMENT_CIRCUIT.md`.
+4. Existing repository behavior, migrations, tests, and previous task handoffs.
+
+## Accepted decisions and invariants
+
+- User, Actor, Membership, and Group remain distinct.
+- Platform authority belongs to User and is auditable.
+- Actor identity is global and ordinary workflows cannot reassign `Actor.user_id`.
+- Actors may hold multiple additive contextual roles in a Group.
+- Membership status gates all contextual authority.
+- Simulation reuses normal Group-domain records with strict consequence isolation.
+- Simulation history is never promoted into live operational truth.
+- MySQL 8+/InnoDB/single-primary and UTC storage define concurrency and time behavior.
+
+## Included
+
+- Foundation milestones F0–F4.
+- Simulation milestones S1–S4 after the foundation exit gate.
+- Focused commits, migration/fresh-upgrade checks, hostile authorization and isolation tests, static analysis, frontend build/audit, localization validation, and durable handoff evidence.
+
+## Excluded
+
+- Spaces and Content implementation, except future integration boundaries.
+- Production Contracts, accounting, settlement, Evidence, and Reputation implementations beyond the isolation guards required by simulation.
+- Any change that contradicts ADR-001 without a human-approved superseding ADR.
+
+## Current verified state
+
+- Branch `feat/kernel-security-foundation` starts exactly at `milestones` commit `0253c05`.
+- Laravel 13.29.0 runs on PHP 8.4 with MySQL as the configured application database.
+- Application timezone is UTC.
+- Discarded security work exists at commit `a2da29d` and requires a dedicated recovery branch.
+- Existing untracked Farsi factory/seeder work is preserved and excluded from unrelated milestone commits until reviewed under F4.
+
+## F0 validation evidence
+
+- Created `recovery/a2da29d-actor-security` at exact commit `a2da29d84d70ec3fceb6f33a08ed13800e8602a6`.
+- Confirmed the working foundation branch starts exactly at `milestones` commit `0253c05`.
+- Confirmed MySQL `8.4.3`, default `InnoDB`, writable single-primary development connection, and Laravel database connection `mysql`.
+- Confirmed Laravel stores application timestamps under the configured `UTC` application timezone. The database host reports `Iran Standard Time`; application conversion must remain explicit at input/render boundaries.
+- Normal PHPUnit compiled-view/cache paths are writable: full suite passed without the previous isolated-path workaround.
+- Production Vite output is writable and the build succeeds when invoked through `npm.cmd` on Windows. PowerShell blocks `npm.ps1` under the host execution policy; this is a shell invocation constraint, not an application build failure.
+- `php artisan test --compact --do-not-cache-result`: 115 tests passed, 658 assertions.
+- `vendor/bin/phpstan analyse --no-progress`: passed with 0 errors.
+- `npm.cmd run build`: passed under Vite 8.2.2.
+- `git diff --check`: passed.
+
+## Milestone ledger
+
+| Milestone | State | Commit | Validation |
+| --- | --- | --- | --- |
+| F0 — Preserve/baseline | Validated; commit pending | Pending | PHPUnit 115/658; PHPStan 0; Vite build passed |
+| F1 — Actor lockdown | Not started | — | — |
+| F2 — Membership/RBAC | Not started | — | — |
+| F3 — Workflow integrity | Not started | — | — |
+| F4 — Delivery reliability | Not started | — | — |
+| S1 — Simulation boundary | Blocked by F0–F4 | — | — |
+| S2 — Simulated Actors/sessions | Blocked by S1 | — | — |
+| S3 — Collaborative simulation | Blocked by S2 | — | — |
+| S4 — System/AI mandates | Blocked by S3 | — | — |
+
+## Files and systems examined
+
+- Git branch/ref topology and discarded commit `a2da29d`.
+- Laravel/PHP/package versions through Laravel Boost.
+- `config/app.php`, `phpunit.xml`, Composer scripts, npm scripts, filesystem ACLs, existing documentation, and task handoffs.
+
+## Changes made
+
+- Added accepted ADR-001 as the durable architecture decision.
+- Added this single program handoff for milestone-by-milestone evidence.
+
+## Tests and commands actually run
+
+- Laravel Boost application inspection confirmed Laravel 13.29.0, PHP 8.4, and MySQL.
+- Git ancestry inspection confirmed the foundation branch currently equals `milestones`.
+- Configuration inspection confirmed UTC application time.
+- Filesystem ACL inspection confirmed writable project cache/view directories; behavioral baseline validation remains pending.
+
+## Risks and unresolved questions
+
+- F1–F4 alter security and lifecycle semantics and require narrow adversarial tests before the full suite.
+- Existing Farsi seed work has not yet been attributed or validated and must not be silently overwritten.
+- Simulation implementation remains prohibited until the complete foundation exit gate passes.
+
+## Repository linkage
+
+- **Branch:** `feat/kernel-security-foundation`
+- **Commits:** Pending
+- **Pull request:** Not created
+- **Linear issue:** Not created
+
+## Prompt for next step
+
+```text
+TASK: Complete the next incomplete milestone in ADR-001 delivery order.
+RESPONSIBLE ARM OR DECISION GATE: Codex escalation arm unless a product semantic conflict requires the human owner.
+AUTHORITATIVE INPUTS: ADR-001, Project Compass, Development Circuit, this handoff, repository tests and migrations.
+CURRENT VERIFIED STATE: Read the milestone ledger and latest validation entries in this handoff.
+ACCEPTED DECISIONS: All ADR-001 decisions.
+OBJECTIVE: Satisfy the next milestone's rendered acceptance and commit it independently.
+INCLUDED: Only that milestone and required supporting corrections.
+EXCLUDED: Later milestones and any superseding architecture decision.
+ACCEPTANCE CRITERIA: Milestone-specific behavior, adversarial tests, Pint, PHPStan, relevant build/database checks, focused commit.
+REQUIRED TESTS: Narrow tests first, then the milestone-appropriate regression suite.
+RISKS: Authorization, tenant isolation, concurrency, irreversible identity changes, cross-mode leakage.
+REQUIRED OUTPUT: Focused commit and updated milestone ledger with exact evidence.
+STOP CONDITIONS: Unresolved product semantics, frozen-boundary conflict, destructive data operation, or validation that cannot be completed.
+```
