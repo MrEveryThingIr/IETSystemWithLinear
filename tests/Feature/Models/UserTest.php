@@ -20,7 +20,7 @@ class UserTest extends TestCase
     public function test_users_contains_only_account_columns(): void
     {
         $this->assertEqualsCanonicalizing([
-            'id', 'username', 'email', 'email_verified_at', 'password',
+            'id', 'username', 'email', 'email_verified_at', 'locale', 'password',
             'status', 'remember_token', 'created_at', 'updated_at',
         ], Schema::getColumnListing('users'));
     }
@@ -121,7 +121,7 @@ class UserTest extends TestCase
         $this->assertNotEmpty($user->refresh()->getRememberToken());
         $this->assertInstanceOf(Carbon::class, $user->email_verified_at);
         $this->assertEqualsCanonicalizing([
-            'id', 'username', 'email', 'email_verified_at', 'status', 'created_at', 'updated_at',
+            'id', 'username', 'email', 'email_verified_at', 'locale', 'status', 'created_at', 'updated_at',
         ], array_keys($user->toArray()));
         Auth::logout();
         $this->assertFalse(Auth::attempt(['email' => $user->email, 'password' => 'wrong-password']));

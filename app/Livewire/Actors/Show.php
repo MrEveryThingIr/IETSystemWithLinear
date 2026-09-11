@@ -19,7 +19,7 @@ class Show extends Component
     public function delete(): void
     {
         $this->actor->delete();
-        session()->flash('status', 'Actor deleted. The associated account was not deleted.');
+        session()->flash('status', __('ui.messages.actor_deleted'));
         $this->redirectRoute('actors.index');
     }
 

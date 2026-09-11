@@ -33,7 +33,7 @@ class Invitations extends Component
         $actor = $this->actor();
         GroupInvitation::create(['group_id' => $this->group->id, 'invited_by_actor_id' => $actor->id, 'email' => $data['email'] ?: null, 'token' => Str::random(48), 'expires_at' => now()->addDays(14), 'max_uses' => $data['maxUses'], 'uses_count' => 0]);
         $this->reset('email');
-        session()->flash('status', 'Invitation created. It will remain available in this list until revoked or expired.');
+        session()->flash('status', __('ui.messages.invitation_created'));
     }
 
     public function revoke(int $id, RevokeGroupInvitation $revoker): void

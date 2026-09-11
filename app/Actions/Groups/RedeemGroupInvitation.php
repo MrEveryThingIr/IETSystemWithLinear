@@ -34,7 +34,7 @@ class RedeemGroupInvitation
             $expiresAt = $invitation->expires_at;
             abort_if($invitation->revoked_at !== null || ($expiresAt instanceof CarbonInterface && $expiresAt->isPast()) || ($invitation->max_uses !== null && $invitation->uses_count >= $invitation->max_uses), 404);
             if ($invitation->email !== null && strcasecmp($invitation->email, $email) !== 0) {
-                throw ValidationException::withMessages(['invitation' => 'This invitation is reserved for a different email address.']);
+                throw ValidationException::withMessages(['invitation' => __('ui.messages.invitation_reserved')]);
             }
             /** @var Admission|null $admission */
             $admission = Admission::query()->where('group_id', $invitation->group_id)->where('candidate_actor_id', $actor->id)->lockForUpdate()->first();

@@ -26,11 +26,11 @@ class VerifyEmailNotice extends Component
 
         $key = 'verification-resend:'.$user->getAuthIdentifier();
         if (RateLimiter::tooManyAttempts($key, 1)) {
-            throw ValidationException::withMessages(['resend' => 'Please wait a minute before requesting another verification email.']);
+            throw ValidationException::withMessages(['resend' => __('ui.messages.verification_throttled')]);
         }
         RateLimiter::hit($key, 60);
         $user->sendEmailVerificationNotification();
-        session()->flash('status', 'A new verification link has been sent.');
+        session()->flash('status', __('ui.messages.verification_sent'));
     }
 
     public function render(): View

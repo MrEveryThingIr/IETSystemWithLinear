@@ -51,19 +51,19 @@ class Login extends Component
 
             if ($invitation->email !== null && strcasecmp($invitation->email, $data['email']) !== 0) {
                 throw ValidationException::withMessages([
-                    'email' => 'This invitation was issued to a different email address.',
+                    'email' => __('ui.messages.invitation_email_mismatch'),
                 ]);
             }
         }
 
         $key = 'login:'.Str::lower($this->email).'|'.request()->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            throw ValidationException::withMessages(['email' => 'Too many login attempts. Please try again in a minute.']);
+            throw ValidationException::withMessages(['email' => __('ui.messages.too_many_login_attempts')]);
         }
 
         if (! Auth::attempt(['email' => $data['email'], 'password' => $data['password'], 'status' => 'active'], $this->remember)) {
             RateLimiter::hit($key, 60);
-            throw ValidationException::withMessages(['email' => 'These credentials do not match our records.']);
+            throw ValidationException::withMessages(['email' => __('auth.failed')]);
         }
 
         RateLimiter::clear($key);

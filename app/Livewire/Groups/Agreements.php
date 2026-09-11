@@ -49,7 +49,7 @@ class Agreements extends Component
         $data = $this->validate(['name' => ['required', 'max:120'], 'content' => ['required', 'string'], 'required' => ['boolean']]);
         $manager->create($this->group, $this->actor(), $data['name'], $data['required'], $data['content']);
         $this->reset('name', 'content');
-        session()->flash('status', 'Agreement created as version 1 draft. Submit it for approval when it is ready.');
+        session()->flash('status', __('ui.messages.agreement_created'));
     }
 
     public function startRevision(int $agreementId): void
@@ -75,21 +75,21 @@ class Agreements extends Component
         /** @var GroupAgreement $agreement */ $agreement = GroupAgreement::query()->where('group_id', $this->group->id)->findOrFail($agreementId);
         $manager->revise($agreement, $this->actor(), $data['revisionContent'], $data['revisionRationale'], $data['reacceptanceRequired']);
         $this->cancelRevision();
-        session()->flash('status', 'A new draft version was created without changing the active version.');
+        session()->flash('status', __('ui.messages.agreement_revision_created'));
     }
 
     public function propose(int $versionId, ManageGroupAgreement $manager): void
     {
         Gate::authorize('manageAgreements', $this->group);
         $manager->propose($this->version($versionId), $this->actor());
-        session()->flash('status', 'Agreement version submitted for approval.');
+        session()->flash('status', __('ui.messages.agreement_submitted'));
     }
 
     public function approve(int $versionId, ManageGroupAgreement $manager): void
     {
         Gate::authorize('manageAgreements', $this->group);
         $manager->approve($this->version($versionId), $this->actor());
-        session()->flash('status', 'Agreement version approved. Activate it now or schedule it.');
+        session()->flash('status', __('ui.messages.agreement_approved'));
     }
 
     public function reject(int $versionId, ManageGroupAgreement $manager): void
@@ -98,7 +98,7 @@ class Agreements extends Component
         $note = $this->validate(['decisionNote' => ['required', 'string']])['decisionNote'];
         $manager->reject($this->version($versionId), $this->actor(), $note);
         $this->reset('decisionNote');
-        session()->flash('status', 'Agreement version rejected.');
+        session()->flash('status', __('ui.messages.agreement_rejected'));
     }
 
     public function requestClarification(int $versionId, ManageGroupAgreement $manager): void
@@ -107,7 +107,7 @@ class Agreements extends Component
         $note = $this->validate(['decisionNote' => ['required', 'string']])['decisionNote'];
         $manager->requestClarification($this->version($versionId), $this->actor(), $note);
         $this->reset('decisionNote');
-        session()->flash('status', 'Agreement version returned for clarification. Create a revised version when ready.');
+        session()->flash('status', __('ui.messages.agreement_clarification'));
     }
 
     public function schedule(int $versionId, ManageGroupAgreement $manager): void
@@ -116,14 +116,14 @@ class Agreements extends Component
         $data = $this->validate(['effectiveFrom' => ['required', 'date', 'after:now'], 'effectiveUntil' => ['nullable', 'date', 'after:effectiveFrom']]);
         $manager->schedule($this->version($versionId), $this->actor(), new \DateTimeImmutable($data['effectiveFrom']), empty($data['effectiveUntil']) ? null : new \DateTimeImmutable($data['effectiveUntil']));
         $this->reset('effectiveFrom', 'effectiveUntil');
-        session()->flash('status', 'Agreement activation scheduled.');
+        session()->flash('status', __('ui.messages.agreement_scheduled'));
     }
 
     public function activate(int $versionId, ManageGroupAgreement $manager): void
     {
         Gate::authorize('manageAgreements', $this->group);
         $manager->activate($this->version($versionId), $this->actor());
-        session()->flash('status', 'Agreement version is now active.');
+        session()->flash('status', __('ui.messages.agreement_activated'));
     }
 
     public function render(): View

@@ -36,7 +36,7 @@ class FinalizeAdmission
                 ->pluck('id');
             $accepted = AgreementAcceptance::query()->where('admission_id', $admission->id)->where('accepted_by_actor_id', $actor->id)->whereIn('group_agreement_version_id', $requiredVersionIds)->count();
             if ($accepted !== $requiredVersionIds->count()) {
-                throw ValidationException::withMessages(['agreements' => 'Every active required agreement version must be accepted before finalization.']);
+                throw ValidationException::withMessages(['agreements' => __('ui.messages.required_agreements_unaccepted')]);
             }
 
             /** @var GroupMembership|null $membership */

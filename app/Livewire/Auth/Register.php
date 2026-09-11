@@ -40,7 +40,7 @@ class Register extends Component
     {
         $key = 'register:'.request()->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            throw ValidationException::withMessages(['email' => 'Too many attempts. Please try again in a minute.']);
+            throw ValidationException::withMessages(['email' => __('ui.messages.too_many_attempts')]);
         }
         RateLimiter::hit($key, 60);
 
