@@ -47,7 +47,8 @@
                                 </flux:badge>
                             </div>
                             @if ($version->effective_from)
-                                <flux:text class="text-sm">{{ __('ui.agreements.effective', ['date' => $version->effective_from->timezone($group->timezone)->translatedFormat('M j, Y H:i').' '.$group->timezone]) }}</flux:text>
+                                @php($displayTimezone = $group->timezone ?: 'UTC')
+                                <flux:text class="text-sm">{{ __('ui.agreements.effective', ['date' => $version->effective_from->timezone($displayTimezone)->translatedFormat('M j, Y H:i').' '.$displayTimezone]) }}</flux:text>
                             @endif
                         </div>
 

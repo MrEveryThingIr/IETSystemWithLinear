@@ -9,6 +9,7 @@ use App\Models\Group;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -219,7 +220,14 @@ class GroupRoleProvisioner
         return $this->withinGroup($group, function () use ($actor, $permission): bool {
             $this->forget($actor);
 
-            return $actor->hasPermissionTo($permission);
+            try {
+                return $actor->hasPermissionTo($permission);
+            } catch (PermissionDoesNotExist) {
+                app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+                return Permission::query()->where('name', $permission)->where('guard_name', 'web')->exists()
+                    && $actor->hasPermissionTo($permission);
+            }
         });
     }
 

@@ -7,8 +7,8 @@ use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
-use Illuminate\Support\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -115,8 +115,9 @@ class Agreements extends Component
     {
         Gate::authorize('manageAgreements', $this->group);
         $data = $this->validate(['effectiveFrom' => ['required', 'date_format:Y-m-d\\TH:i'], 'effectiveUntil' => ['nullable', 'date_format:Y-m-d\\TH:i']]);
-        $from = Carbon::createFromFormat('Y-m-d\\TH:i', $data['effectiveFrom'], $this->group->timezone)->utc();
-        $until = empty($data['effectiveUntil']) ? null : Carbon::createFromFormat('Y-m-d\\TH:i', $data['effectiveUntil'], $this->group->timezone)->utc();
+        $timezone = $this->group->timezone ?: 'UTC';
+        $from = Carbon::createFromFormat('Y-m-d\\TH:i', $data['effectiveFrom'], $timezone)->utc();
+        $until = empty($data['effectiveUntil']) ? null : Carbon::createFromFormat('Y-m-d\\TH:i', $data['effectiveUntil'], $timezone)->utc();
         $manager->schedule($this->version($versionId), $this->actor(), $from, $until);
         $this->reset('effectiveFrom', 'effectiveUntil');
         session()->flash('status', __('ui.messages.agreement_scheduled'));
@@ -141,13 +142,17 @@ class Agreements extends Component
     }
 
     private function version(int $versionId): GroupAgreementVersion
-    { /** @var GroupAgreementVersion $version */ $version = GroupAgreementVersion::query()->whereHas('agreement', fn ($query) => $query->where('group_id', $this->group->id))->findOrFail($versionId);
+    {
+        /** @var GroupAgreementVersion $version */
+        $version = GroupAgreementVersion::query()->whereHas('agreement', fn ($query) => $query->where('group_id', $this->group->id))->findOrFail($versionId);
 
         return $version;
     }
 
     private function actor(): Actor
-    { /** @var Actor $actor */ $actor = Actor::query()->where('user_id', auth()->id())->firstOrFail();
+    {
+        /** @var Actor $actor */
+        $actor = Actor::query()->where('user_id', auth()->id())->firstOrFail();
 
         return $actor;
     }

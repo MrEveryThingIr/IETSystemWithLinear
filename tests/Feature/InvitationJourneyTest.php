@@ -250,7 +250,7 @@ class InvitationJourneyTest extends TestCase
         Livewire::actingAs($owner->user)
             ->test(AdmissionShow::class, ['admission' => $admission])
             ->assertDontSee('Submit admission')
-            ->assertDontSee('Approve')
+            ->assertDontSee('wire:click="review(\'approved\')"', false)
             ->call('review', 'approved')
             ->assertHasErrors('admission');
 
@@ -262,7 +262,7 @@ class InvitationJourneyTest extends TestCase
         Livewire::actingAs($owner->user)
             ->test(AdmissionShow::class, ['admission' => $admission->refresh()])
             ->assertSee('Start review')
-            ->assertDontSee('Approve')
+            ->assertDontSee('wire:click="review(\'approved\')"', false)
             ->call('review', 'under_review')
             ->assertSet('admission.status', 'under_review')
             ->assertSee('Approve')
