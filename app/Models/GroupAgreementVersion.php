@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['group_agreement_id', 'version', 'content', 'rationale', 'status', 'effective_from', 'effective_until', 'reacceptance_required', 'created_by_actor_id', 'approved_by_actor_id', 'approved_at', 'published_at', 'activated_at', 'superseded_by_version_id', 'decision_note'])]
 class GroupAgreementVersion extends Model
 {
+    use HasFactory;
+
     public const STATUSES = ['draft', 'proposed', 'clarification_requested', 'approved', 'scheduled', 'active', 'superseded', 'rejected'];
 
     protected function casts(): array

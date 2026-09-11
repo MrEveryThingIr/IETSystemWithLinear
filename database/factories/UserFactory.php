@@ -42,4 +42,14 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function suspended(): static
+    {
+        return $this->state(fn (): array => ['status' => 'suspended']);
+    }
+
+    public function closed(): static
+    {
+        return $this->state(fn (): array => ['status' => 'closed']);
+    }
 }

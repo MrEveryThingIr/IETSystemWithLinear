@@ -68,10 +68,12 @@ class ActorTest extends TestCase
         $this->assertNull($user->refresh()->actor);
     }
 
-    public function test_default_seeder_explicitly_creates_an_actor(): void
+    public function test_default_seeder_associates_the_seed_account_with_an_actor(): void
     {
         $this->seed();
-        $this->assertDatabaseCount('actors', 1);
-        $this->assertTrue(Actor::sole()->user->is(User::sole()));
+
+        $user = User::query()->where('email', 'test@example.com')->firstOrFail();
+
+        $this->assertTrue($user->actor->user->is($user));
     }
 }

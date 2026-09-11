@@ -15,11 +15,14 @@ class DatabaseSeeder extends Seeder
     {
         app(GroupRoleProvisioner::class)->seedPermissions();
 
-        $user = User::factory()->create([
-            'username' => 'testuser',
-            'email' => 'test@example.com',
-        ]);
+        $user = User::query()->where('email', 'test@example.com')->first()
+            ?? User::factory()->create([
+                'username' => 'testuser',
+                'email' => 'test@example.com',
+            ]);
 
-        $user->actor()->create([]);
+        $user->actor()->firstOrCreate([]);
+
+        $this->call(ConstructionProjectSeeder::class);
     }
 }
