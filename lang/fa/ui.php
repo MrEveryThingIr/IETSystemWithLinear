@@ -236,6 +236,8 @@ return [
         'target_email' => 'ایمیل مقصد (اختیاری)',
         'maximum_uses' => 'حداکثر تعداد استفاده',
         'create_button' => 'ایجاد دعوت‌نامه',
+        'copy_now' => 'این پیوند خصوصی را اکنون کپی کنید؛ بعداً قابل بازیابی نیست.',
+        'secret_not_recoverable' => 'پیوند خصوصی پس از ایجاد برای امنیت پنهان می‌شود.',
         'uses' => ':used/:maximum استفاده',
         'created_expires' => 'ایجاد :created · انقضا :expires',
         'never' => 'هرگز',

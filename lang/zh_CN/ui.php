@@ -236,6 +236,8 @@ return [
         'target_email' => '目标邮箱（可选）',
         'maximum_uses' => '最大使用次数',
         'create_button' => '创建邀请',
+        'copy_now' => '请立即复制此私密链接；之后无法恢复。',
+        'secret_not_recoverable' => '出于安全考虑，私密链接创建后将被隐藏。',
         'uses' => '已使用 :used/:maximum 次',
         'created_expires' => '创建于 :created · 过期于 :expires',
         'never' => '永不过期',

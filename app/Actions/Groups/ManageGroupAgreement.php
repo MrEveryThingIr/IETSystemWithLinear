@@ -123,7 +123,7 @@ class ManageGroupAgreement
         abort_unless($this->agreementForVersion($version)->group_id === $membership->group_id, 422, 'Agreement does not belong to this membership.');
 
         return DB::transaction(function () use ($membership, $version, $actor): MembershipAgreementAcceptance {
-            $acceptance = MembershipAgreementAcceptance::query()->firstOrCreate(['group_membership_id' => $membership->id, 'group_agreement_version_id' => $version->id], ['accepted_by_actor_id' => $actor->id, 'accepted_at' => now(), 'evidence_hash' => hash('sha256', $version->content)]);
+            $acceptance = MembershipAgreementAcceptance::query()->firstOrCreate(['group_membership_id' => $membership->id, 'group_agreement_version_id' => $version->id], ['accepted_by_actor_id' => $actor->id, 'accepted_at' => now(), 'evidence_hash' => $version->content_hash, 'evidence_schema_version' => 1]);
             if ($acceptance->wasRecentlyCreated) {
                 $this->event($this->agreementForVersion($version), $version, $actor, 'agreement.membership_accepted', ['membership_id' => $membership->id, 'acceptance_id' => $acceptance->id, 'evidence_hash' => $acceptance->evidence_hash]);
             }

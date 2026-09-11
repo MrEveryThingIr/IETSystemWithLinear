@@ -10,6 +10,7 @@ use App\Models\Actor;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -85,5 +86,26 @@ class AgreementManagementJourneyTest extends TestCase
         $this->assertSame('superseded', $first->refresh()->status);
         $this->assertSame($second->id, $first->superseded_by_version_id);
         $this->assertSame('active', $second->refresh()->status);
+    }
+
+    public function test_scheduling_interprets_local_group_time_and_stores_utc(): void
+    {
+        Carbon::setTestNow('2026-01-01 00:00:00 UTC');
+        $owner = Actor::factory()->create();
+        $group = app(CreateGroup::class)->execute($owner, 'Toronto group', null);
+        $group->update(['timezone' => 'America/Toronto']);
+        $manager = app(ManageGroupAgreement::class);
+        $agreement = $manager->create($group, $owner, 'Rules', true, 'Version one');
+        $version = $agreement->versions()->sole();
+        $manager->propose($version, $owner);
+        $manager->approve($version, $owner);
+
+        Livewire::actingAs($owner->user)
+            ->test(Agreements::class, ['group' => $group])
+            ->set('effectiveFrom', '2026-01-01T09:00')
+            ->call('schedule', $version->id)
+            ->assertHasNoErrors();
+
+        $this->assertSame('2026-01-01 14:00:00', $version->refresh()->effective_from->utc()->format('Y-m-d H:i:s'));
     }
 }

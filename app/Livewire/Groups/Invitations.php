@@ -8,7 +8,6 @@ use App\Models\Group;
 use App\Models\GroupInvitation;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -21,6 +20,8 @@ class Invitations extends Component
 
     public ?int $maxUses = 1;
 
+    public ?string $createdInvitationUrl = null;
+
     public function mount(Group $group): void
     {
         Gate::authorize('createInvitation', $group);
@@ -31,7 +32,9 @@ class Invitations extends Component
     {
         $data = $this->validate(['email' => ['nullable', 'email'], 'maxUses' => ['nullable', 'integer', 'min:1', 'max:10000']]);
         $actor = $this->actor();
-        GroupInvitation::create(['group_id' => $this->group->id, 'invited_by_actor_id' => $actor->id, 'email' => $data['email'] ?: null, 'token' => Str::random(48), 'expires_at' => now()->addDays(14), 'max_uses' => $data['maxUses'], 'uses_count' => 0]);
+        $token = GroupInvitation::issueToken();
+        GroupInvitation::create(['group_id' => $this->group->id, 'invited_by_actor_id' => $actor->id, 'email' => $data['email'] ?: null, 'token' => $token, 'expires_at' => now()->addDays(14), 'max_uses' => $data['maxUses'], 'uses_count' => 0]);
+        $this->createdInvitationUrl = route('invitations.show', $token);
         $this->reset('email');
         session()->flash('status', __('ui.messages.invitation_created'));
     }

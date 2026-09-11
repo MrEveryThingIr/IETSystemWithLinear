@@ -14,10 +14,10 @@ class GroupInvitationController
         $invitation = $redemption->preview($token);
 
         if ($request->user() !== null && ! $request->user()->hasVerifiedEmail()) {
-            $request->session()->put('url.intended', route('invitations.show', ['token' => $invitation->token]));
+            $request->session()->put('url.intended', route('invitations.show', ['token' => $token]));
         }
 
-        return view('invitations.show', compact('invitation'));
+        return view('invitations.show', compact('invitation', 'token'));
     }
 
     public function accept(Request $request, string $token, RedeemGroupInvitation $redemption): RedirectResponse

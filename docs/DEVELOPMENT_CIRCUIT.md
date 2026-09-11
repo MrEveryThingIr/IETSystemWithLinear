@@ -139,15 +139,15 @@ Report rules:
 
 ## Git discipline
 
-The repository's trunk is `master`. Existing work uses short-lived feature branches; there is no permanent `develop` or release integration branch. Do not rename the trunk or introduce an integration branch without an explicit repository decision.
+The protected production trunk is `main`. Completed milestones integrate through the long-lived `develop` branch, and releases move from `develop` to `main` through reviewed pull requests. Direct feature development on `main` or `develop` is prohibited.
 
-After Linear identifiers exist, prefer agent branches in this form:
+Feature and correction work branches from `develop`. After Linear identifiers exist, prefer agent branches in this form:
 
 ```text
 linear/<type>/<linear-id>-<slug>
 ```
 
-Use a type that communicates intent, such as `feat`, `fix`, `refactor`, `docs`, or `chore`. Preserve a human-requested branch name when explicitly supplied. Every pull request should link its Linear issue and task handoff, keep unrelated changes out, report validation honestly, and target the repository's established trunk unless the issue says otherwise.
+Use a type that communicates intent, such as `feat`, `fix`, `refactor`, `docs`, or `chore`. Preserve a human-requested branch name when explicitly supplied. Every pull request should link its Linear issue and task handoff, keep unrelated changes out, report validation honestly, and target `develop`. Release pull requests target `main` and receive a semantic version tag after merge.
 
 ## Prompt for next step template
 

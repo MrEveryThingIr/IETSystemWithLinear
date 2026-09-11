@@ -47,18 +47,20 @@
                                 </flux:badge>
                             </div>
                             @if ($version->effective_from)
-                                <flux:text class="text-sm">{{ __('ui.agreements.effective', ['date' => $version->effective_from->translatedFormat('M j, Y H:i')]) }}</flux:text>
+                                <flux:text class="text-sm">{{ __('ui.agreements.effective', ['date' => $version->effective_from->timezone($group->timezone)->translatedFormat('M j, Y H:i').' '.$group->timezone]) }}</flux:text>
                             @endif
                         </div>
 
-                        <div class="whitespace-pre-wrap break-words rounded-lg bg-zinc-50 p-3 text-sm leading-6 dark:bg-zinc-800" dir="auto">{{ $version->content }}</div>
-
-                        @if ($version->rationale)
-                            <flux:text><span class="font-medium">{{ __('ui.agreements.revision_rationale') }}</span> {{ $version->rationale }}</flux:text>
-                        @endif
-                        @if ($version->decision_note)
-                            <flux:text><span class="font-medium">{{ __('ui.agreements.decision_note') }}</span> {{ $version->decision_note }}</flux:text>
-                        @endif
+                        <details class="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800" @if ($loop->first) open @endif>
+                            <summary class="cursor-pointer font-medium">{{ __('ui.agreements.terms') }}</summary>
+                            <div class="mt-3 whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $version->content }}</div>
+                            @if ($version->rationale)
+                                <flux:text class="mt-3"><span class="font-medium">{{ __('ui.agreements.revision_rationale') }}</span> {{ $version->rationale }}</flux:text>
+                            @endif
+                            @if ($version->decision_note)
+                                <flux:text class="mt-2"><span class="font-medium">{{ __('ui.agreements.decision_note') }}</span> {{ $version->decision_note }}</flux:text>
+                            @endif
+                        </details>
 
                         @if ($version->status === 'draft')
                             <flux:button wire:click="propose({{ $version->id }})" size="sm" variant="primary">{{ __('ui.agreements.submit_approval') }}</flux:button>

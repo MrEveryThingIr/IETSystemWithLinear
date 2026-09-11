@@ -15,7 +15,7 @@ class RedeemGroupInvitation
     {
         return GroupInvitation::query()
             ->with(['group', 'inviter.user'])
-            ->where('token', $token)
+            ->where('token', GroupInvitation::hashToken($token))
             ->whereNull('revoked_at')
             ->where(function ($query): void {
                 $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
@@ -30,7 +30,7 @@ class RedeemGroupInvitation
     {
         return DB::transaction(function () use ($token, $actor, $email): Admission {
             /** @var GroupInvitation $invitation */
-            $invitation = GroupInvitation::query()->where('token', $token)->lockForUpdate()->firstOrFail();
+            $invitation = GroupInvitation::query()->where('token', GroupInvitation::hashToken($token))->lockForUpdate()->firstOrFail();
             $expiresAt = $invitation->expires_at;
             abort_if($invitation->revoked_at !== null || ($expiresAt instanceof CarbonInterface && $expiresAt->isPast()) || ($invitation->max_uses !== null && $invitation->uses_count >= $invitation->max_uses), 404);
             if ($invitation->email !== null && strcasecmp($invitation->email, $email) !== 0) {

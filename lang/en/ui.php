@@ -236,6 +236,8 @@ return [
         'target_email' => 'Target email (optional)',
         'maximum_uses' => 'Maximum uses',
         'create_button' => 'Create invitation',
+        'copy_now' => 'Copy this private link now. It cannot be recovered later.',
+        'secret_not_recoverable' => 'Private link hidden after creation for security.',
         'uses' => ':used/:maximum uses',
         'created_expires' => 'Created :created · expires :expires',
         'never' => 'never',

@@ -33,7 +33,7 @@ class Login extends Component
         }
 
         $invitation = $redemption->preview($token);
-        $this->invitationToken = $invitation->token;
+        $this->invitationToken = $token;
         $this->groupName = $invitation->group->name;
         $this->email = $invitation->email ?? '';
     }

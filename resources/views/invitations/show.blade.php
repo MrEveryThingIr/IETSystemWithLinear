@@ -28,7 +28,7 @@
                     </div>
                     <div>
                         <p class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('ui.invitation.access') }}</p>
-                        <p class="mt-1 font-semibold">{{ $invitation->email ?: __('ui.invitation.anyone_with_link') }}</p>
+                        <p class="mt-1 font-semibold">{{ $invitation->maskedEmail() ?: __('ui.invitation.anyone_with_link') }}</p>
                     </div>
                 </div>
 
@@ -38,7 +38,7 @@
 
                 @auth
                     @if (auth()->user()->hasVerifiedEmail())
-                        <form method="POST" action="{{ route('invitations.accept', ['token' => $invitation->token]) }}">
+                        <form method="POST" action="{{ route('invitations.accept', ['token' => $token]) }}">
                             @csrf
                             <flux:button type="submit" variant="primary" class="w-full">{{ __('ui.invitation.continue_to_admission') }}</flux:button>
                         </form>
@@ -50,10 +50,10 @@
                     @endif
                 @else
                     <div class="space-y-3">
-                        <flux:button href="{{ route('invitations.login', ['token' => $invitation->token]) }}" variant="primary" class="w-full">
+                        <flux:button href="{{ route('invitations.login', ['token' => $token]) }}" variant="primary" class="w-full">
                             {{ __('ui.invitation.login_and_continue') }}
                         </flux:button>
-                        <flux:button href="{{ route('invitations.register', ['token' => $invitation->token]) }}" variant="ghost" class="w-full">
+                        <flux:button href="{{ route('invitations.register', ['token' => $token]) }}" variant="ghost" class="w-full">
                             {{ __('ui.auth.create_invited_account') }}
                         </flux:button>
                         <flux:text class="text-center text-sm">{{ __('ui.invitation.new_accounts_only') }}</flux:text>

@@ -236,6 +236,8 @@ return [
         'target_email' => 'البريد المستهدف (اختياري)',
         'maximum_uses' => 'الحد الأقصى للاستخدام',
         'create_button' => 'إنشاء الدعوة',
+        'copy_now' => 'انسخ هذا الرابط الخاص الآن؛ لا يمكن استعادته لاحقًا.',
+        'secret_not_recoverable' => 'يُخفى الرابط الخاص بعد الإنشاء حفاظًا على الأمان.',
         'uses' => ':used/:maximum استخدام',
         'created_expires' => 'أُنشئت :created · تنتهي :expires',
         'never' => 'أبدًا',

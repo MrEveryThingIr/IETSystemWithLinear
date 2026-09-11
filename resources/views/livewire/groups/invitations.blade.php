@@ -9,6 +9,13 @@
         <flux:callout variant="success">{{ session('status') }}</flux:callout>
     @endif
 
+    @if ($createdInvitationUrl)
+        <flux:callout variant="success" class="space-y-2">
+            <p class="font-medium">{{ __('ui.invitations.copy_now') }}</p>
+            <p class="break-all font-mono text-sm">{{ $createdInvitationUrl }}</p>
+        </flux:callout>
+    @endif
+
     <flux:card class="space-y-4">
         <div>
             <flux:heading size="lg">{{ __('ui.invitations.create') }}</flux:heading>
@@ -31,11 +38,9 @@
                                 {{ $invitation->revoked_at ? __('ui.common.revoked') : ($invitation->expires_at?->isPast() ? __('ui.common.expired') : __('ui.common.active')) }}
                             </flux:badge>
                             <flux:text>{{ __('ui.invitations.uses', ['used' => $invitation->acceptances_count, 'maximum' => $invitation->max_uses ?? '∞']) }}</flux:text>
-                            @if ($invitation->email)<flux:badge>{{ $invitation->email }}</flux:badge>@endif
+                            @if ($invitation->email)<flux:badge>{{ $invitation->maskedEmail() }}</flux:badge>@endif
                         </div>
-                        <a href="{{ route('invitations.show', $invitation->token) }}" class="block break-all text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">
-                            {{ route('invitations.show', $invitation->token) }}
-                        </a>
+                        <flux:text class="text-sm">{{ __('ui.invitations.secret_not_recoverable') }}</flux:text>
                         <flux:text class="text-sm">{{ __('ui.invitations.created_expires', ['created' => $invitation->created_at->diffForHumans(), 'expires' => $invitation->expires_at?->diffForHumans() ?? __('ui.invitations.never')]) }}</flux:text>
                     </div>
                     @if (! $invitation->revoked_at)

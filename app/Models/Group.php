@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'description', 'created_by_actor_id'])]
+#[Fillable(['name', 'description', 'timezone', 'created_by_actor_id'])]
 class Group extends Model
 {
     use HasFactory;

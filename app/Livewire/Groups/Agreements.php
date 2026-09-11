@@ -7,6 +7,7 @@ use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
+use Illuminate\Support\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -113,8 +114,10 @@ class Agreements extends Component
     public function schedule(int $versionId, ManageGroupAgreement $manager): void
     {
         Gate::authorize('manageAgreements', $this->group);
-        $data = $this->validate(['effectiveFrom' => ['required', 'date', 'after:now'], 'effectiveUntil' => ['nullable', 'date', 'after:effectiveFrom']]);
-        $manager->schedule($this->version($versionId), $this->actor(), new \DateTimeImmutable($data['effectiveFrom']), empty($data['effectiveUntil']) ? null : new \DateTimeImmutable($data['effectiveUntil']));
+        $data = $this->validate(['effectiveFrom' => ['required', 'date_format:Y-m-d\\TH:i'], 'effectiveUntil' => ['nullable', 'date_format:Y-m-d\\TH:i']]);
+        $from = Carbon::createFromFormat('Y-m-d\\TH:i', $data['effectiveFrom'], $this->group->timezone)->utc();
+        $until = empty($data['effectiveUntil']) ? null : Carbon::createFromFormat('Y-m-d\\TH:i', $data['effectiveUntil'], $this->group->timezone)->utc();
+        $manager->schedule($this->version($versionId), $this->actor(), $from, $until);
         $this->reset('effectiveFrom', 'effectiveUntil');
         session()->flash('status', __('ui.messages.agreement_scheduled'));
     }

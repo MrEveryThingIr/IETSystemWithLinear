@@ -63,7 +63,7 @@ class FinalizeAdmission
                 ->each(function (AgreementAcceptance $acceptance) use ($membership, $actor): void {
                     MembershipAgreementAcceptance::query()->firstOrCreate(
                         ['group_membership_id' => $membership->id, 'group_agreement_version_id' => $acceptance->group_agreement_version_id],
-                        ['accepted_by_actor_id' => $actor->id, 'accepted_at' => $acceptance->accepted_at, 'evidence_hash' => $acceptance->evidence_hash],
+                        ['accepted_by_actor_id' => $actor->id, 'accepted_at' => $acceptance->accepted_at, 'evidence_hash' => $acceptance->evidence_hash, 'evidence_schema_version' => $acceptance->evidence_schema_version],
                     );
                 });
 

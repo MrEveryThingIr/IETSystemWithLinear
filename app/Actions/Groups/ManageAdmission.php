@@ -27,7 +27,7 @@ class ManageAdmission
 
             $acceptance = AgreementAcceptance::firstOrCreate(
                 ['admission_id' => $lockedAdmission->id, 'group_agreement_version_id' => $lockedVersion->id],
-                ['accepted_by_actor_id' => $actor->id, 'accepted_at' => now(), 'evidence_hash' => hash('sha256', $lockedVersion->content)],
+                ['accepted_by_actor_id' => $actor->id, 'accepted_at' => now(), 'evidence_hash' => $lockedVersion->content_hash, 'evidence_schema_version' => 1],
             );
 
             if ($acceptance->wasRecentlyCreated) {

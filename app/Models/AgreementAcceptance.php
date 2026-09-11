@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['admission_id', 'group_agreement_version_id', 'accepted_by_actor_id', 'accepted_at', 'evidence_hash'])]
+#[Fillable(['admission_id', 'group_agreement_version_id', 'accepted_by_actor_id', 'accepted_at', 'evidence_hash', 'evidence_schema_version'])]
 class AgreementAcceptance extends Model
 {
     use HasFactory;

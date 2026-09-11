@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['group_agreement_id', 'version', 'content', 'rationale', 'status', 'effective_from', 'effective_until', 'reacceptance_required', 'created_by_actor_id', 'approved_by_actor_id', 'approved_at', 'published_at', 'activated_at', 'superseded_by_version_id', 'decision_note'])]
+#[Fillable(['group_agreement_id', 'version', 'content', 'content_hash', 'rationale', 'status', 'effective_from', 'effective_until', 'reacceptance_required', 'created_by_actor_id', 'approved_by_actor_id', 'approved_at', 'published_at', 'activated_at', 'superseded_by_version_id', 'decision_note'])]
 class GroupAgreementVersion extends Model
 {
     use HasFactory;
@@ -21,6 +21,10 @@ class GroupAgreementVersion extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (self $version): void {
+            $version->content_hash = self::hashContent($version->content);
+        });
+
         static::updating(function (self $version): void {
             if (in_array($version->getOriginal('status'), ['approved', 'scheduled', 'active', 'superseded'], true)
                 && $version->isDirty(['content', 'rationale', 'version', 'group_agreement_id', 'reacceptance_required', 'created_by_actor_id'])) {
@@ -31,6 +35,13 @@ class GroupAgreementVersion extends Model
         static::deleting(function (): void {
             abort(422, 'Agreement versions are immutable history.');
         });
+    }
+
+    public static function hashContent(string $content): string
+    {
+        $canonical = preg_replace('/[ \t]+$/m', '', str_replace(["\r\n", "\r"], "\n", trim($content))) ?? '';
+
+        return hash('sha256', $canonical);
     }
 
     /** @return BelongsTo<GroupAgreement, $this> */

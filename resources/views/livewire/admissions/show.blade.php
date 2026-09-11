@@ -1,6 +1,19 @@
 <section class="mx-auto max-w-3xl space-y-6">
     <x-app.page-header :title="__('ui.admission.title')" :description="$admission->group->name.' · '.__('ui.status.'.$admission->status)" />
 
+    @php
+        $pipeline = ['draft', 'submitted', 'under_review', 'approved', 'finalized'];
+        $currentStep = array_search($admission->status, $pipeline, true);
+    @endphp
+    <nav aria-label="Admission progress" class="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        @foreach ($pipeline as $index => $status)
+            <div class="rounded-xl border px-3 py-2 text-center text-sm {{ $currentStep !== false && $index <= $currentStep ? 'border-indigo-500 bg-indigo-50 font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300' : 'border-zinc-200 text-zinc-500 dark:border-zinc-700' }}">
+                <span class="block text-xs opacity-70">{{ $index + 1 }}</span>
+                {{ __('ui.status.'.$status) }}
+            </div>
+        @endforeach
+    </nav>
+
     @error('admission')
         <flux:callout variant="danger">{{ $message }}</flux:callout>
     @enderror
@@ -51,7 +64,10 @@
             <div class="flex flex-col gap-3 border-b border-zinc-200 pb-4 last:border-0 last:pb-0 dark:border-zinc-700 sm:flex-row sm:items-start sm:justify-between">
                 <div class="space-y-2">
                     <flux:heading>{{ $version->agreement->name }} · {{ __('ui.common.version', ['version' => $version->version]) }}</flux:heading>
-                    <div class="whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $version->content }}</div>
+                    <details class="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800">
+                        <summary class="cursor-pointer font-medium">{{ __('ui.common.version', ['version' => $version->version]) }}</summary>
+                        <div class="mt-3 whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $version->content }}</div>
+                    </details>
                 </div>
                 @if ($acceptedVersionIds->contains($version->id))
                     <flux:badge color="green">{{ __('ui.admission.accepted') }}</flux:badge>

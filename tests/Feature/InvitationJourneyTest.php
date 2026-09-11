@@ -27,6 +27,25 @@ class InvitationJourneyTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    public function test_invitation_secret_is_hashed_at_rest_and_target_email_is_masked_publicly(): void
+    {
+        $this->withoutVite();
+        [, $invitation] = $this->invitation(email: 'private.person@example.com');
+        $token = $invitation->token;
+
+        $this->assertNotNull($token);
+        $this->assertDatabaseHas('group_invitations', [
+            'id' => $invitation->id,
+            'token' => GroupInvitation::hashToken($token),
+        ]);
+        $this->assertDatabaseMissing('group_invitations', ['token' => $token]);
+
+        $this->get(route('invitations.show', $token))
+            ->assertOk()
+            ->assertDontSee('private.person@example.com')
+            ->assertSee('p•••••••••••••@example.com');
+    }
+
     public function test_invitation_page_has_distinct_token_scoped_login_and_registration_paths(): void
     {
         $this->withoutVite();
@@ -209,6 +228,9 @@ class InvitationJourneyTest extends TestCase
 
         $this->assertDatabaseCount('agreement_acceptances', 1);
         $this->assertSame(1, $admission->events()->where('event', 'agreement.accepted')->count());
+        $acceptance = $admission->acceptances()->sole();
+        $this->assertSame(GroupAgreementVersion::hashContent('Required terms'), $acceptance->evidence_hash);
+        $this->assertSame(1, $acceptance->evidence_schema_version);
     }
 
     public function test_admission_page_exposes_only_valid_actor_and_state_actions(): void
