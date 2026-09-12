@@ -46,8 +46,12 @@ class Access extends Component
         $user = request()->user();
         abort_unless($user instanceof User && $user->hasPlatformCapability(PlatformCapability::ManagePlatformAccess), 403);
 
+        $data = $this->validate([
+            "reviewNotes.{$requestId}" => ['nullable', 'string', 'max:2000'],
+        ]);
+
         $accessRequest = PlatformAccessRequest::query()->where('status', 'pending')->findOrFail($requestId);
-        $reviewAccess->execute($accessRequest, $user, $approved, $this->reviewNotes[$requestId] ?? null);
+        $reviewAccess->execute($accessRequest, $user, $approved, $data['reviewNotes'][$requestId] ?? null);
 
         unset($this->reviewNotes[$requestId]);
         session()->flash('status', $approved ? 'Platform access approved.' : 'Platform access request rejected.');
