@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class GroupSpaceMessageFactory extends Factory
 {
+    /** @return array<string, mixed> */
     public function definition(): array
     {
         return [
