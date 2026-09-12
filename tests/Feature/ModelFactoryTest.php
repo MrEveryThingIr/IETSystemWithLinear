@@ -15,6 +15,8 @@ use App\Models\GroupInvitationAcceptance;
 use App\Models\GroupMembership;
 use App\Models\GroupMembershipEvent;
 use App\Models\GroupRoleChangeRequest;
+use App\Models\GroupSpace;
+use App\Models\GroupSpaceMessage;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\PlatformAccessGrant;
 use App\Models\Story;
@@ -46,6 +48,8 @@ class ModelFactoryTest extends TestCase
             AgreementEvent::factory()->create(),
             MembershipAgreementAcceptance::factory()->create(),
             GroupRoleChangeRequest::factory()->create(),
+            GroupSpace::factory()->create(),
+            GroupSpaceMessage::factory()->create(),
             Story::factory()->create(),
             StoryRole::factory()->create(),
             PlatformAccessGrant::factory()->create(),
