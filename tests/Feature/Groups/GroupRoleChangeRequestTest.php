@@ -12,8 +12,8 @@ use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupMembership;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class GroupRoleChangeRequestTest extends TestCase
