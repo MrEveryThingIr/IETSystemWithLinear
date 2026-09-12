@@ -43,6 +43,12 @@ class Group extends Model
         return $this->hasMany(GroupAgreement::class);
     }
 
+    /** @return HasMany<GroupSpace, $this> */
+    public function spaces(): HasMany
+    {
+        return $this->hasMany(GroupSpace::class);
+    }
+
     /** @return HasMany<Story, $this> */
     public function stories(): HasMany
     {

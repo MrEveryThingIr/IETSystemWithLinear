@@ -13,6 +13,8 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    <x-app.group-space-tabs :group="$group" />
+
     @if (session('status'))
         <flux:callout variant="success" class="break-all">{{ session('status') }}</flux:callout>
     @endif
