@@ -130,7 +130,7 @@
                 <div class="border-l-2 border-zinc-200 pl-4 dark:border-zinc-700">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="font-medium">{{ __('ui.events.'.str_replace('.', '_', $event->event)) }}</span>
-                        <flux:text class="text-sm">{{ $event->created_at->translatedFormat('M j, Y H:i') }}</flux:text>
+                        <flux:text class="text-sm">{{ $event->created_at->timezone($admission->group->timezone ?: 'UTC')->translatedFormat('M j, Y H:i') }} {{ $admission->group->timezone ?: 'UTC' }}</flux:text>
                     </div>
                     <flux:text class="text-sm">{{ __('ui.admission.by', ['username' => $event->actor?->user?->username ?? __('ui.common.system')]) }}</flux:text>
                     @if ($event->note)

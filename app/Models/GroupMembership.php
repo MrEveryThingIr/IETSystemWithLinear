@@ -46,4 +46,12 @@ class GroupMembership extends Model
     {
         return $this->hasMany(GroupMembershipEvent::class);
     }
+
+    public function currentParticipationEvent(): ?GroupMembershipEvent
+    {
+        return $this->events()
+            ->where('to_status', 'active')
+            ->latest('id')
+            ->first();
+    }
 }

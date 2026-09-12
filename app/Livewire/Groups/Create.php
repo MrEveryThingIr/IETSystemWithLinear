@@ -20,13 +20,20 @@ class Create extends Component
 
     public string $description = '';
 
+    public string $timezone = 'UTC';
+
+    public function mount(): void
+    {
+        $this->timezone = request()->user()?->timezone ?: 'UTC';
+    }
+
     public function save(CreateGroup $createGroup): void
     {
         Gate::authorize('create', Group::class);
-        $data = $this->validate(['name' => ['required', 'string', 'max:120'], 'description' => ['nullable', 'string', 'max:2000']]);
+        $data = $this->validate(['name' => ['required', 'string', 'max:120'], 'description' => ['nullable', 'string', 'max:2000'], 'timezone' => ['required', 'timezone']]);
         $user = request()->user();
         abort_unless($user instanceof User && $user->actor instanceof Actor, 403);
-        $group = $createGroup->execute($user->actor, $data['name'], $data['description'] ?: null);
+        $group = $createGroup->execute($user->actor, $data['name'], $data['description'] ?: null, $data['timezone']);
         $this->redirectRoute('groups.show', $group);
     }
 
@@ -34,6 +41,6 @@ class Create extends Component
     {
         Gate::authorize('create', Group::class);
 
-        return view('livewire.groups.create');
+        return view('livewire.groups.create', ['timezones' => timezone_identifiers_list()]);
     }
 }

@@ -20,6 +20,8 @@ class Login extends Component
 
     public ?string $groupName = null;
 
+    public ?string $targetEmailHint = null;
+
     public string $email = '';
 
     public string $password = '';
@@ -35,7 +37,7 @@ class Login extends Component
         $invitation = $redemption->preview($token);
         $this->invitationToken = $token;
         $this->groupName = $invitation->group->name;
-        $this->email = $invitation->email ?? '';
+        $this->targetEmailHint = $invitation->maskedEmail();
     }
 
     public function login(RedeemGroupInvitation $redemption): void

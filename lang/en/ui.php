@@ -23,6 +23,7 @@ return [
         'logout' => 'Log out',
         'continue_to_group' => 'Continue to :group',
         'invitation_after_login' => 'Your invitation will be applied after you log in.',
+        'invitation_target_hint' => 'This invitation is reserved for :email. Enter the full matching address to continue.',
         'email' => 'Email',
         'password' => 'Password',
         'confirm_password' => 'Confirm password',
@@ -155,6 +156,8 @@ return [
         'name_placeholder' => 'e.g. The Lantern Guild',
         'description' => 'Description',
         'description_help' => 'Optional. Explain the purpose of this group.',
+        'timezone' => 'Group timezone',
+        'timezone_help' => 'Schedules are entered and displayed in this IANA timezone; storage remains UTC.',
     ],
     'admission' => [
         'title' => 'Group admission',
@@ -347,6 +350,7 @@ return [
         'required_agreements_unaccepted' => 'Every active required agreement version must be accepted before finalization.',
         'admission_action_unavailable' => 'That admission action is no longer available. Refresh the page and try again.',
         'group_needs_owner' => 'A Group must have at least one active Owner.',
+        'invalid_local_datetime' => 'Enter a real local date and time in :timezone. Times skipped by daylight-saving changes are not valid.',
     ],
     'status' => [
         'draft' => 'Draft',

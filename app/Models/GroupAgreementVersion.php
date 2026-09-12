@@ -14,6 +14,10 @@ class GroupAgreementVersion extends Model
 
     public const STATUSES = ['draft', 'proposed', 'clarification_requested', 'approved', 'scheduled', 'active', 'superseded', 'rejected'];
 
+    private const LIFECYCLE_ATTRIBUTES = ['status', 'decision_note', 'approved_by_actor_id', 'approved_at', 'published_at', 'activated_at', 'effective_from', 'effective_until', 'superseded_by_version_id'];
+
+    private bool $applyingLifecycleTransition = false;
+
     protected function casts(): array
     {
         return ['effective_from' => 'datetime', 'effective_until' => 'datetime', 'approved_at' => 'datetime', 'published_at' => 'datetime', 'activated_at' => 'datetime', 'reacceptance_required' => 'boolean'];
@@ -26,10 +30,18 @@ class GroupAgreementVersion extends Model
         });
 
         static::updating(function (self $version): void {
+            if ($version->isDirty('content')) {
+                $version->content_hash = self::hashContent($version->content);
+            } elseif ($version->isDirty('content_hash')) {
+                abort(422, 'The canonical content hash is managed by the agreement version.');
+            }
+
             if (in_array($version->getOriginal('status'), ['approved', 'scheduled', 'active', 'superseded'], true)
-                && $version->isDirty(['content', 'rationale', 'version', 'group_agreement_id', 'reacceptance_required', 'created_by_actor_id'])) {
+                && $version->isDirty(['content', 'content_hash', 'rationale', 'version', 'group_agreement_id', 'reacceptance_required', 'created_by_actor_id'])) {
                 abort(422, 'Published agreement version data is immutable.');
             }
+
+            abort_if($version->isDirty(self::LIFECYCLE_ATTRIBUTES) && ! $version->applyingLifecycleTransition, 422, 'Agreement lifecycle changes require the lifecycle action.');
         });
 
         static::deleting(function (): void {
@@ -42,6 +54,19 @@ class GroupAgreementVersion extends Model
         $canonical = preg_replace('/[ \t]+$/m', '', str_replace(["\r\n", "\r"], "\n", trim($content))) ?? '';
 
         return hash('sha256', $canonical);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    public function applyLifecycleTransition(array $attributes): void
+    {
+        abort_if(array_diff(array_keys($attributes), self::LIFECYCLE_ATTRIBUTES) !== [], 422, 'Only lifecycle attributes may change through this operation.');
+        $this->applyingLifecycleTransition = true;
+
+        try {
+            $this->update($attributes);
+        } finally {
+            $this->applyingLifecycleTransition = false;
+        }
     }
 
     /** @return BelongsTo<GroupAgreement, $this> */

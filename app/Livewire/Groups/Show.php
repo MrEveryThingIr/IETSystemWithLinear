@@ -33,6 +33,8 @@ class Show extends Component
 
     public string $description = '';
 
+    public string $timezone = 'UTC';
+
     public string $newRoleName = '';
 
     /** @var list<string> */
@@ -59,13 +61,14 @@ class Show extends Component
         $this->group = $group;
         $this->name = $group->name;
         $this->description = $group->description ?? '';
+        $this->timezone = $group->timezone ?: 'UTC';
     }
 
     public function save(): void
     {
         Gate::authorize('update', $this->group);
-        $data = $this->validate(['name' => ['required', 'string', 'max:120'], 'description' => ['nullable', 'string', 'max:2000']]);
-        $this->group->update(['name' => $data['name'], 'description' => $data['description'] ?: null]);
+        $data = $this->validate(['name' => ['required', 'string', 'max:120'], 'description' => ['nullable', 'string', 'max:2000'], 'timezone' => ['required', 'timezone']]);
+        $this->group->update(['name' => $data['name'], 'description' => $data['description'] ?: null, 'timezone' => $data['timezone']]);
         session()->flash('status', __('ui.messages.group_updated'));
     }
 
@@ -203,7 +206,13 @@ class Show extends Component
         $canApproveRoleChanges = Gate::allows('approveRoleChanges', $this->group);
         $canTransferOwnership = Gate::allows('transferOwnership', $this->group);
         $pendingRequests = $canApproveRoleChanges
-            ? GroupRoleChangeRequest::query()->where('group_id', $this->group->id)->where('status', 'pending')->with(['membership.actor.user', 'requestedRole'])->latest()->get()
+            ? GroupRoleChangeRequest::query()
+                ->where('group_id', $this->group->id)
+                ->where('status', 'pending')
+                ->whereHas('membership', fn ($query) => $query->where('actor_id', '!=', $this->actor()->id))
+                ->with(['membership.actor.user', 'requestedRole'])
+                ->latest()
+                ->get()
             : collect();
         $admissions = Gate::allows('manageAdmissions', $this->group)
             ? Admission::query()
@@ -218,6 +227,7 @@ class Show extends Component
         $permissionLabels = collect(GroupPermission::cases())->mapWithKeys(
             fn (GroupPermission $permission): array => [$permission->value => __('ui.permissions.'.$permission->value)],
         );
+        $timezones = timezone_identifiers_list();
 
         return view('livewire.groups.show', compact(
             'memberships',
@@ -227,6 +237,7 @@ class Show extends Component
             'admissions',
             'permissionNames',
             'permissionLabels',
+            'timezones',
             'canManageGroup',
             'canManageRoles',
             'canManageMembers',

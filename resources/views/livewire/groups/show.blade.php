@@ -26,6 +26,11 @@
             <form wire:submit="save" class="space-y-4">
                 <flux:input wire:model="name" :label="__('ui.groups.name')" />
                 <flux:textarea wire:model="description" :label="__('ui.groups.description')" rows="3" />
+                <flux:select wire:model="timezone" :label="__('ui.groups.timezone')" :description="__('ui.groups.timezone_help')" searchable>
+                    @foreach ($timezones as $timezoneOption)
+                        <option value="{{ $timezoneOption }}">{{ $timezoneOption }}</option>
+                    @endforeach
+                </flux:select>
                 <div class="flex flex-col gap-2 sm:flex-row">
                     <flux:button type="submit" variant="primary">{{ __('ui.groups.save_details') }}</flux:button>
                 </div>

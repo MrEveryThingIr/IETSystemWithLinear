@@ -90,7 +90,7 @@ class GroupOwnerIntegrityTest extends TestCase
         }
     }
 
-    public function test_invitation_redemption_preserves_owner_role_and_creates_admission(): void
+    public function test_current_member_cannot_redeem_an_invitation_or_change_owner_role(): void
     {
         [$group, $owner, $roles] = $this->ownedGroup();
         $invitation = GroupInvitation::create([
@@ -104,13 +104,14 @@ class GroupOwnerIntegrityTest extends TestCase
 
         $this->actingAs($owner->user)
             ->post(route('invitations.accept', $invitation->token))
-            ->assertRedirect(route('admissions.show', 1));
+            ->assertUnprocessable();
 
         $this->assertTrue($roles->hasRole($owner, $group, 'Owner'));
-        $this->assertSame(1, $invitation->refresh()->uses_count);
-        $this->assertCount(1, $invitation->acceptances);
+        $this->assertSame(0, $invitation->refresh()->uses_count);
+        $this->assertCount(0, $invitation->acceptances);
         $this->assertSame(1, $this->activeOwnerCount($group));
         $this->assertDatabaseCount('group_memberships', 1);
+        $this->assertDatabaseCount('admissions', 0);
     }
 
     /** @return array{Group, Actor, GroupRoleProvisioner} */

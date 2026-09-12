@@ -7,11 +7,13 @@ use App\Actions\Groups\ReviewGroupRoleChangeRequest;
 use App\Actions\Groups\SubmitGroupRoleChangeRequest;
 use App\GroupPermission;
 use App\GroupRoleKey;
+use App\Livewire\Groups\Show;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupMembership;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class GroupRoleChangeRequestTest extends TestCase
@@ -69,6 +71,20 @@ class GroupRoleChangeRequestTest extends TestCase
         $this->expectException(HttpException::class);
 
         app(ReviewGroupRoleChangeRequest::class)->execute($request, $member, true);
+    }
+
+    public function test_reviewer_does_not_see_their_own_pending_request(): void
+    {
+        [$group, , $member, $membership, $roles] = $this->groupWithReviewer();
+        $editor = $roles->createRole($group, 'Editor', [GroupPermission::ManageGroup->value]);
+        $approver = $roles->createRole($group, 'Approver', [GroupPermission::ApproveRoleChanges->value]);
+        $roles->grant($member, $group, $approver);
+
+        app(SubmitGroupRoleChangeRequest::class)->execute($membership, $member, $editor, 'grant');
+
+        Livewire::actingAs($member->user)
+            ->test(Show::class, ['group' => $group])
+            ->assertDontSee(__('ui.groups.pending_role_changes'));
     }
 
     public function test_built_in_roles_cannot_be_requested(): void

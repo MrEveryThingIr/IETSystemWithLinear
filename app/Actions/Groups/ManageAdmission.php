@@ -6,6 +6,7 @@ use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\AgreementAcceptance;
 use App\Models\GroupAgreementVersion;
+use App\Support\AgreementEvidence;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -25,15 +26,32 @@ class ManageAdmission
             }
             abort_unless((int) $lockedVersion->agreement->group_id === (int) $lockedAdmission->group_id && $lockedVersion->agreement->required_for_admission && $lockedVersion->isActiveAt(), 422);
 
-            $acceptance = AgreementAcceptance::firstOrCreate(
-                ['admission_id' => $lockedAdmission->id, 'group_agreement_version_id' => $lockedVersion->id],
-                ['accepted_by_actor_id' => $actor->id, 'accepted_at' => now(), 'evidence_hash' => $lockedVersion->content_hash, 'evidence_schema_version' => 1],
-            );
+            $acceptance = AgreementAcceptance::query()
+                ->where('admission_id', $lockedAdmission->id)
+                ->where('group_agreement_version_id', $lockedVersion->id)
+                ->lockForUpdate()
+                ->first();
 
-            if ($acceptance->wasRecentlyCreated) {
-                $lockedAdmission->events()->create(['actor_id' => $actor->id, 'event' => 'agreement.accepted', 'metadata' => ['version_id' => $lockedVersion->id]]);
+            if ($acceptance instanceof AgreementAcceptance) {
+                return;
             }
-        });
+
+            $acceptance = AgreementAcceptance::create([
+                'admission_id' => $lockedAdmission->id,
+                'group_agreement_version_id' => $lockedVersion->id,
+                ...AgreementEvidence::forAcceptance($lockedVersion, $actor),
+            ]);
+            $lockedAdmission->events()->create([
+                'actor_id' => $actor->id,
+                'event' => 'agreement.accepted',
+                'metadata' => [
+                    'version_id' => $lockedVersion->id,
+                    'acceptance_id' => $acceptance->id,
+                    'evidence_hash' => $acceptance->evidence_hash,
+                    'evidence_schema_version' => $acceptance->evidence_schema_version,
+                ],
+            ]);
+        }, attempts: 3);
     }
 
     public function candidateTransition(Admission $admission, Actor $actor, string $status, ?string $note = null): void

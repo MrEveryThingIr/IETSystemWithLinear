@@ -10,6 +10,7 @@ use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
 use App\Models\GroupMembership;
 use App\Models\MembershipAgreementAcceptance;
+use App\Support\AgreementEvidence;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -29,9 +30,11 @@ class ManageGroupAgreement
     public function revise(GroupAgreement $agreement, Actor $actor, string $content, string $rationale, bool $reacceptanceRequired): GroupAgreementVersion
     {
         return DB::transaction(function () use ($agreement, $actor, $content, $rationale, $reacceptanceRequired): GroupAgreementVersion {
-            $next = ((int) $agreement->versions()->lockForUpdate()->max('version')) + 1;
-            $version = $agreement->versions()->create(compact('content', 'rationale') + ['version' => $next, 'status' => 'draft', 'reacceptance_required' => $reacceptanceRequired, 'created_by_actor_id' => $actor->id]);
-            $this->event($agreement, $version, $actor, 'agreement.revision.created', ['rationale' => $rationale]);
+            /** @var GroupAgreement $lockedAgreement */
+            $lockedAgreement = GroupAgreement::query()->lockForUpdate()->findOrFail($agreement->id);
+            $next = ((int) $lockedAgreement->versions()->max('version')) + 1;
+            $version = $lockedAgreement->versions()->create(compact('content', 'rationale') + ['version' => $next, 'status' => 'draft', 'reacceptance_required' => $reacceptanceRequired, 'created_by_actor_id' => $actor->id]);
+            $this->event($lockedAgreement, $version, $actor, 'agreement.revision.created', ['rationale' => $rationale]);
 
             return $version;
         });
@@ -70,6 +73,7 @@ class ManageGroupAgreement
             /** @var GroupAgreementVersion $version */
             $version = GroupAgreementVersion::query()->lockForUpdate()->findOrFail($version->id);
             abort_unless(in_array($version->status, ['approved', 'scheduled'], true), 422, 'Only an approved or scheduled agreement version can be activated.');
+            abort_if($version->status === 'scheduled' && $version->effective_from?->isFuture(), 422, 'A scheduled agreement cannot be activated before its effective time.');
 
             $agreement = $this->agreementForVersion($version);
             /** @var GroupAgreementVersion|null $active */
@@ -80,12 +84,12 @@ class ManageGroupAgreement
                 ->first();
 
             if ($active !== null) {
-                $active->update(['status' => 'superseded', 'effective_until' => now(), 'superseded_by_version_id' => $version->id]);
+                $active->applyLifecycleTransition(['status' => 'superseded', 'effective_until' => now(), 'superseded_by_version_id' => $version->id]);
             }
 
-            $version->update([
+            $version->applyLifecycleTransition([
                 'status' => 'active',
-                'effective_from' => now(),
+                'effective_from' => $version->status === 'scheduled' ? $version->effective_from : now(),
                 'published_at' => $version->published_at ?? now(),
                 'activated_at' => now(),
             ]);
@@ -103,8 +107,9 @@ class ManageGroupAgreement
                 $agreement = $this->agreementForVersion($version);
                 /** @var GroupAgreementVersion|null $active */ $active = GroupAgreementVersion::query()->where('group_agreement_id', $agreement->id)->where('status', 'active')->lockForUpdate()->first();
                 if ($active !== null) {
-                    $active->update(['status' => 'superseded', 'effective_until' => $at, 'superseded_by_version_id' => $version->id]);
-                } $version->update(['status' => 'active', 'activated_at' => $at]);
+                    $active->applyLifecycleTransition(['status' => 'superseded', 'effective_until' => $at, 'superseded_by_version_id' => $version->id]);
+                }
+                $version->applyLifecycleTransition(['status' => 'active', 'activated_at' => $at]);
                 $this->event($agreement, $version, null, 'agreement.revision.activated', ['superseded_version_id' => $active?->id]);
             }
 
@@ -119,17 +124,42 @@ class ManageGroupAgreement
 
     public function acceptMembership(GroupMembership $membership, GroupAgreementVersion $version, Actor $actor): MembershipAgreementAcceptance
     {
-        abort_unless($membership->status === 'active' && $membership->actor_id === $actor->id && $version->isActiveAt() && $version->reacceptance_required, 422, 'This agreement version cannot be accepted.');
-        abort_unless($this->agreementForVersion($version)->group_id === $membership->group_id, 422, 'Agreement does not belong to this membership.');
-
         return DB::transaction(function () use ($membership, $version, $actor): MembershipAgreementAcceptance {
-            $acceptance = MembershipAgreementAcceptance::query()->firstOrCreate(['group_membership_id' => $membership->id, 'group_agreement_version_id' => $version->id], ['accepted_by_actor_id' => $actor->id, 'accepted_at' => now(), 'evidence_hash' => $version->content_hash, 'evidence_schema_version' => 1]);
-            if ($acceptance->wasRecentlyCreated) {
-                $this->event($this->agreementForVersion($version), $version, $actor, 'agreement.membership_accepted', ['membership_id' => $membership->id, 'acceptance_id' => $acceptance->id, 'evidence_hash' => $acceptance->evidence_hash]);
+            /** @var GroupMembership $lockedMembership */
+            $lockedMembership = GroupMembership::query()->lockForUpdate()->findOrFail($membership->id);
+            /** @var GroupAgreementVersion $lockedVersion */
+            $lockedVersion = GroupAgreementVersion::query()->with('agreement')->lockForUpdate()->findOrFail($version->id);
+            abort_unless($lockedMembership->status === 'active' && $lockedMembership->actor_id === $actor->id && $lockedVersion->isActiveAt() && $lockedVersion->reacceptance_required, 422, 'This agreement version cannot be accepted.');
+            abort_unless($lockedVersion->agreement->group_id === $lockedMembership->group_id, 422, 'Agreement does not belong to this membership.');
+            $currentMembershipEvent = $lockedMembership->currentParticipationEvent();
+            abort_unless($currentMembershipEvent !== null, 422, 'Membership history is incomplete.');
+
+            $acceptance = MembershipAgreementAcceptance::query()
+                ->where('group_membership_id', $lockedMembership->id)
+                ->where('group_agreement_version_id', $lockedVersion->id)
+                ->where('group_membership_event_id', $currentMembershipEvent->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($acceptance instanceof MembershipAgreementAcceptance) {
+                return $acceptance;
             }
 
+            $acceptance = MembershipAgreementAcceptance::create([
+                'group_membership_id' => $lockedMembership->id,
+                'group_membership_event_id' => $currentMembershipEvent->id,
+                'group_agreement_version_id' => $lockedVersion->id,
+                ...AgreementEvidence::forAcceptance($lockedVersion, $actor),
+            ]);
+            $this->event($lockedVersion->agreement, $lockedVersion, $actor, 'agreement.membership_accepted', [
+                'membership_id' => $lockedMembership->id,
+                'acceptance_id' => $acceptance->id,
+                'evidence_hash' => $acceptance->evidence_hash,
+                'evidence_schema_version' => $acceptance->evidence_schema_version,
+            ]);
+
             return $acceptance;
-        });
+        }, attempts: 3);
     }
 
     /**
@@ -148,7 +178,7 @@ class ManageGroupAgreement
     {
         DB::transaction(function () use ($version, $actor, $from, $to, $event, $metadata, $attributes): void { /** @var GroupAgreementVersion $version */ $version = GroupAgreementVersion::query()->lockForUpdate()->findOrFail($version->id);
             abort_unless(in_array($version->status, (array) $from, true), 422, 'Invalid agreement lifecycle transition.');
-            $version->update(['status' => $to] + $attributes);
+            $version->applyLifecycleTransition(['status' => $to] + $attributes);
             $this->event($this->agreementForVersion($version), $version, $actor, $event, $metadata);
         });
     }

@@ -34,7 +34,11 @@ class AcceptAgreements extends Component
     public function render(): View
     {
         $membership = $this->membership($this->group);
-        $acceptedIds = $membership?->agreementAcceptances()->pluck('group_agreement_version_id') ?? collect();
+        $currentParticipationEvent = $membership?->currentParticipationEvent();
+        $acceptedIds = $membership?->agreementAcceptances()
+            ->when($currentParticipationEvent !== null, fn ($query) => $query->where('group_membership_event_id', $currentParticipationEvent->id))
+            ->when($currentParticipationEvent === null, fn ($query) => $query->whereRaw('1 = 0'))
+            ->pluck('group_agreement_version_id') ?? collect();
         $versions = GroupAgreementVersion::query()->with('agreement')->whereHas('agreement', fn ($query) => $query->where('group_id', $this->group->id))->where('status', 'active')->where('reacceptance_required', true)->where('effective_from', '<=', now())->where(fn ($query) => $query->whereNull('effective_until')->orWhere('effective_until', '>', now()))->whereNotIn('id', $acceptedIds)->get();
 
         return view('livewire.groups.accept-agreements', ['versions' => $versions]);

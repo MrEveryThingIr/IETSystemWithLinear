@@ -21,6 +21,7 @@ class GroupFactory extends Factory
         return [
             'name' => fake()->unique()->city().' Construction Project',
             'description' => fake()->paragraphs(2, true),
+            'timezone' => 'UTC',
             'created_by_actor_id' => Actor::factory(),
         ];
     }

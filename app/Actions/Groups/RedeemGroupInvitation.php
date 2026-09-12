@@ -5,6 +5,7 @@ namespace App\Actions\Groups;
 use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\GroupInvitation;
+use App\Models\GroupMembership;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -32,14 +33,29 @@ class RedeemGroupInvitation
             /** @var GroupInvitation $invitation */
             $invitation = GroupInvitation::query()->where('token', GroupInvitation::hashToken($token))->lockForUpdate()->firstOrFail();
             $expiresAt = $invitation->expires_at;
-            abort_if($invitation->revoked_at !== null || ($expiresAt instanceof CarbonInterface && $expiresAt->isPast()) || ($invitation->max_uses !== null && $invitation->uses_count >= $invitation->max_uses), 404);
+            $existingAcceptance = $invitation->acceptances()->where('accepted_by_actor_id', $actor->id)->first();
+            abort_if(
+                $invitation->revoked_at !== null
+                || ($expiresAt instanceof CarbonInterface && $expiresAt->isPast())
+                || ($existingAcceptance === null && $invitation->max_uses !== null && $invitation->uses_count >= $invitation->max_uses),
+                404,
+            );
             if ($invitation->email !== null && strcasecmp($invitation->email, $email) !== 0) {
                 throw ValidationException::withMessages(['invitation' => __('ui.messages.invitation_reserved')]);
             }
+            $hasCurrentMembership = GroupMembership::query()
+                ->where('group_id', $invitation->group_id)
+                ->where('actor_id', $actor->id)
+                ->whereIn('status', ['active', 'suspended'])
+                ->exists();
+            abort_if($hasCurrentMembership, 422, 'Current Group members cannot create another admission.');
+
+            $openKey = Admission::openKey($invitation->group_id, $actor->id);
             /** @var Admission|null $admission */
-            $admission = Admission::query()->where('group_id', $invitation->group_id)->where('candidate_actor_id', $actor->id)->lockForUpdate()->first();
-            abort_if($admission !== null && in_array($admission->status, ['rejected', 'cancelled'], true), 422, 'This admission is closed.');
-            if ($invitation->acceptances()->where('accepted_by_actor_id', $actor->id)->doesntExist()) {
+            $admission = Admission::query()->where('open_key', $openKey)->lockForUpdate()->first();
+            abort_if($existingAcceptance !== null && $admission === null, 422, 'A new admission attempt requires a new invitation.');
+
+            if ($existingAcceptance === null) {
                 $invitation->acceptances()->create(['accepted_by_actor_id' => $actor->id, 'accepted_at' => now()]);
                 $invitation->increment('uses_count');
             }

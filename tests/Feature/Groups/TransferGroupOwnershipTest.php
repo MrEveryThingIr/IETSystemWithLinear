@@ -5,6 +5,7 @@ namespace Tests\Feature\Groups;
 use App\Actions\Groups\GroupRoleProvisioner;
 use App\Actions\Groups\TransferGroupOwnership;
 use App\GroupPermission;
+use App\GroupRoleKey;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupMembership;
@@ -69,6 +70,24 @@ class TransferGroupOwnershipTest extends TestCase
 
         $this->expectException(HttpException::class);
         app(TransferGroupOwnership::class)->respond($request, Actor::factory()->create(), true);
+    }
+
+    public function test_repeated_proposal_is_idempotent_but_a_different_pending_target_is_rejected(): void
+    {
+        [$group, $owner, , $membership, $roles] = $this->ownedGroupWithMember();
+        $otherMember = Actor::factory()->create();
+        $otherMembership = $group->memberships()->create(['actor_id' => $otherMember->id, 'status' => 'active']);
+        $roles->grant($otherMember, $group, $roles->builtInRole($group, GroupRoleKey::Member));
+        $transfers = app(TransferGroupOwnership::class);
+
+        $first = $transfers->propose($group, $owner, $membership);
+        $retry = $transfers->propose($group, $owner, $membership);
+
+        $this->assertSame($first->id, $retry->id);
+        $this->assertDatabaseCount('group_ownership_transfer_requests', 1);
+
+        $this->expectException(HttpException::class);
+        $transfers->propose($group, $owner, $otherMembership);
     }
 
     /** @return array{Group, Actor, Actor, GroupMembership, GroupRoleProvisioner} */

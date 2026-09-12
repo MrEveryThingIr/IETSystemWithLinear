@@ -20,6 +20,8 @@ class Register extends Component
 
     public string $groupName = '';
 
+    public ?string $targetEmailHint = null;
+
     public string $username = '';
 
     public string $email = '';
@@ -33,7 +35,7 @@ class Register extends Component
         $invitation = $redemption->preview($token);
         $this->invitationToken = $token;
         $this->groupName = $invitation->group->name;
-        $this->email = $invitation->email ?? '';
+        $this->targetEmailHint = $invitation->maskedEmail();
     }
 
     public function register(RegisterInvitedUser $register): void

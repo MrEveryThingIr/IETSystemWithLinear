@@ -3,6 +3,9 @@
         <flux:badge color="indigo">{{ __('ui.auth.invitation_accepted') }}</flux:badge>
         <flux:heading size="xl" level="1">{{ __('ui.auth.join_group', ['group' => $groupName]) }}</flux:heading>
         <flux:text>{{ __('ui.auth.create_account_intro') }}</flux:text>
+        @if ($targetEmailHint)
+            <flux:text>{{ __('ui.auth.invitation_target_hint', ['email' => $targetEmailHint]) }}</flux:text>
+        @endif
     </div>
 
     <x-app.flash-message />

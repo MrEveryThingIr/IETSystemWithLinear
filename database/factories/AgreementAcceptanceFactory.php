@@ -6,6 +6,7 @@ use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\AgreementAcceptance;
 use App\Models\GroupAgreementVersion;
+use App\Support\AgreementEvidence;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -24,8 +25,18 @@ class AgreementAcceptanceFactory extends Factory
             'admission_id' => Admission::factory()->approved(),
             'group_agreement_version_id' => GroupAgreementVersion::factory()->active(),
             'accepted_by_actor_id' => Actor::factory(),
+            'represented_actor_id' => fn (array $attributes): int => $attributes['accepted_by_actor_id'],
+            'acting_user_id' => fn (array $attributes): ?int => Actor::query()->findOrFail($attributes['accepted_by_actor_id'])->user_id,
+            'group_agreement_id' => fn (array $attributes): int => GroupAgreementVersion::query()->findOrFail($attributes['group_agreement_version_id'])->group_agreement_id,
+            'version_number' => fn (array $attributes): int => GroupAgreementVersion::query()->findOrFail($attributes['group_agreement_version_id'])->version,
             'accepted_at' => now(),
-            'evidence_hash' => hash('sha256', fake()->paragraph()),
+            'evidence_hash' => fn (array $attributes): string => GroupAgreementVersion::query()->findOrFail($attributes['group_agreement_version_id'])->content_hash,
+            'hash_algorithm' => AgreementEvidence::HASH_ALGORITHM,
+            'version_effective_from' => fn (array $attributes) => GroupAgreementVersion::query()->findOrFail($attributes['group_agreement_version_id'])->effective_from,
+            'version_effective_until' => fn (array $attributes) => GroupAgreementVersion::query()->findOrFail($attributes['group_agreement_version_id'])->effective_until,
+            'required_for_admission' => fn (array $attributes): bool => GroupAgreementVersion::query()->findOrFail($attributes['group_agreement_version_id'])->agreement()->value('required_for_admission'),
+            'reacceptance_required' => fn (array $attributes): bool => GroupAgreementVersion::query()->findOrFail($attributes['group_agreement_version_id'])->reacceptance_required,
+            'evidence_schema_version' => AgreementEvidence::SCHEMA_VERSION,
         ];
     }
 
@@ -34,8 +45,7 @@ class AgreementAcceptanceFactory extends Factory
         return $this->state(fn (): array => [
             'admission_id' => $admission->id,
             'group_agreement_version_id' => $version->id,
-            'accepted_by_actor_id' => $admission->candidate_actor_id,
-            'evidence_hash' => hash('sha256', $version->content),
+            ...AgreementEvidence::forAcceptance($version, $admission->candidate),
         ]);
     }
 }

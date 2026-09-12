@@ -30,10 +30,29 @@ class TransferGroupOwnership
             $sourceMembership = GroupMembership::query()->where('group_id', $group->id)->where('actor_id', $currentOwner->id)->where('status', 'active')->lockForUpdate()->firstOrFail();
             GroupMembership::query()->whereKey($targetMembership->id)->where('status', 'active')->lockForUpdate()->firstOrFail();
 
-            return GroupOwnershipTransferRequest::query()->firstOrCreate(
-                ['pending_group_id' => $group->id],
-                ['group_id' => $group->id, 'from_membership_id' => $sourceMembership->id, 'to_membership_id' => $targetMembership->id, 'status' => 'pending'],
-            );
+            $pendingRequest = GroupOwnershipTransferRequest::query()
+                ->where('pending_group_id', $group->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($pendingRequest instanceof GroupOwnershipTransferRequest) {
+                abort_unless(
+                    (int) $pendingRequest->from_membership_id === (int) $sourceMembership->id
+                    && (int) $pendingRequest->to_membership_id === (int) $targetMembership->id,
+                    422,
+                    'Another ownership transfer is already awaiting consent.',
+                );
+
+                return $pendingRequest;
+            }
+
+            return GroupOwnershipTransferRequest::create([
+                'pending_group_id' => $group->id,
+                'group_id' => $group->id,
+                'from_membership_id' => $sourceMembership->id,
+                'to_membership_id' => $targetMembership->id,
+                'status' => 'pending',
+            ]);
         }, attempts: 3);
     }
 

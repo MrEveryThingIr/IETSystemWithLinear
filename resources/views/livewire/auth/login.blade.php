@@ -3,6 +3,9 @@
         <flux:heading size="xl" level="1">{{ $groupName ? __('ui.auth.continue_to_group', ['group' => $groupName]) : __('ui.auth.login') }}</flux:heading>
         @if ($groupName)
             <flux:text>{{ __('ui.auth.invitation_after_login') }}</flux:text>
+            @if ($targetEmailHint)
+                <flux:text>{{ __('ui.auth.invitation_target_hint', ['email' => $targetEmailHint]) }}</flux:text>
+            @endif
         @endif
     </div>
 

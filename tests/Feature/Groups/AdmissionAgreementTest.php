@@ -4,10 +4,10 @@ namespace Tests\Feature\Groups;
 
 use App\Actions\Groups\FinalizeAdmission;
 use App\Actions\Groups\GroupRoleProvisioner;
+use App\Actions\Groups\ManageAdmission;
 use App\Actions\Groups\RedeemGroupInvitation;
 use App\Models\Actor;
 use App\Models\Admission;
-use App\Models\AgreementAcceptance;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
@@ -49,13 +49,7 @@ class AdmissionAgreementTest extends TestCase
     public function test_finalization_reactivates_membership_only_after_approval_and_acceptance(): void
     {
         [$candidate, $admission, $version] = $this->approvedAdmissionWithRequiredVersion();
-        AgreementAcceptance::create([
-            'admission_id' => $admission->id,
-            'group_agreement_version_id' => $version->id,
-            'accepted_by_actor_id' => $candidate->id,
-            'accepted_at' => now(),
-            'evidence_hash' => hash('sha256', 'Terms'),
-        ]);
+        app(ManageAdmission::class)->accept($admission, $candidate, $version);
 
         $membership = app(FinalizeAdmission::class)->execute($admission);
 

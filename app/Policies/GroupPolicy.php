@@ -8,6 +8,7 @@ use App\GroupRoleKey;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupAgreementVersion;
+use App\Models\GroupMembership;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\User;
 use App\PlatformCapability;
@@ -97,10 +98,10 @@ class GroupPolicy
             return false;
         }
 
-        return $permission !== GroupPermission::Participate->value || ! $this->requiresReacceptance($group, $membership->id);
+        return $permission !== GroupPermission::Participate->value || ! $this->requiresReacceptance($group, $membership);
     }
 
-    private function requiresReacceptance(Group $group, int $membershipId): bool
+    private function requiresReacceptance(Group $group, GroupMembership $membership): bool
     {
         $requiredVersionIds = GroupAgreementVersion::query()
             ->whereHas('agreement', fn ($query) => $query->where('group_id', $group->id))
@@ -110,7 +111,23 @@ class GroupPolicy
             ->where(fn ($query) => $query->whereNull('effective_until')->orWhere('effective_until', '>', now()))
             ->pluck('id');
 
-        return $requiredVersionIds->isNotEmpty()
-            && MembershipAgreementAcceptance::query()->where('group_membership_id', $membershipId)->whereIn('group_agreement_version_id', $requiredVersionIds)->count() !== $requiredVersionIds->count();
+        if ($requiredVersionIds->isEmpty()) {
+            return false;
+        }
+
+        $currentMembershipEvent = $membership->currentParticipationEvent();
+
+        if ($currentMembershipEvent === null) {
+            return true;
+        }
+
+        $acceptedVersionCount = MembershipAgreementAcceptance::query()
+            ->where('group_membership_id', $membership->id)
+            ->where('group_membership_event_id', $currentMembershipEvent->id)
+            ->whereIn('group_agreement_version_id', $requiredVersionIds)
+            ->distinct('group_agreement_version_id')
+            ->count('group_agreement_version_id');
+
+        return $acceptedVersionCount !== $requiredVersionIds->count();
     }
 }

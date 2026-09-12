@@ -23,6 +23,7 @@ return [
         'logout' => '登出',
         'continue_to_group' => '继续前往 :group',
         'invitation_after_login' => '您的邀请将在登录后应用。',
+        'invitation_target_hint' => '此邀请仅限 :email。请输入完整且匹配的邮箱地址以继续。',
         'email' => '电子邮箱',
         'password' => '密码',
         'confirm_password' => '确认密码',
@@ -155,6 +156,8 @@ return [
         'name_placeholder' => '例如：灯笼公会',
         'description' => '描述',
         'description_help' => '可选。说明此群组的用途。',
+        'timezone' => '群组时区',
+        'timezone_help' => '计划时间按此 IANA 时区输入和显示，数据仍以 UTC 存储。',
     ],
     'admission' => [
         'title' => '群组加入申请',
@@ -347,6 +350,7 @@ return [
         'required_agreements_unaccepted' => '最终确认前必须接受所有生效中的必需协议版本。',
         'admission_action_unavailable' => '该加入申请操作已不可用，请刷新页面后重试。',
         'group_needs_owner' => '群组必须至少有一位有效所有者。',
+        'invalid_local_datetime' => '请输入 :timezone 中真实存在的本地日期和时间。夏令时跳过的时间无效。',
     ],
     'status' => [
         'draft' => '草稿',
