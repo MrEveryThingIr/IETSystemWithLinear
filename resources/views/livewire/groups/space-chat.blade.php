@@ -5,19 +5,7 @@
         </x-slot:actions>
     </x-app.page-header>
 
-    <div class="flex flex-wrap items-center gap-2 border-b border-zinc-200 pb-3 dark:border-zinc-800">
-        <flux:text class="me-2 font-medium">Spaces</flux:text>
-        <flux:button :href="route('groups.show', $group)" size="sm" variant="ghost">Overview</flux:button>
-        @foreach ($spaces as $candidate)
-            <flux:button
-                :href="route('groups.spaces.show', [$group, $candidate])"
-                size="sm"
-                :variant="$candidate->is($space) ? 'primary' : 'ghost'"
-            >
-                # {{ $candidate->name }}
-            </flux:button>
-        @endforeach
-    </div>
+    <x-app.group-space-tabs :group="$group" :current-space="$space" />
 
     <flux:card class="flex min-h-[34rem] flex-col gap-4">
         <div class="border-b border-zinc-200 pb-3 dark:border-zinc-800">
