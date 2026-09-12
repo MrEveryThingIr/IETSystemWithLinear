@@ -11,6 +11,7 @@ class CreateGroup
     public function __construct(
         private GroupRoleProvisioner $roles,
         private TransitionGroupMembership $memberships,
+        private EnsureDefaultGroupSpace $spaces,
     ) {}
 
     public function execute(Actor $actor, string $name, ?string $description, string $timezone = 'UTC'): Group
@@ -21,6 +22,7 @@ class CreateGroup
             $membership = $group->memberships()->create(['actor_id' => $actor->id, 'status' => 'active']);
             $this->roles->grant($actor, $group, $role);
             $this->memberships->recordInitial($membership, $actor, 'Group creator membership established.');
+            $this->spaces->execute($group, $actor);
 
             return $group;
         });
