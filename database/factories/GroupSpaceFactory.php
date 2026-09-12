@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
  */
 class GroupSpaceFactory extends Factory
 {
+    /** @return array<string, mixed> */
     public function definition(): array
     {
         $name = fake()->unique()->words(2, true);
