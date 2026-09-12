@@ -8,7 +8,6 @@ use App\GroupPermission;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupMembership;
-use App\Models\GroupOwnershipTransferRequest;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpKernel\Exception\HttpException;
