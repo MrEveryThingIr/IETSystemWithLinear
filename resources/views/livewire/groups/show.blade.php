@@ -137,7 +137,7 @@
                         <option value="{{ $membership->id }}">{{ $membership->actor->user?->username ?? __('ui.groups.unknown_member') }}</option>
                     @endforeach
                 </flux:select>
-                <flux:button type="submit" variant="danger">{{ __('ui.groups.transfer') }}</flux:button>
+                <flux:button type="submit" variant="primary">{{ __('ui.groups.request_transfer') }}</flux:button>
             </form>
         </flux:card>
     @endif

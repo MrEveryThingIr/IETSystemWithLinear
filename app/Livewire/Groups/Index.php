@@ -3,9 +3,11 @@
 namespace App\Livewire\Groups;
 
 use App\Actions\Groups\GroupRoleProvisioner;
+use App\Actions\Groups\TransferGroupOwnership;
 use App\Models\Admission;
 use App\Models\GroupInvitation;
 use App\Models\GroupMembership;
+use App\Models\GroupOwnershipTransferRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -16,6 +18,14 @@ use Livewire\Component;
 #[Title('Groups')]
 class Index extends Component
 {
+    public function respondToOwnershipTransfer(int $requestId, bool $accepted, TransferGroupOwnership $transfers): void
+    {
+        $actor = auth()->user()->actor;
+        $request = GroupOwnershipTransferRequest::query()->where('status', 'pending')->findOrFail($requestId);
+        $transfers->respond($request, $actor, $accepted);
+        session()->flash('status', $accepted ? __('ui.messages.ownership_transferred') : __('ui.messages.ownership_transfer_rejected'));
+    }
+
     public function render(GroupRoleProvisioner $groupRoles): View
     {
         $actor = auth()->user()->actor;
@@ -38,7 +48,13 @@ class Index extends Component
             ->where('invited_by_actor_id', $actor->id)
             ->latest()
             ->get();
+        $ownershipTransfers = GroupOwnershipTransferRequest::query()
+            ->with(['group', 'sourceMembership.actor.user'])
+            ->whereHas('targetMembership', fn ($query) => $query->where('actor_id', $actor->id)->where('status', 'active'))
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
 
-        return view('livewire.groups.index', compact('memberships', 'roles', 'requiresAgreementAcceptance', 'receivedInvitations', 'sentInvitations'));
+        return view('livewire.groups.index', compact('memberships', 'roles', 'requiresAgreementAcceptance', 'receivedInvitations', 'sentInvitations', 'ownershipTransfers'));
     }
 }

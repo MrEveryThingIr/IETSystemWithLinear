@@ -9,6 +9,21 @@
         <flux:callout variant="success" class="break-all">{{ session('status') }}</flux:callout>
     @endif
 
+    @if ($ownershipTransfers->isNotEmpty())
+        <flux:card class="space-y-4 border-indigo-300 dark:border-indigo-700">
+            <flux:heading size="lg">{{ __('ui.groups.ownership_requests') }}</flux:heading>
+            @foreach ($ownershipTransfers as $transfer)
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <flux:text>{{ __('ui.groups.ownership_request_from', ['group' => $transfer->group->name, 'username' => $transfer->sourceMembership->actor->user?->username ?? __('ui.common.unknown_account')]) }}</flux:text>
+                    <div class="flex gap-2">
+                        <flux:button wire:click="respondToOwnershipTransfer({{ $transfer->id }}, true)" variant="primary">{{ __('ui.common.accept') }}</flux:button>
+                        <flux:button wire:click="respondToOwnershipTransfer({{ $transfer->id }}, false)" variant="ghost">{{ __('ui.admission.reject') }}</flux:button>
+                    </div>
+                </div>
+            @endforeach
+        </flux:card>
+    @endif
+
     <div class="space-y-4">
         <flux:heading size="lg">{{ __('ui.groups.your_groups') }}</flux:heading>
         @if ($memberships->isEmpty())

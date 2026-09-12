@@ -178,9 +178,9 @@ class Show extends Component
         Gate::authorize('transferOwnership', $this->group);
         $data = $this->validate(['transferMembershipId' => ['required', 'integer']]);
         $membership = GroupMembership::query()->where('group_id', $this->group->id)->where('status', 'active')->findOrFail($data['transferMembershipId']);
-        $transferOwnership->execute($this->group, $this->actor(), $membership);
+        $transferOwnership->propose($this->group, $this->actor(), $membership);
         $this->reset('transferMembershipId');
-        session()->flash('status', __('ui.messages.ownership_transferred'));
+        session()->flash('status', __('ui.messages.ownership_transfer_requested'));
     }
 
     public function render(GroupRoleProvisioner $groupRoles): View

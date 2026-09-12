@@ -8,6 +8,7 @@ use App\GroupPermission;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupMembership;
+use App\Models\GroupOwnershipTransferRequest;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -23,7 +24,13 @@ class TransferGroupOwnershipTest extends TestCase
         $coordinator = $roles->createRole($group, 'Coordinator', [GroupPermission::ManageInvitations->value]);
         $roles->grant($member, $group, $coordinator);
 
-        app(TransferGroupOwnership::class)->execute($group, $owner, $membership);
+        $request = app(TransferGroupOwnership::class)->propose($group, $owner, $membership);
+
+        $this->assertSame('pending', $request->status);
+        $this->assertTrue(Gate::forUser($owner->user)->allows('transferOwnership', $group));
+        $this->assertFalse(Gate::forUser($member->user)->allows('transferOwnership', $group));
+
+        app(TransferGroupOwnership::class)->respond($request, $member, true);
 
         $this->assertSame(['Member'], $roles->roleNames($owner, $group)->all());
         $this->assertEqualsCanonicalizing(['Coordinator', 'Member', 'Owner'], $roles->roleNames($member, $group)->all());
@@ -40,7 +47,29 @@ class TransferGroupOwnershipTest extends TestCase
 
         $this->expectException(HttpException::class);
 
-        app(TransferGroupOwnership::class)->execute($group, $owner, $otherMembership);
+        app(TransferGroupOwnership::class)->propose($group, $owner, $otherMembership);
+    }
+
+    public function test_rejection_changes_no_roles_and_closes_the_request(): void
+    {
+        [$group, $owner, $member, $membership, $roles] = $this->ownedGroupWithMember();
+        $request = app(TransferGroupOwnership::class)->propose($group, $owner, $membership);
+
+        app(TransferGroupOwnership::class)->respond($request, $member, false);
+
+        $this->assertSame('rejected', $request->refresh()->status);
+        $this->assertNull($request->pending_group_id);
+        $this->assertSame(['Member', 'Owner'], $roles->roleNames($owner, $group)->all());
+        $this->assertSame(['Member'], $roles->roleNames($member, $group)->all());
+    }
+
+    public function test_only_the_target_member_can_answer_a_transfer(): void
+    {
+        [$group, $owner, , $membership] = $this->ownedGroupWithMember();
+        $request = app(TransferGroupOwnership::class)->propose($group, $owner, $membership);
+
+        $this->expectException(HttpException::class);
+        app(TransferGroupOwnership::class)->respond($request, Actor::factory()->create(), true);
     }
 
     /** @return array{Group, Actor, Actor, GroupMembership, GroupRoleProvisioner} */
