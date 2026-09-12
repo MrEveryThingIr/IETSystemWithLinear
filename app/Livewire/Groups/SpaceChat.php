@@ -49,12 +49,6 @@ class SpaceChat extends Component
     {
         Gate::authorize('view', $this->group);
 
-        $spaces = $this->group->spaces()
-            ->where('status', 'active')
-            ->orderByDesc('is_default')
-            ->orderBy('id')
-            ->get();
-
         $messages = $this->space->messages()
             ->with('author.user')
             ->latest('id')
@@ -63,6 +57,6 @@ class SpaceChat extends Component
             ->reverse()
             ->values();
 
-        return view('livewire.groups.space-chat', compact('spaces', 'messages'));
+        return view('livewire.groups.space-chat', compact('messages'));
     }
 }
