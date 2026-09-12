@@ -46,6 +46,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(PlatformAccessGrant::class);
     }
 
+    /** @return HasMany<PlatformAccessRequest, $this> */
+    public function platformAccessRequests(): HasMany
+    {
+        return $this->hasMany(PlatformAccessRequest::class);
+    }
+
     public function hasPlatformCapability(PlatformCapability $capability): bool
     {
         $currentUser = self::query()->find($this->getKey());
