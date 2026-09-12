@@ -1,8 +1,12 @@
 <section class="space-y-8">
     <x-app.page-header :title="__('ui.groups.title')" :description="__('ui.groups.overview')">
-        @can('create', App\Models\Group::class)
-            <x-slot:actions><flux:button :href="route('groups.create')" variant="primary" icon="plus">{{ __('ui.groups.create') }}</flux:button></x-slot:actions>
-        @endcan
+        <x-slot:actions>
+            @can('create', App\Models\Group::class)
+                <flux:button :href="route('groups.create')" variant="primary" icon="plus">{{ __('ui.groups.create') }}</flux:button>
+            @else
+                <flux:button :href="route('platform.access')" variant="ghost" icon="key">Request create access</flux:button>
+            @endcan
+        </x-slot:actions>
     </x-app.page-header>
 
     @if (session('status'))

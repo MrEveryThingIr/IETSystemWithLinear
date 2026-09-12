@@ -19,6 +19,7 @@ use App\Livewire\Groups\Create as CreateGroup;
 use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
+use App\Livewire\Platform\Access as PlatformAccess;
 use App\Models\Actor;
 use App\Models\Group;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,7 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
     Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
+    Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
     Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');
