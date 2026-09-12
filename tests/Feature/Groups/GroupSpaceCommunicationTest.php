@@ -12,7 +12,6 @@ use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupMembership;
 use App\Models\GroupSpace;
-use App\Models\GroupSpaceMessage;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
