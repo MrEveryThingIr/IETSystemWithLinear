@@ -19,6 +19,7 @@ use App\Livewire\Groups\Create as CreateGroup;
 use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
+use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Models\Actor;
 use App\Models\Group;
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/groups', GroupIndex::class)->name('groups.index');
     Route::livewire('/groups/create', CreateGroup::class)->can('create', Group::class)->name('groups.create');
     Route::livewire('/groups/{group}/accept-agreements', AcceptAgreements::class)->name('groups.accept-agreements');
+    Route::livewire('/groups/{group}/spaces/{space}', SpaceChat::class)->name('groups.spaces.show');
     Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show');
     Route::livewire('/groups/{group}/agreements', Agreements::class)->name('groups.agreements');
     Route::livewire('/groups/{group}/invitations', Invitations::class)->name('groups.invitations');
