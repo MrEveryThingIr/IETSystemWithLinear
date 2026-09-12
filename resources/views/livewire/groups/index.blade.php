@@ -134,6 +134,6 @@
                     </flux:card>
                 @endforeach
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
 </section>
