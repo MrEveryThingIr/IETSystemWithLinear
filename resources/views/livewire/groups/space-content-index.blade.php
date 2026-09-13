@@ -9,9 +9,12 @@
     <x-app.space-section-tabs :group="$group" :space="$space" current="content" />
 
     @php
+        $hasDraftWork = $draftContents->isNotEmpty()
+            || ($canManageSpace && $spaceDraftContents->isNotEmpty());
+
         $nextStep = match (true) {
             $definitions->isEmpty() => __('workflow.content.next_define'),
-            $draftContents->isNotEmpty() => __('workflow.content.next_review'),
+            $hasDraftWork => __('workflow.content.next_review'),
             $publishedContents->isEmpty() => __('workflow.content.next_create'),
             default => __('workflow.content.next_continue'),
         };
@@ -77,8 +80,8 @@
 
             <flux:card class="space-y-4">
                 <div>
-                    <flux:heading size="lg">{{ __('workflow.content.workspace_title') }}</flux:heading>
-                    <flux:text>{{ __('workflow.content.workspace_help') }}</flux:text>
+                    <flux:heading size="lg">{{ __('workflow.content.my_drafts_title') }}</flux:heading>
+                    <flux:text>{{ __('workflow.content.my_drafts_help') }}</flux:text>
                 </div>
 
                 @forelse ($draftContents as $item)
@@ -102,6 +105,41 @@
                     <x-app.empty-state :title="__('workflow.content.no_drafts')" :description="__('workflow.content.no_drafts_help')" />
                 @endforelse
             </flux:card>
+
+            @if ($canManageSpace)
+                <flux:card class="space-y-4">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <flux:heading size="lg">{{ __('workflow.content.space_drafts_title') }}</flux:heading>
+                            <flux:text>{{ __('workflow.content.space_drafts_help') }}</flux:text>
+                        </div>
+                        <flux:badge>{{ $spaceDraftContents->count() }}</flux:badge>
+                    </div>
+
+                    @forelse ($spaceDraftContents as $item)
+                        <a
+                            wire:key="space-draft-content-{{ $item->id }}"
+                            href="{{ route('groups.spaces.contents.show', [$group, $space, $item]) }}"
+                            class="block rounded-xl border border-amber-200 bg-amber-50/60 p-4 transition hover:bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/20 dark:hover:bg-amber-950/30"
+                        >
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0 space-y-1">
+                                    <flux:heading>{{ $item->draftRevision?->title ?? __('ui.content.untitled') }}</flux:heading>
+                                    <flux:text class="text-sm">
+                                        {{ $item->definition->name }} · {{ $item->author->user?->username ?? __('ui.common.unknown_account') }}
+                                    </flux:text>
+                                </div>
+                                <div class="flex flex-col items-end gap-1">
+                                    <flux:badge>{{ __('ui.content.status_draft') }}</flux:badge>
+                                    <flux:text class="text-xs">{{ __('workflow.content.review_space_draft') }} →</flux:text>
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <x-app.empty-state :title="__('workflow.content.no_space_drafts')" :description="__('workflow.content.no_space_drafts_help')" />
+                    @endforelse
+                </flux:card>
+            @endif
         </div>
 
         <flux:card class="space-y-5 self-start xl:sticky xl:top-6">
