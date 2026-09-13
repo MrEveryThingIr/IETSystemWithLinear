@@ -1,4 +1,9 @@
 <section class="space-y-6">
+    @php
+        $hasDraft = $content->draft_revision_id !== null;
+        $hasPublishedEdition = $content->active_revision_id !== null;
+    @endphp
+
     <x-app.page-header :title="$currentRevision->title" :description="$content->definition->name">
         <x-slot:actions>
             <div class="flex flex-wrap gap-2">
@@ -22,17 +27,50 @@
         <flux:callout variant="success">{{ session('status') }}</flux:callout>
     @endif
 
-    <div class="flex flex-wrap gap-2">
-        <flux:badge>{{ __('ui.content.status_'.$content->status) }}</flux:badge>
-        @if ($canUpdate && $content->draft_revision_id !== null)
-            <flux:badge>{{ __('ui.content.status_draft') }}</flux:badge>
+    <flux:card class="space-y-5">
+        <div class="space-y-1">
+            <flux:heading size="lg">{{ __('workflow.content.where_now') }}</flux:heading>
+            <flux:text>{{ __('workflow.content.subtitle') }}</flux:text>
+        </div>
+
+        <x-app.workflow-pipeline :steps="[
+            ['label' => __('workflow.content.definition'), 'description' => __('workflow.content.definition_help'), 'state' => 'complete'],
+            ['label' => __('workflow.content.draft'), 'description' => __('workflow.content.draft_help'), 'state' => ($hasDraft || $hasPublishedEdition) ? 'complete' : 'current'],
+            ['label' => __('workflow.content.review'), 'description' => __('workflow.content.review_help'), 'state' => $hasDraft ? 'current' : ($hasPublishedEdition ? 'complete' : 'upcoming')],
+            ['label' => __('workflow.content.publish'), 'description' => __('workflow.content.publish_help'), 'state' => $hasPublishedEdition ? 'complete' : 'upcoming'],
+        ]" />
+
+        <div class="flex flex-wrap gap-2">
+            <flux:badge>{{ __('ui.content.status_'.$content->status) }}</flux:badge>
+            @if ($hasDraft && $canUpdate)
+                <flux:badge>{{ __('ui.content.status_draft') }}</flux:badge>
+            @endif
+            <flux:badge>{{ __('ui.content.revision_number', ['revision' => $currentRevision->revision]) }}</flux:badge>
+            <flux:badge>{{ __('ui.content.definition_version', ['version' => $definitionVersion->version]) }}</flux:badge>
+        </div>
+
+        @if (! $canUpdate)
+            <flux:callout>{{ __('workflow.content.reader_notice') }}</flux:callout>
+        @elseif ($hasDraft)
+            <flux:callout>{{ __('workflow.content.draft_notice') }}</flux:callout>
+        @elseif ($hasPublishedEdition)
+            <flux:callout>{{ __('workflow.content.published_notice') }} {{ __('workflow.content.start_next_edition_help') }}</flux:callout>
+        @else
+            <flux:callout>{{ __('workflow.content.first_draft_notice') }}</flux:callout>
         @endif
-        <flux:badge>{{ __('ui.content.revision_number', ['revision' => $currentRevision->revision]) }}</flux:badge>
-        <flux:badge>{{ __('ui.content.definition_version', ['version' => $definitionVersion->version]) }}</flux:badge>
-    </div>
+    </flux:card>
 
     <flux:card class="space-y-5">
-        <flux:heading size="lg">{{ __('ui.content.current') }}</flux:heading>
+        <div class="space-y-1">
+            <flux:heading size="lg">
+                {{ $hasDraft && $canUpdate ? __('workflow.content.draft_preview') : __('workflow.content.published_preview') }}
+            </flux:heading>
+            @if ($hasDraft && $canUpdate)
+                <flux:text>{{ __('workflow.content.draft_notice') }}</flux:text>
+            @elseif ($hasPublishedEdition)
+                <flux:text>{{ __('workflow.content.published_notice') }}</flux:text>
+            @endif
+        </div>
 
         @foreach ($definitionVersion->schema['fields'] as $field)
             @php
@@ -56,9 +94,14 @@
 
     @if ($canUpdate)
         <flux:card class="space-y-5">
-            <div>
-                <flux:heading size="lg">{{ __('ui.content.revise') }}</flux:heading>
-                <flux:text>{{ __('ui.content.revise_help') }}</flux:text>
+            <div class="space-y-1">
+                <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('workflow.content.next_step') }}</div>
+                <flux:heading size="lg">
+                    {{ $hasDraft ? __('workflow.content.edit_draft') : __('workflow.content.start_next_edition') }}
+                </flux:heading>
+                <flux:text>
+                    {{ $hasDraft ? __('workflow.content.edit_draft_help') : __('workflow.content.start_next_edition_help') }}
+                </flux:text>
             </div>
 
             <form wire:submit="saveRevision" class="space-y-4">
@@ -85,7 +128,10 @@
                             @break
                     @endswitch
                 @endforeach
-                <flux:button type="submit" variant="primary">{{ __('ui.content.save_revision') }}</flux:button>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <flux:text class="text-xs">{{ __('workflow.content.edit_draft_help') }}</flux:text>
+                    <flux:button type="submit" variant="primary">{{ __('workflow.content.save_private_revision') }}</flux:button>
+                </div>
             </form>
         </flux:card>
     @endif
