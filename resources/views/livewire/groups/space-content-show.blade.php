@@ -61,11 +61,26 @@
             <form wire:submit="saveRevision" class="space-y-4">
                 <flux:input wire:model="title" :label="__('ui.content.title')" maxlength="255" />
                 @foreach ($definitionVersion->schema['fields'] as $field)
-                    <x-dynamic-component
-                        :component="$fieldComponents[$field['type']]"
-                        :field="$field"
-                        :model="'payload.'.$field['key']"
-                    />
+                    @switch($field['type'])
+                        @case('short_text')
+                            <x-space-content.fields.short-text :field="$field" :model="'payload.'.$field['key']" />
+                            @break
+                        @case('long_text')
+                            <x-space-content.fields.long-text :field="$field" :model="'payload.'.$field['key']" />
+                            @break
+                        @case('number')
+                            <x-space-content.fields.number :field="$field" :model="'payload.'.$field['key']" />
+                            @break
+                        @case('date')
+                            <x-space-content.fields.date :field="$field" :model="'payload.'.$field['key']" />
+                            @break
+                        @case('boolean')
+                            <x-space-content.fields.boolean :field="$field" :model="'payload.'.$field['key']" />
+                            @break
+                        @case('select')
+                            <x-space-content.fields.select :field="$field" :model="'payload.'.$field['key']" />
+                            @break
+                    @endswitch
                 @endforeach
                 <flux:button type="submit" variant="primary">{{ __('ui.content.save_revision') }}</flux:button>
             </form>
@@ -79,7 +94,9 @@
         </div>
 
         @foreach ($revisions as $revision)
-            @php($revisionSchema = $revision->definitionVersion->schema['fields'] ?? [])
+            @php
+                $revisionSchema = $revision->definitionVersion->schema['fields'] ?? [];
+            @endphp
             <details wire:key="content-revision-{{ $revision->id }}" class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
                 <summary class="cursor-pointer font-medium">
                     {{ __('ui.content.revision_number', ['revision' => $revision->revision]) }} · {{ $revision->title }}
