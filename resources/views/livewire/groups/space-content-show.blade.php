@@ -302,7 +302,9 @@
             </div>
 
             @foreach ($revisions as $revision)
-                @php($revisionSchema = $revision->definitionVersion->schema['fields'] ?? [])
+                @php
+                    $revisionSchema = $revision->definitionVersion->schema['fields'] ?? [];
+                @endphp
                 <details wire:key="content-revision-{{ $revision->id }}" class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
                     <summary class="cursor-pointer font-medium">
                         {{ __('ui.content.revision_number', ['revision' => $revision->revision]) }} · {{ $revision->title }}
