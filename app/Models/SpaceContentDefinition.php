@@ -9,7 +9,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use LogicException;
 
-#[Fillable(['group_space_id', 'created_by_actor_id', 'name', 'slug', 'description', 'status', 'current_version'])]
+#[Fillable([
+    'group_space_id',
+    'created_by_actor_id',
+    'name',
+    'slug',
+    'description',
+    'status',
+    'current_version',
+    'active_version_id',
+    'draft_version_id',
+])]
 class SpaceContentDefinition extends Model
 {
     use HasFactory;
