@@ -8,12 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['group_id', 'created_by_actor_id', 'name', 'slug', 'kind', 'status', 'is_default'])]
+#[Fillable(['group_id', 'created_by_actor_id', 'name', 'slug', 'kind', 'access_mode', 'status', 'is_default'])]
 class GroupSpace extends Model
 {
     use HasFactory;
 
-    /** @return array<string, string> */
+    protected $attributes = [
+        'kind' => 'chat',
+        'access_mode' => 'group',
+        'status' => 'active',
+        'is_default' => false,
+    ];
+
     protected function casts(): array
     {
         return [
@@ -37,5 +43,23 @@ class GroupSpace extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(GroupSpaceMessage::class);
+    }
+
+    /** @return HasMany<GroupSpaceParticipant, $this> */
+    public function participants(): HasMany
+    {
+        return $this->hasMany(GroupSpaceParticipant::class);
+    }
+
+    /** @return HasMany<SpaceContentDefinition, $this> */
+    public function contentDefinitions(): HasMany
+    {
+        return $this->hasMany(SpaceContentDefinition::class);
+    }
+
+    /** @return HasMany<SpaceContent, $this> */
+    public function contents(): HasMany
+    {
+        return $this->hasMany(SpaceContent::class);
     }
 }

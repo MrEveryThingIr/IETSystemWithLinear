@@ -25,8 +25,11 @@ class SpaceChat extends Component
     public function mount(Group $group, GroupSpace $space): void
     {
         abort_unless((int) $space->group_id === (int) $group->id, 404);
-        abort_unless($space->status === 'active' && $space->kind === 'chat', 404);
-        Gate::authorize('view', $group);
+        abort_unless($space->kind === 'chat', 404);
+
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+        Gate::forUser($user)->authorize('view', $space);
 
         $this->group = $group;
         $this->space = $space;
@@ -47,9 +50,17 @@ class SpaceChat extends Component
 
     public function render(): View
     {
-        Gate::authorize('view', $this->group);
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
 
-        $messages = $this->space->messages()
+        /** @var GroupSpace $currentSpace */
+        $currentSpace = GroupSpace::query()->with('group')->findOrFail($this->space->id);
+        abort_unless((int) $currentSpace->group_id === (int) $this->group->id, 404);
+        Gate::forUser($user)->authorize('view', $currentSpace);
+
+        $this->space = $currentSpace;
+
+        $messages = $currentSpace->messages()
             ->with('author.user')
             ->latest('id')
             ->limit(100)

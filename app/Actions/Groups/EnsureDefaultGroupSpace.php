@@ -12,7 +12,7 @@ class EnsureDefaultGroupSpace
     {
         abort_unless((int) $group->created_by_actor_id === (int) $creator->id, 422, 'The default space must be provisioned by the group creator.');
 
-        return GroupSpace::query()->firstOrCreate(
+        $space = GroupSpace::query()->firstOrCreate(
             [
                 'group_id' => $group->id,
                 'slug' => 'general',
@@ -21,9 +21,24 @@ class EnsureDefaultGroupSpace
                 'created_by_actor_id' => $creator->id,
                 'name' => 'General',
                 'kind' => 'chat',
+                'access_mode' => 'group',
                 'status' => 'active',
                 'is_default' => true,
             ],
         );
+
+        $space->forceFill([
+            'name' => 'General',
+            'kind' => 'chat',
+            'access_mode' => 'group',
+            'status' => 'active',
+            'is_default' => true,
+        ]);
+
+        if ($space->isDirty()) {
+            $space->save();
+        }
+
+        return $space->refresh();
     }
 }

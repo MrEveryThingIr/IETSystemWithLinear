@@ -6,11 +6,12 @@
     </x-app.page-header>
 
     <x-app.group-space-tabs :group="$group" :current-space="$space" />
+    <x-app.space-section-tabs :group="$group" :space="$space" current="chat" />
 
     <flux:card class="flex min-h-[34rem] flex-col gap-4">
         <div class="border-b border-zinc-200 pb-3 dark:border-zinc-800">
             <flux:heading size="lg"># {{ $space->name }}</flux:heading>
-            <flux:text>Simple group chat. This is the first communication surface built on the group-space substrate.</flux:text>
+            <flux:text>{{ __('ui.spaces.chat_description') }}</flux:text>
         </div>
 
         <div wire:poll.5s class="flex-1 space-y-4 overflow-y-auto">
@@ -27,20 +28,20 @@
                     <div class="whitespace-pre-wrap break-words text-sm text-zinc-800 dark:text-zinc-200">{{ $chatMessage->body }}</div>
                 </div>
             @empty
-                <x-app.empty-state title="No messages yet" description="Start the conversation in this space." />
+                <x-app.empty-state :title="__('ui.spaces.no_messages')" :description="__('ui.spaces.no_messages_help')" />
             @endforelse
         </div>
 
         <form wire:submit="send" class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
             <flux:textarea
                 wire:model="message"
-                label="Message"
+                :label="__('ui.spaces.message')"
                 rows="3"
                 maxlength="4000"
-                placeholder="Write a message to the group..."
+                :placeholder="__('ui.spaces.message_placeholder')"
             />
             <div class="flex justify-end">
-                <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="send">Send</flux:button>
+                <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="send">{{ __('ui.spaces.send') }}</flux:button>
             </div>
         </form>
     </flux:card>
