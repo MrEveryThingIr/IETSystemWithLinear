@@ -237,6 +237,10 @@ class SpaceContentShow extends Component
         $publicationIssues = $canPublish
             ? app(SpaceContentPublicationEvidence::class)->issues($currentRevision)
             : new Collection;
+        $blockingAssetIds = $publicationIssues->pluck('asset_id')->unique()->all();
+        $blockingMediaAssets = $mediaAssets
+            ->filter(fn (Asset $asset): bool => in_array($asset->id, $blockingAssetIds, true))
+            ->values();
         $publishBlocked = $canPublish && $publicationIssues->isNotEmpty();
 
         return view('livewire.groups.space-content-show', compact(
@@ -251,6 +255,7 @@ class SpaceContentShow extends Component
             'mediaAssets',
             'rightsStatuses',
             'publicationIssues',
+            'blockingMediaAssets',
             'publishBlocked',
         ));
     }
