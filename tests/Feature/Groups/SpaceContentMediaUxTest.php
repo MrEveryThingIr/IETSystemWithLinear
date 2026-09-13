@@ -86,6 +86,7 @@ class SpaceContentMediaUxTest extends TestCase
         $this->assertIsString($source);
         $this->assertStringContainsString('id="content-audio-recorder-{{ $content->id }}"', $source);
         $this->assertStringContainsString('wire:ignore', $source);
+        $this->assertStringContainsString('const suffix = @js((string) $content->id);', $source);
         $this->assertStringContainsString("\$wire.upload('assetUpload'", $source);
         $this->assertStringContainsString("\$wire.call('attachRecordedAsset')", $source);
         $this->assertStringNotContainsString("Alpine.data('contentAudioRecorder'", $source);
