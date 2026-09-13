@@ -91,9 +91,11 @@ class SpaceContentIndex extends Component
     public function render(): View
     {
         $registry = app(SpaceContentFieldRegistry::class);
-        Gate::forUser($this->user())->authorize('view', $this->space);
+        $user = $this->user();
+        Gate::forUser($user)->authorize('view', $this->space);
 
         $actor = $this->actor();
+        $canManageSpace = Gate::forUser($user)->allows('manage', $this->space);
         $definitions = $this->activeDefinitions();
         $selectedDefinition = $definitions->firstWhere('id', (int) $this->definitionId);
         $selectedVersion = $selectedDefinition instanceof SpaceContentDefinition
@@ -115,6 +117,15 @@ class SpaceContentIndex extends Component
             ->latest('id')
             ->get();
 
+        $spaceDraftContents = $canManageSpace
+            ? $this->space->contents()
+                ->where('author_actor_id', '!=', $actor->id)
+                ->whereNotNull('draft_revision_id')
+                ->with(['draftRevision', 'definition', 'author.user'])
+                ->latest('id')
+                ->get()
+            : new Collection;
+
         $fieldComponents = [];
         if ($selectedVersion instanceof SpaceContentDefinitionVersion) {
             foreach ($selectedVersion->schema['fields'] ?? [] as $field) {
@@ -130,6 +141,8 @@ class SpaceContentIndex extends Component
             'selectedVersion',
             'publishedContents',
             'draftContents',
+            'spaceDraftContents',
+            'canManageSpace',
             'fieldComponents',
         ));
     }
