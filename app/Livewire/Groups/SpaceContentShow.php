@@ -16,6 +16,7 @@ use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentFieldRegistry;
+use App\Support\SpaceContentPublicationEvidence;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -168,8 +169,7 @@ class SpaceContentShow extends Component
     {
         $this->resetErrorBag('publish');
 
-        $blockingAssets = $this->blockingDraftAssets();
-        if ($blockingAssets->isNotEmpty()) {
+        if ($this->publicationIssues()->isNotEmpty()) {
             $this->addError('publish', __('media.publish_blocked_help'));
 
             return;
@@ -234,10 +234,10 @@ class SpaceContentShow extends Component
 
         $mediaAssets = $currentRevision->assets;
         $rightsStatuses = Asset::RIGHTS_STATUSES;
-        $blockingMediaAssets = $canPublish
-            ? $mediaAssets->filter(fn (Asset $asset): bool => ! $asset->isPublishable())->values()
+        $publicationIssues = $canPublish
+            ? app(SpaceContentPublicationEvidence::class)->issues($currentRevision)
             : new Collection;
-        $publishBlocked = $canPublish && $blockingMediaAssets->isNotEmpty();
+        $publishBlocked = $canPublish && $publicationIssues->isNotEmpty();
 
         return view('livewire.groups.space-content-show', compact(
             'currentRevision',
@@ -250,13 +250,13 @@ class SpaceContentShow extends Component
             'canViewRevisions',
             'mediaAssets',
             'rightsStatuses',
-            'blockingMediaAssets',
+            'publicationIssues',
             'publishBlocked',
         ));
     }
 
-    /** @return Collection<int, Asset> */
-    private function blockingDraftAssets(): Collection
+    /** @return Collection<int, array{asset_id: int, filename: string, code: string}> */
+    private function publicationIssues(): Collection
     {
         $current = $this->content->fresh();
         if (! $current instanceof SpaceContent) {
@@ -268,10 +268,7 @@ class SpaceContentShow extends Component
             return new Collection;
         }
 
-        return $draft->assets()
-            ->get()
-            ->filter(fn (Asset $asset): bool => ! $asset->isPublishable())
-            ->values();
+        return app(SpaceContentPublicationEvidence::class)->issues($draft);
     }
 
     private function fillFromEditableRevision(): void
