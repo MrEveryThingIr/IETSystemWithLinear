@@ -52,12 +52,18 @@ class CreateSpaceContentDefinition
                 'current_version' => 1,
             ]);
 
-            $definition->versions()->create([
+            $version = $definition->versions()->create([
                 'version' => 1,
                 'schema' => $schema,
                 'display' => null,
                 'created_by_actor_id' => $actor->id,
                 'published_at' => null,
+            ]);
+
+            $definition->applyLifecycle([
+                'current_version' => 1,
+                'active_version_id' => null,
+                'draft_version_id' => $version->id,
             ]);
 
             return $definition->refresh();

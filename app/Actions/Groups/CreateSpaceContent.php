@@ -31,13 +31,11 @@ class CreateSpaceContent
 
             $currentDefinition = SpaceContentDefinition::query()->lockForUpdate()->findOrFail($definition->id);
             abort_unless((int) $currentDefinition->group_space_id === (int) $currentSpace->id, 404);
-            abort_unless($currentDefinition->status === 'active', 422, 'Content may only be created from an active Content Definition.');
+            abort_if($currentDefinition->status === 'archived', 422, 'Archived Content Definitions cannot create Content.');
 
-            /** @var SpaceContentDefinitionVersion $version */
-            $version = $currentDefinition->versions()
-                ->where('version', $currentDefinition->current_version)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $version = $currentDefinition->activeVersionRecord();
+            abort_unless($version instanceof SpaceContentDefinitionVersion, 422, 'The active Content Definition must have an active version.');
+            $version = SpaceContentDefinitionVersion::query()->lockForUpdate()->findOrFail($version->id);
             abort_unless($version->published_at !== null, 422, 'The active Content Definition version must be published.');
 
             $normalizedPayload = SpaceContentSchema::normalizePayload($version->schema, $payload);
@@ -52,12 +50,18 @@ class CreateSpaceContent
                 'archived_at' => null,
             ]);
 
-            $content->revisions()->create([
+            $revision = $content->revisions()->create([
                 'definition_version_id' => $version->id,
                 'revision' => 1,
                 'title' => $title,
                 'payload' => $normalizedPayload,
                 'created_by_actor_id' => $actor->id,
+            ]);
+
+            $content->applyLifecycle([
+                'current_revision' => 1,
+                'active_revision_id' => null,
+                'draft_revision_id' => $revision->id,
             ]);
 
             return $content->refresh();

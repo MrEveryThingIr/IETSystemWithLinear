@@ -9,9 +9,11 @@ use App\Models\Group;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinitionVersion;
+use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentFieldRegistry;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -41,7 +43,7 @@ class SpaceContentShow extends Component
         $this->group = $group;
         $this->space = $space;
         $this->content = $content;
-        $this->fillFromCurrentRevision();
+        $this->fillFromEditableRevision();
     }
 
     public function saveRevision(ReviseSpaceContent $reviseContent): void
@@ -57,13 +59,14 @@ class SpaceContentShow extends Component
             $this->title,
             $this->payload,
         );
-        $this->fillFromCurrentRevision();
+        $this->fillFromEditableRevision();
         session()->flash('status', __('ui.content.revised'));
     }
 
     public function publish(PublishSpaceContent $publishContent): void
     {
         $this->content = $publishContent->execute($this->content, $this->user());
+        $this->fillFromEditableRevision();
         session()->flash('status', __('ui.content.published'));
     }
 
@@ -77,16 +80,28 @@ class SpaceContentShow extends Component
     {
         $registry = app(SpaceContentFieldRegistry::class);
         $user = $this->user();
+        $current = $this->content->fresh();
+        abort_unless($current instanceof SpaceContent, 404);
+        $this->content = $current;
+
         Gate::forUser($user)->authorize('view', $this->content);
         abort_unless((int) $this->content->group_space_id === (int) $this->space->id, 404);
 
-        $currentRevision = $this->content->currentRevisionRecord();
+        $canUpdate = Gate::forUser($user)->allows('update', $this->content);
+        $canPublish = Gate::forUser($user)->allows('publish', $this->content);
+        $canArchive = Gate::forUser($user)->allows('archive', $this->content);
+        $canViewRevisions = Gate::forUser($user)->allows('revisions', $this->content);
+
+        $currentRevision = $this->visibleRevision($canUpdate || $canViewRevisions);
         /** @var SpaceContentDefinitionVersion $definitionVersion */
         $definitionVersion = $currentRevision->definitionVersion()->firstOrFail();
-        $revisions = $this->content->revisions()
-            ->with(['createdBy.user', 'definitionVersion'])
-            ->orderByDesc('revision')
-            ->get();
+
+        $revisions = $canViewRevisions
+            ? $this->content->revisions()
+                ->with(['createdBy.user', 'definitionVersion'])
+                ->orderByDesc('revision')
+                ->get()
+            : new Collection;
 
         $fieldComponents = [];
         foreach ($definitionVersion->schema['fields'] ?? [] as $field) {
@@ -94,10 +109,6 @@ class SpaceContentShow extends Component
                 $fieldComponents[$field['type']] = $registry->componentFor($field['type']);
             }
         }
-
-        $canUpdate = Gate::forUser($user)->allows('update', $this->content);
-        $canPublish = Gate::forUser($user)->allows('publish', $this->content);
-        $canArchive = Gate::forUser($user)->allows('archive', $this->content);
 
         return view('livewire.groups.space-content-show', compact(
             'currentRevision',
@@ -107,14 +118,41 @@ class SpaceContentShow extends Component
             'canUpdate',
             'canPublish',
             'canArchive',
+            'canViewRevisions',
         ));
     }
 
-    private function fillFromCurrentRevision(): void
+    private function fillFromEditableRevision(): void
     {
-        $revision = $this->content->currentRevisionRecord();
+        $user = $this->user();
+
+        if (! Gate::forUser($user)->allows('update', $this->content)) {
+            return;
+        }
+
+        $revision = $this->content->draftRevisionRecord() ?? $this->content->activeRevisionRecord();
+
+        if (! $revision instanceof SpaceContentRevision) {
+            return;
+        }
+
         $this->title = $revision->title;
         $this->payload = $revision->payload;
+    }
+
+    private function visibleRevision(bool $canSeeWorkingRevision): SpaceContentRevision
+    {
+        if ($canSeeWorkingRevision) {
+            $revision = $this->content->draftRevisionRecord() ?? $this->content->activeRevisionRecord();
+            abort_unless($revision instanceof SpaceContentRevision, 404);
+
+            return $revision;
+        }
+
+        $revision = $this->content->activeRevisionRecord();
+        abort_unless($revision instanceof SpaceContentRevision, 404);
+
+        return $revision;
     }
 
     private function user(): User

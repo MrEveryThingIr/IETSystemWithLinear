@@ -24,7 +24,7 @@
                     >
                         <div class="flex flex-wrap items-start justify-between gap-2">
                             <div>
-                                <flux:heading>{{ $item->latestRevision?->title ?? __('ui.content.untitled') }}</flux:heading>
+                                <flux:heading>{{ $item->activeRevision?->title ?? __('ui.content.untitled') }}</flux:heading>
                                 <flux:text class="text-sm">
                                     {{ $item->definition->name }} · {{ $item->author->user?->username ?? __('ui.common.unknown_account') }}
                                 </flux:text>
@@ -52,7 +52,7 @@
                         >
                             <div class="flex flex-wrap items-start justify-between gap-2">
                                 <div>
-                                    <flux:heading>{{ $item->latestRevision?->title ?? __('ui.content.untitled') }}</flux:heading>
+                                    <flux:heading>{{ $item->draftRevision?->title ?? __('ui.content.untitled') }}</flux:heading>
                                     <flux:text class="text-sm">{{ $item->definition->name }}</flux:text>
                                 </div>
                                 <flux:badge>{{ __('ui.content.status_draft') }}</flux:badge>

@@ -15,7 +15,15 @@ class SpaceContentPolicy
     {
         $content->loadMissing('space');
 
-        return $this->spaces->view($user, $content->space);
+        if (! $this->spaces->view($user, $content->space)) {
+            return false;
+        }
+
+        if ($content->status === 'published') {
+            return $content->activeRevisionRecord() !== null;
+        }
+
+        return $this->canOwnOrManage($user, $content);
     }
 
     public function create(User $user, GroupSpace $space): bool
@@ -25,12 +33,14 @@ class SpaceContentPolicy
 
     public function update(User $user, SpaceContent $content): bool
     {
-        return $content->status === 'draft' && $this->canOwnOrManage($user, $content);
+        return $content->status !== 'archived' && $this->canOwnOrManage($user, $content);
     }
 
     public function publish(User $user, SpaceContent $content): bool
     {
-        return $content->status === 'draft' && $this->canOwnOrManage($user, $content);
+        return $content->status !== 'archived'
+            && $content->draftRevisionRecord() !== null
+            && $this->canOwnOrManage($user, $content);
     }
 
     public function archive(User $user, SpaceContent $content): bool
@@ -40,7 +50,7 @@ class SpaceContentPolicy
 
     public function revisions(User $user, SpaceContent $content): bool
     {
-        return $this->view($user, $content);
+        return $this->canOwnOrManage($user, $content);
     }
 
     private function canOwnOrManage(User $user, SpaceContent $content): bool
@@ -52,6 +62,7 @@ class SpaceContentPolicy
         }
 
         $current = User::query()->with('actor')->find($user->id);
+
         if (! $current instanceof User || ! $current->actor instanceof Actor) {
             return false;
         }

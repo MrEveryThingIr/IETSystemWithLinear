@@ -17,6 +17,8 @@ class SpaceContentDefinitionVersion extends Model
 
     private bool $publishing = false;
 
+    private bool $discarding = false;
+
     protected function casts(): array
     {
         return [
@@ -56,8 +58,12 @@ class SpaceContentDefinitionVersion extends Model
             }
         });
 
-        static::deleting(function (): never {
-            throw new LogicException('Content Definition versions are preserved as immutable history.');
+        static::deleting(function (self $version): void {
+            if (! $version->discarding
+                || $version->published_at !== null
+                || $version->revisions()->exists()) {
+                throw new LogicException('Only unused unpublished Definition drafts may be discarded.');
+            }
         });
     }
 
@@ -73,6 +79,21 @@ class SpaceContentDefinitionVersion extends Model
             $this->update(['published_at' => now()]);
         } finally {
             $this->publishing = false;
+        }
+    }
+
+    public function discard(): void
+    {
+        if ($this->published_at !== null || $this->revisions()->exists()) {
+            throw new LogicException('Only unused unpublished Definition drafts may be discarded.');
+        }
+
+        $this->discarding = true;
+
+        try {
+            $this->delete();
+        } finally {
+            $this->discarding = false;
         }
     }
 

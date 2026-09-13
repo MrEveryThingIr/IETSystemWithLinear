@@ -18,30 +18,29 @@ class ReviseSpaceContentDefinition
             Gate::forUser($user)->authorize('manage', $current);
             abort_if($current->status === 'archived', 422, 'Archived Content Definitions cannot be revised.');
 
-            if ($current->status === 'draft') {
+            if ($current->draftVersionRecord() instanceof SpaceContentDefinitionVersion) {
                 return $current;
             }
 
-            /** @var SpaceContentDefinitionVersion $published */
-            $published = $current->versions()
-                ->where('version', $current->current_version)
-                ->lockForUpdate()
-                ->firstOrFail();
-            abort_unless($published->published_at !== null, 422, 'The active Content Definition must reference a published version.');
+            $active = $current->activeVersionRecord();
+            abort_unless($active instanceof SpaceContentDefinitionVersion && $active->published_at !== null, 422, 'An active published Definition version is required before creating a replacement draft.');
 
-            $nextVersion = $current->current_version + 1;
+            $nextVersion = ((int) $current->versions()->max('version')) + 1;
             $actor = $this->actor($user);
 
-            $current->versions()->create([
+            $draft = $current->versions()->create([
                 'version' => $nextVersion,
-                'schema' => $published->schema,
-                'display' => $published->display,
+                'schema' => $active->schema,
+                'display' => $active->display,
                 'created_by_actor_id' => $actor->id,
                 'published_at' => null,
             ]);
+
             $current->applyLifecycle([
                 'status' => 'draft',
                 'current_version' => $nextVersion,
+                'active_version_id' => $active->id,
+                'draft_version_id' => $draft->id,
             ]);
 
             return $current->refresh();

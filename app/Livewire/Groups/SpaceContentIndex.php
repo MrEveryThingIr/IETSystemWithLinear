@@ -51,7 +51,11 @@ class SpaceContentIndex extends Component
             return;
         }
 
-        $version = $definition->currentVersionRecord();
+        $version = $definition->activeVersionRecord();
+        if (! $version instanceof SpaceContentDefinitionVersion) {
+            return;
+        }
+
         foreach ($version->schema['fields'] ?? [] as $field) {
             if (is_array($field) && ($field['type'] ?? null) === 'boolean' && is_string($field['key'] ?? null)) {
                 $this->payload[$field['key']] = false;
@@ -68,7 +72,7 @@ class SpaceContentIndex extends Component
         ]);
 
         $definition = $this->space->contentDefinitions()
-            ->where('status', 'active')
+            ->where('status', '!=', 'archived')
             ->whereKey((int) $this->definitionId)
             ->first();
         abort_unless($definition instanceof SpaceContentDefinition, 404);
@@ -93,20 +97,21 @@ class SpaceContentIndex extends Component
         $definitions = $this->activeDefinitions();
         $selectedDefinition = $definitions->firstWhere('id', (int) $this->definitionId);
         $selectedVersion = $selectedDefinition instanceof SpaceContentDefinition
-            ? $selectedDefinition->currentVersionRecord()
+            ? $selectedDefinition->activeVersionRecord()
             : null;
 
         $publishedContents = $this->space->contents()
             ->where('status', 'published')
-            ->with(['latestRevision', 'author.user', 'definition'])
+            ->whereNotNull('active_revision_id')
+            ->with(['activeRevision', 'author.user', 'definition'])
             ->latest('published_at')
             ->latest('id')
             ->get();
 
         $draftContents = $this->space->contents()
-            ->where('status', 'draft')
             ->where('author_actor_id', $actor->id)
-            ->with(['latestRevision', 'definition'])
+            ->whereNotNull('draft_revision_id')
+            ->with(['draftRevision', 'definition'])
             ->latest('id')
             ->get();
 
@@ -133,14 +138,11 @@ class SpaceContentIndex extends Component
     private function activeDefinitions(): Collection
     {
         return $this->space->contentDefinitions()
-            ->where('status', 'active')
+            ->where('status', '!=', 'archived')
+            ->whereNotNull('active_version_id')
             ->orderBy('name')
             ->get()
-            ->filter(function (SpaceContentDefinition $definition): bool {
-                $version = $definition->currentVersionRecord();
-
-                return $version->published_at !== null;
-            })
+            ->filter(fn (SpaceContentDefinition $definition): bool => $definition->activeVersionRecord()?->published_at !== null)
             ->values();
     }
 

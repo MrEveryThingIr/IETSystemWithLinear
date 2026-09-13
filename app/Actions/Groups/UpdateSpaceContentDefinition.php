@@ -29,13 +29,11 @@ class UpdateSpaceContentDefinition
         return DB::transaction(function () use ($definition, $user, $name, $description, $schema): SpaceContentDefinition {
             $current = SpaceContentDefinition::query()->with('space')->lockForUpdate()->findOrFail($definition->id);
             Gate::forUser($user)->authorize('manage', $current);
-            abort_unless($current->status === 'draft', 422, 'Only draft Content Definitions may be changed.');
+            abort_if($current->status === 'archived', 422, 'Archived Content Definitions cannot be changed.');
 
-            /** @var SpaceContentDefinitionVersion $version */
-            $version = $current->versions()
-                ->where('version', $current->current_version)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $version = $current->draftVersionRecord();
+            abort_unless($version instanceof SpaceContentDefinitionVersion, 422, 'Create a Definition draft before editing.');
+            $version = SpaceContentDefinitionVersion::query()->lockForUpdate()->findOrFail($version->id);
             abort_unless($version->published_at === null, 422, 'Published Content Definition versions are immutable.');
 
             $version->update([
@@ -50,5 +48,4 @@ class UpdateSpaceContentDefinition
             return $current->refresh();
         }, 3);
     }
-
 }

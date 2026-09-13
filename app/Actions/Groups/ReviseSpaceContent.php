@@ -5,6 +5,7 @@ namespace App\Actions\Groups;
 use App\Models\Actor;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinitionVersion;
+use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentSchema;
 use Illuminate\Support\Facades\DB;
@@ -21,26 +22,30 @@ class ReviseSpaceContent
         return DB::transaction(function () use ($content, $user, $title, $payload): SpaceContent {
             $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
             Gate::forUser($user)->authorize('update', $current);
-            abort_unless($current->status === 'draft', 422, 'Only draft Content may be revised.');
+            abort_if($current->status === 'archived', 422, 'Archived Content cannot be revised.');
 
-            $currentRevision = $current->revisions()
-                ->where('revision', $current->current_revision)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $source = $current->draftRevisionRecord() ?? $current->activeRevisionRecord();
+            abort_unless($source instanceof SpaceContentRevision, 422, 'Content has no revision to revise from.');
+            $source = SpaceContentRevision::query()->lockForUpdate()->findOrFail($source->id);
+
             /** @var SpaceContentDefinitionVersion $definitionVersion */
-            $definitionVersion = SpaceContentDefinitionVersion::query()->findOrFail($currentRevision->definition_version_id);
+            $definitionVersion = SpaceContentDefinitionVersion::query()->findOrFail($source->definition_version_id);
             $normalizedPayload = SpaceContentSchema::normalizePayload($definitionVersion->schema, $payload);
-            $nextRevision = $current->current_revision + 1;
+            $nextRevision = ((int) $current->revisions()->max('revision')) + 1;
             $actor = $this->actor($user);
 
-            $current->revisions()->create([
+            $revision = $current->revisions()->create([
                 'definition_version_id' => $definitionVersion->id,
                 'revision' => $nextRevision,
                 'title' => $title,
                 'payload' => $normalizedPayload,
                 'created_by_actor_id' => $actor->id,
             ]);
-            $current->applyLifecycle(['current_revision' => $nextRevision]);
+
+            $current->applyLifecycle([
+                'current_revision' => $nextRevision,
+                'draft_revision_id' => $revision->id,
+            ]);
 
             return $current->refresh();
         }, 3);

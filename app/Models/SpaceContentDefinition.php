@@ -27,8 +27,26 @@ class SpaceContentDefinition extends Model
             if (! in_array($definition->status, ['draft', 'active', 'archived'], true)) {
                 throw new LogicException('Unknown Content Definition status.');
             }
+
             if ((int) $definition->current_version < 1) {
                 throw new LogicException('Content Definition current version must be positive.');
+            }
+
+            foreach (['active_version_id', 'draft_version_id'] as $attribute) {
+                $versionId = $definition->getAttribute($attribute);
+
+                if ($versionId === null || ! $definition->exists) {
+                    continue;
+                }
+
+                $belongs = SpaceContentDefinitionVersion::query()
+                    ->whereKey($versionId)
+                    ->where('space_content_definition_id', $definition->id)
+                    ->exists();
+
+                if (! $belongs) {
+                    throw new LogicException('Content Definition version pointers must belong to the same Definition.');
+                }
             }
         });
 
@@ -37,7 +55,12 @@ class SpaceContentDefinition extends Model
                 throw new LogicException('Content Definition provenance and stable slug cannot be reassigned.');
             }
 
-            if ($definition->isDirty(['status', 'current_version']) && ! $definition->applyingLifecycle) {
+            if ($definition->isDirty([
+                'status',
+                'current_version',
+                'active_version_id',
+                'draft_version_id',
+            ]) && ! $definition->applyingLifecycle) {
                 throw new LogicException('Content Definition lifecycle changes require a dedicated Action.');
             }
         });
@@ -50,7 +73,14 @@ class SpaceContentDefinition extends Model
     /** @param array<string, mixed> $attributes */
     public function applyLifecycle(array $attributes): void
     {
-        if (array_diff(array_keys($attributes), ['status', 'current_version']) !== []) {
+        $allowed = [
+            'status',
+            'current_version',
+            'active_version_id',
+            'draft_version_id',
+        ];
+
+        if (array_diff(array_keys($attributes), $allowed) !== []) {
             throw new LogicException('Only Content Definition lifecycle attributes may change through this operation.');
         }
 
@@ -81,14 +111,52 @@ class SpaceContentDefinition extends Model
         return $this->hasMany(SpaceContentDefinitionVersion::class);
     }
 
+    /** @return BelongsTo<SpaceContentDefinitionVersion, $this> */
+    public function activeVersion(): BelongsTo
+    {
+        return $this->belongsTo(SpaceContentDefinitionVersion::class, 'active_version_id');
+    }
+
+    /** @return BelongsTo<SpaceContentDefinitionVersion, $this> */
+    public function draftVersion(): BelongsTo
+    {
+        return $this->belongsTo(SpaceContentDefinitionVersion::class, 'draft_version_id');
+    }
+
     /** @return HasMany<SpaceContent, $this> */
     public function contents(): HasMany
     {
         return $this->hasMany(SpaceContent::class, 'space_content_definition_id');
     }
 
+    public function activeVersionRecord(): ?SpaceContentDefinitionVersion
+    {
+        if ($this->active_version_id !== null) {
+            return $this->activeVersion()->first();
+        }
+
+        return $this->versions()
+            ->whereNotNull('published_at')
+            ->orderByDesc('version')
+            ->first();
+    }
+
+    public function draftVersionRecord(): ?SpaceContentDefinitionVersion
+    {
+        if ($this->draft_version_id !== null) {
+            return $this->draftVersion()->first();
+        }
+
+        return $this->versions()
+            ->where('version', $this->current_version)
+            ->whereNull('published_at')
+            ->first();
+    }
+
     public function currentVersionRecord(): SpaceContentDefinitionVersion
     {
-        return $this->versions()->where('version', $this->current_version)->firstOrFail();
+        return $this->draftVersionRecord()
+            ?? $this->activeVersionRecord()
+            ?? $this->versions()->where('version', $this->current_version)->firstOrFail();
     }
 }
