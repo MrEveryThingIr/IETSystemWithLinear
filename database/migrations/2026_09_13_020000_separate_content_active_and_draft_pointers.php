@@ -96,19 +96,27 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('space_contents', function (Blueprint $table): void {
-            $table->dropForeign('sc_active_rev_fk');
-            $table->dropForeign('sc_draft_rev_fk');
-            $table->dropIndex('sc_active_rev_ix');
-            $table->dropIndex('sc_draft_rev_ix');
+        $isSqlite = DB::getDriverName() === 'sqlite';
+
+        Schema::table('space_contents', function (Blueprint $table) use ($isSqlite): void {
+            if (! $isSqlite) {
+                $table->dropForeign('sc_active_rev_fk');
+                $table->dropForeign('sc_draft_rev_fk');
+                $table->dropIndex('sc_active_rev_ix');
+                $table->dropIndex('sc_draft_rev_ix');
+            }
+
             $table->dropColumn(['active_revision_id', 'draft_revision_id']);
         });
 
-        Schema::table('space_content_definitions', function (Blueprint $table): void {
-            $table->dropForeign('scd_active_ver_fk');
-            $table->dropForeign('scd_draft_ver_fk');
-            $table->dropIndex('scd_active_ver_ix');
-            $table->dropIndex('scd_draft_ver_ix');
+        Schema::table('space_content_definitions', function (Blueprint $table) use ($isSqlite): void {
+            if (! $isSqlite) {
+                $table->dropForeign('scd_active_ver_fk');
+                $table->dropForeign('scd_draft_ver_fk');
+                $table->dropIndex('scd_active_ver_ix');
+                $table->dropIndex('scd_draft_ver_ix');
+            }
+
             $table->dropColumn(['active_version_id', 'draft_version_id']);
         });
     }
