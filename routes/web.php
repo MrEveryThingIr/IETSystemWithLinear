@@ -23,6 +23,7 @@ use App\Livewire\Groups\Show as GroupShow;
 use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceContentIndex;
 use App\Livewire\Groups\SpaceContentShow;
+use App\Livewire\Groups\SpaceContentStructure;
 use App\Livewire\Groups\SpaceManagement;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Models\Actor;
@@ -60,6 +61,8 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->name('groups.spaces.contents.assets.show');
     Route::get('/groups/{group}/spaces/{space}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'download'])
         ->name('groups.spaces.contents.assets.download');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/structure', SpaceContentStructure::class)
+        ->name('groups.spaces.contents.structure');
     Route::livewire('/groups/{group}/spaces/{space}/contents/{content}', SpaceContentShow::class)->name('groups.spaces.contents.show');
     Route::livewire('/groups/{group}/spaces/{space}', SpaceChat::class)->name('groups.spaces.show');
     Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show');

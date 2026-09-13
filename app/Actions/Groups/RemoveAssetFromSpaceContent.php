@@ -7,11 +7,14 @@ use App\Models\Asset;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\SpaceContentRevisionComposition;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class RemoveAssetFromSpaceContent
 {
+    public function __construct(private readonly SpaceContentRevisionComposition $composition) {}
+
     public function execute(SpaceContent $content, Asset $asset, User $user): SpaceContent
     {
         return DB::transaction(function () use ($content, $asset, $user): SpaceContent {
@@ -40,23 +43,8 @@ class RemoveAssetFromSpaceContent
                 'created_by_actor_id' => $actor->id,
             ]);
 
-            $placements = DB::table('space_content_revision_assets')
-                ->where('space_content_revision_id', $source->id)
-                ->where('asset_id', '!=', $asset->id)
-                ->orderBy('position')
-                ->get();
-
-            foreach ($placements->values() as $position => $placement) {
-                DB::table('space_content_revision_assets')->insert([
-                    'space_content_revision_id' => $revision->id,
-                    'asset_id' => $placement->asset_id,
-                    'role' => $placement->role,
-                    'position' => $position,
-                    'caption' => $placement->caption,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            $this->composition->copyAssets($source, $revision, [$asset->id]);
+            $this->composition->copyRelationships($source, $revision);
 
             $current->applyLifecycle([
                 'current_revision' => $nextRevision,

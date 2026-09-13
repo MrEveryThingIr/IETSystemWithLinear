@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use LogicException;
 
 #[Fillable([
@@ -152,5 +153,19 @@ class SpaceContentRevision extends Model
             ])
             ->withTimestamps()
             ->orderByPivot('position');
+    }
+
+    /** @return HasMany<SpaceContentRevisionRelationship, $this> */
+    public function relationships(): HasMany
+    {
+        return $this->hasMany(SpaceContentRevisionRelationship::class, 'parent_revision_id');
+    }
+
+    /** @return HasMany<SpaceContentRevisionRelationship, $this> */
+    public function containedRelationships(): HasMany
+    {
+        return $this->relationships()
+            ->where('relation_type', SpaceContentRevisionRelationship::TYPE_CONTAINS)
+            ->orderBy('position');
     }
 }

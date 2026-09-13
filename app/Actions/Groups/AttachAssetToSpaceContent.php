@@ -7,6 +7,7 @@ use App\Models\Asset;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\SpaceContentRevisionComposition;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -16,6 +17,8 @@ use Throwable;
 
 class AttachAssetToSpaceContent
 {
+    public function __construct(private readonly SpaceContentRevisionComposition $composition) {}
+
     public function execute(
         SpaceContent $content,
         User $user,
@@ -99,7 +102,9 @@ class AttachAssetToSpaceContent
                     'created_by_actor_id' => $actor->id,
                 ]);
 
-                $this->copyPlacements($source, $revision);
+                $this->composition->copyAssets($source, $revision);
+                $this->composition->copyRelationships($source, $revision);
+
                 $maxPosition = DB::table('space_content_revision_assets')
                     ->where('space_content_revision_id', $revision->id)
                     ->max('position');
@@ -126,26 +131,6 @@ class AttachAssetToSpaceContent
             Storage::disk('local')->delete($storageKey);
 
             throw $exception;
-        }
-    }
-
-    private function copyPlacements(SpaceContentRevision $source, SpaceContentRevision $target): void
-    {
-        $placements = DB::table('space_content_revision_assets')
-            ->where('space_content_revision_id', $source->id)
-            ->orderBy('position')
-            ->get();
-
-        foreach ($placements as $placement) {
-            DB::table('space_content_revision_assets')->insert([
-                'space_content_revision_id' => $target->id,
-                'asset_id' => $placement->asset_id,
-                'role' => $placement->role,
-                'position' => $placement->position,
-                'caption' => $placement->caption,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
         }
     }
 

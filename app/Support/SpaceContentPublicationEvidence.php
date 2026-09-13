@@ -3,8 +3,11 @@
 namespace App\Support;
 
 use App\Models\Asset;
+use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
+use App\Models\SpaceContentRevisionRelationship;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -55,6 +58,17 @@ class SpaceContentPublicationEvidence
         $definitionVersion = SpaceContentDefinitionVersion::query()->findOrFail($revision->definition_version_id);
         $publishedAt = now();
 
+        $this->sealAssets($revision, $publishedAt);
+        $this->sealRelationships($revision, $publishedAt);
+
+        $manifestHash = $this->manifestHash($revision, $definitionVersion);
+        $revision->sealManifest($manifestHash);
+
+        return $manifestHash;
+    }
+
+    private function sealAssets(SpaceContentRevision $revision, Carbon $publishedAt): void
+    {
         $placements = DB::table('space_content_revision_assets')
             ->where('space_content_revision_id', $revision->id)
             ->orderBy('position')
@@ -96,11 +110,59 @@ class SpaceContentPublicationEvidence
                 ->where('id', $placement->id)
                 ->update($snapshot);
         }
+    }
 
-        $manifestHash = $this->manifestHash($revision, $definitionVersion);
-        $revision->sealManifest($manifestHash);
+    private function sealRelationships(SpaceContentRevision $revision, Carbon $publishedAt): void
+    {
+        $parent = $revision->content()->firstOrFail();
+        $relationships = DB::table('space_content_revision_relationships')
+            ->where('parent_revision_id', $revision->id)
+            ->where('relation_type', SpaceContentRevisionRelationship::TYPE_CONTAINS)
+            ->orderBy('position')
+            ->lockForUpdate()
+            ->get();
 
-        return $manifestHash;
+        foreach ($relationships as $relationship) {
+            $child = SpaceContent::query()->lockForUpdate()->findOrFail($relationship->child_content_id);
+            abort_unless(
+                (int) $child->group_space_id === (int) $parent->group_space_id,
+                422,
+                'Contained Content must belong to the same Space.',
+            );
+            abort_unless(
+                $child->status === 'published' && $child->active_revision_id !== null,
+                422,
+                'Publish every contained child before publishing this parent edition.',
+            );
+
+            $childRevision = SpaceContentRevision::query()->lockForUpdate()->findOrFail($child->active_revision_id);
+            abort_unless(
+                is_string($childRevision->manifest_hash) && $childRevision->manifest_hash !== '',
+                422,
+                'Contained Content must have a sealed published edition before the parent can be published.',
+            );
+
+            if ($relationship->sealed_at !== null) {
+                abort_unless(
+                    (int) $relationship->child_revision_id === (int) $childRevision->id
+                    && is_string($relationship->child_manifest_hash)
+                    && hash_equals($relationship->child_manifest_hash, $childRevision->manifest_hash),
+                    409,
+                    'Published Content relationship evidence cannot be rewritten.',
+                );
+
+                continue;
+            }
+
+            DB::table('space_content_revision_relationships')
+                ->where('id', $relationship->id)
+                ->update([
+                    'child_revision_id' => $childRevision->id,
+                    'child_manifest_hash' => $childRevision->manifest_hash,
+                    'sealed_at' => $publishedAt,
+                    'updated_at' => $publishedAt,
+                ]);
+        }
     }
 
     private function manifestHash(
@@ -137,12 +199,33 @@ class SpaceContentPublicationEvidence
             ])
             ->all();
 
+        $relationships = DB::table('space_content_revision_relationships')
+            ->where('parent_revision_id', $revision->id)
+            ->orderBy('relation_type')
+            ->orderBy('position')
+            ->get([
+                'relation_type',
+                'position',
+                'child_content_id',
+                'child_revision_id',
+                'child_manifest_hash',
+            ])
+            ->map(static fn (object $relationship): array => [
+                'type' => $relationship->relation_type,
+                'position' => (int) $relationship->position,
+                'child_content_id' => (int) $relationship->child_content_id,
+                'child_revision_id' => (int) $relationship->child_revision_id,
+                'child_manifest_hash' => $relationship->child_manifest_hash,
+            ])
+            ->all();
+
         return SpaceContentSchema::hashArray([
             'title' => trim($revision->title),
             'payload' => $revision->payload,
             'definition_version_hash' => $definitionVersion->content_hash,
             'blocks' => [],
             'assets' => $placements,
+            'relationships' => $relationships,
         ]);
     }
 
