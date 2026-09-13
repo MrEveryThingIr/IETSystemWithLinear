@@ -7,6 +7,7 @@ use App\Actions\Groups\AttachAssetToSpaceContent;
 use App\Actions\Groups\PublishSpaceContent;
 use App\Actions\Groups\RemoveAssetFromSpaceContent;
 use App\Actions\Groups\ReviseSpaceContent;
+use App\Actions\Groups\UpdateAssetRightsStatus;
 use App\Models\Asset;
 use App\Models\Group;
 use App\Models\GroupSpace;
@@ -24,6 +25,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Layout('layouts.app')]
 #[Title('Content')]
@@ -44,9 +46,11 @@ class SpaceContentShow extends Component
 
     public mixed $assetUpload = null;
 
-    public string $assetRightsStatus = 'private_study_only';
+    public string $assetRightsStatus = 'unknown';
 
     public string $assetCaption = '';
+
+    public string $recordingCaption = '';
 
     public function mount(Group $group, GroupSpace $space, SpaceContent $content): void
     {
@@ -97,7 +101,55 @@ class SpaceContentShow extends Component
 
         $this->reset('assetUpload', 'assetCaption');
         $this->fillFromEditableRevision();
+        $this->resetErrorBag('publish');
         session()->flash('status', __('media.attached'));
+    }
+
+    public function attachRecordedAsset(AttachAssetToSpaceContent $attachAsset): void
+    {
+        $this->validate([
+            'assetUpload' => ['required', 'file', 'max:12288'],
+            'recordingCaption' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        abort_unless($this->assetUpload instanceof UploadedFile, 422);
+
+        $this->content = $attachAsset->execute(
+            $this->content,
+            $this->user(),
+            $this->assetUpload,
+            'owned',
+            $this->recordingCaption,
+        );
+
+        $this->reset('assetUpload', 'recordingCaption');
+        $this->fillFromEditableRevision();
+        $this->resetErrorBag('publish');
+        session()->flash('status', __('media.recording_attached'));
+    }
+
+    public function updateAssetRights(int $assetId, string $rightsStatus, UpdateAssetRightsStatus $updateRights): void
+    {
+        $this->resetErrorBag('publish');
+        $this->resetErrorBag('assetRights.'.$assetId);
+
+        $asset = Asset::query()
+            ->where('group_space_id', $this->space->id)
+            ->findOrFail($assetId);
+
+        try {
+            $updateRights->execute($this->content, $asset, $this->user(), $rightsStatus);
+        } catch (HttpException $exception) {
+            if ($exception->getStatusCode() !== 422) {
+                throw $exception;
+            }
+
+            $this->addError('assetRights.'.$assetId, $exception->getMessage());
+
+            return;
+        }
+
+        session()->flash('status', __('media.rights_updated'));
     }
 
     public function removeAsset(int $assetId, RemoveAssetFromSpaceContent $removeAsset): void
@@ -108,12 +160,33 @@ class SpaceContentShow extends Component
 
         $this->content = $removeAsset->execute($this->content, $asset, $this->user());
         $this->fillFromEditableRevision();
+        $this->resetErrorBag('publish');
         session()->flash('status', __('media.removed'));
     }
 
     public function publish(PublishSpaceContent $publishContent): void
     {
-        $this->content = $publishContent->execute($this->content, $this->user());
+        $this->resetErrorBag('publish');
+
+        $blockingAssets = $this->blockingDraftAssets();
+        if ($blockingAssets->isNotEmpty()) {
+            $this->addError('publish', __('media.publish_blocked_help'));
+
+            return;
+        }
+
+        try {
+            $this->content = $publishContent->execute($this->content, $this->user());
+        } catch (HttpException $exception) {
+            if ($exception->getStatusCode() !== 422) {
+                throw $exception;
+            }
+
+            $this->addError('publish', $exception->getMessage());
+
+            return;
+        }
+
         $this->fillFromEditableRevision();
         session()->flash('status', __('ui.content.published'));
     }
@@ -161,6 +234,10 @@ class SpaceContentShow extends Component
 
         $mediaAssets = $currentRevision->assets;
         $rightsStatuses = Asset::RIGHTS_STATUSES;
+        $blockingMediaAssets = $canPublish
+            ? $mediaAssets->filter(fn (Asset $asset): bool => ! $asset->isPublishable())->values()
+            : new Collection;
+        $publishBlocked = $canPublish && $blockingMediaAssets->isNotEmpty();
 
         return view('livewire.groups.space-content-show', compact(
             'currentRevision',
@@ -173,7 +250,28 @@ class SpaceContentShow extends Component
             'canViewRevisions',
             'mediaAssets',
             'rightsStatuses',
+            'blockingMediaAssets',
+            'publishBlocked',
         ));
+    }
+
+    /** @return Collection<int, Asset> */
+    private function blockingDraftAssets(): Collection
+    {
+        $current = $this->content->fresh();
+        if (! $current instanceof SpaceContent) {
+            return new Collection;
+        }
+
+        $draft = $current->draftRevisionRecord();
+        if (! $draft instanceof SpaceContentRevision) {
+            return new Collection;
+        }
+
+        return $draft->assets()
+            ->get()
+            ->filter(fn (Asset $asset): bool => ! $asset->isPublishable())
+            ->values();
     }
 
     private function fillFromEditableRevision(): void

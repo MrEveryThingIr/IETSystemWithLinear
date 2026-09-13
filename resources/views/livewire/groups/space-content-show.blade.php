@@ -11,7 +11,9 @@
                     {{ __('ui.content.all_content') }}
                 </flux:button>
                 @if ($canPublish)
-                    <flux:button wire:click="publish" variant="primary">{{ __('ui.content.publish') }}</flux:button>
+                    <flux:button wire:click="publish" variant="primary" :disabled="$publishBlocked">
+                        {{ __('ui.content.publish') }}
+                    </flux:button>
                 @endif
                 @if ($canArchive)
                     <flux:button wire:click="archive" variant="danger">{{ __('ui.content.archive') }}</flux:button>
@@ -25,6 +27,24 @@
 
     @if (session('status'))
         <flux:callout variant="success">{{ session('status') }}</flux:callout>
+    @endif
+
+    @error('publish')
+        <flux:callout variant="danger">{{ $message }}</flux:callout>
+    @enderror
+
+    @if ($canPublish && $publishBlocked)
+        <flux:callout>
+            <div class="space-y-2">
+                <div class="font-medium">{{ __('media.publish_blocked_title') }}</div>
+                <div>{{ __('media.publish_blocked_help') }}</div>
+                <ul class="list-disc space-y-1 ps-5 text-sm">
+                    @foreach ($blockingMediaAssets as $blockingAsset)
+                        <li>{{ $blockingAsset->original_filename }} — {{ __('media.rights.'.$blockingAsset->rights_status) }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </flux:callout>
     @endif
 
     <flux:card class="space-y-5">
@@ -121,7 +141,7 @@
                     @endswitch
 
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div class="min-w-0 space-y-1">
+                        <div class="min-w-0 space-y-2">
                             <flux:text class="font-medium">{{ $asset->original_filename }}</flux:text>
                             @if ($caption)
                                 <flux:text>{{ $caption }}</flux:text>
@@ -130,6 +150,21 @@
                                 <flux:badge>{{ __('media.rights.'.$asset->rights_status) }}</flux:badge>
                                 <flux:text class="text-xs">{{ number_format($asset->byte_size / 1024, 1) }} KB</flux:text>
                             </div>
+
+                            @if ($canUpdate && $hasDraft)
+                                <div class="max-w-sm">
+                                    <flux:select wire:change="updateAssetRights({{ $asset->id }}, $event.target.value)" :label="__('media.rights_status')">
+                                        @foreach ($rightsStatuses as $status)
+                                            <option value="{{ $status }}" @selected($asset->rights_status === $status)>
+                                                {{ __('media.rights.'.$status) }}
+                                            </option>
+                                        @endforeach
+                                    </flux:select>
+                                    @error('assetRights.'.$asset->id)
+                                        <flux:text class="mt-1 text-sm text-red-600">{{ $message }}</flux:text>
+                                    @enderror
+                                </div>
+                            @endif
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <flux:button :href="$downloadUrl" size="sm" variant="ghost">{{ __('media.download') }}</flux:button>
@@ -164,11 +199,7 @@
 
                     <label class="block space-y-2">
                         <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ __('media.choose_file') }}</span>
-                        <input
-                            type="file"
-                            wire:model="assetUpload"
-                            class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 file:me-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:file:bg-zinc-800"
-                        />
+                        <input type="file" wire:model="assetUpload" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 file:me-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:file:bg-zinc-800" />
                     </label>
                     @error('assetUpload')
                         <flux:text class="text-sm text-red-600">{{ $message }}</flux:text>
@@ -191,29 +222,33 @@
                     </div>
                 </div>
 
-                <div x-data="contentAudioRecorder" class="space-y-4 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+                <div class="space-y-4 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
                     <div>
                         <flux:heading>{{ __('media.record_title') }}</flux:heading>
                         <flux:text>{{ __('media.record_help') }}</flux:text>
                     </div>
 
-                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900">
+                    <flux:input wire:model="recordingCaption" :label="__('media.caption')" maxlength="1000" />
+
+                    <div id="content-audio-recorder-{{ $content->id }}" wire:ignore class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900">
                         <div class="flex flex-wrap items-center gap-3">
-                            <flux:button type="button" x-show="!recording && !uploading" @click="start" variant="primary">
+                            <flux:button id="content-audio-start-{{ $content->id }}" type="button" variant="primary">
                                 {{ __('media.start_recording') }}
                             </flux:button>
-                            <flux:button type="button" x-show="recording" @click="stop" variant="danger">
+                            <flux:button id="content-audio-stop-{{ $content->id }}" type="button" variant="danger" class="hidden">
                                 {{ __('media.stop_recording') }}
                             </flux:button>
-                            <span x-show="recording" class="text-sm font-medium text-red-600">
-                                {{ __('media.recording') }} <span x-text="elapsedLabel"></span>
+                            <span id="content-audio-recording-{{ $content->id }}" class="hidden text-sm font-medium text-red-600">
+                                {{ __('media.recording') }} <span id="content-audio-timer-{{ $content->id }}">00:00</span>
                             </span>
-                            <span x-show="uploading" class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('media.uploading_recording') }}</span>
+                            <span id="content-audio-uploading-{{ $content->id }}" class="hidden text-sm text-zinc-600 dark:text-zinc-300">
+                                {{ __('media.uploading_recording') }}
+                            </span>
                         </div>
-                        <p x-show="error" x-text="error" class="mt-3 text-sm text-red-600"></p>
+                        <p id="content-audio-error-{{ $content->id }}" class="mt-3 hidden text-sm text-red-600"></p>
                     </div>
 
-                    <flux:text class="text-xs">{{ __('media.rights_help') }}</flux:text>
+                    <flux:callout>{{ __('media.recording_rights_help') }}</flux:callout>
                 </div>
             </div>
         </flux:card>
@@ -224,9 +259,7 @@
                 <flux:heading size="lg">
                     {{ $hasDraft ? __('workflow.content.edit_draft') : __('workflow.content.start_next_edition') }}
                 </flux:heading>
-                <flux:text>
-                    {{ $hasDraft ? __('workflow.content.edit_draft_help') : __('workflow.content.start_next_edition_help') }}
-                </flux:text>
+                <flux:text>{{ $hasDraft ? __('workflow.content.edit_draft_help') : __('workflow.content.start_next_edition_help') }}</flux:text>
             </div>
 
             <form wire:submit="saveRevision" class="space-y-4">
@@ -269,9 +302,7 @@
             </div>
 
             @foreach ($revisions as $revision)
-                @php
-                    $revisionSchema = $revision->definitionVersion->schema['fields'] ?? [];
-                @endphp
+                @php($revisionSchema = $revision->definitionVersion->schema['fields'] ?? [])
                 <details wire:key="content-revision-{{ $revision->id }}" class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
                     <summary class="cursor-pointer font-medium">
                         {{ __('ui.content.revision_number', ['revision' => $revision->revision]) }} · {{ $revision->title }}
@@ -308,90 +339,131 @@
 @if ($canUpdate)
     @script
     <script>
-        Alpine.data('contentAudioRecorder', () => ({
-            recording: false,
-            uploading: false,
-            recorder: null,
-            stream: null,
-            chunks: [],
-            seconds: 0,
-            timer: null,
-            error: '',
+        (() => {
+            const suffix = @js((string) $content->id)
+            const root = document.getElementById(`content-audio-recorder-${suffix}`)
 
-            get elapsedLabel() {
-                const minutes = Math.floor(this.seconds / 60).toString().padStart(2, '0')
-                const seconds = (this.seconds % 60).toString().padStart(2, '0')
-                return `${minutes}:${seconds}`
-            },
+            if (!root || root.dataset.recorderReady === '1') return
+            root.dataset.recorderReady = '1'
 
-            async start() {
-                this.error = ''
+            const startButton = document.getElementById(`content-audio-start-${suffix}`)
+            const stopButton = document.getElementById(`content-audio-stop-${suffix}`)
+            const recordingLabel = document.getElementById(`content-audio-recording-${suffix}`)
+            const timerLabel = document.getElementById(`content-audio-timer-${suffix}`)
+            const uploadingLabel = document.getElementById(`content-audio-uploading-${suffix}`)
+            const errorLabel = document.getElementById(`content-audio-error-${suffix}`)
+
+            let recorder = null
+            let stream = null
+            let chunks = []
+            let elapsed = 0
+            let timer = null
+
+            const show = (element, visible) => element?.classList.toggle('hidden', !visible)
+            const setError = message => {
+                if (!errorLabel) return
+                errorLabel.textContent = message || ''
+                show(errorLabel, Boolean(message))
+            }
+            const updateTimer = () => {
+                if (!timerLabel) return
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0')
+                const seconds = (elapsed % 60).toString().padStart(2, '0')
+                timerLabel.textContent = `${minutes}:${seconds}`
+            }
+            const setMode = mode => {
+                show(startButton, mode === 'idle')
+                show(stopButton, mode === 'recording')
+                show(recordingLabel, mode === 'recording')
+                show(uploadingLabel, mode === 'uploading')
+            }
+            const stopTracks = () => {
+                stream?.getTracks().forEach(track => track.stop())
+                stream = null
+            }
+            const finishTimer = () => {
+                clearInterval(timer)
+                timer = null
+            }
+
+            const uploadRecording = () => {
+                const type = recorder?.mimeType || 'audio/webm'
+                const extension = type.includes('mp4') ? 'm4a' : (type.includes('ogg') ? 'ogg' : 'webm')
+                const blob = new Blob(chunks, { type })
+
+                stopTracks()
+                recorder = null
+                chunks = []
+
+                if (blob.size === 0) {
+                    setMode('idle')
+                    setError(@js(__('media.recording_error')))
+                    return
+                }
+
+                const file = new File([blob], `recording-${Date.now()}.${extension}`, { type })
+                setMode('uploading')
+
+                $wire.upload('assetUpload', file, () => {
+                    $wire.call('attachRecordedAsset').then(() => {
+                        elapsed = 0
+                        updateTimer()
+                        setMode('idle')
+                    }).catch(() => {
+                        setMode('idle')
+                        setError(@js(__('media.recording_error')))
+                    })
+                }, () => {
+                    setMode('idle')
+                    setError(@js(__('media.recording_error')))
+                })
+            }
+
+            startButton?.addEventListener('click', async () => {
+                setError('')
 
                 if (!window.MediaRecorder || !navigator.mediaDevices?.getUserMedia) {
-                    this.error = @js(__('media.recorder_unavailable'))
+                    setError(@js(__('media.recorder_unavailable')))
                     return
                 }
 
                 try {
-                    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true })
                     const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
                     const mimeType = candidates.find(type => MediaRecorder.isTypeSupported(type)) ?? ''
-                    this.recorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : undefined)
-                    this.chunks = []
-                    this.seconds = 0
+                    recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+                    chunks = []
+                    elapsed = 0
+                    updateTimer()
 
-                    this.recorder.addEventListener('dataavailable', event => {
-                        if (event.data.size > 0) this.chunks.push(event.data)
+                    recorder.addEventListener('dataavailable', event => {
+                        if (event.data.size > 0) chunks.push(event.data)
                     })
-
-                    this.recorder.addEventListener('stop', () => this.uploadRecording())
-                    this.recorder.start()
-                    this.recording = true
-                    this.timer = setInterval(() => this.seconds++, 1000)
+                    recorder.addEventListener('stop', uploadRecording, { once: true })
+                    recorder.start()
+                    setMode('recording')
+                    timer = setInterval(() => {
+                        elapsed++
+                        updateTimer()
+                    }, 1000)
                 } catch (error) {
-                    this.cleanup()
-                    this.error = @js(__('media.recording_error'))
+                    finishTimer()
+                    stopTracks()
+                    recorder = null
+                    setMode('idle')
+                    setError(@js(__('media.recording_error')))
                 }
-            },
+            })
 
-            stop() {
-                if (this.recorder && this.recorder.state !== 'inactive') {
-                    this.recorder.stop()
-                }
+            stopButton?.addEventListener('click', () => {
+                if (!recorder || recorder.state === 'inactive') return
+                finishTimer()
+                recorder.stop()
+            })
 
-                this.recording = false
-                clearInterval(this.timer)
-            },
-
-            uploadRecording() {
-                const type = this.recorder?.mimeType || 'audio/webm'
-                const extension = type.includes('mp4') ? 'm4a' : (type.includes('ogg') ? 'ogg' : 'webm')
-                const blob = new Blob(this.chunks, { type })
-                const file = new File([blob], `recording-${Date.now()}.${extension}`, { type })
-
-                this.uploading = true
-                this.cleanup(false)
-
-                $wire.upload('assetUpload', file, () => {
-                    $wire.call('attachAsset').then(() => {
-                        this.uploading = false
-                        this.seconds = 0
-                    })
-                }, () => {
-                    this.uploading = false
-                    this.error = @js(__('media.recording_error'))
-                })
-            },
-
-            cleanup(resetRecording = true) {
-                clearInterval(this.timer)
-                this.stream?.getTracks().forEach(track => track.stop())
-                this.stream = null
-                this.recorder = null
-                this.chunks = []
-                if (resetRecording) this.recording = false
-            },
-        }))
+            setMode('idle')
+            updateTimer()
+        })()
     </script>
     @endscript
 @endif
