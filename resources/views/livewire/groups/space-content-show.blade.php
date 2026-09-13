@@ -342,7 +342,7 @@
     @script
     <script>
         (() => {
-            const suffix = @js((string) $content->id)
+            const suffix = @js((string) $content->id);
             const root = document.getElementById(`content-audio-recorder-${suffix}`)
 
             if (!root || root.dataset.recorderReady === '1') return
