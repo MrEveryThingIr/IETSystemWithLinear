@@ -84,11 +84,26 @@
                         <flux:input wire:model="title" :label="__('ui.content.title')" maxlength="255" />
 
                         @foreach ($selectedVersion->schema['fields'] as $field)
-                            <x-dynamic-component
-                                :component="$fieldComponents[$field['type']]"
-                                :field="$field"
-                                :model="'payload.'.$field['key']"
-                            />
+                            @switch($field['type'])
+                                @case('short_text')
+                                    <x-space-content.fields.short-text :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('long_text')
+                                    <x-space-content.fields.long-text :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('number')
+                                    <x-space-content.fields.number :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('date')
+                                    <x-space-content.fields.date :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('boolean')
+                                    <x-space-content.fields.boolean :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('select')
+                                    <x-space-content.fields.select :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                            @endswitch
                         @endforeach
 
                         <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="create">
