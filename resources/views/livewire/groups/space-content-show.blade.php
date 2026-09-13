@@ -90,9 +90,134 @@
                 <div class="whitespace-pre-wrap break-words text-sm text-zinc-900 dark:text-zinc-100">{{ $displayValue }}</div>
             </div>
         @endforeach
+
+        <div class="space-y-4 border-t border-zinc-200 pt-5 dark:border-zinc-800">
+            <div>
+                <flux:heading>{{ __('media.title') }}</flux:heading>
+                <flux:text>{{ __('media.preview_help') }}</flux:text>
+            </div>
+
+            @forelse ($mediaAssets as $asset)
+                @php
+                    $assetUrl = route('groups.spaces.contents.assets.show', [$group, $space, $content, $asset]);
+                    $downloadUrl = route('groups.spaces.contents.assets.download', [$group, $space, $content, $asset]);
+                    $caption = $asset->pivot->caption;
+                @endphp
+                <div wire:key="content-asset-{{ $asset->id }}" class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+                    @switch($asset->mediaKind())
+                        @case('image')
+                            <img src="{{ $assetUrl }}" alt="{{ $caption ?: $asset->original_filename }}" class="max-h-[32rem] w-auto rounded-lg object-contain" />
+                            @break
+                        @case('audio')
+                            <audio controls preload="metadata" class="w-full" src="{{ $assetUrl }}"></audio>
+                            @break
+                        @case('video')
+                            <video controls preload="metadata" class="max-h-[36rem] w-full rounded-lg bg-black" src="{{ $assetUrl }}"></video>
+                            @break
+                        @default
+                            <a href="{{ $assetUrl }}" target="_blank" rel="noopener" class="block rounded-lg bg-zinc-50 p-4 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800">
+                                {{ __('media.open_file') }} · {{ $asset->original_filename }}
+                            </a>
+                    @endswitch
+
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0 space-y-1">
+                            <flux:text class="font-medium">{{ $asset->original_filename }}</flux:text>
+                            @if ($caption)
+                                <flux:text>{{ $caption }}</flux:text>
+                            @endif
+                            <div class="flex flex-wrap gap-2">
+                                <flux:badge>{{ __('media.rights.'.$asset->rights_status) }}</flux:badge>
+                                <flux:text class="text-xs">{{ number_format($asset->byte_size / 1024, 1) }} KB</flux:text>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <flux:button :href="$downloadUrl" size="sm" variant="ghost">{{ __('media.download') }}</flux:button>
+                            @if ($canUpdate)
+                                <flux:button wire:click="removeAsset({{ $asset->id }})" size="sm" variant="danger">
+                                    {{ __('media.remove') }}
+                                </flux:button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <flux:text>{{ __('media.none') }}</flux:text>
+            @endforelse
+        </div>
     </flux:card>
 
     @if ($canUpdate)
+        <flux:card class="space-y-5">
+            <div class="space-y-1">
+                <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('workflow.content.draft') }}</div>
+                <flux:heading size="lg">{{ __('media.draft_title') }}</flux:heading>
+                <flux:text>{{ __('media.draft_help') }}</flux:text>
+            </div>
+
+            <div class="grid gap-5 lg:grid-cols-2">
+                <div class="space-y-4 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+                    <div>
+                        <flux:heading>{{ __('media.upload_title') }}</flux:heading>
+                        <flux:text>{{ __('media.upload_help') }}</flux:text>
+                    </div>
+
+                    <label class="block space-y-2">
+                        <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ __('media.choose_file') }}</span>
+                        <input
+                            type="file"
+                            wire:model="assetUpload"
+                            class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 file:me-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:file:bg-zinc-800"
+                        />
+                    </label>
+                    @error('assetUpload')
+                        <flux:text class="text-sm text-red-600">{{ $message }}</flux:text>
+                    @enderror
+
+                    <flux:select wire:model="assetRightsStatus" :label="__('media.rights_status')">
+                        @foreach ($rightsStatuses as $status)
+                            <option value="{{ $status }}">{{ __('media.rights.'.$status) }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:text class="text-xs">{{ __('media.rights_help') }}</flux:text>
+
+                    <flux:input wire:model="assetCaption" :label="__('media.caption')" maxlength="1000" />
+
+                    <div class="flex items-center justify-between gap-3">
+                        <flux:text wire:loading wire:target="assetUpload,attachAsset" class="text-xs">{{ __('media.uploading') }}</flux:text>
+                        <flux:button wire:click="attachAsset" wire:loading.attr="disabled" wire:target="assetUpload,attachAsset" variant="primary">
+                            {{ __('media.add_to_draft') }}
+                        </flux:button>
+                    </div>
+                </div>
+
+                <div x-data="contentAudioRecorder" class="space-y-4 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+                    <div>
+                        <flux:heading>{{ __('media.record_title') }}</flux:heading>
+                        <flux:text>{{ __('media.record_help') }}</flux:text>
+                    </div>
+
+                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <flux:button type="button" x-show="!recording && !uploading" @click="start" variant="primary">
+                                {{ __('media.start_recording') }}
+                            </flux:button>
+                            <flux:button type="button" x-show="recording" @click="stop" variant="danger">
+                                {{ __('media.stop_recording') }}
+                            </flux:button>
+                            <span x-show="recording" class="text-sm font-medium text-red-600">
+                                {{ __('media.recording') }} <span x-text="elapsedLabel"></span>
+                            </span>
+                            <span x-show="uploading" class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('media.uploading_recording') }}</span>
+                        </div>
+                        <p x-show="error" x-text="error" class="mt-3 text-sm text-red-600"></p>
+                    </div>
+
+                    <flux:text class="text-xs">{{ __('media.rights_help') }}</flux:text>
+                </div>
+            </div>
+        </flux:card>
+
         <flux:card class="space-y-5">
             <div class="space-y-1">
                 <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('workflow.content.next_step') }}</div>
@@ -179,3 +304,94 @@
         </flux:card>
     @endif
 </section>
+
+@if ($canUpdate)
+    @script
+    <script>
+        Alpine.data('contentAudioRecorder', () => ({
+            recording: false,
+            uploading: false,
+            recorder: null,
+            stream: null,
+            chunks: [],
+            seconds: 0,
+            timer: null,
+            error: '',
+
+            get elapsedLabel() {
+                const minutes = Math.floor(this.seconds / 60).toString().padStart(2, '0')
+                const seconds = (this.seconds % 60).toString().padStart(2, '0')
+                return `${minutes}:${seconds}`
+            },
+
+            async start() {
+                this.error = ''
+
+                if (!window.MediaRecorder || !navigator.mediaDevices?.getUserMedia) {
+                    this.error = @js(__('media.recorder_unavailable'))
+                    return
+                }
+
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+                    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+                    const mimeType = candidates.find(type => MediaRecorder.isTypeSupported(type)) ?? ''
+                    this.recorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : undefined)
+                    this.chunks = []
+                    this.seconds = 0
+
+                    this.recorder.addEventListener('dataavailable', event => {
+                        if (event.data.size > 0) this.chunks.push(event.data)
+                    })
+
+                    this.recorder.addEventListener('stop', () => this.uploadRecording())
+                    this.recorder.start()
+                    this.recording = true
+                    this.timer = setInterval(() => this.seconds++, 1000)
+                } catch (error) {
+                    this.cleanup()
+                    this.error = @js(__('media.recording_error'))
+                }
+            },
+
+            stop() {
+                if (this.recorder && this.recorder.state !== 'inactive') {
+                    this.recorder.stop()
+                }
+
+                this.recording = false
+                clearInterval(this.timer)
+            },
+
+            uploadRecording() {
+                const type = this.recorder?.mimeType || 'audio/webm'
+                const extension = type.includes('mp4') ? 'm4a' : (type.includes('ogg') ? 'ogg' : 'webm')
+                const blob = new Blob(this.chunks, { type })
+                const file = new File([blob], `recording-${Date.now()}.${extension}`, { type })
+
+                this.uploading = true
+                this.cleanup(false)
+
+                $wire.upload('assetUpload', file, () => {
+                    $wire.call('attachAsset').then(() => {
+                        this.uploading = false
+                        this.seconds = 0
+                    })
+                }, () => {
+                    this.uploading = false
+                    this.error = @js(__('media.recording_error'))
+                })
+            },
+
+            cleanup(resetRecording = true) {
+                clearInterval(this.timer)
+                this.stream?.getTracks().forEach(track => track.stop())
+                this.stream = null
+                this.recorder = null
+                this.chunks = []
+                if (resetRecording) this.recording = false
+            },
+        }))
+    </script>
+    @endscript
+@endif

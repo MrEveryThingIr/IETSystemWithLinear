@@ -3,56 +3,55 @@
 namespace App\Actions\Groups;
 
 use App\Models\Actor;
+use App\Models\Asset;
 use App\Models\SpaceContent;
-use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
-use App\Support\SpaceContentSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-class ReviseSpaceContent
+class RemoveAssetFromSpaceContent
 {
-    /** @param array<string, mixed> $payload */
-    public function execute(SpaceContent $content, User $user, string $title, array $payload): SpaceContent
+    public function execute(SpaceContent $content, Asset $asset, User $user): SpaceContent
     {
-        $title = trim($title);
-        abort_if($title === '' || mb_strlen($title) > 255, 422, 'Content title is required and may not exceed 255 characters.');
-
-        return DB::transaction(function () use ($content, $user, $title, $payload): SpaceContent {
+        return DB::transaction(function () use ($content, $asset, $user): SpaceContent {
             $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
             Gate::forUser($user)->authorize('update', $current);
-            abort_if($current->status === 'archived', 422, 'Archived Content cannot be revised.');
+            abort_if($current->status === 'archived', 422, 'Archived Content cannot change media.');
+            abort_unless((int) $asset->group_space_id === (int) $current->group_space_id, 404);
 
             $source = $current->draftRevisionRecord() ?? $current->activeRevisionRecord();
-            abort_unless($source instanceof SpaceContentRevision, 422, 'Content has no revision to revise from.');
+            abort_unless($source instanceof SpaceContentRevision, 422, 'Content has no revision to change.');
             $source = SpaceContentRevision::query()->lockForUpdate()->findOrFail($source->id);
 
-            /** @var SpaceContentDefinitionVersion $definitionVersion */
-            $definitionVersion = SpaceContentDefinitionVersion::query()->findOrFail($source->definition_version_id);
-            $normalizedPayload = SpaceContentSchema::normalizePayload($definitionVersion->schema, $payload);
-            $nextRevision = ((int) $current->revisions()->max('revision')) + 1;
-            $actor = $this->actor($user);
+            $placementExists = DB::table('space_content_revision_assets')
+                ->where('space_content_revision_id', $source->id)
+                ->where('asset_id', $asset->id)
+                ->exists();
+            abort_unless($placementExists, 404);
 
+            $actor = $this->actor($user);
+            $nextRevision = ((int) $current->revisions()->max('revision')) + 1;
             $revision = $current->revisions()->create([
-                'definition_version_id' => $definitionVersion->id,
+                'definition_version_id' => $source->definition_version_id,
                 'revision' => $nextRevision,
-                'title' => $title,
-                'payload' => $normalizedPayload,
+                'title' => $source->title,
+                'payload' => $source->payload,
                 'created_by_actor_id' => $actor->id,
             ]);
 
             $placements = DB::table('space_content_revision_assets')
                 ->where('space_content_revision_id', $source->id)
+                ->where('asset_id', '!=', $asset->id)
                 ->orderBy('position')
                 ->get();
 
-            foreach ($placements as $placement) {
+            foreach ($placements->values() as $position => $placement) {
                 DB::table('space_content_revision_assets')->insert([
                     'space_content_revision_id' => $revision->id,
                     'asset_id' => $placement->asset_id,
                     'role' => $placement->role,
-                    'position' => $placement->position,
+                    'position' => $position,
                     'caption' => $placement->caption,
                     'created_at' => now(),
                     'updated_at' => now(),

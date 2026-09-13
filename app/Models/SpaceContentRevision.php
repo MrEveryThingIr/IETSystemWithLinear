@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use LogicException;
 
 #[Fillable(['space_content_id', 'definition_version_id', 'revision', 'title', 'payload', 'created_by_actor_id', 'content_hash'])]
@@ -64,5 +65,19 @@ class SpaceContentRevision extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'created_by_actor_id');
+    }
+
+    /** @return BelongsToMany<Asset, $this> */
+    public function assets(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Asset::class,
+            'space_content_revision_assets',
+            'space_content_revision_id',
+            'asset_id',
+        )
+            ->withPivot(['role', 'position', 'caption'])
+            ->withTimestamps()
+            ->orderByPivot('position');
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\SpaceContentAssetController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -55,6 +56,10 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/groups/{group}/accept-agreements', AcceptAgreements::class)->name('groups.accept-agreements');
     Route::livewire('/groups/{group}/spaces/manage', SpaceManagement::class)->name('groups.spaces.manage');
     Route::livewire('/groups/{group}/spaces/{space}/contents', SpaceContentIndex::class)->name('groups.spaces.contents.index');
+    Route::get('/groups/{group}/spaces/{space}/contents/{content}/assets/{asset}', [SpaceContentAssetController::class, 'show'])
+        ->name('groups.spaces.contents.assets.show');
+    Route::get('/groups/{group}/spaces/{space}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'download'])
+        ->name('groups.spaces.contents.assets.download');
     Route::livewire('/groups/{group}/spaces/{space}/contents/{content}', SpaceContentShow::class)->name('groups.spaces.contents.show');
     Route::livewire('/groups/{group}/spaces/{space}', SpaceChat::class)->name('groups.spaces.show');
     Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show');

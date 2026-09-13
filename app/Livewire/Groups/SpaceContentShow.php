@@ -3,8 +3,11 @@
 namespace App\Livewire\Groups;
 
 use App\Actions\Groups\ArchiveSpaceContent;
+use App\Actions\Groups\AttachAssetToSpaceContent;
 use App\Actions\Groups\PublishSpaceContent;
+use App\Actions\Groups\RemoveAssetFromSpaceContent;
 use App\Actions\Groups\ReviseSpaceContent;
+use App\Models\Asset;
 use App\Models\Group;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
@@ -13,16 +16,21 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentFieldRegistry;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 #[Title('Content')]
 class SpaceContentShow extends Component
 {
+    use WithFileUploads;
+
     public Group $group;
 
     public GroupSpace $space;
@@ -33,6 +41,12 @@ class SpaceContentShow extends Component
 
     /** @var array<string, mixed> */
     public array $payload = [];
+
+    public mixed $assetUpload = null;
+
+    public string $assetRightsStatus = 'private_study_only';
+
+    public string $assetCaption = '';
 
     public function mount(Group $group, GroupSpace $space, SpaceContent $content): void
     {
@@ -61,6 +75,40 @@ class SpaceContentShow extends Component
         );
         $this->fillFromEditableRevision();
         session()->flash('status', __('ui.content.revised'));
+    }
+
+    public function attachAsset(AttachAssetToSpaceContent $attachAsset): void
+    {
+        $this->validate([
+            'assetUpload' => ['required', 'file', 'max:12288'],
+            'assetRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
+            'assetCaption' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        abort_unless($this->assetUpload instanceof UploadedFile, 422);
+
+        $this->content = $attachAsset->execute(
+            $this->content,
+            $this->user(),
+            $this->assetUpload,
+            $this->assetRightsStatus,
+            $this->assetCaption,
+        );
+
+        $this->reset('assetUpload', 'assetCaption');
+        $this->fillFromEditableRevision();
+        session()->flash('status', __('media.attached'));
+    }
+
+    public function removeAsset(int $assetId, RemoveAssetFromSpaceContent $removeAsset): void
+    {
+        $asset = Asset::query()
+            ->where('group_space_id', $this->space->id)
+            ->findOrFail($assetId);
+
+        $this->content = $removeAsset->execute($this->content, $asset, $this->user());
+        $this->fillFromEditableRevision();
+        session()->flash('status', __('media.removed'));
     }
 
     public function publish(PublishSpaceContent $publishContent): void
@@ -93,6 +141,7 @@ class SpaceContentShow extends Component
         $canViewRevisions = Gate::forUser($user)->allows('revisions', $this->content);
 
         $currentRevision = $this->visibleRevision($canUpdate || $canViewRevisions);
+        $currentRevision->loadMissing(['assets.uploader.user']);
         /** @var SpaceContentDefinitionVersion $definitionVersion */
         $definitionVersion = $currentRevision->definitionVersion()->firstOrFail();
 
@@ -110,6 +159,9 @@ class SpaceContentShow extends Component
             }
         }
 
+        $mediaAssets = $currentRevision->assets;
+        $rightsStatuses = Asset::RIGHTS_STATUSES;
+
         return view('livewire.groups.space-content-show', compact(
             'currentRevision',
             'definitionVersion',
@@ -119,6 +171,8 @@ class SpaceContentShow extends Component
             'canPublish',
             'canArchive',
             'canViewRevisions',
+            'mediaAssets',
+            'rightsStatuses',
         ));
     }
 
