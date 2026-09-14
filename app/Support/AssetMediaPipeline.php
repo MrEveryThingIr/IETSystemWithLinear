@@ -11,9 +11,15 @@ class AssetMediaPipeline
 {
     public function process(Asset $asset): Asset
     {
-        $asset = Asset::query()->lockForUpdate()->findOrFail($asset->id);
+        $asset = Asset::query()->findOrFail($asset->id);
 
-        if ($asset->scan_status === 'clean' && $asset->processing_status === 'ready' && $asset->readiness_verified_at !== null) {
+        if ($asset->scan_status === 'rejected' || $asset->processing_status === 'blocked') {
+            return $asset;
+        }
+
+        if ($asset->scan_status === 'clean'
+            && $asset->processing_status === 'ready'
+            && $asset->readiness_verified_at !== null) {
             return $asset;
         }
 
@@ -44,6 +50,7 @@ class AssetMediaPipeline
                     'scan_completed_at' => now(),
                     'processing_status' => 'blocked',
                     'processing_error' => 'Processing is blocked because the file failed malware scanning.',
+                    'readiness_verified_at' => null,
                 ]);
 
                 return $asset->refresh();
