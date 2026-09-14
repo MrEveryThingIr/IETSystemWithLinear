@@ -21,6 +21,7 @@ use App\Models\SpaceContentAnnotation;
 use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -151,6 +152,47 @@ class SpaceContentInteractionTest extends TestCase
             'type' => SpaceContentReaction::TYPE_LIKE,
         ]);
         $this->assertDatabaseCount('space_content_annotations', 2);
+    }
+
+    public function test_author_can_interact_with_current_legacy_published_edition(): void
+    {
+        [$group, $space, $owner, $author, $reader, $content] = $this->fixture();
+        $revision = $content->activeRevisionRecord();
+        $this->assertInstanceOf(SpaceContentRevision::class, $revision);
+
+        DB::table('space_content_revisions')
+            ->where('id', $revision->id)
+            ->update([
+                'evidence_status' => SpaceContentRevision::EVIDENCE_LEGACY_UNSEALED,
+                'manifest_hash' => null,
+                'manifest_version' => null,
+                'canonicalization_version' => null,
+                'manifest_algorithm' => null,
+                'canonical_manifest' => null,
+                'manifest_sealed_at' => null,
+            ]);
+
+        $content->refresh();
+
+        Livewire::actingAs($author->user)
+            ->test(SpaceContentReader::class, compact('group', 'space', 'content'))
+            ->set('commentBody', 'Comment on legacy edition')
+            ->call('addComment')
+            ->assertHasNoErrors()
+            ->assertSee('Comment on legacy edition')
+            ->call('toggleReaction', SpaceContentReaction::TYPE_LIKE)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('space_content_annotations', [
+            'space_content_revision_id' => $revision->id,
+            'author_actor_id' => $author->id,
+            'body' => 'Comment on legacy edition',
+        ]);
+        $this->assertDatabaseHas('space_content_reactions', [
+            'space_content_revision_id' => $revision->id,
+            'actor_id' => $author->id,
+            'type' => SpaceContentReaction::TYPE_LIKE,
+        ]);
     }
 
     public function test_discussion_from_previous_edition_is_not_rendered_on_new_reader_edition(): void
