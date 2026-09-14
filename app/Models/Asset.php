@@ -39,6 +39,7 @@ class Asset extends Model
     use HasFactory;
 
     public const SCAN_STATUSES = ['quarantined', 'scanning', 'clean', 'rejected', 'failed', 'unavailable'];
+
     public const PROCESSING_STATUSES = ['pending', 'processing', 'ready', 'blocked', 'failed'];
 
     /** @var list<string> */
@@ -146,9 +147,17 @@ class Asset extends Model
 
     public function mediaKind(): string
     {
-        if (str_starts_with($this->mime_type, 'image/')) return 'image';
-        if (str_starts_with($this->mime_type, 'audio/')) return 'audio';
-        if (str_starts_with($this->mime_type, 'video/')) return 'video';
+        if (str_starts_with($this->mime_type, 'image/')) {
+            return 'image';
+        }
+
+        if (str_starts_with($this->mime_type, 'audio/')) {
+            return 'audio';
+        }
+
+        if (str_starts_with($this->mime_type, 'video/')) {
+            return 'video';
+        }
 
         return $this->mime_type === 'application/pdf' ? 'pdf' : 'file';
     }
