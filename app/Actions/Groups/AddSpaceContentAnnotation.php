@@ -38,7 +38,6 @@ class AddSpaceContentAnnotation
                 ->where('space_content_id', $current->id)
                 ->lockForUpdate()
                 ->firstOrFail();
-            abort_unless($lockedRevision->hasVerifiableManifest(), 409, 'Only verified published editions accept interactions.');
 
             $parentAnnotation = null;
             if ($parent instanceof SpaceContentAnnotation) {
