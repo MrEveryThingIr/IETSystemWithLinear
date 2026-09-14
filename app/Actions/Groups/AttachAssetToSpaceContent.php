@@ -2,6 +2,7 @@
 
 namespace App\Actions\Groups;
 
+use App\Jobs\ProcessAssetMedia;
 use App\Models\Actor;
 use App\Models\Asset;
 use App\Models\SpaceContent;
@@ -75,6 +76,7 @@ class AttachAssetToSpaceContent
                 abort_unless($source instanceof SpaceContentRevision, 422, 'Content has no revision to attach media to.');
                 $source = SpaceContentRevision::query()->lockForUpdate()->findOrFail($source->id);
                 $actor = $this->actor($user);
+                $developmentReady = app()->environment(['local', 'testing']);
 
                 $asset = Asset::query()->create([
                     'uuid' => $uuid,
@@ -87,8 +89,12 @@ class AttachAssetToSpaceContent
                     'storage_key' => $storageKey,
                     'sha256' => $sha256,
                     'uploaded_by_actor_id' => $actor->id,
-                    'scan_status' => 'unavailable',
-                    'processing_status' => 'ready',
+                    'scan_status' => $developmentReady ? 'unavailable' : 'quarantined',
+                    'scan_error' => null,
+                    'processing_status' => $developmentReady ? 'ready' : 'pending',
+                    'processing_error' => null,
+                    'processing_completed_at' => $developmentReady ? now() : null,
+                    'readiness_verified_at' => $developmentReady ? now() : null,
                     'rights_status' => $rightsStatus,
                     'metadata' => null,
                 ]);
@@ -111,6 +117,7 @@ class AttachAssetToSpaceContent
                 $nextPosition = $maxPosition === null ? 0 : ((int) $maxPosition) + 1;
 
                 DB::table('space_content_revision_assets')->insert([
+                    'uuid' => (string) Str::uuid(),
                     'space_content_revision_id' => $revision->id,
                     'asset_id' => $asset->id,
                     'role' => 'inline',
@@ -124,6 +131,10 @@ class AttachAssetToSpaceContent
                     'current_revision' => $nextRevision,
                     'draft_revision_id' => $revision->id,
                 ]);
+
+                if (! $developmentReady) {
+                    ProcessAssetMedia::dispatch($asset->id)->afterCommit();
+                }
 
                 return $current->refresh();
             }, 3);
