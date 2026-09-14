@@ -41,7 +41,8 @@ class SpaceContentMediaUxTest extends TestCase
 
         $component = Livewire::actingAs($author->user)
             ->test(SpaceContentShow::class, compact('group', 'space', 'content'))
-            ->assertSee('Publishing is waiting on media rights')
+            ->assertSee('Publishing is blocked')
+            ->assertSee('Resolve sharing rights.')
             ->call('publish')
             ->assertHasErrors(['publish']);
 
@@ -50,7 +51,7 @@ class SpaceContentMediaUxTest extends TestCase
         $component
             ->call('updateAssetRights', $asset->id, 'owned')
             ->assertHasNoErrors()
-            ->assertDontSee('Publishing is waiting on media rights')
+            ->assertDontSee('Resolve sharing rights.')
             ->call('publish')
             ->assertHasNoErrors();
 
@@ -84,9 +85,9 @@ class SpaceContentMediaUxTest extends TestCase
         $source = file_get_contents(resource_path('views/livewire/groups/space-content-show.blade.php'));
 
         $this->assertIsString($source);
-        $this->assertStringContainsString('id="content-audio-recorder-{{ $content->id }}"', $source);
+        $this->assertStringContainsString('id="content-audio-recorder-{{ $content->uuid }}"', $source);
         $this->assertStringContainsString('wire:ignore', $source);
-        $this->assertStringContainsString('const suffix = @js((string) $content->id);', $source);
+        $this->assertStringContainsString('const suffix = @js((string) $content->uuid);', $source);
         $this->assertStringContainsString("\$wire.upload('assetUpload'", $source);
         $this->assertStringContainsString("\$wire.call('attachRecordedAsset')", $source);
         $this->assertStringNotContainsString("Alpine.data('contentAudioRecorder'", $source);
