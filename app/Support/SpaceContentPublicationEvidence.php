@@ -231,6 +231,33 @@ class SpaceContentPublicationEvidence
             ])
             ->all();
 
+        $blockRows = DB::table('space_content_blocks')
+            ->where('space_content_revision_id', $revision->id)
+            ->orderBy('parent_block_id')
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
+        $blockUuidById = [];
+        foreach ($blockRows as $block) {
+            $blockUuidById[(int) $block->id] = (string) $block->uuid;
+        }
+        $blocks = [];
+        foreach ($blockRows as $block) {
+            $data = json_decode((string) $block->data, true);
+            $style = $block->style !== null ? json_decode((string) $block->style, true) : null;
+            $blocks[] = [
+                'block_uuid' => (string) $block->uuid,
+                'logical_uuid' => (string) $block->logical_uuid,
+                'parent_block_uuid' => $block->parent_block_id !== null
+                    ? ($blockUuidById[(int) $block->parent_block_id] ?? null)
+                    : null,
+                'type' => (string) $block->type,
+                'position' => (int) $block->position,
+                'data' => is_array($data) ? $data : [],
+                'style' => is_array($style) ? $style : [],
+            ];
+        }
+
         $relationships = DB::table('space_content_revision_relationships as relationship')
             ->join('space_contents as child_content', 'child_content.id', '=', 'relationship.child_content_id')
             ->join('space_content_revisions as child_revision', 'child_revision.id', '=', 'relationship.child_revision_id')
@@ -264,10 +291,11 @@ class SpaceContentPublicationEvidence
             'title' => trim($revision->title),
             'payload' => $revision->payload,
             'definition_version_hash' => $definitionVersion->content_hash,
+            'composition_mode' => $revision->composition_mode,
             'render_template_key' => $revision->render_template_key,
             'render_template_uuid' => $revision->render_template_uuid,
             'presentation' => $revision->presentation,
-            'blocks' => [],
+            'blocks' => $blocks,
             'assets' => $placements,
             'relationships' => $relationships,
         ];
