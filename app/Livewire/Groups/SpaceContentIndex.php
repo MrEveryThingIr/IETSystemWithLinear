@@ -9,6 +9,7 @@ use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinition;
 use App\Models\SpaceContentDefinitionVersion;
+use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentFieldRegistry;
 use Illuminate\Contracts\View\View;
@@ -19,15 +20,12 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Space Content')]
+#[Title('Content')]
 class SpaceContentIndex extends Component
 {
     public Group $group;
-
     public GroupSpace $space;
-
     public string $definitionId = '';
-
     public string $title = '';
 
     /** @var array<string, mixed> */
@@ -45,7 +43,6 @@ class SpaceContentIndex extends Component
     public function updatedDefinitionId(): void
     {
         $this->payload = [];
-
         $definition = $this->activeDefinitions()->firstWhere('id', (int) $this->definitionId);
         if (! $definition instanceof SpaceContentDefinition) {
             return;
@@ -85,7 +82,7 @@ class SpaceContentIndex extends Component
             $this->payload,
         );
 
-        return $this->redirectRoute('groups.spaces.contents.show', [$this->group, $this->space, $content]);
+        return $this->redirectRoute('groups.spaces.contents.studio', [$this->group, $this->space, $content]);
     }
 
     public function render(): View
@@ -102,29 +99,51 @@ class SpaceContentIndex extends Component
             ? $selectedDefinition->activeVersionRecord()
             : null;
 
-        $publishedContents = $this->space->contents()
+        $publishedQuery = $this->space->contents()
             ->where('status', 'published')
-            ->whereNotNull('active_revision_id')
-            ->with(['activeRevision', 'author.user', 'definition'])
+            ->whereNotNull('active_revision_id');
+
+        if (! $canManageSpace) {
+            $publishedQuery->where(function ($query) use ($actor): void {
+                $query->where('author_actor_id', $actor->id)
+                    ->orWhereHas('activeRevision', fn ($revision) => $revision->where('evidence_status', SpaceContentRevision::EVIDENCE_SEALED));
+            });
+        }
+
+        $publishedContents = $publishedQuery
+            ->with(['activeRevision.assets', 'author.user', 'definition'])
             ->latest('published_at')
             ->latest('id')
+            ->limit(60)
             ->get();
 
         $draftContents = $this->space->contents()
+            ->where('status', '!=', 'archived')
             ->where('author_actor_id', $actor->id)
             ->whereNotNull('draft_revision_id')
             ->with(['draftRevision', 'definition'])
             ->latest('id')
+            ->limit(60)
             ->get();
 
         $spaceDraftContents = $canManageSpace
             ? $this->space->contents()
+                ->where('status', '!=', 'archived')
                 ->where('author_actor_id', '!=', $actor->id)
                 ->whereNotNull('draft_revision_id')
                 ->with(['draftRevision', 'definition', 'author.user'])
                 ->latest('id')
+                ->limit(60)
                 ->get()
             : new Collection;
+
+        $archivedContents = $this->space->contents()
+            ->where('status', 'archived')
+            ->when(! $canManageSpace, fn ($query) => $query->where('author_actor_id', $actor->id))
+            ->with(['draftRevision', 'activeRevision', 'definition', 'author.user'])
+            ->latest('archived_at')
+            ->limit(60)
+            ->get();
 
         $fieldComponents = [];
         if ($selectedVersion instanceof SpaceContentDefinitionVersion) {
@@ -142,6 +161,7 @@ class SpaceContentIndex extends Component
             'publishedContents',
             'draftContents',
             'spaceDraftContents',
+            'archivedContents',
             'canManageSpace',
             'fieldComponents',
         ));
