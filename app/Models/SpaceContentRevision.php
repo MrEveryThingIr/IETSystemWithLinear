@@ -23,6 +23,7 @@ use LogicException;
     'render_template_key',
     'render_template_uuid',
     'presentation',
+    'composition_mode',
     'created_by_actor_id',
     'content_hash',
     'evidence_status',
@@ -38,6 +39,12 @@ class SpaceContentRevision extends Model
     use HasFactory;
 
     public const UPDATED_AT = null;
+
+    public const COMPOSITION_FIELDS = 'fields';
+    public const COMPOSITION_BLOCKS = 'blocks';
+
+    /** @var list<string> */
+    public const COMPOSITION_MODES = [self::COMPOSITION_FIELDS, self::COMPOSITION_BLOCKS];
 
     public const EVIDENCE_UNSEALED = 'unsealed';
     public const EVIDENCE_SEALED = 'sealed';
@@ -84,6 +91,10 @@ class SpaceContentRevision extends Model
                 is_array($revision->presentation) ? $revision->presentation : [],
                 $fieldKeys,
             );
+            $revision->composition_mode = is_string($revision->composition_mode)
+                && in_array($revision->composition_mode, self::COMPOSITION_MODES, true)
+                    ? $revision->composition_mode
+                    : self::COMPOSITION_FIELDS;
             $revision->content_hash = SpaceContentSchema::hashRevision($revision->title, $revision->payload);
             $revision->evidence_status = self::EVIDENCE_UNSEALED;
             $revision->manifest_hash = null;
@@ -106,6 +117,7 @@ class SpaceContentRevision extends Model
                     'render_template_key',
                     'render_template_uuid',
                     'presentation',
+                    'composition_mode',
                     'created_by_actor_id',
                     'content_hash',
                 ])) {
@@ -245,6 +257,14 @@ class SpaceContentRevision extends Model
     {
         return $this->relationships()
             ->where('relation_type', SpaceContentRevisionRelationship::TYPE_CONTAINS)
+            ->orderBy('position');
+    }
+
+    /** @return HasMany<SpaceContentBlock, $this> */
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(SpaceContentBlock::class, 'space_content_revision_id')
+            ->whereNull('parent_block_id')
             ->orderBy('position');
     }
 
