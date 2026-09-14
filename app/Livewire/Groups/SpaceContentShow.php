@@ -14,7 +14,6 @@ use App\Models\Asset;
 use App\Models\Group;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
-use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentFieldRegistry;
@@ -239,7 +238,6 @@ class SpaceContentShow extends Component
         $currentRevision = $this->visibleRevision($canUpdate || $canViewRevisions);
         $currentRevision->loadMissing(['assets.uploader.user']);
         $definitionVersion = $currentRevision->definitionVersion()->firstOrFail();
-        abort_unless($definitionVersion instanceof SpaceContentDefinitionVersion, 404);
 
         $revisions = $canViewRevisions
             ? $current->revisions()->with(['createdBy.user', 'definitionVersion'])->orderByDesc('revision')->get()
