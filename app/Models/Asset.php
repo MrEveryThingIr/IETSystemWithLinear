@@ -124,8 +124,8 @@ class Asset extends Model
         });
 
         static::deleting(function (self $asset): void {
-            if ($asset->revisions()->exists()) {
-                throw new LogicException('Referenced Assets are preserved with Content history.');
+            if ($asset->revisions()->exists() || $asset->annotations()->exists()) {
+                throw new LogicException('Referenced Assets are preserved with Content and interaction history.');
             }
         });
     }
@@ -183,6 +183,14 @@ class Asset extends Model
     public function revisions(): BelongsToMany
     {
         return $this->belongsToMany(SpaceContentRevision::class, 'space_content_revision_assets', 'asset_id', 'space_content_revision_id')
+            ->withPivot(['uuid', 'role', 'position', 'caption'])
+            ->withTimestamps();
+    }
+
+    /** @return BelongsToMany<SpaceContentAnnotation, $this> */
+    public function annotations(): BelongsToMany
+    {
+        return $this->belongsToMany(SpaceContentAnnotation::class, 'space_content_annotation_assets', 'asset_id', 'annotation_id')
             ->withPivot(['uuid', 'role', 'position', 'caption'])
             ->withTimestamps();
     }
