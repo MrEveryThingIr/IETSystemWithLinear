@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 use LogicException;
 
 #[Fillable([
+    'uuid',
     'group_space_id',
     'space_content_definition_id',
     'author_actor_id',
@@ -43,6 +45,7 @@ class SpaceContent extends Model
     protected static function booted(): void
     {
         static::creating(function (self $content): void {
+            $content->uuid ??= (string) Str::uuid();
             $definition = SpaceContentDefinition::query()->findOrFail($content->space_content_definition_id);
 
             if ((int) $definition->group_space_id !== (int) $content->group_space_id) {
@@ -59,8 +62,8 @@ class SpaceContent extends Model
         });
 
         static::updating(function (self $content): void {
-            if ($content->isDirty(['group_space_id', 'space_content_definition_id', 'author_actor_id'])) {
-                throw new LogicException('Content provenance cannot be reassigned.');
+            if ($content->isDirty(['uuid', 'group_space_id', 'space_content_definition_id', 'author_actor_id'])) {
+                throw new LogicException('Content identity and provenance cannot be reassigned.');
             }
 
             foreach (['active_revision_id', 'draft_revision_id'] as $attribute) {
@@ -148,6 +151,12 @@ class SpaceContent extends Model
     public function revisions(): HasMany
     {
         return $this->hasMany(SpaceContentRevision::class, 'space_content_id');
+    }
+
+    /** @return HasMany<SpaceContentLifecycleEvent, $this> */
+    public function lifecycleEvents(): HasMany
+    {
+        return $this->hasMany(SpaceContentLifecycleEvent::class, 'space_content_id')->orderByDesc('created_at');
     }
 
     /** @return BelongsTo<SpaceContentRevision, $this> */
