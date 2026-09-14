@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Actor;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
+use App\Models\SpaceContentRevision;
 use App\Models\User;
 
 class SpaceContentPolicy
@@ -20,7 +21,12 @@ class SpaceContentPolicy
         }
 
         if ($content->status === 'published') {
-            return $content->activeRevisionRecord() !== null;
+            $revision = $content->activeRevisionRecord();
+            if (! $revision instanceof SpaceContentRevision) {
+                return false;
+            }
+
+            return $revision->hasVerifiableManifest() || $this->canOwnOrManage($user, $content);
         }
 
         return $this->canOwnOrManage($user, $content);
