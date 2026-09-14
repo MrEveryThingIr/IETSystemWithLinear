@@ -246,7 +246,6 @@ class SpaceContentReader extends Component
         if (
             ! $revision instanceof SpaceContentRevision
             || (int) $current->active_revision_id !== (int) $revision->id
-            || ! $revision->hasVerifiableManifest()
         ) {
             return null;
         }
