@@ -15,6 +15,7 @@ use App\Actions\Groups\ReviseSpaceContentDefinition;
 use App\Actions\Groups\SetGroupSpaceParticipant;
 use App\Actions\Groups\TransitionGroupMembership;
 use App\GroupRoleKey;
+use App\Livewire\Groups\SpaceContentReader;
 use App\Livewire\Groups\SpaceContentShow;
 use App\Models\Actor;
 use App\Models\Group;
@@ -87,7 +88,7 @@ class SpaceContentFoundationCorrectionTest extends TestCase
         $this->assertInstanceOf(SpaceContentRevision::class, $draft);
 
         Livewire::actingAs($reader->user)
-            ->test(SpaceContentShow::class, compact('group', 'space', 'content'))
+            ->test(SpaceContentReader::class, compact('group', 'space', 'content'))
             ->assertOk()
             ->assertSee('Published edition one')
             ->assertDontSee('Secret draft edition two')
@@ -161,7 +162,7 @@ class SpaceContentFoundationCorrectionTest extends TestCase
         $this->assertSame($editionOne->id, $content->active_revision_id);
 
         Livewire::actingAs($reader->user)
-            ->test(SpaceContentShow::class, compact('group', 'space', 'content'))
+            ->test(SpaceContentReader::class, compact('group', 'space', 'content'))
             ->assertSee('Edition one')
             ->assertDontSee('Edition two draft');
 
