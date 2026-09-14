@@ -72,7 +72,7 @@ class SpaceContentPublishedOutline
                 'content_uuid' => $child->uuid,
                 'revision_uuid' => $childRevision->uuid,
                 'title' => $childRevision->title,
-                'author' => $child->author->user?->username ?? 'Unknown author',
+                'author' => $child->author->user->username ?? 'Unknown author',
                 'can_open_current' => $canOpenCurrent,
                 'children' => $this->children($childRevision, $user, $depth + 1, $visitedRevisionIds),
             ];
