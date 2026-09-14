@@ -48,6 +48,11 @@ class SpaceContentPolicy
         return $content->status !== 'archived' && $this->canOwnOrManage($user, $content);
     }
 
+    public function restore(User $user, SpaceContent $content): bool
+    {
+        return $content->status === 'archived' && $this->canOwnOrManage($user, $content);
+    }
+
     public function revisions(User $user, SpaceContent $content): bool
     {
         return $this->canOwnOrManage($user, $content);
