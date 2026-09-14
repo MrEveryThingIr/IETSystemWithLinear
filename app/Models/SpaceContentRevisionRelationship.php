@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 use LogicException;
 
 #[Fillable([
+    'uuid',
     'parent_revision_id',
     'child_content_id',
     'relation_type',
@@ -36,12 +38,10 @@ class SpaceContentRevisionRelationship extends Model
     protected static function booted(): void
     {
         static::creating(function (self $relationship): void {
+            $relationship->uuid ??= (string) Str::uuid();
+
             if (! in_array($relationship->relation_type, self::TYPES, true)) {
                 throw new LogicException('Unknown Content relationship type.');
-            }
-
-            if ((int) $relationship->position < 0) {
-                throw new LogicException('Content relationship position cannot be negative.');
             }
 
             $parent = SpaceContentRevision::query()->with('content')->findOrFail($relationship->parent_revision_id);
