@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class SpaceContentPublicationEvidence
 {
-    public const MANIFEST_VERSION = 1;
+    public const MANIFEST_VERSION = 2;
     public const CANONICALIZATION_VERSION = 1;
     public const ALGORITHM = 'sha256';
 
@@ -264,6 +264,9 @@ class SpaceContentPublicationEvidence
             'title' => trim($revision->title),
             'payload' => $revision->payload,
             'definition_version_hash' => $definitionVersion->content_hash,
+            'render_template_key' => $revision->render_template_key,
+            'render_template_uuid' => $revision->render_template_uuid,
+            'presentation' => $revision->presentation,
             'blocks' => [],
             'assets' => $placements,
             'relationships' => $relationships,
