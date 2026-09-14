@@ -137,13 +137,7 @@ class SpaceContentIndex extends Component
                 ->get()
             : new Collection;
 
-        $archivedContents = $this->space->contents()
-            ->where('status', 'archived')
-            ->when(! $canManageSpace, fn ($query) => $query->where('author_actor_id', $actor->id))
-            ->with(['draftRevision', 'activeRevision', 'definition', 'author.user'])
-            ->latest('archived_at')
-            ->limit(60)
-            ->get();
+        $archivedContents = new Collection;
 
         $fieldComponents = [];
         if ($selectedVersion instanceof SpaceContentDefinitionVersion) {
