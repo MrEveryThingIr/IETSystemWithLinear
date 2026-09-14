@@ -45,10 +45,12 @@ class ReviseSpaceContent
                 'render_template_key' => $source->render_template_key,
                 'render_template_uuid' => $source->render_template_uuid,
                 'presentation' => $source->presentation,
+                'composition_mode' => $source->composition_mode,
                 'created_by_actor_id' => $actor->id,
             ]);
 
-            $this->composition->copyAssets($source, $revision);
+            $placementMap = $this->composition->copyAssets($source, $revision);
+            $this->composition->copyBlocks($source, $revision, $placementMap);
             $this->composition->copyRelationships($source, $revision);
 
             $current->applyLifecycle([
