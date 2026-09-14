@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SpaceContentPresentation;
 use App\Support\SpaceContentSchema;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,9 @@ use LogicException;
     'revision',
     'title',
     'payload',
+    'render_template_key',
+    'render_template_uuid',
+    'presentation',
     'created_by_actor_id',
     'content_hash',
     'evidence_status',
@@ -46,6 +50,7 @@ class SpaceContentRevision extends Model
     {
         return [
             'payload' => 'array',
+            'presentation' => 'array',
             'manifest_version' => 'integer',
             'canonicalization_version' => 'integer',
             'manifest_sealed_at' => 'datetime',
@@ -66,6 +71,19 @@ class SpaceContentRevision extends Model
             }
 
             $revision->payload = SpaceContentSchema::normalizePayload($version->schema, $revision->payload ?? []);
+            $revision->render_template_key = is_string($revision->render_template_key) && $revision->render_template_key !== ''
+                ? $revision->render_template_key
+                : 'article';
+            $fieldKeys = collect($version->schema['fields'] ?? [])
+                ->filter(fn (mixed $field): bool => is_array($field) && is_string($field['key'] ?? null))
+                ->map(fn (array $field): string => (string) $field['key'])
+                ->values()
+                ->all();
+            $revision->presentation = app(SpaceContentPresentation::class)->resolve(
+                $revision->render_template_key,
+                is_array($revision->presentation) ? $revision->presentation : [],
+                $fieldKeys,
+            );
             $revision->content_hash = SpaceContentSchema::hashRevision($revision->title, $revision->payload);
             $revision->evidence_status = self::EVIDENCE_UNSEALED;
             $revision->manifest_hash = null;
@@ -85,6 +103,9 @@ class SpaceContentRevision extends Model
                     'revision',
                     'title',
                     'payload',
+                    'render_template_key',
+                    'render_template_uuid',
+                    'presentation',
                     'created_by_actor_id',
                     'content_hash',
                 ])) {
