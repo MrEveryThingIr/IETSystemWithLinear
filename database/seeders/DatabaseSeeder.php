@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Actions\Groups\GroupRoleProvisioner;
+use App\Models\PlatformAccessGrant;
 use App\Models\User;
+use App\PlatformRole;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,7 +14,9 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        app(GroupRoleProvisioner::class)->seedPermissions();
+        if (! app()->environment(['local', 'testing'])) {
+            return;
+        }
 
         $user = User::query()->where('email', 'test@example.com')->first()
             ?? User::factory()->create([
@@ -23,6 +26,11 @@ class DatabaseSeeder extends Seeder
 
         $user->actor()->firstOrCreate([]);
 
-        $this->call(ConstructionProjectSeeder::class);
+        if (! $user->platformAccessGrants()->active()->where('role', PlatformRole::Superadmin->value)->exists()) {
+            PlatformAccessGrant::factory()->for($user)->create([
+                'role' => PlatformRole::Superadmin,
+                'reason' => 'Local development bootstrap superadmin.',
+            ]);
+        }
     }
 }
