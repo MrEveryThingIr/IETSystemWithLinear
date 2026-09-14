@@ -177,7 +177,7 @@ class UpdateSpaceContentStructure
 
         abort_if(count($normalized) !== count(array_unique($normalized)), 422, 'Content cannot contain the same child more than once.');
 
-        return array_values($normalized);
+        return $normalized;
     }
 
     private function actor(User $user): Actor
