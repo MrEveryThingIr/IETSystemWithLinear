@@ -56,7 +56,15 @@ class SpaceContentShow extends Component
     {
         abort_unless((int) $space->group_id === (int) $group->id, 404);
         abort_unless((int) $content->group_space_id === (int) $space->id, 404);
-        Gate::authorize('view', $content);
+
+        $user = $this->user();
+        Gate::forUser($user)->authorize('view', $content);
+        abort_unless(
+            Gate::forUser($user)->allows('update', $content)
+                || Gate::forUser($user)->allows('revisions', $content)
+                || Gate::forUser($user)->allows('restore', $content),
+            403,
+        );
 
         $this->group = $group;
         $this->space = $space;
