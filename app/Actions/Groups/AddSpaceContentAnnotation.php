@@ -7,6 +7,7 @@ use App\Models\Actor;
 use App\Models\Asset;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentAnnotation;
+use App\Models\SpaceContentAnnotationAnchor;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentAnnotationAnchors;
@@ -102,7 +103,7 @@ class AddSpaceContentAnnotation
                 }
 
                 $normalizedAnchors = $parentAnnotation instanceof SpaceContentAnnotation
-                    ? $parentAnnotation->anchors->map(static fn ($anchor): array => [
+                    ? $parentAnnotation->anchors->map(static fn (SpaceContentAnnotationAnchor $anchor): array => [
                         'target_type' => $anchor->target_type,
                         'target_uuid' => $anchor->target_uuid,
                         'field_key' => $anchor->field_key,
@@ -110,11 +111,12 @@ class AddSpaceContentAnnotation
                     ])->all()
                     : $this->anchorNormalizer->normalize($lockedRevision, $anchors);
 
+                $actor = $this->actor($user);
                 $annotation = SpaceContentAnnotation::query()->create([
                     'space_content_id' => $current->id,
                     'space_content_revision_id' => $lockedRevision->id,
                     'parent_annotation_id' => $parentAnnotation?->id,
-                    'author_actor_id' => $this->actor($user)->id,
+                    'author_actor_id' => $actor->id,
                     'kind' => $kind,
                     'visibility' => $visibility,
                     'status' => SpaceContentAnnotation::STATUS_ACTIVE,
@@ -143,7 +145,7 @@ class AddSpaceContentAnnotation
                         'disk' => 'local',
                         'storage_key' => $uploadContext['storage_key'],
                         'sha256' => $uploadContext['sha256'],
-                        'uploaded_by_actor_id' => $this->actor($user)->id,
+                        'uploaded_by_actor_id' => $actor->id,
                         'scan_status' => $developmentReady ? 'unavailable' : 'quarantined',
                         'scan_error' => null,
                         'processing_status' => $developmentReady ? 'ready' : 'pending',
