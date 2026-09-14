@@ -4,6 +4,7 @@ namespace App\Actions\Groups;
 
 use App\Models\Actor;
 use App\Models\SpaceContent;
+use App\Models\SpaceContentBlock;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentBlocks;
@@ -41,6 +42,10 @@ class UpdateSpaceContentBlocks
                 ? $this->blocks->normalize($source, $blocks)
                 : [];
             abort_if($compositionMode === SpaceContentRevision::COMPOSITION_BLOCKS && $normalized === [], 422, 'A block document needs at least one block.');
+
+            if ($source->composition_mode === $compositionMode && $this->sameBlocks($source, $normalized)) {
+                return $current->refresh();
+            }
 
             $actor = $this->actor($user);
             $nextRevision = ((int) $current->revisions()->max('revision')) + 1;
@@ -90,6 +95,30 @@ class UpdateSpaceContentBlocks
 
             return $current->refresh();
         }, 3);
+    }
+
+    /**
+     * @param list<array{logical_uuid: string, type: string, data: array<string, mixed>, style: array<string, mixed>}> $normalized
+     */
+    private function sameBlocks(SpaceContentRevision $source, array $normalized): bool
+    {
+        if ($source->composition_mode !== SpaceContentRevision::COMPOSITION_BLOCKS) {
+            return $normalized === [];
+        }
+
+        /** @var list<array{logical_uuid: string, type: string, data: array<string, mixed>, style: array<string, mixed>}> $existing */
+        $existing = $source->blocks()
+            ->get()
+            ->map(static fn (SpaceContentBlock $block): array => [
+                'logical_uuid' => $block->logical_uuid,
+                'type' => $block->type,
+                'data' => is_array($block->data) ? $block->data : [],
+                'style' => is_array($block->style) ? $block->style : [],
+            ])
+            ->values()
+            ->all();
+
+        return $existing === $normalized;
     }
 
     private function actor(User $user): Actor
