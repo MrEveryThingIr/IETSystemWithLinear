@@ -45,11 +45,17 @@ class SpaceContentReleaseContractTest extends TestCase
         $this->assertTrue(Str::isUuid($content->uuid));
         $this->assertTrue(Str::isUuid($revision->uuid));
         $this->assertSame(SpaceContentRevision::EVIDENCE_SEALED, $revision->evidence_status);
-        $this->assertSame(1, $revision->manifest_version);
+        $this->assertSame(2, $revision->manifest_version);
         $this->assertSame(1, $revision->canonicalization_version);
         $this->assertSame('sha256', $revision->manifest_algorithm);
         $this->assertIsString($revision->canonical_manifest);
         $this->assertSame(hash('sha256', $revision->canonical_manifest), $revision->manifest_hash);
+
+        $manifest = json_decode($revision->canonical_manifest, true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame(SpaceContentRevision::COMPOSITION_FIELDS, $manifest['composition_mode']);
+        $this->assertSame('article', $manifest['render_template_key']);
+        $this->assertIsArray($manifest['presentation']);
+        $this->assertSame([], $manifest['blocks']);
 
         $placementUuid = DB::table('space_content_revision_assets')
             ->where('space_content_revision_id', $revision->id)
