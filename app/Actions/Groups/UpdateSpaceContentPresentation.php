@@ -58,10 +58,12 @@ class UpdateSpaceContentPresentation
                 'render_template_key' => $baseKey,
                 'render_template_uuid' => $templateUuid,
                 'presentation' => $resolved,
+                'composition_mode' => $source->composition_mode,
                 'created_by_actor_id' => $actor->id,
             ]);
 
-            $this->composition->copyAssets($source, $revision);
+            $placementMap = $this->composition->copyAssets($source, $revision);
+            $this->composition->copyBlocks($source, $revision, $placementMap);
             $this->composition->copyRelationships($source, $revision);
 
             $current->applyLifecycle([
