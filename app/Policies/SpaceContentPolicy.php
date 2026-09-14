@@ -37,6 +37,19 @@ class SpaceContentPolicy
         return $this->spaces->post($user, $space);
     }
 
+    public function interact(User $user, SpaceContent $content): bool
+    {
+        $content->loadMissing('space');
+
+        if ($content->status !== 'published' || ! $this->spaces->post($user, $content->space)) {
+            return false;
+        }
+
+        $revision = $content->activeRevisionRecord();
+
+        return $revision instanceof SpaceContentRevision && $revision->hasVerifiableManifest();
+    }
+
     public function update(User $user, SpaceContent $content): bool
     {
         return $content->status !== 'archived' && $this->canOwnOrManage($user, $content);
