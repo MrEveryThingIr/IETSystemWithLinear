@@ -27,7 +27,13 @@ class AssetFactory extends Factory
             'sha256' => hash('sha256', $uuid),
             'uploaded_by_actor_id' => Actor::factory(),
             'scan_status' => 'unavailable',
+            'scan_error' => null,
+            'scan_attempted_at' => null,
+            'scan_completed_at' => null,
             'processing_status' => 'ready',
+            'processing_error' => null,
+            'processing_completed_at' => now(),
+            'readiness_verified_at' => now(),
             'rights_status' => 'owned',
             'metadata' => null,
         ];
