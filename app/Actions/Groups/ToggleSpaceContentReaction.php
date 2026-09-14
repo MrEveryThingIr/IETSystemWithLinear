@@ -36,7 +36,6 @@ class ToggleSpaceContentReaction
                 ->where('space_content_id', $current->id)
                 ->lockForUpdate()
                 ->firstOrFail();
-            abort_unless($lockedRevision->hasVerifiableManifest(), 409, 'Only verified published editions accept interactions.');
 
             $actor = $this->actor($user);
             $existing = SpaceContentReaction::query()
