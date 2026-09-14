@@ -14,22 +14,26 @@ use Illuminate\Support\Facades\Storage;
 
 class SpaceContentPublicationEvidence
 {
+    public const MANIFEST_VERSION = 1;
+    public const CANONICALIZATION_VERSION = 1;
+    public const ALGORITHM = 'sha256';
+
     /**
      * @return Collection<int, array{asset_id: int, filename: string, code: string}>
      */
-    public function issues(SpaceContentRevision $revision): Collection
+    public function issues(SpaceContentRevision $revision, bool $verifyStoredFile = false): Collection
     {
         $revision->loadMissing('assets');
 
         return $revision->assets
-            ->flatMap(function (Asset $asset): array {
+            ->flatMap(function (Asset $asset) use ($verifyStoredFile): array {
                 $issues = [];
 
                 if (! $asset->isPublishable()) {
                     $issues[] = $this->issue($asset, 'rights');
                 }
 
-                if ($asset->processing_status !== 'ready') {
+                if ($asset->processing_status !== 'ready' || $asset->readiness_verified_at === null) {
                     $issues[] = $this->issue($asset, 'processing');
                 }
 
@@ -41,7 +45,7 @@ class SpaceContentPublicationEvidence
                     $issues[] = $this->issue($asset, 'unsupported_type');
                 }
 
-                if (! Storage::disk($asset->disk)->exists($asset->storage_key)) {
+                if ($verifyStoredFile && ! $this->storedIdentityMatches($asset)) {
                     $issues[] = $this->issue($asset, 'missing_file');
                 }
 
@@ -52,7 +56,7 @@ class SpaceContentPublicationEvidence
 
     public function seal(SpaceContentRevision $revision): string
     {
-        $issues = $this->issues($revision);
+        $issues = $this->issues($revision, true);
         abort_if($issues->isNotEmpty(), 422, 'Resolve media publication checks before publishing.');
 
         $definitionVersion = SpaceContentDefinitionVersion::query()->findOrFail($revision->definition_version_id);
@@ -61,8 +65,17 @@ class SpaceContentPublicationEvidence
         $this->sealAssets($revision, $publishedAt);
         $this->sealRelationships($revision, $publishedAt);
 
-        $manifestHash = $this->manifestHash($revision, $definitionVersion);
-        $revision->sealManifest($manifestHash);
+        $manifest = $this->manifest($revision, $definitionVersion);
+        $canonicalManifest = SpaceContentSchema::canonicalJson($manifest);
+        $manifestHash = hash(self::ALGORITHM, $canonicalManifest);
+
+        $revision->sealManifest(
+            $manifestHash,
+            $canonicalManifest,
+            self::MANIFEST_VERSION,
+            self::CANONICALIZATION_VERSION,
+            self::ALGORITHM,
+        );
 
         return $manifestHash;
     }
@@ -75,8 +88,19 @@ class SpaceContentPublicationEvidence
             ->lockForUpdate()
             ->get();
 
+        if ($placements->isEmpty()) {
+            return;
+        }
+
+        $assets = Asset::query()
+            ->whereIn('id', $placements->pluck('asset_id')->all())
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
         foreach ($placements as $placement) {
-            $asset = Asset::query()->findOrFail($placement->asset_id);
+            $asset = $assets->get((int) $placement->asset_id);
+            abort_unless($asset instanceof Asset, 422, 'Referenced media no longer exists.');
             $scanEvidence = $this->scanEvidence($asset);
             abort_unless(is_string($scanEvidence), 422, 'Media scanning must be resolved before publishing.');
 
@@ -91,8 +115,7 @@ class SpaceContentPublicationEvidence
                 'updated_at' => $publishedAt,
             ];
 
-            $existingHasEvidence = $placement->published_evidence_at !== null;
-            if ($existingHasEvidence) {
+            if ($placement->published_evidence_at !== null) {
                 abort_unless(
                     $placement->asset_sha256_snapshot === $snapshot['asset_sha256_snapshot']
                     && $placement->rights_status_snapshot === $snapshot['rights_status_snapshot']
@@ -122,31 +145,37 @@ class SpaceContentPublicationEvidence
             ->lockForUpdate()
             ->get();
 
-        foreach ($relationships as $relationship) {
-            $child = SpaceContent::query()->lockForUpdate()->findOrFail($relationship->child_content_id);
-            abort_unless(
-                (int) $child->group_space_id === (int) $parent->group_space_id,
-                422,
-                'Contained Content must belong to the same Space.',
-            );
-            abort_unless(
-                $child->status === 'published' && $child->active_revision_id !== null,
-                422,
-                'Publish every contained child before publishing this parent edition.',
-            );
+        if ($relationships->isEmpty()) {
+            return;
+        }
 
-            $childRevision = SpaceContentRevision::query()->lockForUpdate()->findOrFail($child->active_revision_id);
-            abort_unless(
-                is_string($childRevision->manifest_hash) && $childRevision->manifest_hash !== '',
-                422,
-                'Contained Content must have a sealed published edition before the parent can be published.',
-            );
+        $children = SpaceContent::query()
+            ->whereIn('id', $relationships->pluck('child_content_id')->all())
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        $revisionIds = $children->pluck('active_revision_id')->filter()->all();
+        $childRevisions = SpaceContentRevision::query()
+            ->whereIn('id', $revisionIds)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        foreach ($relationships as $relationship) {
+            $child = $children->get((int) $relationship->child_content_id);
+            abort_unless($child instanceof SpaceContent, 422, 'Contained Content no longer exists.');
+            abort_unless((int) $child->group_space_id === (int) $parent->group_space_id, 422, 'Contained Content must belong to the same Space.');
+            abort_unless($child->status === 'published' && $child->active_revision_id !== null, 422, 'Publish every contained child before publishing this parent edition.');
+
+            $childRevision = $childRevisions->get((int) $child->active_revision_id);
+            abort_unless($childRevision instanceof SpaceContentRevision && $childRevision->hasVerifiableManifest(), 422, 'Contained Content must have a verifiable sealed edition before the parent can be published.');
 
             if ($relationship->sealed_at !== null) {
                 abort_unless(
                     (int) $relationship->child_revision_id === (int) $childRevision->id
                     && is_string($relationship->child_manifest_hash)
-                    && hash_equals($relationship->child_manifest_hash, $childRevision->manifest_hash),
+                    && hash_equals($relationship->child_manifest_hash, (string) $childRevision->manifest_hash),
                     409,
                     'Published Content relationship evidence cannot be rewritten.',
                 );
@@ -165,15 +194,17 @@ class SpaceContentPublicationEvidence
         }
     }
 
-    private function manifestHash(
-        SpaceContentRevision $revision,
-        SpaceContentDefinitionVersion $definitionVersion,
-    ): string {
+    /** @return array<string, mixed> */
+    private function manifest(SpaceContentRevision $revision, SpaceContentDefinitionVersion $definitionVersion): array
+    {
+        $revision->loadMissing('content');
+
         $placements = DB::table('space_content_revision_assets as placement')
             ->join('assets as asset', 'asset.id', '=', 'placement.asset_id')
             ->where('placement.space_content_revision_id', $revision->id)
             ->orderBy('placement.position')
             ->get([
+                'placement.uuid as placement_uuid',
                 'asset.uuid as asset_uuid',
                 'placement.role',
                 'placement.position',
@@ -186,6 +217,7 @@ class SpaceContentPublicationEvidence
                 'placement.evidence_origin',
             ])
             ->map(static fn (object $placement): array => [
+                'placement_uuid' => $placement->placement_uuid,
                 'asset_uuid' => $placement->asset_uuid,
                 'sha256' => $placement->asset_sha256_snapshot,
                 'role' => $placement->role,
@@ -199,34 +231,64 @@ class SpaceContentPublicationEvidence
             ])
             ->all();
 
-        $relationships = DB::table('space_content_revision_relationships')
-            ->where('parent_revision_id', $revision->id)
-            ->orderBy('relation_type')
-            ->orderBy('position')
+        $relationships = DB::table('space_content_revision_relationships as relationship')
+            ->join('space_contents as child_content', 'child_content.id', '=', 'relationship.child_content_id')
+            ->join('space_content_revisions as child_revision', 'child_revision.id', '=', 'relationship.child_revision_id')
+            ->where('relationship.parent_revision_id', $revision->id)
+            ->orderBy('relationship.relation_type')
+            ->orderBy('relationship.position')
             ->get([
-                'relation_type',
-                'position',
-                'child_content_id',
-                'child_revision_id',
-                'child_manifest_hash',
+                'relationship.uuid as relationship_uuid',
+                'relationship.relation_type',
+                'relationship.position',
+                'child_content.uuid as child_content_uuid',
+                'child_revision.uuid as child_revision_uuid',
+                'relationship.child_manifest_hash',
             ])
             ->map(static fn (object $relationship): array => [
+                'relationship_uuid' => $relationship->relationship_uuid,
                 'type' => $relationship->relation_type,
                 'position' => (int) $relationship->position,
-                'child_content_id' => (int) $relationship->child_content_id,
-                'child_revision_id' => (int) $relationship->child_revision_id,
+                'child_content_uuid' => $relationship->child_content_uuid,
+                'child_revision_uuid' => $relationship->child_revision_uuid,
                 'child_manifest_hash' => $relationship->child_manifest_hash,
             ])
             ->all();
 
-        return SpaceContentSchema::hashArray([
+        return [
+            'manifest_version' => self::MANIFEST_VERSION,
+            'canonicalization_version' => self::CANONICALIZATION_VERSION,
+            'algorithm' => self::ALGORITHM,
+            'content_uuid' => $revision->content->uuid,
+            'revision_uuid' => $revision->uuid,
             'title' => trim($revision->title),
             'payload' => $revision->payload,
             'definition_version_hash' => $definitionVersion->content_hash,
             'blocks' => [],
             'assets' => $placements,
             'relationships' => $relationships,
-        ]);
+        ];
+    }
+
+    private function storedIdentityMatches(Asset $asset): bool
+    {
+        if (! Storage::disk($asset->disk)->exists($asset->storage_key)) {
+            return false;
+        }
+
+        $stream = Storage::disk($asset->disk)->readStream($asset->storage_key);
+        if (! is_resource($stream)) {
+            return false;
+        }
+
+        $context = hash_init('sha256');
+        try {
+            hash_update_stream($context, $stream);
+        } finally {
+            fclose($stream);
+        }
+
+        return hash_equals($asset->sha256, hash_final($context));
     }
 
     private function scanEvidence(Asset $asset): ?string
