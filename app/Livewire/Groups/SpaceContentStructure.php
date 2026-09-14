@@ -165,6 +165,7 @@ class SpaceContentStructure extends Component
         $canManageSpace = Gate::forUser($user)->allows('manage', $this->space);
 
         return $this->space->contents()
+            ->getQuery()
             ->where('id', '!=', $this->content->id)
             ->where('status', '!=', 'archived')
             ->when(! $canManageSpace, function (Builder $query) use ($actor): void {
