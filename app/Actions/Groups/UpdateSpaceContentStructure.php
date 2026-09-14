@@ -187,17 +187,9 @@ class UpdateSpaceContentStructure
 
     private function actor(User $user): Actor
     {
-        $current = User::query()->with('actor')->find($this->user()->id);
+        $current = User::query()->with('actor')->find($user->id);
         abort_unless($current instanceof User && $current->actor instanceof Actor, 403);
 
         return $current->actor;
-    }
-
-    private function user(): User
-    {
-        $user = request()->user();
-        abort_unless($user instanceof User, 403);
-
-        return $user;
     }
 }
