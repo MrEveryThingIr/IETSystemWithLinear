@@ -226,4 +226,16 @@ class SpaceContentRevision extends Model
             ->where('relation_type', SpaceContentRevisionRelationship::TYPE_CONTAINS)
             ->orderBy('position');
     }
+
+    /** @return HasMany<SpaceContentAnnotation, $this> */
+    public function annotations(): HasMany
+    {
+        return $this->hasMany(SpaceContentAnnotation::class, 'space_content_revision_id');
+    }
+
+    /** @return HasMany<SpaceContentReaction, $this> */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(SpaceContentReaction::class, 'space_content_revision_id');
+    }
 }
