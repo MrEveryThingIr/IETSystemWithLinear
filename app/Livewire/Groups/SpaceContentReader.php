@@ -49,6 +49,8 @@ class SpaceContentReader extends Component
 
     public bool $annotationComposerOpen = false;
 
+    public ?string $annotationParentUuid = null;
+
     public string $annotationKind = SpaceContentAnnotation::KIND_NOTE;
 
     public string $annotationVisibility = SpaceContentAnnotation::VISIBILITY_SPACE;
@@ -136,6 +138,9 @@ class SpaceContentReader extends Component
         $revision = $this->interactionRevision();
         abort_unless($revision instanceof SpaceContentRevision, 409, __('interactions.edition_changed'));
 
+        $this->annotationParentUuid = null;
+        $this->annotationKind = SpaceContentAnnotation::KIND_NOTE;
+        $this->annotationVisibility = SpaceContentAnnotation::VISIBILITY_SPACE;
         $this->annotationComposerOpen = true;
         $this->annotationAnchors = [[
             'target_type' => SpaceContentAnnotationAnchor::TARGET_REVISION,
@@ -165,6 +170,16 @@ class SpaceContentReader extends Component
         ]);
     }
 
+    public function addBlockAnchor(string $blockUuid): void
+    {
+        $this->appendAnchor([
+            'target_type' => SpaceContentAnnotationAnchor::TARGET_BLOCK,
+            'target_uuid' => $blockUuid,
+            'field_key' => null,
+            'selector' => [],
+        ]);
+    }
+
     public function addRelationshipAnchor(string $relationshipUuid, string $label = ''): void
     {
         $this->appendAnchor([
@@ -182,6 +197,7 @@ class SpaceContentReader extends Component
             return;
         }
 
+        $this->annotationParentUuid = null;
         $this->annotationComposerOpen = true;
         $this->annotationAnchors = [[
             'target_type' => SpaceContentAnnotationAnchor::TARGET_TEXT,
@@ -197,7 +213,7 @@ class SpaceContentReader extends Component
 
     public function removeAnnotationAnchor(int $index): void
     {
-        if (! array_key_exists($index, $this->annotationAnchors)) {
+        if ($this->annotationParentUuid !== null || ! array_key_exists($index, $this->annotationAnchors)) {
             return;
         }
 
@@ -208,6 +224,7 @@ class SpaceContentReader extends Component
     public function clearAnnotationComposer(): void
     {
         $this->annotationComposerOpen = false;
+        $this->annotationParentUuid = null;
         $this->reset(
             'annotationBody',
             'annotationAnchors',
@@ -242,10 +259,42 @@ class SpaceContentReader extends Component
         $this->resetErrorBag('annotationUpload');
     }
 
+    public function openReplyComposer(string $annotationUuid): void
+    {
+        $revision = $this->interactionRevision();
+        if (! $revision instanceof SpaceContentRevision) {
+            $this->addError('interaction', __('interactions.edition_changed'));
+
+            return;
+        }
+
+        $parent = $this->visibleTopLevelAnnotation($revision, $annotationUuid);
+        abort_unless($parent instanceof SpaceContentAnnotation, 404);
+        $parent->loadMissing('anchors');
+
+        $this->clearAnnotationComposer();
+        $this->annotationComposerOpen = true;
+        $this->annotationParentUuid = $parent->uuid;
+        $this->annotationKind = $parent->kind === SpaceContentAnnotation::KIND_QUESTION
+            ? SpaceContentAnnotation::KIND_ANSWER
+            : SpaceContentAnnotation::KIND_REPLY;
+        $this->annotationVisibility = $parent->visibility;
+        $this->annotationAnchors = $parent->anchors->map(static fn ($anchor): array => [
+            'target_type' => $anchor->target_type,
+            'target_uuid' => $anchor->target_uuid,
+            'field_key' => $anchor->field_key,
+            'selector' => $anchor->selector,
+        ])->all();
+    }
+
     public function postAnnotation(AddSpaceContentAnnotation $add): void
     {
+        $allowedKinds = $this->annotationParentUuid !== null
+            ? SpaceContentAnnotation::CHILD_KINDS
+            : SpaceContentAnnotation::TOP_LEVEL_KINDS;
+
         $this->validate([
-            'annotationKind' => ['required', Rule::in(SpaceContentAnnotation::TOP_LEVEL_KINDS)],
+            'annotationKind' => ['required', Rule::in($allowedKinds)],
             'annotationVisibility' => ['required', Rule::in(SpaceContentAnnotation::VISIBILITIES)],
             'annotationBody' => ['nullable', 'string', 'max:5000'],
             'annotationUpload' => ['nullable', 'file', 'max:12288'],
@@ -267,15 +316,22 @@ class SpaceContentReader extends Component
             return;
         }
 
+        $parent = $this->annotationParentUuid !== null
+            ? $this->visibleTopLevelAnnotation($revision, $this->annotationParentUuid)
+            : null;
+        if ($this->annotationParentUuid !== null && ! $parent instanceof SpaceContentAnnotation) {
+            abort(404);
+        }
+
         try {
             $add->execute(
                 $this->content,
                 $revision,
                 $this->user(),
                 $this->annotationBody,
-                null,
+                $parent,
                 $this->annotationKind,
-                $this->annotationVisibility,
+                $parent?->visibility ?? $this->annotationVisibility,
                 $this->annotationAnchors,
                 $upload,
                 $this->annotationUploadIsRecording ? 'owned' : $this->annotationRightsStatus,
@@ -310,19 +366,7 @@ class SpaceContentReader extends Component
             return;
         }
 
-        $actor = $this->actor();
-        $parent = $revision->annotations()
-            ->where('uuid', $annotationUuid)
-            ->whereNull('parent_annotation_id')
-            ->where('status', SpaceContentAnnotation::STATUS_ACTIVE)
-            ->where(function ($query) use ($actor): void {
-                $query->where('visibility', SpaceContentAnnotation::VISIBILITY_SPACE)
-                    ->orWhere(function ($query) use ($actor): void {
-                        $query->where('visibility', SpaceContentAnnotation::VISIBILITY_PRIVATE)
-                            ->where('author_actor_id', $actor->id);
-                    });
-            })
-            ->first();
+        $parent = $this->visibleTopLevelAnnotation($revision, $annotationUuid);
         abort_unless($parent instanceof SpaceContentAnnotation, 404);
 
         $this->replyingTo = $annotationUuid;
@@ -354,19 +398,7 @@ class SpaceContentReader extends Component
             return;
         }
 
-        $actor = $this->actor();
-        $parent = $revision->annotations()
-            ->where('uuid', $this->replyingTo)
-            ->whereNull('parent_annotation_id')
-            ->where('status', SpaceContentAnnotation::STATUS_ACTIVE)
-            ->where(function ($query) use ($actor): void {
-                $query->where('visibility', SpaceContentAnnotation::VISIBILITY_SPACE)
-                    ->orWhere(function ($query) use ($actor): void {
-                        $query->where('visibility', SpaceContentAnnotation::VISIBILITY_PRIVATE)
-                            ->where('author_actor_id', $actor->id);
-                    });
-            })
-            ->first();
+        $parent = $this->visibleTopLevelAnnotation($revision, (string) $this->replyingTo);
         abort_unless($parent instanceof SpaceContentAnnotation, 404);
 
         try {
@@ -459,6 +491,7 @@ class SpaceContentReader extends Component
 
         $fieldAnnotationCounts = [];
         $assetAnnotationCounts = [];
+        $blockAnnotationCounts = [];
         foreach ($annotations as $annotation) {
             foreach ($annotation->anchors as $anchor) {
                 if (in_array($anchor->target_type, [SpaceContentAnnotationAnchor::TARGET_FIELD, SpaceContentAnnotationAnchor::TARGET_TEXT], true)
@@ -468,11 +501,16 @@ class SpaceContentReader extends Component
                 if ($anchor->target_type === SpaceContentAnnotationAnchor::TARGET_ASSET && is_string($anchor->target_uuid)) {
                     $assetAnnotationCounts[$anchor->target_uuid] = ($assetAnnotationCounts[$anchor->target_uuid] ?? 0) + 1;
                 }
+                if ($anchor->target_type === SpaceContentAnnotationAnchor::TARGET_BLOCK && is_string($anchor->target_uuid)) {
+                    $blockAnnotationCounts[$anchor->target_uuid] = ($blockAnnotationCounts[$anchor->target_uuid] ?? 0) + 1;
+                }
             }
         }
 
         $reactionTypes = SpaceContentReaction::TYPES;
-        $annotationKinds = SpaceContentAnnotation::TOP_LEVEL_KINDS;
+        $annotationKinds = $this->annotationParentUuid !== null
+            ? SpaceContentAnnotation::CHILD_KINDS
+            : SpaceContentAnnotation::TOP_LEVEL_KINDS;
         $annotationVisibilities = SpaceContentAnnotation::VISIBILITIES;
         $rightsStatuses = Asset::RIGHTS_STATUSES;
 
@@ -492,12 +530,17 @@ class SpaceContentReader extends Component
             'rightsStatuses',
             'fieldAnnotationCounts',
             'assetAnnotationCounts',
+            'blockAnnotationCounts',
         ));
     }
 
     /** @param array<string, mixed> $anchor */
     private function appendAnchor(array $anchor): void
     {
+        if ($this->annotationParentUuid !== null) {
+            return;
+        }
+
         $this->annotationComposerOpen = true;
         $key = implode('|', [
             (string) ($anchor['target_type'] ?? ''),
@@ -519,6 +562,24 @@ class SpaceContentReader extends Component
         if (count($this->annotationAnchors) < 20) {
             $this->annotationAnchors[] = $anchor;
         }
+    }
+
+    private function visibleTopLevelAnnotation(SpaceContentRevision $revision, string $uuid): ?SpaceContentAnnotation
+    {
+        $actor = $this->actor();
+
+        return $revision->annotations()
+            ->where('uuid', $uuid)
+            ->whereNull('parent_annotation_id')
+            ->where('status', SpaceContentAnnotation::STATUS_ACTIVE)
+            ->where(function ($query) use ($actor): void {
+                $query->where('visibility', SpaceContentAnnotation::VISIBILITY_SPACE)
+                    ->orWhere(function ($query) use ($actor): void {
+                        $query->where('visibility', SpaceContentAnnotation::VISIBILITY_PRIVATE)
+                            ->where('author_actor_id', $actor->id);
+                    });
+            })
+            ->first();
     }
 
     private function interactionRevision(): ?SpaceContentRevision
