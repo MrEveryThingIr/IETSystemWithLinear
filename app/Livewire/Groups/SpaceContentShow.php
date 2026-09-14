@@ -6,6 +6,8 @@ use App\Actions\Groups\ArchiveSpaceContent;
 use App\Actions\Groups\AttachAssetToSpaceContent;
 use App\Actions\Groups\PublishSpaceContent;
 use App\Actions\Groups\RemoveAssetFromSpaceContent;
+use App\Actions\Groups\RestoreSpaceContent;
+use App\Actions\Groups\RetryAssetMediaProcessing;
 use App\Actions\Groups\ReviseSpaceContent;
 use App\Actions\Groups\UpdateAssetRightsStatus;
 use App\Models\Asset;
@@ -29,29 +31,26 @@ use Livewire\WithFileUploads;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Layout('layouts.app')]
-#[Title('Content')]
+#[Title('Content Studio')]
 class SpaceContentShow extends Component
 {
     use WithFileUploads;
 
     public Group $group;
-
     public GroupSpace $space;
-
     public SpaceContent $content;
-
     public string $title = '';
 
     /** @var array<string, mixed> */
     public array $payload = [];
 
     public mixed $assetUpload = null;
-
     public string $assetRightsStatus = 'unknown';
-
     public string $assetCaption = '';
-
     public string $recordingCaption = '';
+    public string $archiveReason = '';
+    public string $restoreReason = '';
+    public bool $showArchiveConfirmation = false;
 
     public function mount(Group $group, GroupSpace $space, SpaceContent $content): void
     {
@@ -72,12 +71,7 @@ class SpaceContentShow extends Component
             'payload' => ['array'],
         ]);
 
-        $this->content = $reviseContent->execute(
-            $this->content,
-            $this->user(),
-            $this->title,
-            $this->payload,
-        );
+        $this->content = $reviseContent->execute($this->content, $this->user(), $this->title, $this->payload);
         $this->fillFromEditableRevision();
         session()->flash('status', __('ui.content.revised'));
     }
@@ -89,7 +83,6 @@ class SpaceContentShow extends Component
             'assetRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
             'assetCaption' => ['nullable', 'string', 'max:1000'],
         ]);
-
         abort_unless($this->assetUpload instanceof UploadedFile, 422);
 
         $this->content = $attachAsset->execute(
@@ -112,7 +105,6 @@ class SpaceContentShow extends Component
             'assetUpload' => ['required', 'file', 'max:12288'],
             'recordingCaption' => ['nullable', 'string', 'max:1000'],
         ]);
-
         abort_unless($this->assetUpload instanceof UploadedFile, 422);
 
         $this->content = $attachAsset->execute(
@@ -133,10 +125,7 @@ class SpaceContentShow extends Component
     {
         $this->resetErrorBag('publish');
         $this->resetErrorBag('assetRights.'.$assetId);
-
-        $asset = Asset::query()
-            ->where('group_space_id', $this->space->id)
-            ->findOrFail($assetId);
+        $asset = $this->asset($assetId);
 
         try {
             $updateRights->execute($this->content, $asset, $this->user(), $rightsStatus);
@@ -153,13 +142,15 @@ class SpaceContentShow extends Component
         session()->flash('status', __('media.rights_updated'));
     }
 
+    public function retryAssetProcessing(int $assetId, RetryAssetMediaProcessing $retry): void
+    {
+        $retry->execute($this->content, $this->asset($assetId), $this->user());
+        session()->flash('status', __('studio.media_retry_queued'));
+    }
+
     public function removeAsset(int $assetId, RemoveAssetFromSpaceContent $removeAsset): void
     {
-        $asset = Asset::query()
-            ->where('group_space_id', $this->space->id)
-            ->findOrFail($assetId);
-
-        $this->content = $removeAsset->execute($this->content, $asset, $this->user());
+        $this->content = $removeAsset->execute($this->content, $this->asset($assetId), $this->user());
         $this->fillFromEditableRevision();
         $this->resetErrorBag('publish');
         session()->flash('status', __('media.removed'));
@@ -191,38 +182,63 @@ class SpaceContentShow extends Component
         session()->flash('status', __('ui.content.published'));
     }
 
+    public function beginArchive(): void
+    {
+        Gate::forUser($this->user())->authorize('archive', $this->content);
+        $this->showArchiveConfirmation = true;
+    }
+
+    public function cancelArchive(): void
+    {
+        $this->showArchiveConfirmation = false;
+        $this->reset('archiveReason');
+        $this->resetErrorBag('archiveReason');
+    }
+
     public function archive(ArchiveSpaceContent $archiveContent): void
     {
-        $this->content = $archiveContent->execute($this->content, $this->user());
-        session()->flash('status', __('ui.content.archived'));
+        $this->validate(['archiveReason' => ['required', 'string', 'max:1000']]);
+        $this->content = $archiveContent->execute($this->content, $this->user(), $this->archiveReason);
+        $this->showArchiveConfirmation = false;
+        $this->reset('archiveReason');
+        session()->flash('status', __('studio.archived'));
+    }
+
+    public function restore(RestoreSpaceContent $restoreContent): void
+    {
+        $this->validate(['restoreReason' => ['required', 'string', 'max:1000']]);
+        $this->content = $restoreContent->execute($this->content, $this->user(), $this->restoreReason);
+        $this->reset('restoreReason');
+        $this->fillFromEditableRevision();
+        session()->flash('status', __('studio.restored'));
     }
 
     public function render(): View
     {
         $registry = app(SpaceContentFieldRegistry::class);
         $user = $this->user();
-        $current = $this->content->fresh();
-        abort_unless($current instanceof SpaceContent, 404);
+        $current = SpaceContent::query()->with(['definition', 'author.user'])->findOrFail($this->content->id);
+        abort_unless((int) $current->group_space_id === (int) $this->space->id, 404);
+        Gate::forUser($user)->authorize('view', $current);
         $this->content = $current;
 
-        Gate::forUser($user)->authorize('view', $this->content);
-        abort_unless((int) $this->content->group_space_id === (int) $this->space->id, 404);
-
-        $canUpdate = Gate::forUser($user)->allows('update', $this->content);
-        $canPublish = Gate::forUser($user)->allows('publish', $this->content);
-        $canArchive = Gate::forUser($user)->allows('archive', $this->content);
-        $canViewRevisions = Gate::forUser($user)->allows('revisions', $this->content);
+        $canUpdate = Gate::forUser($user)->allows('update', $current);
+        $canPublish = Gate::forUser($user)->allows('publish', $current);
+        $canArchive = Gate::forUser($user)->allows('archive', $current);
+        $canRestore = Gate::forUser($user)->allows('restore', $current);
+        $canViewRevisions = Gate::forUser($user)->allows('revisions', $current);
 
         $currentRevision = $this->visibleRevision($canUpdate || $canViewRevisions);
         $currentRevision->loadMissing(['assets.uploader.user']);
-        /** @var SpaceContentDefinitionVersion $definitionVersion */
         $definitionVersion = $currentRevision->definitionVersion()->firstOrFail();
+        abort_unless($definitionVersion instanceof SpaceContentDefinitionVersion, 404);
 
         $revisions = $canViewRevisions
-            ? $this->content->revisions()
-                ->with(['createdBy.user', 'definitionVersion'])
-                ->orderByDesc('revision')
-                ->get()
+            ? $current->revisions()->with(['createdBy.user', 'definitionVersion'])->orderByDesc('revision')->get()
+            : new Collection;
+
+        $lifecycleEvents = $canViewRevisions
+            ? $current->lifecycleEvents()->with('actor.user')->get()
             : new Collection;
 
         $fieldComponents = [];
@@ -237,25 +253,27 @@ class SpaceContentShow extends Component
         $publicationIssues = $canPublish
             ? app(SpaceContentPublicationEvidence::class)->issues($currentRevision)
             : new Collection;
-        $blockingAssetIds = $publicationIssues->pluck('asset_id')->unique()->all();
-        $blockingMediaAssets = $mediaAssets
-            ->filter(fn (Asset $asset): bool => in_array($asset->id, $blockingAssetIds, true))
-            ->values();
         $publishBlocked = $canPublish && $publicationIssues->isNotEmpty();
+        $activeRevision = $current->activeRevisionRecord();
+        $legacyEvidence = $activeRevision instanceof SpaceContentRevision && ! $activeRevision->hasVerifiableManifest();
+        $canOpenReader = $current->status === 'published' && $activeRevision instanceof SpaceContentRevision;
 
         return view('livewire.groups.space-content-show', compact(
             'currentRevision',
             'definitionVersion',
             'revisions',
+            'lifecycleEvents',
             'fieldComponents',
             'canUpdate',
             'canPublish',
             'canArchive',
+            'canRestore',
             'canViewRevisions',
+            'canOpenReader',
+            'legacyEvidence',
             'mediaAssets',
             'rightsStatuses',
             'publicationIssues',
-            'blockingMediaAssets',
             'publishBlocked',
         ));
     }
@@ -279,13 +297,11 @@ class SpaceContentShow extends Component
     private function fillFromEditableRevision(): void
     {
         $user = $this->user();
-
         if (! Gate::forUser($user)->allows('update', $this->content)) {
             return;
         }
 
         $revision = $this->content->draftRevisionRecord() ?? $this->content->activeRevisionRecord();
-
         if (! $revision instanceof SpaceContentRevision) {
             return;
         }
@@ -307,6 +323,11 @@ class SpaceContentShow extends Component
         abort_unless($revision instanceof SpaceContentRevision, 404);
 
         return $revision;
+    }
+
+    private function asset(int $assetId): Asset
+    {
+        return Asset::query()->where('group_space_id', $this->space->id)->findOrFail($assetId);
     }
 
     private function user(): User
