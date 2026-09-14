@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use LogicException;
 
 #[Fillable([
+    'uuid',
     'space_content_id',
     'definition_version_id',
     'revision',
@@ -19,7 +21,12 @@ use LogicException;
     'payload',
     'created_by_actor_id',
     'content_hash',
+    'evidence_status',
     'manifest_hash',
+    'manifest_version',
+    'canonicalization_version',
+    'manifest_algorithm',
+    'canonical_manifest',
     'manifest_sealed_at',
 ])]
 class SpaceContentRevision extends Model
@@ -28,12 +35,19 @@ class SpaceContentRevision extends Model
 
     public const UPDATED_AT = null;
 
+    public const EVIDENCE_UNSEALED = 'unsealed';
+    public const EVIDENCE_SEALED = 'sealed';
+    public const EVIDENCE_LEGACY_UNSEALED = 'legacy_unsealed';
+    public const EVIDENCE_LEGACY_SEALED_V0 = 'legacy_sealed_v0';
+
     private bool $sealingManifest = false;
 
     protected function casts(): array
     {
         return [
             'payload' => 'array',
+            'manifest_version' => 'integer',
+            'canonicalization_version' => 'integer',
             'manifest_sealed_at' => 'datetime',
         ];
     }
@@ -41,6 +55,7 @@ class SpaceContentRevision extends Model
     protected static function booted(): void
     {
         static::creating(function (self $revision): void {
+            $revision->uuid ??= (string) Str::uuid();
             $content = SpaceContent::query()->findOrFail($revision->space_content_id);
             $version = SpaceContentDefinitionVersion::query()->findOrFail($revision->definition_version_id);
             if ((int) $version->space_content_definition_id !== (int) $content->space_content_definition_id) {
@@ -52,13 +67,19 @@ class SpaceContentRevision extends Model
 
             $revision->payload = SpaceContentSchema::normalizePayload($version->schema, $revision->payload ?? []);
             $revision->content_hash = SpaceContentSchema::hashRevision($revision->title, $revision->payload);
+            $revision->evidence_status = self::EVIDENCE_UNSEALED;
             $revision->manifest_hash = null;
+            $revision->manifest_version = null;
+            $revision->canonicalization_version = null;
+            $revision->manifest_algorithm = null;
+            $revision->canonical_manifest = null;
             $revision->manifest_sealed_at = null;
         });
 
         static::updating(function (self $revision): void {
             if (! $revision->sealingManifest
                 || $revision->isDirty([
+                    'uuid',
                     'space_content_id',
                     'definition_version_id',
                     'revision',
@@ -75,7 +96,15 @@ class SpaceContentRevision extends Model
                 throw new LogicException('Published Content manifests are immutable.');
             }
 
-            if (! $revision->isDirty(['manifest_hash', 'manifest_sealed_at'])) {
+            if (! $revision->isDirty([
+                'evidence_status',
+                'manifest_hash',
+                'manifest_version',
+                'canonicalization_version',
+                'manifest_algorithm',
+                'canonical_manifest',
+                'manifest_sealed_at',
+            ])) {
                 throw new LogicException('Content revisions are immutable.');
             }
         });
@@ -85,11 +114,22 @@ class SpaceContentRevision extends Model
         });
     }
 
-    public function sealManifest(string $hash): void
-    {
+    public function sealManifest(
+        string $hash,
+        string $canonicalManifest,
+        int $manifestVersion,
+        int $canonicalizationVersion,
+        string $algorithm = 'sha256',
+    ): void {
         $hash = strtolower(trim($hash));
+        $algorithm = strtolower(trim($algorithm));
+
         if (! preg_match('/^[a-f0-9]{64}$/', $hash)) {
             throw new LogicException('Content manifest hash must be a SHA-256 value.');
+        }
+
+        if ($manifestVersion < 1 || $canonicalizationVersion < 1 || $algorithm !== 'sha256') {
+            throw new LogicException('Unsupported Content manifest contract.');
         }
 
         if ($this->manifest_hash !== null) {
@@ -104,12 +144,29 @@ class SpaceContentRevision extends Model
 
         try {
             $this->update([
+                'evidence_status' => self::EVIDENCE_SEALED,
                 'manifest_hash' => $hash,
+                'manifest_version' => $manifestVersion,
+                'canonicalization_version' => $canonicalizationVersion,
+                'manifest_algorithm' => $algorithm,
+                'canonical_manifest' => $canonicalManifest,
                 'manifest_sealed_at' => now(),
             ]);
         } finally {
             $this->sealingManifest = false;
         }
+    }
+
+    public function hasVerifiableManifest(): bool
+    {
+        return $this->evidence_status === self::EVIDENCE_SEALED
+            && is_string($this->manifest_hash)
+            && $this->manifest_hash !== ''
+            && $this->manifest_version !== null
+            && $this->canonicalization_version !== null
+            && $this->manifest_algorithm === 'sha256'
+            && is_string($this->canonical_manifest)
+            && $this->canonical_manifest !== '';
     }
 
     /** @return BelongsTo<SpaceContent, $this> */
@@ -140,6 +197,7 @@ class SpaceContentRevision extends Model
             'asset_id',
         )
             ->withPivot([
+                'uuid',
                 'role',
                 'position',
                 'caption',
