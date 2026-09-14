@@ -40,6 +40,9 @@ class RemoveAssetFromSpaceContent
                 'revision' => $nextRevision,
                 'title' => $source->title,
                 'payload' => $source->payload,
+                'render_template_key' => $source->render_template_key,
+                'render_template_uuid' => $source->render_template_uuid,
+                'presentation' => $source->presentation,
                 'created_by_actor_id' => $actor->id,
             ]);
 
