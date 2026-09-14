@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Actor;
 use App\Models\Asset;
 use App\Models\Group;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
+use App\Models\SpaceContentAnnotation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -75,11 +77,33 @@ class SpaceContentAssetController extends Controller
             ? $content->revisions()->pluck('id')
             : collect([$content->active_revision_id])->filter();
 
-        $linked = DB::table('space_content_revision_assets')
+        $linkedToRevision = DB::table('space_content_revision_assets')
             ->where('asset_id', $asset->id)
             ->whereIn('space_content_revision_id', $revisionIds)
             ->exists();
-        abort_unless($linked, 404);
+
+        $linkedToVisibleAnnotation = false;
+        if (! $linkedToRevision) {
+            $currentUser = User::query()->with('actor')->find($user->id);
+            abort_unless($currentUser instanceof User && $currentUser->actor instanceof Actor, 403);
+
+            $linkedToVisibleAnnotation = DB::table('space_content_annotation_assets as placement')
+                ->join('space_content_annotations as annotation', 'annotation.id', '=', 'placement.annotation_id')
+                ->where('placement.asset_id', $asset->id)
+                ->where('annotation.space_content_id', $content->id)
+                ->whereIn('annotation.space_content_revision_id', $revisionIds)
+                ->where('annotation.status', SpaceContentAnnotation::STATUS_ACTIVE)
+                ->where(function ($query) use ($currentUser): void {
+                    $query->where('annotation.visibility', SpaceContentAnnotation::VISIBILITY_SPACE)
+                        ->orWhere(function ($query) use ($currentUser): void {
+                            $query->where('annotation.visibility', SpaceContentAnnotation::VISIBILITY_PRIVATE)
+                                ->where('annotation.author_actor_id', $currentUser->actor->id);
+                        });
+                })
+                ->exists();
+        }
+
+        abort_unless($linkedToRevision || $linkedToVisibleAnnotation, 404);
         abort_unless(Storage::disk($asset->disk)->exists($asset->storage_key), 404);
     }
 }
