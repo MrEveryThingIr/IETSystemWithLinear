@@ -71,10 +71,12 @@ class UpdateSpaceContentStructure
                 'render_template_key' => $source->render_template_key,
                 'render_template_uuid' => $source->render_template_uuid,
                 'presentation' => $source->presentation,
+                'composition_mode' => $source->composition_mode,
                 'created_by_actor_id' => $actor->id,
             ]);
 
-            $this->composition->copyAssets($source, $revision);
+            $placementMap = $this->composition->copyAssets($source, $revision);
+            $this->composition->copyBlocks($source, $revision, $placementMap);
             $this->composition->copyRelationships(
                 $source,
                 $revision,
@@ -185,9 +187,17 @@ class UpdateSpaceContentStructure
 
     private function actor(User $user): Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = User::query()->with('actor')->find($this->user()->id);
         abort_unless($current instanceof User && $current->actor instanceof Actor, 403);
 
         return $current->actor;
+    }
+
+    private function user(): User
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+
+        return $user;
     }
 }
