@@ -39,15 +39,11 @@ class SpaceContentPolicy
 
     public function interact(User $user, SpaceContent $content): bool
     {
-        $content->loadMissing('space');
-
-        if ($content->status !== 'published' || ! $this->spaces->post($user, $content->space)) {
+        if ($content->status !== 'published' || ! $this->view($user, $content)) {
             return false;
         }
 
-        $revision = $content->activeRevisionRecord();
-
-        return $revision instanceof SpaceContentRevision && $revision->hasVerifiableManifest();
+        return $content->activeRevisionRecord() instanceof SpaceContentRevision;
     }
 
     public function update(User $user, SpaceContent $content): bool
