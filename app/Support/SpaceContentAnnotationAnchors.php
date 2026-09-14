@@ -61,12 +61,7 @@ class SpaceContentAnnotationAnchors
                     abort_unless($exact !== '' && mb_strlen($exact) <= 2000, 422, 'Select a specific piece of text up to 2000 characters.');
                     $value = $revision->payload[$fieldKey] ?? null;
                     abort_unless(is_string($value) && str_contains($value, $exact), 422, 'The selected text no longer matches this edition.');
-                    $selector = [
-                        'label' => $label,
-                        'exact' => $exact,
-                        'prefix' => mb_substr((string) ($selector['prefix'] ?? ''), -120),
-                        'suffix' => mb_substr((string) ($selector['suffix'] ?? ''), 0, 120),
-                    ];
+                    $selector = $this->quoteSelector($label, $exact, $selector);
                 }
             } elseif ($type === SpaceContentAnnotationAnchor::TARGET_ASSET) {
                 abort_unless(is_string($targetUuid), 422, 'Choose a media placement to annotate.');
@@ -95,10 +90,20 @@ class SpaceContentAnnotationAnchors
                 $block = DB::table('space_content_blocks')
                     ->where('space_content_revision_id', $revision->id)
                     ->where('uuid', $targetUuid)
-                    ->first(['uuid', 'type']);
+                    ->first(['uuid', 'type', 'data']);
                 abort_unless(is_object($block), 422, 'The selected block is not part of this edition.');
                 $fieldKey = null;
-                $selector = ['label' => (string) ($selector['label'] ?? $block->type)];
+                $label = (string) ($selector['label'] ?? $block->type);
+                $exact = trim((string) ($selector['exact'] ?? ''));
+                if ($exact !== '') {
+                    abort_unless(mb_strlen($exact) <= 2000, 422, 'Select a specific piece of text up to 2000 characters.');
+                    $data = json_decode((string) $block->data, true);
+                    $searchable = $this->blockText(is_array($data) ? $data : []);
+                    abort_unless($searchable !== '' && str_contains($searchable, $exact), 422, 'The selected block text no longer matches this edition.');
+                    $selector = $this->quoteSelector($label, $exact, $selector);
+                } else {
+                    $selector = ['label' => $label];
+                }
             }
 
             $normalized[] = [
@@ -118,5 +123,36 @@ class SpaceContentAnnotationAnchors
             ]))
             ->values()
             ->all();
+    }
+
+    /** @param array<string, mixed> $selector @return array<string, string> */
+    private function quoteSelector(string $label, string $exact, array $selector): array
+    {
+        return [
+            'label' => $label,
+            'exact' => $exact,
+            'prefix' => mb_substr((string) ($selector['prefix'] ?? ''), -120),
+            'suffix' => mb_substr((string) ($selector['suffix'] ?? ''), 0, 120),
+        ];
+    }
+
+    /** @param array<string, mixed> $data */
+    private function blockText(array $data): string
+    {
+        $parts = [];
+        foreach (['text', 'attribution', 'caption', 'label'] as $key) {
+            if (is_string($data[$key] ?? null)) {
+                $parts[] = $data[$key];
+            }
+        }
+        if (is_array($data['items'] ?? null)) {
+            foreach ($data['items'] as $item) {
+                if (is_string($item)) {
+                    $parts[] = $item;
+                }
+            }
+        }
+
+        return implode("\n", $parts);
     }
 }
