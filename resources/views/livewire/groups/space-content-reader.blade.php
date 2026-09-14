@@ -87,9 +87,7 @@
                     <flux:badge size="sm">{{ __('presentation.preset.'.$revision->render_template_key) }}</flux:badge>
                 </div>
 
-                <h1 class="text-3xl sm:text-4xl {{ $headingClass }}" dir="auto">
-                    {{ $revision->title }}
-                </h1>
+                <h1 class="text-3xl sm:text-4xl {{ $headingClass }}" dir="auto">{{ $revision->title }}</h1>
                 <div class="mt-3 text-sm" style="color: var(--content-muted)" dir="auto">{{ $content->definition->name }}</div>
             </header>
 
@@ -133,7 +131,9 @@
                                     <div class="whitespace-pre-wrap break-words {{ $fontClass }}" dir="auto">{{ $blockData['text'] ?? '' }}</div>
                                     @break
                                 @case('heading')
-                                    @php $level = (int) ($blockData['level'] ?? 2); @endphp
+                                    @php
+                                        $level = (int) ($blockData['level'] ?? 2);
+                                    @endphp
                                     @if ($level === 4)
                                         <h4 class="text-lg {{ $headingClass }}" dir="auto">{{ $blockData['text'] ?? '' }}</h4>
                                     @elseif ($level === 3)
@@ -153,11 +153,15 @@
                                 @case('list')
                                     @if ($blockData['ordered'] ?? false)
                                         <ol class="list-decimal space-y-2 ps-6 {{ $fontClass }}" dir="auto">
-                                            @foreach (($blockData['items'] ?? []) as $item)<li>{{ $item }}</li>@endforeach
+                                            @foreach (($blockData['items'] ?? []) as $item)
+                                                <li>{{ $item }}</li>
+                                            @endforeach
                                         </ol>
                                     @else
                                         <ul class="list-disc space-y-2 ps-6 {{ $fontClass }}" dir="auto">
-                                            @foreach (($blockData['items'] ?? []) as $item)<li>{{ $item }}</li>@endforeach
+                                            @foreach (($blockData['items'] ?? []) as $item)
+                                                <li>{{ $item }}</li>
+                                            @endforeach
                                         </ul>
                                     @endif
                                     @break
@@ -198,13 +202,16 @@
                                 @case('audio')
                                 @case('video')
                                 @case('file')
-                                    @php $asset = $mediaByPlacement->get((string) ($blockData['asset_placement_uuid'] ?? '')); @endphp
+                                    @php
+                                        $placementUuid = (string) ($blockData['asset_placement_uuid'] ?? '');
+                                        $asset = $mediaByPlacement->get($placementUuid);
+                                    @endphp
                                     @if ($asset)
                                         @php
                                             $assetUrl = route('groups.spaces.contents.assets.show', [$group, $space, $content, $asset]);
                                             $downloadUrl = route('groups.spaces.contents.assets.download', [$group, $space, $content, $asset]);
                                         @endphp
-                                        <figure class="space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 '.$radiusClass : '' }}" style="border-color: var(--content-border)">
+                                        <figure class="space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-placement-uuid="{{ $placementUuid }}">
                                             @if ($block->type === 'image')
                                                 <img src="{{ $assetUrl }}" alt="{{ $asset->alt_text ?: ($blockData['caption'] ?? $asset->original_filename) }}" class="mx-auto max-h-[42rem] w-auto {{ $radiusClass }} object-contain" loading="lazy" />
                                             @elseif ($block->type === 'audio')
@@ -214,21 +221,27 @@
                                             @else
                                                 <a href="{{ $downloadUrl }}" class="block p-4 font-medium" dir="auto">{{ __('reader.download') }} · {{ $asset->original_filename }}</a>
                                             @endif
-                                            @if (! empty($blockData['caption']))<figcaption class="text-sm" style="color: var(--content-muted)" dir="auto">{{ $blockData['caption'] }}</figcaption>@endif
+                                            @if (! empty($blockData['caption']))
+                                                <figcaption class="text-sm" style="color: var(--content-muted)" dir="auto">{{ $blockData['caption'] }}</figcaption>
+                                            @endif
+                                            @if ($canInteract)
+                                                <button type="button" wire:click="addAssetAnchor('{{ $placementUuid }}')" class="text-xs font-medium underline underline-offset-4" style="color: var(--content-accent)">
+                                                    + {{ __('interactions.add_note_here') }}
+                                                </button>
+                                            @endif
                                         </figure>
                                     @endif
                                     @break
                             @endswitch
 
                             @if ($canInteract && $block->type !== 'divider')
-                                <div class="mt-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                                    <button
-                                        type="button"
-                                        class="text-xs font-medium underline underline-offset-4"
-                                        style="color: var(--content-accent)"
-                                        x-data
-                                        x-on:click="$wire.annotationComposerOpen = true; $wire.annotationAnchors = [...($wire.annotationAnchors || []), {target_type:'block', target_uuid:'{{ $block->uuid }}', field_key:null, selector:{label:@js(__('blocks.type.'.$block->type))}}]"
-                                    >+ {{ __('interactions.add_note_here') }}</button>
+                                <div class="mt-2 flex items-center gap-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                    <button type="button" wire:click="addBlockAnchor('{{ $block->uuid }}')" class="text-xs font-medium underline underline-offset-4" style="color: var(--content-accent)">
+                                        + {{ __('interactions.add_note_here') }}
+                                    </button>
+                                    @if (($blockAnnotationCounts[$block->uuid] ?? 0) > 0)
+                                        <span class="text-xs" style="color: var(--content-muted)">{{ trans_choice('interactions.annotation_count', $blockAnnotationCounts[$block->uuid], ['count' => $blockAnnotationCounts[$block->uuid]]) }}</span>
+                                    @endif
                                 </div>
                             @endif
                         </section>
@@ -279,7 +292,6 @@
                 @if ($revision->assets->isNotEmpty() && $revision->composition_mode !== \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS)
                     <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)">
                         <h2 class="text-xl {{ $headingClass }}">{{ __('reader.media') }}</h2>
-
                         @foreach ($revision->assets as $asset)
                             @php
                                 $assetUrl = route('groups.spaces.contents.assets.show', [$group, $space, $content, $asset]);
@@ -287,7 +299,6 @@
                                 $caption = $asset->pivot->caption;
                                 $placementUuid = (string) $asset->pivot->uuid;
                             @endphp
-
                             <figure class="group space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 sm:p-4 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-placement-uuid="{{ $placementUuid }}">
                                 @switch($asset->mediaKind())
                                     @case('image')
@@ -305,8 +316,9 @@
                                     @default
                                         <a href="{{ $downloadUrl }}" class="block p-5 font-medium" dir="auto">{{ __('reader.download') }} · {{ $asset->original_filename }}</a>
                                 @endswitch
-
-                                @if ($caption)<figcaption class="text-sm leading-6" style="color: var(--content-muted)" dir="auto">{{ $caption }}</figcaption>@endif
+                                @if ($caption)
+                                    <figcaption class="text-sm leading-6" style="color: var(--content-muted)" dir="auto">{{ $caption }}</figcaption>
+                                @endif
                                 @if ($canInteract)
                                     <div class="flex items-center gap-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
                                         <button type="button" wire:click="addAssetAnchor('{{ $placementUuid }}')" class="text-xs font-medium underline underline-offset-4" style="color: var(--content-accent)">+ {{ __('interactions.add_note_here') }}</button>
@@ -320,12 +332,12 @@
                     </section>
                 @endif
 
-                @if ($canInteract && $annotationComposerOpen)
-                    <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)" id="annotation-composer">
+                @if ($canInteract)
+                    <section id="annotation-composer" class="space-y-5 border-t pt-7 {{ $annotationComposerOpen ? '' : 'hidden' }}" style="border-color: var(--content-border)">
                         <div class="{{ $radiusClass }} border p-4 sm:p-5" style="border-color: var(--content-border); background: var(--content-surface)">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <h2 class="text-lg font-semibold">{{ __('interactions.composer_title') }}</h2>
+                                    <h2 class="text-lg font-semibold">{{ $annotationParentUuid ? __('interactions.kind.'.$annotationKind) : __('interactions.composer_title') }}</h2>
                                     <p class="mt-1 text-sm" style="color: var(--content-muted)">{{ __('interactions.composer_help') }}</p>
                                 </div>
                                 <flux:button wire:click="clearAnnotationComposer" size="sm" variant="ghost">{{ __('interactions.cancel') }}</flux:button>
@@ -333,21 +345,27 @@
 
                             <div class="mt-4 flex flex-wrap gap-2">
                                 @forelse ($annotationAnchors as $index => $anchor)
-                                    <button type="button" wire:click="removeAnnotationAnchor({{ $index }})" class="rounded-full border px-3 py-1 text-xs" style="border-color: var(--content-border)">
-                                        {{ $anchor['selector']['label'] ?? __('interactions.anchor.'.$anchor['target_type']) }} ×
-                                    </button>
+                                    @if ($annotationParentUuid)
+                                        <span class="rounded-full border px-3 py-1 text-xs" style="border-color: var(--content-border)">
+                                            {{ $anchor['selector']['label'] ?? __('interactions.anchor.'.$anchor['target_type']) }}
+                                        </span>
+                                    @else
+                                        <button type="button" wire:click="removeAnnotationAnchor({{ $index }})" class="rounded-full border px-3 py-1 text-xs" style="border-color: var(--content-border)">
+                                            {{ $anchor['selector']['label'] ?? __('interactions.anchor.'.$anchor['target_type']) }} ×
+                                        </button>
+                                    @endif
                                 @empty
                                     <span class="text-sm" style="color: var(--content-muted)">{{ __('interactions.anchor.entire_edition') }}</span>
                                 @endforelse
                             </div>
 
                             <div class="mt-5 grid gap-4 md:grid-cols-2">
-                                <flux:select wire:model="annotationKind" :label="__('interactions.role')">
+                                <flux:select wire:model="annotationKind" :label="__('interactions.role')" :disabled="$annotationParentUuid !== null">
                                     @foreach ($annotationKinds as $kind)
                                         <option value="{{ $kind }}">{{ __('interactions.kind.'.$kind) }}</option>
                                     @endforeach
                                 </flux:select>
-                                <flux:select wire:model="annotationVisibility" :label="__('interactions.visibility')">
+                                <flux:select wire:model="annotationVisibility" :label="__('interactions.visibility')" :disabled="$annotationParentUuid !== null">
                                     @foreach ($annotationVisibilities as $visibility)
                                         <option value="{{ $visibility }}">{{ __('interactions.visibility_value.'.$visibility) }}</option>
                                     @endforeach
@@ -356,17 +374,23 @@
 
                             <div class="mt-4">
                                 <flux:textarea wire:model="annotationBody" :label="__('interactions.note_body')" :placeholder="__('interactions.note_placeholder')" rows="4" maxlength="5000" />
-                                @error('annotationBody')<div class="mt-1 text-sm text-red-600">{{ $message }}</div>@enderror
+                                @error('annotationBody')
+                                    <div class="mt-1 text-sm text-red-600">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="mt-5 grid gap-4 lg:grid-cols-2">
                                 <div class="space-y-3 rounded-xl border p-4" style="border-color: var(--content-border)">
                                     <div class="font-medium">{{ __('interactions.attach_file') }}</div>
                                     <input type="file" wire:model="annotationUpload" class="block w-full text-sm" />
-                                    @error('annotationUpload')<div class="text-sm text-red-600">{{ $message }}</div>@enderror
+                                    @error('annotationUpload')
+                                        <div class="text-sm text-red-600">{{ $message }}</div>
+                                    @enderror
                                     @if ($annotationUpload)
                                         <flux:select wire:model="annotationRightsStatus" :label="__('media.rights_status')">
-                                            @foreach ($rightsStatuses as $status)<option value="{{ $status }}">{{ __('media.rights.'.$status) }}</option>@endforeach
+                                            @foreach ($rightsStatuses as $status)
+                                                <option value="{{ $status }}">{{ __('media.rights.'.$status) }}</option>
+                                            @endforeach
                                         </flux:select>
                                         <flux:input wire:model="annotationCaption" :label="__('media.caption')" maxlength="1000" />
                                         <flux:button wire:click="clearAnnotationUpload" size="sm" variant="ghost">{{ __('interactions.remove_attachment') }}</flux:button>
@@ -387,7 +411,9 @@
                             </div>
 
                             <div class="mt-5 flex justify-end">
-                                <flux:button wire:click="postAnnotation" wire:loading.attr="disabled" wire:target="postAnnotation,annotationUpload" variant="primary">{{ __('interactions.post_annotation') }}</flux:button>
+                                <flux:button wire:click="postAnnotation" wire:loading.attr="disabled" wire:target="postAnnotation,annotationUpload" variant="primary">
+                                    {{ $annotationParentUuid && $annotationKind === 'answer' ? __('interactions.post_answer') : ($annotationParentUuid ? __('interactions.post_reply') : __('interactions.post_annotation')) }}
+                                </flux:button>
                             </div>
                         </div>
                     </section>
@@ -399,8 +425,12 @@
                         <p class="text-sm" style="color: var(--content-muted)">{{ __('interactions.edition_help') }}</p>
                     </div>
 
-                    @error('interaction')<flux:callout variant="warning">{{ $message }}</flux:callout>@enderror
-                    @if (! $canInteract)<flux:callout>{{ __('interactions.verified_only') }}</flux:callout>@endif
+                    @error('interaction')
+                        <flux:callout variant="warning">{{ $message }}</flux:callout>
+                    @enderror
+                    @if (! $canInteract)
+                        <flux:callout>{{ __('interactions.verified_only') }}</flux:callout>
+                    @endif
 
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="me-1 text-sm font-medium">{{ __('interactions.reactions') }}</span>
@@ -416,9 +446,7 @@
                     </div>
 
                     @if ($canInteract && ! $annotationComposerOpen)
-                        <div class="flex flex-wrap gap-2">
-                            <flux:button wire:click="openRevisionAnnotation" variant="primary">+ {{ __('interactions.add_annotation') }}</flux:button>
-                        </div>
+                        <flux:button wire:click="openRevisionAnnotation" variant="primary">+ {{ __('interactions.add_annotation') }}</flux:button>
                     @endif
 
                     <div class="space-y-5">
@@ -428,7 +456,9 @@
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span class="font-medium" dir="auto">{{ $annotation->author->user?->username ?? __('ui.common.unknown_account') }}</span>
                                         <flux:badge size="sm">{{ __('interactions.kind.'.$annotation->kind) }}</flux:badge>
-                                        @if ($annotation->visibility === 'private')<flux:badge size="sm">{{ __('interactions.visibility_value.private') }}</flux:badge>@endif
+                                        @if ($annotation->visibility === 'private')
+                                            <flux:badge size="sm">{{ __('interactions.visibility_value.private') }}</flux:badge>
+                                        @endif
                                     </div>
                                     <div class="text-xs" style="color: var(--content-muted)">{{ $annotation->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</div>
                                 </div>
@@ -437,12 +467,16 @@
                                     @foreach ($annotation->anchors as $anchor)
                                         <span class="rounded-full border px-2 py-1 text-xs" style="border-color: var(--content-border)">
                                             {{ $anchor->selector['label'] ?? __('interactions.anchor.'.$anchor->target_type) }}
-                                            @if (! empty($anchor->selector['exact'])) · “{{ \Illuminate\Support\Str::limit($anchor->selector['exact'], 80) }}” @endif
+                                            @if (! empty($anchor->selector['exact']))
+                                                · “{{ \Illuminate\Support\Str::limit($anchor->selector['exact'], 80) }}”
+                                            @endif
                                         </span>
                                     @endforeach
                                 </div>
 
-                                @if ($annotation->body)<div class="whitespace-pre-wrap break-words text-sm leading-7" dir="auto">{{ $annotation->body }}</div>@endif
+                                @if ($annotation->body)
+                                    <div class="whitespace-pre-wrap break-words text-sm leading-7" dir="auto">{{ $annotation->body }}</div>
+                                @endif
 
                                 @foreach ($annotation->assets as $attachment)
                                     @php
@@ -461,12 +495,14 @@
                                         @else
                                             <a href="{{ $attachmentDownload }}" class="font-medium" dir="auto">{{ $attachment->original_filename }}</a>
                                         @endif
-                                        @if ($attachment->pivot->caption)<div class="mt-2 text-sm" style="color: var(--content-muted)" dir="auto">{{ $attachment->pivot->caption }}</div>@endif
+                                        @if ($attachment->pivot->caption)
+                                            <div class="mt-2 text-sm" style="color: var(--content-muted)" dir="auto">{{ $attachment->pivot->caption }}</div>
+                                        @endif
                                     </div>
                                 @endforeach
 
                                 @if ($canInteract)
-                                    <flux:button wire:click="startReply('{{ $annotation->uuid }}')" size="sm" variant="ghost">
+                                    <flux:button wire:click="openReplyComposer('{{ $annotation->uuid }}')" size="sm" variant="ghost">
                                         {{ $annotation->kind === 'question' ? __('interactions.answer') : __('interactions.reply') }}
                                     </flux:button>
                                 @endif
@@ -474,26 +510,39 @@
                                 @if ($annotation->replies->isNotEmpty())
                                     <div class="space-y-3 border-s-2 ps-4" style="border-color: var(--content-border)">
                                         @foreach ($annotation->replies as $reply)
-                                            <div wire:key="reply-{{ $reply->uuid }}" class="space-y-2 rounded-lg p-3" style="background: var(--content-bg)">
+                                            <div wire:key="reply-{{ $reply->uuid }}" class="space-y-3 rounded-lg p-3" style="background: var(--content-bg)">
                                                 <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-                                                    <div class="flex items-center gap-2"><span class="font-medium" dir="auto">{{ $reply->author->user?->username ?? __('ui.common.unknown_account') }}</span><flux:badge size="sm">{{ __('interactions.kind.'.$reply->kind) }}</flux:badge></div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-medium" dir="auto">{{ $reply->author->user?->username ?? __('ui.common.unknown_account') }}</span>
+                                                        <flux:badge size="sm">{{ __('interactions.kind.'.$reply->kind) }}</flux:badge>
+                                                    </div>
                                                     <div class="text-xs" style="color: var(--content-muted)">{{ $reply->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</div>
                                                 </div>
-                                                @if ($reply->body)<div class="whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $reply->body }}</div>@endif
+                                                @if ($reply->body)
+                                                    <div class="whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $reply->body }}</div>
+                                                @endif
+                                                @foreach ($reply->assets as $attachment)
+                                                    @php
+                                                        $replyAssetUrl = route('groups.spaces.contents.assets.show', [$group, $space, $content, $attachment]);
+                                                        $replyDownloadUrl = route('groups.spaces.contents.assets.download', [$group, $space, $content, $attachment]);
+                                                    @endphp
+                                                    <div class="rounded-lg border p-2" style="border-color: var(--content-border)">
+                                                        @if ($attachment->processing_status !== 'ready')
+                                                            <div class="text-sm">{{ __('interactions.attachment_processing') }}</div>
+                                                        @elseif ($attachment->mediaKind() === 'image')
+                                                            <img src="{{ $replyAssetUrl }}" alt="{{ $attachment->pivot->caption ?: $attachment->original_filename }}" class="max-h-60 rounded object-contain" />
+                                                        @elseif ($attachment->mediaKind() === 'audio')
+                                                            <audio controls preload="metadata" class="w-full" src="{{ $replyAssetUrl }}"></audio>
+                                                        @elseif ($attachment->mediaKind() === 'video')
+                                                            <video controls preload="metadata" class="max-h-72 w-full rounded bg-black" src="{{ $replyAssetUrl }}"></video>
+                                                        @else
+                                                            <a href="{{ $replyDownloadUrl }}" class="font-medium" dir="auto">{{ $attachment->original_filename }}</a>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
                                             </div>
                                         @endforeach
                                     </div>
-                                @endif
-
-                                @if ($canInteract && $replyingTo === $annotation->uuid)
-                                    <form wire:submit="addReply" class="space-y-3 border-t pt-4" style="border-color: var(--content-border)">
-                                        <textarea wire:model="replyBody" rows="3" maxlength="5000" placeholder="{{ $annotation->kind === 'question' ? __('interactions.answer_placeholder') : __('interactions.reply_placeholder') }}" class="w-full rounded-lg border bg-transparent px-3 py-2 text-sm" style="border-color: var(--content-border)" dir="auto"></textarea>
-                                        @error('replyBody')<div class="text-sm text-red-600">{{ $message }}</div>@enderror
-                                        <div class="flex justify-end gap-2">
-                                            <flux:button wire:click="cancelReply" type="button" variant="ghost">{{ __('interactions.cancel') }}</flux:button>
-                                            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="addReply">{{ $annotation->kind === 'question' ? __('interactions.post_answer') : __('interactions.post_reply') }}</flux:button>
-                                        </div>
-                                    </form>
                                 @endif
                             </article>
                         @empty
@@ -519,7 +568,9 @@
                 <flux:card class="space-y-3">
                     <flux:heading>{{ __('interactions.annotate_outline') }}</flux:heading>
                     @foreach ($relationships as $relationship)
-                        @php $childRevision = $relationship->childContent->activeRevision; @endphp
+                        @php
+                            $childRevision = $relationship->childContent->activeRevision;
+                        @endphp
                         <button type="button" wire:click="addRelationshipAnchor('{{ $relationship->uuid }}', @js($childRevision?->title ?? __('reader.outline')))" class="w-full rounded-lg border border-zinc-200 p-2 text-start text-sm dark:border-zinc-800" dir="auto">
                             + {{ $childRevision?->title ?? __('reader.outline') }}
                         </button>
@@ -538,13 +589,14 @@
     @script
     <script>
         (() => {
-            const suffix = @js((string) $content->uuid)
+            const suffix = @js((string) $content->uuid);
             const selectionButton = document.getElementById(`content-selection-annotator-${suffix}`)
             let pendingAnchor = null
 
             const textContext = (container, exact) => {
                 const full = container.innerText || container.textContent || ''
                 const index = full.indexOf(exact)
+
                 return {
                     prefix: index >= 0 ? full.slice(Math.max(0, index - 120), index) : '',
                     suffix: index >= 0 ? full.slice(index + exact.length, index + exact.length + 120) : '',
@@ -556,61 +608,68 @@
                 pendingAnchor = null
             }
 
-            document.addEventListener('mouseup', event => {
-                if (!selectionButton) return
-                const selection = window.getSelection()
-                const exact = selection?.toString().trim() || ''
-                if (!exact || exact.length > 2000 || !selection?.rangeCount) {
-                    hideSelectionButton()
-                    return
-                }
+            if (selectionButton?.dataset.selectionReady !== '1') {
+                selectionButton.dataset.selectionReady = '1'
 
-                const range = selection.getRangeAt(0)
-                const node = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
-                    ? range.commonAncestorContainer
-                    : range.commonAncestorContainer.parentElement
-                const container = node?.closest?.('[data-annotation-target]')
-                if (!container || !container.contains(range.commonAncestorContainer)) {
-                    hideSelectionButton()
-                    return
-                }
-
-                const context = textContext(container, exact)
-                if (container.dataset.annotationTarget === 'field') {
-                    pendingAnchor = {
-                        target_type: 'text', target_uuid: null, field_key: container.dataset.fieldKey,
-                        selector: { exact, prefix: context.prefix, suffix: context.suffix, label: exact.slice(0, 80) },
+                document.addEventListener('mouseup', event => {
+                    const selection = window.getSelection()
+                    const exact = selection?.toString().trim() || ''
+                    if (!exact || exact.length > 2000 || !selection?.rangeCount) {
+                        hideSelectionButton()
+                        return
                     }
-                } else if (container.dataset.annotationTarget === 'block') {
-                    pendingAnchor = {
-                        target_type: 'block', target_uuid: container.dataset.blockUuid, field_key: null,
-                        selector: { exact, prefix: context.prefix, suffix: context.suffix, label: container.dataset.blockLabel || exact.slice(0, 80) },
+
+                    const range = selection.getRangeAt(0)
+                    const node = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+                        ? range.commonAncestorContainer
+                        : range.commonAncestorContainer.parentElement
+                    const container = node?.closest?.('[data-annotation-target]')
+                    if (!container || !container.contains(range.commonAncestorContainer)) {
+                        hideSelectionButton()
+                        return
                     }
-                } else {
+
+                    const context = textContext(container, exact)
+                    if (container.dataset.annotationTarget === 'field') {
+                        pendingAnchor = {
+                            target_type: 'text',
+                            target_uuid: null,
+                            field_key: container.dataset.fieldKey,
+                            selector: { exact, prefix: context.prefix, suffix: context.suffix, label: exact.slice(0, 80) },
+                        }
+                    } else if (container.dataset.annotationTarget === 'block') {
+                        pendingAnchor = {
+                            target_type: 'block',
+                            target_uuid: container.dataset.blockUuid,
+                            field_key: null,
+                            selector: { exact, prefix: context.prefix, suffix: context.suffix, label: container.dataset.blockLabel || exact.slice(0, 80) },
+                        }
+                    } else {
+                        hideSelectionButton()
+                        return
+                    }
+
+                    selectionButton.style.left = `${Math.min(window.innerWidth - 180, event.clientX + 8)}px`
+                    selectionButton.style.top = `${Math.max(8, event.clientY - 44)}px`
+                    selectionButton.classList.remove('hidden')
+                })
+
+                selectionButton.addEventListener('click', () => {
+                    if (!pendingAnchor) return
+                    const existing = Array.isArray($wire.annotationAnchors) ? $wire.annotationAnchors : []
+                    $wire.set('annotationAnchors', [...existing, pendingAnchor])
+                    $wire.set('annotationParentUuid', null)
+                    $wire.set('annotationComposerOpen', true)
                     hideSelectionButton()
-                    return
-                }
-
-                const x = Math.min(window.innerWidth - 180, event.clientX + 8)
-                const y = Math.max(8, event.clientY - 44)
-                selectionButton.style.left = `${x}px`
-                selectionButton.style.top = `${y}px`
-                selectionButton.classList.remove('hidden')
-            })
-
-            selectionButton?.addEventListener('click', () => {
-                if (!pendingAnchor) return
-                const existing = Array.isArray($wire.annotationAnchors) ? $wire.annotationAnchors : []
-                $wire.set('annotationAnchors', [...existing, pendingAnchor])
-                $wire.set('annotationComposerOpen', true)
-                hideSelectionButton()
-                window.getSelection()?.removeAllRanges()
-                setTimeout(() => document.getElementById('annotation-composer')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
-            })
+                    window.getSelection()?.removeAllRanges()
+                    setTimeout(() => document.getElementById('annotation-composer')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+                })
+            }
 
             const root = document.getElementById(`annotation-audio-recorder-${suffix}`)
             if (!root || root.dataset.recorderReady === '1') return
             root.dataset.recorderReady = '1'
+
             const start = document.getElementById(`annotation-audio-start-${suffix}`)
             const stop = document.getElementById(`annotation-audio-stop-${suffix}`)
             const status = document.getElementById(`annotation-audio-status-${suffix}`)
@@ -622,7 +681,7 @@
             let elapsed = 0
             let timer = null
 
-            const show = (el, visible) => el?.classList.toggle('hidden', !visible)
+            const show = (element, visible) => element?.classList.toggle('hidden', !visible)
             const setError = message => {
                 if (!errorLabel) return
                 errorLabel.textContent = message || ''
@@ -645,6 +704,7 @@
                     setError(@js(__('media.recorder_unavailable')))
                     return
                 }
+
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({ audio: true })
                     const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
@@ -653,7 +713,9 @@
                     chunks = []
                     elapsed = 0
                     updateTimer()
-                    recorder.addEventListener('dataavailable', event => { if (event.data.size > 0) chunks.push(event.data) })
+                    recorder.addEventListener('dataavailable', event => {
+                        if (event.data.size > 0) chunks.push(event.data)
+                    })
                     recorder.addEventListener('stop', () => {
                         const type = recorder?.mimeType || 'audio/webm'
                         const extension = type.includes('mp4') ? 'm4a' : (type.includes('ogg') ? 'ogg' : 'webm')
@@ -661,14 +723,22 @@
                         cleanup()
                         recorder = null
                         chunks = []
+
                         if (!blob.size) {
                             setError(@js(__('media.recording_error')))
-                            show(start, true); show(stop, false); show(status, false); show(timerLabel, false)
+                            show(start, true)
+                            show(stop, false)
+                            show(status, false)
+                            show(timerLabel, false)
                             return
                         }
+
                         const file = new File([blob], `voice-note-${Date.now()}.${extension}`, { type })
                         if (status) status.textContent = @js(__('interactions.uploading_voice_note'))
-                        show(status, true); show(timerLabel, false); show(stop, false)
+                        show(status, true)
+                        show(timerLabel, false)
+                        show(stop, false)
+
                         $wire.upload('annotationUpload', file, () => {
                             $wire.call('markAnnotationRecordingReady').then(() => {
                                 if (status) status.textContent = @js(__('interactions.voice_note_ready'))
@@ -676,18 +746,28 @@
                             })
                         }, () => {
                             setError(@js(__('media.recording_error')))
-                            show(start, true); show(status, false)
+                            show(start, true)
+                            show(status, false)
                         })
                     }, { once: true })
                     recorder.start()
-                    show(start, false); show(stop, true); show(status, true); show(timerLabel, true)
+                    show(start, false)
+                    show(stop, true)
+                    show(status, true)
+                    show(timerLabel, true)
                     if (status) status.textContent = @js(__('media.recording'))
-                    timer = setInterval(() => { elapsed++; updateTimer() }, 1000)
+                    timer = setInterval(() => {
+                        elapsed++
+                        updateTimer()
+                    }, 1000)
                 } catch (error) {
                     cleanup()
                     recorder = null
                     setError(@js(__('media.recording_error')))
-                    show(start, true); show(stop, false); show(status, false); show(timerLabel, false)
+                    show(start, true)
+                    show(stop, false)
+                    show(status, false)
+                    show(timerLabel, false)
                 }
             })
 
