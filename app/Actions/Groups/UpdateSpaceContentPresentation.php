@@ -48,6 +48,14 @@ class UpdateSpaceContentPresentation
                 $fieldKeys,
             );
 
+            if (
+                $source->render_template_key === $baseKey
+                && $source->render_template_uuid === $templateUuid
+                && $source->presentation === $resolved
+            ) {
+                return $current->refresh();
+            }
+
             $nextRevision = ((int) $current->revisions()->max('revision')) + 1;
             $actor = $this->actor($user);
             $revision = $current->revisions()->create([
