@@ -5,6 +5,7 @@ namespace App\Actions\Groups;
 use App\Models\Actor;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRenderTemplate;
+use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentPresentation;
 use Illuminate\Support\Facades\DB;
@@ -29,8 +30,18 @@ class SaveSpaceContentRenderTemplate
         return DB::transaction(function () use ($content, $user, $name, $baseKey, $tokens): SpaceContentRenderTemplate {
             $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
             Gate::forUser($user)->authorize('update', $current);
+            abort_if($current->status === 'archived', 422, 'Archived Content cannot create rendering templates.');
+            abort_if(
+                SpaceContentRenderTemplate::query()
+                    ->where('group_space_id', $current->group_space_id)
+                    ->where('name', $name)
+                    ->exists(),
+                422,
+                'A rendering template with this name already exists in the Space.',
+            );
+
             $revision = $current->draftRevisionRecord() ?? $current->activeRevisionRecord();
-            abort_unless($revision !== null, 422, 'Content has no revision to use as a template source.');
+            abort_unless($revision instanceof SpaceContentRevision, 422, 'Content has no revision to use as a template source.');
             $version = $revision->definitionVersion()->firstOrFail();
             $fieldKeys = collect($version->schema['fields'] ?? [])
                 ->filter(fn (mixed $field): bool => is_array($field) && is_string($field['key'] ?? null))
