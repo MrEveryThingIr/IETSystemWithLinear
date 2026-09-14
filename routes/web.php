@@ -21,6 +21,8 @@ use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
 use App\Livewire\Groups\SpaceChat;
+use App\Livewire\Groups\SpaceContentAppearanceStudio;
+use App\Livewire\Groups\SpaceContentBlockStudio;
 use App\Livewire\Groups\SpaceContentIndex;
 use App\Livewire\Groups\SpaceContentReader;
 use App\Livewire\Groups\SpaceContentShow;
@@ -64,6 +66,10 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->name('groups.spaces.contents.assets.download');
     Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/studio', SpaceContentShow::class)
         ->name('groups.spaces.contents.studio');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/studio/blocks', SpaceContentBlockStudio::class)
+        ->name('groups.spaces.contents.blocks');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/studio/appearance', SpaceContentAppearanceStudio::class)
+        ->name('groups.spaces.contents.appearance');
     Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/outline', SpaceContentStructure::class)
         ->name('groups.spaces.contents.outline');
     Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/structure', SpaceContentStructure::class)
