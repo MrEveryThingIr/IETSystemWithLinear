@@ -5,7 +5,6 @@ namespace App\Livewire\Groups;
 use App\Models\Group;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
-use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentPublishedOutline;
@@ -53,7 +52,6 @@ class SpaceContentReader extends Component
         $revision->loadMissing('assets');
 
         $definitionVersion = $revision->definitionVersion()->firstOrFail();
-        abort_unless($definitionVersion instanceof SpaceContentDefinitionVersion, 404);
 
         $outline = $outlineBuilder->forRevision($revision, $user);
         $canEnterStudio = Gate::forUser($user)->allows('update', $current)
