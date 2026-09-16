@@ -76,6 +76,8 @@ class SpaceContentRichAnnotationTest extends TestCase
         $this->assertNotNull($textAnchor);
         $this->assertSame('important sentence', $textAnchor->selector['exact']);
         $this->assertSame('An ', $textAnchor->selector['prefix']);
+        $this->assertSame(3, $textAnchor->selector['start']);
+        $this->assertSame(21, $textAnchor->selector['end']);
         $this->assertCount(1, $annotation->assets);
         $this->assertSame('reference.pdf', $annotation->assets->first()->original_filename);
     }
@@ -159,15 +161,21 @@ class SpaceContentRichAnnotationTest extends TestCase
         $this->assertCount(1, $answer->assets);
     }
 
-    public function test_reader_source_keeps_annotation_recorder_first_render_ready(): void
+    public function test_reader_source_keeps_contextual_selection_and_recorder_first_render_ready(): void
     {
         $source = file_get_contents(resource_path('views/livewire/groups/space-content-reader.blade.php'));
         $this->assertIsString($source);
         $this->assertStringContainsString('id="annotation-audio-recorder-', $source);
         $this->assertStringContainsString('const suffix = @js((string) $content->uuid);', $source);
-        $this->assertStringContainsString("wire:click=\"openReplyComposer('", $source);
-        $this->assertStringContainsString("wire:click=\"addBlockAnchor('", $source);
-        $this->assertStringNotContainsString('x-on:click="$wire.annotationComposerOpen', $source);
+        $this->assertStringContainsString('data-selection-purpose=', $source);
+        $this->assertStringContainsString('data-context-purpose=', file_get_contents(resource_path('views/components/app/annotation-target-menu.blade.php')) ?: '');
+        $this->assertStringContainsString('data-reply-annotation=', $source);
+        $this->assertStringContainsString('data-annotation-text', $source);
+        $this->assertStringContainsString("document.addEventListener('selectionchange'", $source);
+        $this->assertStringContainsString("document.addEventListener('pointerup'", $source);
+        $this->assertStringContainsString("document.addEventListener('keyup'", $source);
+        $this->assertStringContainsString('data-content-annotation-mark', $source);
+        $this->assertStringNotContainsString('scrollIntoView', $source);
     }
 
     /** @return array{Group, GroupSpace, Actor, Actor, Actor, Actor, SpaceContent} */
