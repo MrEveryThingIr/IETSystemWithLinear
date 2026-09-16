@@ -186,6 +186,11 @@ class SpaceContentReader extends Component
         abort_unless($this->interactionRevision() instanceof SpaceContentRevision, 409, __('interactions.edition_changed'));
 
         $anchor = $this->sanitizeClientAnchor($anchor);
+        $targets = [
+            ...$this->selectedTargets,
+            $anchor,
+        ];
+
         $this->resetComposerState(false);
         $this->annotationComposerOpen = true;
         $this->annotationComposerMode = $purpose;
@@ -205,10 +210,11 @@ class SpaceContentReader extends Component
         $this->annotationVisibility = SpaceContentAnnotation::VISIBILITY_PRIVATE;
         $this->annotationComposerX = max(12, min(3000, $x));
         $this->annotationComposerY = max(12, min(3000, $y));
-        $this->annotationAnchors = $this->mergeAnchors([
-            ...$this->selectedTargets,
-            $this->withIntent($anchor, $purpose),
-        ]);
+        $this->annotationAnchors = $this->mergeAnchors(array_map(
+            fn (array $target): array => $this->withIntent($target, $purpose),
+            $targets,
+        ));
+        $this->selectedTargets = [];
     }
 
     public function openSelectionComposer(string $purpose, int $x = 0, int $y = 0): void
@@ -216,8 +222,10 @@ class SpaceContentReader extends Component
         abort_unless(in_array($purpose, self::COMPOSER_PURPOSES, true), 422);
         abort_if($this->selectedTargets === [], 422, __('interactions.selection_empty'));
 
-        $anchor = array_pop($this->selectedTargets);
+        $targets = $this->selectedTargets;
+        $anchor = array_pop($targets);
         abort_unless(is_array($anchor), 422);
+        $this->selectedTargets = $targets;
         $this->openContextComposer($purpose, $anchor, $x, $y);
     }
 
@@ -759,12 +767,15 @@ class SpaceContentReader extends Component
             }
         }
 
-        foreach ([$fields, $assets, $blocks] as &$targets) {
-            foreach ($targets as &$uuids) {
-                $uuids = array_values(array_unique($uuids));
-            }
+        foreach ($fields as $key => $uuids) {
+            $fields[$key] = array_values(array_unique($uuids));
         }
-        unset($targets, $uuids);
+        foreach ($assets as $key => $uuids) {
+            $assets[$key] = array_values(array_unique($uuids));
+        }
+        foreach ($blocks as $key => $uuids) {
+            $blocks[$key] = array_values(array_unique($uuids));
+        }
 
         foreach ($ranges as &$range) {
             $range['annotation_uuids'] = array_values(array_unique($range['annotation_uuids']));
