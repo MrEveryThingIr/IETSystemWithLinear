@@ -12,6 +12,7 @@ enum GroupPermission: string
     case ApproveRoleChanges = 'approve_role_changes';
     case ManageAdmissions = 'manage_admissions';
     case ManageAgreements = 'manage_agreements';
+    case ManageSpaces = 'manage_spaces';
     case ViewGroupAudit = 'view_group_audit';
     case ManageSimulations = 'manage_simulations';
     case TransferOwnership = 'transfer_ownership';

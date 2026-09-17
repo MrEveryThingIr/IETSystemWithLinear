@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\SpaceContentAssetController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -19,6 +20,14 @@ use App\Livewire\Groups\Create as CreateGroup;
 use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
+use App\Livewire\Groups\SpaceChat;
+use App\Livewire\Groups\SpaceContentAppearanceStudio;
+use App\Livewire\Groups\SpaceContentBlockStudio;
+use App\Livewire\Groups\SpaceContentIndex;
+use App\Livewire\Groups\SpaceContentReader;
+use App\Livewire\Groups\SpaceContentShow;
+use App\Livewire\Groups\SpaceContentStructure;
+use App\Livewire\Groups\SpaceManagement;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Models\Actor;
 use App\Models\Group;
@@ -49,6 +58,25 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/groups', GroupIndex::class)->name('groups.index');
     Route::livewire('/groups/create', CreateGroup::class)->can('create', Group::class)->name('groups.create');
     Route::livewire('/groups/{group}/accept-agreements', AcceptAgreements::class)->name('groups.accept-agreements');
+    Route::livewire('/groups/{group}/spaces/manage', SpaceManagement::class)->name('groups.spaces.manage');
+    Route::livewire('/groups/{group}/spaces/{space}/contents', SpaceContentIndex::class)->name('groups.spaces.contents.index');
+    Route::get('/groups/{group}/spaces/{space}/contents/{content}/assets/{asset}', [SpaceContentAssetController::class, 'show'])
+        ->name('groups.spaces.contents.assets.show');
+    Route::get('/groups/{group}/spaces/{space}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'download'])
+        ->name('groups.spaces.contents.assets.download');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/studio', SpaceContentShow::class)
+        ->name('groups.spaces.contents.studio');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/studio/blocks', SpaceContentBlockStudio::class)
+        ->name('groups.spaces.contents.blocks');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/studio/appearance', SpaceContentAppearanceStudio::class)
+        ->name('groups.spaces.contents.appearance');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/outline', SpaceContentStructure::class)
+        ->name('groups.spaces.contents.outline');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}/structure', SpaceContentStructure::class)
+        ->name('groups.spaces.contents.structure');
+    Route::livewire('/groups/{group}/spaces/{space}/contents/{content}', SpaceContentReader::class)
+        ->name('groups.spaces.contents.show');
+    Route::livewire('/groups/{group}/spaces/{space}', SpaceChat::class)->name('groups.spaces.show');
     Route::livewire('/groups/{group}', GroupShow::class)->name('groups.show');
     Route::livewire('/groups/{group}/agreements', Agreements::class)->name('groups.agreements');
     Route::livewire('/groups/{group}/invitations', Invitations::class)->name('groups.invitations');

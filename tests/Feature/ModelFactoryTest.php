@@ -15,8 +15,15 @@ use App\Models\GroupInvitationAcceptance;
 use App\Models\GroupMembership;
 use App\Models\GroupMembershipEvent;
 use App\Models\GroupRoleChangeRequest;
+use App\Models\GroupSpace;
+use App\Models\GroupSpaceMessage;
+use App\Models\GroupSpaceParticipant;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\PlatformAccessGrant;
+use App\Models\SpaceContent;
+use App\Models\SpaceContentDefinition;
+use App\Models\SpaceContentDefinitionVersion;
+use App\Models\SpaceContentRevision;
 use App\Models\Story;
 use App\Models\StoryRole;
 use App\Models\User;
@@ -46,6 +53,13 @@ class ModelFactoryTest extends TestCase
             AgreementEvent::factory()->create(),
             MembershipAgreementAcceptance::factory()->create(),
             GroupRoleChangeRequest::factory()->create(),
+            GroupSpace::factory()->create(),
+            GroupSpaceMessage::factory()->create(),
+            GroupSpaceParticipant::factory()->create(),
+            SpaceContentDefinition::factory()->create(),
+            SpaceContentDefinitionVersion::factory()->create(),
+            SpaceContent::factory()->create(),
+            SpaceContentRevision::factory()->create(),
             Story::factory()->create(),
             StoryRole::factory()->create(),
             PlatformAccessGrant::factory()->create(),
@@ -74,6 +88,12 @@ class ModelFactoryTest extends TestCase
         $this->assertSame('suspended', User::factory()->suspended()->create()->status);
         $this->assertSame('closed', User::factory()->closed()->create()->status);
         $this->assertSame('archived', Actor::factory()->withoutUser()->archived()->create()->status);
+        $this->assertSame('archived', GroupSpace::factory()->archived()->create()->status);
+        $this->assertSame('restricted', GroupSpace::factory()->restricted()->create()->access_mode);
+        $this->assertSame('deny', GroupSpaceParticipant::factory()->denied()->create()->access);
+        $this->assertSame('manager', GroupSpaceParticipant::factory()->manager()->create()->role);
+        $this->assertSame('active', SpaceContentDefinition::factory()->active()->create()->status);
+        $this->assertSame('archived', SpaceContent::factory()->archived()->create()->status);
         $this->assertNotNull(PlatformAccessGrant::factory()->revoked()->create()->revoked_at);
     }
 }

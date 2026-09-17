@@ -67,6 +67,11 @@ class GroupPolicy
         return $this->allows($user, $group, GroupPermission::ManageAgreements->value);
     }
 
+    public function manageSpaces(User $user, Group $group): bool
+    {
+        return $this->allows($user, $group, GroupPermission::ManageSpaces->value);
+    }
+
     public function viewGroupAudit(User $user, Group $group): bool
     {
         return $this->allows($user, $group, GroupPermission::ViewGroupAudit->value);
