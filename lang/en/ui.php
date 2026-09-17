@@ -348,6 +348,9 @@ return [
         'no_messages_help' => 'Start the conversation in this Space.',
         'message' => 'Message',
         'message_placeholder' => 'Write a message to this Space...',
+        'reply' => 'Reply',
+        'replying_to' => 'Replying to',
+        'cancel_reply' => 'Cancel reply',
         'send' => 'Send',
     ],
     'content' => [
