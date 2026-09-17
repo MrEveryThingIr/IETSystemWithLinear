@@ -82,9 +82,8 @@ class SpaceContentRevision extends Model
             }
 
             $revision->payload = SpaceContentSchema::normalizePayload($version->schema, $revision->payload ?? []);
-            $revision->render_template_key = $revision->render_template_key !== ''
-                ? $revision->render_template_key
-                : 'article';
+            $renderTemplateKey = trim($revision->render_template_key ?? '');
+            $revision->render_template_key = $renderTemplateKey === '' ? 'article' : $renderTemplateKey;
             $fieldKeys = collect($version->schema['fields'] ?? [])
                 ->filter(fn (mixed $field): bool => is_array($field) && is_string($field['key'] ?? null))
                 ->map(fn (array $field): string => (string) $field['key'])
