@@ -348,6 +348,9 @@ return [
         'no_messages_help' => '在此空间开始交流。',
         'message' => '消息',
         'message_placeholder' => '向此空间发送消息...',
+        'reply' => '回复',
+        'replying_to' => '回复给',
+        'cancel_reply' => '取消回复',
         'send' => '发送',
     ],
     'content' => [

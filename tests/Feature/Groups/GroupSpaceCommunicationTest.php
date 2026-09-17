@@ -58,6 +58,43 @@ class GroupSpaceCommunicationTest extends TestCase
             ->assertSee('Hello from the first group space.');
     }
 
+    public function test_member_can_reply_only_to_a_message_in_the_same_chat_space(): void
+    {
+        [$group, $owner, $member, $space] = $this->groupWithMember();
+        $original = $space->messages()->create([
+            'author_actor_id' => $owner->id,
+            'body' => 'Original question',
+        ]);
+
+        Livewire::actingAs($member->user)
+            ->test(SpaceChat::class, ['group' => $group, 'space' => $space])
+            ->call('replyTo', $original->id)
+            ->assertSet('replyToMessageId', $original->id)
+            ->assertSee('Replying to')
+            ->set('message', 'Here is an answer.')
+            ->call('send')
+            ->assertHasNoErrors()
+            ->assertSet('replyToMessageId', null);
+
+        $this->assertDatabaseHas('group_space_messages', [
+            'group_space_id' => $space->id,
+            'author_actor_id' => $member->id,
+            'reply_to_message_id' => $original->id,
+            'body' => 'Here is an answer.',
+        ]);
+
+        $otherGroup = app(CreateGroup::class)->execute($owner, 'Other chat', null);
+        $foreignMessage = $otherGroup->spaces()->sole()->messages()->create([
+            'author_actor_id' => $owner->id,
+            'body' => 'Not in this chat',
+        ]);
+
+        Livewire::actingAs($member->user)
+            ->test(SpaceChat::class, ['group' => $group, 'space' => $space])
+            ->call('replyTo', $foreignMessage->id)
+            ->assertStatus(404);
+    }
+
     public function test_group_overview_exposes_general_space_tab(): void
     {
         $owner = Actor::factory()->create();

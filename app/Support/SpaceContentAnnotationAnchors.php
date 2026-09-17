@@ -25,7 +25,7 @@ class SpaceContentAnnotationAnchors
     ];
 
     /**
-     * @param list<array<string, mixed>> $anchors
+     * @param  list<mixed>  $anchors
      * @return list<array{target_type: string, target_uuid: ?string, field_key: ?string, selector: ?array<string, mixed>}>
      */
     public function normalize(SpaceContentRevision $revision, array $anchors): array
@@ -141,7 +141,7 @@ class SpaceContentAnnotationAnchors
     }
 
     /**
-     * @param array<string, mixed> $selector
+     * @param  array<string, mixed>  $selector
      * @return array<string, mixed>
      */
     private function rangeSelector(string $label, string $searchable, array $selector, ?string $intent): array
@@ -253,7 +253,7 @@ class SpaceContentAnnotationAnchors
     }
 
     /**
-     * @param array<string, mixed> $selector
+     * @param  array<string, mixed>  $selector
      * @return array<string, mixed>
      */
     private function withIntent(array $selector, ?string $intent): array

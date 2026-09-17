@@ -36,27 +36,27 @@
     $relationships = $revision->containedRelationships()->with(['childContent.activeRevision'])->get();
 @endphp
 
-<style>
-    @media (max-width: 639px) {
-        #annotation-selection-toolbar-{{ $content->uuid }},
-        #annotation-context-composer-{{ $content->uuid }},
-        #annotation-preview-panel-{{ $content->uuid }} {
-            inset-inline: .75rem !important;
-            left: auto !important;
-            right: auto !important;
-            top: auto !important;
-            bottom: .75rem !important;
-            width: auto !important;
-            max-width: none !important;
-        }
-    }
-</style>
-
 <section
     id="content-reader-{{ $content->uuid }}"
     class="min-h-screen space-y-6 px-1 pb-16"
     style="--content-bg: {{ $readerBackground }}; --content-surface: {{ $readerSurface }}; --content-text: {{ $readerText }}; --content-muted: {{ $readerMuted }}; --content-accent: {{ $readerAccent }}; --content-border: {{ $readerBorder }}; background: var(--content-bg); color: var(--content-text);"
 >
+    <style>
+        @media (max-width: 639px) {
+            #annotation-selection-toolbar-{{ $content->uuid }},
+            #annotation-context-composer-{{ $content->uuid }},
+            #annotation-preview-panel-{{ $content->uuid }} {
+                inset-inline: .75rem !important;
+                left: auto !important;
+                right: auto !important;
+                top: auto !important;
+                bottom: .75rem !important;
+                width: auto !important;
+                max-width: none !important;
+            }
+        }
+    </style>
+
     <div id="annotation-marker-payload-{{ $content->uuid }}" class="hidden" data-marker-payload='@json($rangeMarkers)'></div>
 
     <div class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 pt-4">
@@ -1069,11 +1069,15 @@
                             return
                         }
                         const file = new File([blob], `voice-note-${Date.now()}.${extension}`, { type })
-                        if (status) status.textContent = @js(__('interactions.uploading_voice_note'))
+                        if (status) {
+                            status.textContent = @js(__('interactions.uploading_voice_note'));
+                        }
                         show(status, true); show(timerLabel, false); show(stop, false)
                         $wire.upload('annotationUpload', file, () => {
                             $wire.call('markAnnotationRecordingReady').then(() => {
-                                if (status) status.textContent = @js(__('interactions.voice_note_ready'))
+                                if (status) {
+                                    status.textContent = @js(__('interactions.voice_note_ready'));
+                                }
                                 show(start, true)
                             })
                         }, () => {
@@ -1083,7 +1087,9 @@
                     }, { once: true })
                     recorder.start()
                     show(start, false); show(stop, true); show(status, true); show(timerLabel, true)
-                    if (status) status.textContent = @js(__('media.recording'))
+                    if (status) {
+                        status.textContent = @js(__('media.recording'));
+                    }
                     timer = setInterval(() => { elapsed++; updateTimer() }, 1000)
                 } catch (_) {
                     cleanup()

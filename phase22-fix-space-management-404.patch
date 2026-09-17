@@ -1,0 +1,20 @@
+diff --git a/app/Livewire/Groups/SpaceManagement.php b/app/Livewire/Groups/SpaceManagement.php
+--- a/app/Livewire/Groups/SpaceManagement.php	2026-09-12 21:12:07.843618080 +0000
++++ b/app/Livewire/Groups/SpaceManagement.php	2026-09-12 21:12:07.844593017 +0000
+@@ -271,9 +271,14 @@
+ 
+     private function groupSpace(int $spaceId): GroupSpace
+     {
+-        return $this->group->spaces()
++        $space = $this->group->spaces()
+             ->where('status', 'active')
+-            ->findOrFail($spaceId);
++            ->whereKey($spaceId)
++            ->first();
++
++        abort_unless($space instanceof GroupSpace, 404);
++
++        return $space;
+     }
+ 
+     /** @return Collection<int, Actor> */

@@ -5,6 +5,7 @@ namespace App\Livewire\Groups;
 use App\Actions\Groups\PostGroupSpaceMessage;
 use App\Models\Group;
 use App\Models\GroupSpace;
+use App\Models\GroupSpaceMessage;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +22,23 @@ class SpaceChat extends Component
     public GroupSpace $space;
 
     public string $message = '';
+
+    public ?int $replyToMessageId = null;
+
+    public function replyTo(int $messageId): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+        Gate::forUser($user)->authorize('view', $this->space);
+        abort_unless($this->space->messages()->whereKey($messageId)->exists(), 404);
+
+        $this->replyToMessageId = $messageId;
+    }
+
+    public function cancelReply(): void
+    {
+        $this->replyToMessageId = null;
+    }
 
     public function mount(Group $group, GroupSpace $space): void
     {
@@ -44,8 +62,9 @@ class SpaceChat extends Component
         $user = request()->user();
         abort_unless($user instanceof User, 403);
 
-        $postMessage->execute($this->space, $user, $data['message']);
+        $postMessage->execute($this->space, $user, $data['message'], $this->replyToMessageId);
         $this->reset('message');
+        $this->replyToMessageId = null;
     }
 
     public function render(): View
@@ -61,13 +80,20 @@ class SpaceChat extends Component
         $this->space = $currentSpace;
 
         $messages = $currentSpace->messages()
-            ->with('author.user')
+            ->with(['author.user', 'replyTo.author.user'])
             ->latest('id')
             ->limit(100)
             ->get()
             ->reverse()
             ->values();
 
-        return view('livewire.groups.space-chat', compact('messages'));
+        $replyToMessage = $this->replyToMessageId !== null
+            ? $currentSpace->messages()->with('author.user')->whereKey($this->replyToMessageId)->first()
+            : null;
+        if (! $replyToMessage instanceof GroupSpaceMessage) {
+            $this->replyToMessageId = null;
+        }
+
+        return view('livewire.groups.space-chat', compact('messages', 'replyToMessage'));
     }
 }

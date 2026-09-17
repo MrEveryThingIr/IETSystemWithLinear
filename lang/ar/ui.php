@@ -348,6 +348,9 @@ return [
         'no_messages_help' => 'ابدأ المحادثة في هذه المساحة.',
         'message' => 'رسالة',
         'message_placeholder' => 'اكتب رسالة إلى هذه المساحة...',
+        'reply' => 'رد',
+        'replying_to' => 'ردًا على',
+        'cancel_reply' => 'إلغاء الرد',
         'send' => 'إرسال',
     ],
     'content' => [

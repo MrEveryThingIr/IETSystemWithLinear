@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Models\Asset;
 use App\Models\SpaceContentBlock;
 use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
@@ -12,7 +11,7 @@ use Illuminate\Support\Str;
 class SpaceContentBlocks
 {
     /**
-     * @param list<array<string, mixed>> $blocks
+     * @param  list<mixed>  $blocks
      * @return list<array{logical_uuid: string, type: string, data: array<string, mixed>, style: array<string, mixed>}>
      */
     public function normalize(SpaceContentRevision $revision, array $blocks): array

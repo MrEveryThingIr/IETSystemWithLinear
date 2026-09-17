@@ -41,14 +41,18 @@ class SpaceContentRevision extends Model
     public const UPDATED_AT = null;
 
     public const COMPOSITION_FIELDS = 'fields';
+
     public const COMPOSITION_BLOCKS = 'blocks';
 
     /** @var list<string> */
     public const COMPOSITION_MODES = [self::COMPOSITION_FIELDS, self::COMPOSITION_BLOCKS];
 
     public const EVIDENCE_UNSEALED = 'unsealed';
+
     public const EVIDENCE_SEALED = 'sealed';
+
     public const EVIDENCE_LEGACY_UNSEALED = 'legacy_unsealed';
+
     public const EVIDENCE_LEGACY_SEALED_V0 = 'legacy_sealed_v0';
 
     private bool $sealingManifest = false;
@@ -78,7 +82,7 @@ class SpaceContentRevision extends Model
             }
 
             $revision->payload = SpaceContentSchema::normalizePayload($version->schema, $revision->payload ?? []);
-            $revision->render_template_key = is_string($revision->render_template_key) && $revision->render_template_key !== ''
+            $revision->render_template_key = $revision->render_template_key !== ''
                 ? $revision->render_template_key
                 : 'article';
             $fieldKeys = collect($version->schema['fields'] ?? [])
@@ -88,11 +92,10 @@ class SpaceContentRevision extends Model
                 ->all();
             $revision->presentation = app(SpaceContentPresentation::class)->resolve(
                 $revision->render_template_key,
-                is_array($revision->presentation) ? $revision->presentation : [],
+                $revision->presentation ?? [],
                 $fieldKeys,
             );
-            $revision->composition_mode = is_string($revision->composition_mode)
-                && in_array($revision->composition_mode, self::COMPOSITION_MODES, true)
+            $revision->composition_mode = in_array($revision->composition_mode, self::COMPOSITION_MODES, true)
                     ? $revision->composition_mode
                     : self::COMPOSITION_FIELDS;
             $revision->content_hash = SpaceContentSchema::hashRevision($revision->title, $revision->payload);

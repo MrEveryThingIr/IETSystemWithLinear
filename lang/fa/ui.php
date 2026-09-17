@@ -348,6 +348,9 @@ return [
         'no_messages_help' => 'گفت‌وگو را در این فضا آغاز کنید.',
         'message' => 'پیام',
         'message_placeholder' => 'برای این فضا پیام بنویسید...',
+        'reply' => 'پاسخ',
+        'replying_to' => 'در پاسخ به',
+        'cancel_reply' => 'لغو پاسخ',
         'send' => 'ارسال',
     ],
     'content' => [
