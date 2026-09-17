@@ -224,7 +224,6 @@ class SpaceContentReader extends Component
 
         $targets = $this->selectedTargets;
         $anchor = array_pop($targets);
-        abort_unless(is_array($anchor), 422);
         $this->selectedTargets = $targets;
         $this->openContextComposer($purpose, $anchor, $x, $y);
     }
@@ -447,7 +446,7 @@ class SpaceContentReader extends Component
                 $this->annotationBody,
                 $parent,
                 $this->annotationKind,
-                $parent?->visibility ?? $this->annotationVisibility,
+                $parent instanceof SpaceContentAnnotation ? $parent->visibility : $this->annotationVisibility,
                 $this->annotationAnchors,
                 $upload,
                 $this->annotationUploadIsRecording ? 'owned' : $this->annotationRightsStatus,
@@ -547,7 +546,7 @@ class SpaceContentReader extends Component
         $this->previewAnnotationUuids = [];
     }
 
-    /** @param list<string> $uuids */
+    /** @param list<mixed> $uuids */
     public function openMarkerPreview(array $uuids): void
     {
         $revision = $this->interactionRevision();
@@ -701,7 +700,7 @@ class SpaceContentReader extends Component
     }
 
     /**
-     * @param list<SpaceContentAnnotation> $annotations
+     * @param  list<SpaceContentAnnotation>  $annotations
      * @return array{list<array<string, mixed>>, array<string, list<string>>, array<string, list<string>>, array<string, list<string>>}
      */
     private function markerState(array $annotations): array
@@ -846,7 +845,7 @@ class SpaceContentReader extends Component
     }
 
     /**
-     * @param list<array<string, mixed>> $anchors
+     * @param  list<mixed>  $anchors
      * @return list<array<string, mixed>>
      */
     private function mergeAnchors(array $anchors): array

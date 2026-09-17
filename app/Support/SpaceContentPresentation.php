@@ -112,8 +112,8 @@ class SpaceContentPresentation
     }
 
     /**
-     * @param array<string, mixed> $overrides
-     * @param list<string> $fieldKeys
+     * @param  array<string, mixed>  $overrides
+     * @param  list<string>  $fieldKeys
      * @return array<string, mixed>
      */
     public function resolve(string $baseKey, array $overrides, array $fieldKeys = []): array
@@ -149,7 +149,7 @@ class SpaceContentPresentation
                 }
             }
             $fieldStyle['emphasis'] = $this->choice($style['emphasis'] ?? 'normal', ['normal', 'muted', 'strong', 'callout'], 'normal');
-            if ($fieldStyle !== ['emphasis' => 'normal']) {
+            if (count($fieldStyle) > 1 || $fieldStyle['emphasis'] !== 'normal') {
                 $fieldStyles[$fieldKey] = $fieldStyle;
             }
         }

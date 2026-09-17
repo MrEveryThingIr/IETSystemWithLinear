@@ -223,6 +223,23 @@ class SpaceContentContextualAnnotationTest extends TestCase
         $this->assertStringContainsString('window.confirm', $source);
     }
 
+    public function test_reader_mounts_on_the_interactive_section_and_voice_status_js_has_statement_boundaries(): void
+    {
+        [$group, $space, $owner, $author, $reader, $other, $content] = $this->fixture('The Reader must remain interactive.');
+
+        $html = Livewire::actingAs($reader->user)
+            ->test(SpaceContentReader::class, compact('group', 'space', 'content'))
+            ->html();
+
+        $this->assertMatchesRegularExpression('/<section[^>]*wire:id=/s', $html);
+        $this->assertDoesNotMatchRegularExpression('/<style[^>]*wire:id=/s', $html);
+
+        $source = file_get_contents(resource_path('views/livewire/groups/space-content-reader.blade.php'));
+        $this->assertIsString($source);
+        $this->assertSame(3, substr_count($source, 'status.textContent = @js('));
+        $this->assertStringContainsString("status.textContent = @js(__('interactions.uploading_voice_note'));", $source);
+    }
+
     /** @return array{Group, GroupSpace, Actor, Actor, Actor, Actor, SpaceContent} */
     private function fixture(string $body): array
     {

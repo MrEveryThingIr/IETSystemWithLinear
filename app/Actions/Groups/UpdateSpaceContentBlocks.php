@@ -98,7 +98,7 @@ class UpdateSpaceContentBlocks
     }
 
     /**
-     * @param list<array{logical_uuid: string, type: string, data: array<string, mixed>, style: array<string, mixed>}> $normalized
+     * @param  list<array{logical_uuid: string, type: string, data: array<string, mixed>, style: array<string, mixed>}>  $normalized
      */
     private function sameBlocks(SpaceContentRevision $source, array $normalized): bool
     {
@@ -112,8 +112,8 @@ class UpdateSpaceContentBlocks
             ->map(static fn (SpaceContentBlock $block): array => [
                 'logical_uuid' => $block->logical_uuid,
                 'type' => $block->type,
-                'data' => is_array($block->data) ? $block->data : [],
-                'style' => is_array($block->style) ? $block->style : [],
+                'data' => $block->data ?? [],
+                'style' => $block->style ?? [],
             ])
             ->values()
             ->all();
