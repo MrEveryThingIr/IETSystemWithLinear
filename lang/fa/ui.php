@@ -260,6 +260,7 @@ return [
         'uses' => ':used/:maximum استفاده',
         'created_expires' => 'ایجاد :created · انقضا :expires',
         'never' => 'هرگز',
+        'exhausted' => 'به سقف استفاده رسیده',
         'revoke' => 'لغو',
         'invitees' => 'دعوت‌شدگان',
         'none' => 'هنوز دعوت‌نامه‌ای نیست',

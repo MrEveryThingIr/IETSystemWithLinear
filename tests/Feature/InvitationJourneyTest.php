@@ -8,6 +8,7 @@ use App\Livewire\Admissions\Show as AdmissionShow;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Groups\Index as GroupIndex;
+use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
 use App\Models\Actor;
 use App\Models\Admission;
@@ -320,6 +321,16 @@ class InvitationJourneyTest extends TestCase
             'group_id' => $invitation->group_id,
             'actor_id' => $candidate->id,
         ]);
+    }
+
+    public function test_owner_invitation_workspace_marks_a_used_up_invitation_as_exhausted(): void
+    {
+        [$owner, $invitation] = $this->invitation();
+        $invitation->update(['uses_count' => $invitation->max_uses]);
+
+        Livewire::actingAs($owner->user)
+            ->test(Invitations::class, ['group' => $invitation->group])
+            ->assertSee(__('ui.invitations.exhausted'));
     }
 
     public function test_account_group_page_tracks_received_and_sent_invitations(): void

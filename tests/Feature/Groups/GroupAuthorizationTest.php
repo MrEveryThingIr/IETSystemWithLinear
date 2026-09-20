@@ -116,6 +116,7 @@ class GroupAuthorizationTest extends TestCase
         $firstOwner = Actor::factory()->create();
         $secondOwner = Actor::factory()->create();
         $candidate = Actor::factory()->create();
+        $otherCandidate = Actor::factory()->create();
         $firstGroup = $this->createOwnedGroup($firstOwner);
         $secondGroup = $this->createOwnedGroup($secondOwner, 'Second group');
         $admission = Admission::create([
@@ -125,6 +126,10 @@ class GroupAuthorizationTest extends TestCase
         ]);
 
         $this->actingAs($secondOwner->user)
+            ->get(route('admissions.show', $admission))
+            ->assertForbidden();
+
+        $this->actingAs($otherCandidate->user)
             ->get(route('admissions.show', $admission))
             ->assertForbidden();
 

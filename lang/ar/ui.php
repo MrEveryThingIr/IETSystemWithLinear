@@ -260,6 +260,7 @@ return [
         'uses' => ':used/:maximum استخدام',
         'created_expires' => 'أُنشئت :created · تنتهي :expires',
         'never' => 'أبدًا',
+        'exhausted' => 'مستنفدة',
         'revoke' => 'إلغاء',
         'invitees' => 'المدعوون',
         'none' => 'لا توجد دعوات بعد',

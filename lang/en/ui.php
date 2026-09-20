@@ -260,6 +260,7 @@ return [
         'uses' => ':used/:maximum uses',
         'created_expires' => 'Created :created · expires :expires',
         'never' => 'never',
+        'exhausted' => 'Exhausted',
         'revoke' => 'Revoke',
         'invitees' => 'Invitees',
         'none' => 'No invitations yet',

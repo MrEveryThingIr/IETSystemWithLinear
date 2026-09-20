@@ -260,6 +260,7 @@ return [
         'uses' => '已使用 :used/:maximum 次',
         'created_expires' => '创建于 :created · 过期于 :expires',
         'never' => '永不过期',
+        'exhausted' => '已用尽',
         'revoke' => '撤销',
         'invitees' => '受邀人',
         'none' => '暂无邀请',
