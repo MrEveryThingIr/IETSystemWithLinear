@@ -6,7 +6,6 @@
         <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="resend">{{ __('ui.auth.resend_verification') }}</flux:button>
         <flux:error name="resend" />
     </form>
-    <flux:link :href="route('dashboard')">{{ __('ui.auth.continue_dashboard') }}</flux:link>
     <form method="POST" action="{{ route('logout') }}">
         @csrf
         <flux:button type="submit" variant="ghost">{{ __('ui.auth.logout') }}</flux:button>

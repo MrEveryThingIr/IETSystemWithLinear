@@ -72,7 +72,56 @@ class InvitationJourneyTest extends TestCase
         $this->get(route('invitations.register', $expired->token))->assertNotFound();
     }
 
-    public function test_invited_registration_atomically_creates_an_admission_and_verification_returns_to_it(): void
+    public function test_known_unavailable_invitations_explain_their_state_without_offering_onboarding(): void
+    {
+        $this->withoutVite();
+        [, $expired] = $this->invitation(expiresAt: now()->subMinute());
+        [, $revoked] = $this->invitation();
+        $revoked->update(['revoked_at' => now()]);
+        [, $exhausted] = $this->invitation();
+        $exhausted->update(['max_uses' => 1, 'uses_count' => 1]);
+
+        foreach ([
+            [$expired, 'expired'],
+            [$revoked, 'revoked'],
+            [$exhausted, 'use limit'],
+        ] as [$invitation, $message]) {
+            $this->get(route('invitations.show', $invitation->token))
+                ->assertOk()
+                ->assertSee($message)
+                ->assertDontSee('Create an invited account');
+        }
+
+        $this->get(route('invitations.show', 'unknown-token'))->assertNotFound();
+    }
+
+    public function test_existing_admission_can_be_resumed_after_invitation_is_exhausted(): void
+    {
+        $this->withoutVite();
+        [, $invitation] = $this->invitation();
+        $candidate = Actor::factory()->create();
+        $admission = app(RedeemGroupInvitation::class)->execute($invitation->token, $candidate, $candidate->user->email);
+        $invitation->update(['max_uses' => 1]);
+
+        $this->actingAs($candidate->user)
+            ->get(route('invitations.show', $invitation->token))
+            ->assertOk()
+            ->assertSee(route('admissions.show', $admission), false)
+            ->assertSee('admission in progress');
+    }
+
+    public function test_redemption_rejects_unverified_identity_even_if_invitation_email_is_supplied(): void
+    {
+        [, $invitation] = $this->invitation(email: 'invited@example.com');
+        $candidate = Actor::factory()->create();
+        $candidate->user->forceFill(['email_verified_at' => null])->save();
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+
+        app(RedeemGroupInvitation::class)->execute($invitation->token, $candidate, 'invited@example.com');
+    }
+
+    public function test_invited_registration_creates_identity_but_does_not_redeem_until_verification_and_continue(): void
     {
         Notification::fake();
         [, $invitation] = $this->invitation(email: 'invitee@example.com');
@@ -87,7 +136,8 @@ class InvitationJourneyTest extends TestCase
             ->assertRedirect(route('verification.notice'));
 
         $user = User::query()->where('email', 'invitee@example.com')->sole();
-        $admission = Admission::query()->where('candidate_actor_id', $user->actor->id)->sole();
+        $this->assertDatabaseCount('admissions', 0);
+        $this->assertSame(0, $invitation->refresh()->uses_count);
         Notification::assertSentToTimes($user, VerifyEmail::class, 1);
 
         $verificationUrl = URL::temporarySignedRoute('verification.verify', now()->addHour(), [
@@ -95,8 +145,13 @@ class InvitationJourneyTest extends TestCase
             'hash' => sha1($user->email),
         ]);
 
-        $this->get($verificationUrl)->assertRedirect(route('admissions.show', $admission));
+        $this->get($verificationUrl)->assertRedirect(route('invitations.show', $invitation->token));
         $this->assertTrue($user->refresh()->hasVerifiedEmail());
+        $this->assertDatabaseCount('admissions', 0);
+
+        $this->post(route('invitations.accept', $invitation->token))
+            ->assertRedirect(route('admissions.show', Admission::query()->sole()));
+        $this->assertSame(1, $invitation->refresh()->uses_count);
     }
 
     public function test_reserved_email_mismatch_rolls_back_the_entire_registration(): void
@@ -110,7 +165,7 @@ class InvitationJourneyTest extends TestCase
             ->set('password', 'secure-password')
             ->set('password_confirmation', 'secure-password')
             ->call('register')
-            ->assertHasErrors('invitation');
+            ->assertHasErrors('email');
 
         $this->assertDatabaseMissing('users', ['email' => 'other@example.com']);
         $this->assertDatabaseCount('admissions', 0);
@@ -118,7 +173,7 @@ class InvitationJourneyTest extends TestCase
         Notification::assertNothingSent();
     }
 
-    public function test_existing_account_login_through_an_invitation_redirects_to_the_admission(): void
+    public function test_existing_account_login_through_an_invitation_returns_to_preview_before_redemption(): void
     {
         $candidate = Actor::factory()->create();
         [, $invitation] = $this->invitation();
@@ -129,8 +184,8 @@ class InvitationJourneyTest extends TestCase
             ->call('login')
             ->assertHasNoErrors();
 
-        $admission = Admission::query()->where('candidate_actor_id', $candidate->id)->sole();
-        $component->assertRedirect(route('admissions.show', $admission));
+        $this->assertDatabaseCount('admissions', 0);
+        $component->assertRedirect(route('invitations.show', $invitation->token));
         $this->assertAuthenticatedAs($candidate->user);
     }
 
@@ -231,6 +286,30 @@ class InvitationJourneyTest extends TestCase
         $acceptance = $admission->acceptances()->sole();
         $this->assertSame(GroupAgreementVersion::hashContent('Required terms'), $acceptance->evidence_hash);
         $this->assertSame(1, $acceptance->evidence_schema_version);
+    }
+
+    public function test_candidate_cannot_submit_until_every_active_required_version_has_exact_acceptance(): void
+    {
+        [, $invitation] = $this->invitation();
+        $candidate = Actor::factory()->create();
+        $admission = app(RedeemGroupInvitation::class)->execute($invitation->token, $candidate, $candidate->user->email);
+        $agreement = GroupAgreement::create(['group_id' => $invitation->group_id, 'name' => 'Required rules', 'required_for_admission' => true]);
+        $version = GroupAgreementVersion::create(['group_agreement_id' => $agreement->id, 'version' => 1, 'content' => 'Terms to accept', 'status' => 'active', 'effective_from' => now()->subMinute()]);
+
+        Livewire::actingAs($candidate->user)
+            ->test(AdmissionShow::class, ['admission' => $admission])
+            ->assertSee('0 of 1')
+            ->call('submit')
+            ->assertHasErrors('agreements');
+        $this->assertSame('draft', $admission->refresh()->status);
+
+        Livewire::actingAs($candidate->user)
+            ->test(AdmissionShow::class, ['admission' => $admission])
+            ->call('acceptVersion', $version->id)
+            ->assertSee('1 of 1')
+            ->call('submit')
+            ->assertHasNoErrors();
+        $this->assertSame('submitted', $admission->refresh()->status);
     }
 
     public function test_admission_page_exposes_only_valid_actor_and_state_actions(): void

@@ -26,6 +26,7 @@
             <div>
                 <flux:heading size="lg">{{ __('ui.admission.your_application') }}</flux:heading>
                 <flux:text>{{ __('ui.admission.application_to_join', ['group' => $admission->group->name]) }}</flux:text>
+                <flux:text>{{ __('ui.admission.agreement_progress', ['accepted' => $acceptedVersionIds->count(), 'total' => $versions->count()]) }}</flux:text>
             </div>
 
             @if (in_array($admission->status, ['draft', 'clarification_required'], true))
@@ -34,7 +35,7 @@
                 @endif
                 <flux:textarea wire:model="note" :label="__('ui.admission.message_to_reviewers')" rows="4" />
                 <div class="flex flex-col gap-2 sm:flex-row">
-                    <flux:button wire:click="submit" variant="primary">{{ $admission->status === 'draft' ? __('ui.admission.submit') : __('ui.admission.reply_submit') }}</flux:button>
+                    <flux:button wire:click="submit" variant="primary" :disabled="! $allAgreementsAccepted">{{ $admission->status === 'draft' ? __('ui.admission.submit') : __('ui.admission.reply_submit') }}</flux:button>
                     <flux:button wire:click="cancel" variant="ghost">{{ __('ui.admission.cancel') }}</flux:button>
                 </div>
             @elseif ($admission->status === 'submitted')
