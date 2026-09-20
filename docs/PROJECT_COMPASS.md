@@ -1,158 +1,163 @@
-# Everything Project Compass
+# IET Project Compass
 
-## Purpose and authority
+## Authority
 
-Everything is a modular Laravel platform in which Users authenticate as Actors; Actors participate in Groups through Memberships with contextual authorization; first-class objects receive Entity identity and reusable Concepts, relations, notes, and media; Groups organize activity through Spaces, Content, Agreements, and invitation-based admission; Plans turn intent into execution, Results, and Evidence; validated history produces learning and Reputation; Agreements can mature into Contracts with obligations and settlement; Commerce and accounting exchange value over the same contextual foundation; and successful structures become reusable templates without duplicating identity, membership, content, or authorization systems for each domain.
+This document is the durable product compass for IET. It defines the product purpose, architectural philosophy, non-negotiable boundaries, and destination. It does not claim that every described capability exists today.
 
-The product exists to let people, organizations, and systems describe themselves, form contexts, communicate, organize activity, learn, collaborate, agree on terms, exchange value, demonstrate results, build trust, and reuse successful patterns through one coherent platform.
+Repository implementation truth is summarized in `docs/CURRENT_STATE.md`. The target technical shape is defined in `docs/TARGET_ARCHITECTURE.md`. Execution order and release gates are defined in `docs/PRODUCTION_ROADMAP.md`.
 
-This document is the durable product and architecture compass. It distinguishes the intended destination from the verified implementation. It is not a claim that every capability described here currently exists.
+When a chat, report, issue, agent suggestion, legacy migration, or old document conflicts with these canonical documents, the canonical documents win unless the human owner explicitly approves a new architecture decision.
+
+## Product purpose
+
+IET is a configurable coordination platform for people and organizations to:
+
+- progressively identify and describe themselves;
+- form communities, teams, projects, classes, businesses, and other contexts;
+- describe knowledge, capabilities, resources, needs, offers, and intentions;
+- publish structured, interactive, versioned Content;
+- communicate and collaborate around that Content;
+- plan recurring and one-time activity;
+- submit applications, answers, evidence, reports, and evaluations;
+- negotiate agreements and create explicit commitments;
+- record fulfillment and evidence;
+- account for financial consequences through an immutable ledger;
+- experiment with new value and financial-instrument ideas in a separate laboratory;
+- reuse successful structures through versioned Blueprints and focused domain packs.
+
+IET is intentionally generic internally, but must feel specific externally. A normal user should experience "Chess School", "Construction Project", "My Life", "Tour Operator", "Hiring", "Interactive Book", or another focused workflow. They should not need to understand generic schemas, assertions, workflow engines, or journal lines.
 
 ## Product north star
 
-Everything should support many applications—personal organization, education, travel, projects, recruitment, communities, services, commerce, manufacturing, and knowledge sharing—without building unrelated identity, participation, content, or authorization systems for each one.
+The target lifecycle is:
 
-The complete platform lifecycle is:
+~~~text
+Identity
+→ Representation
+→ Context
+→ Participation
+→ Meaning
+→ Content and Communication
+→ Interaction
+→ Planning
+→ Need / Offer
+→ Proposal / Negotiation
+→ Agreement / Commitment
+→ Fulfillment / Evidence
+→ Obligation / Settlement
+→ Accounting
+→ Learning / Reputation / Discovery
+→ Reuse through Blueprints
+~~~
 
-```text
-Identity → Representation → Context → Participation → Meaning
-→ Communication → Agreement → Intent and Planning → Execution
-→ Result → Evidence → Trust and Reputation → Value Exchange
-→ Learning and Improvement → Reuse
-```
+The platform should support many domains without creating unrelated identity, authorization, content, planning, workflow, or accounting systems for every domain.
 
-A mature user should experience one connected view of their identity, profile, groups, spaces, plans, work, learning, agreements, contracts, offers, needs, transactions, evidence, reputation, and history—not a collection of disconnected applications.
+The design goal is not "everything is one database object." The design goal is:
 
-## Foundational distinctions
+> Everything can participate in a small, coherent set of reusable capabilities while specialized domains retain their own invariants.
+
+## Core distinctions
 
 | Concept | Durable meaning |
 | --- | --- |
-| **User** | The authentication account: credentials, email verification, account status, sessions, and other authentication concerns. |
-| **UserIdentity** | Account-level personal identity and presentation, such as given, family, and display names. It keeps `User` deliberately small. |
-| **Actor** | The domain participant that joins Groups, creates material, accepts terms, performs work, and receives attribution. An Actor may be accountless when the domain genuinely requires it. |
-| **Entity** | The stable universal identity and attachment surface for a first-class object. It enables generic addressing, classification, relations, notes, media, and references; it does not own every object's business state. |
-| **Group** | The context answering who participates together. It is reusable across domains and does not absorb travel, education, commerce, or other specialized fields. |
-| **Membership** | The operational truth that an Actor participates in a Group, including participation lifecycle state. It is not the authorization system. |
-| **Contextual Role / Permission** | The authorization truth within a Group context. Authority in one Group has no effect in another. Active Membership remains a prerequisite. |
-| **Concept** | Shared semantic meaning used for classification, hierarchy, discovery, and relationships. A Concept never grants access or substitutes for workflow state. |
-| **Space** | A purpose-specific place where a Group communicates or operates. It uses Group participation rather than creating a separate membership universe. |
-| **Content** | Authored intrinsic information such as an article, announcement, question, proposal, or instruction. |
-| **ContentBlock** | A first-class structural part of Content that may carry media, meaning, notes, or reactions at block level. |
-| **Note** | Supplemental information about a target. It is not an intrinsic ContentBlock and does not replace the document model. |
-| **Agreement** | Versioned rules or terms that participants explicitly accept. Published versions point to immutable Content revisions. |
-| **Invitation** | A controlled admission context that exposes only an authorized preview and pathway. Possession of a link is not Membership. |
-| **Application** | An authenticated Actor's request for admission through an Invitation. Membership is created only when admission succeeds. |
-| **Plan** | An Actor's or Group's intended activity, optionally with assignments, dependencies, scheduling, and recurrence. Personal plans do not require a fake Group. |
-| **Occurrence** | One scheduled or executed instance of a Plan item. It is distinct from the reusable plan definition. |
-| **Result** | What actually happened during execution, distinct from what was planned. |
-| **Evidence** | Material supporting a Result, obligation, skill, or claim, with an explicit validation lifecycle when required. |
-| **Contract** | Versioned binding obligations and value exchange between explicit parties. It is not merely a Plan or general Agreement. |
-| **Reputation** | A projection derived from verified history, evidence, fulfillment, reliability, and disputes—not a self-declared score. |
-| **Ledger** | Strongly typed, balanced, immutable accounting records of value movement, settlement, allocation, reversal, and provenance. |
+| User | Authentication account: credentials, verification, sessions, account status, locale, timezone, and other login-level concerns. |
+| Actor | Domain participant. Today it is primarily a person backed by a User; the target supports person, organization, and system Actors with explicit acting authority. |
+| Group | A governed collaboration/community boundary with Memberships, contextual roles, invitations, admissions, agreements, and Spaces. |
+| Membership | Participation truth in a Group. It is distinct from authorization. |
+| Role / Permission | Contextual authorization. Group authority never grants platform authority or authority in another Group. |
+| Context | A bounded collaboration/visibility environment. Group Space is the first implementation; future contexts include Personal, Admission, Negotiation, Contract, and direct collaboration. |
+| Concept | Canonical semantic meaning such as Chess, Programming, Electrical Work, Tourism, or English. A Concept is not intrinsically a skill, need, interest, or tag; predicates provide that meaning. |
+| Concept Assertion | A typed relation from a subject to a Concept, e.g. Actor has_skill Chess, Content teaches Chess, or Group focuses_on Chess. |
+| Content | The universal human-facing artifact layer: authored information that can be structured, revised, styled, published, related, annotated, and interacted with. |
+| Content Definition | Versioned structured field schema for Content. |
+| Content Blueprint | Reusable package of Definition, initial composition, Presentation, semantic classification, and interaction defaults. |
+| Submission | A structured response to a published interaction definition, such as an application, exam attempt, questionnaire, assignment, survey, or inspection. |
+| Workflow | Explicit states, transitions, requirements, authorization, and evidence for a process. It does not replace domain objects. |
+| Plan | Intended activity, possibly recurrent. |
+| Occurrence | A concrete scheduled or executed instance of a Plan. |
+| Need | A structured expression of something an Actor or context requires. |
+| Offer | A structured expression of something an Actor or context can provide. |
+| Agreement | Versioned terms/rules accepted by explicit parties or participants. |
+| Commitment | A concrete obligation to provide, perform, pay, deliver, attend, or otherwise fulfill something. |
+| Fulfillment | Evidence-bearing record of what actually happened against a Commitment. |
+| Ledger | Immutable, balanced accounting truth produced from financial consequences of domain events. |
+| Financial Instrument | A unit/claim/credit/asset used in the financial laboratory or approved production flows. It is distinct from fiat currency and from the accounting ledger. |
+| Blueprint | Versioned reusable configuration that turns generic kernels into a focused user experience. |
+| Domain Pack | Curated collection of Blueprints, capabilities, terminology, and UI for a field such as Learning, Projects, Tourism, or Personal Life. |
 
-## Frozen architectural boundaries
+## Architectural rules
 
-These rules are architectural constraints, not optional implementation preferences:
+1. Build a modular Laravel monolith until evidence requires otherwise. Do not introduce microservices merely because the domain is broad.
+2. User and Actor remain distinct.
+3. Platform authority, Group participation, and Context access remain distinct.
+4. Content is the universal human-facing artifact layer, not a replacement for every domain entity.
+5. Domain facts and lifecycles stay in domain models; Content describes/presents them and may provide immutable evidence.
+6. Concepts describe meaning. Predicates describe how something relates to that meaning. Schemes describe classification perspectives.
+7. Do not encode "skill", "need", "interest", "service", and similar contextual meanings as duplicate Concept branches when a predicate expresses them.
+8. Group Space must eventually become one Content Context implementation rather than the only place Content can exist.
+9. Published Content revisions, accepted agreements, posted accounting entries, and comparable evidence are immutable. Corrections create new revisions or reversals.
+10. Critical multi-model transitions live in explicit transactional Actions.
+11. Authorization is rechecked at protected boundaries and mutations; possession of IDs or URLs grants no authority.
+12. Generic engines are accepted only after at least two meaningfully different domains demonstrate them.
+13. Generic internals must be hidden behind purpose-specific UX.
+14. Dynamic definitions and templates may configure trusted registries and data. They must not execute arbitrary PHP, Blade, JavaScript, SQL, or CSS from the database.
+15. Real-time transport is never authoritative. The database and domain actions remain the source of truth.
+16. Accounting and the Financial Laboratory are separate bounded systems. Experimental valuation must never corrupt production accounting truth.
+17. External real-money redemption is a controlled production capability, not an automatic property of every Group-created instrument.
+18. Production readiness includes operations, security, privacy, observability, backups, accessibility, performance, and recovery—not only feature completeness.
+19. No roadmap phase begins merely because it is interesting. Its dependency and prior phase exit gates must be satisfied.
+20. No AI agent may silently change these boundaries.
 
-1. Build a modular Laravel monolith with one coherent domain model. Do not default to microservices, generic repositories, or a universal workflow interpreter.
-2. `Entity` is a universal identity and attachment surface, not a universal business table or JSON dumping ground. Specialized domain models own behavior, state machines, and invariants.
-3. Semantic relations describe meaning and provenance; they never replace operational records such as Membership, Application, acceptance, Contract, transaction, or ledger entry.
-4. Concepts never grant authorization or represent operational workflow state.
-5. Membership is participation truth. Contextual RBAC and policies are authorization truth. Both must be satisfied where participation is required.
-6. Group or Entity relations never imply Membership, visibility, or permission inheritance.
-7. Group, Space, Plan, Agreement, and Contract remain distinct objects with distinct responsibilities.
-8. User and Actor remain distinct. Anonymous visitors do not automatically become Actors.
-9. Objects evolve through relations and provenance; one domain object does not shapeshift into another.
-10. Published Content revisions and accepted Agreement or Contract versions are immutable. Corrections create new versions or explicit reversals.
-11. Critical multi-model operations live in explicit transactional domain actions. Controllers, Livewire components, APIs, and administrative UI call those actions rather than reimplementing invariants.
-12. Authorization is explicit at every protected boundary. Knowing an ID, receiving a URL, sharing a Concept, or relating to an accessible Entity confers no access.
-13. Accounting remains strongly typed, balanced, immutable after posting, idempotent at settlement boundaries, and corrected through explicit reversals.
-14. Dynamic forms, tables, templates, and automation sit above stable business domains. They collect or present domain data; they do not replace domain objects or rules.
-15. Reusable media, rich-content, audit, and identity capabilities should not be rebuilt independently in each domain.
+## "Generic inside, specific outside"
 
-## Verified current state
+The kernel may expose abstractions such as ConceptAssertion, ContentBlueprint, SubmissionDefinition, ScheduleRule, or JournalEntry.
 
-The repository is an early-stage Laravel 13 monolith. The following statements reflect the verified audit and its critical review as of 2026-09-09.
+The UI should instead say:
 
-### Established foundation
+~~~text
+Add a skill
+Create a lesson
+Apply for this job
+Schedule weekly class
+Record an expense
+Invite a student
+~~~
 
-- Authentication, account-status enforcement, email verification, password reset, and session handling have substantive feature coverage.
-- Registration creates a conventional `User` and an associated `Actor` transactionally.
-- The User/Actor separation and an accountless-Actor option exist.
-- A reusable Blade/Livewire/Flux application shell exists.
-- Group, Membership, reusable Invitation, contextual Spatie role, role-change request, and Story responsibility schemas or prototypes exist.
-- The current suite passes 71 tests with 319 assertions.
+Domain Packs are responsible for making the generic kernel feel native to a specific field.
 
-Historical implementation detail remains in `Development-CodexReports/`. Those files are milestone evidence, not the current product compass.
+## Generic-abstraction proof rule
 
-### Current limitations and release blockers
+Every major generic abstraction must be validated by at least two unrelated use cases before being considered stable.
 
-- Actor administration is intentionally but only temporarily available to every active, verified account.
-- Active Membership is not rechecked on every Group Livewire mutation; removal also leaves contextual role records attached.
-- Invitation acceptance overwrites an existing member's role and does not correctly reactivate a removed Membership.
-- Concurrent Owner removal can leave a Group without an Owner; role-request creation and review also have race windows.
-- Configurable permissions are stored but application actions authorize only the literal Owner role.
-- Multi-Group role resolution can reuse a stale loaded Spatie relation.
-- Group rendering provisions and synchronizes roles and permissions, so a read path performs writes.
-- Group, invitation, membership, role, request, story, tenant-isolation, and concurrency behavior has no tests.
-- Static analysis currently reports five errors in Group and Invitation code.
-- The frontend dependency graph has no lockfile.
+Examples:
 
-There is no verified production deployment, no complete Entity/UserIdentity kernel, no semantic kernel, no Spaces/Content/Agreement system, no admission Application workflow, and no production-ready Planner, Evidence, Contract, Reputation, Commerce, Accounting, or builder capability.
-
-## Development stages
-
-The stages express dependency order, not promises that every speculative feature will be built exactly as named.
-
-| Horizon | Stage | Outcome |
+| Kernel | Proof A | Proof B |
 | --- | --- | --- |
-| **Completed foundation** | Laravel/authentication, User/Actor foundation, test harness, UI shell, early Group and Invitation prototype | A verified development baseline with working authentication and initial domain scaffolding. |
-| **Current stage** | Kernel hardening | Make the existing Actor, Group, Membership, contextual authorization, Invitation, and role workflows safe, transactional, isolated, and tested. |
-| **Near-term kernel** | Identity completion; secure Group kernel; semantic kernel; Spaces and Content; Agreements; invitation-based admission; operational hardening | Establish stable identity, participation, meaning, communication, terms, and admission before broader domains. |
-| **Later platform** | Planner and execution; Results and Evidence; Contracts; Reputation and Learning; Commerce; Economy; templates and repetition | Build specialized capabilities only on the proven kernel and preserve domain boundaries. |
-| **Optional mature layer** | Configurable builders, automation, and advanced value/governance capabilities | Introduce only when stable domains demonstrate real reusable behavior. |
+| Concept Assertions | Actor skills/interests | Content classification |
+| Submissions | School exam | Employment application |
+| Planner | Personal chess-study habit | Construction worker shift |
+| Need / Offer | Construction labor | Tourism/restaurant service |
+| Workflow | Admission | Content/application review |
+| Ledger | Personal expense | Payroll/payable |
+| Group Blueprint | Chess learning group | Project/work group |
 
-The next recommended milestone is **Authorization and Group-Integrity Correction**. It does not include Entity, Concepts, Spaces, Content, Filament, Stories UI, Planner, Commerce, or other expansion work.
+If one abstraction cannot model both cases cleanly without field abuse, it is not yet generic enough.
 
-## North-star acceptance stories
+## Product boundaries
 
-These stories express architectural capability, not immediate implementation scope.
+IET is not:
 
-### Secure Group kernel
+- one giant universal Entity table;
+- a low-code system where JSON replaces business invariants;
+- a blockchain or cryptocurrency product by default;
+- a financial institution merely because it has a ledger;
+- an LMS, project manager, social network, marketplace, accounting package, or tourism application with unrelated modules bolted together;
+- a requirement that every person use every feature.
 
-A verified User has an Actor, creates a Group, receives an active creator Membership and contextual authority, and admits another Actor with different authority. The same Actor can hold a different role in another Group. Policies enforce active Membership, permission, target scope, and Group isolation on every request, including after page load. No role or permission leaks across Groups, and no workflow can remove the last Owner.
+It is a platform kernel from which focused applications can be instantiated.
 
-### Invitation and admission kernel
+## Success criterion
 
-An authorized Group participant issues an Invitation containing only approved preview material, available roles, responsibilities, and required Agreement versions. A guest sees only that invitation-scoped preview, then authenticates or registers and verifies. The Actor submits an Application, accepts exact immutable Agreement versions, completes any review or negotiation, and receives Membership and contextual authority only after approval. Redemption is idempotent, race-safe, auditable, and preserves existing membership state correctly.
+Technical success means that several unrelated real workflows can operate comfortably over the same kernels without bypassing invariants or exposing generic complexity to users.
 
-### Marta and Elizabeth across domains
-
-Elizabeth participates in a Training Class, then joins a derived Trip Group without inheriting access merely from the relationship. Through a real introduction she discovers Marta's Tailoring Workshop, reviews an invitation-authorized curriculum and Agreement, applies, and becomes a learner. Plans, assignments, Results, and validated Evidence establish skill. Later, a customer Contract assigns Elizabeth an obligation; fulfillment, customer validation, and settlement create evidence and reputation. Marta independently participates in a Tour Group as a chef and in supplier/customer Groups. Shared identity, Concepts, Membership, Content, Agreements, Plans, Evidence, Reputation, Contracts, and accounting support the whole story without duplicating domain kernels.
-
-## Unresolved decisions
-
-The following decisions must be resolved before implementation whose behavior depends on them:
-
-- Who may administer Actors: platform administrators, the associated User, Group-scoped administrators, or a defined combination?
-- Must every authenticated User always retain exactly one Actor, or may an account temporarily be Actor-less?
-- Does an Actor hold exactly one contextual role per Group or multiple roles?
-- When Membership ends and later resumes, are prior roles discarded, restored, or explicitly reassigned?
-- What are the exact Membership lifecycle states and allowed transitions?
-- Is registration permanently invitation-oriented, and what controlled bootstrap mechanism creates the first platform administrator?
-- Which Group permissions and operations form the initial frozen authorization matrix?
-- Which database engine and deployment topology define production concurrency and migration constraints?
-
-Unresolved product semantics must not be silently decided by an AI arm, Linear, or incidental implementation.
-
-## What Everything is not
-
-Everything is not a travel application with modules, a marketplace with social features, an LMS with commerce, a project manager with chat, a social network with tasks, a giant universal Entity table, a blockchain product, or a low-code builder that pretends business rules do not exist.
-
-It is a composable contextual platform whose reusable primitives support many domains while preserving specialized operational models and invariants.
-
-## Governance
-
-This compass defines the durable destination, vocabulary, dependency order, and frozen architectural boundaries. It does not make speculative stages current commitments and does not override an accepted task-specific decision recorded later.
-
-A change to a frozen boundary requires explicit human approval and an architecture decision record, or an equivalent durable documented decision linked from the relevant task handoff. When the compass, an accepted decision, a Linear issue, and implementation evidence conflict, work stops until the human owner resolves the conflict.
+Product adoption cannot be guaranteed by architecture. The release process therefore uses measurable usability, reliability, security, and operational gates and then validates the system with real domain pilots.

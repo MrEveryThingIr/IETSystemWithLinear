@@ -1,58 +1,75 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# IET / EveryThing
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+IET is a Laravel-based coordination platform designed around reusable kernels for identity, governed groups, structured interactive Content, semantics, planning, workflows, exchange, commitments, and accounting.
 
-## About Laravel
+The project deliberately aims for **generic infrastructure internally and focused experiences externally**. A user should interact with concrete products such as a learning group, project workspace, personal planner, hiring flow, or tourism workflow rather than raw generic primitives.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Current baseline
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Active development branch:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+`feat/group-spaces-communication`
 
-## Learning Laravel
+Validated code baseline before the current architecture-documentation update:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+`f57ee430f96afcdb1ecc32f5b644fcb057dae6f4`
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Human-owner local validation at that baseline:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- 273 tests passed / 1386 assertions
+- PHPStan: no errors
+- Pint: passed
+- Vite production build: passed
 
-## Agentic Development
+## Canonical project documents
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Read these instead of relying on chat history:
 
-```bash
-composer require laravel/boost --dev
+1. [Project Compass](docs/PROJECT_COMPASS.md)
+2. [Current State](docs/CURRENT_STATE.md)
+3. [Target Architecture](docs/TARGET_ARCHITECTURE.md)
+4. [Production Roadmap](docs/PRODUCTION_ROADMAP.md)
+5. [Phase 1 — Invitation / Registration / Admission](docs/PHASE_01_INVITATION_ONBOARDING.md)
+6. [Concept Kernel](docs/CONCEPT_KERNEL.md)
+7. [Financial Architecture](docs/FINANCIAL_ARCHITECTURE.md)
+8. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
+9. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
 
-php artisan boost:install
-```
+Historical implementation reports are under `Development-CodexReports/`.
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Current implemented foundation
 
-## Contributing
+The repository already contains substantial implementations for:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- User/Actor identity separation;
+- authentication, verification and password reset;
+- platform access grants;
+- Groups, Memberships, contextual roles/permissions;
+- invitation-based Admission and Agreement evidence;
+- ownership transfer integrity;
+- Group Spaces and restricted participation;
+- chat and replies;
+- structured Content Definitions and immutable versions;
+- Content revisions with active/draft pointers;
+- blocks and rich media/assets;
+- safe presentation templates;
+- Book/Lesson/Page Outline composition;
+- immutable publication evidence;
+- Reader/Studio separation;
+- contextual annotations, questions/answers/replies, private notes and reactions.
 
-## Code of Conduct
+See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Development rule
 
-## Security Vulnerabilities
+Work on one accepted roadmap phase at a time.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+The next implementation milestone is **Phase 1: Production Invitation, Registration and Admission Journey**.
 
-## License
+Agents must read `AGENTS.md` and the canonical docs before changing code.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Laravel
+
+This is a Laravel 13 application running on PHP 8.4. Project-specific Laravel/Boost guidance is committed in `AGENTS.md` and `.ai/rules/`.
+
+Do not infer package versions from generic documentation; inspect the repository before making version-dependent changes.

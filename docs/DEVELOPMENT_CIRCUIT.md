@@ -1,168 +1,361 @@
-# Everything Development Circuit
+# IET Development Circuit
 
 ## Purpose
 
-Everything uses a Linear-first AI–human development circuit. Product meaning, architecture decisions, live work state, source history, and validation evidence have distinct authorities; none silently substitutes for another.
+IET is developed through a repository-first, phase-gated human + AI circuit.
+
+The repository holds durable architecture, implementation, reports, and validation evidence. Chat history is useful for discussion but is not the long-term source of truth.
 
 The default circuit is:
 
-```text
-Human owner + ChatGPT decision hub
-→ Linear planning, execution, and review
-→ GitHub branch, pull request, CI, commit, merge, or release
-→ Human/ChatGPT decision gate
-→ Linear correction or continuation
-```
+~~~text
+Human owner + ChatGPT architecture/decision hub
+→ repository canonical docs
+→ one accepted roadmap phase
+→ Codex / Work / another implementation agent
+→ GitHub branch + commits + tests
+→ phase report
+→ human/ChatGPT review gate
+→ next phase
+~~~
 
-Linear may continue unblocked accepted work without human interruption between routine steps. Pause for the human owner and ChatGPT decision hub when a product semantic decision is unresolved, a frozen architecture boundary may change, a destructive or irreversible operation is required, validation cannot be completed, or a materially different design choice needs human judgment.
+Issue trackers such as Linear may manage live task state, but they do not replace the repository's canonical architecture or source history.
 
-Codex is an optional escalation arm, not a mandatory stage. Use it for difficult Laravel architecture, security, concurrency, migrations or data integrity, deep repository audits, repeated failures, or an independent high-risk review.
+## Authority order
 
-## Responsibilities
+1. Human owner
+2. Accepted architecture decisions / ADRs
+3. `docs/PROJECT_COMPASS.md`
+4. `docs/TARGET_ARCHITECTURE.md`
+5. `docs/PRODUCTION_ROADMAP.md`
+6. active phase contract, e.g. `docs/PHASE_01_INVITATION_ONBOARDING.md`
+7. path-specific `.ai/rules/`
+8. source code and tests for actual implemented behavior
+9. phase reports / historical evidence
+10. issue tracker/live planning metadata
+11. chat summaries or legacy migrations
+
+When two authoritative sources conflict materially, stop and resolve the contradiction before implementation.
+
+## Canonical reading order for an agent
+
+Before meaningful implementation:
+
+1. read `AGENTS.md`;
+2. read `.ai/rules/index.md` and matching rules;
+3. read `docs/PROJECT_COMPASS.md`;
+4. read `docs/CURRENT_STATE.md`;
+5. read `docs/TARGET_ARCHITECTURE.md`;
+6. read `docs/PRODUCTION_ROADMAP.md`;
+7. read only the currently active phase contract;
+8. read relevant ADRs;
+9. inspect actual source/tests before proposing changes.
+
+Do not read every future phase as implementation scope.
+
+## Roles
 
 ### Human owner
 
-- Is the product authority and approves unresolved product semantics.
-- Approves material architecture decisions and changes to frozen boundaries.
-- Approves sensitive merges and releases.
-- Resolves contradictions between authoritative inputs.
+- owns product intent;
+- approves architecture changes;
+- accepts phase gates;
+- resolves ambiguous semantics;
+- authorizes destructive/irreversible operations;
+- decides when a phase is ready to merge/release.
 
-### ChatGPT decision hub
+### ChatGPT architecture/decision hub
 
-- Synthesizes evidence, alternatives, and recommendations into a coherent direction.
-- Identifies contradictions, missing evidence, and decisions requiring the owner.
-- Does not duplicate Linear's live issue or workflow state.
+- synthesizes current evidence and alternatives;
+- maintains consistency between product vision and implementation;
+- updates or proposes canonical docs when product decisions change;
+- reviews phase results;
+- identifies contradictions and hidden coupling;
+- does not replace GitHub as source truth.
 
-### Linear
+### Codex / implementation agent
 
-- Is the primary planning, execution, and review arm for accepted work.
-- Stores projects, milestones, issues, dependencies, acceptance criteria, assignments, and live workflow state.
-- Continues routine unblocked work, links issues to branches, pull requests, and handoffs, and records corrections.
-- Never silently decides unresolved product semantics or changes frozen architecture boundaries.
+- reads repository authority first;
+- audits existing implementation before editing;
+- changes only the accepted phase scope;
+- writes tests;
+- runs validation;
+- records a durable implementation report;
+- stops at the phase gate.
 
-### Codex escalation arm
+### ChatGPT Work
 
-- Inspects the repository and applicable instructions before acting.
-- Is engaged only when specialist Laravel or independent high-risk review is needed.
-- May investigate or implement the specifically escalated scope and reports exact Git state and validation evidence.
+Work may be used instead of or alongside Codex for a substantial scoped phase, especially when multi-file repository inspection, browser workflows, connectors, or artifact production are useful.
+
+The same repository/phase rules apply.
+
+### Linear or another issue tracker
+
+Optional live planning layer.
+
+May hold:
+
+- issue breakdown;
+- dependencies;
+- live status;
+- assignees;
+- links to commits/PRs.
+
+It is not the architecture authority.
 
 ### GitHub
 
-- Is authoritative for source, branches, pull requests, review discussion, CI evidence, commits, merges, and releases.
-- Preserves committed history of handoffs and architecture decisions.
+Authoritative for:
 
-## Authority boundaries
+- files;
+- commits;
+- branches;
+- pull requests;
+- CI;
+- review discussion;
+- release history.
 
-- `docs/PROJECT_COMPASS.md` governs durable product vocabulary, destination, and frozen architecture.
-- Human-approved architecture decisions govern explicit exceptions or refinements.
-- The human owner is the product authority.
-- ChatGPT is the architecture and decision-synthesis hub.
-- Linear governs live issue, project, and workflow state after an issue exists.
-- GitHub governs the exact source, pull request, CI, commit, merge, and release state.
-- Task handoffs record verified execution history and cross-context information; they do not replace Linear or GitHub.
-- Historical files in `Development-CodexReports/` remain evidence for their milestones but are not a live roadmap.
+## One phase at a time
 
-If these sources conflict in a way that changes behavior, scope, or acceptance, stop and request human resolution.
+A phase contract defines:
 
-## Cycle states
+- objective;
+- accepted semantics;
+- included scope;
+- excluded scope;
+- dependencies;
+- acceptance criteria;
+- tests;
+- stop conditions.
 
-1. **Proposed** — an idea or need exists but has not been analyzed.
-2. **Analysis** — evidence, constraints, alternatives, and dependencies are being examined.
-3. **Decision required** — one or more unresolved choices materially change behavior or architecture.
-4. **Frozen** — the human owner has accepted the relevant semantics, invariants, and boundaries.
-5. **Ready for implementation** — the implementation entry requirements are complete.
-6. **In progress** — Linear or an explicitly escalated arm is changing the repository.
-7. **Review** — implementation or documentation awaits review appropriate to its risk.
-8. **Changes requested** — review identified required corrections.
-9. **Ready to merge** — acceptance criteria and required validation are satisfied.
-10. **Done** — the accepted work is merged and durable state is updated.
-11. **Blocked** — progress requires missing authority, information, access, or an external state change.
+An agent must not implement future phases merely because the target architecture describes them.
 
-## Entry requirements for implementation
+Example:
 
-An issue may enter **Ready for implementation** only when it has:
+During Phase 1, do not build:
 
-- One objective.
-- Accepted invariants and product semantics.
-- Explicit included scope.
-- Explicit excluded scope.
-- Measurable acceptance criteria.
-- Required tests and validation.
-- Known dependencies.
-- A stated risk level.
-- No unresolved decision that would materially change behavior.
+- Concepts;
+- Profile;
+- generic Submission engine;
+- Planner;
+- Ledger.
 
-Discovery, audit, documentation, and decision work may proceed earlier, but must not be mislabeled as implementation.
+Phase 1 may leave compatible seams for later work, but no speculative database structure is required unless the active phase needs it.
 
-## Handoff discipline
+## Implementation cycle
 
-Every meaningful working session creates or updates exactly one task handoff in `docs/handoffs/`. Small correction loops update the same file rather than generating competing summaries.
+### 1. Synchronize
 
-Before Linear exists, use a neutral stable bootstrap identifier such as:
+Before editing:
 
-```text
-BOOTSTRAP-001-project-foundation.md
-```
+~~~text
+git status --short
+git branch --show-current
+git fetch origin
+git pull --ff-only <remote> <current-branch>
+git rev-parse --short HEAD
+~~~
 
-After Linear is established, prefer:
+If tracked local changes exist, preserve them before pulling. Do not reset, discard, or overwrite them casually.
 
-```text
-<LINEAR-ID>-<short-task-name>.md
-```
+### 2. Inspect
 
-Each handoff contains:
+Inspect:
 
-- Task identifier and title.
-- Current status and responsible arm or decision gate.
-- Objective and authoritative inputs.
-- Accepted decisions and invariants.
-- Included and excluded scope.
-- Files or systems examined.
-- Changes made.
-- Tests and commands actually run, with exact results.
-- Risks and unresolved questions.
-- Git branch, commits, pull request, and Linear issue.
-- Review findings and final outcome.
-- `Prompt for next step`.
+- active phase docs;
+- source;
+- migrations;
+- policies;
+- Actions;
+- tests;
+- applicable rules;
+- relevant Laravel/package docs when version-specific behavior matters.
 
-Report rules:
+### 3. Report pre-change findings
 
-- Never claim a check that was not run.
-- Record durable conclusions, not full conversations.
-- Do not paste enormous output unless it is necessary evidence.
-- Link to source, commits, and pull requests instead of duplicating diffs.
-- Never include secrets, environment values, signed URLs, tokens, or personal recipient data.
-- Update the existing task handoff rather than create a second source of truth.
-- GitHub stores committed handoff history; Linear stores live workflow state.
-- A handoff must not contradict its Linear issue or an accepted architecture decision.
-- A blocked or incomplete result must be reported as such.
+For nontrivial phases, record:
+
+- what currently exists;
+- exact defects/gaps;
+- proposed minimal architecture-compatible change;
+- migrations/data risks;
+- tests required.
+
+If this reveals a frozen-boundary conflict, stop before coding.
+
+### 4. Implement atomically
+
+Prefer coherent commits.
+
+Examples:
+
+~~~text
+feat(onboarding): ...
+test(onboarding): ...
+docs(onboarding): ...
+~~~
+
+Avoid one giant commit mixing unrelated cleanup.
+
+### 5. Validate progressively
+
+Start focused.
+
+Then phase gate.
+
+Typical final validation:
+
+~~~text
+php artisan test --compact
+vendor/bin/phpstan analyse
+vendor/bin/pint --dirty --format agent
+npm run build
+git status --short
+~~~
+
+Run additional concurrency/browser/manual checks when required by the phase.
+
+Never report a command as passed unless it actually ran.
+
+### 6. Write the phase report
+
+Path:
+
+`Development-CodexReports/<phase>-report.md`
+
+Reports should contain:
+
+- phase;
+- baseline;
+- objective;
+- files inspected;
+- issues discovered;
+- changes made;
+- migrations;
+- tests;
+- exact validation;
+- manual checks;
+- unresolved risks;
+- Git commits;
+- next recommended gate.
+
+Do not store giant duplicated diffs in reports when Git already preserves them.
+
+### 7. Review gate
+
+Human/ChatGPT reviews:
+
+- correctness;
+- architecture consistency;
+- UX;
+- authorization;
+- migration safety;
+- test evidence;
+- whether the phase exit gate is actually satisfied.
+
+Only then activate the next phase.
 
 ## Git discipline
 
-The protected production trunk is `main`. Completed milestones integrate through the long-lived `develop` branch, and releases move from `develop` to `main` through reviewed pull requests. Direct feature development on `main` or `develop` is prohibited.
+Current project reality takes precedence over an idealized branching model.
 
-Feature and correction work branches from `develop`. After Linear identifiers exist, prefer agent branches in this form:
+Rules:
 
-```text
-linear/<type>/<linear-id>-<slug>
-```
+- never develop directly on `main`;
+- preserve the current accepted integration/feature branch strategy until a dedicated Git-flow decision changes it;
+- use fast-forward pulls when synchronizing a clean branch;
+- never force-push shared branches without explicit approval;
+- never reset/discard local user work without explicit confirmation and backup;
+- isolate unrelated work;
+- use PRs for integration/release boundaries;
+- tag production releases.
 
-Use a type that communicates intent, such as `feat`, `fix`, `refactor`, `docs`, or `chore`. Preserve a human-requested branch name when explicitly supplied. Every pull request should link its Linear issue and task handoff, keep unrelated changes out, report validation honestly, and target `develop`. Release pull requests target `main` and receive a semantic version tag after merge.
+For the current architecture baseline, the active branch is:
 
-## Prompt for next step template
+`feat/group-spaces-communication`
 
-```text
-TASK:
-RESPONSIBLE ARM OR DECISION GATE:
-AUTHORITATIVE INPUTS:
-CURRENT VERIFIED STATE:
-ACCEPTED DECISIONS:
-OBJECTIVE:
-INCLUDED:
-EXCLUDED:
-ACCEPTANCE CRITERIA:
-REQUIRED TESTS:
-RISKS:
-REQUIRED OUTPUT:
-STOP CONDITIONS:
-```
+Future phase branching should be decided at each phase start from the then-current accepted integration baseline.
+
+## Database discipline
+
+- migrations are append-only once shared;
+- no `migrate:fresh` assumption for production migration design;
+- preserve immutable evidence;
+- use explicit data migrations where semantics change;
+- restrict deletes where history matters;
+- test forward migration;
+- document rollback limitations;
+- use transactions/locks for race-sensitive transitions.
+
+## AI behavior rules
+
+An implementation agent must not:
+
+- invent missing product semantics;
+- silently weaken authorization;
+- replace domain models with generic JSON merely to simplify code;
+- introduce dependencies without approval;
+- implement later roadmap phases;
+- claim production readiness from tests alone;
+- claim browser/manual validation it did not perform;
+- rewrite a stable subsystem because a future name is cleaner;
+- connect experimental financial instruments to external money.
+
+## When to stop immediately
+
+Stop and request review when:
+
+- architecture docs conflict;
+- a frozen boundary must change;
+- a destructive migration appears necessary;
+- user data might be lost;
+- authorization implications are unclear;
+- legal/financial product semantics would change;
+- tests expose a deeper invariant contradiction;
+- local repository state is unsafe to synchronize;
+- required validation cannot run.
+
+## Handoffs
+
+Use `docs/handoffs/` for a task that spans agents/sessions and needs a concise operational state.
+
+Do not create a new handoff for every small correction.
+
+A handoff records:
+
+- task/phase;
+- current status;
+- accepted decisions;
+- work completed;
+- Git state;
+- validation;
+- unresolved items;
+- exact next step.
+
+The canonical architecture remains in the main docs, not copied into every handoff.
+
+## Prompting Codex
+
+The normal prompt should be short because the repository now contains the long context.
+
+Example:
+
+~~~text
+Work on IET Phase 1 only.
+
+Read AGENTS.md, .ai/rules/index.md and matching rules, then:
+- docs/PROJECT_COMPASS.md
+- docs/CURRENT_STATE.md
+- docs/TARGET_ARCHITECTURE.md
+- docs/PRODUCTION_ROADMAP.md
+- docs/PHASE_01_INVITATION_ONBOARDING.md
+
+Inspect the current branch completely for the Phase 1 scope before changing code.
+Do not implement later phases.
+Preserve all frozen invariants.
+Write/update Development-CodexReports/phase-01-invitation-onboarding-report.md.
+Run all validation required by the phase.
+Stop at the exit gate and report exact Git state and any unresolved risks.
+~~~
+
+This is preferred to pasting the whole architecture conversation into the prompt.

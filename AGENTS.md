@@ -1,3 +1,61 @@
+# IET Project Authority
+
+Before any nontrivial implementation work, read the repository's canonical product documents in this order:
+
+1. `docs/PROJECT_COMPASS.md`
+2. `docs/CURRENT_STATE.md`
+3. `docs/TARGET_ARCHITECTURE.md`
+4. `docs/PRODUCTION_ROADMAP.md`
+5. the currently active phase contract, beginning with `docs/PHASE_01_INVITATION_ONBOARDING.md`
+6. relevant ADRs
+7. `.ai/rules/index.md` and every matching path rule
+
+The repository is the durable source of truth. Chat transcripts, legacy migrations, issue comments, and historical reports are supporting evidence only.
+
+## Phase discipline
+
+- Work on one accepted roadmap phase at a time.
+- Do not implement later phases speculatively.
+- Audit existing code/tests before changing architecture.
+- Preserve frozen boundaries unless the human owner explicitly approves a new architecture decision.
+- Record meaningful phase results under `Development-CodexReports/`.
+- Stop at the phase exit gate for review before beginning the next phase.
+
+## Current architecture baseline
+
+The code baseline immediately before the canonical roadmap documentation is:
+
+`f57ee430f96afcdb1ecc32f5b644fcb057dae6f4`
+
+on:
+
+`feat/group-spaces-communication`
+
+The human owner locally validated that baseline with:
+
+- 273 PHPUnit tests passing / 1386 assertions;
+- PHPStan: no errors;
+- Pint: passed;
+- Vite production build: passed;
+- clean working tree.
+
+Current implementation details and known debt are maintained in `docs/CURRENT_STATE.md`; do not rely on older reports for present-state claims.
+
+## Architectural stop conditions
+
+Stop and request review before code changes that would:
+
+- change User/Actor identity semantics;
+- bypass Invitation → Admission → Membership;
+- weaken immutable Agreement/Content/accounting evidence;
+- introduce a universal JSON entity in place of specialized domains;
+- make GroupSpace the permanent universal container for all future Content;
+- connect experimental financial instruments to external money;
+- add destructive migrations or discard user data;
+- silently change a frozen boundary in `docs/PROJECT_COMPASS.md`.
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
