@@ -183,6 +183,41 @@ class InvitationJourneyTest extends TestCase
         $this->assertSame(1, $invitation->refresh()->uses_count);
     }
 
+    public function test_invitation_is_revalidated_if_it_expires_while_the_user_is_verifying(): void
+    {
+        Notification::fake();
+        [, $invitation] = $this->invitation(email: 'delayed@example.com');
+
+        Livewire::test(Register::class, ['token' => $invitation->token])
+            ->set('username', 'delayed_person')
+            ->set('email', 'delayed@example.com')
+            ->set('password', 'secure-password')
+            ->set('password_confirmation', 'secure-password')
+            ->call('register')
+            ->assertHasNoErrors();
+
+        $user = User::query()->where('email', 'delayed@example.com')->sole();
+        $invitation->update(['expires_at' => now()->subMinute()]);
+
+        $verificationUrl = URL::temporarySignedRoute('verification.verify', now()->addHour(), [
+            'id' => $user->id,
+            'hash' => sha1($user->email),
+        ]);
+
+        $this->get($verificationUrl)
+            ->assertRedirect(route('invitations.show', $invitation->token));
+
+        $this->get(route('invitations.show', $invitation->token))
+            ->assertOk()
+            ->assertSee('invitation has expired')
+            ->assertDontSee('Continue to admission');
+
+        $this->post(route('invitations.accept', $invitation->token))->assertNotFound();
+
+        $this->assertDatabaseCount('admissions', 0);
+        $this->assertSame(0, $invitation->refresh()->uses_count);
+    }
+
     public function test_reserved_email_mismatch_rolls_back_the_entire_registration(): void
     {
         Notification::fake();
@@ -261,6 +296,30 @@ class InvitationJourneyTest extends TestCase
 
         $this->assertDatabaseCount('admissions', 1);
         $this->assertSame(1, $invitation->refresh()->uses_count);
+    }
+
+    public function test_admission_candidate_has_no_normal_group_access_before_finalization(): void
+    {
+        [, $invitation] = $this->invitation();
+        $candidate = Actor::factory()->create();
+        $admission = app(RedeemGroupInvitation::class)->execute(
+            $invitation->token,
+            $candidate,
+            $candidate->user->email,
+        );
+
+        $this->actingAs($candidate->user)
+            ->get(route('admissions.show', $admission))
+            ->assertOk();
+
+        $this->actingAs($candidate->user)
+            ->get(route('groups.show', $invitation->group))
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('group_memberships', [
+            'group_id' => $invitation->group_id,
+            'actor_id' => $candidate->id,
+        ]);
     }
 
     public function test_account_group_page_tracks_received_and_sent_invitations(): void
