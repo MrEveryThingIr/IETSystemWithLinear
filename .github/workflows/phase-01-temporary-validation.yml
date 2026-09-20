@@ -35,6 +35,9 @@ jobs:
           cp .env.example .env
           php artisan key:generate --no-interaction
 
+      - name: Frontend build
+        run: npm run build
+
       - name: PHPUnit
         run: php artisan test --compact
 
@@ -46,6 +49,3 @@ jobs:
 
       - name: Pint repository check
         run: vendor/bin/pint --test
-
-      - name: Frontend build
-        run: npm run build
