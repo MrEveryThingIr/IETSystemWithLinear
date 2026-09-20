@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - codex/phase-01-invitation-onboarding
+  pull_request:
+    branches:
+      - feat/group-spaces-communication
 
 jobs:
   validate:
