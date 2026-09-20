@@ -95,6 +95,35 @@ class InvitationJourneyTest extends TestCase
         $this->get(route('invitations.show', 'unknown-token'))->assertNotFound();
     }
 
+    public function test_current_member_sees_group_entry_instead_of_another_admission_action(): void
+    {
+        $this->withoutVite();
+        [$owner, $invitation] = $this->invitation();
+
+        $this->actingAs($owner->user)
+            ->get(route('invitations.show', $invitation->token))
+            ->assertOk()
+            ->assertSee('already have a current membership')
+            ->assertSee(route('groups.show', $invitation->group), false)
+            ->assertDontSee('Continue to admission');
+    }
+
+    public function test_targeted_invitation_preview_blocks_the_wrong_authenticated_account(): void
+    {
+        $this->withoutVite();
+        $candidate = Actor::factory()->create();
+        [, $invitation] = $this->invitation(email: 'reserved@example.com');
+
+        $this->actingAs($candidate->user)
+            ->get(route('invitations.show', $invitation->token))
+            ->assertOk()
+            ->assertSee('reserved for another email address')
+            ->assertSee('Log out')
+            ->assertDontSee('Continue to admission');
+
+        $this->assertDatabaseCount('admissions', 0);
+    }
+
     public function test_existing_admission_can_be_resumed_after_invitation_is_exhausted(): void
     {
         $this->withoutVite();
@@ -216,6 +245,22 @@ class InvitationJourneyTest extends TestCase
             ->assertOk()
             ->assertSee('Verify your email address before continuing.')
             ->assertSessionHas('url.intended', route('invitations.show', $invitation->token));
+    }
+
+    public function test_invitation_accept_endpoint_is_rate_limited_and_redemption_stays_idempotent(): void
+    {
+        [, $invitation] = $this->invitation();
+        $candidate = Actor::factory()->create();
+        $this->actingAs($candidate->user);
+
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $this->post(route('invitations.accept', $invitation->token))->assertRedirect();
+        }
+
+        $this->post(route('invitations.accept', $invitation->token))->assertStatus(429);
+
+        $this->assertDatabaseCount('admissions', 1);
+        $this->assertSame(1, $invitation->refresh()->uses_count);
     }
 
     public function test_account_group_page_tracks_received_and_sent_invitations(): void

@@ -5,8 +5,11 @@ namespace Tests\Feature\Groups;
 use App\Actions\Groups\GroupRoleProvisioner;
 use App\Actions\Groups\TransitionGroupMembership;
 use App\GroupPermission;
+use App\Livewire\Admissions\Show as AdmissionShow;
+use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show;
 use App\Models\Actor;
+use App\Models\Admission;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -106,6 +109,64 @@ class GroupAuthorizationTest extends TestCase
 
         $this->assertSame('Permitted change', $firstGroup->refresh()->name);
         $this->assertSame('Second group', $secondGroup->refresh()->name);
+    }
+
+    public function test_admission_candidate_and_manager_permissions_are_group_isolated(): void
+    {
+        $firstOwner = Actor::factory()->create();
+        $secondOwner = Actor::factory()->create();
+        $candidate = Actor::factory()->create();
+        $firstGroup = $this->createOwnedGroup($firstOwner);
+        $secondGroup = $this->createOwnedGroup($secondOwner, 'Second group');
+        $admission = Admission::create([
+            'group_id' => $firstGroup->id,
+            'candidate_actor_id' => $candidate->id,
+            'status' => 'submitted',
+        ]);
+
+        $this->actingAs($secondOwner->user)
+            ->get(route('admissions.show', $admission))
+            ->assertForbidden();
+
+        Livewire::actingAs($candidate->user)
+            ->test(AdmissionShow::class, ['admission' => $admission])
+            ->call('review', 'under_review')
+            ->assertStatus(403);
+
+        $this->assertSame('submitted', $admission->refresh()->status);
+
+        Livewire::actingAs($firstOwner->user)
+            ->test(AdmissionShow::class, ['admission' => $admission->refresh()])
+            ->call('review', 'under_review')
+            ->assertSet('admission.status', 'under_review');
+
+        $this->assertFalse(Gate::forUser($secondOwner->user)->allows('manageAdmissions', $firstGroup));
+        $this->assertTrue(Gate::forUser($firstOwner->user)->allows('manageAdmissions', $firstGroup));
+        $this->assertTrue(Gate::forUser($secondOwner->user)->allows('manageAdmissions', $secondGroup));
+    }
+
+    public function test_invitation_management_reauthorizes_after_membership_is_revoked(): void
+    {
+        $owner = Actor::factory()->create();
+        $manager = Actor::factory()->create();
+        $group = $this->createOwnedGroup($owner);
+        $membership = $group->memberships()->create(['actor_id' => $manager->id, 'status' => 'active']);
+        $roles = app(GroupRoleProvisioner::class);
+        $invitationManager = $roles->createRole($group, 'Invitation manager', [GroupPermission::ManageInvitations->value]);
+        $roles->grant($manager, $group, $invitationManager);
+
+        $component = Livewire::actingAs($manager->user)
+            ->test(Invitations::class, ['group' => $group])
+            ->set('email', 'new.person@example.com');
+
+        app(TransitionGroupMembership::class)->remove($membership, $owner, 'Invitation authority revoked.');
+
+        $component->call('create')->assertStatus(403);
+
+        $this->assertDatabaseMissing('group_invitations', [
+            'group_id' => $group->id,
+            'email' => 'new.person@example.com',
+        ]);
     }
 
     public function test_management_surfaces_follow_contextual_capabilities(): void
