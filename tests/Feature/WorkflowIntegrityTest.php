@@ -17,7 +17,6 @@ use App\Models\Group;
 use App\Models\GroupAgreementVersion;
 use App\Models\GroupInvitation;
 use App\Models\MembershipAgreementAcceptance;
-use App\Support\AgreementEvidence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
