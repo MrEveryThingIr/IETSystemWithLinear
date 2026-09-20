@@ -13,7 +13,6 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Groups\Agreements;
 use App\Models\Actor;
 use App\Models\Admission;
-use App\Models\AgreementAcceptance;
 use App\Models\Group;
 use App\Models\GroupAgreementVersion;
 use App\Models\GroupInvitation;
