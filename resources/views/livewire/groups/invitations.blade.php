@@ -13,8 +13,8 @@
         <flux:callout variant="success" class="space-y-2" x-data="{ copied: false }">
             <p class="font-medium">{{ __('ui.invitations.copy_now') }}</p>
             <div class="flex flex-col gap-2 sm:flex-row">
-                <input x-ref="invitationUrl" readonly value="{{ $createdInvitationUrl }}" aria-label="{{ __('ui.invitations.private_link') }}" class="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100" />
-                <button type="button" x-on:click="navigator.clipboard.writeText($refs.invitationUrl.value).then(() => copied = true)" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">{{ __('ui.invitations.copy_link') }}</button>
+                <input x-ref="invitationUrl" x-on:focus="$event.target.select()" readonly value="{{ $createdInvitationUrl }}" aria-label="{{ __('ui.invitations.private_link') }}" class="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100" />
+                <button type="button" x-on:click="$refs.invitationUrl.select(); if (navigator.clipboard?.writeText) { navigator.clipboard.writeText($refs.invitationUrl.value).then(() => copied = true).catch(() => copied = document.execCommand('copy')); } else { copied = document.execCommand('copy'); }" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">{{ __('ui.invitations.copy_link') }}</button>
             </div>
             <span x-show="copied" role="status" class="text-sm">{{ __('ui.invitations.link_copied') }}</span>
         </flux:callout>

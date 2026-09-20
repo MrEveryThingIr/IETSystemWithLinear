@@ -35,8 +35,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'));
 Route::post('/locale', LocaleController::class)->name('locale.update');
-Route::get('/invitations/{token}', [GroupInvitationController::class, 'show'])->name('invitations.show');
-Route::post('/invitations/{token}/accept', [GroupInvitationController::class, 'accept'])->middleware(['auth', 'account.active', 'verified'])->name('invitations.accept');
+Route::get('/invitations/{token}', [GroupInvitationController::class, 'show'])->middleware('throttle:60,1')->name('invitations.show');
+Route::post('/invitations/{token}/accept', [GroupInvitationController::class, 'accept'])->middleware(['auth', 'account.active', 'verified', 'throttle:10,1'])->name('invitations.accept');
 Route::middleware('guest')->group(function (): void {
     Route::livewire('/invitations/{token}/register', Register::class)->name('invitations.register');
     Route::livewire('/invitations/{token}/login', Login::class)->name('invitations.login');
