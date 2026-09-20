@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class InvitationJourneyTest extends TestCase
@@ -146,7 +147,7 @@ class InvitationJourneyTest extends TestCase
         $candidate = Actor::factory()->create();
         $candidate->user->forceFill(['email_verified_at' => null])->save();
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(HttpException::class);
 
         app(RedeemGroupInvitation::class)->execute($invitation->token, $candidate, 'invited@example.com');
     }
