@@ -150,6 +150,32 @@ class GroupAuthorizationTest extends TestCase
         $this->assertTrue(Gate::forUser($secondOwner->user)->allows('manageAdmissions', $secondGroup));
     }
 
+    public function test_admission_review_reauthorizes_after_manager_membership_is_revoked(): void
+    {
+        $owner = Actor::factory()->create();
+        $manager = Actor::factory()->create();
+        $candidate = Actor::factory()->create();
+        $group = $this->createOwnedGroup($owner);
+        $managerMembership = $group->memberships()->create(['actor_id' => $manager->id, 'status' => 'active']);
+        $roles = app(GroupRoleProvisioner::class);
+        $admissionManager = $roles->createRole($group, 'Admission manager', [GroupPermission::ManageAdmissions->value]);
+        $roles->grant($manager, $group, $admissionManager);
+        $admission = Admission::create([
+            'group_id' => $group->id,
+            'candidate_actor_id' => $candidate->id,
+            'status' => 'submitted',
+        ]);
+
+        $component = Livewire::actingAs($manager->user)
+            ->test(AdmissionShow::class, ['admission' => $admission]);
+
+        app(TransitionGroupMembership::class)->remove($managerMembership, $owner, 'Admission authority revoked.');
+
+        $component->call('review', 'under_review')->assertStatus(403);
+
+        $this->assertSame('submitted', $admission->refresh()->status);
+    }
+
     public function test_invitation_management_reauthorizes_after_membership_is_revoked(): void
     {
         $owner = Actor::factory()->create();
