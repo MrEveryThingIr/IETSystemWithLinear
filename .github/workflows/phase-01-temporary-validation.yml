@@ -1,0 +1,49 @@
+name: Phase 1 temporary validation
+
+on:
+  push:
+    branches:
+      - codex/phase-01-invitation-onboarding
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+
+      - name: PHPUnit
+        run: php artisan test --compact
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse
+
+      - name: Pint required command
+        run: vendor/bin/pint --dirty --format agent
+
+      - name: Pint repository check
+        run: vendor/bin/pint --test
+
+      - name: Frontend build
+        run: npm run build
