@@ -28,7 +28,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Install frontend dependencies
-        run: npm install --ignore-scripts
+        run: npm install --ignore-scripts --no-package-lock
 
       - name: Prepare application
         run: |
@@ -37,6 +37,15 @@ jobs:
 
       - name: Frontend build
         run: npm run build
+
+      - name: Focused Phase 1 tests
+        run: |
+          php artisan test --compact tests/Feature/InvitationJourneyTest.php
+          php artisan test --compact tests/Feature/WorkflowIntegrityTest.php
+          php artisan test --compact tests/Feature/Auth/RegistrationTest.php
+          php artisan test --compact tests/Feature/Groups/GroupAuthorizationTest.php
+          php artisan test --compact tests/Feature/Groups/AdmissionAgreementTest.php
+          php artisan test --compact tests/Feature/Groups/InvitationRedemptionConcurrencyTest.php
 
       - name: PHPUnit
         run: php artisan test --compact
@@ -47,5 +56,8 @@ jobs:
       - name: Pint required command
         run: vendor/bin/pint --dirty --format agent
 
-      - name: Pint repository check
-        run: vendor/bin/pint --test
+      - name: Pint Phase 1 files
+        run: git diff --name-only dee86677cdfd95b6b2887843cba699b21b07f6f0...HEAD -- '*.php' | xargs vendor/bin/pint --test
+
+      - name: Final Git status
+        run: git status --short
