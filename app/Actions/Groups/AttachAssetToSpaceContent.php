@@ -115,7 +115,7 @@ class AttachAssetToSpaceContent
                 $placementMap = $this->composition->copyAssets($source, $revision);
                 $this->composition->copyBlocks($source, $revision, $placementMap);
                 $this->composition->copyRelationships($source, $revision);
-            $this->composition->copyConceptAssertions($source, $revision, $actor);
+                $this->composition->copyConceptAssertions($source, $revision, $actor);
 
                 $maxPosition = DB::table('space_content_revision_assets')
                     ->where('space_content_revision_id', $revision->id)
