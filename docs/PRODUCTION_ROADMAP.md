@@ -217,7 +217,7 @@ Concept semantics are reusable by both Actor Profile and Content without duplica
 
 **Status: active on `feat/phase-04-actor-profile`.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 
-Current milestone: 4A professional identity + profile media is remote-CI green and awaiting owner-local/browser acceptance.
+Current milestone: 4A is owner-local accepted. 4B semantic Profile + recurring Need/Offer declarations is active. Recurring Profile declarations capture cadence/constraints only; Planner Occurrences remain Phase 11 and full Need/Offer matching remains Phase 13.
 
 ### Purpose
 
