@@ -6,7 +6,7 @@ Before any nontrivial implementation work, read the repository's canonical produ
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
 4. `docs/PRODUCTION_ROADMAP.md`
-5. the currently active phase contract (`docs/PHASE_02_DELIVERY_OPERATIONS.md` after the Phase 1 closure; completed Phase 1 remains documented in `docs/PHASE_01_INVITATION_ONBOARDING.md`)
+5. the currently active phase contract (`docs/PHASE_03_CONCEPT_KERNEL.md`; completed Phase 2 remains documented in `docs/PHASE_02_DELIVERY_OPERATIONS.md`)
 6. relevant ADRs
 7. `.ai/rules/index.md` and every matching path rule
 
@@ -25,7 +25,8 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 
 - Phase 0 — canonical architecture: complete.
 - Phase 1 — production invitation/registration/admission journey: implementation and validation complete; close it with the Phase 1 report and canonical-document commit before starting new runtime work.
-- Phase 2 — delivery and operations baseline: complete on `feat/phase-02-delivery-operations`; validated repository/local operational baseline. Phase 3 is the next implementation phase.
+- Phase 2 — delivery and operations baseline: complete on `feat/phase-02-delivery-operations`; validated repository/local operational baseline.
+- Phase 3 — Concept Kernel: active on `feat/phase-03-concept-kernel`; do not pull Profile/Context/Admission v2 work forward.
 - Admission collaboration, contextual conversations, structured evidence/submissions, real-time broadcasting, and negotiated contracts are recorded future architecture. They belong to their roadmap phases and must not be pulled into Phase 2 speculatively.
 
 ## Current architecture baseline
