@@ -137,9 +137,10 @@ class SpaceContentRevisionComposition
                     'valid_from' => $assertion->valid_from,
                     'valid_until' => $assertion->valid_until,
                     'created_by_actor_id' => $actor->id,
-                    'metadata' => $metadata !== []
-                        ? json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                        : null,
+                    'metadata' => json_encode(
+                        $metadata,
+                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+                    ),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
