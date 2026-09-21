@@ -5,7 +5,8 @@
 Phase 4 is active on `feat/phase-04-actor-profile`.
 
 - 4A — professional identity + profile media: **complete and owner-local accepted**.
-- 4B — semantic Profile + recurring Needs/Offers: **implementation complete, remote-CI validated, and owner-local technical accepted; human browser smoke pending**.
+- 4B — semantic Profile + recurring Needs/Offers: **implementation complete**.
+- 4B.1 — temporal localization hardening: **implemented and remote-CI validated at 310 tests / 1593 assertions; refreshed owner-local/browser acceptance pending**.
 - 4C — selective sharing/completeness/final Phase 4 closure: **next after 4B acceptance**.
 
 ## Starting point
@@ -251,6 +252,95 @@ Passed:
    - Synchronization now leaves independent assertions untouched.
    - Regression test added.
 
+## 4B.1 — temporal localization hardening
+
+The human 4B browser smoke found a real MySQL defect while creating a weekly Transportation Need with optional date fields left empty:
+
+~~~text
+SQLSTATE[22007]: Invalid datetime format
+Incorrect date value: '' for column 'starts_on'
+~~~
+
+The immediate cause was an empty browser string reaching a nullable DATE column. The broader finding was that locale, timezone and calendar behavior needed one explicit reusable contract before Planner and other time-sensitive domains build on Profile.
+
+### Decisions and invariants
+
+Language, timezone and calendar remain independent:
+
+- locale controls UI language, direction and formatting;
+- timezone controls the local civil clock and uses IANA timezone identifiers;
+- timezone mode is either automatic/device-following or fixed;
+- calendar controls input/display only;
+- date-only domain values persist canonically as ISO/Gregorian `YYYY-MM-DD`;
+- changing locale/calendar/timezone never rewrites stored dates;
+- timezone must never be inferred from language.
+
+Product defaults:
+
+| Locale | Intl locale | Default calendar | First weekday |
+| --- | --- | --- | --- |
+| English | `en` | Gregorian | Sunday |
+| Arabic | `ar` | Gregorian | Saturday |
+| Simplified Chinese | `zh-CN` | Gregorian | Monday |
+| Persian | `fa-IR` | Persian/Jalali | Saturday |
+
+Calendar overrides:
+
+- Gregorian;
+- Persian/Jalali;
+- Hijri/Umm al-Qura.
+
+Arabic therefore does not automatically mean Hijri, and Chinese does not automatically mean the traditional lunisolar calendar. A user may choose a different supported presentation calendar explicitly.
+
+### Implementation
+
+- blank nullable temporal/quantity inputs normalize to `NULL` before validation/persistence;
+- existing `users.timezone` is preserved;
+- migration `2026_09_21_171000_add_temporal_preferences_to_users_table` adds:
+  - `timezone_mode` (`auto` / `fixed`);
+  - optional explicit `calendar` override;
+- automatic timezone mode uses the browser/device IANA timezone;
+- fixed timezone mode preserves the selected IANA zone;
+- locale configuration now supplies Intl locale, calendar default and first weekday;
+- Profile has a Date & time preferences section with live preview;
+- recurring Need/Offer date inputs use a reusable calendar-aware picker;
+- the picker renders Gregorian, Persian/Jalali or Hijri/Umm al-Qura while posting canonical ISO dates;
+- public Profile dates/times are localized for the viewer;
+- no third-party calendar dependency was added: the browser Intl engine is used;
+- picker includes RTL-aware navigation, keyboard arrows, Escape, Today and Clear.
+
+### Regression tests
+
+`tests/Feature/TemporalLocalizationTest.php` proves:
+
+- English/Arabic/Chinese default Gregorian presentation;
+- Persian defaults Persian/Jalali;
+- Persian uses Saturday-first weekday ordering;
+- explicit calendar/timezone overrides remain independent of locale;
+- the exact blank-date path persists `starts_on`, `ends_on`, time-window and optional numeric values as `NULL`;
+- Persian Profile emits Persian-calendar picker metadata.
+
+Existing User model schema/serialization tests were aligned because `timezone_mode` and `calendar` are now legitimate account-preference fields.
+
+### Remote validation
+
+Final runtime head before this documentation update:
+
+`c1ce5ccd83020b4f51b3585e2bf092e3ba66cde6`
+
+Passed:
+
+- PHPUnit: **310 passed / 1593 assertions**;
+- PHPStan: **no errors**;
+- Pint: **125 changed PHP files passed**;
+- Vite production build;
+- fresh migrations including temporal preferences;
+- migration/scheduler/queue smoke;
+- SQLite backup → restore smoke;
+- Composer security audit: clean.
+
+Because 4B.1 changes schema and visible date/time UX, the earlier local 4B gate must be refreshed once before final 4B acceptance.
+
 ## Owner-local/browser gate for 4B
 
 Before 4C starts, synchronize the final 4B head and prove locally:
@@ -289,6 +379,6 @@ These are roadmap work, not 4B defects.
 
 ## Next gate
 
-4B implementation is frozen for owner-local/browser acceptance.
+4B plus 4B.1 temporal hardening is frozen for refreshed owner-local/browser acceptance.
 
 After that succeeds, begin **4C — selective sharing, Profile completeness/requirements, privacy/accessibility polish, and final Phase 4 closure**. Do not jump to Planner or Need/Offer Matching merely because recurring declarations now exist.
