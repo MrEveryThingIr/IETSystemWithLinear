@@ -217,7 +217,7 @@ Concept semantics are reusable by both Actor Profile and Content without duplica
 
 **Status: active on `feat/phase-04-actor-profile`.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 
-Current milestone: 4A is owner-local accepted. 4B semantic Profile + recurring Need/Offer declarations is implementation-complete, remote-CI green, and owner-local technical accepted at 306 tests / 1570 assertions. Only human browser smoke remains before 4B is formally accepted. Recurring Profile declarations capture cadence/constraints only; Planner Occurrences remain Phase 11 and full Need/Offer matching remains Phase 13. Phase 4C begins only after that browser gate.
+Current milestone: 4A is owner-local accepted. Core 4B semantic Profile + recurring Need/Offer declarations was technically accepted locally, then browser acceptance exposed a temporal input defect. 4B.1 Temporal Localization Hardening is now remote-CI green at 310 tests / 1593 assertions. One refreshed owner-local/browser gate is required before 4B is formally accepted. Recurring Profile declarations capture cadence/constraints only; Planner Occurrences remain Phase 11 and full Need/Offer matching remains Phase 13. Phase 4C begins only after that gate.
 
 ### Purpose
 
