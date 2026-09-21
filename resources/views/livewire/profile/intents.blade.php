@@ -1,0 +1,169 @@
+<section class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <div>
+        <h2 class="text-lg font-semibold">{{ __('ui.profile.intents.title') }}</h2>
+        <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.intents.help') }}</p>
+    </div>
+
+    <form wire:submit="save" class="space-y-5 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950/50">
+        <div class="grid gap-4 md:grid-cols-2">
+            <div class="space-y-2">
+                <label class="text-sm font-medium" for="intent-kind">{{ __('ui.profile.intents.kind') }}</label>
+                <select id="intent-kind" wire:model="kind" @disabled($editingIntentId !== null) class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900">
+                    <option value="need">{{ __('ui.profile.intents.kinds.need') }}</option>
+                    <option value="offer">{{ __('ui.profile.intents.kinds.offer') }}</option>
+                </select>
+            </div>
+
+            <flux:input wire:model="conceptLabel" :disabled="$editingIntentId !== null" :label="__('ui.profile.intents.concept')" maxlength="120" />
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+            <flux:input wire:model="title" :label="__('ui.profile.intents.intent_title')" maxlength="180" />
+            <div class="space-y-2">
+                <label class="text-sm font-medium" for="intent-visibility">{{ __('ui.profile.item_visibility') }}</label>
+                <select id="intent-visibility" wire:model="itemVisibility" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                    @foreach ($visibilityOptions as $option)
+                        <option value="{{ $option->value }}">{{ __('ui.profile.item_visibility_options.'.$option->value) }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <flux:textarea wire:model="description" :label="__('ui.profile.intents.description')" rows="3" maxlength="3000" />
+
+        <div class="grid gap-4 md:grid-cols-3">
+            <flux:input wire:model="quantity" type="number" step="0.0001" min="0" :label="__('ui.profile.intents.quantity')" />
+            <flux:input wire:model="unit" :label="__('ui.profile.intents.unit')" maxlength="64" placeholder="kg, seat, hour…" />
+            <flux:input wire:model="locationText" :label="__('ui.profile.intents.location')" maxlength="255" />
+        </div>
+
+        <details class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" @if($editingIntentId !== null || $scheduleKind !== 'once') open @endif>
+            <summary class="cursor-pointer font-medium">{{ __('ui.profile.intents.schedule_and_route') }}</summary>
+
+            <div class="mt-4 space-y-5">
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium" for="schedule-kind">{{ __('ui.profile.intents.schedule_kind') }}</label>
+                        <select id="schedule-kind" wire:model.live="scheduleKind" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            @foreach ($scheduleKinds as $option)
+                                <option value="{{ $option->value }}">{{ __('ui.profile.intents.schedules.'.$option->value) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <flux:input wire:model="startsOn" type="date" :label="__('ui.profile.intents.starts_on')" />
+                    <flux:input wire:model="endsOn" type="date" :label="__('ui.profile.intents.ends_on')" />
+                    <flux:input wire:model="timezone" :label="__('ui.profile.intents.timezone')" maxlength="64" />
+                </div>
+
+                @if (in_array($scheduleKind, ['daily', 'weekly', 'monthly'], true))
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <flux:input wire:model="recurrenceInterval" type="number" min="1" max="365" :label="__('ui.profile.intents.repeat_every')" />
+                        <flux:input wire:model="timeWindowStart" type="time" :label="__('ui.profile.intents.time_from')" />
+                        <flux:input wire:model="timeWindowEnd" type="time" :label="__('ui.profile.intents.time_to')" />
+                    </div>
+                @endif
+
+                @if ($scheduleKind === 'weekly')
+                    <fieldset>
+                        <legend class="text-sm font-medium">{{ __('ui.profile.intents.weekdays') }}</legend>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            @foreach ([1, 2, 3, 4, 5, 6, 7] as $weekday)
+                                <label class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800">
+                                    <input type="checkbox" wire:model="recurrenceWeekdays" value="{{ $weekday }}">
+                                    {{ __('ui.profile.intents.weekday_names.'.$weekday) }}
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('recurrenceWeekdays') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </fieldset>
+                @endif
+
+                @if ($scheduleKind === 'monthly')
+                    <flux:input wire:model="recurrenceDayOfMonth" type="number" min="1" max="31" :label="__('ui.profile.intents.day_of_month')" />
+                @endif
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    <flux:input wire:model="originText" :label="__('ui.profile.intents.origin')" maxlength="255" />
+                    <flux:input wire:model="destinationText" :label="__('ui.profile.intents.destination')" maxlength="255" />
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4">
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" wire:model.live="roundTrip">
+                        {{ __('ui.profile.intents.round_trip') }}
+                    </label>
+                    @if ($roundTrip)
+                        <div class="w-48">
+                            <flux:input wire:model="returnAfterDays" type="number" min="0" max="3650" :label="__('ui.profile.intents.return_after_days')" />
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </details>
+
+        <div class="flex flex-wrap justify-end gap-2">
+            @if ($editingIntentId !== null)
+                <flux:button type="button" wire:click="cancelEdit" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
+            @endif
+            <flux:button type="submit" variant="primary">
+                {{ $editingIntentId !== null ? __('ui.profile.intents.save_changes') : __('ui.profile.intents.add') }}
+            </flux:button>
+        </div>
+    </form>
+
+    @if ($intents->isNotEmpty())
+        <div class="grid gap-4 lg:grid-cols-2">
+            @foreach ($intents as $intent)
+                <article class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="profile-intent-{{ $intent->id }}">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <flux:badge :color="$intent->kind->value === 'need' ? 'amber' : 'green'">
+                                    {{ __('ui.profile.intents.kinds.'.$intent->kind->value) }}
+                                </flux:badge>
+                                <flux:badge color="zinc">{{ __('ui.profile.intents.statuses.'.$intent->status->value) }}</flux:badge>
+                            </div>
+                            <h3 class="mt-2 font-semibold" dir="auto">{{ $intent->title ?: $intent->concept->displayLabel() }}</h3>
+                            @if ($intent->title)
+                                <p class="mt-0.5 text-sm text-zinc-500" dir="auto">{{ $intent->concept->displayLabel() }}</p>
+                            @endif
+                        </div>
+                        <span class="text-xs text-zinc-500">{{ __('ui.profile.intents.schedules.'.$intent->schedule_kind->value) }}</span>
+                    </div>
+
+                    @if ($intent->description)
+                        <p class="mt-3 text-sm leading-6 text-zinc-700 dark:text-zinc-200" dir="auto">{{ $intent->description }}</p>
+                    @endif
+
+                    <dl class="mt-3 grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                        @if ($intent->quantity !== null)
+                            <div><dt class="inline font-medium">{{ __('ui.profile.intents.quantity') }}:</dt> <dd class="inline">{{ rtrim(rtrim($intent->quantity, '0'), '.') }} {{ $intent->unit }}</dd></div>
+                        @endif
+                        @if ($intent->origin_text && $intent->destination_text)
+                            <div><dt class="inline font-medium">{{ __('ui.profile.intents.route') }}:</dt> <dd class="inline" dir="auto">{{ $intent->origin_text }} → {{ $intent->destination_text }}</dd></div>
+                        @elseif ($intent->location_text)
+                            <div><dt class="inline font-medium">{{ __('ui.profile.intents.location') }}:</dt> <dd class="inline" dir="auto">{{ $intent->location_text }}</dd></div>
+                        @endif
+                        @if ($intent->round_trip)
+                            <div><dt class="inline font-medium">{{ __('ui.profile.intents.round_trip') }}:</dt> <dd class="inline">{{ trans_choice('ui.profile.intents.return_days', $intent->return_after_days ?? 0, ['count' => $intent->return_after_days ?? 0]) }}</dd></div>
+                        @endif
+                    </dl>
+
+                    @if ($intent->status->value !== 'closed')
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <flux:button wire:click="edit({{ $intent->id }})" size="xs" variant="ghost">{{ __('ui.common.edit') }}</flux:button>
+                            @if ($intent->status->value === 'active')
+                                <flux:button wire:click="setStatus({{ $intent->id }}, 'paused')" size="xs" variant="ghost">{{ __('ui.profile.intents.pause') }}</flux:button>
+                            @else
+                                <flux:button wire:click="setStatus({{ $intent->id }}, 'active')" size="xs" variant="ghost">{{ __('ui.profile.intents.activate') }}</flux:button>
+                            @endif
+                            <flux:button wire:click="setStatus({{ $intent->id }}, 'closed')" wire:confirm="{{ __('ui.profile.intents.close_confirm') }}" size="xs" variant="danger">
+                                {{ __('ui.profile.intents.close') }}
+                            </flux:button>
+                        </div>
+                    @endif
+                </article>
+            @endforeach
+        </div>
+    @endif
+</section>
