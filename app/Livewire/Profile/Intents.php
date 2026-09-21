@@ -13,6 +13,7 @@ use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -267,7 +268,8 @@ class Intents extends Component
         $this->resetValidation();
     }
 
-    private function editableIntents()
+    /** @return Builder<ActorProfileIntent> */
+    private function editableIntents(): Builder
     {
         return ActorProfileIntent::query()
             ->where('actor_profile_id', $this->profile->id);
