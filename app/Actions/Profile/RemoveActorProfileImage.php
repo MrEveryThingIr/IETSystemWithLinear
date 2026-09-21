@@ -16,7 +16,7 @@ class RemoveActorProfileImage
     {
         Gate::forUser($user)->authorize('update', $profile);
 
-        $storage = DB::transaction(function () use ($user, $profile, $image): ?array {
+        $storage = DB::transaction(function () use ($user, $profile, $image): array {
             $lockedProfile = ActorProfile::query()->lockForUpdate()->findOrFail($profile->id);
             Gate::forUser($user)->authorize('update', $lockedProfile);
 
