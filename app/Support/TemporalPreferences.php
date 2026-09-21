@@ -21,10 +21,8 @@ class TemporalPreferences
 
     public static function timezoneFor(?User $user): string
     {
-        $timezone = $user?->timezone;
-
-        if (is_string($timezone) && self::validTimezone($timezone)) {
-            return $timezone;
+        if ($user instanceof User && self::validTimezone($user->timezone)) {
+            return $user->timezone;
         }
 
         $fallback = (string) config('app.timezone', 'UTC');
@@ -34,7 +32,7 @@ class TemporalPreferences
 
     public static function validTimezone(?string $timezone): bool
     {
-        if (! is_string($timezone) || $timezone === '') {
+        if ($timezone === null || $timezone === '') {
             return false;
         }
 
