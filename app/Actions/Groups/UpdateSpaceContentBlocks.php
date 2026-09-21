@@ -63,6 +63,7 @@ class UpdateSpaceContentBlocks
 
             $placementMap = $this->composition->copyAssets($source, $revision);
             $this->composition->copyRelationships($source, $revision);
+            $this->composition->copyConceptAssertions($source, $revision, $actor);
 
             foreach ($normalized as $position => $block) {
                 $data = $block['data'];
