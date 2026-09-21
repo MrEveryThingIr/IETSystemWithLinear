@@ -5,7 +5,7 @@
 Phase 4 is active on `feat/phase-04-actor-profile`.
 
 - 4A — professional identity + profile media: **complete and owner-local accepted**.
-- 4B — semantic Profile + recurring Needs/Offers: **implementation complete and remote-CI validated; owner-local/browser acceptance pending**.
+- 4B — semantic Profile + recurring Needs/Offers: **implementation complete, remote-CI validated, and owner-local technical accepted; human browser smoke pending**.
 - 4C — selective sharing/completeness/final Phase 4 closure: **next after 4B acceptance**.
 
 ## Starting point
