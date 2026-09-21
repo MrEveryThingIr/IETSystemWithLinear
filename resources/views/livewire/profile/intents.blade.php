@@ -1,6 +1,6 @@
 <section
     class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900"
-    @if (! $hasStoredTimezone)
+    @if ($timezoneAutomatic)
         x-data
         x-init="$wire.useBrowserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)"
     @endif
