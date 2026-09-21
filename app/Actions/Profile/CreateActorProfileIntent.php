@@ -32,13 +32,14 @@ class CreateActorProfileIntent
             Gate::forUser($user)->authorize('update', $lockedProfile);
 
             $actor = Actor::query()->findOrFail($lockedProfile->actor_id);
-            $intent = $lockedProfile->intents()->create([
-                ...$data,
-                'concept_id' => $concept->id,
-                'kind' => $kind,
-                'created_by_actor_id' => $actor->id,
-                'metadata' => [],
-            ]);
+            $intent = new ActorProfileIntent();
+            $intent->fill($data);
+            $intent->profile()->associate($lockedProfile);
+            $intent->concept()->associate($concept);
+            $intent->creator()->associate($actor);
+            $intent->kind = $kind;
+            $intent->metadata = [];
+            $intent->save();
 
             app(SyncProfileIntentConceptAssertion::class)->execute(
                 $user,
