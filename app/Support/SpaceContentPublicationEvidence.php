@@ -364,6 +364,10 @@ class SpaceContentPublicationEvidence
             return [];
         }
 
+        if (is_array($value)) {
+            return $value;
+        }
+
         $decoded = json_decode((string) $value, true);
 
         return is_array($decoded) ? $decoded : [];
