@@ -36,8 +36,6 @@ class RemoveActorProfileImage
             return ['disk' => $asset->disk, 'key' => $asset->storage_key];
         }, 3);
 
-        if (is_array($storage)) {
-            Storage::disk((string) $storage['disk'])->delete((string) $storage['key']);
-        }
+        Storage::disk((string) $storage['disk'])->delete((string) $storage['key']);
     }
 }
