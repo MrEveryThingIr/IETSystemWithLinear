@@ -9,6 +9,8 @@
                 <flux:text size="sm" class="break-all">{{ auth()->user()->email }}</flux:text>
             </div>
             <flux:menu.separator />
+            <flux:menu.item :href="route('profile.edit')" icon="user-circle">{{ __('ui.navigation.profile') }}</flux:menu.item>
+            <flux:menu.separator />
             <flux:menu.radio.group x-model="$flux.appearance" :aria-label="__('ui.appearance.label')">
                 <flux:menu.radio value="system" icon="computer-desktop">{{ __('ui.appearance.system') }}</flux:menu.radio>
                 <flux:menu.radio value="light" icon="sun">{{ __('ui.appearance.light') }}</flux:menu.radio>
