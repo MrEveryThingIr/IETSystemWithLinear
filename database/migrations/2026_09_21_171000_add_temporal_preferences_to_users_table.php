@@ -8,16 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table): void {
-            $table->string('timezone', 64)->nullable()->after('locale');
-            $table->string('calendar', 32)->nullable()->after('timezone');
-        });
+        if (! Schema::hasColumn('users', 'calendar')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->string('calendar', 32)->nullable()->after('timezone');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table): void {
-            $table->dropColumn(['timezone', 'calendar']);
-        });
+        if (Schema::hasColumn('users', 'calendar')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->dropColumn('calendar');
+            });
+        }
     }
 };
