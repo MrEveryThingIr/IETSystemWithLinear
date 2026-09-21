@@ -32,7 +32,13 @@ class UpdateActorProfile
             $data[$field] = $value === '' ? null : $value;
         }
 
-        $profile->update($data);
+        $profile->display_name = $data['display_name'];
+        $profile->headline = $data['headline'];
+        $profile->bio = $data['bio'];
+        $profile->location_text = $data['location_text'];
+        $profile->website_url = $data['website_url'];
+        $profile->visibility = $data['visibility'];
+        $profile->save();
 
         return $profile->refresh();
     }
