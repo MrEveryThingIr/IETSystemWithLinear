@@ -86,6 +86,20 @@ class Concept extends Model
         return $current;
     }
 
+    public function displayLabel(?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+        $labels = $this->relationLoaded('labels') ? $this->labels : $this->labels()->get();
+
+        $preferred = $labels
+            ->where('kind', \App\ConceptLabelKind::Preferred)
+            ->firstWhere('locale', $locale)
+            ?? $labels->firstWhere('kind', \App\ConceptLabelKind::Preferred)
+            ?? $labels->first();
+
+        return $preferred?->label ?? Str::headline($this->slug);
+    }
+
     /** @return BelongsTo<ConceptVocabulary, $this> */
     public function vocabulary(): BelongsTo
     {
