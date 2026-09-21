@@ -12,7 +12,7 @@ It does not select a paid hosting, email, object-storage, or monitoring provider
 - Composer: 2.x.
 - Node: 22.12+.
 - Laravel: 13.x as locked by Composer.
-- Queue: database by default.
+- Queue: database by default; asynchronous queue connections dispatch after open database transactions commit unless explicitly overridden.
 - Scheduler: Laravel scheduler, one system trigger invoking `schedule:run` every minute.
 - Local mail: `log`.
 - Local/private files: Laravel `local` disk rooted at `storage/app/private`.
