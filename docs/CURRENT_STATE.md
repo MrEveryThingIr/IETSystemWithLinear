@@ -496,6 +496,14 @@ Owner-local validation after synchronizing the Phase 2 branch confirmed:
 
 Production-host-specific proof is deliberately not a blocker for Phase 3. Before production release, the selected deployment target must still exercise real worker/scheduler supervision, enabled transactional mail, operational monitoring/log retention, automated backups, an isolated restore drill, and private media storage. Those remain governed by `docs/OPERATIONS_RUNBOOK.md` and later production-hardening/release gates.
 
-The next implementation milestone is:
+The active implementation milestone is:
 
 > Phase 3 — Concept Kernel
+
+Phase 3 branch: `feat/phase-03-concept-kernel`.
+Starting point: accepted Phase 2 closure commit `73e98f05746c7c42bf63d7c9bc91bee63d800cf9`.
+
+The Concept Kernel adds reusable semantic identity/classification for Actor and current Content without introducing Profile, generic Context, Admission v2, recommendations, or AI taxonomy.
+
+Detailed execution contract: `docs/PHASE_03_CONCEPT_KERNEL.md`.
+Architecture: `docs/CONCEPT_KERNEL.md`.
