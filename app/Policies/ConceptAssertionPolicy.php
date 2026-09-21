@@ -28,9 +28,14 @@ class ConceptAssertionPolicy
         };
     }
 
-    public function delete(User $user, ConceptAssertion $assertion): bool
+    public function update(User $user, ConceptAssertion $assertion): bool
     {
         return $this->create($user, $assertion->subjectModel());
+    }
+
+    public function delete(User $user, ConceptAssertion $assertion): bool
+    {
+        return $this->update($user, $assertion);
     }
 
     private function canAssertActor(User $user, Actor $actor): bool
