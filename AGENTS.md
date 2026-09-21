@@ -27,7 +27,7 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 1 — production invitation/registration/admission journey: complete and accepted.
 - Phase 2 — delivery and operations baseline: complete on `feat/phase-02-delivery-operations`; validated repository/local operational baseline.
 - Phase 3 — Concept Kernel: complete on `feat/phase-03-concept-kernel`.
-- Phase 4 — Actor/Party and progressive Profile: active on `feat/phase-04-actor-profile`; 4A implemented remotely, owner-local gate pending. Do not pull generic Context/Admission v2 work forward.
+- Phase 4 — Actor/Party and progressive Profile: active on `feat/phase-04-actor-profile`; 4A owner-local accepted, 4B semantic Profile + recurring Need/Offer declarations active. Profile recurrence records cadence only: do not pull Planner Occurrences (Phase 11), full matching (Phase 13), obligations (Phase 14), generic Context, or Admission v2 forward.
 - Admission collaboration, contextual conversations, structured evidence/submissions, real-time broadcasting, and negotiated contracts are recorded future architecture. They belong to their roadmap phases and must not be pulled into Phase 2 speculatively.
 
 ## Current architecture baseline
