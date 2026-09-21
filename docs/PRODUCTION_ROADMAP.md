@@ -215,9 +215,11 @@ Concept semantics are reusable by both Actor Profile and Content without duplica
 
 ## Phase 4 — Actor/Party and progressive Profile
 
-**Status: active on `feat/phase-04-actor-profile`.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
+**Status: runtime implementation technically complete on `feat/phase-04-actor-profile`; final owner-local/browser acceptance pending.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 
-Current milestone: 4A is owner-local accepted. Core 4B semantic Profile + recurring Need/Offer declarations was technically accepted locally, then browser acceptance exposed a temporal input defect. 4B.1 Temporal Localization Hardening is now remote-CI green at 310 tests / 1593 assertions. One refreshed owner-local/browser gate is required before 4B is formally accepted. Recurring Profile declarations capture cadence/constraints only; Planner Occurrences remain Phase 11 and full Need/Offer matching remains Phase 13. Phase 4C begins only after that gate.
+4A, 4B and 4B.1 are owner-local accepted. 4C selective disclosure/completeness is implemented and remote-CI green at `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db` with **320 tests / 1651 assertions**, PHPStan clean, Pint clean, production build green, operational smoke green and Composer audit clean.
+
+Phase 5 is the next implementation phase **only after** the final Phase 4 owner-local/browser gate. Recurring Profile declarations remain current-intent cadence rather than Planner Occurrences (Phase 11); full Need/Offer matching remains Phase 13; selective Profile disclosure is live mutable access rather than immutable Contract evidence (Phase 14).
 
 ### Purpose
 

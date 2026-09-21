@@ -2,7 +2,14 @@
 
 ## Status
 
-Active on `feat/phase-04-actor-profile`, starting from accepted Phase 3 closure commit `b2e5dc0a8b7cfd33ff9dbcb6af4c6f6027c7948c`.
+Runtime implementation is technically complete on `feat/phase-04-actor-profile`.
+
+- 4A is owner-local accepted.
+- 4B and 4B.1 are owner-local accepted at `ea52eef97184aa3b06bc8946c45c513dd2586baf`.
+- 4C is remote-CI green at `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`.
+- one final owner-local/browser acceptance gate remains before Phase 4 is formally closed and Phase 5 may begin.
+
+Accepted Phase 3 closure baseline: `b2e5dc0a8b7cfd33ff9dbcb6af4c6f6027c7948c`.
 
 ## Objective
 
@@ -257,19 +264,154 @@ Final hardening also proves that 4B-generated coarse Actor `needs` / `offers` su
 
 ### 4C — sharing, completeness and Phase 4 closure
 
-**Status: active after accepted 4B/4B.1 head `ea52eef`.**
+**Status: implementation complete and remote-CI validated at `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`; owner-local/browser acceptance pending.**
 
-Planned:
+4C turns Profile into a safe upstream source for later Context, Admission, Planner, Matching and negotiated-Agreement work without pulling those later domains into Profile.
 
-- progressive completeness service;
-- context/request-oriented field requirements;
-- reusable selective sharing grants for later Admission;
-- revocation/expiry semantics where appropriate;
-- privacy review;
-- responsive/accessibility polish;
-- final focused/full validation;
-- implementation report completion;
-- Phase 4 human acceptance.
+#### Purpose-specific completeness
+
+Implemented:
+
+- `ProfileRequirement` and `ProfileRequirementKind` for field, Concept-predicate and active-intent requirements;
+- `ProfileCompletenessService` for evaluating a supplied requirement set;
+- a recommended Profile-readiness checklist in the owner UI;
+- missing/present evaluation without mutating Profile schema or making optional fields globally required.
+
+A requirement belongs to the purpose that asks for it. A future Admission or Context may request a headline, skill, Need or other fact without changing that information into a universal registration requirement.
+
+#### Selective disclosure contract
+
+Implemented:
+
+- `ActorProfileDisclosureGrant`;
+- immutable `ActorProfileDisclosureItem` selection records;
+- explicit recipient Actor;
+- optional human-readable purpose;
+- optional expiry;
+- explicit revocation;
+- dedicated creation/revocation Actions;
+- recipient/owner authorization policy;
+- authenticated recipient-only Livewire shared view;
+- owner-side grant history and management.
+
+A grant may select only information that belongs to the source Profile:
+
+- shareable Profile fields;
+- Actor Concept assertions used by Profile semantics;
+- active Profile Need/Offer declarations.
+
+The grant itself never changes ordinary Profile/item visibility. A private item may be exposed only because its owner explicitly selected it for this recipient.
+
+Security/privacy invariants:
+
+- User email is not a shareable Profile field;
+- an unselected display name, biography or other Profile field is not leaked by shared-page chrome;
+- arbitrary/foreign item keys are rejected;
+- URL/UUID possession grants no authority;
+- only the selected recipient's active, verified User and active Actor may open the grant;
+- owner/grant provenance is enforced;
+- a Profile cannot grant to its own Actor;
+- revocation removes access immediately;
+- expiry removes access automatically;
+- archived/inactive recipient Actors lose access;
+- grant/item history is preserved rather than physically deleted.
+
+#### Live Profile access, not historical evidence
+
+Selective disclosure is intentionally **live access to current mutable Profile information**.
+
+Therefore:
+
+- selected field values reflect the current Profile value;
+- expired/invalid semantic assertions are no longer resolved;
+- a selected Need/Offer disappears from the shared view when it is no longer active;
+- revocation/expiry affects future access immediately.
+
+This is not Contract/Agreement evidence. A later Proposal/Contract/Commitment domain that needs immutable historical truth must snapshot or version-bind the accepted information independently in Phase 14.
+
+#### Stable future integration boundary
+
+4C preserves these boundaries:
+
+~~~text
+ActorProfileIntent != Planner Occurrence
+Profile Need/Offer declaration != Match
+Profile disclosure != Context membership/authorization
+Profile disclosure != Proposal/Contract
+mutable Profile state != immutable historical evidence
+~~~
+
+Consequences:
+
+- Phase 5 owns the generic Context abstraction; 4C does not add Context foreign keys or Context authorization;
+- Phase 8 may reuse Profile requirement/disclosure services inside Admission Context;
+- Phase 11 remains authoritative for Plan/ScheduleRule/Occurrence;
+- Phase 13 remains authoritative for full Need/Offer matching;
+- Phase 14 remains authoritative for Proposal/Negotiation/Contract/Commitment/Fulfillment.
+
+The temporal contract established in 4B.1 remains the shared interpretation seam for later time-sensitive domains; 4C adds no Planner scheduling behavior.
+
+#### Query/product bounds and UX
+
+- recent disclosure-grant history is limited to 20 records in the Profile UI;
+- one grant accepts at most 100 selected items;
+- selectable semantic assertions are bounded to 100;
+- selectable active Profile intents are bounded to 100;
+- the UI is localized in English, Persian, Arabic and Simplified Chinese;
+- layout uses the existing responsive/RTL-aware application components;
+- the recipient view renders only selected current values.
+
+4C migration:
+
+`2026_09_21_220000_create_actor_profile_disclosure_grants.php`
+
+Focused proof:
+
+`tests/Feature/ActorProfileSharingAndCompletenessTest.php`
+
+It proves:
+
+- completeness can be purpose-specific without globally requiring fields;
+- private Profile fields/semantics/intents can be selectively disclosed to one recipient;
+- unselected identity/account data is not leaked;
+- foreign or unsupported item keys cannot be smuggled into a grant;
+- outsiders cannot open another Actor's grant;
+- archived recipient Actors lose access;
+- revocation is immediate;
+- expiry denies access;
+- a closed previously-shared Profile intent disappears from the live view.
+
+#### Final remote technical proof
+
+Runtime candidate: `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`.
+
+GitHub Actions run `35655910450` passed:
+
+- PHPUnit: **320 passed / 1651 assertions**;
+- PHPStan: **no errors**;
+- Pint changed-file gate: **147 files passed**;
+- Vite production build: passed;
+- migration/scheduler/queue smoke: passed;
+- SQLite backup → restore smoke: passed;
+- Composer security audit: no vulnerability advisories.
+
+The Phase 4 runtime is frozen at this candidate unless the owner-local/browser gate exposes a defect.
+
+#### Final owner-local/browser gate
+
+Before formally closing Phase 4 and beginning Phase 5, the human owner must synchronize the final branch and verify:
+
+- the disclosure migration applies;
+- focused Phase 4 tests pass;
+- full PHPUnit/PHPStan/Pint/build pass;
+- Profile readiness/selective-sharing UI is usable;
+- a private item can be shared with exactly one second active/verified Actor;
+- the recipient sees only selected items, with no account email or unselected identity leakage;
+- an unrelated Actor is denied;
+- closing a shared intent removes it from the live disclosure;
+- revoking a grant removes access immediately;
+- existing Profile semantic/temporal behavior remains correct;
+- responsive and RTL presentation is acceptable.
 
 ## 4A security/privacy decisions
 
@@ -317,7 +459,9 @@ Planned:
 
 ## Phase 4 exit gate
 
-Phase 4 is complete only after 4A, 4B and 4C are all accepted. 4B/4B.1 is accepted; 4C is the only remaining milestone.
+4A, 4B and 4B.1 are accepted. 4C implementation is complete and remote-CI green.
+
+The **only remaining Phase 4 gate** is final owner-local/browser acceptance of the frozen candidate. After that gate succeeds, Phase 4 can be marked formally complete and Phase 5 — Generic Content Context — may begin.
 
 
 ## Final 4B/4B.1 owner-local closure evidence

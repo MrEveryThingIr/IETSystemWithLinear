@@ -2,12 +2,14 @@
 
 ## Status
 
-Phase 4 is active on `feat/phase-04-actor-profile`.
+Phase 4 runtime implementation is technically complete on `feat/phase-04-actor-profile`.
 
 - 4A — professional identity + profile media: **complete and owner-local accepted**.
 - 4B — semantic Profile + recurring Needs/Offers: **complete and owner-local accepted at `ea52eef`**.
 - 4B.1 — temporal localization hardening: **complete and owner-local accepted at `ea52eef`**.
-- 4C — selective sharing/completeness/final Phase 4 closure: **active from accepted baseline `ea52eef`**.
+- 4C — selective sharing/completeness/final Phase 4 closure: **implementation complete and remote-CI green at `02b3d97`; owner-local/browser acceptance pending**.
+
+Phase 5 remains blocked until that final human gate succeeds.
 
 ## Starting point
 
@@ -389,12 +391,148 @@ Before 4C starts, synchronize the final 4B head and prove locally:
 
 These are roadmap work, not 4B defects.
 
+## 4C — selective sharing, completeness and future-safe integration
+
+Implemented from the accepted 4B/4B.1 baseline `ea52eef`.
+
+### Purpose-specific Profile requirements
+
+4C adds explicit Profile requirement descriptors and a completeness service rather than embedding one global completeness percentage into Actor/Profile state.
+
+Supported requirement kinds:
+
+- Profile field;
+- Concept assertion predicate;
+- active Need/Offer intent.
+
+The caller supplies the requirement set. The owner UI shows one recommended readiness set, but an Admission/Context in later phases can supply a different set without mutating global Profile requirements.
+
+### Selective disclosure
+
+Added:
+
+- `ActorProfileDisclosureGrant`;
+- `ActorProfileDisclosureItem`;
+- `CreateProfileDisclosureGrant`;
+- `RevokeProfileDisclosureGrant`;
+- `ActorProfileDisclosureGrantPolicy`;
+- `ProfileDisclosureCatalog`;
+- `ProfileDisclosureResolver`;
+- owner-side `Profile\\Sharing` Livewire component;
+- recipient-side `Profile\\SharedShow` Livewire component;
+- disclosure migration and factories;
+- multilingual UI strings.
+
+A grant records an immutable selection of shareable Profile field keys, Actor Concept-assertion UUIDs and active Profile-intent UUIDs for one explicit grantee Actor.
+
+Grant terms include:
+
+- purpose;
+- optional expiry;
+- revocation timestamp;
+- creator/Profile owner provenance.
+
+### Privacy/authorization hardening
+
+4C explicitly proves and enforces:
+
+- account email cannot be selected;
+- unselected display name/username/biography cannot leak from recipient-view chrome;
+- foreign Profile items cannot be inserted into another owner's grant;
+- an arbitrary disclosure URL/UUID provides no authority;
+- only the selected active Actor backed by an active verified User can view;
+- inactive/archived recipient Actors lose access;
+- owner provenance is validated;
+- self-grants are rejected;
+- expiry/revocation deny future reads immediately.
+
+A privacy review during implementation caught and fixed an early shared-page heading that could have exposed an unselected owner display name/username. Regression coverage now protects that boundary.
+
+### Live-access semantics
+
+The grant is intentionally a live disclosure permission, not a historical snapshot.
+
+- current selected Profile field values are resolved at read time;
+- assertions must still be temporally valid;
+- Profile intents must still be active;
+- closing a shared intent makes it disappear from the grant view.
+
+This is deliberately different from future Contract evidence. Phase 14 must capture immutable/versioned contractual evidence independently.
+
+### Integration boundaries preserved
+
+No Phase 5/8/11/13/14 state was pulled forward.
+
+- no generic Context model/FK/authorization was added;
+- no Admission v2 requirements were implemented;
+- no Planner occurrences/reminders were generated;
+- no matching engine or Match records were created;
+- no Proposal/Negotiation/Contract/Commitment/Fulfillment state was created.
+
+The intended dependency remains:
+
+~~~text
+Actor / Profile / Concepts / temporal preferences
+        ↓
+Context + Admission consumers
+Planner consumers
+Matching consumers
+Negotiation/Contract consumers
+~~~
+
+Downstream domains may consume Profile services and explicit disclosure; they must not treat mutable Profile rows as their own authoritative historical state.
+
+### Bounded reads / product surface
+
+- owner UI shows at most 20 recent grants;
+- a grant accepts at most 100 selected items;
+- shareable semantic assertions are bounded to 100;
+- shareable active Profile intents are bounded to 100;
+- English/Persian/Arabic/Simplified Chinese strings are present;
+- existing responsive/RTL-aware application components are used.
+
+### 4C proof
+
+Focused suite:
+
+`tests/Feature/ActorProfileSharingAndCompletenessTest.php`
+
+Final runtime candidate:
+
+`02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`
+
+GitHub Actions run `35655910450`:
+
+- full PHPUnit: **320 passed / 1651 assertions**;
+- PHPStan: **no errors**;
+- Pint changed-file gate: **147 files passed**;
+- Vite production build: passed;
+- migration/scheduler/queue smoke: passed;
+- SQLite backup → restore smoke: passed;
+- Composer security audit: clean.
+
+The runtime candidate is frozen unless owner-local/browser acceptance finds a defect.
+
 ## Next gate
 
-4B plus 4B.1 temporal hardening is accepted and frozen at `ea52eef`.
+Synchronize the final Phase 4 branch locally and perform the owner-local/browser gate.
 
-Begin **4C — selective sharing, Profile completeness/requirements, privacy/accessibility polish, and final Phase 4 closure**. Do not jump to Planner or Need/Offer Matching merely because recurring declarations now exist.
+Required human proof:
 
+- disclosure migration applies cleanly;
+- focused Phase 4 suite passes;
+- full PHPUnit/PHPStan/Pint/Vite gates pass;
+- selective sharing is understandable and usable in-browser;
+- one private Profile item can be shared with exactly one second active/verified Actor;
+- recipient sees only selected data;
+- outsider is denied;
+- no account email or unselected identity field leaks;
+- closed shared intents disappear from live disclosure;
+- revocation immediately removes recipient access;
+- existing semantic/temporal Profile behavior is still accepted;
+- mobile/RTL presentation is acceptable.
+
+If this gate is green, make one documentation-only Phase 4 closure commit and then begin **Phase 5 — Generic Content Context**. Do not start Phase 5 before that acceptance.
 
 ## 4B/4B.1 final owner-local closure
 
