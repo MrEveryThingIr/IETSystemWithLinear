@@ -43,8 +43,8 @@ class UploadActorProfileImage
         $dimensions = @getimagesize($realPath);
         abort_unless(is_array($dimensions), 422, 'The uploaded file is not a valid image.');
 
-        $width = (int) ($dimensions[0] ?? 0);
-        $height = (int) ($dimensions[1] ?? 0);
+        $width = (int) $dimensions[0];
+        $height = (int) $dimensions[1];
         abort_unless($width >= 128 && $height >= 128, 422, 'Profile image must be at least 128 by 128 pixels.');
         abort_unless($width <= 8000 && $height <= 8000 && ($width * $height) <= 40_000_000, 422, 'Profile image dimensions are too large.');
 
