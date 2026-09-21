@@ -239,6 +239,18 @@ return [
             'close_confirm' => '关闭此声明？关闭后会保留历史记录且不能重新打开。',
             'public_needs' => '需求',
             'public_offers' => '提供与服务',
+            'add_details' => '添加详情',
+            'add_details_help' => '先创建最简单的声明，再只添加这项需求或提供真正需要的细节。',
+            'custom_concept_hint' => '没有完全匹配的建议？继续输入，它会成为你自己的可复用概念。',
+            'facets' => [
+                'title' => '标题',
+                'description' => '描述',
+                'quantity' => '数量',
+                'location' => '位置',
+                'route' => '路线',
+                'timing' => '时间',
+                'visibility' => '可见性',
+            ],
         ],
     ],
     'welcome' => [
