@@ -39,9 +39,11 @@ Read these instead of relying on chat history:
 7. [Admission Collaboration Architecture](docs/ADMISSION_COLLABORATION_ARCHITECTURE.md)
 8. [Completed Phase 1 — Invitation / Registration / Admission](docs/PHASE_01_INVITATION_ONBOARDING.md)
 9. [Concept Kernel](docs/CONCEPT_KERNEL.md)
-10. [Financial Architecture](docs/FINANCIAL_ARCHITECTURE.md)
-11. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
-12. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
+10. [Completed Phase 3 — Concept Kernel](docs/PHASE_03_CONCEPT_KERNEL.md)
+11. [Active Phase 4 — Actor/Party and Progressive Profile](docs/PHASE_04_ACTOR_PROFILE.md)
+12. [Financial Architecture](docs/FINANCIAL_ARCHITECTURE.md)
+13. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
+14. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
 
 Historical implementation reports are under `Development-CodexReports/`.
 
@@ -72,7 +74,7 @@ See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
 
 Work on one accepted roadmap phase at a time.
 
-Phase 2 is complete at its provider-neutral operational baseline. The next implementation milestone is **Phase 3: Concept Kernel**. Production-host-specific deployment, mail-provider, supervisor, monitoring, and backup/restore proof remain mandatory before production release and are tracked by the operations runbook and later production-hardening/release phases.
+Phases 2 and 3 are complete. **Phase 4 — Actor/Party and Progressive Profile** is active on `feat/phase-04-actor-profile`. Milestone 4A (professional identity + profile media foundation) is remote-CI green and awaits owner-local/browser acceptance before 4B begins. Production-host-specific deployment, mail-provider, supervisor, monitoring, and backup/restore proof remain mandatory before production release and are tracked by the operations runbook and later production-hardening/release phases.
 
 Agents must read `AGENTS.md` and the canonical docs before changing code.
 
