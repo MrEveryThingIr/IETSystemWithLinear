@@ -25,9 +25,13 @@ class EnsureActorProfile
         return DB::transaction(function () use ($current): ActorProfile {
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
-            return ActorProfile::query()->firstOrCreate([
-                'actor_id' => $actor->id,
-            ]);
+            $profile = ActorProfile::query()
+                ->where('actor_id', $actor->id)
+                ->first();
+
+            return $profile instanceof ActorProfile
+                ? $profile
+                : $actor->profile()->create();
         }, 3);
     }
 }
