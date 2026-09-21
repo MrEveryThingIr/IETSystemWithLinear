@@ -520,9 +520,18 @@ Contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 Current Phase 4 state:
 
 - 4A professional identity + profile media: owner-local accepted at 298 tests / 1528 assertions, PHPStan/Pint/build green and clean working tree;
-- 4B semantic Profile + recurring Need/Offer declarations: implementation complete, remote-CI green, and owner-local technical gate accepted at 306 tests / 1570 assertions; only human browser smoke remains before final 4B acceptance;
+- 4B semantic Profile + recurring Need/Offer declarations: core implementation was owner-local technically accepted; 4B.1 temporal-localization hardening is now remote-CI green at 310 tests / 1593 assertions and requires one refreshed owner-local/browser gate before final 4B acceptance;
 - 4C selective sharing/completeness/final closure: pending.
 
 4B preserves future boundaries: recurring Profile declarations describe current cadence/constraints without generating Planner Occurrences, performing Need/Offer matching, or creating obligations.
+
+Temporal contract now established by 4B.1:
+
+- locale, timezone and calendar are independent preferences;
+- timezone uses IANA identifiers and may be automatic (device-following) or fixed;
+- Persian defaults to Persian/Jalali presentation;
+- English, Arabic and Simplified Chinese default to Gregorian presentation;
+- Hijri/Umm al-Qura is an explicit optional calendar;
+- date-only persistence remains canonical ISO/Gregorian and empty optional temporal inputs normalize to NULL.
 
 Phase 4 keeps authentication User data separate from Actor/Profile data, defaults Profile visibility to private, and reuses the private Asset/media pipeline for profile images.
