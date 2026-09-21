@@ -5,6 +5,7 @@ namespace App\Actions\Profile;
 use App\Models\User;
 use App\ProfileIntentScheduleKind;
 use App\ProfileItemVisibility;
+use App\Support\TemporalPreferences;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -18,7 +19,31 @@ class NormalizeProfileIntentData
      */
     public function execute(User $user, array $input): array
     {
-        $input['timezone'] ??= $user->timezone ?: config('app.timezone');
+        foreach ([
+            'title',
+            'description',
+            'quantity',
+            'unit',
+            'location_text',
+            'origin_text',
+            'destination_text',
+            'return_after_days',
+            'starts_on',
+            'ends_on',
+            'recurrence_day_of_month',
+            'time_window_start',
+            'time_window_end',
+        ] as $nullableKey) {
+            if (array_key_exists($nullableKey, $input)
+                && is_string($input[$nullableKey])
+                && trim($input[$nullableKey]) === '') {
+                $input[$nullableKey] = null;
+            }
+        }
+
+        if (! isset($input['timezone']) || ! is_string($input['timezone']) || trim($input['timezone']) === '') {
+            $input['timezone'] = TemporalPreferences::timezoneFor($user);
+        }
         $input['recurrence_interval'] ??= 1;
         $input['round_trip'] ??= false;
         $input['visibility'] ??= ProfileItemVisibility::Inherited->value;
