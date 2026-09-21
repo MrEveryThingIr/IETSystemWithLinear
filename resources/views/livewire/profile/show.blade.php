@@ -117,6 +117,31 @@
                                         <div><dt class="inline font-medium">{{ __('ui.profile.intents.location') }}:</dt> <dd class="inline" dir="auto">{{ $intent->location_text }}</dd></div>
                                     @endif
 
+                                    @if ($intent->starts_on || $intent->ends_on)
+                                        <div>
+                                            <dt class="inline font-medium">{{ __('ui.profile.intents.date_range') }}:</dt>
+                                            <dd class="inline">
+                                                @if ($intent->starts_on)
+                                                    <time
+                                                        datetime="{{ $intent->starts_on->toDateString() }}"
+                                                        data-localized-date="{{ $intent->starts_on->toDateString() }}"
+                                                        data-locale="{{ $intlLocale }}"
+                                                        data-calendar="{{ $calendar }}"
+                                                    >{{ $intent->starts_on->toDateString() }}</time>
+                                                @endif
+                                                @if ($intent->ends_on)
+                                                    <span aria-hidden="true"> → </span>
+                                                    <time
+                                                        datetime="{{ $intent->ends_on->toDateString() }}"
+                                                        data-localized-date="{{ $intent->ends_on->toDateString() }}"
+                                                        data-locale="{{ $intlLocale }}"
+                                                        data-calendar="{{ $calendar }}"
+                                                    >{{ $intent->ends_on->toDateString() }}</time>
+                                                @endif
+                                            </dd>
+                                        </div>
+                                    @endif
+
                                     @if ($intent->schedule_kind->value === 'weekly' && ! empty($intent->recurrence_weekdays))
                                         <div>
                                             <dt class="inline font-medium">{{ __('ui.profile.intents.weekdays') }}:</dt>
@@ -133,7 +158,17 @@
                                     @endif
 
                                     @if ($intent->time_window_start || $intent->time_window_end)
-                                        <div><dt class="inline font-medium">{{ __('ui.profile.intents.time_window') }}:</dt> <dd class="inline">{{ substr((string) $intent->time_window_start, 0, 5) }}{{ $intent->time_window_end ? '–'.substr((string) $intent->time_window_end, 0, 5) : '' }} {{ $intent->timezone }}</dd></div>
+                                        <div>
+                                            <dt class="inline font-medium">{{ __('ui.profile.intents.time_window') }}:</dt>
+                                            <dd class="inline">
+                                                <span data-localized-time="{{ substr((string) $intent->time_window_start, 0, 5) }}" data-locale="{{ $intlLocale }}">{{ substr((string) $intent->time_window_start, 0, 5) }}</span>
+                                                @if ($intent->time_window_end)
+                                                    <span aria-hidden="true">–</span>
+                                                    <span data-localized-time="{{ substr((string) $intent->time_window_end, 0, 5) }}" data-locale="{{ $intlLocale }}">{{ substr((string) $intent->time_window_end, 0, 5) }}</span>
+                                                @endif
+                                                <span>{{ $intent->timezone }}</span>
+                                            </dd>
+                                        </div>
                                     @endif
 
                                     @if ($intent->round_trip)
