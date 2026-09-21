@@ -222,6 +222,16 @@ CI performs Composer metadata validation, formatting, static analysis, migration
 
 `package-lock.json` is committed and CI installs JavaScript dependencies exclusively with `npm ci`.
 
+## Repository merge policy
+
+The current `main` repository ruleset requires pull requests and blocks deletion/non-fast-forward updates. At the Phase 2 implementation audit it did not yet require the CI workflow status.
+
+After the CI workflow is integrated into the branch that feeds `main`, configure the protected merge rule to require:
+
+- `CI / PHP 8.4 / Node 22`
+
+Do not weaken the existing pull-request/non-fast-forward protections to make CI easier to bypass.
+
 ## Release verification checklist
 
 Before calling a release healthy:

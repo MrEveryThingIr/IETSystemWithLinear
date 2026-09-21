@@ -100,7 +100,7 @@ Verified by that CI run:
 - PHPUnit: **284 passed / 1441 assertions**;
 - `composer audit --locked`: no security vulnerability advisories found.
 
-A later Phase 2 CI tightening adds `npm audit --audit-level=high` and the SQLite restore smoke; record their final result after that run completes.
+Final strengthened GitHub Actions run `35595391675` on commit `2fb123e18a1b3828e991c8dc2696296644c42cc8` also passed. It verified current GitHub Actions runtimes, strict `npm ci`, `npm audit --audit-level=high`, scheduler execution, database queue-worker boot, the SQLite backup→restore smoke, the full PHPUnit suite, and the Composer advisory audit.
 
 The first complete CI attempt correctly exposed pre-existing repository-wide Pint debt in 20 unrelated legacy files. Phase 2 did not mass-reformat unrelated domains; CI now uses the Phase 1 integration branch merge-base and enforces Pint on PHP changed by the phase branch.
 
@@ -122,6 +122,12 @@ git status --short
 
 CI execution after push/PR is additional evidence, not a substitute for the local gate.
 
+## GitHub merge-policy observation
+
+The repository-level `Protect main` ruleset currently requires pull requests and blocks deletion/non-fast-forward updates, but it does not yet require the CI job as a merge status check. The connected GitHub toolset in this session exposes ruleset reads but no safe ruleset mutation action, so this was not changed silently.
+
+Before Phase 2 closes, add the CI job (`CI / PHP 8.4 / Node 22`) as a required status check on the intended protected integration/default branch after the workflow is present there.
+
 ## Human/infrastructure gates still required
 
 Before Phase 2 can close:
@@ -134,7 +140,8 @@ Before Phase 2 can close:
 6. configure automated production backups;
 7. perform an isolated restore drill and record exact result/date;
 8. validate private media storage on the selected target;
-9. rerun the full final gate and obtain human acceptance.
+9. require the CI status check in the protected merge policy;
+10. rerun the local/final gate and obtain human acceptance.
 
 ## Deferred by design
 
