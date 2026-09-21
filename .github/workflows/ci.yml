@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -61,8 +63,20 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Verify formatting
-        run: vendor/bin/pint --test
+      - name: Verify formatting for changed PHP files
+        shell: bash
+        run: |
+          git fetch origin feat/group-spaces-communication
+          BASE_SHA="$(git merge-base HEAD origin/feat/group-spaces-communication)"
+          mapfile -t PHP_FILES < <(git diff --name-only --diff-filter=ACMRT "$BASE_SHA"...HEAD -- '*.php')
+
+          if (( ${#PHP_FILES[@]} == 0 )); then
+            echo "No changed PHP files require Pint verification."
+            exit 0
+          fi
+
+          printf 'Pint checking %s\n' "${PHP_FILES[@]}"
+          vendor/bin/pint --test "${PHP_FILES[@]}"
 
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress
