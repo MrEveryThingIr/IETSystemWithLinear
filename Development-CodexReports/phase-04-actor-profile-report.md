@@ -5,9 +5,9 @@
 Phase 4 is active on `feat/phase-04-actor-profile`.
 
 - 4A — professional identity + profile media: **complete and owner-local accepted**.
-- 4B — semantic Profile + recurring Needs/Offers: **implementation complete**.
-- 4B.1 — temporal localization hardening: **implemented and remote-CI validated at 310 tests / 1593 assertions; refreshed owner-local/browser acceptance pending**.
-- 4C — selective sharing/completeness/final Phase 4 closure: **next after 4B acceptance**.
+- 4B — semantic Profile + recurring Needs/Offers: **complete and owner-local accepted at `ea52eef`**.
+- 4B.1 — temporal localization hardening: **complete and owner-local accepted at `ea52eef`**.
+- 4C — selective sharing/completeness/final Phase 4 closure: **active from accepted baseline `ea52eef`**.
 
 ## Starting point
 
@@ -351,7 +351,7 @@ Passed:
 - SQLite backup → restore smoke;
 - Composer security audit: clean.
 
-Because 4B.1 changes schema and visible date/time UX, the earlier local 4B gate must be refreshed once before final 4B acceptance.
+4B.1's schema and visible date/time UX were refreshed owner-locally on `ea52eef`; the gate is closed.
 
 ## Owner-local/browser gate for 4B
 
@@ -391,6 +391,20 @@ These are roadmap work, not 4B defects.
 
 ## Next gate
 
-4B plus 4B.1 temporal hardening is frozen for refreshed owner-local/browser acceptance.
+4B plus 4B.1 temporal hardening is accepted and frozen at `ea52eef`.
 
-After that succeeds, begin **4C — selective sharing, Profile completeness/requirements, privacy/accessibility polish, and final Phase 4 closure**. Do not jump to Planner or Need/Offer Matching merely because recurring declarations now exist.
+Begin **4C — selective sharing, Profile completeness/requirements, privacy/accessibility polish, and final Phase 4 closure**. Do not jump to Planner or Need/Offer Matching merely because recurring declarations now exist.
+
+
+## 4B/4B.1 final owner-local closure
+
+Accepted baseline: `ea52eef97184aa3b06bc8946c45c513dd2586baf`.
+
+- focused semantic/progressive/temporal suite: **16 passed / 85 assertions**;
+- full PHPUnit: **314 passed / 1613 assertions**;
+- PHPStan: **no errors**;
+- Pint dirty-file gate: **passed**;
+- Vite production build: **passed**;
+- working tree: **clean**.
+
+4B/4B.1 is closed. 4C is the sole remaining Phase 4 milestone.
