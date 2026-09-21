@@ -244,6 +244,18 @@ return [
             'close_confirm' => 'Close this declaration? Closed declarations are kept as history and cannot be reopened.',
             'public_needs' => 'Needs',
             'public_offers' => 'Offers & services',
+            'add_details' => 'Add details',
+            'add_details_help' => 'Start with the simplest statement, then add only the details that matter for this need or offer.',
+            'custom_concept_hint' => 'No exact suggestion? Keep typing and this will become your own reusable concept.',
+            'facets' => [
+                'title' => 'Title',
+                'description' => 'Description',
+                'quantity' => 'Quantity',
+                'location' => 'Location',
+                'route' => 'Route',
+                'timing' => 'Timing',
+                'visibility' => 'Visibility',
+            ],
         ],
     ],
     'welcome' => [
