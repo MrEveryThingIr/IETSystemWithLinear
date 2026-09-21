@@ -5,7 +5,25 @@
     </div>
 
     <form wire:submit="add" class="grid gap-3 md:grid-cols-[minmax(0,1fr)_13rem_11rem_auto] md:items-end">
-        <flux:input wire:model="conceptLabel" :label="__('ui.profile.semantics.concept')" maxlength="120" />
+        <div class="relative space-y-2">
+            <flux:input wire:model.live.debounce.250ms="conceptLabel" :label="__('ui.profile.semantics.concept')" maxlength="120" />
+            @if ($conceptSuggestions !== [])
+                <div class="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                    @foreach ($conceptSuggestions as $suggestion)
+                        <button
+                            type="button"
+                            wire:click="selectConceptSuggestion(@js($suggestion))"
+                            class="block w-full px-3 py-2 text-start text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                            dir="auto"
+                        >
+                            {{ $suggestion }}
+                        </button>
+                    @endforeach
+                </div>
+            @elseif (mb_strlen(trim($conceptLabel)) >= 2)
+                <p class="text-xs text-zinc-500">{{ __('ui.profile.intents.custom_concept_hint') }}</p>
+            @endif
+        </div>
         <div class="space-y-2">
             <label class="text-sm font-medium" for="semantic-predicate">{{ __('ui.profile.semantics.relationship') }}</label>
             <select id="semantic-predicate" wire:model="predicate" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
