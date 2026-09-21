@@ -11,6 +11,8 @@ use App\Models\ConceptAssertion;
 use App\Models\User;
 use App\Policies\ActorProfileIntentPolicy;
 use App\ProfileIntentStatus;
+use App\Support\Localization;
+use App\Support\TemporalPreferences;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -72,6 +74,8 @@ class Show extends Component
             'learningGoals' => $assertions->where('predicate', ConceptAssertionPredicate::WantsToLearn)->values(),
             'needs' => $intents->where('kind.value', 'need')->values(),
             'offers' => $intents->where('kind.value', 'offer')->values(),
+            'calendar' => TemporalPreferences::calendarFor($user)->value,
+            'intlLocale' => Localization::intlLocale(),
         ]);
     }
 
