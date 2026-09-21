@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\ActorProfileImageController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LocaleController;
@@ -29,12 +30,17 @@ use App\Livewire\Groups\SpaceContentShow;
 use App\Livewire\Groups\SpaceContentStructure;
 use App\Livewire\Groups\SpaceManagement;
 use App\Livewire\Platform\Access as PlatformAccess;
+use App\Livewire\Profile\Manage as ProfileManage;
+use App\Livewire\Profile\Show as ProfileShow;
 use App\Models\Actor;
 use App\Models\Group;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'));
 Route::post('/locale', LocaleController::class)->name('locale.update');
+Route::livewire('/profiles/{profile}', ProfileShow::class)->name('profiles.show');
+Route::get('/profiles/{profile}/images/{image}', [ActorProfileImageController::class, 'show'])
+    ->name('profiles.images.show');
 Route::get('/invitations/{token}', [GroupInvitationController::class, 'show'])->name('invitations.show');
 Route::post('/invitations/{token}/accept', [GroupInvitationController::class, 'accept'])->middleware(['auth', 'account.active', 'verified', 'throttle:invitation-acceptance'])->name('invitations.accept');
 Route::middleware('guest')->group(function (): void {
@@ -51,6 +57,7 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
     Route::view('/dashboard', 'dashboard')->middleware('verified')->name('dashboard');
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
+    Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
     Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
