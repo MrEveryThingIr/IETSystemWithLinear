@@ -92,6 +92,10 @@ Implemented direction:
 - closed declarations remain historical and cannot be reopened;
 - active Need/Offer declarations synchronize coarse Actor `needs` / `offers` Concept assertions;
 - Profile UI and public rendering remain purpose-specific rather than exposing generic assertion tables.
+- Profile statement composition follows progressive disclosure: relationship + Concept is the minimal core; title, description, quantity, location, route, timing and visibility are opt-in facets.
+- inactive facets are omitted from the form and cleared from the pending payload when removed;
+- editing an existing declaration reactivates only facets already represented by stored data;
+- Concept inputs suggest reusable Platform/Actor Concepts while preserving free creation of a new Actor-scoped personal Concept when no match fits.
 
 #### Recurrence boundary
 
