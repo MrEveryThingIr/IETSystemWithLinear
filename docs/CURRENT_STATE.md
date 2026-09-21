@@ -518,7 +518,7 @@ Contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 Current Phase 4 state:
 
 - 4A professional identity + profile media: owner-local accepted at 298 tests / 1528 assertions, PHPStan/Pint/build green and clean working tree;
-- 4B semantic Profile + recurring Need/Offer declarations: active implementation;
+- 4B semantic Profile + recurring Need/Offer declarations: implemented and remote-CI green at 305 tests / 1566 assertions; owner-local/browser gate pending;
 - 4C selective sharing/completeness/final closure: pending.
 
 4B preserves future boundaries: recurring Profile declarations describe current cadence/constraints without generating Planner Occurrences, performing Need/Offer matching, or creating obligations.
