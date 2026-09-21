@@ -8,7 +8,7 @@ The project deliberately aims for **generic infrastructure internally and focuse
 
 Active roadmap phase:
 
-`Phase 3 — Concept Kernel`
+`Phase 4 — Actor/Party and Progressive Profile`
 
 Completed Phase 2 branch:
 
