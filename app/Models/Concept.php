@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ConceptLabelKind;
 use App\ConceptStatus;
 use Database\Factories\ConceptFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -92,9 +93,9 @@ class Concept extends Model
         $labels = $this->relationLoaded('labels') ? $this->labels : $this->labels()->get();
 
         $preferred = $labels
-            ->where('kind', \App\ConceptLabelKind::Preferred)
+            ->where('kind', ConceptLabelKind::Preferred)
             ->firstWhere('locale', $locale)
-            ?? $labels->firstWhere('kind', \App\ConceptLabelKind::Preferred)
+            ?? $labels->firstWhere('kind', ConceptLabelKind::Preferred)
             ?? $labels->first();
 
         return $preferred?->label ?? Str::headline($this->slug);

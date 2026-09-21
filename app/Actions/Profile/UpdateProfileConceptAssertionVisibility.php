@@ -3,8 +3,8 @@
 namespace App\Actions\Profile;
 
 use App\ConceptAssertionPredicate;
-use App\ConceptAssertionVisibility;
 use App\ConceptAssertionSubject;
+use App\ConceptAssertionVisibility;
 use App\Models\ActorProfile;
 use App\Models\ConceptAssertion;
 use App\Models\User;

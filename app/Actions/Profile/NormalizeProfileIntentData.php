@@ -2,11 +2,11 @@
 
 namespace App\Actions\Profile;
 
+use App\Models\User;
 use App\ProfileIntentScheduleKind;
 use App\ProfileItemVisibility;
-use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 

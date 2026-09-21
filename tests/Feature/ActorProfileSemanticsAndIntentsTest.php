@@ -14,7 +14,6 @@ use App\ConceptAssertionVisibility;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
-use App\Models\ConceptAssertion;
 use App\Models\ConceptVocabulary;
 use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
@@ -24,6 +23,7 @@ use App\ProfileVisibility;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class ActorProfileSemanticsAndIntentsTest extends TestCase
@@ -224,7 +224,7 @@ class ActorProfileSemanticsAndIntentsTest extends TestCase
         $this->assertNotNull($intent->closed_at);
         $this->assertModelExists($intent);
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(HttpException::class);
         app(SetActorProfileIntentStatus::class)->execute(
             $actor->user,
             $intent,
