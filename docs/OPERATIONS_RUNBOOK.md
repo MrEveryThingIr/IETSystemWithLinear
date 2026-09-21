@@ -250,7 +250,7 @@ Before calling a release healthy:
 - private Asset retrieval remains authorized;
 - Phase 1 invitation/onboarding smoke path still works.
 
-## Phase 2 closure evidence still requiring infrastructure
+## Production-release evidence requiring selected infrastructure
 
 Repository implementation alone cannot prove:
 
@@ -262,4 +262,4 @@ Repository implementation alone cannot prove:
 - automated production backup retention;
 - a real restore drill.
 
-Record those results in the Phase 2 report only after they actually happen.
+Record those results only after they actually happen. They are mandatory before production release, but they do not block Phase 3 while no production deployment target has been selected.

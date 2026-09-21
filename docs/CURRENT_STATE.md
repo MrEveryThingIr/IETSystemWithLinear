@@ -477,14 +477,25 @@ These are continuous roadmap requirements, not a final afterthought.
 
 Phase 1 — Production Invitation + Registration + Admission Journey — has completed implementation and validation. Its durable evidence is in `docs/PHASE_01_INVITATION_ONBOARDING.md` and `Development-CodexReports/phase-01-invitation-onboarding-report.md`.
 
-The active implementation milestone is:
+Phase 2 — Delivery and Operations Baseline — is complete at the provider-neutral development baseline.
 
-> Phase 2 — Delivery and Operations Baseline
+Validated Phase 2 capabilities include CI, committed Composer/npm lockfiles, strict `npm ci`, dependency audits, deploy/version and request correlation, database queue operation, scheduler execution, failed-job visibility, SQLite backup→restore smoke, private-storage guidance, abuse-control inventory, and an executable operations runbook.
 
-Phase 2 starts from the accepted Phase 1 closure commit `a91c0dea1e770614d1d419f26a9bf1783b38e023` on `feat/phase-02-delivery-operations`.
+Owner-local validation after synchronizing the Phase 2 branch confirmed:
 
-The provider-neutral baseline now covers CI, committed Composer/npm lockfiles, deployment/runbook discipline, queue/scheduler operation, transactional email operations, request/deploy log correlation, backup/restore procedure, failed-job handling, dependency/security updates, abuse-control inventory, and production storage guidance.
+- Composer metadata/install from lock: passed;
+- npm install/audit/build from lock: passed;
+- PHPUnit: 284 tests / 1441 assertions;
+- PHPStan: no errors;
+- Pint on all Phase 2 PHP changes: passed;
+- migrations: all ran;
+- scheduler list and execution: passed;
+- database queue worker: started and drained cleanly;
+- failed jobs: none;
+- Laravel `/up` liveness page: healthy in the browser.
 
-Phase 2 is not complete merely because these repository files exist. The selected deployment target, enabled production mail transport, supervised worker/scheduler exercise, and an actual backup/restore drill remain exit-gate evidence that must be performed and recorded honestly.
+Production-host-specific proof is deliberately not a blocker for Phase 3. Before production release, the selected deployment target must still exercise real worker/scheduler supervision, enabled transactional mail, operational monitoring/log retention, automated backups, an isolated restore drill, and private media storage. Those remain governed by `docs/OPERATIONS_RUNBOOK.md` and later production-hardening/release gates.
 
-The detailed contract is `docs/PHASE_02_DELIVERY_OPERATIONS.md`; executable guidance is `docs/OPERATIONS_RUNBOOK.md`. Do not begin Phase 3 or pull Admission v2/real-time/negotiation work forward until Phase 2 reaches its exit gate.
+The next implementation milestone is:
+
+> Phase 3 — Concept Kernel

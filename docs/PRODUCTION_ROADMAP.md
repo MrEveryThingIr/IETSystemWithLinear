@@ -150,7 +150,7 @@ Invitation
 
 ## Phase 2 — Delivery and operations baseline
 
-**Status: active.** Implementation branch: `feat/phase-02-delivery-operations`. Detailed contract: `docs/PHASE_02_DELIVERY_OPERATIONS.md`.
+**Status: complete at the provider-neutral operational baseline.** Completed branch: `feat/phase-02-delivery-operations`. Detailed contract: `docs/PHASE_02_DELIVERY_OPERATIONS.md`.
 
 ### Purpose
 
@@ -175,6 +175,8 @@ Establish the operational floor before the platform expands significantly.
 A release candidate can be deployed, observed, backed up, restored, and diagnosed without relying on developer memory.
 
 ## Phase 3 — Concept Kernel
+
+**Status: next.**
 
 Architecture: `docs/CONCEPT_KERNEL.md`.
 

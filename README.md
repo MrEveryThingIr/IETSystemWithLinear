@@ -8,9 +8,9 @@ The project deliberately aims for **generic infrastructure internally and focuse
 
 Active roadmap phase:
 
-`Phase 2 — Delivery and Operations Baseline`
+`Phase 3 — Concept Kernel`
 
-Phase 2 implementation branch:
+Completed Phase 2 branch:
 
 `feat/phase-02-delivery-operations`
 
@@ -72,7 +72,7 @@ See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
 
 Work on one accepted roadmap phase at a time.
 
-The active implementation milestone is **Phase 2: Delivery and Operations Baseline**. Do not begin Phase 3 until the Phase 2 operational exit gate is accepted.
+Phase 2 is complete at its provider-neutral operational baseline. The next implementation milestone is **Phase 3: Concept Kernel**. Production-host-specific deployment, mail-provider, supervisor, monitoring, and backup/restore proof remain mandatory before production release and are tracked by the operations runbook and later production-hardening/release phases.
 
 Agents must read `AGENTS.md` and the canonical docs before changing code.
 

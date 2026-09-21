@@ -2,9 +2,11 @@
 
 ## Status
 
-Active on `feat/phase-02-delivery-operations`, starting from accepted Phase 1 closure commit `a91c0dea1e770614d1d419f26a9bf1783b38e023`.
+Complete at the provider-neutral development/operations baseline on `feat/phase-02-delivery-operations`, starting from accepted Phase 1 closure commit `a91c0dea1e770614d1d419f26a9bf1783b38e023`.
 
-Provider-neutral operational implementation may proceed. External provider selection, production deployment credentials, and claims of a successful restore drill remain human/infrastructure gates.
+The repository and owner-local environment now prove CI, reproducible dependency installation, queue/scheduler execution, failed-job visibility, request/deploy correlation, dependency auditing, and baseline backup→restore mechanics.
+
+Production-host-specific provider/supervisor/backup evidence is deferred to the later production-hardening/release gates because no production target has been selected yet. It remains mandatory before production release and must not be claimed prematurely.
 
 ## Objective
 
@@ -212,17 +214,30 @@ Stop for owner/architecture review before:
 
 ## Exit gate
 
-Phase 2 is complete only when a release candidate can be built and its operating model can be followed without developer memory, including:
+The Phase 2 development baseline is complete when:
 
-- CI enforces the required test/static/build gates;
-- deployment/environment runbook is complete for the selected target;
-- queue/scheduler operations are documented and verified where used;
-- transactional email operation is documented/verified for enabled mail paths;
+- CI enforces the required test/static/build/audit gates;
+- dependency installation is reproducible from committed lockfiles;
+- deployment/environment/rollback guidance is documented;
+- queue/scheduler operations are documented and exercised in CI and the owner-local environment;
 - failed jobs and operational errors are diagnosable;
-- backup procedure exists and restore has actually been tested;
+- request/deploy correlation exists;
+- backup/restore mechanics are exercised at least against the development/CI database;
 - production storage/media requirements are documented;
 - sensitive endpoint abuse controls are reviewed;
 - dependency/security update process is documented;
-- applicable final validation is green;
+- applicable repository and local validation is green;
 - implementation report is committed;
-- human owner accepts the operational gate.
+- human owner accepts the baseline.
+
+The following are **production release gates, not Phase 3 blockers** when no production target has yet been selected:
+
+- real worker/scheduler supervision on the selected host;
+- enabled production transactional-mail delivery;
+- production monitoring/log-retention destination;
+- automated production backup retention;
+- an isolated restore drill on the selected production database/storage topology;
+- private media verification on the selected production storage;
+- protected-branch CI status enforcement.
+
+These must be satisfied before production release and remain tracked in `docs/OPERATIONS_RUNBOOK.md`.

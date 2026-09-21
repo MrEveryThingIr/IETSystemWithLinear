@@ -2,7 +2,7 @@
 
 ## Status
 
-Implementation in progress on `feat/phase-02-delivery-operations`.
+Phase 2 provider-neutral operational baseline complete on `feat/phase-02-delivery-operations` and accepted by the human owner after local/browser validation.
 
 This report distinguishes repository implementation from environment evidence. No deployment, external mail provider, queue supervisor, scheduler supervisor, production backup, or restore drill is claimed until it is actually exercised.
 
@@ -104,23 +104,24 @@ Final strengthened GitHub Actions run `35595391675` on commit `2fb123e18a1b3828e
 
 The first complete CI attempt correctly exposed pre-existing repository-wide Pint debt in 20 unrelated legacy files. Phase 2 did not mass-reformat unrelated domains; CI now uses the Phase 1 integration branch merge-base and enforces Pint on PHP changed by the phase branch.
 
-The owner's local Laravel checkout has not yet executed the Phase 2 branch changes.
+Owner-local validation completed successfully after synchronizing the Phase 2 branch:
 
-Required next local gate:
+- `composer validate --strict`: valid;
+- `composer install`: lockfile install succeeded;
+- `npm ci`: succeeded;
+- `npm audit --audit-level=high`: 0 vulnerabilities;
+- `npm run build`: succeeded;
+- `php artisan test --compact`: **284 passed / 1441 assertions**;
+- `vendor/bin/phpstan analyse`: no errors;
+- Pint on all PHP files changed since Phase 1 closure: passed (7 files);
+- all migrations reported as ran;
+- `php artisan schedule:list`: expected Agreement activation + queue-pruning schedules present;
+- `php artisan schedule:run`: `agreements:activate-due` executed successfully;
+- database queue worker started and drained the default queue successfully;
+- `php artisan queue:failed`: no failed jobs;
+- browser `/up` liveness page: healthy.
 
-~~~text
-git switch feat/phase-02-delivery-operations
-git pull --ff-only
-composer validate --strict
-php artisan test --compact
-vendor/bin/phpstan analyse
-vendor/bin/pint --dirty --format agent
-npm run build
-php artisan schedule:list
-git status --short
-~~~
-
-CI execution after push/PR is additional evidence, not a substitute for the local gate.
+The Phase 2 runtime changes are operational rather than product-UI changes, so no new browser interface is expected. Phase 1 user journeys remain the regression baseline.
 
 ## GitHub merge-policy observation
 
@@ -128,20 +129,20 @@ The repository-level `Protect main` ruleset currently requires pull requests and
 
 Before Phase 2 closes, add the CI job (`CI / PHP 8.4 / Node 22`) as a required status check on the intended protected integration/default branch after the workflow is present there.
 
-## Human/infrastructure gates still required
+## Production-release gates intentionally deferred
 
-Before Phase 2 can close:
+No production deployment target has been selected yet, so the following are not claimed by Phase 2 and are not blockers for Phase 3:
 
-1. select/record the production deployment target and database;
-2. exercise the queue worker under the selected supervisor;
-3. exercise the scheduler under the selected supervisor;
-4. select/configure and test production transactional mail if those paths are enabled;
-5. choose operational log/monitoring retention/destination;
-6. configure automated production backups;
-7. perform an isolated restore drill and record exact result/date;
-8. validate private media storage on the selected target;
-9. require the CI status check in the protected merge policy;
-10. rerun the local/final gate and obtain human acceptance.
+1. queue worker under the selected production supervisor;
+2. scheduler under the selected production supervisor;
+3. enabled production transactional-mail delivery;
+4. production log/monitoring retention/destination;
+5. automated production backups;
+6. isolated restore drill on the selected production topology;
+7. private media verification on selected production storage;
+8. required CI status check in the protected merge policy.
+
+These remain mandatory before production release and are tracked by the operations runbook and later production-hardening/release phases.
 
 ## Deferred by design
 
@@ -149,4 +150,4 @@ Phase 2 does not implement Concept, Profile, Admission Context, generic Conversa
 
 ## Recommended next gate
 
-Pull this Phase 2 branch locally, run the repository validation above, inspect the first CI run, and address any environment-specific failures before selecting infrastructure providers or attempting the restore drill.
+Close this branch as the accepted Phase 2 baseline, keep the operations runbook as a standing production-readiness contract, and begin Phase 3 — Concept Kernel. Do not claim production readiness until the deferred production-release gates are actually exercised.
