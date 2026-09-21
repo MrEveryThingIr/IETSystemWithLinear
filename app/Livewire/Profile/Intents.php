@@ -7,6 +7,7 @@ use App\Actions\Profile\SetActorProfileIntentStatus;
 use App\Actions\Profile\UpdateActorProfileIntent;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
+use App\Models\ConceptLabel;
 use App\Models\User;
 use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
@@ -75,6 +76,9 @@ class Intents extends Component
 
     public bool $timezoneAutomatic = true;
 
+    /** @var list<string> */
+    public array $activeFacets = [];
+
     public function mount(): void
     {
         $user = request()->user();
@@ -82,6 +86,61 @@ class Intents extends Component
 
         $this->timezoneAutomatic = $user->timezone_mode === TimezoneMode::Auto;
         $this->timezone = TemporalPreferences::timezoneFor($user);
+    }
+
+    public function toggleFacet(string $facet): void
+    {
+        $allowed = ['title', 'description', 'quantity', 'location', 'route', 'timing', 'visibility'];
+        abort_unless(in_array($facet, $allowed, true), 422);
+
+        if (in_array($facet, $this->activeFacets, true)) {
+            $this->activeFacets = array_values(array_filter(
+                $this->activeFacets,
+                fn (string $active): bool => $active !== $facet,
+            ));
+            $this->clearFacet($facet);
+
+            return;
+        }
+
+        $this->activeFacets[] = $facet;
+        $this->activeFacets = array_values(array_unique($this->activeFacets));
+    }
+
+    public function selectConceptSuggestion(string $label): void
+    {
+        $this->conceptLabel = trim($label);
+    }
+
+    private function clearFacet(string $facet): void
+    {
+        match ($facet) {
+            'title' => $this->title = null,
+            'description' => $this->description = null,
+            'quantity' => [$this->quantity, $this->unit] = [null, null],
+            'location' => $this->locationText = null,
+            'route' => [
+                $this->originText,
+                $this->destinationText,
+                $this->roundTrip,
+                $this->returnAfterDays,
+            ] = [null, null, false, null],
+            'timing' => $this->clearTimingFacet(),
+            'visibility' => $this->itemVisibility = ProfileItemVisibility::Inherited->value,
+            default => null,
+        };
+    }
+
+    private function clearTimingFacet(): void
+    {
+        $this->scheduleKind = ProfileIntentScheduleKind::Once->value;
+        $this->startsOn = null;
+        $this->endsOn = null;
+        $this->recurrenceInterval = 1;
+        $this->recurrenceWeekdays = [];
+        $this->recurrenceDayOfMonth = null;
+        $this->timeWindowStart = null;
+        $this->timeWindowEnd = null;
     }
 
     public function useBrowserTimezone(string $timezone): void
@@ -188,6 +247,22 @@ class Intents extends Component
             ? substr((string) $intent->time_window_end, 0, 5)
             : null;
         $this->itemVisibility = $intent->visibility->value;
+
+        $this->activeFacets = array_values(array_filter([
+            $intent->title !== null ? 'title' : null,
+            $intent->description !== null ? 'description' : null,
+            $intent->quantity !== null || $intent->unit !== null ? 'quantity' : null,
+            $intent->location_text !== null ? 'location' : null,
+            $intent->origin_text !== null || $intent->destination_text !== null || $intent->round_trip ? 'route' : null,
+            $intent->schedule_kind !== ProfileIntentScheduleKind::Once
+                || $intent->starts_on !== null
+                || $intent->ends_on !== null
+                || $intent->time_window_start !== null
+                || $intent->time_window_end !== null
+                ? 'timing'
+                : null,
+            $intent->visibility !== ProfileItemVisibility::Inherited ? 'visibility' : null,
+        ]));
     }
 
     public function cancelEdit(): void
@@ -238,6 +313,7 @@ class Intents extends Component
             'intlLocale' => Localization::intlLocale(),
             'firstDay' => Localization::firstDayOfWeek(),
             'weekdayOrder' => TemporalPreferences::weekdayOrder(),
+            'conceptSuggestions' => $this->conceptSuggestions(),
         ]);
     }
 
@@ -302,7 +378,37 @@ class Intents extends Component
         $this->timeWindowStart = null;
         $this->timeWindowEnd = null;
         $this->itemVisibility = ProfileItemVisibility::Inherited->value;
+        $this->activeFacets = [];
         $this->resetValidation();
+    }
+
+    /** @return list<string> */
+    private function conceptSuggestions(): array
+    {
+        $term = trim($this->conceptLabel);
+
+        if (mb_strlen($term) < 2) {
+            return [];
+        }
+
+        $normalized = mb_strtolower($term);
+
+        return ConceptLabel::query()
+            ->where('normalized_label', 'like', '%'.$normalized.'%')
+            ->whereHas('concept.vocabulary', function ($query): void {
+                $query->where(function ($scope): void {
+                    $scope->where('scope_type', 'platform')->where('scope_id', 0);
+                })->orWhere(function ($scope): void {
+                    $scope->where('scope_type', 'actor')->where('scope_id', $this->profile->actor_id);
+                });
+            })
+            ->with('concept')
+            ->limit(8)
+            ->get()
+            ->map(fn (ConceptLabel $label): string => $label->concept->displayLabel())
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /** @return Builder<ActorProfileIntent> */
