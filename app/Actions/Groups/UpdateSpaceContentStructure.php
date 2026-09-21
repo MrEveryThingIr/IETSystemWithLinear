@@ -82,6 +82,7 @@ class UpdateSpaceContentStructure
                 $revision,
                 SpaceContentRevisionRelationship::TYPE_CONTAINS,
             );
+            $this->composition->copyConceptAssertions($source, $revision, $actor);
 
             foreach ($childContentIds as $position => $childId) {
                 SpaceContentRevisionRelationship::query()->create([
