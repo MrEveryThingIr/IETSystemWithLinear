@@ -80,7 +80,23 @@ The existing auth/onboarding rate-limit inventory was reviewed and recorded. No 
 
 ## Validation status
 
-Remote repository changes created through the GitHub connector have not yet been executed in the owner's local Laravel environment.
+GitHub Actions CI run `35594399390` completed successfully on commit `925ff0ef7baeb6377291dc0647a9657997a50e99` after the CI Pint gate was corrected to enforce formatting on changed PHP files rather than unrelated inherited formatting debt.
+
+Verified by that CI run:
+
+- Composer metadata validation: passed;
+- PHP dependency install: passed;
+- fresh SQLite migration: passed;
+- frontend dependency install/build: passed;
+- changed-file Pint verification: passed;
+- PHPStan: no errors;
+- migration/scheduler smoke: passed;
+- PHPUnit: **284 passed / 1441 assertions**;
+- `composer audit --locked`: no security vulnerability advisories found.
+
+The first complete CI attempt correctly exposed pre-existing repository-wide Pint debt in 20 unrelated legacy files. Phase 2 did not mass-reformat unrelated domains; CI now uses the Phase 1 integration branch merge-base and enforces Pint on PHP changed by the phase branch.
+
+The owner's local Laravel checkout has not yet executed the Phase 2 branch changes.
 
 Required next local gate:
 
