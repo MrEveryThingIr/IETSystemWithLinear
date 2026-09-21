@@ -57,6 +57,7 @@ class Localization
     public static function firstDayOfWeek(?string $locale = null): int
     {
         $day = self::supported()[$locale ?? app()->getLocale()]['first_day_of_week'] ?? 1;
+
         return min(7, max(1, $day));
     }
 }
