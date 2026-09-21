@@ -35,11 +35,6 @@ class Semantics extends Component
         $this->conceptLabel = trim($label);
     }
 
-    public function selectConceptSuggestion(string $label): void
-    {
-        $this->conceptLabel = trim($label);
-    }
-
     public function add(AddProfileConceptAssertion $addAssertion): void
     {
         $user = request()->user();
