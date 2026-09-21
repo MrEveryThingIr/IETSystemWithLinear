@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -45,11 +46,17 @@ return new class extends Migration
 
     public function down(): void
     {
+        $profileAssetIds = DB::table('actor_profile_images')->pluck('asset_id');
+
         Schema::table('actor_profiles', function (Blueprint $table): void {
             $table->dropForeign('actor_profile_display_image_fk');
         });
 
         Schema::dropIfExists('actor_profile_images');
         Schema::dropIfExists('actor_profiles');
+
+        if ($profileAssetIds->isNotEmpty()) {
+            DB::table('assets')->whereIn('id', $profileAssetIds)->delete();
+        }
     }
 };
