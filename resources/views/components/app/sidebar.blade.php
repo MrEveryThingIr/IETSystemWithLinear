@@ -7,6 +7,9 @@
         <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" icon="home">
             {{ __('ui.navigation.dashboard') }}
         </flux:sidebar.item>
+        <flux:sidebar.item :href="route('profile.edit')" :current="request()->routeIs('profile.*')" icon="user-circle">
+            {{ __('ui.navigation.profile') }}
+        </flux:sidebar.item>
         <flux:sidebar.item :href="route('groups.index')" :current="request()->routeIs('groups.*')" icon="users">
             {{ __('ui.navigation.groups') }}
         </flux:sidebar.item>
