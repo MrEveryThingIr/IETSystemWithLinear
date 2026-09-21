@@ -496,23 +496,20 @@ Owner-local validation after synchronizing the Phase 2 branch confirmed:
 
 Production-host-specific proof is deliberately not a blocker for Phase 3. Before production release, the selected deployment target must still exercise real worker/scheduler supervision, enabled transactional mail, operational monitoring/log retention, automated backups, an isolated restore drill, and private media storage. Those remain governed by `docs/OPERATIONS_RUNBOOK.md` and later production-hardening/release gates.
 
-The active implementation milestone is:
+Phase 3 — Concept Kernel — is complete.
 
-> Phase 3 — Concept Kernel
+Owner-local closure validation on the final Phase 3 branch confirmed:
 
-Phase 3 branch: `feat/phase-03-concept-kernel`.
-Starting point: accepted Phase 2 closure commit `73e98f05746c7c42bf63d7c9bc91bee63d800cf9`.
+- focused Concept + publication suite: 16 passed / 118 assertions;
+- full PHPUnit suite: 292 passed / 1493 assertions;
+- PHPStan: no errors;
+- Pint across Phase 3 PHP: 55 files passed;
+- Vite production build: passed;
+- migrations: current;
+- working tree: clean.
 
-The Concept Kernel adds reusable semantic identity/classification for Actor and current Content without introducing Profile, generic Context, Admission v2, recommendations, or AI taxonomy.
+The active implementation milestone is now:
 
-Detailed execution contract: `docs/PHASE_03_CONCEPT_KERNEL.md`.
-Architecture: `docs/CONCEPT_KERNEL.md`.
+> Phase 4 — Actor/Party and progressive Profile
 
-Current Phase 3 implementation status:
-
-- 3A schema/authority: owner-local validated;
-- 3B domain behavior: owner-local validated at 290 tests / 1463 assertions;
-- 3C publication semantic evidence: remote CI green at 292 tests / 1493 assertions;
-- final owner-local/browser gate: pending before Phase 3 closure.
-
-Phase 4 — Actor/Party and progressive Profile — remains next and must not begin until that final gate is accepted.
+Phase 4 builds professional, privacy-aware Actor profiles on top of the completed Concept kernel. It must keep authentication User data separate from Actor identity/profile data and reuse the private Asset pipeline for profile media rather than storing public file paths on users.
