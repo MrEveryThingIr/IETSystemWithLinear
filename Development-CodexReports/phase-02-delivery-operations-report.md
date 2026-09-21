@@ -80,17 +80,21 @@ The existing auth/onboarding rate-limit inventory was reviewed and recorded. No 
 
 ## Validation status
 
-GitHub Actions CI run `35594399390` completed successfully on commit `925ff0ef7baeb6377291dc0647a9657997a50e99` after the CI Pint gate was corrected to enforce formatting on changed PHP files rather than unrelated inherited formatting debt.
+The final strict repository baseline was exercised by GitHub Actions run `35595084942` on commit `f44b5e40d708539efd39ec2cd54a8231026601d4`.
 
 Verified by that CI run:
 
 - Composer metadata validation: passed;
-- PHP dependency install: passed;
+- locked PHP dependency install: passed;
 - fresh SQLite migration: passed;
-- frontend dependency install/build: passed;
+- strict `npm ci`: passed using committed `package-lock.json`;
+- Vite production build: passed;
 - changed-file Pint verification: passed;
 - PHPStan: no errors;
-- migration/scheduler smoke: passed;
+- migration status: passed;
+- scheduler listing and execution smoke: passed;
+- database queue worker boot/empty-queue exit: passed;
+- failed-job inspection: passed;
 - PHPUnit: **284 passed / 1441 assertions**;
 - `composer audit --locked`: no security vulnerability advisories found.
 
