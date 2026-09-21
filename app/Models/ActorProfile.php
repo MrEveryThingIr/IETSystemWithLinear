@@ -69,6 +69,12 @@ class ActorProfile extends Model
         return $this->hasMany(ActorProfileImage::class)->orderBy('position')->orderBy('id');
     }
 
+    /** @return HasMany<ActorProfileIntent, $this> */
+    public function intents(): HasMany
+    {
+        return $this->hasMany(ActorProfileIntent::class);
+    }
+
     /** @return BelongsTo<ActorProfileImage, $this> */
     public function displayImage(): BelongsTo
     {
