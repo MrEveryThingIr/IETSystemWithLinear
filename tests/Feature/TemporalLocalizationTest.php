@@ -135,6 +135,8 @@ class TemporalLocalizationTest extends TestCase
             ->assertOk()
             ->assertSee('data-calendar="persian"', false)
             ->assertSee('data-locale="fa-IR"', false)
-            ->assertSee('data-first-day="6"', false);
+            ->assertSee(__('ui.profile.temporal.calendar_auto', [
+                'calendar' => __('ui.profile.temporal.calendars.persian'),
+            ]));
     }
 }
