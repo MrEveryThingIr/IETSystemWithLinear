@@ -8,5 +8,6 @@ enum PlatformCapability: string
     case ManageUsers = 'manage_users';
     case ManageActors = 'manage_actors';
     case ManagePlatformAccess = 'manage_platform_access';
+    case ManageConcepts = 'manage_concepts';
     case ViewPlatformAudit = 'view_platform_audit';
 }
