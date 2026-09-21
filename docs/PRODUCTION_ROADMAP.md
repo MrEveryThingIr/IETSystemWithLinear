@@ -215,7 +215,9 @@ Concept semantics are reusable by both Actor Profile and Content without duplica
 
 ## Phase 4 — Actor/Party and progressive Profile
 
-**Status: next.**
+**Status: active on `feat/phase-04-actor-profile`.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
+
+Current milestone: 4A professional identity + profile media is remote-CI green and awaiting owner-local/browser acceptance.
 
 ### Purpose
 
