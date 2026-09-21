@@ -14,6 +14,7 @@ use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
 use App\Support\Localization;
 use App\Support\TemporalPreferences;
+use App\TimezoneMode;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -72,20 +73,20 @@ class Intents extends Component
 
     public string $itemVisibility = ProfileItemVisibility::Inherited->value;
 
-    public bool $hasStoredTimezone = false;
+    public bool $timezoneAutomatic = true;
 
     public function mount(): void
     {
         $user = request()->user();
         abort_unless($user instanceof User, 403);
 
-        $this->hasStoredTimezone = is_string($user->timezone) && TemporalPreferences::validTimezone($user->timezone);
+        $this->timezoneAutomatic = $user->timezone_mode === TimezoneMode::Auto;
         $this->timezone = TemporalPreferences::timezoneFor($user);
     }
 
     public function useBrowserTimezone(string $timezone): void
     {
-        if ($this->editingIntentId !== null || $this->hasStoredTimezone) {
+        if ($this->editingIntentId !== null || ! $this->timezoneAutomatic) {
             return;
         }
 
@@ -105,7 +106,7 @@ class Intents extends Component
         abort_unless($user instanceof User, 403);
 
         $fresh = User::query()->findOrFail($user->id);
-        $this->hasStoredTimezone = is_string($fresh->timezone) && TemporalPreferences::validTimezone($fresh->timezone);
+        $this->timezoneAutomatic = $fresh->timezone_mode === TimezoneMode::Auto;
         $this->timezone = TemporalPreferences::timezoneFor($fresh);
     }
 
