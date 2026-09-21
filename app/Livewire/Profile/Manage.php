@@ -8,7 +8,6 @@ use App\Actions\Profile\SetDisplayedProfileImage;
 use App\Actions\Profile\UpdateActorProfile;
 use App\Actions\Profile\UploadActorProfileImage;
 use App\Models\ActorProfile;
-use App\Models\ActorProfileImage;
 use App\Models\User;
 use App\ProfileVisibility;
 use Illuminate\Contracts\View\View;
