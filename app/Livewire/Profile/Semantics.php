@@ -10,6 +10,7 @@ use App\ConceptAssertionSubject;
 use App\ConceptAssertionVisibility;
 use App\Models\ActorProfile;
 use App\Models\ConceptAssertion;
+use App\Models\ConceptLabel;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,6 +29,11 @@ class Semantics extends Component
     public string $predicate = ConceptAssertionPredicate::HasSkill->value;
 
     public string $semanticVisibility = ConceptAssertionVisibility::Inherited->value;
+
+    public function selectConceptSuggestion(string $label): void
+    {
+        $this->conceptLabel = trim($label);
+    }
 
     public function add(AddProfileConceptAssertion $addAssertion): void
     {
@@ -107,7 +113,37 @@ class Semantics extends Component
 
         return view('livewire.profile.semantics', [
             'assertions' => $this->assertions()->with('concept.labels')->get(),
+            'conceptSuggestions' => $this->conceptSuggestions(),
         ]);
+    }
+
+    /** @return list<string> */
+    private function conceptSuggestions(): array
+    {
+        $term = trim($this->conceptLabel);
+
+        if (mb_strlen($term) < 2) {
+            return [];
+        }
+
+        $normalized = mb_strtolower($term);
+
+        return ConceptLabel::query()
+            ->where('normalized_label', 'like', '%'.$normalized.'%')
+            ->whereHas('concept.vocabulary', function ($query): void {
+                $query->where(function ($scope): void {
+                    $scope->where('scope_type', 'platform')->where('scope_id', 0);
+                })->orWhere(function ($scope): void {
+                    $scope->where('scope_type', 'actor')->where('scope_id', $this->profile->actor_id);
+                });
+            })
+            ->with('concept')
+            ->limit(8)
+            ->get()
+            ->map(fn (ConceptLabel $label): string => $label->concept->displayLabel())
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /** @return Builder<ConceptAssertion> */
