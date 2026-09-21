@@ -74,7 +74,7 @@ See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
 
 Work on one accepted roadmap phase at a time.
 
-Phases 2 and 3 are complete. **Phase 4 — Actor/Party and Progressive Profile** is active on `feat/phase-04-actor-profile`. Milestone 4A (professional identity + profile media foundation) is remote-CI green and awaits owner-local/browser acceptance before 4B begins. Production-host-specific deployment, mail-provider, supervisor, monitoring, and backup/restore proof remain mandatory before production release and are tracked by the operations runbook and later production-hardening/release phases.
+Phases 2 and 3 are complete. **Phase 4 — Actor/Party and Progressive Profile** is active on `feat/phase-04-actor-profile`. Milestone 4A is owner-local accepted. Milestone 4B (semantic Profile + recurring Needs/Offers) is remote-CI green at 305 tests / 1566 assertions and awaits owner-local/browser acceptance before 4C begins. Production-host-specific deployment, mail-provider, supervisor, monitoring, and backup/restore proof remain mandatory before production release and are tracked by the operations runbook and later production-hardening/release phases.
 
 Agents must read `AGENTS.md` and the canonical docs before changing code.
 
