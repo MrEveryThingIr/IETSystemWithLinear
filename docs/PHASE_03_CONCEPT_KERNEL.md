@@ -2,7 +2,7 @@
 
 ## Status
 
-Active on `feat/phase-03-concept-kernel`, starting from accepted Phase 2 closure commit `73e98f05746c7c42bf63d7c9bc91bee63d800cf9`.
+Complete on `feat/phase-03-concept-kernel`, starting from accepted Phase 2 closure commit `73e98f05746c7c42bf63d7c9bc91bee63d800cf9`.
 
 ## Objective
 
@@ -62,7 +62,7 @@ Remote CI is green after fixing stale-instance canonical resolution, and the own
 - subject-authorized assertion action;
 - focused tests for multilingual identity, polyhierarchy, cycle rejection, multiple predicates, merge canonicalization, relation idempotency, and cross-Group authorization.
 
-### 3C — publication evidence and acceptance proof — implemented; awaiting owner-local final gate
+### 3C — publication evidence and acceptance proof — complete
 
 Remote CI is green on runtime head `fc22e847acc91af2fe6150fdaa4cc4511901d99f`.
 
@@ -75,7 +75,7 @@ Remote CI is green on runtime head `fc22e847acc91af2fe6150fdaa4cc4511901d99f`.
 - existing Content classification remains separate mutable catalog metadata;
 - final proof tests cover Content `about Chess`, revision `teaches Chess`, sealed immutability and semantic revision copying.
 
-Phase 3 is not closed until the owner synchronizes this head and passes the final local/browser gate.
+The owner synchronized the final 3C head and passed the focused/full/static/format/build/migration gate. Browser expectations remain intentionally unchanged because Phase 3 adds no Concept administration surface.
 
 ## Explicitly excluded
 
