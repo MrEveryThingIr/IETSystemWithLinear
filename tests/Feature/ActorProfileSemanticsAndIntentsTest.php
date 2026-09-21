@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Concepts\AssertConcept;
 use App\Actions\Profile\AddProfileConceptAssertion;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
+use App\Actions\Profile\ResolveActorProfileConcept;
 use App\Actions\Profile\SetActorProfileIntentStatus;
 use App\Actions\Profile\UpdateActorProfile;
 use App\Actions\Profile\UpdateActorProfileIntent;
-use App\Actions\Profile\ResolveActorProfileConcept;
-use App\Actions\Concepts\AssertConcept;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
 use App\ConceptAssertionVisibility;
