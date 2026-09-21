@@ -8,12 +8,15 @@ use App\Actions\Profile\EnsureActorProfile;
 use App\Actions\Profile\SetActorProfileIntentStatus;
 use App\Actions\Profile\UpdateActorProfile;
 use App\Actions\Profile\UpdateActorProfileIntent;
+use App\Actions\Profile\ResolveActorProfileConcept;
+use App\Actions\Concepts\AssertConcept;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
 use App\ConceptAssertionVisibility;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
+use App\Models\ConceptAssertion;
 use App\Models\ConceptVocabulary;
 use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
@@ -229,6 +232,57 @@ class ActorProfileSemanticsAndIntentsTest extends TestCase
             $actor->user,
             $intent,
             ProfileIntentStatus::Active,
+        );
+    }
+
+    public function test_profile_intent_summary_never_overwrites_or_deletes_a_manual_actor_assertion(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+        $concept = app(ResolveActorProfileConcept::class)->execute(
+            $actor->user,
+            $profile,
+            'Transportation',
+        );
+
+        $manual = app(AssertConcept::class)->execute(
+            $actor->user,
+            $actor,
+            $concept,
+            ConceptAssertionPredicate::Needs,
+            visibility: ConceptAssertionVisibility::Private,
+            metadata: ['purpose' => 'manual_profile_statement'],
+        );
+
+        $intent = app(CreateActorProfileIntent::class)->execute(
+            $actor->user,
+            $profile,
+            ProfileIntentKind::Need,
+            'Transportation',
+            [
+                'schedule_kind' => ProfileIntentScheduleKind::Weekly->value,
+                'timezone' => 'America/Toronto',
+                'recurrence_weekdays' => [6],
+                'recurrence_interval' => 1,
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Public->value,
+            ],
+        );
+
+        $manual->refresh();
+        $this->assertSame(ConceptAssertionVisibility::Private, $manual->visibility);
+        $this->assertSame('manual_profile_statement', $manual->metadata['purpose'] ?? null);
+
+        app(SetActorProfileIntentStatus::class)->execute(
+            $actor->user,
+            $intent,
+            ProfileIntentStatus::Paused,
+        );
+
+        $this->assertModelExists(ConceptAssertion::query()->findOrFail($manual->id));
+        $this->assertSame(
+            ConceptAssertionVisibility::Private,
+            ConceptAssertion::query()->findOrFail($manual->id)->visibility,
         );
     }
 
