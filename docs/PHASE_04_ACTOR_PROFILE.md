@@ -65,7 +65,7 @@ Includes:
 - cross-database migration rollback behavior;
 - focused tests for privacy/media/ownership.
 
-### 4B — semantic Profile + recurring Needs/Offers — implementation complete; owner-local technical acceptance complete; browser smoke pending
+### 4B — semantic Profile + recurring Needs/Offers — implementation complete; 4B.1 temporal hardening remote-green; renewed owner-local/browser acceptance pending
 
 4B deliberately uses concrete Profile semantics instead of introducing a speculative universal key/value fact engine.
 
@@ -119,6 +119,93 @@ It does **not** create:
 - fulfillment records.
 
 Phase 11 Planner remains authoritative for materialized Occurrences. Phase 13 remains authoritative for full Need/Offer matching. Phase 14 remains authoritative for negotiated obligations.
+
+#### 4B.1 — temporal localization hardening
+
+A real MySQL browser-flow failure exposed an important cross-cutting gap:
+
+~~~text
+SQLSTATE[22007]: Incorrect date value: '' for column 'starts_on'
+~~~
+
+4B.1 fixes that defect and establishes the temporal contract that later Planner, Admission deadlines, Agreements, matching and contracts must reuse.
+
+##### Temporal invariants
+
+Language, timezone and calendar are **independent concerns**:
+
+- locale controls interface language, text direction and culturally appropriate formatting;
+- timezone controls the local civil clock and uses IANA timezone identifiers;
+- calendar controls date presentation/input only;
+- date-only domain values remain canonical ISO/Gregorian `YYYY-MM-DD` values in persistence;
+- changing locale/calendar/timezone never rewrites the underlying stored date;
+- no timezone is inferred from language.
+
+Locale-derived calendar defaults are product defaults, not identity assumptions:
+
+| Locale | Default calendar | First weekday |
+| --- | --- | --- |
+| English | Gregorian | Sunday |
+| Arabic | Gregorian | Saturday |
+| Simplified Chinese | Gregorian | Monday |
+| Persian | Persian/Jalali | Saturday |
+
+Arabic users may explicitly choose Hijri/Umm al-Qura; Chinese, English or Persian users may also override the calendar independently.
+
+Supported presentation calendars:
+
+- Gregorian (`gregory`);
+- Persian/Jalali (`persian`);
+- Hijri/Umm al-Qura (`islamic-umalqura`).
+
+Timezone behavior is explicit:
+
+- `auto` — follow the browser/device IANA timezone and refresh it when the device zone changes;
+- `fixed` — retain the explicitly selected timezone.
+
+##### Implementation
+
+- blank nullable temporal/quantity inputs normalize to `null` before domain validation and persistence, so empty browser fields never reach DATE/TIME/DECIMAL columns as empty strings;
+- existing `users.timezone` is preserved;
+- users now store `timezone_mode` plus optional calendar override;
+- locale configuration carries Intl locale, default calendar and first weekday metadata;
+- a reusable temporal preference resolver centralizes timezone/calendar/week-order decisions;
+- Profile contains a Date & time preferences card;
+- Needs/Offers use a reusable calendar-aware picker rather than the browser's Gregorian-only `type=date`;
+- the picker stores ISO dates while rendering the selected calendar through the browser Intl engine;
+- public Profile date/time output is localized for the viewer;
+- week ordering follows locale preference;
+- picker supports RTL, month navigation, keyboard arrows, Escape, Today and Clear;
+- no extra JavaScript calendar dependency was introduced.
+
+##### Remote proof
+
+Final 4B.1 runtime head before documentation closure:
+
+`c1ce5ccd83020b4f51b3585e2bf092e3ba66cde6`
+
+CI passed:
+
+- full PHPUnit: **310 passed / 1593 assertions**;
+- PHPStan: **no errors**;
+- Pint: **125 changed PHP files passed**;
+- Vite production build: passed;
+- fresh migrations, including `2026_09_21_171000_add_temporal_preferences_to_users_table`: passed;
+- scheduler/queue smoke: passed;
+- SQLite backup→restore smoke: passed;
+- Composer security audit: clean.
+
+Focused regression coverage proves:
+
+- English/Arabic/Simplified Chinese default to Gregorian presentation;
+- Persian defaults to Persian/Jalali presentation;
+- calendar override is independent from locale;
+- timezone is independently persisted;
+- Persian uses Saturday-first week ordering;
+- empty optional `starts_on`, `ends_on`, time-window, quantity and recurrence fields persist as `NULL`;
+- a Persian Profile emits Persian-calendar picker metadata.
+
+Because 4B.1 adds a migration and visible temporal UI, the earlier local 4B technical acceptance must be refreshed once on this final temporal candidate before 4B can close.
 
 #### 4B acceptance proof
 
