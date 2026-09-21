@@ -126,6 +126,11 @@ return [
             'preview_loading' => '正在加载本地日期和时间…',
             'timezone' => '时区',
             'timezone_help' => '使用 IANA 时区，例如 Asia/Shanghai 或 America/Toronto。设备可以自动建议当前时区。',
+            'timezone_mode' => '时区行为',
+            'timezone_modes' => [
+                'auto' => '自动 — 跟随当前设备',
+                'fixed' => '固定 — 保留所选时区',
+            ],
             'use_device_timezone' => '使用设备时区',
             'calendar' => '日历',
             'calendar_help' => '自动模式使用 :language 的默认日历。你可以覆盖它，而不会改变已存储的日期。',
