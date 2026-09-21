@@ -176,7 +176,7 @@ A release candidate can be deployed, observed, backed up, restored, and diagnose
 
 ## Phase 3 — Concept Kernel
 
-**Status: active on `feat/phase-03-concept-kernel`.** Detailed contract: `docs/PHASE_03_CONCEPT_KERNEL.md`. Architecture: `docs/CONCEPT_KERNEL.md`.
+**Status: complete.** Completed branch: `feat/phase-03-concept-kernel`. Detailed contract: `docs/PHASE_03_CONCEPT_KERNEL.md`. Architecture: `docs/CONCEPT_KERNEL.md`.
 
 ### Purpose
 
@@ -214,6 +214,8 @@ Create the semantic layer before large template/catalog growth.
 Concept semantics are reusable by both Actor Profile and Content without duplicate category records.
 
 ## Phase 4 — Actor/Party and progressive Profile
+
+**Status: next.**
 
 ### Purpose
 
