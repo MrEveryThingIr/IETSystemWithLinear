@@ -65,7 +65,7 @@ Includes:
 - cross-database migration rollback behavior;
 - focused tests for privacy/media/ownership.
 
-### 4B — semantic Profile + recurring Needs/Offers — implemented remotely; owner-local gate pending
+### 4B — semantic Profile + recurring Needs/Offers — implementation complete; owner-local acceptance pending
 
 4B deliberately uses concrete Profile semantics instead of introducing a speculative universal key/value fact engine.
 
@@ -137,16 +137,19 @@ Owner-local acceptance must prove:
 11. no match, proposal, commitment, occurrence or financial record is created merely from a Profile declaration;
 12. full PHPUnit, PHPStan, Pint, migration and Vite gates remain green.
 
-Remote CI proof before owner-local validation:
+Final remote CI proof before owner-local validation:
 
-- runtime head: `fab55e848fe4e26e31e4cffe41874093c41f261f`;
-- PHPUnit: 305 passed / 1566 assertions;
-- PHPStan: no errors;
-- Pint: 113 changed PHP files passed;
+- hardened runtime head: `6dbc36c271f02f3851a7349171f77c9591d55ee6`;
+- PHPUnit: **306 passed / 1570 assertions**;
+- PHPStan: **no errors**;
+- Pint: **113 changed PHP files passed**;
 - Vite production build: passed;
+- Profile Intent migration: ran successfully;
 - migration/scheduler/queue smoke: passed;
 - SQLite backup→restore smoke: passed;
 - Composer security audit: clean.
+
+Final hardening also proves that 4B-generated coarse Actor `needs` / `offers` summaries are provenance-owned by the Profile-intent subsystem. An independently/manual-created Actor assertion is never silently changed or deleted when a Profile declaration is paused or closed.
 
 ### 4C — sharing, completeness and Phase 4 closure
 
