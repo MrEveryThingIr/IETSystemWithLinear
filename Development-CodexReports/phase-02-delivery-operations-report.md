@@ -68,7 +68,9 @@ No provider was selected and Phase 1 manual invitation-link semantics remain unc
 
 A provider-neutral backup/restore procedure is documented for SQLite/local development and MySQL/MariaDB/PostgreSQL production patterns.
 
-**Actual restore drill: not yet performed in a selected deployment environment.**
+CI now performs an actual SQLite backup→restore smoke on its freshly migrated database and verifies the restored migration history. This proves the repository's baseline recovery mechanics only.
+
+**Production-target restore drill: not yet performed in a selected deployment environment.**
 
 ### Storage/media
 
@@ -97,6 +99,8 @@ Verified by that CI run:
 - failed-job inspection: passed;
 - PHPUnit: **284 passed / 1441 assertions**;
 - `composer audit --locked`: no security vulnerability advisories found.
+
+A later Phase 2 CI tightening adds `npm audit --audit-level=high` and the SQLite restore smoke; record their final result after that run completes.
 
 The first complete CI attempt correctly exposed pre-existing repository-wide Pint debt in 20 unrelated legacy files. Phase 2 did not mass-reformat unrelated domains; CI now uses the Phase 1 integration branch merge-base and enforces Pint on PHP changed by the phase branch.
 

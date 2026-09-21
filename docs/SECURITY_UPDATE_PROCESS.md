@@ -9,7 +9,7 @@ Keep Laravel/PHP, JavaScript tooling, GitHub Actions, and direct dependencies cu
 - Dependabot checks Composer weekly.
 - Dependabot checks npm weekly.
 - Dependabot checks GitHub Actions monthly.
-- CI runs `composer audit --locked`.
+- CI runs `composer audit --locked` and `npm audit --audit-level=high`.
 - GitHub security/advisory features may add additional signals when enabled for the repository.
 
 ## Routine cadence

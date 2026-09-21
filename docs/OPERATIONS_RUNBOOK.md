@@ -184,7 +184,9 @@ Use a transactionally consistent dump tool appropriate to the selected server ve
 
 Use `pg_dump`/custom format and restore into an isolated database. Verify the same application-level invariants before considering the drill successful.
 
-The exact command and target are intentionally not frozen until the deployment database is selected.
+The exact production command and target are intentionally not frozen until the deployment database is selected.
+
+CI performs a provider-neutral SQLite backup→restore smoke against its freshly migrated test database and verifies restored migration history. This is recovery-mechanics evidence only; it does **not** satisfy the required production-target restore drill.
 
 ## Private storage and media
 
@@ -216,7 +218,7 @@ Do not merge these actions into one shared throttle bucket. Review new sensitive
 
 See `docs/SECURITY_UPDATE_PROCESS.md`.
 
-CI performs Composer metadata validation, formatting, static analysis, migration/scheduler smoke, tests, frontend build, and Composer advisory audit. Dependabot monitors Composer, npm, and GitHub Actions manifests.
+CI performs Composer metadata validation, formatting, static analysis, migration/scheduler/queue smoke, a SQLite restore smoke, tests, frontend build, Composer advisory audit, and an npm high-severity advisory gate. Dependabot monitors Composer, npm, and GitHub Actions manifests.
 
 `package-lock.json` is committed and CI installs JavaScript dependencies exclusively with `npm ci`.
 
