@@ -32,7 +32,7 @@ class CreateActorProfileIntent
             Gate::forUser($user)->authorize('update', $lockedProfile);
 
             $actor = Actor::query()->findOrFail($lockedProfile->actor_id);
-            $intent = new ActorProfileIntent();
+            $intent = new ActorProfileIntent;
             $intent->fill($data);
             $intent->profile()->associate($lockedProfile);
             $intent->concept()->associate($concept);
