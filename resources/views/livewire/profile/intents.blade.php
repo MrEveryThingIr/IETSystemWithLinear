@@ -1,4 +1,10 @@
-<section class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
+<section
+    class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900"
+    @if (! $hasStoredTimezone)
+        x-data
+        x-init="$wire.useBrowserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)"
+    @endif
+>
     <div>
         <h2 class="text-lg font-semibold">{{ __('ui.profile.intents.title') }}</h2>
         <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.intents.help') }}</p>
@@ -50,8 +56,22 @@
                             @endforeach
                         </select>
                     </div>
-                    <flux:input wire:model="startsOn" type="date" :label="__('ui.profile.intents.starts_on')" />
-                    <flux:input wire:model="endsOn" type="date" :label="__('ui.profile.intents.ends_on')" />
+                    <x-app.calendar-date-input
+                        model="startsOn"
+                        :label="__('ui.profile.intents.starts_on')"
+                        :calendar="$calendar"
+                        :locale="$intlLocale"
+                        :timezone="$timezone"
+                        :first-day="$firstDay"
+                    />
+                    <x-app.calendar-date-input
+                        model="endsOn"
+                        :label="__('ui.profile.intents.ends_on')"
+                        :calendar="$calendar"
+                        :locale="$intlLocale"
+                        :timezone="$timezone"
+                        :first-day="$firstDay"
+                    />
                     <flux:input wire:model="timezone" :label="__('ui.profile.intents.timezone')" maxlength="64" />
                 </div>
 
@@ -67,7 +87,7 @@
                     <fieldset>
                         <legend class="text-sm font-medium">{{ __('ui.profile.intents.weekdays') }}</legend>
                         <div class="mt-2 flex flex-wrap gap-2">
-                            @foreach ([1, 2, 3, 4, 5, 6, 7] as $weekday)
+                            @foreach ($weekdayOrder as $weekday)
                                 <label class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800">
                                     <input type="checkbox" wire:model="recurrenceWeekdays" value="{{ $weekday }}">
                                     {{ __('ui.profile.intents.weekday_names.'.$weekday) }}
