@@ -508,8 +508,17 @@ Owner-local closure validation on the final Phase 3 branch confirmed:
 - migrations: current;
 - working tree: clean.
 
-The active implementation milestone is now:
+The active implementation milestone is:
 
 > Phase 4 — Actor/Party and progressive Profile
 
-Phase 4 builds professional, privacy-aware Actor profiles on top of the completed Concept kernel. It must keep authentication User data separate from Actor identity/profile data and reuse the private Asset pipeline for profile media rather than storing public file paths on users.
+Branch: `feat/phase-04-actor-profile`.
+Contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
+
+Current Phase 4 state:
+
+- 4A professional identity + profile media: implemented and remote-CI green at 298 tests / 1528 assertions; owner-local/browser gate pending;
+- 4B structured facts + Concept integration: next after 4A acceptance;
+- 4C selective sharing/completeness/final closure: pending.
+
+Phase 4 keeps authentication User data separate from Actor/Profile data, defaults Profile visibility to private, and reuses the private Asset/media pipeline for profile images.
