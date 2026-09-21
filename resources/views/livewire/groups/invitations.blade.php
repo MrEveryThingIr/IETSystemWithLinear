@@ -10,9 +10,13 @@
     @endif
 
     @if ($createdInvitationUrl)
-        <flux:callout variant="success" class="space-y-2">
+        <flux:callout variant="success" class="space-y-2" x-data="{ copied: false }">
             <p class="font-medium">{{ __('ui.invitations.copy_now') }}</p>
-            <p class="break-all font-mono text-sm">{{ $createdInvitationUrl }}</p>
+            <div class="flex flex-col gap-2 sm:flex-row">
+                <input x-ref="invitationUrl" readonly value="{{ $createdInvitationUrl }}" aria-label="{{ __('ui.invitations.private_link') }}" class="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100" />
+                <button type="button" x-on:click="navigator.clipboard.writeText($refs.invitationUrl.value).then(() => copied = true)" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">{{ __('ui.invitations.copy_link') }}</button>
+            </div>
+            <span x-show="copied" role="status" class="text-sm">{{ __('ui.invitations.link_copied') }}</span>
         </flux:callout>
     @endif
 
@@ -33,11 +37,12 @@
             <flux:card class="space-y-4">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0 space-y-2">
+                        @php($isExhausted = $invitation->max_uses !== null && $invitation->uses_count >= $invitation->max_uses)
                         <div class="flex flex-wrap items-center gap-2">
-                            <flux:badge :color="$invitation->revoked_at ? 'red' : ($invitation->expires_at?->isPast() ? 'amber' : 'green')">
-                                {{ $invitation->revoked_at ? __('ui.common.revoked') : ($invitation->expires_at?->isPast() ? __('ui.common.expired') : __('ui.common.active')) }}
+                            <flux:badge :color="$invitation->revoked_at ? 'red' : ($invitation->expires_at?->isPast() || $isExhausted ? 'amber' : 'green')">
+                                {{ $invitation->revoked_at ? __('ui.common.revoked') : ($invitation->expires_at?->isPast() ? __('ui.common.expired') : ($isExhausted ? __('ui.invitations.exhausted') : __('ui.common.active'))) }}
                             </flux:badge>
-                            <flux:text>{{ __('ui.invitations.uses', ['used' => $invitation->acceptances_count, 'maximum' => $invitation->max_uses ?? '∞']) }}</flux:text>
+                            <flux:text>{{ __('ui.invitations.uses', ['used' => $invitation->uses_count, 'maximum' => $invitation->max_uses ?? '∞']) }}</flux:text>
                             @if ($invitation->email)<flux:badge>{{ $invitation->maskedEmail() }}</flux:badge>@endif
                         </div>
                         <flux:text class="text-sm">{{ __('ui.invitations.secret_not_recoverable') }}</flux:text>
@@ -66,5 +71,6 @@
         @empty
             <x-app.empty-state :title="__('ui.invitations.none')" :description="__('ui.invitations.none_help')" />
         @endforelse
+        {{ $invitations->links() }}
     </div>
 </section>

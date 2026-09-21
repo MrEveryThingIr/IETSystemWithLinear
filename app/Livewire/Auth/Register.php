@@ -46,13 +46,13 @@ class Register extends Component
         }
         RateLimiter::hit($key, 60);
 
-        [$user, $admission] = $register->handle(
+        $user = $register->handle(
             $this->only(['username', 'email', 'password', 'password_confirmation']),
             $this->invitationToken,
         );
         Auth::login($user);
         session()->regenerate();
-        session()->put('url.intended', route('admissions.show', $admission));
+        session()->put('url.intended', route('invitations.show', ['token' => $this->invitationToken]));
         $this->reset('password', 'password_confirmation');
         $this->redirectRoute('verification.notice');
     }

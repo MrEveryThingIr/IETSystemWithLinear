@@ -13,13 +13,12 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Groups\Agreements;
 use App\Models\Actor;
 use App\Models\Admission;
-use App\Models\AgreementAcceptance;
 use App\Models\Group;
 use App\Models\GroupAgreementVersion;
 use App\Models\GroupInvitation;
 use App\Models\MembershipAgreementAcceptance;
-use App\Support\AgreementEvidence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -206,15 +205,12 @@ class WorkflowIntegrityTest extends TestCase
         $admission = app(RedeemGroupInvitation::class)->execute($token, $candidate, $candidate->user->email);
         $version = $this->activeAgreementVersion($invitation->group, $owner);
         $manager = app(ManageAdmission::class);
+        $manager->accept($admission, $candidate, $version);
         $manager->candidateTransition($admission, $candidate, 'submitted');
         $manager->review($admission, $owner, 'under_review');
         $manager->review($admission, $owner, 'approved');
-        AgreementAcceptance::create([
-            'admission_id' => $admission->id,
-            'group_agreement_version_id' => $version->id,
-            ...AgreementEvidence::forAcceptance($version, $candidate),
-            'evidence_hash' => str_repeat('0', 64),
-        ]);
+        DB::table('agreement_acceptances')->where('admission_id', $admission->id)
+            ->update(['evidence_hash' => str_repeat('0', 64)]);
 
         $this->expectException(ValidationException::class);
         app(FinalizeAdmission::class)->execute($admission);
@@ -253,9 +249,9 @@ class WorkflowIntegrityTest extends TestCase
     private function approveAndAccept(Admission $admission, Actor $owner, Actor $candidate, GroupAgreementVersion $version): void
     {
         $manager = app(ManageAdmission::class);
+        $manager->accept($admission, $candidate, $version);
         $manager->candidateTransition($admission, $candidate, 'submitted');
         $manager->review($admission, $owner, 'under_review');
         $manager->review($admission, $owner, 'approved');
-        $manager->accept($admission, $candidate, $version);
     }
 }

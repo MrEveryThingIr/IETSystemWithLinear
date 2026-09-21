@@ -5,7 +5,7 @@
         $pipeline = ['draft', 'submitted', 'under_review', 'approved', 'finalized'];
         $currentStep = array_search($admission->status, $pipeline, true);
     @endphp
-    <nav aria-label="Admission progress" class="grid grid-cols-2 gap-2 sm:grid-cols-5">
+    <nav aria-label="{{ __('ui.admission.title') }}" class="grid grid-cols-2 gap-2 sm:grid-cols-5">
         @foreach ($pipeline as $index => $status)
             <div class="rounded-xl border px-3 py-2 text-center text-sm {{ $currentStep !== false && $index <= $currentStep ? 'border-indigo-500 bg-indigo-50 font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300' : 'border-zinc-200 text-zinc-500 dark:border-zinc-700' }}">
                 <span class="block text-xs opacity-70">{{ $index + 1 }}</span>
@@ -34,7 +34,7 @@
                 @endif
                 <flux:textarea wire:model="note" :label="__('ui.admission.message_to_reviewers')" rows="4" />
                 <div class="flex flex-col gap-2 sm:flex-row">
-                    <flux:button wire:click="submit" variant="primary">{{ $admission->status === 'draft' ? __('ui.admission.submit') : __('ui.admission.reply_submit') }}</flux:button>
+                    <flux:button wire:click="submit" variant="primary" :disabled="! $allAgreementsAccepted">{{ $admission->status === 'draft' ? __('ui.admission.submit') : __('ui.admission.reply_submit') }}</flux:button>
                     <flux:button wire:click="cancel" variant="ghost">{{ __('ui.admission.cancel') }}</flux:button>
                 </div>
             @elseif ($admission->status === 'submitted')
@@ -59,6 +59,7 @@
         <div>
             <flux:heading size="lg">{{ __('ui.admission.required_agreements') }}</flux:heading>
             <flux:text>{{ __('ui.admission.required_help') }}</flux:text>
+            <flux:text>{{ __('ui.admission.agreement_progress', ['accepted' => $acceptedVersionIds->count(), 'total' => $versions->count()]) }}</flux:text>
         </div>
         @forelse ($versions as $version)
             <div class="flex flex-col gap-3 border-b border-zinc-200 pb-4 last:border-0 last:pb-0 dark:border-zinc-700 sm:flex-row sm:items-start sm:justify-between">

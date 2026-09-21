@@ -46,7 +46,7 @@ class RegistrationTest extends TestCase
         ]);
     }
 
-    public function test_registration_creates_active_unverified_account_and_logs_in(): void
+    public function test_registration_creates_active_unverified_account_without_redeeming_invitation(): void
     {
         Notification::fake();
         $invitation = $this->invitation('new@example.com');
@@ -61,17 +61,9 @@ class RegistrationTest extends TestCase
         $this->assertSame('active', $user->status);
         $this->assertNull($user->email_verified_at);
         $this->assertTrue(Hash::check('secure-password', $user->password));
-        $this->assertDatabaseHas('admissions', [
-            'group_id' => $invitation->group_id,
-            'candidate_actor_id' => $user->actor->id,
-            'source_invitation_id' => $invitation->id,
-            'status' => 'draft',
-        ]);
-        $this->assertDatabaseHas('group_invitation_acceptances', [
-            'group_invitation_id' => $invitation->id,
-            'accepted_by_actor_id' => $user->actor->id,
-        ]);
-        $this->assertSame(1, $invitation->refresh()->uses_count);
+        $this->assertDatabaseCount('admissions', 0);
+        $this->assertDatabaseCount('group_invitation_acceptances', 0);
+        $this->assertSame(0, $invitation->refresh()->uses_count);
         Notification::assertSentToTimes($user, VerifyEmail::class, 1);
     }
 

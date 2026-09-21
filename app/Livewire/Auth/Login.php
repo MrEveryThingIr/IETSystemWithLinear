@@ -74,8 +74,7 @@ class Login extends Component
 
         if ($this->invitationToken !== null) {
             $user = Auth::user();
-            $admission = $redemption->execute($this->invitationToken, $user->actor, $user->email);
-            session()->put('url.intended', route('admissions.show', $admission));
+            session()->put('url.intended', route('invitations.show', ['token' => $this->invitationToken]));
 
             if (! $user->hasVerifiedEmail()) {
                 $this->redirectRoute('verification.notice');
@@ -83,7 +82,7 @@ class Login extends Component
                 return;
             }
 
-            $this->redirectRoute('admissions.show', ['admission' => $admission]);
+            $this->redirectRoute('invitations.show', ['token' => $this->invitationToken]);
 
             return;
         }

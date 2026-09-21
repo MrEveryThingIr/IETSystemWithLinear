@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="referrer" content="no-referrer">
         <title>{{ __('ui.invitation.title') }} &mdash; {{ config('app.name') }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @fluxAppearance
@@ -21,6 +22,8 @@
                     </flux:text>
                 </div>
 
+                <flux:callout>{{ __('ui.invitation.joining_steps') }}</flux:callout>
+
                 <div class="grid gap-3 rounded-xl bg-zinc-100 p-4 text-sm dark:bg-zinc-800 sm:grid-cols-2">
                     <div>
                         <p class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('ui.invitation.invited_by') }}</p>
@@ -36,18 +39,34 @@
                     <flux:callout variant="danger">{{ session('error') }}</flux:callout>
                 @endif
 
-                @auth
-                    @if (auth()->user()->hasVerifiedEmail())
-                        <form method="POST" action="{{ route('invitations.accept', ['token' => $token]) }}">
-                            @csrf
-                            <flux:button type="submit" variant="primary" class="w-full">{{ __('ui.invitation.continue_to_admission') }}</flux:button>
-                        </form>
-                    @else
-                        <div class="space-y-3">
-                            <flux:callout variant="warning">{{ __('ui.invitation.verify_before_continue') }}</flux:callout>
-                            <flux:button href="{{ route('verification.notice') }}" variant="primary" class="w-full">{{ __('ui.auth.verify_email') }}</flux:button>
-                        </div>
+                @if ($membership)
+                    <flux:callout variant="success">{{ __('ui.invitation.already_member') }}</flux:callout>
+                    @if ($membership->status === 'active')
+                        <flux:button :href="route('groups.show', $invitation->group)" variant="primary" class="w-full">{{ __('ui.groups.open') }}</flux:button>
                     @endif
+                @elseif ($admission)
+                    <flux:callout>{{ __('ui.invitation.existing_admission') }}</flux:callout>
+                    <flux:button :href="route('admissions.show', $admission)" variant="primary" class="w-full">{{ __('ui.groups.view_admission') }}</flux:button>
+                @elseif ($state !== 'available')
+                    <flux:callout variant="warning">{{ __('ui.invitation.state_'.$state) }}</flux:callout>
+                @elseif ($targetMismatch)
+                    <flux:callout variant="warning">{{ __('ui.invitation.wrong_account') }}</flux:callout>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <flux:button type="submit" variant="ghost" class="w-full">{{ __('ui.auth.logout') }}</flux:button>
+                    </form>
+                @elseif (auth()->check() && ! auth()->user()->actor)
+                    <flux:callout variant="danger">{{ __('ui.invitation.identity_recovery') }}</flux:callout>
+                @elseif (auth()->check() && auth()->user()->hasVerifiedEmail())
+                    <form method="POST" action="{{ route('invitations.accept', ['token' => $token]) }}">
+                        @csrf
+                        <flux:button type="submit" variant="primary" class="w-full">{{ __('ui.invitation.continue_to_admission') }}</flux:button>
+                    </form>
+                @elseif (auth()->check())
+                    <div class="space-y-3">
+                        <flux:callout variant="warning">{{ __('ui.invitation.verify_before_continue') }}</flux:callout>
+                        <flux:button href="{{ route('verification.notice') }}" variant="primary" class="w-full">{{ __('ui.auth.verify_email') }}</flux:button>
+                    </div>
                 @else
                     <div class="space-y-3">
                         <flux:button href="{{ route('invitations.login', ['token' => $token]) }}" variant="primary" class="w-full">
@@ -58,7 +77,7 @@
                         </flux:button>
                         <flux:text class="text-center text-sm">{{ __('ui.invitation.new_accounts_only') }}</flux:text>
                     </div>
-                @endauth
+                @endif
             </flux:card>
         </main>
         @fluxScripts

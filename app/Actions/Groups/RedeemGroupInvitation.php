@@ -30,6 +30,15 @@ class RedeemGroupInvitation
     public function execute(string $token, Actor $actor, string $email): Admission
     {
         return DB::transaction(function () use ($token, $actor, $email): Admission {
+            $actor = Actor::query()->with('user')->findOrFail($actor->id);
+            abort_unless(
+                $actor->user !== null
+                && $actor->user->status === 'active'
+                && $actor->user->hasVerifiedEmail()
+                && strcasecmp($actor->user->email, $email) === 0,
+                403,
+            );
+
             /** @var GroupInvitation $invitation */
             $invitation = GroupInvitation::query()->where('token', GroupInvitation::hashToken($token))->lockForUpdate()->firstOrFail();
             $expiresAt = $invitation->expires_at;

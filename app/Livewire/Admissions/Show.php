@@ -6,6 +6,7 @@ use App\Actions\Groups\FinalizeAdmission;
 use App\Actions\Groups\ManageAdmission;
 use App\Models\Admission;
 use App\Models\GroupAgreementVersion;
+use App\Support\AgreementEvidence;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -71,9 +72,15 @@ class Show extends Component
             ->orderByDesc('version')
             ->get()
             ->filter(fn (GroupAgreementVersion $version): bool => $version->isActiveAt());
-        $acceptedVersionIds = $this->admission->acceptances()->pluck('group_agreement_version_id');
+        $acceptances = $this->admission->acceptances()->where('accepted_by_actor_id', $this->admission->candidate_actor_id)->get()->keyBy('group_agreement_version_id');
+        $acceptedVersionIds = $versions->filter(function (GroupAgreementVersion $version) use ($acceptances): bool {
+            $acceptance = $acceptances->get($version->id);
+
+            return $acceptance !== null && AgreementEvidence::matchesAdmissionAcceptance($acceptance, $version, $this->admission->candidate);
+        })->pluck('id');
+        $allAgreementsAccepted = $acceptedVersionIds->count() === $versions->count();
         $events = $this->admission->events()->with('actor.user')->oldest()->get();
 
-        return view('livewire.admissions.show', compact('versions', 'acceptedVersionIds', 'events'));
+        return view('livewire.admissions.show', compact('versions', 'acceptedVersionIds', 'allAgreementsAccepted', 'events'));
     }
 }

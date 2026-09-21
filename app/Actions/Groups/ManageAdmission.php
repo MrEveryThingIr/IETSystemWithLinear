@@ -61,6 +61,28 @@ class ManageAdmission
             /** @var Admission $locked */
             $locked = Admission::query()->lockForUpdate()->findOrFail($admission->id);
             abort_unless((int) $locked->candidate_actor_id === (int) $actor->id, 403);
+            if ($status === 'submitted') {
+                $requiredVersions = GroupAgreementVersion::query()
+                    ->with('agreement')
+                    ->whereHas('agreement', fn ($query) => $query->where('group_id', $locked->group_id)->where('required_for_admission', true))
+                    ->lockForUpdate()
+                    ->get()
+                    ->filter(fn (GroupAgreementVersion $version): bool => $version->isActiveAt());
+                $acceptances = AgreementAcceptance::query()
+                    ->where('admission_id', $locked->id)
+                    ->where('accepted_by_actor_id', $actor->id)
+                    ->whereIn('group_agreement_version_id', $requiredVersions->pluck('id'))
+                    ->get()
+                    ->keyBy('group_agreement_version_id');
+                if (! $requiredVersions->every(function (GroupAgreementVersion $version) use ($acceptances, $actor): bool {
+                    $acceptance = $acceptances->get($version->id);
+
+                    return $acceptance instanceof AgreementAcceptance
+                        && AgreementEvidence::matchesAdmissionAcceptance($acceptance, $version, $actor);
+                })) {
+                    throw ValidationException::withMessages(['agreements' => __('ui.messages.required_agreements_unaccepted')]);
+                }
+            }
             $locked->transitionTo($status, $actor, $note);
         });
     }
