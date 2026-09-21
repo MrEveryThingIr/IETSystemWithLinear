@@ -18,7 +18,8 @@ class ConceptRelationFactory extends Factory
             'from_concept_id' => Concept::factory(),
             'relation_type_id' => fn (): int => ConceptRelationType::query()
                 ->where('key', 'related_to')
-                ->valueOrFail('id'),
+                ->firstOrFail()
+                ->id,
             'to_concept_id' => Concept::factory(),
             'source' => ConceptAssertionSource::Manual,
             'created_by_actor_id' => Actor::factory(),
