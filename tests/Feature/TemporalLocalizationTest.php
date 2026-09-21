@@ -12,6 +12,7 @@ use App\ProfileIntentScheduleKind;
 use App\ProfileItemVisibility;
 use App\Support\Localization;
 use App\Support\TemporalPreferences;
+use App\TimezoneMode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,7 +23,8 @@ class TemporalLocalizationTest extends TestCase
     public function test_locale_defaults_keep_language_timezone_and_calendar_separate(): void
     {
         $user = User::factory()->create([
-            'timezone' => null,
+            'timezone' => 'UTC',
+            'timezone_mode' => TimezoneMode::Auto,
             'calendar' => null,
         ]);
 
@@ -48,6 +50,7 @@ class TemporalLocalizationTest extends TestCase
         $user = User::factory()->create([
             'locale' => 'en',
             'timezone' => 'America/Toronto',
+            'timezone_mode' => TimezoneMode::Fixed,
             'calendar' => CalendarSystem::IslamicUmmAlQura,
         ]);
 
@@ -58,6 +61,7 @@ class TemporalLocalizationTest extends TestCase
 
         $user->calendar = CalendarSystem::Persian;
         $user->timezone = 'Asia/Tehran';
+        $user->timezone_mode = TimezoneMode::Fixed;
         $user->save();
 
         $this->assertSame(CalendarSystem::Persian, $user->refresh()->calendar);
@@ -68,6 +72,7 @@ class TemporalLocalizationTest extends TestCase
     {
         $actor = Actor::factory()->create();
         $actor->user->timezone = 'Asia/Tehran';
+        $actor->user->timezone_mode = TimezoneMode::Fixed;
         $actor->user->save();
 
         $profile = app(EnsureActorProfile::class)->execute($actor->user);
@@ -121,6 +126,7 @@ class TemporalLocalizationTest extends TestCase
         $actor = Actor::factory()->create();
         $actor->user->locale = 'fa';
         $actor->user->timezone = 'Asia/Tehran';
+        $actor->user->timezone_mode = TimezoneMode::Fixed;
         $actor->user->calendar = null;
         $actor->user->save();
 
