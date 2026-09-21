@@ -40,6 +40,10 @@ class ModelFactoryTest extends TestCase
         $models = [
             User::factory()->create(),
             Actor::factory()->create(),
+            ActorProfile::factory()->create(),
+            ActorProfileIntent::factory()->create(),
+            ActorProfileDisclosureGrant::factory()->create(),
+            ActorProfileDisclosureItem::factory()->create(),
             Group::factory()->create(),
             GroupMembership::factory()->create(),
             GroupMembershipEvent::factory()->create(),
@@ -95,5 +99,7 @@ class ModelFactoryTest extends TestCase
         $this->assertSame('active', SpaceContentDefinition::factory()->active()->create()->status);
         $this->assertSame('archived', SpaceContent::factory()->archived()->create()->status);
         $this->assertNotNull(PlatformAccessGrant::factory()->revoked()->create()->revoked_at);
+        $this->assertNotNull(ActorProfileDisclosureGrant::factory()->revoked()->create()->revoked_at);
+        $this->assertFalse(ActorProfileDisclosureGrant::factory()->expired()->create()->isActive());
     }
 }

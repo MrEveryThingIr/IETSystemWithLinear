@@ -5,6 +5,7 @@ namespace App\Support\Profile;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
 use App\Models\ActorProfile;
+use App\Models\ConceptAssertion;
 use App\ProfileDisclosureItemKind;
 use App\ProfileIntentStatus;
 
@@ -30,7 +31,7 @@ class ProfileDisclosureCatalog
             ];
         }
 
-        $assertions = \App\Models\ConceptAssertion::query()
+        $assertions = ConceptAssertion::query()
             ->where('subject_type', ConceptAssertionSubject::Actor->value)
             ->where('subject_id', $profile->actor_id)
             ->whereIn('predicate', [
@@ -48,7 +49,7 @@ class ProfileDisclosureCatalog
                 'key' => 'assertion:'.$assertion->uuid,
                 'kind' => ProfileDisclosureItemKind::ConceptAssertion->value,
                 'label' => $assertion->concept->displayLabel(),
-                'description' => __('ui.profile.semantic_predicates.'.$assertion->predicate->value),
+                'description' => __('ui.profile.semantics.types.'.$assertion->predicate->value),
             ];
         }
 
@@ -63,7 +64,7 @@ class ProfileDisclosureCatalog
                 'key' => 'intent:'.$intent->uuid,
                 'kind' => ProfileDisclosureItemKind::ProfileIntent->value,
                 'label' => $intent->title ?: $intent->concept->displayLabel(),
-                'description' => __('ui.profile.intent_kinds.'.$intent->kind->value),
+                'description' => __('ui.profile.intents.kinds.'.$intent->kind->value),
             ];
         }
 

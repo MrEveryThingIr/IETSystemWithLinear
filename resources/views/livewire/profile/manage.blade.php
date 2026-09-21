@@ -117,6 +117,7 @@
     </div>
 
     <livewire:profile.temporal-preferences />
+    <livewire:profile.sharing :profile="$profile" />
     <livewire:profile.semantics :profile="$profile" />
     <livewire:profile.intents :profile="$profile" />
 </section>

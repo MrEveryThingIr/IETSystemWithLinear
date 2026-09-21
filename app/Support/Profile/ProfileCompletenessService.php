@@ -20,9 +20,9 @@ class ProfileCompletenessService
             ProfileRequirement::field('display_name', __('ui.profile.display_name')),
             ProfileRequirement::field('headline', __('ui.profile.headline')),
             ProfileRequirement::field('bio', __('ui.profile.bio')),
-            ProfileRequirement::concept(ConceptAssertionPredicate::HasSkill, __('ui.profile.semantic_predicates.has_skill')),
-            ProfileRequirement::activeIntent(ProfileIntentKind::Need, __('ui.profile.intent_kinds.need')),
-            ProfileRequirement::activeIntent(ProfileIntentKind::Offer, __('ui.profile.intent_kinds.offer')),
+            ProfileRequirement::concept(ConceptAssertionPredicate::HasSkill, __('ui.profile.semantics.types.has_skill')),
+            ProfileRequirement::activeIntent(ProfileIntentKind::Need, __('ui.profile.intents.kinds.need')),
+            ProfileRequirement::activeIntent(ProfileIntentKind::Offer, __('ui.profile.intents.kinds.offer')),
         ];
     }
 
