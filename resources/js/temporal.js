@@ -156,12 +156,12 @@ class IetDatePicker extends HTMLElement {
         this.input = this.querySelector('[data-date-value]');
         this.trigger = this.querySelector('[data-date-trigger]');
         this.display = this.querySelector('[data-date-display]');
-        this.popover = this.querySelector('[data-date-popover]');
-        this.title = this.querySelector('[data-date-title]');
+        this.popoverElement = this.querySelector('[data-date-popover]');
+        this.titleElement = this.querySelector('[data-date-title]');
         this.weekdays = this.querySelector('[data-date-weekdays]');
         this.days = this.querySelector('[data-date-days]');
 
-        if (!this.input || !this.trigger || !this.popover) {
+        if (!this.input || !this.trigger || !this.popoverElement) {
             return;
         }
 
@@ -204,7 +204,7 @@ class IetDatePicker extends HTMLElement {
     }
 
     toggle() {
-        if (this.popover.hidden) {
+        if (this.popoverElement.hidden) {
             this.open();
         } else {
             this.close();
@@ -212,13 +212,13 @@ class IetDatePicker extends HTMLElement {
     }
 
     open() {
-        this.popover.hidden = false;
+        this.popoverElement.hidden = false;
         this.trigger.setAttribute('aria-expanded', 'true');
         this.render();
     }
 
     close() {
-        this.popover.hidden = true;
+        this.popoverElement.hidden = true;
         this.trigger.setAttribute('aria-expanded', 'false');
     }
 
@@ -240,7 +240,7 @@ class IetDatePicker extends HTMLElement {
     }
 
     handleKeydown(event) {
-        if (this.popover.hidden) {
+        if (this.popoverElement.hidden) {
             if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 this.open();
@@ -326,7 +326,7 @@ class IetDatePicker extends HTMLElement {
             day: 'numeric',
         });
 
-        this.title.textContent = titleFormatter.format(this.monthStart);
+        this.titleElement.textContent = titleFormatter.format(this.monthStart);
         this.days.replaceChildren();
 
         const jsDay = this.monthStart.getUTCDay() === 0 ? 7 : this.monthStart.getUTCDay();
