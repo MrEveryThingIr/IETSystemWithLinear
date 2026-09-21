@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: PHP 8.4 / Node 22
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate Composer metadata
+        run: composer validate --strict
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          rm -f database/database.sqlite
+          touch database/database.sqlite
+          php artisan migrate --force --no-interaction
+
+      - name: Install JavaScript dependencies
+        shell: bash
+        run: |
+          if [[ -f package-lock.json ]]; then
+            npm ci
+          else
+            echo "::warning::package-lock.json is not committed yet; Phase 2 must add it before closure. Using npm install for this baseline run."
+            npm install --ignore-scripts --no-audit --no-fund
+          fi
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Verify formatting
+        run: vendor/bin/pint --test
+
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Migration and scheduler smoke
+        run: |
+          php artisan migrate:status
+          php artisan schedule:list
+
+      - name: Test
+        run: php artisan test --compact
+
+      - name: Composer security audit
+        run: composer audit --locked --no-interaction
