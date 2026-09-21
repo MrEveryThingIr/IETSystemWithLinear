@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\ConceptAssertionSubject;
+use App\Models\Actor;
 use App\Models\SpaceContentBlock;
 use App\Models\SpaceContentRevision;
 use Illuminate\Support\Facades\DB;
@@ -97,6 +99,54 @@ class SpaceContentRevisionComposition
                 'updated_at' => now(),
             ]);
             $idMap[(int) $block->id] = $newId;
+        }
+    }
+
+    public function copyConceptAssertions(
+        SpaceContentRevision $source,
+        SpaceContentRevision $target,
+        Actor $actor,
+    ): void {
+        $now = now();
+        $rows = DB::table('concept_assertions')
+            ->where('subject_type', ConceptAssertionSubject::SpaceContentRevision->value)
+            ->where('subject_id', $source->id)
+            ->orderBy('predicate')
+            ->orderBy('concept_id')
+            ->orderBy('id')
+            ->get()
+            ->map(static function (object $assertion) use ($target, $actor, $now): array {
+                $metadata = $assertion->metadata !== null
+                    ? json_decode((string) $assertion->metadata, true)
+                    : [];
+                $metadata = is_array($metadata) ? $metadata : [];
+                $metadata['copied_from_assertion_uuid'] = (string) $assertion->uuid;
+
+                return [
+                    'uuid' => (string) Str::uuid(),
+                    'subject_type' => ConceptAssertionSubject::SpaceContentRevision->value,
+                    'subject_id' => $target->id,
+                    'concept_id' => $assertion->concept_id,
+                    'predicate' => $assertion->predicate,
+                    'scheme_id' => $assertion->scheme_id,
+                    'weight' => $assertion->weight,
+                    'confidence' => $assertion->confidence,
+                    'source' => $assertion->source,
+                    'visibility' => $assertion->visibility,
+                    'valid_from' => $assertion->valid_from,
+                    'valid_until' => $assertion->valid_until,
+                    'created_by_actor_id' => $actor->id,
+                    'metadata' => $metadata !== []
+                        ? json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                        : null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            })
+            ->all();
+
+        if ($rows !== []) {
+            DB::table('concept_assertions')->insert($rows);
         }
     }
 
