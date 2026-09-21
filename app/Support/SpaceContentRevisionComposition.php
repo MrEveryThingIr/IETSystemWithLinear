@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\ConceptAssertionSubject;
 use App\Models\Actor;
-use App\Models\SpaceContentBlock;
 use App\Models\SpaceContentRevision;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -12,7 +11,7 @@ use Illuminate\Support\Str;
 class SpaceContentRevisionComposition
 {
     /**
-     * @param list<int> $excludedAssetIds
+     * @param  list<int>  $excludedAssetIds
      * @return array<string, string> old placement UUID => new placement UUID
      */
     public function copyAssets(

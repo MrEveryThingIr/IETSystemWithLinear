@@ -16,7 +16,9 @@ use Illuminate\Support\Facades\Storage;
 class SpaceContentPublicationEvidence
 {
     public const MANIFEST_VERSION = 3;
+
     public const CANONICALIZATION_VERSION = 1;
+
     public const ALGORITHM = 'sha256';
 
     /**

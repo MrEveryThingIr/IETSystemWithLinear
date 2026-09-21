@@ -103,8 +103,8 @@ class UpdateSpaceContentStructure
     }
 
     /**
-     * @param list<int> $proposedChildIds
-     * @param Collection<int, SpaceContent> $spaceContents
+     * @param  list<int>  $proposedChildIds
+     * @param  Collection<int, SpaceContent>  $spaceContents
      */
     private function assertAcyclic(
         SpaceContent $parent,
@@ -168,7 +168,7 @@ class UpdateSpaceContentStructure
     }
 
     /**
-     * @param array<int, int|string> $ids
+     * @param  array<int, int|string>  $ids
      * @return list<int>
      */
     private function normalizeIds(array $ids): array
