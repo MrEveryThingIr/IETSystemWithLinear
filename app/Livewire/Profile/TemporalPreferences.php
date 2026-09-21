@@ -4,6 +4,7 @@ namespace App\Livewire\Profile;
 
 use App\CalendarSystem;
 use App\Models\User;
+use App\TimezoneMode;
 use App\Support\Localization;
 use App\Support\TemporalPreferences as TemporalPreferenceResolver;
 use Illuminate\Contracts\View\View;
@@ -16,13 +17,16 @@ class TemporalPreferences extends Component
 
     public string $calendar = 'auto';
 
+    public string $timezoneMode = TimezoneMode::Auto->value;
+
     public function mount(): void
     {
         $user = request()->user();
         abort_unless($user instanceof User, 403);
 
         $this->timezone = TemporalPreferenceResolver::timezoneFor($user);
-        $this->calendar = $user->calendar?->value ?? 'auto';
+        $this->timezoneMode = $user->timezone_mode->value;
+        $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
     }
 
     public function useBrowserTimezone(string $timezone): void
@@ -35,6 +39,18 @@ class TemporalPreferences extends Component
 
         $this->resetErrorBag('timezone');
         $this->timezone = $timezone;
+
+        if ($this->timezoneMode === TimezoneMode::Auto->value) {
+            $user = request()->user();
+
+            if ($user instanceof User && $user->timezone !== $timezone) {
+                $user->timezone = $timezone;
+                $user->timezone_mode = TimezoneMode::Auto;
+                $user->save();
+
+                $this->dispatch('temporal-preferences-updated');
+            }
+        }
     }
 
     public function save(): void
@@ -44,6 +60,7 @@ class TemporalPreferences extends Component
 
         $data = $this->validate([
             'timezone' => ['required', 'timezone'],
+            'timezoneMode' => ['required', Rule::enum(TimezoneMode::class)],
             'calendar' => [
                 'required',
                 Rule::in([
@@ -56,6 +73,7 @@ class TemporalPreferences extends Component
         ]);
 
         $user->timezone = $data['timezone'];
+        $user->timezone_mode = TimezoneMode::from($data['timezoneMode']);
         $user->calendar = $data['calendar'] === 'auto'
             ? null
             : CalendarSystem::from($data['calendar']);
