@@ -84,7 +84,7 @@ class NormalizeProfileIntentData
         }
 
         $data = $validator->validated();
-        $schedule = ProfileIntentScheduleKind::from($data['schedule_kind']);
+        $schedule = ProfileIntentScheduleKind::from((string) $data['schedule_kind']);
 
         foreach (['title', 'description', 'unit', 'location_text', 'origin_text', 'destination_text'] as $key) {
             $value = isset($data[$key]) ? Str::of((string) $data[$key])->squish()->toString() : '';
