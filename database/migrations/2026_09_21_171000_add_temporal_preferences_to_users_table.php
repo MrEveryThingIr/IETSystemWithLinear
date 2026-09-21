@@ -8,19 +8,27 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasColumn('users', 'calendar')) {
-            Schema::table('users', function (Blueprint $table): void {
-                $table->string('calendar', 32)->nullable()->after('timezone');
-            });
-        }
+        Schema::table('users', function (Blueprint $table): void {
+            if (! Schema::hasColumn('users', 'timezone_mode')) {
+                $table->string('timezone_mode', 16)->default('auto')->after('timezone');
+            }
+
+            if (! Schema::hasColumn('users', 'calendar')) {
+                $table->string('calendar', 32)->nullable()->after('timezone_mode');
+            }
+        });
     }
 
     public function down(): void
     {
-        if (Schema::hasColumn('users', 'calendar')) {
-            Schema::table('users', function (Blueprint $table): void {
+        Schema::table('users', function (Blueprint $table): void {
+            if (Schema::hasColumn('users', 'calendar')) {
                 $table->dropColumn('calendar');
-            });
-        }
+            }
+
+            if (Schema::hasColumn('users', 'timezone_mode')) {
+                $table->dropColumn('timezone_mode');
+            }
+        });
     }
 };
