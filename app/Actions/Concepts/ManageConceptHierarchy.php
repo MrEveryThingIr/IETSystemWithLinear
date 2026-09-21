@@ -18,7 +18,7 @@ class ManageConceptHierarchy
     public function __construct(private readonly RebuildConceptClosure $closure) {}
 
     /**
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      */
     public function add(
         User $user,

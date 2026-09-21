@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class CreateConcept
 {
     /**
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      */
     public function execute(
         User $user,

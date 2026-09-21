@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Gate;
 class RelateConcepts
 {
     /**
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      */
     public function execute(
         User $user,

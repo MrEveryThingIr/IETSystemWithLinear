@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Gate;
 class AssertConcept
 {
     /**
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      */
     public function execute(
         User $user,

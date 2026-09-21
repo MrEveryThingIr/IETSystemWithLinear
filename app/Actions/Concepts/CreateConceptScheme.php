@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 class CreateConceptScheme
 {
     /**
-     * @param array<string, mixed> $metadata
+     * @param  array<string, mixed>  $metadata
      */
     public function execute(
         User $user,
