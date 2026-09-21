@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\ActorProfileImageController;
+use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LocaleController;
