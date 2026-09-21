@@ -115,4 +115,7 @@
             </div>
         </div>
     </div>
+
+    <livewire:profile.semantics :profile="$profile" />
+    <livewire:profile.intents :profile="$profile" />
 </section>
