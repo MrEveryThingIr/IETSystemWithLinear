@@ -40,24 +40,29 @@ Phase 3 implements:
 
 ## Implementation milestones
 
-### 3A — schema and authority contract
+### 3A — schema and authority contract — complete
+
+Validated locally by the owner and in CI.
 
 - catalog/graph/assertion migrations;
 - trusted predicate/source/visibility enums;
 - explicit `manage_concepts` platform and Group authority;
 - active-phase documentation.
 
-### 3B — domain behavior
+### 3B — domain behavior — implemented, awaiting owner-local gate
+
+Remote CI is green after fixing stale-instance canonical resolution.
 
 - Eloquent models/factories/relationships;
-- Vocabulary policy;
+- Vocabulary and assertion policies;
 - create/catalog actions;
-- hierarchy mutation action with cycle prevention + closure rebuild;
+- hierarchy mutation action with cycle prevention + transactional closure rebuild;
 - merge/deprecate lifecycle;
 - trusted relation action;
-- subject-authorized assertion action.
+- subject-authorized assertion action;
+- focused tests for multilingual identity, polyhierarchy, cycle rejection, multiple predicates, merge canonicalization, relation idempotency, and cross-Group authorization.
 
-### 3C — publication evidence and acceptance proof
+### 3C — publication evidence and acceptance proof — next
 
 - exact revision assertion integration into Content publication manifest;
 - sealed-revision semantic immutability;
