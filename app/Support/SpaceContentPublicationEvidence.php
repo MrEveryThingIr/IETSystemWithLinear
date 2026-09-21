@@ -286,7 +286,6 @@ class SpaceContentPublicationEvidence
         $semanticAssertions = DB::table('concept_assertions as assertion')
             ->join('concepts as concept', 'concept.id', '=', 'assertion.concept_id')
             ->leftJoin('concept_schemes as scheme', 'scheme.id', '=', 'assertion.scheme_id')
-            ->leftJoin('actors as creator_actor', 'creator_actor.id', '=', 'assertion.created_by_actor_id')
             ->where('assertion.subject_type', ConceptAssertionSubject::SpaceContentRevision->value)
             ->where('assertion.subject_id', $revision->id)
             ->orderBy('assertion.predicate')
@@ -303,7 +302,6 @@ class SpaceContentPublicationEvidence
                 'assertion.visibility',
                 'assertion.valid_from',
                 'assertion.valid_until',
-                'creator_actor.uuid as creator_actor_uuid',
                 'assertion.metadata',
             ])
             ->map(fn (object $assertion): array => [
@@ -317,9 +315,6 @@ class SpaceContentPublicationEvidence
                 'visibility' => (string) $assertion->visibility,
                 'valid_from' => $this->canonicalTimestamp($assertion->valid_from),
                 'valid_until' => $this->canonicalTimestamp($assertion->valid_until),
-                'creator_actor_uuid' => $assertion->creator_actor_uuid !== null
-                    ? (string) $assertion->creator_actor_uuid
-                    : null,
                 'metadata' => $this->canonicalMetadata($assertion->metadata),
             ])
             ->all();
