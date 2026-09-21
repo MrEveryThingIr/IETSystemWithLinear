@@ -31,7 +31,7 @@ class TemporalPreferences extends Component
 
     public function useBrowserTimezone(string $timezone): void
     {
-        if (! TemporalPreferenceResolver::validTimezone($timezone)) {
+        if (TemporalPreferenceResolver::validTimezone($timezone) === false) {
             $this->addError('timezone', __('ui.profile.temporal.invalid_timezone'));
 
             return;
