@@ -217,6 +217,53 @@
                         @elseif ($intent->location_text)
                             <div><dt class="inline font-medium">{{ __('ui.profile.intents.location') }}:</dt> <dd class="inline" dir="auto">{{ $intent->location_text }}</dd></div>
                         @endif
+                        @if ($intent->starts_on || $intent->ends_on)
+                            <div>
+                                <dt class="inline font-medium">{{ __('ui.profile.intents.date_range') }}:</dt>
+                                <dd class="inline">
+                                    @if ($intent->starts_on)
+                                        <time
+                                            datetime="{{ $intent->starts_on->toDateString() }}"
+                                            data-localized-date="{{ $intent->starts_on->toDateString() }}"
+                                            data-locale="{{ $intlLocale }}"
+                                            data-calendar="{{ $calendar }}"
+                                        >{{ $intent->starts_on->toDateString() }}</time>
+                                    @endif
+                                    @if ($intent->ends_on)
+                                        <span aria-hidden="true"> → </span>
+                                        <time
+                                            datetime="{{ $intent->ends_on->toDateString() }}"
+                                            data-localized-date="{{ $intent->ends_on->toDateString() }}"
+                                            data-locale="{{ $intlLocale }}"
+                                            data-calendar="{{ $calendar }}"
+                                        >{{ $intent->ends_on->toDateString() }}</time>
+                                    @endif
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($intent->schedule_kind->value === 'weekly' && ! empty($intent->recurrence_weekdays))
+                            <div>
+                                <dt class="inline font-medium">{{ __('ui.profile.intents.weekdays') }}:</dt>
+                                <dd class="inline">{{ collect($intent->recurrence_weekdays)->map(fn ($day) => __('ui.profile.intents.weekday_names.'.$day))->join(', ') }}</dd>
+                            </div>
+                        @elseif ($intent->schedule_kind->value === 'monthly' && $intent->recurrence_day_of_month)
+                            <div><dt class="inline font-medium">{{ __('ui.profile.intents.day_of_month') }}:</dt> <dd class="inline">{{ $intent->recurrence_day_of_month }}</dd></div>
+                        @endif
+                        @if ($intent->time_window_start || $intent->time_window_end)
+                            <div>
+                                <dt class="inline font-medium">{{ __('ui.profile.intents.time_window') }}:</dt>
+                                <dd class="inline">
+                                    @if ($intent->time_window_start)
+                                        <span data-localized-time="{{ substr((string) $intent->time_window_start, 0, 5) }}" data-locale="{{ $intlLocale }}">{{ substr((string) $intent->time_window_start, 0, 5) }}</span>
+                                    @endif
+                                    @if ($intent->time_window_end)
+                                        <span aria-hidden="true">–</span>
+                                        <span data-localized-time="{{ substr((string) $intent->time_window_end, 0, 5) }}" data-locale="{{ $intlLocale }}">{{ substr((string) $intent->time_window_end, 0, 5) }}</span>
+                                    @endif
+                                    <span>{{ $intent->timezone }}</span>
+                                </dd>
+                            </div>
+                        @endif
                         @if ($intent->round_trip)
                             <div><dt class="inline font-medium">{{ __('ui.profile.intents.round_trip') }}:</dt> <dd class="inline">{{ trans_choice('ui.profile.intents.return_days', $intent->return_after_days ?? 0, ['count' => $intent->return_after_days ?? 0]) }}</dd></div>
                         @endif
