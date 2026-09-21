@@ -7,6 +7,7 @@ use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -20,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Log::shareContext([
+            'app_version' => (string) config('app.version', 'unknown'),
+        ]);
+
         RateLimiter::for('invitation-acceptance', function (Request $request): Limit {
             $identity = (string) ($request->user()?->getAuthIdentifier() ?? $request->ip());
 
