@@ -47,7 +47,7 @@ Current limitation:
 
 - Actor is still effectively designed primarily around one User-backed person.
 - organization/system Actors and explicit User→Actor acting authority do not yet exist.
-- there is no progressive Profile domain yet.
+- Phase 4A now provides the professional ActorProfile identity/media foundation, but structured Profile facts, Concept-backed skills/interests, selective sharing, and completeness/requirements remain 4B/4C work.
 
 ## Group governance kernel
 
