@@ -48,7 +48,7 @@ php artisan test --compact
 
 ## npm
 
-Phase 2 must add and commit `package-lock.json`. Once present:
+The repository commits `package-lock.json`; use the lockfile as the reproducible npm source:
 
 ~~~text
 npm ci

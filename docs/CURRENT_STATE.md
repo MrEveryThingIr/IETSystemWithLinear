@@ -483,8 +483,8 @@ The active implementation milestone is:
 
 Phase 2 starts from the accepted Phase 1 closure commit `a91c0dea1e770614d1d419f26a9bf1783b38e023` on `feat/phase-02-delivery-operations`.
 
-The provider-neutral baseline now covers CI, deployment/runbook discipline, queue/scheduler operation, transactional email operations, request/deploy log correlation, backup/restore procedure, failed-job handling, dependency/security updates, abuse-control inventory, and production storage guidance.
+The provider-neutral baseline now covers CI, committed Composer/npm lockfiles, deployment/runbook discipline, queue/scheduler operation, transactional email operations, request/deploy log correlation, backup/restore procedure, failed-job handling, dependency/security updates, abuse-control inventory, and production storage guidance.
 
-Phase 2 is not complete merely because these repository files exist. The npm lockfile, selected deployment target, enabled production mail transport, worker/scheduler exercise, and an actual backup/restore drill remain exit-gate evidence that must be performed and recorded honestly.
+Phase 2 is not complete merely because these repository files exist. The selected deployment target, enabled production mail transport, supervised worker/scheduler exercise, and an actual backup/restore drill remain exit-gate evidence that must be performed and recorded honestly.
 
 The detailed contract is `docs/PHASE_02_DELIVERY_OPERATIONS.md`; executable guidance is `docs/OPERATIONS_RUNBOOK.md`. Do not begin Phase 3 or pull Admission v2/real-time/negotiation work forward until Phase 2 reaches its exit gate.

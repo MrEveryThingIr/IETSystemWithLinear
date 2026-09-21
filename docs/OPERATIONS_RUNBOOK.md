@@ -218,13 +218,13 @@ See `docs/SECURITY_UPDATE_PROCESS.md`.
 
 CI performs Composer metadata validation, formatting, static analysis, migration/scheduler smoke, tests, frontend build, and Composer advisory audit. Dependabot monitors Composer, npm, and GitHub Actions manifests.
 
-The repository currently lacks `package-lock.json`. Generate and commit the lockfile before Phase 2 closure, then CI automatically switches from `npm install` to `npm ci`.
+`package-lock.json` is committed and CI installs JavaScript dependencies exclusively with `npm ci`.
 
 ## Release verification checklist
 
 Before calling a release healthy:
 
-- exact commit CI green;
+- exact commit CI green, including strict Composer/npm lockfile installs;
 - environment/secrets present;
 - backup completed;
 - migrations successful;

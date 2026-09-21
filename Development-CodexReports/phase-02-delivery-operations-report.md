@@ -31,7 +31,7 @@ Added `.github/workflows/ci.yml` with:
 - full compact PHPUnit suite;
 - Composer advisory audit.
 
-The repository did not contain `package-lock.json` at Phase 2 start. CI therefore uses `npm install` with a visible warning until the lockfile is committed, then automatically uses `npm ci`.
+The repository did not contain `package-lock.json` at Phase 2 start. CI generated it from the exact Phase 2 manifest under Node 22/npm 10, uploaded the artifact for inspection, and committed it as `1ae6dc3`. CI is now strict `npm ci`.
 
 ### Dependency automation
 
@@ -118,16 +118,15 @@ CI execution after push/PR is additional evidence, not a substitute for the loca
 
 Before Phase 2 can close:
 
-1. generate and commit `package-lock.json`, then verify CI uses `npm ci`;
-2. select/record the production deployment target and database;
-3. exercise the queue worker under the selected supervisor;
-4. exercise the scheduler under the selected supervisor;
-5. select/configure and test production transactional mail if those paths are enabled;
-6. choose operational log/monitoring retention/destination;
-7. configure automated production backups;
-8. perform an isolated restore drill and record exact result/date;
-9. validate private media storage on the selected target;
-10. rerun the full final gate and obtain human acceptance.
+1. select/record the production deployment target and database;
+2. exercise the queue worker under the selected supervisor;
+3. exercise the scheduler under the selected supervisor;
+4. select/configure and test production transactional mail if those paths are enabled;
+5. choose operational log/monitoring retention/destination;
+6. configure automated production backups;
+7. perform an isolated restore drill and record exact result/date;
+8. validate private media storage on the selected target;
+9. rerun the full final gate and obtain human acceptance.
 
 ## Deferred by design
 

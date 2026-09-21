@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   quality:
@@ -51,36 +51,7 @@ jobs:
           php artisan migrate --force --no-interaction
 
       - name: Install JavaScript dependencies
-        id: node_dependencies
-        shell: bash
-        run: |
-          if [[ -f package-lock.json ]]; then
-            npm ci
-            echo "generated_lock=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::package-lock.json is not committed yet; generating it for the Phase 2 closure."
-            npm install --ignore-scripts --no-audit --no-fund
-            echo "generated_lock=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Upload generated npm lockfile
-        if: steps.node_dependencies.outputs.generated_lock == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: phase-02-package-lock
-          path: package-lock.json
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Commit generated npm lockfile
-        if: steps.node_dependencies.outputs.generated_lock == 'true' && github.event_name == 'push'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          git commit -m "chore(deps): lock npm dependencies"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+        run: npm ci
 
       - name: Build frontend
         run: npm run build
@@ -103,10 +74,13 @@ jobs:
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress
 
-      - name: Migration and scheduler smoke
+      - name: Migration, scheduler, and queue smoke
         run: |
           php artisan migrate:status
           php artisan schedule:list
+          php artisan schedule:run
+          php artisan queue:work database --stop-when-empty --tries=1 --timeout=30
+          php artisan queue:failed
 
       - name: Test
         run: php artisan test --compact
