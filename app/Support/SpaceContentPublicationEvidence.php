@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\ConceptAssertionSubject;
 use App\Models\Asset;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinitionVersion;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 class SpaceContentPublicationEvidence
 {
-    public const MANIFEST_VERSION = 2;
+    public const MANIFEST_VERSION = 3;
     public const CANONICALIZATION_VERSION = 1;
     public const ALGORITHM = 'sha256';
 
@@ -282,6 +283,47 @@ class SpaceContentPublicationEvidence
             ])
             ->all();
 
+        $semanticAssertions = DB::table('concept_assertions as assertion')
+            ->join('concepts as concept', 'concept.id', '=', 'assertion.concept_id')
+            ->leftJoin('concept_schemes as scheme', 'scheme.id', '=', 'assertion.scheme_id')
+            ->leftJoin('actors as creator_actor', 'creator_actor.id', '=', 'assertion.created_by_actor_id')
+            ->where('assertion.subject_type', ConceptAssertionSubject::SpaceContentRevision->value)
+            ->where('assertion.subject_id', $revision->id)
+            ->orderBy('assertion.predicate')
+            ->orderBy('concept.uuid')
+            ->orderBy('assertion.uuid')
+            ->get([
+                'assertion.uuid as assertion_uuid',
+                'assertion.predicate',
+                'concept.uuid as concept_uuid',
+                'scheme.uuid as scheme_uuid',
+                'assertion.weight',
+                'assertion.confidence',
+                'assertion.source',
+                'assertion.visibility',
+                'assertion.valid_from',
+                'assertion.valid_until',
+                'creator_actor.uuid as creator_actor_uuid',
+                'assertion.metadata',
+            ])
+            ->map(fn (object $assertion): array => [
+                'assertion_uuid' => (string) $assertion->assertion_uuid,
+                'predicate' => (string) $assertion->predicate,
+                'concept_uuid' => (string) $assertion->concept_uuid,
+                'scheme_uuid' => $assertion->scheme_uuid !== null ? (string) $assertion->scheme_uuid : null,
+                'weight' => $this->canonicalDecimal($assertion->weight),
+                'confidence' => $this->canonicalDecimal($assertion->confidence),
+                'source' => (string) $assertion->source,
+                'visibility' => (string) $assertion->visibility,
+                'valid_from' => $this->canonicalTimestamp($assertion->valid_from),
+                'valid_until' => $this->canonicalTimestamp($assertion->valid_until),
+                'creator_actor_uuid' => $assertion->creator_actor_uuid !== null
+                    ? (string) $assertion->creator_actor_uuid
+                    : null,
+                'metadata' => $this->canonicalMetadata($assertion->metadata),
+            ])
+            ->all();
+
         return [
             'manifest_version' => self::MANIFEST_VERSION,
             'canonicalization_version' => self::CANONICALIZATION_VERSION,
@@ -298,7 +340,38 @@ class SpaceContentPublicationEvidence
             'blocks' => $blocks,
             'assets' => $placements,
             'relationships' => $relationships,
+            'semantic_assertions' => $semanticAssertions,
         ];
+    }
+
+    private function canonicalDecimal(mixed $value): ?string
+    {
+        return $value === null
+            ? null
+            : number_format((float) $value, 4, '.', '');
+    }
+
+    private function canonicalTimestamp(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return Carbon::parse((string) $value)
+            ->utc()
+            ->format('Y-m-d\\TH:i:s.u\\Z');
+    }
+
+    /** @return array<string, mixed> */
+    private function canonicalMetadata(mixed $value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        $decoded = json_decode((string) $value, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     private function storedIdentityMatches(Asset $asset): bool
