@@ -64,7 +64,7 @@ class NormalizeProfileIntentData
                 $validator->errors()->add('origin_text', 'Origin and destination must be supplied together.');
             }
 
-            if ((bool) ($input['round_trip'] ?? false)) {
+            if ((bool) $input['round_trip']) {
                 if ($origin === '' || $destination === '') {
                     $validator->errors()->add('round_trip', 'Round trips require both origin and destination.');
                 }
