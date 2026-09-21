@@ -16,6 +16,8 @@ use App\ProfileItemVisibility;
 
 class SyncProfileIntentConceptAssertion
 {
+    private const PURPOSE = 'actor_profile_intent_summary';
+
     public function execute(
         User $user,
         ActorProfile $profile,
@@ -41,7 +43,7 @@ class SyncProfileIntentConceptAssertion
             ->first();
 
         if ($activeIntents->isEmpty()) {
-            if ($assertion instanceof ConceptAssertion) {
+            if ($this->isManagedSummary($assertion)) {
                 $assertion->delete();
             }
 
@@ -55,6 +57,10 @@ class SyncProfileIntentConceptAssertion
             : ConceptAssertionVisibility::Inherited;
 
         if ($assertion instanceof ConceptAssertion) {
+            if (! $this->isManagedSummary($assertion)) {
+                return;
+            }
+
             if ($assertion->visibility !== $visibility) {
                 $assertion->visibility = $visibility;
                 $assertion->save();
@@ -69,6 +75,16 @@ class SyncProfileIntentConceptAssertion
             $concept,
             $predicate,
             visibility: $visibility,
+            metadata: [
+                'purpose' => self::PURPOSE,
+                'actor_profile_id' => $profile->id,
+            ],
         );
+    }
+
+    private function isManagedSummary(?ConceptAssertion $assertion): bool
+    {
+        return $assertion instanceof ConceptAssertion
+            && ($assertion->metadata['purpose'] ?? null) === self::PURPOSE;
     }
 }
