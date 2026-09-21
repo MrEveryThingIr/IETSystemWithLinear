@@ -150,7 +150,7 @@ Invitation
 
 ## Phase 2 — Delivery and operations baseline
 
-**Status: next.** Detailed contract: `docs/PHASE_02_DELIVERY_OPERATIONS.md`.
+**Status: active.** Implementation branch: `feat/phase-02-delivery-operations`. Detailed contract: `docs/PHASE_02_DELIVERY_OPERATIONS.md`.
 
 ### Purpose
 
