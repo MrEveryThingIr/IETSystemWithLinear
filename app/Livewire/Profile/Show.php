@@ -6,6 +6,7 @@ use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
 use App\ConceptAssertionVisibility;
 use App\Models\ActorProfile;
+use App\Models\ActorProfileIntent;
 use App\Models\ConceptAssertion;
 use App\Models\User;
 use App\Policies\ActorProfileIntentPolicy;
@@ -58,7 +59,7 @@ class Show extends Component
             ->with('concept.labels')
             ->latest('updated_at')
             ->get()
-            ->filter(fn ($intent): bool => $intentPolicy->view($user, $intent))
+            ->filter(fn (ActorProfileIntent $intent): bool => $intentPolicy->view($user, $intent))
             ->values();
 
         return view('livewire.profile.show', [
