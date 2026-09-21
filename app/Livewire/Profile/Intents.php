@@ -12,11 +12,14 @@ use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
+use App\Support\Localization;
+use App\Support\TemporalPreferences;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Intents extends Component
@@ -69,12 +72,41 @@ class Intents extends Component
 
     public string $itemVisibility = ProfileItemVisibility::Inherited->value;
 
+    public bool $hasStoredTimezone = false;
+
     public function mount(): void
     {
         $user = request()->user();
         abort_unless($user instanceof User, 403);
 
-        $this->timezone = $user->timezone ?: config('app.timezone');
+        $this->hasStoredTimezone = is_string($user->timezone) && TemporalPreferences::validTimezone($user->timezone);
+        $this->timezone = TemporalPreferences::timezoneFor($user);
+    }
+
+    public function useBrowserTimezone(string $timezone): void
+    {
+        if ($this->editingIntentId !== null || $this->hasStoredTimezone) {
+            return;
+        }
+
+        if (TemporalPreferences::validTimezone($timezone)) {
+            $this->timezone = $timezone;
+        }
+    }
+
+    #[On('temporal-preferences-updated')]
+    public function refreshTemporalPreferences(): void
+    {
+        if ($this->editingIntentId !== null) {
+            return;
+        }
+
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+
+        $fresh = User::query()->findOrFail($user->id);
+        $this->hasStoredTimezone = is_string($fresh->timezone) && TemporalPreferences::validTimezone($fresh->timezone);
+        $this->timezone = TemporalPreferences::timezoneFor($fresh);
     }
 
     public function save(
@@ -201,6 +233,10 @@ class Intents extends Component
                 ->get(),
             'scheduleKinds' => ProfileIntentScheduleKind::cases(),
             'visibilityOptions' => ProfileItemVisibility::cases(),
+            'calendar' => TemporalPreferences::calendarFor(request()->user())->value,
+            'intlLocale' => Localization::intlLocale(),
+            'firstDay' => Localization::firstDayOfWeek(),
+            'weekdayOrder' => TemporalPreferences::weekdayOrder(),
         ]);
     }
 
@@ -256,9 +292,9 @@ class Intents extends Component
         $this->scheduleKind = ProfileIntentScheduleKind::Once->value;
         $this->startsOn = null;
         $this->endsOn = null;
-        $this->timezone = $user instanceof User && $user->timezone
-            ? $user->timezone
-            : config('app.timezone');
+        $this->timezone = $user instanceof User
+            ? TemporalPreferences::timezoneFor($user)
+            : (string) config('app.timezone', 'UTC');
         $this->recurrenceInterval = 1;
         $this->recurrenceWeekdays = [];
         $this->recurrenceDayOfMonth = null;
