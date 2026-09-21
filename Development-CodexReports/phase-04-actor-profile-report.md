@@ -324,9 +324,9 @@ Existing User model schema/serialization tests were aligned because `timezone_mo
 
 ### Remote validation
 
-Final runtime head before this documentation update:
+Final hardened runtime head before this documentation update:
 
-`c1ce5ccd83020b4f51b3585e2bf092e3ba66cde6`
+`b477c563abde4a307f8c41307cda3a02652e9735`
 
 Passed:
 
@@ -335,6 +335,7 @@ Passed:
 - Pint: **125 changed PHP files passed**;
 - Vite production build;
 - fresh migrations including temporal preferences;
+- fresh-install schema safety: `users.timezone` is added when missing, while rollback preserves any legacy/pre-existing timezone column;
 - migration/scheduler/queue smoke;
 - SQLite backup → restore smoke;
 - Composer security audit: clean.
