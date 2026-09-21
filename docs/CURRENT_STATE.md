@@ -507,3 +507,12 @@ The Concept Kernel adds reusable semantic identity/classification for Actor and 
 
 Detailed execution contract: `docs/PHASE_03_CONCEPT_KERNEL.md`.
 Architecture: `docs/CONCEPT_KERNEL.md`.
+
+Current Phase 3 implementation status:
+
+- 3A schema/authority: owner-local validated;
+- 3B domain behavior: owner-local validated at 290 tests / 1463 assertions;
+- 3C publication semantic evidence: remote CI green at 292 tests / 1493 assertions;
+- final owner-local/browser gate: pending before Phase 3 closure.
+
+Phase 4 — Actor/Party and progressive Profile — remains next and must not begin until that final gate is accepted.

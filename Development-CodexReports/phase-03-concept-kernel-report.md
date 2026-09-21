@@ -5,10 +5,10 @@
 Phase 3 is active on `feat/phase-03-concept-kernel`.
 
 - 3A — schema and authority contract: **complete and owner-local validated**.
-- 3B — domain behavior: **implemented and remote-CI validated; owner-local validation pending**.
-- 3C — publication evidence and final acceptance proof: **not started**.
+- 3B — domain behavior: **complete and owner-local validated**.
+- 3C — publication evidence and final acceptance proof: **implemented and remote-CI validated; owner-local final validation pending**.
 
-Phase 3 is not complete until 3C and the final owner gate pass.
+Phase 3 is not complete until the final owner-local/browser gate passes.
 
 ## Starting point
 
@@ -133,30 +133,76 @@ Focused 3B tests prove:
 - symmetric relations are idempotent in either direction;
 - Group Concept governance is isolated across Groups.
 
+## Owner-local milestone 3B validation
+
+The owner synchronized the 3B head and reported:
+
+- `php artisan migrate`: nothing pending;
+- all four Phase 3 migrations: ran;
+- focused `ConceptKernelDomainTest`: **6 passed / 22 assertions**;
+- full PHPUnit suite: **290 passed / 1463 assertions**;
+- PHPStan: no errors;
+- Pint over Phase 3 changes: **32 files passed**;
+- Vite production build: passed;
+- working tree: clean.
+
+## Milestone 3C — publication semantic evidence
+
+Implemented:
+
+- Content manifest contract upgraded to version 3;
+- deterministic `semantic_assertions` snapshot for exact SpaceContentRevision assertions;
+- semantic snapshot uses stable assertion/Concept/Scheme UUID evidence rather than mutable labels or internal Actor IDs;
+- assertion source, visibility, weight/confidence, validity window and metadata are sealed;
+- revision semantic authoring locks the revision row, serializing against publication;
+- post-publication revision assertions cannot be added or rewritten;
+- later Concept label changes and merge lifecycle do not rewrite the sealed historical manifest;
+- all revision-cloning Content actions copy semantic assertions into the new draft with new assertion UUIDs and `copied_from_assertion_uuid` provenance;
+- mutable SpaceContent-level classification remains distinct from immutable exact-revision evidence.
+
+### Defects caught and fixed during 3C
+
+- an attempted public Actor UUID in the semantic manifest was removed because Actor currently has no UUID; Phase 3 did not expand Actor identity scope merely for publication provenance;
+- JSON metadata handling was normalized for cross-database drivers;
+- PHPStan caught an impossible empty-metadata branch after copy provenance was always added;
+- legacy Content tests expecting manifest v2 were aligned with the intentional v3 contract.
+
+### 3C remote validation
+
+GitHub Actions on runtime head `fc22e847acc91af2fe6150fdaa4cc4511901d99f`:
+
+- changed-file Pint: passed;
+- PHPStan: **no errors**;
+- fresh migrations: passed;
+- scheduler/queue smoke: passed;
+- SQLite backup→restore smoke: passed;
+- full PHPUnit suite: **292 passed / 1493 assertions**;
+- Vite/npm gates: passed;
+- Composer advisory audit: no security vulnerability advisories.
+
 ## Browser/UI status
 
-3B adds no user-facing Concept screens or routes.
+Phase 3 deliberately exposes no half-built Concept administration surface.
 
-Expected browser result after synchronization:
+After final synchronization the browser should show the same stable product UI:
 
-- existing authentication/Group/invitation/content UI remains unchanged;
+- authentication/Groups/invitations/Content continue to render normally;
 - `/up` remains healthy;
-- no unfinished Concept-management UI is exposed.
+- published Content rendering is unchanged visually;
+- no Concept/Profile menu is expected yet.
 
-A dedicated Concept UI is not required for the Phase 3 kernel acceptance gate.
+The Phase 3 effect is architectural: Content and future Profile/Context interfaces can now safely consume the same semantic kernel. User-visible Profile/Concept selection/sharing experiences begin in Phase 4 and later focused UX phases.
 
-## Remaining Phase 3 work — 3C
+## Remaining Phase 3 work
 
-3C must still implement and prove:
+Only the owner-local final gate remains:
 
-1. exact `SpaceContentRevision` semantic assertions are included in sealed publication evidence;
-2. later mutable catalog labels/classification do not rewrite historical sealed semantic evidence;
-3. SpaceContent can be classified `about Chess`;
-4. exact revision can carry a semantic predicate such as `teaches Chess`;
-5. publication rejects semantic-evidence inconsistencies;
-6. final Phase 3 focused/full/static/format/build gates pass;
-7. owner-local migration/test/browser smoke passes;
-8. final phase report/current-state/roadmap closure is committed.
+1. synchronize the final 3C head;
+2. run focused Concept domain + publication-evidence tests;
+3. run full PHPUnit, PHPStan, Pint and Vite build;
+4. verify migrations remain current and working tree clean;
+5. browser-smoke `/up`, login, one Group page and one published Content page;
+6. commit the final closure documentation marking Phase 4 next.
 
 ## Explicitly deferred
 
@@ -176,4 +222,4 @@ Phase 3 still does not implement:
 
 ## Next gate
 
-Synchronize the owner-local checkout to the final 3B documentation head, run the focused Concept test plus the full/static/format gate, confirm existing browser behavior is unaffected, and only then begin 3C.
+Synchronize the owner-local checkout to the final 3C documentation head and complete the final local/browser gate. If green, close Phase 3 and activate Phase 4 — Actor/Party and progressive Profile.

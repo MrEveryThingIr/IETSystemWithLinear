@@ -49,9 +49,9 @@ Validated locally by the owner and in CI.
 - explicit `manage_concepts` platform and Group authority;
 - active-phase documentation.
 
-### 3B — domain behavior — implemented, awaiting owner-local gate
+### 3B — domain behavior — complete
 
-Remote CI is green after fixing stale-instance canonical resolution.
+Remote CI is green after fixing stale-instance canonical resolution, and the owner-local gate passed with 290 tests / 1463 assertions, PHPStan clean, Pint clean across 32 Phase 3 PHP files, Vite build green, migrations current, and a clean working tree.
 
 - Eloquent models/factories/relationships;
 - Vocabulary and assertion policies;
@@ -62,12 +62,20 @@ Remote CI is green after fixing stale-instance canonical resolution.
 - subject-authorized assertion action;
 - focused tests for multilingual identity, polyhierarchy, cycle rejection, multiple predicates, merge canonicalization, relation idempotency, and cross-Group authorization.
 
-### 3C — publication evidence and acceptance proof — next
+### 3C — publication evidence and acceptance proof — implemented; awaiting owner-local final gate
 
-- exact revision assertion integration into Content publication manifest;
-- sealed-revision semantic immutability;
-- proof suite for polyhierarchy, labels, assertions, authorization, merge lifecycle and revision evidence;
-- final validation/report.
+Remote CI is green on runtime head `fc22e847acc91af2fe6150fdaa4cc4511901d99f`.
+
+- Content publication manifest upgraded from v2 to v3 with deterministic `semantic_assertions`;
+- exact revision assertions seal stable assertion/Concept/Scheme UUID evidence plus predicate, source, visibility, validity, confidence/weight and metadata;
+- revision assertion creation serializes on the same revision row used by publication sealing;
+- sealed revision assertions cannot be added or rewritten;
+- semantic catalog label/merge changes do not rewrite historical sealed manifests;
+- revision-cloning operations copy semantic assertions into the new draft with new assertion UUIDs and source-assertion provenance;
+- existing Content classification remains separate mutable catalog metadata;
+- final proof tests cover Content `about Chess`, revision `teaches Chess`, sealed immutability and semantic revision copying.
+
+Phase 3 is not closed until the owner synchronizes this head and passes the final local/browser gate.
 
 ## Explicitly excluded
 
