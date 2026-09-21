@@ -98,7 +98,11 @@ class Concept extends Model
             ?? $labels->firstWhere('kind', ConceptLabelKind::Preferred)
             ?? $labels->first();
 
-        return $preferred?->label ?? Str::headline($this->slug);
+        if ($preferred instanceof ConceptLabel) {
+            return $preferred->label;
+        }
+
+        return Str::headline($this->slug);
     }
 
     /** @return BelongsTo<ConceptVocabulary, $this> */
