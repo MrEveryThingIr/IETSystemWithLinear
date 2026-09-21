@@ -47,7 +47,9 @@ Current limitation:
 
 - Actor is still effectively designed primarily around one User-backed person.
 - organization/system Actors and explicit User→Actor acting authority do not yet exist.
-- Phase 4A now provides the professional ActorProfile identity/media foundation, but structured Profile facts, Concept-backed skills/interests, selective sharing, and completeness/requirements remain 4B/4C work.
+- Phase 4A provides the professional ActorProfile identity/media foundation.
+- Phase 4B now provides Concept-backed skills/interests/learning goals plus one-time/ongoing/recurring Need and Offer declarations with quantity, route, schedule, lifecycle, and item-level visibility.
+- selective sharing, completeness/requirements, and final privacy/accessibility closure remain Phase 4C work.
 
 ## Group governance kernel
 
@@ -518,7 +520,7 @@ Contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 Current Phase 4 state:
 
 - 4A professional identity + profile media: owner-local accepted at 298 tests / 1528 assertions, PHPStan/Pint/build green and clean working tree;
-- 4B semantic Profile + recurring Need/Offer declarations: implemented and remote-CI green at 305 tests / 1566 assertions; owner-local/browser gate pending;
+- 4B semantic Profile + recurring Need/Offer declarations: implementation complete and remote-CI green at 306 tests / 1570 assertions; owner-local/browser acceptance pending;
 - 4C selective sharing/completeness/final closure: pending.
 
 4B preserves future boundaries: recurring Profile declarations describe current cadence/constraints without generating Planner Occurrences, performing Need/Offer matching, or creating obligations.
