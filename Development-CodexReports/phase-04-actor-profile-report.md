@@ -180,7 +180,18 @@ The Profile editor is intentionally split rather than becoming one giant form:
 2. skills/interests/learning goals;
 3. Needs & Offers.
 
-The Need/Offer editor keeps simple declarations simple and exposes schedule/route recurrence fields only when useful.
+4B now uses a progressive statement composer rather than an always-expanded schema form:
+
+- minimal creation requires only relationship/type + Concept;
+- optional facets are explicitly activated by the user;
+- supported facets: title, description, quantity, location, route, timing and visibility;
+- removing a facet clears its pending values;
+- editing auto-activates only facets represented by the stored declaration;
+- Concept inputs search reusable Platform and personal Actor Concepts;
+- a user may keep typing and create a new personal reusable Concept when no suggestion fits;
+- saved Need/Offer cards surface activated structured facets, including localized start/end date ranges and time windows.
+
+This keeps simple declarations simple while preserving structured, future-matchable data underneath.
 
 Public Profile cards render human-facing information instead of raw database primitives.
 
