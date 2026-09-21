@@ -65,7 +65,7 @@ Includes:
 - cross-database migration rollback behavior;
 - focused tests for privacy/media/ownership.
 
-### 4B — semantic Profile + recurring Needs/Offers — active
+### 4B — semantic Profile + recurring Needs/Offers — implemented remotely; owner-local gate pending
 
 4B deliberately uses concrete Profile semantics instead of introducing a speculative universal key/value fact engine.
 
@@ -119,6 +119,34 @@ It does **not** create:
 - fulfillment records.
 
 Phase 11 Planner remains authoritative for materialized Occurrences. Phase 13 remains authoritative for full Need/Offer matching. Phase 14 remains authoritative for negotiated obligations.
+
+#### 4B acceptance proof
+
+Owner-local acceptance must prove:
+
+1. one personal Concept is reused across skill/interest/learning predicates rather than duplicated;
+2. private semantic Profile items stay private on an otherwise visible Profile;
+3. a weekly transportation Need can store origin, destination, weekday/time window and next-day round trip;
+4. periodic quantity Needs such as weekly rice/meat can store quantity + unit;
+5. recurring service Offers can store their own weekly cadence/time window;
+6. active Need/Offer declarations synchronize coarse Actor `needs` / `offers` Concept assertions;
+7. pausing the last active declaration removes the active semantic summary and reactivation restores it;
+8. closing preserves history and is terminal;
+9. item-level private/authenticated/public visibility is honored;
+10. another Actor cannot mutate the declaration;
+11. no match, proposal, commitment, occurrence or financial record is created merely from a Profile declaration;
+12. full PHPUnit, PHPStan, Pint, migration and Vite gates remain green.
+
+Remote CI proof before owner-local validation:
+
+- runtime head: `fab55e848fe4e26e31e4cffe41874093c41f261f`;
+- PHPUnit: 305 passed / 1566 assertions;
+- PHPStan: no errors;
+- Pint: 113 changed PHP files passed;
+- Vite production build: passed;
+- migration/scheduler/queue smoke: passed;
+- SQLite backup→restore smoke: passed;
+- Composer security audit: clean.
 
 ### 4C — sharing, completeness and Phase 4 closure
 
