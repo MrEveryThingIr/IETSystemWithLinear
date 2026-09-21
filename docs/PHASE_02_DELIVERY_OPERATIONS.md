@@ -2,7 +2,9 @@
 
 ## Status
 
-Next implementation phase after the Phase 1 closure commit and human gate.
+Active on `feat/phase-02-delivery-operations`, starting from accepted Phase 1 closure commit `a91c0dea1e770614d1d419f26a9bf1783b38e023`.
+
+Provider-neutral operational implementation may proceed. External provider selection, production deployment credentials, and claims of a successful restore drill remain human/infrastructure gates.
 
 ## Objective
 

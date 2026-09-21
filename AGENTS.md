@@ -25,7 +25,7 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 
 - Phase 0 — canonical architecture: complete.
 - Phase 1 — production invitation/registration/admission journey: implementation and validation complete; close it with the Phase 1 report and canonical-document commit before starting new runtime work.
-- Phase 2 — delivery and operations baseline: next implementation phase after that closure commit and human acceptance.
+- Phase 2 — delivery and operations baseline: active on `feat/phase-02-delivery-operations`, starting from accepted Phase 1 closure commit `a91c0de`.
 - Admission collaboration, contextual conversations, structured evidence/submissions, real-time broadcasting, and negotiated contracts are recorded future architecture. They belong to their roadmap phases and must not be pulled into Phase 2 speculatively.
 
 ## Current architecture baseline

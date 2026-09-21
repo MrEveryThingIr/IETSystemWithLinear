@@ -6,20 +6,25 @@ The project deliberately aims for **generic infrastructure internally and focuse
 
 ## Current baseline
 
-Active development branch:
+Active roadmap phase:
 
-`feat/group-spaces-communication`
+`Phase 2 — Delivery and Operations Baseline`
 
-Validated code baseline before the current architecture-documentation update:
+Phase 2 implementation branch:
 
-`f57ee430f96afcdb1ecc32f5b644fcb057dae6f4`
+`feat/phase-02-delivery-operations`
 
-Human-owner local validation at that baseline:
+Accepted Phase 1 closure commit:
 
-- 273 tests passed / 1386 assertions
+`a91c0dea1e770614d1d419f26a9bf1783b38e023`
+
+Phase 1 closure validation:
+
+- 282 tests passed / 1437 assertions
 - PHPStan: no errors
 - Pint: passed
 - Vite production build: passed
+- browser onboarding/hardening accepted by the human owner
 
 ## Canonical project documents
 
@@ -29,11 +34,14 @@ Read these instead of relying on chat history:
 2. [Current State](docs/CURRENT_STATE.md)
 3. [Target Architecture](docs/TARGET_ARCHITECTURE.md)
 4. [Production Roadmap](docs/PRODUCTION_ROADMAP.md)
-5. [Phase 1 — Invitation / Registration / Admission](docs/PHASE_01_INVITATION_ONBOARDING.md)
-6. [Concept Kernel](docs/CONCEPT_KERNEL.md)
-7. [Financial Architecture](docs/FINANCIAL_ARCHITECTURE.md)
-8. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
-9. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
+5. [Phase 2 — Delivery and Operations](docs/PHASE_02_DELIVERY_OPERATIONS.md)
+6. [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
+7. [Admission Collaboration Architecture](docs/ADMISSION_COLLABORATION_ARCHITECTURE.md)
+8. [Completed Phase 1 — Invitation / Registration / Admission](docs/PHASE_01_INVITATION_ONBOARDING.md)
+9. [Concept Kernel](docs/CONCEPT_KERNEL.md)
+10. [Financial Architecture](docs/FINANCIAL_ARCHITECTURE.md)
+11. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
+12. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
 
 Historical implementation reports are under `Development-CodexReports/`.
 
@@ -64,7 +72,7 @@ See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
 
 Work on one accepted roadmap phase at a time.
 
-The next implementation milestone is **Phase 1: Production Invitation, Registration and Admission Journey**.
+The active implementation milestone is **Phase 2: Delivery and Operations Baseline**. Do not begin Phase 3 until the Phase 2 operational exit gate is accepted.
 
 Agents must read `AGENTS.md` and the canonical docs before changing code.
 
