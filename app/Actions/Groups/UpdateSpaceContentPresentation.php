@@ -73,6 +73,7 @@ class UpdateSpaceContentPresentation
             $placementMap = $this->composition->copyAssets($source, $revision);
             $this->composition->copyBlocks($source, $revision, $placementMap);
             $this->composition->copyRelationships($source, $revision);
+            $this->composition->copyConceptAssertions($source, $revision, $actor);
 
             $current->applyLifecycle([
                 'current_revision' => $nextRevision,
