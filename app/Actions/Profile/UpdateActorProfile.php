@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 class UpdateActorProfile
 {
     /**
-     * @param array<string, mixed> $input
+     * @param  array<string, mixed>  $input
      */
     public function execute(User $user, ActorProfile $profile, array $input): ActorProfile
     {
