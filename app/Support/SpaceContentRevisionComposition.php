@@ -116,9 +116,11 @@ class SpaceContentRevisionComposition
             ->orderBy('id')
             ->get()
             ->map(static function (object $assertion) use ($target, $actor, $now): array {
-                $metadata = $assertion->metadata !== null
-                    ? json_decode((string) $assertion->metadata, true)
-                    : [];
+                $metadata = is_array($assertion->metadata)
+                    ? $assertion->metadata
+                    : ($assertion->metadata !== null
+                        ? json_decode((string) $assertion->metadata, true)
+                        : []);
                 $metadata = is_array($metadata) ? $metadata : [];
                 $metadata['copied_from_assertion_uuid'] = (string) $assertion->uuid;
 
