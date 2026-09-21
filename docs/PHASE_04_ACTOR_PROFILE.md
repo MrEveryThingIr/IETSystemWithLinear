@@ -65,7 +65,7 @@ Includes:
 - cross-database migration rollback behavior;
 - focused tests for privacy/media/ownership.
 
-### 4B — semantic Profile + recurring Needs/Offers — implementation complete; owner-local acceptance pending
+### 4B — semantic Profile + recurring Needs/Offers — implementation complete; owner-local technical acceptance complete; browser smoke pending
 
 4B deliberately uses concrete Profile semantics instead of introducing a speculative universal key/value fact engine.
 
@@ -122,7 +122,7 @@ Phase 11 Planner remains authoritative for materialized Occurrences. Phase 13 re
 
 #### 4B acceptance proof
 
-Owner-local acceptance must prove:
+Owner-local technical acceptance has now proved:
 
 1. one personal Concept is reused across skill/interest/learning predicates rather than duplicated;
 2. private semantic Profile items stay private on an otherwise visible Profile;
@@ -136,6 +136,19 @@ Owner-local acceptance must prove:
 10. another Actor cannot mutate the declaration;
 11. no match, proposal, commitment, occurrence or financial record is created merely from a Profile declaration;
 12. full PHPUnit, PHPStan, Pint, migration and Vite gates remain green.
+
+Owner-local technical evidence on `604bbb2`:
+
+- migration applied: `2026_09_21_170000_create_actor_profile_intents_table`;
+- focused 4B suite: **8 passed / 42 assertions**;
+- combined Profile foundation + 4B suite: **14 passed / 77 assertions**;
+- full PHPUnit: **306 passed / 1570 assertions**;
+- PHPStan: **no errors**;
+- Pint across Phase 4 PHP diff: **54 files passed**;
+- Vite production build: passed;
+- working tree: clean.
+
+The only remaining 4B acceptance evidence is the human browser smoke below.
 
 Final remote CI proof before owner-local validation:
 
