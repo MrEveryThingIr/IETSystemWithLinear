@@ -42,6 +42,7 @@ class ProfileDisclosureCatalog
             ->with('concept.labels')
             ->orderBy('predicate')
             ->orderBy('id')
+            ->limit(100)
             ->get();
 
         foreach ($assertions as $assertion) {
@@ -57,6 +58,7 @@ class ProfileDisclosureCatalog
             ->where('status', ProfileIntentStatus::Active->value)
             ->with('concept.labels')
             ->latest('updated_at')
+            ->limit(100)
             ->get();
 
         foreach ($intents as $intent) {
