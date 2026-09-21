@@ -4,9 +4,9 @@ namespace App\Livewire\Profile;
 
 use App\CalendarSystem;
 use App\Models\User;
-use App\TimezoneMode;
 use App\Support\Localization;
 use App\Support\TemporalPreferences as TemporalPreferenceResolver;
+use App\TimezoneMode;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
