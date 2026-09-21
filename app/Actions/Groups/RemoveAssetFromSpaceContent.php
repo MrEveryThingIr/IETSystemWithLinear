@@ -50,6 +50,7 @@ class RemoveAssetFromSpaceContent
             $placementMap = $this->composition->copyAssets($source, $revision, [$asset->id]);
             $this->composition->copyBlocks($source, $revision, $placementMap);
             $this->composition->copyRelationships($source, $revision);
+            $this->composition->copyConceptAssertions($source, $revision, $actor);
 
             $current->applyLifecycle([
                 'current_revision' => $nextRevision,
