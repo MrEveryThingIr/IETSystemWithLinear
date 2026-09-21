@@ -35,6 +35,11 @@ class Semantics extends Component
         $this->conceptLabel = trim($label);
     }
 
+    public function selectConceptSuggestion(string $label): void
+    {
+        $this->conceptLabel = trim($label);
+    }
+
     public function add(AddProfileConceptAssertion $addAssertion): void
     {
         $user = request()->user();
@@ -115,6 +120,35 @@ class Semantics extends Component
             'assertions' => $this->assertions()->with('concept.labels')->get(),
             'conceptSuggestions' => $this->conceptSuggestions(),
         ]);
+    }
+
+    /** @return list<string> */
+    private function conceptSuggestions(): array
+    {
+        $term = trim($this->conceptLabel);
+
+        if (mb_strlen($term) < 2) {
+            return [];
+        }
+
+        $normalized = mb_strtolower($term);
+
+        return ConceptLabel::query()
+            ->where('normalized_label', 'like', '%'.$normalized.'%')
+            ->whereHas('concept.vocabulary', function ($query): void {
+                $query->where(function ($scope): void {
+                    $scope->where('scope_type', 'platform')->where('scope_id', 0);
+                })->orWhere(function ($scope): void {
+                    $scope->where('scope_type', 'actor')->where('scope_id', $this->profile->actor_id);
+                });
+            })
+            ->with('concept')
+            ->limit(8)
+            ->get()
+            ->map(fn (ConceptLabel $label): string => $label->concept->displayLabel())
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /** @return list<string> */
