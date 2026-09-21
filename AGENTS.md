@@ -24,7 +24,7 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 ## Current roadmap position
 
 - Phase 0 — canonical architecture: complete.
-- Phase 1 — production invitation/registration/admission journey: implementation and validation complete; close it with the Phase 1 report and canonical-document commit before starting new runtime work.
+- Phase 1 — production invitation/registration/admission journey: complete and accepted.
 - Phase 2 — delivery and operations baseline: complete on `feat/phase-02-delivery-operations`; validated repository/local operational baseline.
 - Phase 3 — Concept Kernel: complete on `feat/phase-03-concept-kernel`.
 - Phase 4 — Actor/Party and progressive Profile: active on `feat/phase-04-actor-profile`; 4A implemented remotely, owner-local gate pending. Do not pull generic Context/Admission v2 work forward.
