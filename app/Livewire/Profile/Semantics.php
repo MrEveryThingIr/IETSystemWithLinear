@@ -12,6 +12,7 @@ use App\Models\ActorProfile;
 use App\Models\ConceptAssertion;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -109,7 +110,8 @@ class Semantics extends Component
         ]);
     }
 
-    private function assertions()
+    /** @return Builder<ConceptAssertion> */
+    private function assertions(): Builder
     {
         return ConceptAssertion::query()
             ->where('subject_type', ConceptAssertionSubject::Actor->value)
