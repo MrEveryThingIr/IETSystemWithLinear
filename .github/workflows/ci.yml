@@ -51,14 +51,26 @@ jobs:
           php artisan migrate --force --no-interaction
 
       - name: Install JavaScript dependencies
+        id: node_dependencies
         shell: bash
         run: |
           if [[ -f package-lock.json ]]; then
             npm ci
+            echo "generated_lock=false" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::package-lock.json is not committed yet; Phase 2 must add it before closure. Using npm install for this baseline run."
+            echo "::warning::package-lock.json is not committed yet; generating it for the Phase 2 closure."
             npm install --ignore-scripts --no-audit --no-fund
+            echo "generated_lock=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Upload generated npm lockfile
+        if: steps.node_dependencies.outputs.generated_lock == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-02-package-lock
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Build frontend
         run: npm run build
