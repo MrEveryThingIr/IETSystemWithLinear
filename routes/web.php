@@ -58,7 +58,7 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
-    Route::livewire('/profile-shares/{grant}', ProfileSharedShow::class)->name('profiles.shares.show');
+    Route::livewire('/profile-shares/{grant}', \App\Livewire\Profile\SharedShow::class)->name('profiles.shares.show');
     Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');

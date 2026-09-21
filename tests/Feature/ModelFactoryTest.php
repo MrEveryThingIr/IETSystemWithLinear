@@ -3,6 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Actor;
+use App\Models\ActorProfile;
+use App\Models\ActorProfileDisclosureGrant;
+use App\Models\ActorProfileDisclosureItem;
+use App\Models\ActorProfileIntent;
 use App\Models\Admission;
 use App\Models\AdmissionEvent;
 use App\Models\AgreementAcceptance;
