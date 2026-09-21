@@ -176,9 +176,7 @@ A release candidate can be deployed, observed, backed up, restored, and diagnose
 
 ## Phase 3 — Concept Kernel
 
-**Status: next.**
-
-Architecture: `docs/CONCEPT_KERNEL.md`.
+**Status: active on `feat/phase-03-concept-kernel`.** Detailed contract: `docs/PHASE_03_CONCEPT_KERNEL.md`. Architecture: `docs/CONCEPT_KERNEL.md`.
 
 ### Purpose
 
