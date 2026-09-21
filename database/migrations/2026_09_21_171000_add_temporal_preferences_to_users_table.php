@@ -9,6 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table): void {
+            if (! Schema::hasColumn('users', 'timezone')) {
+                $table->string('timezone', 64)->nullable()->after('locale');
+            }
+
             if (! Schema::hasColumn('users', 'timezone_mode')) {
                 $table->string('timezone_mode', 16)->default('auto')->after('timezone');
             }
@@ -28,6 +32,10 @@ return new class extends Migration
 
             if (Schema::hasColumn('users', 'timezone_mode')) {
                 $table->dropColumn('timezone_mode');
+            }
+
+            if (Schema::hasColumn('users', 'timezone')) {
+                $table->dropColumn('timezone');
             }
         });
     }
