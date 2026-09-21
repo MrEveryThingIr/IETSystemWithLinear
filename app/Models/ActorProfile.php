@@ -75,6 +75,12 @@ class ActorProfile extends Model
         return $this->hasMany(ActorProfileIntent::class);
     }
 
+    /** @return HasMany<ActorProfileDisclosureGrant, $this> */
+    public function disclosureGrants(): HasMany
+    {
+        return $this->hasMany(ActorProfileDisclosureGrant::class, 'actor_profile_id');
+    }
+
     /** @return BelongsTo<ActorProfileImage, $this> */
     public function displayImage(): BelongsTo
     {
