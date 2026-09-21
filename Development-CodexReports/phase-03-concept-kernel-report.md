@@ -2,13 +2,11 @@
 
 ## Status
 
-Phase 3 is active on `feat/phase-03-concept-kernel`.
+Phase 3 is complete on `feat/phase-03-concept-kernel`.
 
 - 3A — schema and authority contract: **complete and owner-local validated**.
 - 3B — domain behavior: **complete and owner-local validated**.
-- 3C — publication evidence and final acceptance proof: **implemented and remote-CI validated; owner-local final validation pending**.
-
-Phase 3 is not complete until the final owner-local/browser gate passes.
+- 3C — publication evidence and final acceptance proof: **complete and owner-local validated**.
 
 ## Starting point
 
@@ -193,16 +191,19 @@ After final synchronization the browser should show the same stable product UI:
 
 The Phase 3 effect is architectural: Content and future Profile/Context interfaces can now safely consume the same semantic kernel. User-visible Profile/Concept selection/sharing experiences begin in Phase 4 and later focused UX phases.
 
-## Remaining Phase 3 work
+## Final owner-local closure evidence
 
-Only the owner-local final gate remains:
+The owner synchronized final head `bf391ee` and reported:
 
-1. synchronize the final 3C head;
-2. run focused Concept domain + publication-evidence tests;
-3. run full PHPUnit, PHPStan, Pint and Vite build;
-4. verify migrations remain current and working tree clean;
-5. browser-smoke `/up`, login, one Group page and one published Content page;
-6. commit the final closure documentation marking Phase 4 next.
+- focused Concept/publication suite: **16 passed / 118 assertions**;
+- full PHPUnit: **292 passed / 1493 assertions**;
+- PHPStan: **no errors**;
+- Pint over Phase 3 changes: **55 files passed**;
+- Vite production build: passed;
+- migrations: nothing pending; all Phase 3 migrations ran;
+- working tree: clean.
+
+Phase 3 intentionally added no Concept administration UI.
 
 ## Explicitly deferred
 
@@ -222,4 +223,4 @@ Phase 3 still does not implement:
 
 ## Next gate
 
-Synchronize the owner-local checkout to the final 3C documentation head and complete the final local/browser gate. If green, close Phase 3 and activate Phase 4 — Actor/Party and progressive Profile.
+Begin Phase 4 — Actor/Party and progressive Profile from this accepted Phase 3 closure.
