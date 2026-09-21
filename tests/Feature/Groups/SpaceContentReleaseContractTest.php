@@ -45,7 +45,7 @@ class SpaceContentReleaseContractTest extends TestCase
         $this->assertTrue(Str::isUuid($content->uuid));
         $this->assertTrue(Str::isUuid($revision->uuid));
         $this->assertSame(SpaceContentRevision::EVIDENCE_SEALED, $revision->evidence_status);
-        $this->assertSame(2, $revision->manifest_version);
+        $this->assertSame(3, $revision->manifest_version);
         $this->assertSame(1, $revision->canonicalization_version);
         $this->assertSame('sha256', $revision->manifest_algorithm);
         $this->assertIsString($revision->canonical_manifest);
