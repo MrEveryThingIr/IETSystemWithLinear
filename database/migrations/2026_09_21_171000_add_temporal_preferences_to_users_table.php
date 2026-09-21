@@ -25,18 +25,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table): void {
-            if (Schema::hasColumn('users', 'calendar')) {
-                $table->dropColumn('calendar');
-            }
+        $columns = [];
 
-            if (Schema::hasColumn('users', 'timezone_mode')) {
-                $table->dropColumn('timezone_mode');
-            }
+        if (Schema::hasColumn('users', 'calendar')) {
+            $columns[] = 'calendar';
+        }
 
-            if (Schema::hasColumn('users', 'timezone')) {
-                $table->dropColumn('timezone');
-            }
-        });
+        if (Schema::hasColumn('users', 'timezone_mode')) {
+            $columns[] = 'timezone_mode';
+        }
+
+        if ($columns !== []) {
+            Schema::table('users', function (Blueprint $table) use ($columns): void {
+                $table->dropColumn($columns);
+            });
+        }
     }
 };
