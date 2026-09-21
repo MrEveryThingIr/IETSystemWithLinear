@@ -26,9 +26,17 @@ The Profile should become progressively useful over time rather than turning reg
 
 ## Milestones
 
-### 4A — professional identity + profile media foundation
+### 4A — professional identity + profile media foundation — complete
 
-Implemented remotely; owner-local gate pending.
+Owner-local validation passed on `486e877`:
+
+- Profile migrations ran successfully;
+- focused Profile foundation: 6 passed / 35 assertions;
+- full PHPUnit: 298 passed / 1528 assertions;
+- PHPStan: no errors;
+- Pint: 29 Phase 4A PHP files passed;
+- Vite production build: passed;
+- working tree: clean.
 
 Includes:
 
@@ -57,21 +65,60 @@ Includes:
 - cross-database migration rollback behavior;
 - focused tests for privacy/media/ownership.
 
-### 4B — structured facts + Concept integration
+### 4B — semantic Profile + recurring Needs/Offers — active
 
-Next after 4A owner acceptance.
+4B deliberately uses concrete Profile semantics instead of introducing a speculative universal key/value fact engine.
 
-Planned:
+Implemented direction:
 
-- Profile fact model for non-semantic structured attributes that do not belong in User;
 - Concept-backed skills;
 - Concept-backed interests;
 - Concept-backed learning goals;
-- Concept-backed needs/offers where appropriate to Profile scope;
-- per-fact/assertion visibility;
-- professional Profile sections;
-- edit/search/select UX backed by Phase 3 Concept identity;
-- no duplicate skill/category tables.
+- Actor-scoped personal Concept vocabulary as fallback when no curated platform Concept matches;
+- reusable platform Concepts are preferred when available;
+- instance-level Profile Need and Offer declarations linked to canonical Concepts;
+- multiple distinct Needs/Offers may reference the same Concept;
+- one-time, ongoing, daily, weekly and monthly declaration cadence;
+- recurrence interval;
+- weekday/month-day schedule constraints;
+- timezone;
+- optional time window;
+- quantity + unit;
+- location;
+- origin → destination route;
+- optional round trip with return-day offset;
+- item-level visibility;
+- active / paused / closed lifecycle;
+- closed declarations remain historical and cannot be reopened;
+- active Need/Offer declarations synchronize coarse Actor `needs` / `offers` Concept assertions;
+- Profile UI and public rendering remain purpose-specific rather than exposing generic assertion tables.
+
+#### Recurrence boundary
+
+A recurring Profile declaration is a **cadence of current intent**, not a Planner schedule and not a generated set of future records.
+
+Example:
+
+~~~text
+Need: Transportation
+Route: A → B
+Schedule: every Saturday 08:00–10:00
+Round trip: return after 1 day
+~~~
+
+This is sufficient Profile evidence for future discovery/matching.
+
+It does **not** create:
+
+- Planner Occurrences;
+- reminders;
+- route matches;
+- proposals;
+- agreements;
+- commitments;
+- fulfillment records.
+
+Phase 11 Planner remains authoritative for materialized Occurrences. Phase 13 remains authoritative for full Need/Offer matching. Phase 14 remains authoritative for negotiated obligations.
 
 ### 4C — sharing, completeness and Phase 4 closure
 
