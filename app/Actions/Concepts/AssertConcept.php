@@ -16,6 +16,7 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class AssertConcept
@@ -50,10 +51,6 @@ class AssertConcept
             'Concept assertion validity end must be after its start.',
         );
 
-        if ($subject instanceof SpaceContentRevision) {
-            abort_if($subject->hasVerifiableManifest(), 409, 'Published revision-bound Concept assertions are immutable evidence.');
-        }
-
         if ($scheme instanceof ConceptScheme) {
             abort_unless(
                 ConceptSchemeMembership::query()
@@ -65,6 +62,89 @@ class AssertConcept
             );
         }
 
+        $visibility ??= $subject instanceof Actor
+            ? ConceptAssertionVisibility::Private
+            : ConceptAssertionVisibility::Inherited;
+
+        if ($subject instanceof SpaceContentRevision) {
+            return DB::transaction(function () use (
+                $user,
+                $subject,
+                $subjectType,
+                $concept,
+                $predicate,
+                $scheme,
+                $source,
+                $visibility,
+                $weight,
+                $confidence,
+                $validFrom,
+                $validUntil,
+                $metadata,
+            ): ConceptAssertion {
+                $lockedRevision = SpaceContentRevision::query()
+                    ->lockForUpdate()
+                    ->findOrFail($subject->id);
+
+                abort_if(
+                    $lockedRevision->hasVerifiableManifest(),
+                    409,
+                    'Published revision-bound Concept assertions are immutable evidence.',
+                );
+
+                return $this->persist(
+                    $user,
+                    $lockedRevision,
+                    $subjectType,
+                    $concept,
+                    $predicate,
+                    $scheme,
+                    $source,
+                    $visibility,
+                    $weight,
+                    $confidence,
+                    $validFrom,
+                    $validUntil,
+                    $metadata,
+                );
+            }, 3);
+        }
+
+        return $this->persist(
+            $user,
+            $subject,
+            $subjectType,
+            $concept,
+            $predicate,
+            $scheme,
+            $source,
+            $visibility,
+            $weight,
+            $confidence,
+            $validFrom,
+            $validUntil,
+            $metadata,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function persist(
+        User $user,
+        Model $subject,
+        ConceptAssertionSubject $subjectType,
+        Concept $concept,
+        ConceptAssertionPredicate $predicate,
+        ?ConceptScheme $scheme,
+        ConceptAssertionSource $source,
+        ConceptAssertionVisibility $visibility,
+        ?float $weight,
+        ?float $confidence,
+        ?Carbon $validFrom,
+        ?Carbon $validUntil,
+        array $metadata,
+    ): ConceptAssertion {
         $existing = ConceptAssertion::query()
             ->where('subject_type', $subjectType->value)
             ->where('subject_id', $subject->getKey())
@@ -83,9 +163,6 @@ class AssertConcept
         }
 
         $creator = $this->creator($user);
-        $visibility ??= $subject instanceof Actor
-            ? ConceptAssertionVisibility::Private
-            : ConceptAssertionVisibility::Inherited;
 
         return ConceptAssertion::query()->create([
             'subject_type' => $subjectType,
