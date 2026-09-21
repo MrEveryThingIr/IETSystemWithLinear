@@ -71,7 +71,7 @@ class Concept extends Model
 
     public function canonical(): self
     {
-        $current = $this;
+        $current = self::query()->findOrFail($this->getKey());
         $visited = [];
 
         while ($current->status === ConceptStatus::Merged) {
