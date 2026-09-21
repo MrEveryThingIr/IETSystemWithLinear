@@ -167,7 +167,7 @@ class SpaceContentCompositionPresentationTest extends TestCase
         $content = app(PublishSpaceContent::class)->execute($content, $author->user);
         $published = $content->activeRevisionRecord();
         $this->assertInstanceOf(SpaceContentRevision::class, $published);
-        $this->assertSame(2, $published->manifest_version);
+        $this->assertSame(3, $published->manifest_version);
         $this->assertIsString($published->canonical_manifest);
 
         $manifest = json_decode($published->canonical_manifest, true, flags: JSON_THROW_ON_ERROR);
