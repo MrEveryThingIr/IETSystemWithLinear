@@ -124,8 +124,8 @@ class Asset extends Model
         });
 
         static::deleting(function (self $asset): void {
-            if ($asset->revisions()->exists() || $asset->annotations()->exists()) {
-                throw new LogicException('Referenced Assets are preserved with Content and interaction history.');
+            if ($asset->revisions()->exists() || $asset->annotations()->exists() || $asset->profileImages()->exists()) {
+                throw new LogicException('Referenced Assets are preserved with Content, Profile, and interaction history.');
             }
         });
     }
@@ -177,6 +177,12 @@ class Asset extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'uploaded_by_actor_id');
+    }
+
+    /** @return HasMany<ActorProfileImage, $this> */
+    public function profileImages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ActorProfileImage::class);
     }
 
     /** @return BelongsToMany<SpaceContentRevision, $this> */
