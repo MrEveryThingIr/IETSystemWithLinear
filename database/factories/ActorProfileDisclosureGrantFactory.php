@@ -15,10 +15,18 @@ class ActorProfileDisclosureGrantFactory extends Factory
         return [
             'actor_profile_id' => ActorProfile::factory(),
             'grantee_actor_id' => Actor::factory(),
-            'created_by_actor_id' => Actor::factory(),
             'purpose' => fake()->sentence(4),
             'expires_at' => now()->addDays(30),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterMaking(function (ActorProfileDisclosureGrant $grant): void {
+            $profile = ActorProfile::query()->findOrFail($grant->getAttribute('actor_profile_id'));
+
+            $grant->setAttribute('created_by_actor_id', $profile->actor_id);
+        });
     }
 
     public function revoked(): static

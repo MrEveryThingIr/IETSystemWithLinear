@@ -21,6 +21,7 @@ class ActorProfileDisclosureGrantPolicy
             || $current->status !== 'active'
             || $current->email_verified_at === null
             || $current->actor === null
+            || $current->actor->status !== 'active'
             || (int) $current->actor->id !== (int) $grant->grantee_actor_id) {
             return false;
         }

@@ -23,6 +23,23 @@ class ActorProfileDisclosureGrant extends Model
     {
         static::creating(function (self $grant): void {
             $grant->uuid ??= (string) Str::uuid();
+
+            $profileId = $grant->getAttribute('actor_profile_id');
+            $granteeActorId = $grant->getAttribute('grantee_actor_id');
+            $creatorActorId = $grant->getAttribute('created_by_actor_id');
+            $profile = ActorProfile::query()->find($profileId);
+
+            if (! $profile instanceof ActorProfile) {
+                throw new LogicException('Profile disclosure requires an existing Actor Profile.');
+            }
+
+            if ((int) $profile->actor_id !== (int) $creatorActorId) {
+                throw new LogicException('Profile disclosure provenance must belong to the Profile owner.');
+            }
+
+            if ((int) $profile->actor_id === (int) $granteeActorId) {
+                throw new LogicException('A Profile disclosure must target another Actor.');
+            }
         });
 
         static::updating(function (self $grant): void {

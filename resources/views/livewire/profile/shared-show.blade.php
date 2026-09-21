@@ -2,7 +2,6 @@
     <x-app.page-header :title="__('ui.profile_sharing.shared_title')" :description="__('ui.profile_sharing.shared_help')" />
 
     <div class="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 class="text-xl font-semibold">{{ $grant->profile->display_name ?: $grant->profile->actor->user?->username ?: __('ui.profile_sharing.profile_owner') }}</h2>
         @if ($grant->purpose)
             <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile_sharing.purpose_label', ['purpose' => $grant->purpose]) }}</p>
         @endif

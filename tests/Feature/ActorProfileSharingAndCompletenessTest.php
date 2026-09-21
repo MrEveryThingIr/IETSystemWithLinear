@@ -131,6 +131,57 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
             ->assertSee('Private mentoring offer')
             ->assertDontSee('This must stay unshared.')
             ->assertDontSee($owner->user->email);
+
+        app(SetActorProfileIntentStatus::class)->execute(
+            $owner->user,
+            $intent,
+            ProfileIntentStatus::Closed,
+        );
+
+        $this->actingAs($recipient->user)
+            ->get(route('profiles.shares.show', $grant))
+            ->assertOk()
+            ->assertSee('Laravel')
+            ->assertDontSee('Private mentoring offer');
+    }
+
+    public function test_unselected_identity_fields_do_not_leak_through_shared_view_chrome(): void
+    {
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+        $profile = app(UpdateActorProfile::class)->execute($owner->user, $profile, [
+            'display_name' => 'Do Not Leak This Name',
+            'headline' => null,
+            'bio' => null,
+            'location_text' => null,
+            'website_url' => null,
+            'visibility' => ProfileVisibility::Private->value,
+        ]);
+
+        $assertion = app(AddProfileConceptAssertion::class)->execute(
+            $owner->user,
+            $profile,
+            'Selective Skill',
+            ConceptAssertionPredicate::HasSkill,
+            ConceptAssertionVisibility::Private,
+        );
+
+        $recipient = Actor::factory()->create();
+        $recipientProfile = app(EnsureActorProfile::class)->execute($recipient->user);
+        $grant = app(CreateProfileDisclosureGrant::class)->execute(
+            $owner->user,
+            $profile,
+            $recipientProfile,
+            ['assertion:'.$assertion->uuid],
+        );
+
+        $this->actingAs($recipient->user)
+            ->get(route('profiles.shares.show', $grant))
+            ->assertOk()
+            ->assertSee('Selective Skill')
+            ->assertDontSee('Do Not Leak This Name')
+            ->assertDontSee($owner->user->username)
+            ->assertDontSee($owner->user->email);
     }
 
     public function test_foreign_or_non_shareable_items_cannot_be_smuggled_into_a_grant(): void
@@ -199,6 +250,10 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
         $outsider = Actor::factory()->create();
         $this->actingAs($outsider->user)->get(route('profiles.shares.show', $grant))->assertForbidden();
         $this->actingAs($recipient->user)->get(route('profiles.shares.show', $grant))->assertOk();
+
+        $recipient->forceFill(['status' => 'archived'])->save();
+        $this->actingAs($recipient->user)->get(route('profiles.shares.show', $grant))->assertForbidden();
+        $recipient->forceFill(['status' => 'active'])->save();
 
         app(RevokeProfileDisclosureGrant::class)->execute($owner->user, $grant);
 
