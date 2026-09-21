@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -180,7 +181,7 @@ class Asset extends Model
     }
 
     /** @return HasMany<ActorProfileImage, $this> */
-    public function profileImages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function profileImages(): HasMany
     {
         return $this->hasMany(ActorProfileImage::class);
     }
