@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\CalendarSystem;
 use App\PlatformCapability;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['username', 'email', 'locale', 'timezone', 'password'])]
+#[Fillable(['username', 'email', 'locale', 'timezone', 'calendar', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail
 {
@@ -30,6 +31,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     {
         return [
             'email_verified_at' => 'datetime',
+            'calendar' => CalendarSystem::class,
             'password' => 'hashed',
         ];
     }
