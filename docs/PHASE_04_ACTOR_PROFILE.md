@@ -65,7 +65,7 @@ Includes:
 - cross-database migration rollback behavior;
 - focused tests for privacy/media/ownership.
 
-### 4B — semantic Profile + recurring Needs/Offers — implementation complete; 4B.1 temporal hardening remote-green; renewed owner-local/browser acceptance pending
+### 4B — semantic Profile + recurring Needs/Offers — complete and owner-local accepted
 
 4B deliberately uses concrete Profile semantics instead of introducing a speculative universal key/value fact engine.
 
@@ -209,7 +209,7 @@ Focused regression coverage proves:
 - empty optional `starts_on`, `ends_on`, time-window, quantity and recurrence fields persist as `NULL`;
 - a Persian Profile emits Persian-calendar picker metadata.
 
-Because 4B.1 adds a migration and visible temporal UI, the earlier local 4B technical acceptance must be refreshed once on this final temporal candidate before 4B can close.
+4B.1 was refreshed and accepted owner-locally on final head `ea52eef97184aa3b06bc8946c45c513dd2586baf` after synchronization.
 
 #### 4B acceptance proof
 
@@ -239,7 +239,7 @@ Owner-local technical evidence on `604bbb2`:
 - Vite production build: passed;
 - working tree: clean.
 
-The only remaining 4B acceptance evidence is the human browser smoke below.
+Final refreshed owner-local acceptance on `ea52eef` supersedes the earlier pending gate.
 
 Final remote CI proof before owner-local validation:
 
@@ -256,6 +256,8 @@ Final remote CI proof before owner-local validation:
 Final hardening also proves that 4B-generated coarse Actor `needs` / `offers` summaries are provenance-owned by the Profile-intent subsystem. An independently/manual-created Actor assertion is never silently changed or deleted when a Profile declaration is paused or closed.
 
 ### 4C — sharing, completeness and Phase 4 closure
+
+**Status: active after accepted 4B/4B.1 head `ea52eef`.**
 
 Planned:
 
@@ -315,4 +317,18 @@ Planned:
 
 ## Phase 4 exit gate
 
-Phase 4 is complete only after 4A, 4B and 4C are all accepted.
+Phase 4 is complete only after 4A, 4B and 4C are all accepted. 4B/4B.1 is accepted; 4C is the only remaining milestone.
+
+
+## Final 4B/4B.1 owner-local closure evidence
+
+Accepted on `ea52eef97184aa3b06bc8946c45c513dd2586baf`:
+
+- focused semantic/progressive/temporal suite: **16 passed / 85 assertions**;
+- full PHPUnit: **314 passed / 1613 assertions**;
+- PHPStan: **no errors**;
+- Pint dirty-file gate: **passed**;
+- Vite production build: **passed**;
+- working tree: **clean**.
+
+This closes 4B and 4B.1. Phase 4C begins from this exact accepted baseline.
