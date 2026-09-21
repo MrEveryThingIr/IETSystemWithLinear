@@ -126,6 +126,11 @@ return [
             'preview_loading' => 'Loading local date and time…',
             'timezone' => 'Timezone',
             'timezone_help' => 'Use an IANA timezone such as America/Toronto or Asia/Tehran. Your device can suggest this automatically.',
+            'timezone_mode' => 'Timezone behavior',
+            'timezone_modes' => [
+                'auto' => 'Automatic — follow this device',
+                'fixed' => 'Fixed — keep the selected timezone',
+            ],
             'use_device_timezone' => 'Use device timezone',
             'calendar' => 'Calendar',
             'calendar_help' => 'Auto follows the default calendar for :language. You can override it without changing stored dates.',
