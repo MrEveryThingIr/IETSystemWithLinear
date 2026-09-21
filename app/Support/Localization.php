@@ -44,21 +44,19 @@ class Localization
         $code = $locale ?? app()->getLocale();
         $intl = self::supported()[$code]['intl_locale'] ?? str_replace('_', '-', $code);
 
-        return is_string($intl) && $intl !== '' ? $intl : 'en';
+        return $intl !== '' ? $intl : 'en';
     }
 
     public static function defaultCalendar(?string $locale = null): string
     {
         $calendar = self::supported()[$locale ?? app()->getLocale()]['default_calendar'] ?? 'gregory';
 
-        return is_string($calendar) && $calendar !== '' ? $calendar : 'gregory';
+        return $calendar !== '' ? $calendar : 'gregory';
     }
 
     public static function firstDayOfWeek(?string $locale = null): int
     {
         $day = self::supported()[$locale ?? app()->getLocale()]['first_day_of_week'] ?? 1;
-        $day = is_numeric($day) ? (int) $day : 1;
-
         return min(7, max(1, $day));
     }
 }
