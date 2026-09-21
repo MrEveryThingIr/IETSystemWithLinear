@@ -181,6 +181,24 @@ Context answers "within which bounded environment does this collaboration/artifa
 
 A Group may own several Contexts/Spaces.
 
+### Context-scoped collaboration
+
+Collaboration capabilities belong to Context authorization, not automatically to Group Membership. A Context may enable Conversation, Content, Submissions, annotations, Assets, requirements, or other capabilities according to its own policy.
+
+Admission is the canonical proof that Context access and Membership are different: an applicant may collaborate with authorized reviewers inside an Admission Context before any Membership exists, while remaining forbidden from ordinary Group participation.
+
+Target Admission collaboration may expose separate audiences:
+
+- shared candidate/reviewer Conversation;
+- reviewer-internal Conversation;
+- read-only system timeline generated from durable domain events.
+
+Audience checks are server-authoritative. Hiding a tab or message in the UI is never sufficient authorization. Attachments inherit explicit Context/audience authorization and use the reusable Asset/evidence model rather than message-owned public blobs.
+
+Conversation content is not domain authority. A message saying "approved", "I accept", or similar wording does not perform a transition. Approval, Agreement acceptance, Contract activation, Membership finalization, Commitments, and other authoritative facts require explicit authorized domain Actions and durable evidence.
+
+See `docs/ADMISSION_COLLABORATION_ARCHITECTURE.md`.
+
 ## 5. Group Governance
 
 Preserve current Group kernel:
@@ -422,9 +440,17 @@ Keep distinct layers:
 
 Rules/terms applying to participation in a Group.
 
+Group Agreement versions are immutable evidence. Discussion or annotations may motivate a change, but an active version is never edited in place. A change creates a new draft/proposed version, passes the authorized governance/approval path, and receives explicit activation/effective timing. The prior version remains historical evidence and is superseded only according to the lifecycle. `reacceptance_required` or equivalent policy determines whether existing members must accept the new exact version.
+
+One candidate/reviewer discussion must never silently rewrite Group-wide terms. It may propose a future Group Agreement version, but only authorized Group governance can approve/activate that version.
+
 ### Negotiated Agreement / Contract
 
-Terms between explicit parties, potentially with individual commitments.
+Terms between explicit parties, potentially with individual commitments. Candidate-specific negotiated terms belong here rather than in the Group Agreement merely because negotiation occurred during Admission.
+
+Each proposed Contract version binds exact immutable terms, eventually referencing a sealed Content revision. Required parties explicitly accept the exact version. Activation occurs only when the Contract's authorization/acceptance conditions are satisfied. Later amendments create new versions; previously accepted versions are never mutated.
+
+Conversation text is negotiation evidence, not acceptance evidence. A statement such as "I agree" in chat has no authoritative effect unless the Actor performs the explicit acceptance Action for the exact version.
 
 ### Commitment
 
@@ -441,7 +467,7 @@ A concrete obligation such as:
 
 Evidence that a Commitment was performed wholly or partly.
 
-Human-readable terms should eventually reference exact sealed Content revisions, while operational state remains in Agreement/Contract models.
+Human-readable terms should eventually reference exact sealed Content revisions, while operational state remains in Agreement/Contract models. Agreement/Contract acceptance evidence records exact version/content identity, party/Actor, acting User/authority, time, and integrity hash as appropriate.
 
 ## 13. Accounting Kernel
 
@@ -566,7 +592,9 @@ Rules:
 - every subscription/channel is authorized;
 - client reload reconstructs state from DB;
 - events are idempotently consumable where required;
-- broadcast failure never rolls back already-committed domain truth unless the domain explicitly requires synchronous delivery.
+- broadcast failure never rolls back already-committed domain truth unless the domain explicitly requires synchronous delivery;
+- message delivery never becomes a hidden domain transition mechanism: authoritative actions commit first, then durable events/system messages/broadcasts describe the result;
+- attachments and annotations remain authorized through their Context/audience after reconnect or reload, not merely through possession of a broadcast payload.
 
 ## 17. Blueprints and Domain Packs
 

@@ -16,7 +16,7 @@ IET is a configurable coordination platform for people and organizations to:
 - form communities, teams, projects, classes, businesses, and other contexts;
 - describe knowledge, capabilities, resources, needs, offers, and intentions;
 - publish structured, interactive, versioned Content;
-- communicate and collaborate around that Content;
+- communicate and collaborate inside governed Contexts and around Content, submissions, evidence, negotiations, and other domain work;
 - plan recurring and one-time activity;
 - submit applications, answers, evidence, reports, and evaluations;
 - negotiate agreements and create explicit commitments;
@@ -65,7 +65,8 @@ The design goal is not "everything is one database object." The design goal is:
 | Group | A governed collaboration/community boundary with Memberships, contextual roles, invitations, admissions, agreements, and Spaces. |
 | Membership | Participation truth in a Group. It is distinct from authorization. |
 | Role / Permission | Contextual authorization. Group authority never grants platform authority or authority in another Group. |
-| Context | A bounded collaboration/visibility environment. Group Space is the first implementation; future contexts include Personal, Admission, Negotiation, Contract, and direct collaboration. |
+| Context | A bounded collaboration/visibility environment. Group Space is the first implementation; future contexts include Personal, Admission, Negotiation, Contract, and direct collaboration. Context access is not the same thing as Group Membership. |
+| Conversation | A Context-scoped collaboration stream. Messages may document discussion and evidence, but they do not themselves approve, accept, finalize, create Membership, or establish obligations. |
 | Concept | Canonical semantic meaning such as Chess, Programming, Electrical Work, Tourism, or English. A Concept is not intrinsically a skill, need, interest, or tag; predicates provide that meaning. |
 | Concept Assertion | A typed relation from a subject to a Concept, e.g. Actor has_skill Chess, Content teaches Chess, or Group focuses_on Chess. |
 | Content | The universal human-facing artifact layer: authored information that can be structured, revised, styled, published, related, annotated, and interacted with. |
@@ -107,6 +108,10 @@ The design goal is not "everything is one database object." The design goal is:
 18. Production readiness includes operations, security, privacy, observability, backups, accessibility, performance, and recovery—not only feature completeness.
 19. No roadmap phase begins merely because it is interesting. Its dependency and prior phase exit gates must be satisfied.
 20. No AI agent may silently change these boundaries.
+21. Context access may exist without Group Membership only through an explicit context authorization contract; Admission Context is the canonical pre-membership example.
+22. Conversation is collaboration, not authority. Approvals, Agreement acceptances, Membership finalization, Contract activation, Commitments, and comparable domain truth require explicit authorized domain actions and durable evidence.
+23. Group-wide Agreements and party-specific negotiated Agreements/Contracts remain distinct. A candidate discussion must never silently rewrite the rules for every Group member.
+24. Effective terms are versioned and immutable. Changes create new draft/proposed versions with explicit approval, activation/effective dates, supersession, and reacceptance where required; historical accepted versions are never edited in place.
 
 ## "Generic inside, specific outside"
 
@@ -138,6 +143,7 @@ Examples:
 | Planner | Personal chess-study habit | Construction worker shift |
 | Need / Offer | Construction labor | Tourism/restaurant service |
 | Workflow | Admission | Content/application review |
+| Context-scoped Conversation | GroupSpace collaboration | Admission candidate/reviewer collaboration |
 | Ledger | Personal expense | Payroll/payable |
 | Group Blueprint | Chess learning group | Project/work group |
 

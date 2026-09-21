@@ -23,7 +23,19 @@ Starting implementation baseline:
   - Pint clean;
   - Vite build clean.
 
-This documentation update becomes the new architecture baseline once committed.
+The Phase 0 documentation synchronization was subsequently committed at `dee86677cdfd95b6b2887843cba699b21b07f6f0`, which became the Phase 1 starting HEAD.
+
+Phase 1 closure validation reported by the human owner on 2026-09-21:
+
+- focused onboarding/hardening gate: 41 tests / 216 assertions;
+- full suite: 282 tests / 1437 assertions;
+- PHPStan: no errors;
+- Pint: passed;
+- Vite production build: passed;
+- `git diff --check`: clean;
+- browser onboarding/hardening behavior accepted by the human owner.
+
+The next implementation phase after the Phase 1 closure commit is Phase 2.
 
 ## Global phase rules
 
@@ -105,7 +117,9 @@ Make the repository—not chat history—the durable source of truth.
 
 ## Phase 1 — Production invitation, registration and admission journey
 
-Detailed contract: `docs/PHASE_01_INVITATION_ONBOARDING.md`.
+**Status: complete at the Phase 1 closure commit.**
+
+Detailed contract and completion evidence: `docs/PHASE_01_INVITATION_ONBOARDING.md` and `Development-CodexReports/phase-01-invitation-onboarding-report.md`.
 
 ### Purpose
 
@@ -135,6 +149,8 @@ Invitation
 - mail/link handling is documented for production.
 
 ## Phase 2 — Delivery and operations baseline
+
+**Status: next.** Detailed contract: `docs/PHASE_02_DELIVERY_OPERATIONS.md`.
 
 ### Purpose
 
@@ -243,6 +259,7 @@ Remove the architectural requirement that all Content belong to a GroupSpace.
 - Personal Context;
 - Admission Context;
 - context authorization contract;
+- context-scoped collaboration authorization seam, proving that an Admission candidate/reviewer can collaborate before Membership without receiving ordinary Group access;
 - migration/compatibility layer for current SpaceContent;
 - no destructive mass rename until migration is proven.
 
@@ -299,7 +316,8 @@ Support structured interactions that annotations cannot represent correctly.
 - versioned InteractionDefinition;
 - Submission;
 - Response;
-- attachments;
+- attachments/evidence through authorized reusable Assets rather than public message-owned blobs;
+- requirement/evidence response patterns usable by Admission v2;
 - draft/submit/withdraw lifecycle;
 - reviewer/evaluator authorization;
 - Evaluation/feedback;
@@ -328,13 +346,19 @@ Upgrade the current Admission flow to use Profile requirements, Admission Contex
 - admission-specific questionnaire;
 - document/evidence requirements;
 - agreement requirements;
-- reviewer clarification;
+- shared candidate/reviewer Conversation inside Admission Context;
+- optional reviewer-internal Conversation with independent audience authorization;
+- read-only system timeline generated from durable Admission/domain events;
+- reviewer clarification/evidence requests expressed through conversation plus structured requirements rather than multiplying lifecycle states for every question;
+- explicit authoritative actions for submission, review, approval/rejection, exact Agreement-version acceptance, and Membership finalization;
+- proposed Group Agreement revision references where discussion reveals a Group-wide rule change, without mutating the active version;
+- candidate-specific proposed terms routed toward the future negotiated Agreement/Contract model rather than Group-wide Agreement mutation;
 - initial role/context provisioning policy;
 - audit trail.
 
 ### Exit gate
 
-Invitation onboarding can represent simple instant-ish membership and reviewed application flows without granting premature Membership.
+Invitation onboarding can represent simple instant-ish membership and reviewed application flows without granting premature Membership; a reviewed application can carry persistent candidate/reviewer collaboration and structured evidence while all authoritative state remains explicit and auditable.
 
 ## Phase 9 — Real-time collaboration infrastructure
 
@@ -349,7 +373,8 @@ Make collaborative experiences live without making WebSockets authoritative.
 - queue-backed broadcasting;
 - authorized channels;
 - notifications;
-- chat/reply live delivery;
+- GroupSpace and Admission-context chat/reply live delivery over the same authorized real-time infrastructure;
+- system conversation entries derived from committed domain events rather than messages triggering hidden state changes;
 - annotation/reaction live delivery;
 - submission/workflow event delivery;
 - reconnect/reload correctness;
@@ -481,9 +506,11 @@ Turn matched intent into explicit obligations and evidence.
 
 - Proposal;
 - Negotiation Context;
-- negotiated Agreement/Contract;
-- party model;
+- negotiated Agreement/Contract distinct from Group Agreement;
+- party model and explicit required-party acceptance;
+- immutable proposed/accepted Contract versions with activation/supersession semantics;
 - versioned terms referencing sealed Content;
+- negotiation Conversation as collaborative evidence, with explicit domain Actions as the only source of acceptance/activation truth;
 - Commitment;
 - partial/full Fulfillment;
 - evidence;

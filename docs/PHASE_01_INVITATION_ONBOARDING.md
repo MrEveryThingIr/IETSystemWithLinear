@@ -2,7 +2,9 @@
 
 ## Status
 
-Ready for implementation after Phase 0 documentation is synchronized.
+Complete at the Phase 1 closure commit (2026-09-21).
+
+Implementation and validation are complete. This document, the canonical state/roadmap updates, and `Development-CodexReports/phase-01-invitation-onboarding-report.md` are the durable closure evidence. Phase 2 is the next implementation phase after the closure commit/human gate.
 
 ## Objective
 
@@ -27,22 +29,25 @@ Before expanding into Concepts, Profile, Planner, Finance, or Blueprints, this e
 
 This phase intentionally improves the current architecture without waiting for the future AdmissionContext/Profile systems. Those later phases will extend rather than invalidate this journey.
 
-## Existing flow to preserve
+## Implemented flow to preserve
 
-Current semantics:
+Phase 1 semantics:
 
 ~~~text
 Invitation preview
 → authenticate/register
 → verify
+→ return to Invitation
+→ explicit Continue to admission
 → redeem invitation
 → create/reuse Admission
-→ accept required Group Agreement versions
+→ accept exact required Group Agreement versions
 → submit
-→ manager review
+→ manager review / clarification / resubmit
 → approve
 → finalize
 → Membership
+→ Group home
 ~~~
 
 Do not bypass Admission by directly creating Membership from a public invitation.
@@ -425,6 +430,20 @@ Use a fresh invitation and fresh email/user.
 - tests;
 - documentation/runbook for this path.
 
+## Recorded post-Phase-1 Admission evolution
+
+Phase 1 deliberately keeps the existing Admission lifecycle simple. The approved future direction is documented in `docs/ADMISSION_COLLABORATION_ARCHITECTURE.md` and does not reopen this phase.
+
+Key rules for future Admission v2:
+
+- pre-membership collaboration occurs inside an Admission Context, never by granting ordinary Group access;
+- candidate/reviewer Conversation replaces note-heavy human clarification where appropriate, while lifecycle states remain formal process state rather than chat state;
+- files/evidence use authorized reusable Asset/Submission capabilities;
+- chat wording never performs approval, Agreement acceptance, Membership finalization, Contract activation, or other authoritative transitions;
+- active Group Agreement versions remain immutable; discussion may create a new proposed/future version with explicit governance and effective timing;
+- candidate-specific negotiated terms belong to a negotiated Agreement/Contract between explicit parties, not to the Group-wide Agreement;
+- real-time broadcasting is transport after committed domain truth, not the source of truth.
+
 ## Explicitly excluded
 
 - Concept Kernel;
@@ -484,14 +503,23 @@ Stop and request human/architecture review if implementation requires:
 
 ## Exit gate
 
-Phase 1 is complete only when:
+Phase 1 completion evidence:
 
-- automated tests are green;
-- PHPStan/Pint/build are green;
-- the manual fresh-user invitation journey succeeds;
-- the owner can practically create/share/revoke invitations;
-- candidate and manager permissions remain isolated;
-- required Agreement evidence still blocks invalid finalization;
-- no known critical onboarding security defect remains;
-- the report is committed;
-- human owner accepts the browser experience.
+- automated tests: green — 282 tests / 1437 assertions;
+- focused onboarding/hardening gate: green — 41 tests / 216 assertions;
+- PHPStan: no errors;
+- Pint: passed;
+- Vite production build: passed;
+- `git diff --check`: clean;
+- fresh-user invitation/auth/verification/Admission journey and subsequent hardening behavior: accepted in browser by the human owner;
+- owner invitation create/copy/revoke/status UX: implemented and browser-checked;
+- candidate/manager/cross-Group isolation: implemented and regression-tested;
+- Admission alone does not grant Group access; finalized Membership does;
+- exact Agreement evidence blocks invalid submission/finalization;
+- invitation secrets remain hashed at rest and unavailable after the one-time creation-link presentation;
+- known unavailable invitation states are safe while unknown tokens remain non-disclosing;
+- invitation acceptance has dedicated rate limiting;
+- no Phase 2+ domain kernel or third-party service was pulled into Phase 1;
+- manual private-link invitation delivery is the accepted Phase 1 product path; production transactional-email operations are assigned to Phase 2.
+
+Closure requirement: commit this contract, the canonical state/roadmap updates, implementation report, runtime/test changes, and no temporary patch transport files. After that human closure commit/review, proceed to Phase 2 only.

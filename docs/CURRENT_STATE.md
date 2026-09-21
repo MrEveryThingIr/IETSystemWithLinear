@@ -2,18 +2,22 @@
 
 ## Snapshot
 
-Verified architecture baseline:
+Validated Phase 1 closure state:
 
 - Branch: `feat/group-spaces-communication`
-- Baseline commit before this documentation update: `f57ee430f96afcdb1ecc32f5b644fcb057dae6f4`
-- Local validation reported by the human owner:
-  - PHPUnit: 273 passed, 1386 assertions
-  - PHPStan: no errors
-  - Pint: passed
-  - Vite production build: passed
-  - working tree: clean
+- Original validated code baseline: `f57ee430f96afcdb1ecc32f5b644fcb057dae6f4`.
+- Canonical Phase 0 / Phase 1 starting HEAD: `dee86677cdfd95b6b2887843cba699b21b07f6f0`.
+- Phase 1 closure validation reported by the human owner on 2026-09-21:
+  - focused onboarding/hardening gate: 41 tests passed, 216 assertions;
+  - full PHPUnit suite: 282 passed, 1437 assertions;
+  - PHPStan: no errors;
+  - Pint: passed;
+  - Vite production build: passed;
+  - `git diff --check`: clean.
+- Human owner reports the implemented browser onboarding/hardening flows behave as intended.
+- Phase 1 introduced no migrations and no new third-party service.
 
-This document describes the implementation that exists at that baseline. It is deliberately separate from the target architecture.
+This document describes the implementation intended to be committed as the Phase 1 closure state. Target/future architecture remains separate in `docs/TARGET_ARCHITECTURE.md`.
 
 ## Established identity and platform foundation
 
@@ -83,21 +87,51 @@ Current invitation/admission path:
 Invitation preview
 → register/login if needed
 → verify email
-→ redeem invitation
-→ Admission
-→ accept required Agreement versions
-→ submit/review/approve
+→ return to the same invitation
+→ explicit Continue to admission
+→ redeem invitation and create/reuse Admission
+→ accept exact required Agreement versions
+→ submit / review / clarification / resubmit
+→ approve
 → finalize Membership
+→ Group home
 ~~~
 
-This backend foundation is useful and should be preserved.
+Phase 1 hardening now includes:
 
-Current limitation:
+- registration creates User + Actor only and does not consume/redeem the invitation before verification;
+- invitation-scoped login/verification returns to the invitation rather than a generic dashboard;
+- known expired/revoked/exhausted invitations show safe explanatory states while unknown tokens remain non-disclosing;
+- stale acceptance attempts revalidate current invitation state;
+- exact Agreement-version evidence is checked on candidate submission and again at finalization;
+- candidate/manager and cross-Group authorization isolation is explicitly tested;
+- an Admission alone grants no normal Group access; finalized Membership does;
+- practical invitation management includes one-time private-link copy, revocation, usage/status presentation, pagination, and exhausted status;
+- invitation acceptance has a dedicated named rate limiter;
+- new UI strings remain synchronized across supported locales.
 
-- the journey is technically functional but not yet a polished production onboarding experience;
-- Admission does not yet host a configurable onboarding questionnaire/profile requirements;
-- a pre-membership Admission Context does not yet exist;
-- invitation email delivery/notification and full operational UX still require production hardening.
+Current limitations / deliberate future work:
+
+- Admission does not yet host a configurable questionnaire, progressive Profile requirements, structured document/evidence requests, or a pre-membership Admission Context;
+- current clarification uses Admission lifecycle/events/notes rather than a persistent candidate-reviewer Conversation;
+- direct invitation email delivery remains a documented manual private-link product choice for Phase 1; operational transactional-email configuration belongs to Phase 2;
+- context-scoped Admission collaboration, structured submissions/evidence, live broadcasting, and negotiated Contracts belong to later roadmap phases and must not be retrofitted into Phase 1 ad hoc.
+
+## Admission collaboration direction
+
+The next Admission architecture must preserve the proven `Invitation → Admission → Membership` boundary while replacing note-heavy clarification UX with context-scoped collaboration when its dependencies exist.
+
+Recorded direction:
+
+- a pre-membership candidate collaborates through an `Admission` Context, not through ordinary Membership-gated GroupSpace access;
+- the shared candidate/reviewer Conversation, optional reviewer-internal Conversation, and read-only system timeline have explicit audiences;
+- messages, uploads, reactions, annotations, and human wording are collaborative records, not authoritative approvals or acceptances;
+- structured requirements/evidence use the Submission/Response/Asset capabilities when Phase 7 exists;
+- explicit domain actions remain authoritative for approval, exact Agreement-version acceptance, Contract activation, Membership finalization, and future Commitments;
+- Group Agreement changes create new immutable versions with explicit activation/effective dates; candidate-specific negotiated terms use a separate negotiated Agreement/Contract rather than mutating Group-wide rules;
+- real-time delivery later follows committed domain truth through outbox/queue/authorized broadcast and must reconstruct identically after reload.
+
+See `docs/ADMISSION_COLLABORATION_ARCHITECTURE.md`.
 
 ## Group Spaces
 
@@ -441,12 +475,12 @@ These are continuous roadmap requirements, not a final afterthought.
 
 ## Current highest-priority next milestone
 
-The next implementation milestone is not Concepts, Planner, Finance, or Group Blueprints.
+Phase 1 — Production Invitation + Registration + Admission Journey — has completed implementation and validation. Its durable evidence is in `docs/PHASE_01_INVITATION_ONBOARDING.md` and `Development-CodexReports/phase-01-invitation-onboarding-report.md`.
 
-It is:
+The next implementation milestone is:
 
-> Production Invitation + Registration + Admission Journey
+> Phase 2 — Delivery and Operations Baseline
 
-The goal is that a completely new person can receive one invitation link and complete the allowed onboarding path without developer assistance.
+Phase 2 establishes CI, deployment/runbook discipline, queues/scheduler operation, transactional email operations, monitoring/error visibility, backups/restore, failed-job handling, dependency/security updates, abuse controls, and production storage guidance before the platform expands into new domain kernels.
 
-The exact scope and gate are in `docs/PHASE_01_INVITATION_ONBOARDING.md`.
+The detailed contract is `docs/PHASE_02_DELIVERY_OPERATIONS.md`. Do not begin Phase 3 or pull Admission v2/real-time/negotiation work forward until Phase 2 reaches its exit gate.
