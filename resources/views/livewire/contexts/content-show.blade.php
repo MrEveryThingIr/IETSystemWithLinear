@@ -418,6 +418,24 @@
                     </section>
                 @endif
 
+                @if ($interactionDefinitions->isNotEmpty())
+                    <section class="space-y-4 border-t pt-7" style="border-color: var(--content-border)" id="structured-interactions">
+                        <div>
+                            <h2 class="text-xl {{ $headingClass }}">{{ __('structured_interactions.section_title') }}</h2>
+                            <p class="mt-1 text-sm" style="color: var(--content-muted)">{{ __('structured_interactions.section_help') }}</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            @foreach ($interactionDefinitions as $interactionDefinition)
+                                <livewire:interactions.submission-card
+                                    :definition="$interactionDefinition"
+                                    :key="'submission-card-'.$interactionDefinition->uuid"
+                                />
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
                 <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)" id="discussion">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
