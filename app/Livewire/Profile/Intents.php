@@ -115,6 +115,10 @@ class Intents extends Component
 
         $this->activeFacets[] = $facet;
         $this->activeFacets = array_values(array_unique($this->activeFacets));
+
+        if ($facet === 'importance' && $this->importancePercent === null) {
+            $this->importancePercent = '50';
+        }
     }
 
     public function selectConceptSuggestion(string $label): void
