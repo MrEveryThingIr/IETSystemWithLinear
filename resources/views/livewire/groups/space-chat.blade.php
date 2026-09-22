@@ -19,7 +19,7 @@
                 <div wire:key="space-message-{{ $chatMessage->id }}" class="space-y-1">
                     <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                         <flux:text class="font-semibold">
-                            {{ $chatMessage->author->user?->username ?? __('ui.common.unknown_account') }}
+                            <x-app.actor-identity :actor="$chatMessage->author" size="xs" />
                         </flux:text>
                         <flux:text class="text-xs text-zinc-500">
                             {{ $chatMessage->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}
@@ -27,7 +27,7 @@
                     </div>
                     @if ($chatMessage->replyTo)
                         <div class="rounded-lg border-s-2 border-zinc-400 bg-zinc-100 px-3 py-1 text-xs dark:bg-zinc-800">
-                            <span class="font-semibold">{{ $chatMessage->replyTo->author->user?->username ?? __('ui.common.unknown_account') }}</span>
+                            <x-app.actor-identity :actor="$chatMessage->replyTo->author" size="xs" />
                             <span class="line-clamp-2 whitespace-pre-wrap break-words">{{ $chatMessage->replyTo->body }}</span>
                         </div>
                     @endif
@@ -43,7 +43,7 @@
             @if ($replyToMessage)
                 <div class="flex items-start justify-between gap-3 rounded-lg border border-zinc-200 p-3 text-xs dark:border-zinc-700">
                     <div class="min-w-0">
-                        <div class="font-semibold">{{ __('ui.spaces.replying_to') }} {{ $replyToMessage->author->user?->username ?? __('ui.common.unknown_account') }}</div>
+                        <div class="flex flex-wrap items-center gap-2 font-semibold"><span>{{ __('ui.spaces.replying_to') }}</span><x-app.actor-identity :actor="$replyToMessage->author" size="xs" /></div>
                         <div class="line-clamp-2 whitespace-pre-wrap break-words">{{ $replyToMessage->body }}</div>
                     </div>
                     <button type="button" wire:click="cancelReply" class="shrink-0 underline underline-offset-2">{{ __('ui.spaces.cancel_reply') }}</button>
