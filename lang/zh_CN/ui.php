@@ -788,4 +788,5 @@ return [
         'create_from_definition_help' => '面向专家的上下文本地结构化 schema 路径。',
         'open' => '打开',
         'open_reader' => '打开阅读器',
-    ],];
+    ],
+];
