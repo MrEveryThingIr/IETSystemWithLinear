@@ -7,6 +7,7 @@ use App\Http\Controllers\AdmissionContextContentController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\ContentEvidenceReferenceController;
+use App\Http\Controllers\ContentRevisionController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
@@ -78,6 +79,8 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/contexts/{context}/contents/{content}/studio/blocks', ContextContentBlocks::class)->name('contexts.contents.blocks');
     Route::livewire('/contexts/{context}/contents/{content}/studio/appearance', ContextContentAppearance::class)->name('contexts.contents.appearance');
     Route::livewire('/contexts/{context}/contents/{content}/outline', ContextContentOutline::class)->name('contexts.contents.outline');
+    Route::get('/contexts/{context}/contents/{content}/revisions/{revision}', ContentRevisionController::class)
+        ->name('contexts.contents.revisions.show');
     Route::livewire('/contexts/{context}/contents/{content}', ContextContentShow::class)->name('contexts.contents.show');
     Route::get('/content-evidence/{reference}', ContentEvidenceReferenceController::class)->name('content-evidence.show');
     Route::livewire('/profile-shares/{grant}', SharedShow::class)->name('profiles.shares.show');

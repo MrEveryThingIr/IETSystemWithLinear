@@ -75,8 +75,13 @@
                     :label="__('interactions.anchor.entire_edition')"
                 />
             @endif
+            @if ($revision->hasVerifiableManifest())
+                <flux:button :href="route('contexts.contents.revisions.show', [$context, $content, $revision])" variant="ghost" size="sm">
+                    {{ __('reader.revision_permalink') }}
+                </flux:button>
+            @endif
             @if ($canEnterStudio)
-                @unless ($legacyEvidence || $viewingEvidenceReferenceUuid)
+                @unless ($legacyEvidence || $viewingEvidenceReferenceUuid || $viewingRevisionUuid)
                     <flux:button wire:click="createRevisionEvidence" variant="ghost" size="sm">
                         {{ __('ui.context_content.create_evidence_reference') }}
                     </flux:button>
@@ -94,6 +99,16 @@
                 <div class="font-medium">{{ __('ui.context_content.historical_evidence') }}</div>
                 <div class="mt-1 text-sm">{{ __('ui.context_content.historical_evidence_help') }}</div>
                 <div class="mt-2 break-all font-mono text-xs">{{ $viewingEvidenceReferenceUuid }}</div>
+            </flux:callout>
+        </div>
+    @endif
+
+    @if ($viewingRevisionUuid)
+        <div class="mx-auto w-full max-w-7xl">
+            <flux:callout variant="info">
+                <div class="font-medium">{{ __('reader.fixed_edition_title') }}</div>
+                <div class="mt-1 text-sm">{{ __('reader.fixed_edition_help') }}</div>
+                <div class="mt-2 break-all font-mono text-xs">{{ $viewingRevisionUuid }}</div>
             </flux:callout>
         </div>
     @endif

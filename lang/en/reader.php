@@ -12,6 +12,9 @@ return [
     'download' => 'Download',
     'legacy_title' => 'Legacy publication evidence',
     'legacy_help' => 'This older edition predates the current verifiable publication contract. Republish a new edition from Studio before sharing it as verified Content.',
+    'revision_permalink' => 'Edition permalink',
+    'fixed_edition_title' => 'Fixed published edition',
+    'fixed_edition_help' => 'You are viewing one exact sealed publication. Newer edits or publications do not change this edition.',
     'verified_edition' => 'Verified edition',
     'no_body' => 'This edition has no readable body fields.',
 ];

@@ -68,6 +68,11 @@ class SpaceContentRevision extends Model
         ];
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
     protected static function booted(): void
     {
         static::creating(function (self $revision): void {

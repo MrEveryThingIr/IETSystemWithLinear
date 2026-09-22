@@ -63,6 +63,8 @@ class ContentShow extends Component
 
     public ?string $viewingEvidenceReferenceUuid = null;
 
+    public ?string $viewingRevisionUuid = null;
+
     public string $commentBody = '';
 
     public ?string $replyingTo = null;
@@ -633,6 +635,7 @@ class ContentShow extends Component
             || Gate::forUser($user)->allows('revisions', $current);
         $legacyEvidence = ! $revision->hasVerifiableManifest();
         $canInteract = $this->viewingEvidenceReferenceUuid === null
+            && $this->viewingRevisionUuid === null
             && $current->active_revision_id !== null
             && (int) $current->active_revision_id === (int) $revision->id
             && Gate::forUser($user)->allows('interact', $current);
@@ -848,20 +851,39 @@ class ContentShow extends Component
             $evidenceUuid = is_string($queryValue) && $queryValue !== '' ? $queryValue : null;
         }
 
-        if ($evidenceUuid === null) {
+        if ($evidenceUuid !== null) {
+            $reference = ContentEvidenceReference::query()
+                ->where('uuid', $evidenceUuid)
+                ->where('context_id', $context->id)
+                ->where('space_content_id', $content->id)
+                ->firstOrFail();
+
+            $revision = $reference->revision()->firstOrFail();
+            abort_unless($revision->hasVerifiableManifest(), 404);
+
+            $this->viewingEvidenceReferenceUuid = $reference->uuid;
+            $this->viewingRevisionUuid = null;
+
+            return $revision;
+        }
+
+        $revisionUuid = $this->viewingRevisionUuid;
+        if ($revisionUuid === null) {
+            $queryValue = request()->query('revision');
+            $revisionUuid = is_string($queryValue) && $queryValue !== '' ? $queryValue : null;
+        }
+
+        if ($revisionUuid === null) {
             return null;
         }
 
-        $reference = ContentEvidenceReference::query()
-            ->where('uuid', $evidenceUuid)
-            ->where('context_id', $context->id)
-            ->where('space_content_id', $content->id)
+        $revision = $content->revisions()
+            ->where('uuid', $revisionUuid)
             ->firstOrFail();
-
-        $revision = $reference->revision()->firstOrFail();
         abort_unless($revision->hasVerifiableManifest(), 404);
 
-        $this->viewingEvidenceReferenceUuid = $reference->uuid;
+        $this->viewingRevisionUuid = $revision->uuid;
+        $this->viewingEvidenceReferenceUuid = null;
 
         return $revision;
     }
