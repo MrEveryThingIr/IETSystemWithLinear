@@ -12,7 +12,10 @@ use Illuminate\Support\Collection;
 
 class ContentBlueprintCatalog
 {
-    public function __construct(private readonly EnsureSystemContentBlueprints $ensureSystem) {}
+    public function __construct(
+        private readonly EnsureSystemContentBlueprints $ensureSystem,
+        private readonly ContentBlueprintAccess $access,
+    ) {}
 
     /** @return Collection<int, ContentBlueprint> */
     public function availableFor(User $user, Context $context, ?string $search = null): Collection
@@ -33,18 +36,8 @@ class ContentBlueprintCatalog
             ->get()
             ->filter(function (ContentBlueprint $blueprint) use ($current, $context, $needle): bool {
                 $version = $blueprint->activeVersion;
-                if (! $version instanceof ContentBlueprintVersion || ! $version->supportsContext($context->kind)) {
-                    return false;
-                }
-
-                $visible = match ($blueprint->scope) {
-                    ContentBlueprint::SCOPE_SYSTEM => true,
-                    ContentBlueprint::SCOPE_ACTOR => (int) $blueprint->owner_actor_id === (int) $current->actor->id,
-                    ContentBlueprint::SCOPE_CONTEXT => (int) $blueprint->context_id === (int) $context->id,
-                    default => false,
-                };
-
-                if (! $visible) {
+                if (! $version instanceof ContentBlueprintVersion
+                    || ! $this->access->view($current, $context, $version)) {
                     return false;
                 }
 
