@@ -217,7 +217,7 @@ Concept semantics are reusable by both Actor Profile and Content without duplica
 
 **Status: runtime implementation technically complete on `feat/phase-04-actor-profile`; final owner-local/browser acceptance pending.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 
-4A, 4B and 4B.1 are owner-local accepted. 4C selective disclosure/completeness is implemented and remote-CI green at `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db` with **320 tests / 1651 assertions**, PHPStan clean, Pint clean, production build green, operational smoke green and Composer audit clean.
+4A, 4B and 4B.1 are owner-local accepted. 4C selective disclosure/completeness is implemented and remote-CI green at `18a6212d340c5ce04b61ce20b4aef26d618b6fc7` with **322 tests / 1672 assertions**, PHPStan clean, Pint clean, production build green, operational smoke green and Composer audit clean. Final owner feedback also hardened the Profile page to a read-first/on-demand-editor presentation and corrected narrow-screen layout pressure points.
 
 Phase 5 is the next implementation phase **only after** the final Phase 4 owner-local/browser gate. Recurring Profile declarations remain current-intent cadence rather than Planner Occurrences (Phase 11); full Need/Offer matching remains Phase 13; selective Profile disclosure is live mutable access rather than immutable Contract evidence (Phase 14).
 

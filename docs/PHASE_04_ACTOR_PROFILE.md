@@ -6,7 +6,7 @@ Runtime implementation is technically complete on `feat/phase-04-actor-profile`.
 
 - 4A is owner-local accepted.
 - 4B and 4B.1 are owner-local accepted at `ea52eef97184aa3b06bc8946c45c513dd2586baf`.
-- 4C is remote-CI green at `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`.
+- 4C is remote-CI green at `18a6212d340c5ce04b61ce20b4aef26d618b6fc7`.
 - one final owner-local/browser acceptance gate remains before Phase 4 is formally closed and Phase 5 may begin.
 
 Accepted Phase 3 closure baseline: `b2e5dc0a8b7cfd33ff9dbcb6af4c6f6027c7948c`.
@@ -264,7 +264,7 @@ Final hardening also proves that 4B-generated coarse Actor `needs` / `offers` su
 
 ### 4C — sharing, completeness and Phase 4 closure
 
-**Status: implementation complete and remote-CI validated at `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`; owner-local/browser acceptance pending.**
+**Status: implementation complete and remote-CI validated at `18a6212d340c5ce04b61ce20b4aef26d618b6fc7`; owner-local/browser acceptance pending.**
 
 4C turns Profile into a safe upstream source for later Context, Admission, Planner, Matching and negotiated-Agreement work without pulling those later domains into Profile.
 
@@ -383,11 +383,11 @@ It proves:
 
 #### Final remote technical proof
 
-Runtime candidate: `02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`.
+Runtime candidate: `18a6212d340c5ce04b61ce20b4aef26d618b6fc7`.
 
-GitHub Actions run `35655910450` passed:
+GitHub Actions run `35695765946` passed after final owner-feedback UX hardening:
 
-- PHPUnit: **320 passed / 1651 assertions**;
+- PHPUnit: **322 passed / 1672 assertions**;
 - PHPStan: **no errors**;
 - Pint changed-file gate: **147 files passed**;
 - Vite production build: passed;
@@ -395,7 +395,9 @@ GitHub Actions run `35655910450` passed:
 - SQLite backup → restore smoke: passed;
 - Composer security audit: no vulnerability advisories.
 
-The Phase 4 runtime is frozen at this candidate unless the owner-local/browser gate exposes a defect.
+The owner-local/browser gate then exposed two presentation issues: the owner page was editor-first and some narrow mobile layouts were fragile. Final hardening changed the Profile owner experience to read-first with on-demand editors for identity/media/temporal preferences/semantics/Needs-Offers/selective sharing, stacked narrow-screen actions/controls, removed fixed-width mobile pressure points, and bounded/anchored the calendar popover.
+
+The Phase 4 runtime is frozen at this hardened candidate unless the refreshed owner-local/browser gate exposes another defect.
 
 #### Final owner-local/browser gate
 

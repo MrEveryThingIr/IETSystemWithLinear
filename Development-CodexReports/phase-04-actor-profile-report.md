@@ -499,11 +499,11 @@ Focused suite:
 
 Final runtime candidate:
 
-`02b3d97a6b06dbf2f07a603fe1ff77af1d5037db`
+`18a6212d340c5ce04b61ce20b4aef26d618b6fc7`
 
-GitHub Actions run `35655910450`:
+GitHub Actions run `35695765946` after final Profile presentation hardening:
 
-- full PHPUnit: **320 passed / 1651 assertions**;
+- full PHPUnit: **322 passed / 1672 assertions**;
 - PHPStan: **no errors**;
 - Pint changed-file gate: **147 files passed**;
 - Vite production build: passed;
@@ -511,7 +511,9 @@ GitHub Actions run `35655910450`:
 - SQLite backup → restore smoke: passed;
 - Composer security audit: clean.
 
-The runtime candidate is frozen unless owner-local/browser acceptance finds a defect.
+Final owner feedback found two UX issues before acceptance: editors were all visible on first load, and some narrow mobile layouts were inconsistent. The final hardening makes the owner Profile read-first, opens editors only on demand, stacks narrow-screen actions/controls, removes fixed-width mobile pressure points and anchors/bounds the calendar popover.
+
+The hardened runtime candidate is frozen unless refreshed owner-local/browser acceptance finds another defect.
 
 ## Next gate
 
