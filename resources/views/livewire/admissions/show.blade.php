@@ -93,7 +93,7 @@
     @can('manageAdmissions', $admission->group)
         <flux:card class="space-y-4">
             <div>
-                <flux:heading size="lg">{{ __('ui.admission.review_application', ['username' => $admission->candidate->user?->username ?? __('ui.common.unknown_account')]) }}</flux:heading>
+                <div class="flex flex-wrap items-center gap-3"><flux:heading size="lg">{{ __('ui.groups.review_admission') }}</flux:heading><x-app.actor-identity :actor="$admission->candidate" size="xs" /></div>
                 <flux:text>{{ __('ui.admission.review_help') }}</flux:text>
             </div>
 
@@ -133,7 +133,7 @@
                         <span class="font-medium">{{ __('ui.events.'.str_replace('.', '_', $event->event)) }}</span>
                         <flux:text class="text-sm">{{ $event->created_at->timezone($admission->group->timezone ?: 'UTC')->translatedFormat('M j, Y H:i') }} {{ $admission->group->timezone ?: 'UTC' }}</flux:text>
                     </div>
-                    <flux:text class="text-sm">{{ __('ui.admission.by', ['username' => $event->actor?->user?->username ?? __('ui.common.system')]) }}</flux:text>
+                    @if ($event->actor)<div class="mt-1"><x-app.actor-identity :actor="$event->actor" size="xs" /></div>@else<flux:text class="text-sm">{{ __('ui.common.system') }}</flux:text>@endif
                     @if ($event->note)
                         <div class="mt-2 whitespace-pre-wrap break-words rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-800">{{ $event->note }}</div>
                     @endif
