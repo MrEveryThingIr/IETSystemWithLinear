@@ -142,9 +142,7 @@ class InteractionResponseNormalizer
             $normalized[] = $choice;
         }
 
-        $normalized = array_values(array_unique($normalized));
-
-        return $normalized === [] ? null : $normalized;
+        return array_values(array_unique($normalized));
     }
 
     private function invalid(string $key, string $message): never
