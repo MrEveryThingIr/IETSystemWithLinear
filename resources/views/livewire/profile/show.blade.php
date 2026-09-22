@@ -70,8 +70,18 @@
                         <h2 class="font-semibold">{{ $semanticSection['title'] }}</h2>
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($semanticSection['items'] as $assertion)
+                                @php
+                                    $skillPercent = $assertion->predicate->value === 'has_skill'
+                                        ? \App\Support\Profile\ProfileScale::percentFromWeight($assertion->weight)
+                                        : null;
+                                @endphp
                                 <span class="rounded-full bg-zinc-100 px-3 py-1.5 text-sm dark:bg-zinc-800" dir="auto">
                                     {{ $assertion->concept->displayLabel() }}
+                                    @if ($skillPercent !== null)
+                                        <span class="text-zinc-500">
+                                            · {{ $skillPercent }}% · {{ __('ui.profile.semantics.proficiency_levels.'.\App\Support\Profile\ProfileScale::skillLevelKey($skillPercent)) }}
+                                        </span>
+                                    @endif
                                 </span>
                             @endforeach
                         </div>
@@ -107,6 +117,18 @@
                                 @endif
 
                                 <dl class="mt-4 grid gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+                                    @if ($intent->importance_percent !== null)
+                                        <div>
+                                            <dt class="inline font-medium">
+                                                {{ $intent->kind->value === 'need' ? __('ui.profile.intents.importance_urgency') : __('ui.profile.intents.importance') }}:
+                                            </dt>
+                                            <dd class="inline">
+                                                {{ $intent->importance_percent }}%
+                                                ·
+                                                {{ __('ui.profile.intents.importance_levels.'.\App\Support\Profile\ProfileScale::importanceLevelKey($intent->importance_percent)) }}
+                                            </dd>
+                                        </div>
+                                    @endif
                                     @if ($intent->quantity !== null)
                                         <div><dt class="inline font-medium">{{ __('ui.profile.intents.quantity') }}:</dt> <dd class="inline">{{ rtrim(rtrim($intent->quantity, '0'), '.') }} {{ $intent->unit }}</dd></div>
                                     @endif
