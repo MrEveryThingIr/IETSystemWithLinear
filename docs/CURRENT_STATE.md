@@ -8,7 +8,7 @@ Current accepted implementation baseline:
 - Phase 1 — Invitation/registration/admission journey: complete.
 - Phase 2 — Delivery and operations baseline: complete at the provider-neutral baseline.
 - Phase 3 — Concept Kernel: complete.
-- Phase 4 — Actor/Party + progressive Profile: **runtime complete and remote-validated; final owner-local/browser acceptance pending**.
+- Phase 4 — Actor/Party + progressive Profile: **complete and human-owner accepted on 2026-09-22**.
 - Final Phase 4 runtime baseline before documentation-only closure: `20e7c2834fca74b652f89195094b70f86b454f80`.
 - GitHub Actions run `35700986122` on that exact commit:
   - PHPUnit: **331 passed / 1719 assertions**;
@@ -19,9 +19,9 @@ Current accepted implementation baseline:
   - SQLite backup → restore smoke: passed;
   - npm high-severity audit: passed;
   - Composer security audit: clean.
-- **Phase 5 remains blocked until the final owner-local/browser Phase 4 gate passes.**
+- The next implementation milestone is **Phase 5 — Generic Content Context**.
 
-This document describes repository implementation truth at the final Phase 4 acceptance gate. Future architecture remains separately governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
+This document describes repository implementation truth after formal Phase 4 closure. Future architecture remains separately governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
 
 ## Established identity and platform foundation
 
@@ -519,9 +519,9 @@ These are continuous roadmap requirements, not a final afterthought.
 
 ## Current highest-priority next milestone
 
-Phases 1–3 are closed. Phase 4 runtime is complete and remote-validated, with one final owner-local/browser acceptance gate remaining.
+Phases 1–4 are closed.
 
-After that gate passes, the next implementation milestone is:
+The next implementation milestone is:
 
 > **Phase 5 — Generic Content Context**
 
