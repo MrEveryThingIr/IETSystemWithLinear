@@ -14,7 +14,9 @@ use App\Actions\Groups\PublishSpaceContent;
 use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\Asset;
+use App\Models\Context;
 use App\Models\SpaceContent;
+use App\Models\SpaceContentDefinition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
@@ -182,7 +184,7 @@ class ContextContentIntegrationTest extends TestCase
             ->assertNotFound();
     }
 
-    private function activeNoteDefinition(\App\Models\Context $context, Actor $manager): \App\Models\SpaceContentDefinition
+    private function activeNoteDefinition(Context $context, Actor $manager): SpaceContentDefinition
     {
         $definition = app(CreateContextContentDefinition::class)->execute(
             $context,
