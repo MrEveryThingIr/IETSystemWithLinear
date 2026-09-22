@@ -2,7 +2,7 @@
 
 ## Status
 
-**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete and human/local accepted**; Phases **7B and 7C are technically complete**; Phase **7D is next**.
+**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete and human/local accepted**; Phases **7B, 7C and 7D are technically complete**; Phase **7E — proof and closure — is next**.
 
 Starting baseline:
 
@@ -362,9 +362,23 @@ Original 7C deliverables:
 
 ### 7D — productized interaction experience
 
-**Status: next.**
+**Status: technically complete on `d828dc43c9ef469a3532bfee9b6274d5dceb5f24`.** GitHub Actions run `35771215549` is green: **390 tests / 2052 assertions**, changed-file Pint **305 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
 
-Deliver:
+Delivered:
+
+- reusable purpose-specific Submission Card embedded in the unified exact-revision Content Reader;
+- draft start/save/resume, explicit submit, withdrawal and later-attempt UX backed only by existing Phase 7 Actions;
+- scalar, choice, Asset and immutable Content-evidence response inputs;
+- protected same-Context Submission Asset download/stream authorization;
+- reviewer discovery from the Reader plus Context-level submitted/withdrawn review queue;
+- reviewer detail with exact sealed Submission evidence, Evaluation draft/save/finalize and finalized feedback display;
+- reviewer queue intentionally excludes candidate drafts;
+- Evaluation UX proven not to approve Admission or create Membership;
+- exact active Content-revision matching so later publications do not silently reuse an old interaction contract;
+- localized product language in English, Persian, Arabic and Simplified Chinese with responsive/RTL-ready layouts;
+- focused browser-level Livewire/HTTP coverage for Reader discovery, submit flow, draft privacy, reviewer evaluation, Asset authorization and Persian rendering.
+
+Original 7D deliverables:
 
 - purpose-specific interaction rendering from published Content;
 - draft/resume/submit UX;
@@ -374,6 +388,8 @@ Deliver:
 - Questionnaire-shell structured-response integration where appropriate.
 
 ### 7E — proof and closure
+
+**Status: next.**
 
 Deliver:
 
