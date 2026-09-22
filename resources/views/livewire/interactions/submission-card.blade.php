@@ -37,7 +37,7 @@
                 <flux:callout>{{ __('structured_interactions.not_available') }}</flux:callout>
             @endif
         </div>
-    @elseif ($submission->status === AppModelsSubmission::STATUS_DRAFT)
+    @elseif ($submission->status === \App\Models\Submission::STATUS_DRAFT)
         <form wire:submit="saveDraft" class="mt-5 space-y-5">
             @foreach ($version->items as $item)
                 @php
@@ -97,7 +97,7 @@
                             @endif
                             <input type="file" wire:model="assetUploads.{{ $key }}" class="block w-full text-sm" />
                             <flux:select wire:model="assetRights.{{ $key }}" :label="__('media.rights_status')">
-                                @foreach (AppModelsAsset::RIGHTS_STATUSES as $status)
+                                @foreach (\App\Models\Asset::RIGHTS_STATUSES as $status)
                                     <option value="{{ $status }}">{{ __('media.rights.'.$status) }}</option>
                                 @endforeach
                             </flux:select>
@@ -128,8 +128,8 @@
         </form>
     @else
         <div class="mt-5 space-y-4">
-            <flux:callout :variant="$submission->status === AppModelsSubmission::STATUS_SUBMITTED ? 'success' : 'warning'">
-                {{ $submission->status === AppModelsSubmission::STATUS_SUBMITTED ? __('structured_interactions.submitted_help') : __('structured_interactions.withdrawn_help') }}
+            <flux:callout :variant="$submission->status === \App\Models\Submission::STATUS_SUBMITTED ? 'success' : 'warning'">
+                {{ $submission->status === \App\Models\Submission::STATUS_SUBMITTED ? __('structured_interactions.submitted_help') : __('structured_interactions.withdrawn_help') }}
             </flux:callout>
 
             <div class="space-y-3">
@@ -155,7 +155,7 @@
                 @endforeach
             </div>
 
-            @foreach ($submission->evaluations->where('status', AppModelsEvaluation::STATUS_FINALIZED) as $evaluation)
+            @foreach ($submission->evaluations->where('status', \App\Models\Evaluation::STATUS_FINALIZED) as $evaluation)
                 <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
                     <div class="font-semibold">{{ __('structured_interactions.evaluation') }}</div>
                     @if ($evaluation->score !== null)<div class="mt-2 text-sm">{{ __('structured_interactions.score') }}: {{ $evaluation->score }}</div>@endif
@@ -167,7 +167,7 @@
                 @if ($canWithdraw)
                     <flux:button wire:click="withdraw" variant="danger" class="w-full sm:w-auto">{{ __('structured_interactions.withdraw') }}</flux:button>
                 @endif
-                @if ($submission->status === AppModelsSubmission::STATUS_WITHDRAWN && $canStart)
+                @if ($submission->status === \App\Models\Submission::STATUS_WITHDRAWN && $canStart)
                     <flux:button wire:click="start" variant="primary" class="w-full sm:w-auto">{{ __('structured_interactions.start_another') }}</flux:button>
                 @endif
             </div>
