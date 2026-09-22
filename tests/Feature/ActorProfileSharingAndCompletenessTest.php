@@ -9,6 +9,7 @@ use App\Actions\Profile\EnsureActorProfile;
 use App\Actions\Profile\RevokeProfileDisclosureGrant;
 use App\Actions\Profile\SetActorProfileIntentStatus;
 use App\Actions\Profile\UpdateActorProfile;
+use App\Actions\Profile\UploadActorProfileImage;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionVisibility;
 use App\Livewire\Profile\Sharing;
@@ -22,6 +23,8 @@ use App\ProfileVisibility;
 use App\Support\Profile\ProfileCompletenessService;
 use App\Support\Profile\ProfileRequirement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -142,6 +145,10 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
         );
 
         $this->actingAs($recipient->user)
+            ->get(route('actors.profile.reference', $owner))
+            ->assertRedirect(route('profiles.shares.show', $grant));
+
+        $this->actingAs($recipient->user)
             ->get(route('profiles.shares.show', $grant))
             ->assertOk()
             ->assertSee('Selective Owner')
@@ -176,6 +183,13 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
             'visibility' => ProfileVisibility::Private->value,
         ]);
 
+        Storage::fake('local');
+        app(UploadActorProfileImage::class)->execute(
+            $owner->user,
+            $profile,
+            UploadedFile::fake()->image('shared-avatar.jpg', 400, 400),
+        );
+
         $assertion = app(AddProfileConceptAssertion::class)->execute(
             $owner->user,
             $profile,
@@ -197,6 +211,7 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
             ->get(route('profiles.shares.show', $grant))
             ->assertOk()
             ->assertSee('Selective Skill')
+            ->assertSee(route('actors.avatar', $owner), false)
             ->assertDontSee('Do Not Leak This Name')
             ->assertDontSee($owner->user->username)
             ->assertDontSee($owner->user->email);
