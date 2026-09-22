@@ -2,7 +2,7 @@
 
 ## Status
 
-**Active** on `feat/phase-07-submission-evaluation`.
+**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete**; Phase **7B is next**.
 
 Starting baseline:
 
@@ -279,7 +279,22 @@ Therefore Phase 7 should add a new structured-interaction domain while reusing C
 
 ### 7A — versioned interaction kernel
 
-Deliver:
+**Status: complete on `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`.** GitHub Actions run `35756220221` is green: **372 tests / 1964 assertions**, changed-file Pint **272 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
+
+Delivered:
+
+- additive migration `2026_09_22_200000_create_interaction_definition_kernel.php`;
+- stable `InteractionDefinition` UUID identity and guarded lifecycle;
+- immutable `InteractionDefinitionVersion` after activation;
+- trusted response-type registry for text, boolean, number, date, choice, Asset and Content-evidence responses;
+- bounded/whitelisted version configuration with no executable dynamic code;
+- canonical configuration hashing;
+- optional exact sealed Content-revision binding;
+- explicit activation Action with transactional locking/authorization;
+- Context-aware submit/review/manage interaction authorization seams;
+- factories and focused lifecycle/security/Admission-context tests.
+
+Original 7A deliverables:
 
 - InteractionDefinition stable identity;
 - immutable InteractionDefinitionVersion;
@@ -292,6 +307,8 @@ Deliver:
 - lifecycle/versioning tests.
 
 ### 7B — Submission / Response / evidence
+
+**Status: next.**
 
 Deliver:
 

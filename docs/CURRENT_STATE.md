@@ -25,6 +25,8 @@ Current implementation baseline:
 - Human browser review was intentionally non-exhaustive but found no blocking correctness problem; remaining Content-view behavior/UX improvements are deferred to the later whole-system polish pass.
 - Post-closure invitation locale-return regression fixed at `0d98dfe`; GitHub Actions run `35749114796` is green at **366 tests / 1945 assertions**, PHPStan/Pint/Vite/ops/security green.
 - Phase 7 — Submission / Response / Evaluation is **active** on `feat/phase-07-submission-evaluation`; binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
+- Phase 7A — versioned InteractionDefinition kernel — complete on `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`; GitHub Actions run `35756220221`: **372 tests / 1964 assertions**, PHPStan clean, changed-file Pint **272 files**, Vite/migrations/ops/backup/security green.
+- Phase 7B — Submission / Response / evidence is the next active sub-milestone.
 
 This document describes repository implementation truth at the Phase 7 kickoff baseline. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and active Phase 7 scope by `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 
@@ -621,6 +623,10 @@ The active milestone is **Phase 7 — Submission / Response / Evaluation**.
 Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 
 Starting runtime baseline: `0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533`.
+
+Current Phase 7 runtime candidate: `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`.
+
+Phase 7A is complete. Implemented foundation includes stable InteractionDefinition identity, immutable version activation, trusted response types/configuration, canonical hashing, exact sealed Content-revision binding, and explicit Context-aware submit/review/manage authorization seams. Phase 7B is next.
 
 Phase 7 builds one versioned structured-interaction kernel for applications, exams, questionnaires, evidence responses and evaluations.
 
