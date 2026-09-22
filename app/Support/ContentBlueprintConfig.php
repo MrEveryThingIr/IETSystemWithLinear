@@ -98,7 +98,7 @@ class ContentBlueprintConfig
 
         $normalized = [];
 
-        foreach (array_values($blocks) as $block) {
+        foreach ($blocks as $block) {
             if (! is_array($block)) {
                 throw new LogicException('Every Content Blueprint block must be structured data.');
             }
