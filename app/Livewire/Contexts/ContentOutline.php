@@ -155,20 +155,22 @@ class ContentOutline extends Component
     /** @return Builder<SpaceContent> */
     private function authorizedCandidatesQuery(): Builder
     {
-        $user = $this->user();
+        $user = User::query()->with('actor')->findOrFail($this->user()->id);
+        $actorId = (int) $user->actor?->id;
+        $canManageContext = Gate::forUser($user)->allows('manageContent', $this->context);
 
         return SpaceContent::query()
             ->where('context_id', $this->context->id)
             ->where('id', '!=', $this->content->id)
             ->where('status', '!=', 'archived')
-            ->getQuery()
-            ->where(function (Builder $query) use ($user): void {
-                $actorId = (int) $user->actor?->id;
-                $query->where('author_actor_id', $actorId)
-                    ->orWhere(function (Builder $query): void {
-                        $query->where('status', 'published')
-                            ->whereHas('activeRevision', fn (Builder $revision) => $revision->where('evidence_status', SpaceContentRevision::EVIDENCE_SEALED));
-                    });
+            ->when(! $canManageContext, function (Builder $query) use ($actorId): void {
+                $query->where(function (Builder $query) use ($actorId): void {
+                    $query->where('author_actor_id', $actorId)
+                        ->orWhere(function (Builder $query): void {
+                            $query->where('status', 'published')
+                                ->whereHas('activeRevision', fn (Builder $revision) => $revision->where('evidence_status', SpaceContentRevision::EVIDENCE_SEALED));
+                        });
+                });
             });
     }
 
