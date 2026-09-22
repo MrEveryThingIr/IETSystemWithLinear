@@ -28,8 +28,10 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 2 — delivery and operations baseline: complete.
 - Phase 3 — Concept Kernel: complete.
 - Phase 4 — Actor/Party and progressive Profile: complete and human-owner accepted at `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
-- Phase 5 — Generic Content Context: **active** on `feat/phase-05-content-context`.
-- Phase 5 must preserve existing Group Content while proving Personal and Admission Context Content. Do not mass-rename `SpaceContent`, rewrite sealed publication evidence, invent fake Groups, or pull Phase 6/8/9/10/11/13/14 work forward.
+- Phase 5 — Generic Content Context: **runtime technically complete / remote-CI green; final owner-local/browser acceptance pending** on `feat/phase-05-content-context`.
+- Frozen Phase 5 runtime candidate: `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`.
+- Phase 6 must not begin until the human Phase 5 acceptance gate passes.
+- Phase 5 preserves existing Group Content while adding Personal and Admission Context Content. Do not mass-rename `SpaceContent`, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 6/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 
 ## Current architecture baseline
