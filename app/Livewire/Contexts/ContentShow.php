@@ -643,6 +643,7 @@ class ContentShow extends Component
             && Gate::forUser($user)->allows('interact', $current);
         $canAnnotate = $canInteract && $interactionSettings->annotationsEnabled($current);
         $canReact = $canInteract && $interactionSettings->reactionsEnabled($current);
+        $canReviewInteractions = Gate::forUser($user)->allows('reviewInteractions', $this->context);
 
         $actor = $this->actor();
         $reactionCounts = $revision->reactions()
@@ -732,6 +733,7 @@ class ContentShow extends Component
             'canInteract',
             'canAnnotate',
             'canReact',
+            'canReviewInteractions',
             'reactionCounts',
             'viewerReactions',
             'reactionTypes',
