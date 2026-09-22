@@ -108,10 +108,14 @@ class ContentShow extends Component
     public function mount(Context $context, SpaceContent $content): void
     {
         abort_unless((int) $content->context_id === (int) $context->id, 404);
-        abort_unless($content->status === 'published' && $content->active_revision_id !== null, 404);
-        Gate::forUser($this->user())->authorize('view', $content);
+        $user = $this->user();
+        Gate::forUser($user)->authorize('view', $content);
 
         $revision = $content->activeRevisionRecord();
+        if (! $revision instanceof SpaceContentRevision
+            && Gate::forUser($user)->allows('revisions', $content)) {
+            $revision = $content->draftRevisionRecord();
+        }
         abort_unless($revision instanceof SpaceContentRevision, 404);
 
         $this->context = $context;
@@ -594,11 +598,14 @@ class ContentShow extends Component
             ->with(['author.user', 'definition', 'activeRevision'])
             ->findOrFail($this->content->id);
         abort_unless((int) $current->context_id === (int) $this->context->id, 404);
-        abort_unless($current->status === 'published', 404);
         Gate::forUser($user)->authorize('view', $current);
         $this->content = $current;
 
         $revision = $current->activeRevision;
+        if (! $revision instanceof SpaceContentRevision
+            && Gate::forUser($user)->allows('revisions', $current)) {
+            $revision = $current->draftRevisionRecord();
+        }
         abort_unless($revision instanceof SpaceContentRevision, 404);
         $revision->loadMissing('assets');
 
@@ -614,7 +621,9 @@ class ContentShow extends Component
         $canEnterStudio = Gate::forUser($user)->allows('update', $current)
             || Gate::forUser($user)->allows('revisions', $current);
         $legacyEvidence = ! $revision->hasVerifiableManifest();
-        $canInteract = Gate::forUser($user)->allows('interact', $current);
+        $canInteract = $current->active_revision_id !== null
+            && (int) $current->active_revision_id === (int) $revision->id
+            && Gate::forUser($user)->allows('interact', $current);
 
         $actor = $this->actor();
         $reactionCounts = $revision->reactions()
