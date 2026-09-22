@@ -53,7 +53,7 @@
             <p class="text-sm font-medium">{{ __('ui.profile.intents.add_details') }}</p>
             <p class="mt-1 text-xs text-zinc-500">{{ __('ui.profile.intents.add_details_help') }}</p>
             <div class="mt-3 flex flex-wrap gap-2">
-                @foreach (['title', 'description', 'quantity', 'location', 'route', 'timing', 'visibility'] as $facet)
+                @foreach (['title', 'description', 'importance', 'quantity', 'location', 'route', 'timing', 'visibility'] as $facet)
                     <button
                         type="button"
                         wire:click="toggleFacet('{{ $facet }}')"
@@ -75,6 +75,42 @@
         @if (in_array('description', $activeFacets, true))
             <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
                 <flux:textarea wire:model="description" :label="__('ui.profile.intents.description')" rows="3" maxlength="3000" />
+            </div>
+        @endif
+
+        @if (in_array('importance', $activeFacets, true))
+            <div class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+                <div>
+                    <label class="text-sm font-medium" for="intent-importance">
+                        {{ $kind === 'need' ? __('ui.profile.intents.importance_urgency') : __('ui.profile.intents.importance') }}
+                    </label>
+                    <p class="mt-1 text-xs text-zinc-500">
+                        {{ $kind === 'need' ? __('ui.profile.intents.importance_need_help') : __('ui.profile.intents.importance_help') }}
+                    </p>
+                </div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <input
+                        id="intent-importance"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        wire:model.live="importancePercent"
+                        class="w-full"
+                    >
+                    <div class="w-full sm:w-28">
+                        <flux:input wire:model.live="importancePercent" type="number" min="0" max="100" />
+                    </div>
+                </div>
+                @if ($importancePercent !== null && $importancePercent !== '')
+                    @php
+                        $importanceValue = max(0, min(100, (int) $importancePercent));
+                    @endphp
+                    <p class="text-sm font-medium">
+                        {{ $importanceValue }}%
+                        <span class="font-normal text-zinc-500">· {{ __('ui.profile.intents.importance_levels.'.AppSupportProfileProfileScale::importanceLevelKey($importanceValue)) }}</span>
+                    </p>
+                @endif
             </div>
         @endif
 
@@ -216,6 +252,18 @@
                     @endif
 
                     <dl class="mt-3 grid gap-1 text-sm text-zinc-600 dark:text-zinc-300">
+                        @if ($intent->importance_percent !== null)
+                            <div>
+                                <dt class="inline font-medium">
+                                    {{ $intent->kind->value === 'need' ? __('ui.profile.intents.importance_urgency') : __('ui.profile.intents.importance') }}:
+                                </dt>
+                                <dd class="inline">
+                                    {{ $intent->importance_percent }}%
+                                    ·
+                                    {{ __('ui.profile.intents.importance_levels.'.AppSupportProfileProfileScale::importanceLevelKey($intent->importance_percent)) }}
+                                </dd>
+                            </div>
+                        @endif
                         @if ($intent->quantity !== null)
                             <div><dt class="inline font-medium">{{ __('ui.profile.intents.quantity') }}:</dt> <dd class="inline">{{ rtrim(rtrim($intent->quantity, '0'), '.') }} {{ $intent->unit }}</dd></div>
                         @endif
