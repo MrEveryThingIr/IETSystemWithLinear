@@ -2,22 +2,26 @@
 
 ## Snapshot
 
-Validated Phase 1 closure state:
+Current accepted implementation baseline:
 
-- Branch: `feat/group-spaces-communication`
-- Original validated code baseline: `f57ee430f96afcdb1ecc32f5b644fcb057dae6f4`.
-- Canonical Phase 0 / Phase 1 starting HEAD: `dee86677cdfd95b6b2887843cba699b21b07f6f0`.
-- Phase 1 closure validation reported by the human owner on 2026-09-21:
-  - focused onboarding/hardening gate: 41 tests passed, 216 assertions;
-  - full PHPUnit suite: 282 passed, 1437 assertions;
+- Branch: `feat/phase-04-actor-profile`.
+- Phase 1 — Invitation/registration/admission journey: complete.
+- Phase 2 — Delivery and operations baseline: complete at the provider-neutral baseline.
+- Phase 3 — Concept Kernel: complete.
+- Phase 4 — Actor/Party + progressive Profile: **complete and human-owner accepted on 2026-09-22**.
+- Final Phase 4 runtime baseline before documentation-only closure: `20e7c2834fca74b652f89195094b70f86b454f80`.
+- GitHub Actions run `35700986122` on that exact commit:
+  - PHPUnit: **331 passed / 1719 assertions**;
   - PHPStan: no errors;
-  - Pint: passed;
+  - Pint: **171 files passed**;
   - Vite production build: passed;
-  - `git diff --check`: clean.
-- Human owner reports the implemented browser onboarding/hardening flows behave as intended.
-- Phase 1 introduced no migrations and no new third-party service.
+  - migration/scheduler/database-queue smoke: passed;
+  - SQLite backup → restore smoke: passed;
+  - npm high-severity audit: passed;
+  - Composer security audit: clean.
+- The next implementation milestone is **Phase 5 — Generic Content Context**.
 
-This document describes the implementation intended to be committed as the Phase 1 closure state. Target/future architecture remains separate in `docs/TARGET_ARCHITECTURE.md`.
+This document describes repository implementation truth after Phase 4 closure. Future architecture remains separately governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
 
 ## Established identity and platform foundation
 
@@ -43,13 +47,22 @@ Implemented:
   - ManagePlatformAccess
   - ViewPlatformAudit
 
-Current limitation:
+Current Phase 4 identity/Profile state:
 
-- Actor is still effectively designed primarily around one User-backed person.
-- organization/system Actors and explicit User→Actor acting authority do not yet exist.
-- Phase 4A provides the professional ActorProfile identity/media foundation.
-- Phase 4B now provides Concept-backed skills/interests/learning goals plus one-time/ongoing/recurring Need and Offer declarations with quantity, route, schedule, lifecycle, and item-level visibility.
-- selective sharing, completeness/requirements, and final privacy/accessibility closure remain Phase 4C work.
+- Actor is still primarily a User-backed person; organization/system Actors and explicit multi-Actor acting authority remain later work.
+- `ActorProfile` is the mutable presentation/profile layer attached to Actor rather than User.
+- Profile is private by default and never treats account email as a public Profile field.
+- Profile media stays in the private Asset pipeline and supports an always-visible image library plus one changeable displayed image.
+- the displayed Profile image is reused as the participant avatar where authorization permits;
+- reusable participant presentation uses avatar + human-facing identity and links to the Profile/reference surface;
+- dashboard/header presentation uses displayed identity/avatar rather than treating username as the only human-facing identity;
+- clicking another participant is side-effect free and never lazily creates or mutates that person's Profile;
+- Concept-backed skills, interests and learning goals are implemented;
+- skills may carry optional self-rated proficiency from 0–100%, stored through normalized Concept Assertion weight;
+- Profile Need/Offer intent declarations are implemented with quantity, route, recurrence, temporal constraints, lifecycle, visibility and optional importance/urgency from 0–100%;
+- purpose-specific Profile completeness/requirements and recipient-specific selective disclosure are implemented;
+- Profile owner UX is read-first: existing data/cards stay visible while mutation forms/composers open on demand;
+- Profile remains upstream state only: it does not create Planner Occurrences, Matches, Contracts, Commitments or Fulfillment.
 
 ## Group governance kernel
 
@@ -374,17 +387,25 @@ Target decision:
 
 ## Semantic / Concept system
 
-Not implemented in the current application.
+Phase 3 Concept Kernel is implemented and closed.
 
-Legacy migrations supplied outside the current branch demonstrate useful prior ideas:
+Implemented foundations include:
 
-- Concept identity;
-- Concept closure;
+- ConceptVocabulary and Concept identity;
+- localized Concept labels;
+- Concept Schemes and memberships;
+- hierarchy edges and closure;
 - typed Concept relations;
-- generic Concept attachments;
-- User-specific Concept usage.
+- generic Concept Assertions;
+- explicit subject, predicate, visibility, provenance and temporal validity;
+- immutable publication-evidence protection for sealed revision-bound assertions;
+- Actor Profile reuse of the same Concept for different predicates such as skill, interest, learning goal, Need and Offer summaries.
 
-The target redesign is documented in `docs/CONCEPT_KERNEL.md`.
+The central invariant is preserved: the meaning is the Concept; the Actor's relationship to that meaning is the predicate/assertion. The system does not duplicate a Concept merely because one Actor is skilled in it while another needs or wants to learn it.
+
+Profile skill proficiency reuses the existing assertion `weight` dimension as a normalized value rather than creating a second skill-specific semantic model.
+
+See `docs/CONCEPT_KERNEL.md` and `docs/PHASE_03_CONCEPT_KERNEL.md`.
 
 ## Planning
 
@@ -401,16 +422,37 @@ Target primitives:
 
 ## Need / Offer / exchange
 
-Not implemented.
+The **Profile intent layer** is implemented; the full exchange/matching domain is not.
 
-Target domain will separate:
+Current Phase 4 Profile declarations support:
 
-- Need;
-- Offer;
+- Need and Offer kind;
+- canonical Concept reference;
+- title/description;
+- optional importance/urgency percentage (0–100);
+- quantity/unit;
+- location;
+- origin → destination;
+- optional round trip / return offset;
+- one-time, ongoing, daily, weekly and monthly cadence;
+- timezone/date/time-window constraints;
+- inherited/private/authenticated/public item visibility;
+- active / paused / closed lifecycle;
+- coarse Actor Concept summaries for active Needs/Offers without taking over unrelated manual assertions.
+
+These declarations describe **current participant intent**. They do not create matches, obligations or materialized schedules.
+
+Future Phase 13 remains responsible for:
+
 - Match;
+- ranking/eligibility logic;
+- proposal handoff.
+
+Future Phase 14 remains responsible for:
+
 - Proposal;
 - Negotiation;
-- Agreement;
+- Agreement/Contract;
 - Commitment;
 - Fulfillment.
 
@@ -477,61 +519,30 @@ These are continuous roadmap requirements, not a final afterthought.
 
 ## Current highest-priority next milestone
 
-Phase 1 — Production Invitation + Registration + Admission Journey — has completed implementation and validation. Its durable evidence is in `docs/PHASE_01_INVITATION_ONBOARDING.md` and `Development-CodexReports/phase-01-invitation-onboarding-report.md`.
+Phases 1–4 are closed.
 
-Phase 2 — Delivery and Operations Baseline — is complete at the provider-neutral development baseline.
+The next implementation milestone is:
 
-Validated Phase 2 capabilities include CI, committed Composer/npm lockfiles, strict `npm ci`, dependency audits, deploy/version and request correlation, database queue operation, scheduler execution, failed-job visibility, SQLite backup→restore smoke, private-storage guidance, abuse-control inventory, and an executable operations runbook.
+> **Phase 5 — Generic Content Context**
 
-Owner-local validation after synchronizing the Phase 2 branch confirmed:
+Phase 5 starts from the accepted Phase 4 baseline and removes the architectural requirement that all Content belong to a GroupSpace.
 
-- Composer metadata/install from lock: passed;
-- npm install/audit/build from lock: passed;
-- PHPUnit: 284 tests / 1441 assertions;
-- PHPStan: no errors;
-- Pint on all Phase 2 PHP changes: passed;
-- migrations: all ran;
-- scheduler list and execution: passed;
-- database queue worker: started and drained cleanly;
-- failed jobs: none;
-- Laravel `/up` liveness page: healthy in the browser.
+Primary proof targets:
 
-Production-host-specific proof is deliberately not a blocker for Phase 3. Before production release, the selected deployment target must still exercise real worker/scheduler supervision, enabled transactional mail, operational monitoring/log retention, automated backups, an isolated restore drill, and private media storage. Those remain governed by `docs/OPERATIONS_RUNBOOK.md` and later production-hardening/release gates.
+- existing Group Content remains behaviorally unchanged;
+- a personal private Content context exists without a fake Group;
+- Admission-scoped Content/collaboration can exist for candidate/reviewer before Membership;
+- authorization becomes Context-aware without granting ordinary Group access;
+- no destructive mass rename/migration occurs before compatibility is proven.
 
-Phase 3 — Concept Kernel — is complete.
+Phase 4's final invariants remain binding downstream:
 
-Owner-local closure validation on the final Phase 3 branch confirmed:
+- Actor is participant identity;
+- Profile is mutable participant description;
+- Concept is semantic identity;
+- Profile intent ≠ Planner occurrence;
+- Profile Need/Offer ≠ Match;
+- selective Profile disclosure ≠ Context authorization;
+- current mutable Profile state ≠ immutable Contract evidence.
 
-- focused Concept + publication suite: 16 passed / 118 assertions;
-- full PHPUnit suite: 292 passed / 1493 assertions;
-- PHPStan: no errors;
-- Pint across Phase 3 PHP: 55 files passed;
-- Vite production build: passed;
-- migrations: current;
-- working tree: clean.
-
-The active implementation milestone is:
-
-> Phase 4 — Actor/Party and progressive Profile
-
-Branch: `feat/phase-04-actor-profile`.
-Contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
-
-Current Phase 4 state:
-
-- 4A professional identity + profile media: owner-local accepted at 298 tests / 1528 assertions, PHPStan/Pint/build green and clean working tree;
-- 4B semantic Profile + recurring Need/Offer declarations: core implementation was owner-local technically accepted; 4B.1 temporal-localization hardening is now remote-CI green at 310 tests / 1593 assertions and requires one refreshed owner-local/browser gate before final 4B acceptance;
-- 4C selective sharing/completeness/final closure: pending.
-
-4B preserves future boundaries: recurring Profile declarations describe current cadence/constraints without generating Planner Occurrences, performing Need/Offer matching, or creating obligations.
-
-Temporal contract now established by 4B.1:
-
-- locale, timezone and calendar are independent preferences;
-- timezone uses IANA identifiers and may be automatic (device-following) or fixed;
-- Persian defaults to Persian/Jalali presentation;
-- English, Arabic and Simplified Chinese default to Gregorian presentation;
-- Hijri/Umm al-Qura is an explicit optional calendar;
-- date-only persistence remains canonical ISO/Gregorian and empty optional temporal inputs normalize to NULL.
-
-Phase 4 keeps authentication User data separate from Actor/Profile data, defaults Profile visibility to private, and reuses the private Asset/media pipeline for profile images.
+See `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md` before implementation.
