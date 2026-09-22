@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ContextScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use LogicException;
 
 #[Fillable([
+    'context_id',
     'group_space_id',
     'created_by_actor_id',
     'name',
@@ -34,6 +36,13 @@ class SpaceContentDefinition extends Model
     protected static function booted(): void
     {
         static::saving(function (self $definition): void {
+            $context = Context::query()->findOrFail($definition->context_id);
+            ContextScope::assertLegacyGroupSpace(
+                $context,
+                $definition->group_space_id !== null ? (int) $definition->group_space_id : null,
+                'Content Definition',
+            );
+
             if (! in_array($definition->status, ['draft', 'active', 'archived'], true)) {
                 throw new LogicException('Unknown Content Definition status.');
             }
@@ -61,7 +70,7 @@ class SpaceContentDefinition extends Model
         });
 
         static::updating(function (self $definition): void {
-            if ($definition->isDirty(['group_space_id', 'created_by_actor_id', 'slug'])) {
+            if ($definition->isDirty(['context_id', 'group_space_id', 'created_by_actor_id', 'slug'])) {
                 throw new LogicException('Content Definition provenance and stable slug cannot be reassigned.');
             }
 
@@ -101,6 +110,12 @@ class SpaceContentDefinition extends Model
         } finally {
             $this->applyingLifecycle = false;
         }
+    }
+
+    /** @return BelongsTo<Context, $this> */
+    public function context(): BelongsTo
+    {
+        return $this->belongsTo(Context::class);
     }
 
     /** @return BelongsTo<GroupSpace, $this> */

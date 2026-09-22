@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ContextScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ use LogicException;
 
 #[Fillable([
     'uuid',
+    'context_id',
     'group_space_id',
     'original_filename',
     'mime_type',
@@ -92,6 +94,18 @@ class Asset extends Model
     {
         static::creating(function (self $asset): void {
             $asset->uuid ??= (string) Str::uuid();
+
+            if ($asset->context_id !== null) {
+                $context = Context::query()->findOrFail($asset->context_id);
+                ContextScope::assertLegacyGroupSpace(
+                    $context,
+                    $asset->group_space_id !== null ? (int) $asset->group_space_id : null,
+                    'Asset',
+                );
+            } elseif ($asset->group_space_id !== null) {
+                throw new LogicException('GroupSpace Assets require a Context binding.');
+            }
+
             if (! in_array($asset->rights_status, self::RIGHTS_STATUSES, true)) {
                 throw new LogicException('Unknown Asset rights status.');
             }
@@ -108,7 +122,7 @@ class Asset extends Model
 
         static::updating(function (self $asset): void {
             if ($asset->isDirty([
-                'uuid', 'group_space_id', 'original_filename', 'mime_type', 'extension', 'byte_size',
+                'uuid', 'context_id', 'group_space_id', 'original_filename', 'mime_type', 'extension', 'byte_size',
                 'disk', 'storage_key', 'sha256', 'uploaded_by_actor_id',
             ])) {
                 throw new LogicException('Asset provenance and stored file identity are immutable.');
@@ -166,6 +180,12 @@ class Asset extends Model
         }
 
         return $this->mime_type === 'application/pdf' ? 'pdf' : 'file';
+    }
+
+    /** @return BelongsTo<Context, $this> */
+    public function context(): BelongsTo
+    {
+        return $this->belongsTo(Context::class);
     }
 
     /** @return BelongsTo<GroupSpace, $this> */

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Models\Actor;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
@@ -16,8 +17,14 @@ class SpaceContentFactory extends Factory
     {
         return [
             'group_space_id' => GroupSpace::factory()->restricted(),
+            'context_id' => function (array $attributes): int {
+                $space = GroupSpace::query()->findOrFail($attributes['group_space_id']);
+
+                return app(EnsureGroupSpaceContext::class)->execute($space)->id;
+            },
             'space_content_definition_id' => function (array $attributes): int {
                 return SpaceContentDefinition::factory()->create([
+                    'context_id' => $attributes['context_id'],
                     'group_space_id' => $attributes['group_space_id'],
                 ])->id;
             },

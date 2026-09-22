@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['group_id', 'created_by_actor_id', 'name', 'slug', 'kind', 'access_mode', 'status', 'is_default'])]
 class GroupSpace extends Model
@@ -37,6 +38,12 @@ class GroupSpace extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'created_by_actor_id');
+    }
+
+    /** @return HasOne<GroupSpaceContext, $this> */
+    public function contextBinding(): HasOne
+    {
+        return $this->hasOne(GroupSpaceContext::class);
     }
 
     /** @return HasMany<GroupSpaceMessage, $this> */

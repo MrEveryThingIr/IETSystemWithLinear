@@ -33,7 +33,7 @@ class SaveSpaceContentRenderTemplate
             abort_if($current->status === 'archived', 422, 'Archived Content cannot create rendering templates.');
             abort_if(
                 SpaceContentRenderTemplate::query()
-                    ->where('group_space_id', $current->group_space_id)
+                    ->where('context_id', $current->context_id)
                     ->where('name', $name)
                     ->exists(),
                 422,
@@ -52,6 +52,7 @@ class SaveSpaceContentRenderTemplate
             $actor = $this->actor($user);
 
             $template = SpaceContentRenderTemplate::query()->create([
+                'context_id' => $current->context_id,
                 'group_space_id' => $current->group_space_id,
                 'creator_actor_id' => $actor->id,
                 'name' => $name,

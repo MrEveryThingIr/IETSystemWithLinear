@@ -10,13 +10,16 @@ use App\Models\User;
 
 class SpaceContentPolicy
 {
-    public function __construct(private readonly GroupSpacePolicy $spaces) {}
+    public function __construct(
+        private readonly ContextPolicy $contexts,
+        private readonly GroupSpacePolicy $spaces,
+    ) {}
 
     public function view(User $user, SpaceContent $content): bool
     {
-        $content->loadMissing('space');
+        $content->loadMissing('context');
 
-        if (! $this->spaces->view($user, $content->space)) {
+        if (! $this->contexts->view($user, $content->context)) {
             return false;
         }
 
@@ -39,7 +42,11 @@ class SpaceContentPolicy
 
     public function interact(User $user, SpaceContent $content): bool
     {
-        if ($content->status !== 'published' || ! $this->view($user, $content)) {
+        $content->loadMissing('context');
+
+        if ($content->status !== 'published'
+            || ! $this->view($user, $content)
+            || ! $this->contexts->interactContent($user, $content->context)) {
             return false;
         }
 
@@ -75,9 +82,9 @@ class SpaceContentPolicy
 
     private function canOwnOrManage(User $user, SpaceContent $content): bool
     {
-        $content->loadMissing('space');
+        $content->loadMissing('context');
 
-        if (! $this->spaces->view($user, $content->space)) {
+        if (! $this->contexts->view($user, $content->context)) {
             return false;
         }
 
@@ -87,7 +94,9 @@ class SpaceContentPolicy
             return false;
         }
 
-        return (int) $content->author_actor_id === (int) $current->actor->id
-            || $this->spaces->manage($current, $content->space);
+        $isAuthor = (int) $content->author_actor_id === (int) $current->actor->id;
+
+        return ($isAuthor && $this->contexts->createContent($current, $content->context))
+            || $this->contexts->manageContent($current, $content->context);
     }
 }

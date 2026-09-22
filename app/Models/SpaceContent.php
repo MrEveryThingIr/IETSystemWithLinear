@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ContextScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ use LogicException;
 
 #[Fillable([
     'uuid',
+    'context_id',
     'group_space_id',
     'space_content_definition_id',
     'author_actor_id',
@@ -51,10 +53,16 @@ class SpaceContent extends Model
     {
         static::creating(function (self $content): void {
             $content->uuid ??= (string) Str::uuid();
+            $context = Context::query()->findOrFail($content->context_id);
+            ContextScope::assertLegacyGroupSpace(
+                $context,
+                $content->group_space_id !== null ? (int) $content->group_space_id : null,
+                'Content',
+            );
             $definition = SpaceContentDefinition::query()->findOrFail($content->space_content_definition_id);
 
-            if ((int) $definition->group_space_id !== (int) $content->group_space_id) {
-                throw new LogicException('Content Definition must belong to the same Space as Content.');
+            if ((int) $definition->context_id !== (int) $content->context_id) {
+                throw new LogicException('Content Definition must belong to the same Context as Content.');
             }
 
             if (! in_array($content->status, ['draft', 'published', 'archived'], true)) {
@@ -67,7 +75,7 @@ class SpaceContent extends Model
         });
 
         static::updating(function (self $content): void {
-            if ($content->isDirty(['uuid', 'group_space_id', 'space_content_definition_id', 'author_actor_id'])) {
+            if ($content->isDirty(['uuid', 'context_id', 'group_space_id', 'space_content_definition_id', 'author_actor_id'])) {
                 throw new LogicException('Content identity and provenance cannot be reassigned.');
             }
 
@@ -132,6 +140,12 @@ class SpaceContent extends Model
         } finally {
             $this->applyingLifecycle = false;
         }
+    }
+
+    /** @return BelongsTo<Context, $this> */
+    public function context(): BelongsTo
+    {
+        return $this->belongsTo(Context::class);
     }
 
     /** @return BelongsTo<GroupSpace, $this> */

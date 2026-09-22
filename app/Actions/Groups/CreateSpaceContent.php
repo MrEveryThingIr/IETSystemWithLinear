@@ -2,6 +2,7 @@
 
 namespace App\Actions\Groups;
 
+use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Models\Actor;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Gate;
 
 class CreateSpaceContent
 {
+    public function __construct(private readonly EnsureGroupSpaceContext $contexts) {}
+
     /** @param array<string, mixed> $payload */
     public function execute(
         GroupSpace $space,
@@ -28,9 +31,14 @@ class CreateSpaceContent
         return DB::transaction(function () use ($space, $definition, $user, $title, $payload): SpaceContent {
             $currentSpace = GroupSpace::query()->lockForUpdate()->findOrFail($space->id);
             Gate::forUser($user)->authorize('create', [SpaceContent::class, $currentSpace]);
+            $context = $this->contexts->execute($currentSpace);
 
             $currentDefinition = SpaceContentDefinition::query()->lockForUpdate()->findOrFail($definition->id);
-            abort_unless((int) $currentDefinition->group_space_id === (int) $currentSpace->id, 404);
+            abort_unless(
+                (int) $currentDefinition->context_id === (int) $context->id
+                    && (int) $currentDefinition->group_space_id === (int) $currentSpace->id,
+                404,
+            );
             abort_if($currentDefinition->status === 'archived', 422, 'Archived Content Definitions cannot create Content.');
 
             $version = $currentDefinition->activeVersionRecord();
@@ -42,6 +50,7 @@ class CreateSpaceContent
             $actor = $this->actor($user);
 
             $content = $currentSpace->contents()->create([
+                'context_id' => $context->id,
                 'space_content_definition_id' => $currentDefinition->id,
                 'author_actor_id' => $actor->id,
                 'status' => 'draft',

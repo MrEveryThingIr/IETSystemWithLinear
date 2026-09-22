@@ -2,6 +2,7 @@
 
 namespace App\Actions\Groups;
 
+use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Models\Actor;
 use App\Models\GroupSpace;
 use App\Models\SpaceContentDefinition;
@@ -13,6 +14,8 @@ use Illuminate\Support\Str;
 
 class CreateSpaceContentDefinition
 {
+    public function __construct(private readonly EnsureGroupSpaceContext $contexts) {}
+
     /** @param array<int, mixed> $fields */
     public function execute(
         GroupSpace $space,
@@ -35,6 +38,7 @@ class CreateSpaceContentDefinition
             $currentSpace = GroupSpace::query()->lockForUpdate()->findOrFail($space->id);
             Gate::forUser($user)->authorize('manage', $currentSpace);
             abort_unless($currentSpace->status === 'active', 422, 'Archived Spaces cannot define Content.');
+            $context = $this->contexts->execute($currentSpace);
 
             $actor = $this->actor($user);
             abort_if(
@@ -44,6 +48,7 @@ class CreateSpaceContentDefinition
             );
 
             $definition = $currentSpace->contentDefinitions()->create([
+                'context_id' => $context->id,
                 'created_by_actor_id' => $actor->id,
                 'name' => $name,
                 'slug' => $slug,

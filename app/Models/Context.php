@@ -6,6 +6,7 @@ use App\ContextKind;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
@@ -62,5 +63,29 @@ class Context extends Model
     public function admissionBinding(): HasOne
     {
         return $this->hasOne(AdmissionContext::class);
+    }
+
+    /** @return HasMany<SpaceContentDefinition, $this> */
+    public function contentDefinitions(): HasMany
+    {
+        return $this->hasMany(SpaceContentDefinition::class);
+    }
+
+    /** @return HasMany<SpaceContent, $this> */
+    public function contents(): HasMany
+    {
+        return $this->hasMany(SpaceContent::class);
+    }
+
+    /** @return HasMany<SpaceContentRenderTemplate, $this> */
+    public function renderTemplates(): HasMany
+    {
+        return $this->hasMany(SpaceContentRenderTemplate::class);
+    }
+
+    /** @return HasMany<Asset, $this> */
+    public function assets(): HasMany
+    {
+        return $this->hasMany(Asset::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ContextScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,7 @@ use LogicException;
 
 #[Fillable([
     'uuid',
+    'context_id',
     'group_space_id',
     'creator_actor_id',
     'name',
@@ -37,6 +39,12 @@ class SpaceContentRenderTemplate extends Model
     {
         static::creating(function (self $template): void {
             $template->uuid ??= (string) Str::uuid();
+            $context = Context::query()->findOrFail($template->context_id);
+            ContextScope::assertLegacyGroupSpace(
+                $context,
+                $template->group_space_id !== null ? (int) $template->group_space_id : null,
+                'Content rendering template',
+            );
             $template->name = trim($template->name);
             if ($template->name === '' || mb_strlen($template->name) > 120) {
                 throw new LogicException('Content rendering template name is invalid.');
@@ -47,13 +55,19 @@ class SpaceContentRenderTemplate extends Model
         });
 
         static::updating(function (self $template): void {
-            if ($template->isDirty(['uuid', 'group_space_id', 'creator_actor_id'])) {
+            if ($template->isDirty(['uuid', 'context_id', 'group_space_id', 'creator_actor_id'])) {
                 throw new LogicException('Rendering template identity is immutable.');
             }
             if ($template->isDirty('status') && ! in_array($template->status, [self::STATUS_ACTIVE, self::STATUS_ARCHIVED], true)) {
                 throw new LogicException('Unknown Content rendering template status.');
             }
         });
+    }
+
+    /** @return BelongsTo<Context, $this> */
+    public function context(): BelongsTo
+    {
+        return $this->belongsTo(Context::class);
     }
 
     /** @return BelongsTo<GroupSpace, $this> */

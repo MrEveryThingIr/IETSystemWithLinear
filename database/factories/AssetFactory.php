@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Models\Actor;
 use App\Models\Asset;
 use App\Models\GroupSpace;
@@ -18,6 +19,11 @@ class AssetFactory extends Factory
         return [
             'uuid' => $uuid,
             'group_space_id' => GroupSpace::factory()->restricted(),
+            'context_id' => function (array $attributes): int {
+                $space = GroupSpace::query()->findOrFail($attributes['group_space_id']);
+
+                return app(EnsureGroupSpaceContext::class)->execute($space)->id;
+            },
             'original_filename' => 'document.pdf',
             'mime_type' => 'application/pdf',
             'extension' => 'pdf',
