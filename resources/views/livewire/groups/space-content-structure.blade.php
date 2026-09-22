@@ -46,7 +46,7 @@
                             <flux:badge size="sm">{{ __('ui.content.status_'.$item->status) }}</flux:badge>
                         </div>
                         <div class="font-semibold text-zinc-950 dark:text-white" dir="auto">{{ $itemRevision?->title ?? __('ui.content.untitled') }}</div>
-                        <div class="mt-1 text-sm text-zinc-500" dir="auto">{{ $item->author->user?->username ?? __('ui.common.unknown_account') }}</div>
+                        <div class="mt-1"><x-app.actor-identity :actor="$item->author" size="xs" /></div>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <flux:button wire:click="moveUp({{ $item->id }})" size="sm" variant="ghost" :disabled="$index === 0">{{ __('structure.move_up') }}</flux:button>
