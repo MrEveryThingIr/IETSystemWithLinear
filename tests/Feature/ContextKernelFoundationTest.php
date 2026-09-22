@@ -10,7 +10,9 @@ use App\ContextKind;
 use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\Context;
+use App\Models\GroupSpace;
 use App\Models\GroupSpaceContext;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use LogicException;
@@ -47,6 +49,22 @@ class ContextKernelFoundationTest extends TestCase
 
         $this->assertSame($binding->context_id, $again->id);
         $this->assertDatabaseCount('group_space_contexts', 1);
+    }
+
+    public function test_group_space_context_provisioning_survives_disabled_model_events(): void
+    {
+        $space = GroupSpace::factory()->create();
+
+        $context = Model::withoutEvents(
+            fn (): Context => app(EnsureGroupSpaceContext::class)->execute($space),
+        );
+
+        $this->assertNotNull($context->uuid);
+        $this->assertSame(ContextKind::GroupSpace, $context->kind);
+        $this->assertDatabaseHas('group_space_contexts', [
+            'context_id' => $context->id,
+            'group_space_id' => $space->id,
+        ]);
     }
 
     public function test_personal_context_is_unique_private_and_owner_only(): void
