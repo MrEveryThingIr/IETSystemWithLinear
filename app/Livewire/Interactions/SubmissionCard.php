@@ -28,6 +28,7 @@ class SubmissionCard extends Component
     use WithFileUploads;
 
     public InteractionDefinition $definition;
+
     public ?string $submissionUuid = null;
 
     /** @var array<string, mixed> */
