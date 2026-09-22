@@ -33,35 +33,36 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 6 — Content Blueprints and unified productized authoring: **complete and human-owner accepted for roadmap progression on 2026-09-22**.
 - Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1` (GitHub Actions run `35739828516`: 364 tests / 1934 assertions, PHPStan/Pint/Vite/ops/security green).
 - Local Phase 6 closure on synchronized HEAD `b33bdcf`: three migrations applied; focused gate 20 tests / 121 assertions; full suite 364 / 1934; PHPStan and Vite green; clean diff/tree after restoring unrelated whole-repository Pint rewrites; browser review found no blocking defect.
-- Phase 7 — Submission / Response / Evaluation is **active** on `feat/phase-07-submission-evaluation`. Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
+- Phase 7 — Submission / Response / Evaluation is **runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-07-submission-evaluation`. Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 - Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, or turn evidence count into reputation.
 - Phase 6 preserves the proven `SpaceContent*` substrate while making it Context-generic and Blueprint-first. Do not mass-rename it, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 7/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 
 ## Current technical candidate
 
-The Phase 7 starting baseline is:
+The frozen Phase 7 runtime candidate is:
 
-`0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533`
+`35236f7af4ab9168467383b867cd698f2f30755c`
 
 on:
 
 `feat/phase-07-submission-evaluation`
 
-GitHub Actions run `35749114796` on that exact baseline is green:
+GitHub Actions run `35772393444` on that exact runtime candidate is green:
 
-- 366 PHPUnit tests / 1945 assertions;
+- 393 PHPUnit tests / 2086 assertions;
 - PHPStan: no errors;
-- changed-file Pint: 262 files passed;
+- changed-file Pint: 307 files passed;
 - Vite production build: passed;
-- migration/scheduler/database-queue smoke: passed;
+- Phase 7 migrations `200000`, `210000`, `220000` rolled back and reapplied successfully;
+- scheduler/database-queue smoke: passed;
 - SQLite backup → restore smoke: passed;
 - npm audit: 0 vulnerabilities;
 - Composer security audit: clean.
 
-Phase 7 must build the structured interaction substrate for applications/exams/questionnaires and the future conversation-first Admission experience. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 or realtime infrastructure.
+Phases 7A–7E are technically complete. The school-exam and employment-application proof cases, exact historical version preservation, pre-Membership Admission isolation, reusable Asset/evidence flows and Evaluation-without-domain-side-effects are automated and green. Opt-in browser fixture: `database/seeders/Phase7InteractionDemoSeeder.php`; guide: `database/seeders/README-Phase7InteractionDemo.md`; implementation report: `Development-CodexReports/phase-07-submission-evaluation-report.md`.
 
-Phase 7A — versioned InteractionDefinition kernel — is complete and human/local accepted. Phase 7B — Submission / Response / evidence — is technically complete on `7761a2f5a57fd06b8df4fa7e97397cd9f9a2a2ab`. Phase 7C — Evaluation — is technically complete on `9e0338994f755f81c59ed6dfe9e5e96ad0afaa8f`. Phase 7D — productized interaction experience — is technically complete on `d828dc43c9ef469a3532bfee9b6274d5dceb5f24`. GitHub Actions run `35771215549` is green: 390 tests / 2052 assertions, changed-file Pint 305 files, PHPStan/Vite/migration/queue/scheduler/backup-restore/npm/Composer security gates green. Phase 7E — proof and closure — is next.
+Do not begin Phase 8 runtime work until the human owner completes the final local/existing-database and browser/mobile/RTL acceptance gate. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 Conversation or realtime infrastructure.
 
 ## Architectural stop conditions
 
