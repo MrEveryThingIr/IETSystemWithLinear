@@ -270,9 +270,9 @@ Rules:
 - use PRs for integration/release boundaries;
 - tag production releases.
 
-For the current architecture baseline, the active branch is:
+For the current accepted implementation baseline, the active branch is:
 
-`feat/group-spaces-communication`
+`feat/phase-05-content-context`
 
 Future phase branching should be decided at each phase start from the then-current accepted integration baseline.
 
