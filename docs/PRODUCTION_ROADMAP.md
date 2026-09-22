@@ -215,7 +215,7 @@ Concept semantics are reusable by both Actor Profile and Content without duplica
 
 ## Phase 4 — Actor/Party and progressive Profile
 
-**Status: runtime implementation complete and remote-validated; final owner-local/browser acceptance pending.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
+**Status: complete and human-owner accepted on 2026-09-22.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 
 Final runtime baseline before documentation-only closure:
 
@@ -237,7 +237,7 @@ Architectural boundaries remain explicit: recurring Profile declarations are cur
 
 ### Exit gate
 
-**Pending final human acceptance.** The remote/runtime proof is green; the owner must still synchronize locally, apply migrations, run validation, and accept the browser/mobile/RTL behavior before Phase 5 starts.
+**Passed.** Final local/browser acceptance on synchronized HEAD `ec1961b` confirmed the migration, **45 focused tests / 237 assertions**, **331 full tests / 1719 assertions**, PHPStan, Pint, Vite build, clean diff/tree, and browser/mobile/RTL behavior.
 
 ## Phase 5 — Generic Content Context
 
