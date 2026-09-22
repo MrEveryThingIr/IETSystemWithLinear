@@ -19,7 +19,7 @@
                         <flux:table.cell><flux:link :href="route('actors.show', $actor)">#{{ $actor->id }}</flux:link></flux:table.cell>
                         <flux:table.cell>
                             @if ($actor->user)
-                                {{ $actor->user->username }} <flux:text size="sm">{{ $actor->user->email }}</flux:text>
+                                <div class="space-y-1"><x-app.actor-identity :actor="$actor" /><flux:text size="sm">{{ $actor->user->email }}</flux:text></div>
                             @else
                                 <flux:badge>{{ __('ui.actors.accountless') }}</flux:badge>
                             @endif
