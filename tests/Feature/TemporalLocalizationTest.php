@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
 use App\CalendarSystem;
+use App\Livewire\Profile\TemporalPreferences as TemporalPreferencesComponent;
 use App\Models\Actor;
 use App\Models\User;
 use App\ProfileIntentKind;
@@ -14,6 +15,7 @@ use App\Support\Localization;
 use App\Support\TemporalPreferences;
 use App\TimezoneMode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class TemporalLocalizationTest extends TestCase
@@ -134,7 +136,13 @@ class TemporalLocalizationTest extends TestCase
             ->get(route('profile.edit'))
             ->assertOk()
             ->assertSee('data-calendar="persian"', false)
-            ->assertSee('data-locale="fa-IR"', false)
+            ->assertSee('data-locale="fa-IR"', false);
+
+        Livewire::actingAs($actor->user)
+            ->test(TemporalPreferencesComponent::class)
+            ->assertSet('editorOpen', false)
+            ->call('openEditor')
+            ->assertSet('editorOpen', true)
             ->assertSee(__('ui.profile.temporal.calendar_auto', [
                 'calendar' => __('ui.profile.temporal.calendars.persian'),
             ]));
