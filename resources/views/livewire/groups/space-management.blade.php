@@ -106,7 +106,7 @@
                                     <div class="flex items-center justify-between gap-3">
                                         <div>
                                             <flux:text class="font-medium">
-                                                {{ $actor->user?->username ?? __('ui.spaces.accountless_actor', ['id' => $actor->id]) }}
+                                                <x-app.actor-identity :actor="$actor" size="xs" />
                                             </flux:text>
                                             <flux:text class="text-xs">{{ __('ui.spaces.actor_status', ['id' => $actor->id, 'status' => $actor->status]) }}</flux:text>
                                         </div>
@@ -137,13 +137,13 @@
                             <div class="flex flex-col gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
                                 <div class="space-y-1">
                                     <flux:heading>
-                                        {{ $participant->actor->user?->username ?? __('ui.spaces.accountless_actor', ['id' => $participant->actor_id]) }}
+                                        <x-app.actor-identity :actor="$participant->actor" size="xs" />
                                     </flux:heading>
                                     <div class="flex flex-wrap gap-2">
                                         <flux:badge>{{ __('ui.spaces.'.$participant->access) }}</flux:badge>
                                         <flux:badge>{{ __('ui.spaces.'.$participant->role) }}</flux:badge>
                                         <flux:text class="text-xs">
-                                            {{ __('ui.spaces.granted_by', ['username' => $participant->grantedBy->user?->username ?? __('ui.spaces.accountless_actor', ['id' => $participant->granted_by_actor_id])]) }}
+                                            <span class="inline-flex flex-wrap items-center gap-2"><span>{{ __('ui.spaces.granted_by', ['username' => '']) }}</span><x-app.actor-identity :actor="$participant->grantedBy" size="xs" /></span>
                                         </flux:text>
                                     </div>
                                 </div>
