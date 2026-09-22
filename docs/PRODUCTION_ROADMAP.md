@@ -317,11 +317,11 @@ Passed. Automated/runtime conditions were satisfied on `ad07445b16a708b4efd67461
 
 ## Phase 7 — Submission / Response / Evaluation
 
-**Status: next roadmap phase; not yet started. Establish and accept the Phase 7 contract before runtime implementation.**
+**Status: active on `feat/phase-07-submission-evaluation`.** Detailed contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`. Starting baseline: `0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533` (GitHub Actions run `35749114796`: 366 tests / 1945 assertions; PHPStan/Pint/Vite/ops/security green).
 
 ### Purpose
 
-Support structured interactions that annotations cannot represent correctly.
+Support structured interactions that annotations cannot represent correctly, while deliberately shaping the kernel so the same Submission/Response/Evaluation components can later appear naturally inside the conversation-first Admission experience without making messages authoritative.
 
 ### Deliverables
 
@@ -333,7 +333,8 @@ Support structured interactions that annotations cannot represent correctly.
 - draft/submit/withdraw lifecycle;
 - reviewer/evaluator authorization;
 - Evaluation/feedback;
-- exact Content/interaction-version binding.
+- exact Content/interaction-version binding;
+- conversation-embeddable structured interaction components that do not depend on Conversation or realtime infrastructure.
 
 ### Proof cases
 
@@ -342,7 +343,7 @@ Support structured interactions that annotations cannot represent correctly.
 
 ### Exit gate
 
-Both proof cases work without abusing annotations or creating separate form engines.
+Both proof cases work without abusing annotations or creating separate form engines; submitted evidence remains historically exact, and the application components can later be composed into Conversation without changing their domain semantics.
 
 ## Phase 8 — Admission v2: contextual onboarding
 

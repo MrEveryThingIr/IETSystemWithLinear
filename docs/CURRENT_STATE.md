@@ -4,7 +4,7 @@
 
 Current implementation baseline:
 
-- Branch: `feat/phase-06-content-blueprints`.
+- Branch: `feat/phase-07-submission-evaluation`.
 - Phase 1 — Invitation/registration/admission journey: complete.
 - Phase 2 — Delivery and operations baseline: complete at the provider-neutral baseline.
 - Phase 3 — Concept Kernel: complete.
@@ -23,9 +23,10 @@ Current implementation baseline:
   - Composer security audit: clean.
 - Local closure on synchronized HEAD `b33bdcf` applied all three Phase 6 migrations; passed **20 focused tests / 121 assertions**, **364 full tests / 1934 assertions**, PHPStan, Vite build, `git diff --check`, and a clean working tree after restoring unrelated whole-repository Pint rewrites.
 - Human browser review was intentionally non-exhaustive but found no blocking correctness problem; remaining Content-view behavior/UX improvements are deferred to the later whole-system polish pass.
-- Phase 7 — Submission / Response / Evaluation is the next roadmap phase and has not started yet.
+- Post-closure invitation locale-return regression fixed at `0d98dfe`; GitHub Actions run `35749114796` is green at **366 tests / 1945 assertions**, PHPStan/Pint/Vite/ops/security green.
+- Phase 7 — Submission / Response / Evaluation is **active** on `feat/phase-07-submission-evaluation`; binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 
-This document describes repository implementation truth at the accepted Phase 6 closure. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and Phase 6 evidence by `docs/PHASE_06_CONTENT_BLUEPRINTS.md` plus `Development-CodexReports/phase-06-content-blueprints-report.md`.
+This document describes repository implementation truth at the Phase 7 kickoff baseline. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and active Phase 7 scope by `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 
 ## Established identity and platform foundation
 
@@ -615,17 +616,29 @@ Specific defects should be added when observed rather than guessed or implemente
 
 Phases 1–6 are closed.
 
-The next roadmap milestone is **Phase 7 — Submission / Response / Evaluation**.
+The active milestone is **Phase 7 — Submission / Response / Evaluation**.
 
-Phase 7 must add structured interactions that annotations cannot correctly represent, while reusing the accepted Context, Content, Asset and immutable-evidence foundations rather than creating a second form/content engine.
+Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 
-Before Phase 7 runtime implementation:
+Starting runtime baseline: `0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533`.
 
-- establish and accept the Phase 7 repository contract from `docs/PRODUCTION_ROADMAP.md`;
-- audit the current Content interaction, Asset and Context authorization seams;
-- preserve exact Content/Blueprint/revision provenance;
-- keep ordinary annotations/conversation separate from authoritative Submission/Response/Evaluation lifecycle;
-- do not pull Admission v2, realtime infrastructure, generic Workflow, Planner, matching, Contract or reputation work forward.
+Phase 7 builds one versioned structured-interaction kernel for applications, exams, questionnaires, evidence responses and evaluations.
+
+The owner-approved product direction is conversation-ready:
+
+- structured interactions must be able to render later as cards inside Conversation;
+- conversation/messages remain collaboration, never hidden authority;
+- Phase 7 does not implement Admission v2 Conversation or realtime infrastructure;
+- current Admission remains compatible until Phase 8 composes these capabilities into the conversation-first workspace.
+
+Pre-implementation audit confirms reuse of:
+
+- Context authorization, including Admission Context before Membership;
+- private reusable Assets;
+- immutable Content revisions/evidence;
+- rich annotations for discussion rather than structured answers.
+
+Phase 7 must not create a parallel form engine, a second Asset store, an Admission-only response system, or a generic Workflow/Conversation subsystem.
 
 Binding downstream invariants:
 
@@ -636,7 +649,9 @@ Binding downstream invariants:
 - Admission Context access does not imply Group access;
 - mutable Content drafts remain distinct from sealed publication evidence;
 - Content Blueprints remain creation recipes, not permanent hidden authority/type systems;
-- Submission/Response/Evaluation belongs to Phase 7;
-- full Admission v2 requirements/Conversation belongs to Phase 8.
+- Submission/Response/Evaluation is authoritative structured interaction state;
+- Conversation is collaboration, not authority;
+- Admission v2 belongs to Phase 8;
+- real-time transport belongs to Phase 9.
 
-See `docs/PHASE_06_CONTENT_BLUEPRINTS.md`, `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md`.
+See `docs/PHASE_07_SUBMISSION_EVALUATION.md`, `docs/ADMISSION_COLLABORATION_ARCHITECTURE.md`, `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md`.

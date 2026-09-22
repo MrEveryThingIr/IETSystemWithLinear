@@ -6,7 +6,7 @@ Before any nontrivial implementation work, read the repository's canonical produ
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
 4. `docs/PRODUCTION_ROADMAP.md`
-5. the currently active phase contract (Phase 7 is next; establish and accept its repository contract before Phase 7 runtime implementation)
+5. the currently active phase contract (`docs/PHASE_07_SUBMISSION_EVALUATION.md`)
 6. relevant ADRs
 7. `.ai/rules/index.md` and every matching path rule
 
@@ -33,33 +33,33 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 6 — Content Blueprints and unified productized authoring: **complete and human-owner accepted for roadmap progression on 2026-09-22**.
 - Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1` (GitHub Actions run `35739828516`: 364 tests / 1934 assertions, PHPStan/Pint/Vite/ops/security green).
 - Local Phase 6 closure on synchronized HEAD `b33bdcf`: three migrations applied; focused gate 20 tests / 121 assertions; full suite 364 / 1934; PHPStan and Vite green; clean diff/tree after restoring unrelated whole-repository Pint rewrites; browser review found no blocking defect.
-- Phase 7 — Submission / Response / Evaluation is the **next roadmap phase**. It has not started yet; establish its phase contract before runtime implementation.
+- Phase 7 — Submission / Response / Evaluation is **active** on `feat/phase-07-submission-evaluation`. Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 - Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, or turn evidence count into reputation.
 - Phase 6 preserves the proven `SpaceContent*` substrate while making it Context-generic and Blueprint-first. Do not mass-rename it, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 7/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 
 ## Current technical candidate
 
-The current code-bearing candidate is:
+The Phase 7 starting baseline is:
 
-`ad07445b16a708b4efd67461f5cef12201ffa8b1`
+`0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533`
 
 on:
 
-`feat/phase-06-content-blueprints`
+`feat/phase-07-submission-evaluation`
 
-Remote validation on GitHub Actions run `35739828516`:
+GitHub Actions run `35749114796` on that exact baseline is green:
 
-- 364 PHPUnit tests / 1934 assertions;
+- 366 PHPUnit tests / 1945 assertions;
 - PHPStan: no errors;
-- Pint: 258 files passed;
+- changed-file Pint: 262 files passed;
 - Vite production build: passed;
 - migration/scheduler/database-queue smoke: passed;
 - SQLite backup → restore smoke: passed;
 - npm audit: 0 vulnerabilities;
 - Composer security audit: clean.
 
-Human-owner acceptance for roadmap progression was recorded on 2026-09-22 after synchronized local validation and a non-exhaustive browser review found no blocking defect. Non-blocking Content-view behavior/UX improvements are explicitly deferred in `docs/CURRENT_STATE.md` for the later whole-system polish pass.
+Phase 7 must build the structured interaction substrate for applications/exams/questionnaires and the future conversation-first Admission experience. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 or realtime infrastructure.
 
 ## Architectural stop conditions
 
