@@ -20,7 +20,7 @@ Current implementation baseline:
   - SQLite backup → restore smoke: passed;
   - npm audit: 0 vulnerabilities;
   - Composer security audit: clean.
-- Phase 6 — Content Blueprints and unified productized authoring is the next active roadmap phase.
+- Phase 6 — Content Blueprints and unified productized authoring is **active** on `feat/phase-06-content-blueprints`.
 
 This document describes repository implementation truth at the final Phase 5 human acceptance gate. Future architecture remains governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
 
@@ -562,7 +562,9 @@ These are continuous roadmap requirements, not a final afterthought.
 
 Phases 1–4 are closed.
 
-Phase 5 is closed. The next active implementation milestone is **Phase 6 — Content Blueprints and unified productized authoring**.
+Phase 5 is closed. The active implementation milestone is **Phase 6 — Content Blueprints and unified productized authoring**.
+
+Phase 6 is explicitly converging the simple Context authoring surface and mature Group Content Studio into one product experience over the same Content kernel.
 
 Frozen runtime candidate:
 

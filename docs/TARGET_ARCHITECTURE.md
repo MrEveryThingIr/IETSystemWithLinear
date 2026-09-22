@@ -259,6 +259,12 @@ Examples:
 - exam;
 - travel guide.
 
+### Evidence-addressable Content
+
+When Content is used as evidence, references bind an exact immutable published revision and may additionally target an exact field, block UUID, asset placement UUID or relationship UUID. Evidence/reputation layers must not point only to mutable current Content when historical truth matters.
+
+Skill self-ratings, evidence maturity, verification and reputation are separate dimensions. Artifact count alone must not silently rewrite an Actor's self-reported proficiency.
+
 ### Content is not universal domain state
 
 A Job Opportunity may have Content, but structured Need/requirements remain a domain object.
@@ -288,14 +294,17 @@ Introduce versioned ContentBlueprint above it.
 
 A Blueprint version may define:
 
-- Content Definition/version;
+- Content Definition/schema defaults;
 - initial Blocks;
 - RenderTemplate and safe token defaults;
 - Concept classifications;
 - interaction policy;
-- optional Submission schema;
-- optional Workflow;
+- authoring capability hints;
+- optional future Submission schema;
+- optional future Workflow;
 - audience defaults.
+
+Blueprints are recipes over the one Content kernel, not parallel Content types. Personal, GroupSpace, Admission and later Contexts should converge on the same Studio/Reader capabilities with progressive Quick → Guided → Advanced authoring.
 
 Examples:
 

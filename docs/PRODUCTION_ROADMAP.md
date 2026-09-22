@@ -274,11 +274,13 @@ Remove the architectural requirement that all Content belong to a GroupSpace.
 
 Content can safely exist in at least Group, Personal, and Admission contexts.
 
-## Phase 6 — Content Blueprints and productized authoring
+## Phase 6 — Content Blueprints and unified productized authoring
+
+**Status: active on `feat/phase-06-content-blueprints`.** Detailed contract: `docs/PHASE_06_CONTENT_BLUEPRINTS.md`.
 
 ### Purpose
 
-Turn the powerful low-level Content engine into convenient reusable authoring.
+Turn the powerful low-level Content engine into convenient reusable authoring and converge Personal/GroupSpace/Admission authoring onto one advanced Content experience.
 
 ### Deliverables
 
@@ -291,6 +293,9 @@ Turn the powerful low-level Content engine into convenient reusable authoring.
 - explicit Blueprint version provenance;
 - upgrade/clone semantics;
 - Blueprint catalog/search;
+- Quick → Guided → Advanced authoring;
+- one generic Context Studio/Reader capability surface rather than a second simplified Content system;
+- immutable revision/block/asset evidence locators for future verification/reputation;
 - conversion of English workbook demonstration into a reusable Blueprint pattern.
 
 ### Initial Blueprints

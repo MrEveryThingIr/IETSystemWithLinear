@@ -6,7 +6,7 @@ Before any nontrivial implementation work, read the repository's canonical produ
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
 4. `docs/PRODUCTION_ROADMAP.md`
-5. the currently active phase contract (`docs/PHASE_06_CONTENT_BLUEPRINTS.md` once created)
+5. the currently active phase contract (`docs/PHASE_06_CONTENT_BLUEPRINTS.md`)
 6. relevant ADRs
 7. `.ai/rules/index.md` and every matching path rule
 
@@ -30,7 +30,8 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 4 — Actor/Party and progressive Profile: complete and human-owner accepted at `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
 - Phase 5 — Generic Content Context: **complete and human-owner accepted on 2026-09-22**.
 - Accepted Phase 5 branch HEAD before closure docs: `2561eda91c3e1db84c77816e8c15324d8f0fd939`.
-- Phase 6 — Content Blueprints and unified productized authoring: next active phase after its branch/contract is created.
+- Phase 6 — Content Blueprints and unified productized authoring: **active** on `feat/phase-06-content-blueprints`.
+- Phase 6 must converge all Contexts onto one Content kernel/application experience. Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, or implement Phase 7 response/evaluation or later reputation scoring.
 - Phase 5 preserves existing Group Content while adding Personal and Admission Context Content. Do not mass-rename `SpaceContent`, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 6/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 
