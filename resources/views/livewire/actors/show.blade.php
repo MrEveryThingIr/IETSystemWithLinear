@@ -7,7 +7,7 @@
     <dl class="max-w-xl space-y-4">
         <div><dt class="font-medium">{{ __('ui.actors.association') }}</dt><dd>
             @if ($actor->user)
-                {{ $actor->user->username }} ({{ $actor->user->email }})
+                <div class="flex flex-wrap items-center gap-2"><x-app.actor-identity :actor="$actor" /> <span class="text-sm text-zinc-500">{{ $actor->user->email }}</span></div>
             @else
                 <flux:badge>{{ __('ui.actors.accountless') }}</flux:badge>
             @endif
