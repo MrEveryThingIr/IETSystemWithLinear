@@ -215,7 +215,9 @@ class InteractionExperienceTest extends TestCase
 
     public function test_farsi_submission_card_uses_rtl_ready_localized_copy(): void
     {
-        $actor = Actor::factory()->create(['locale' => 'fa']);
+        $actor = Actor::factory()->create();
+        $actor->user->update(['locale' => 'fa']);
+        app()->setLocale('fa');
         [, , , $interaction] = $this->publishedInteraction($actor, 'application');
 
         Livewire::actingAs($actor->user)
