@@ -76,7 +76,8 @@ class ContentShow extends Component
 
         $canUpdate = Gate::forUser($this->user())->allows('update', $current);
         $canPublish = Gate::forUser($this->user())->allows('publish', $current);
-        $revision = $this->visibleRevision($canUpdate);
+        $canSeeDraft = Gate::forUser($this->user())->allows('revisions', $current);
+        $revision = $this->visibleRevision($canSeeDraft);
         $body = is_string($revision->payload['body'] ?? null) ? $revision->payload['body'] : null;
 
         return view('livewire.contexts.content-show', compact(
@@ -89,8 +90,8 @@ class ContentShow extends Component
 
     private function fillFromVisibleRevision(): void
     {
-        $canUpdate = Gate::forUser($this->user())->allows('update', $this->content);
-        $revision = $this->visibleRevision($canUpdate);
+        $canSeeDraft = Gate::forUser($this->user())->allows('revisions', $this->content);
+        $revision = $this->visibleRevision($canSeeDraft);
         $this->title = $revision->title;
         $this->body = is_string($revision->payload['body'] ?? null) ? $revision->payload['body'] : '';
     }
