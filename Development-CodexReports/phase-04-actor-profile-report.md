@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 4 is complete and human-owner accepted.**
+**Phase 4 runtime is complete and remote-validated; final owner-local/browser acceptance is pending.**
 
 - 4A — professional identity + profile media: complete.
 - 4B — semantic Profile + recurring Needs/Offers: complete.
@@ -16,7 +16,7 @@ Final runtime baseline before this documentation-only closure:
 
 Final GitHub Actions run: `35700986122` — **success**.
 
-Phase 5 is now unblocked.
+Phase 5 remains blocked until the human owner completes the final local sync/test/browser acceptance gate.
 
 ## Starting point
 
@@ -556,7 +556,7 @@ All of the above are resolved in the closed milestone.
 
 ## Phase 4 closure
 
-Human owner accepted final Phase 4 closure on **2026-09-22**.
+Final Phase 4 human acceptance is **pending**. Remote implementation and CI are complete.
 
 Closed architectural invariants:
 
@@ -573,4 +573,4 @@ mutable current Profile != immutable historical evidence
 
 No Phase 5 Context model, Phase 11 Planner occurrence, Phase 13 Match, or Phase 14 Contract/Commitment state was pulled forward.
 
-The repository is ready for **Phase 5 — Generic Content Context**.
+The repository is technically ready for **Phase 5 — Generic Content Context**, but Phase 5 must not begin until the owner-local/browser gate passes.
