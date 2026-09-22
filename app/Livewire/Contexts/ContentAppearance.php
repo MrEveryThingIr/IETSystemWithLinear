@@ -133,7 +133,7 @@ class ContentAppearance extends Component
 
     private function currentBaseKey(): string
     {
-        if (! str_starts_with($this->templateSource, 'custom:')) {
+        if (!str_starts_with($this->templateSource, 'custom:')) {
             return 'article';
         }
 
