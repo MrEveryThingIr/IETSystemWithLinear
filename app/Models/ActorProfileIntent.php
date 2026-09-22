@@ -17,6 +17,7 @@ use LogicException;
 #[Fillable([
     'title',
     'description',
+    'importance_percent',
     'quantity',
     'unit',
     'location_text',
@@ -123,6 +124,7 @@ class ActorProfileIntent extends Model
             'visibility' => ProfileItemVisibility::class,
             'status' => ProfileIntentStatus::class,
             'quantity' => 'decimal:4',
+            'importance_percent' => 'integer',
             'round_trip' => 'boolean',
             'starts_on' => 'date',
             'ends_on' => 'date',
