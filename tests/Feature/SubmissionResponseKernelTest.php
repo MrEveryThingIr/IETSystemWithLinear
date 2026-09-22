@@ -310,8 +310,8 @@ class SubmissionResponseKernelTest extends TestCase
     }
 
     /**
-     * @param list<array<string, mixed>> $items
-     * @param array<string, mixed> $settings
+     * @param  list<array<string, mixed>>  $items
+     * @param  array<string, mixed>  $settings
      */
     private function activeInteraction(
         int $contextId,
