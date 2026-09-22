@@ -4,24 +4,31 @@
     x-init="if ($wire.timezoneMode === 'auto') $wire.useBrowserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)"
 >
     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
+        <div class="min-w-0">
             <h2 class="text-lg font-semibold">{{ __('ui.profile.temporal.title') }}</h2>
             <p class="mt-1 max-w-3xl text-sm text-zinc-500">{{ __('ui.profile.temporal.help') }}</p>
         </div>
 
-        <div
+        <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+            <flux:button wire:click="openEditor" size="sm" variant="ghost" class="w-full sm:w-auto">
+                {{ __('ui.common.edit') }}
+            </flux:button>
+
+            <div
             class="rounded-xl bg-zinc-50 px-4 py-3 text-sm dark:bg-zinc-950/60"
             data-temporal-preview
             data-locale="{{ $intlLocale }}"
             data-calendar="{{ $resolvedCalendar }}"
             data-timezone="{{ $timezone }}"
-        >
-            <span class="block text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('ui.profile.temporal.preview') }}</span>
-            <span class="mt-1 block font-medium" data-temporal-preview-value>{{ __('ui.profile.temporal.preview_loading') }}</span>
+            >
+                <span class="block text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('ui.profile.temporal.preview') }}</span>
+                <span class="mt-1 block break-words font-medium" data-temporal-preview-value>{{ __('ui.profile.temporal.preview_loading') }}</span>
+            </div>
         </div>
     </div>
 
-    <form wire:submit="save" class="mt-6 grid gap-5 lg:grid-cols-2">
+    @if ($editorOpen)
+    <form wire:submit="save" class="mt-6 grid min-w-0 gap-5 lg:grid-cols-2">
         <div class="space-y-4">
             <div class="space-y-2">
                 <label for="profile-timezone-mode" class="text-sm font-medium">{{ __('ui.profile.temporal.timezone_mode') }}</label>
@@ -38,7 +45,7 @@
 
             <div class="space-y-2">
                 <label for="profile-timezone" class="text-sm font-medium">{{ __('ui.profile.temporal.timezone') }}</label>
-                <div class="flex gap-2">
+                <div class="flex flex-col gap-2 sm:flex-row">
                     <input
                     id="profile-timezone"
                     wire:model="timezone"
@@ -50,6 +57,7 @@
                     <flux:button
                         type="button"
                         variant="ghost"
+                        class="w-full shrink-0 sm:w-auto"
                         x-on:click="$wire.useBrowserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)"
                     >
                         {{ __('ui.profile.temporal.use_device_timezone') }}
@@ -86,8 +94,10 @@
             </p>
         </div>
 
-        <div class="lg:col-span-2 flex justify-end">
-            <flux:button type="submit" variant="primary">{{ __('ui.common.save') }}</flux:button>
+        <div class="flex flex-col-reverse gap-2 lg:col-span-2 sm:flex-row sm:justify-end">
+            <flux:button type="button" wire:click="cancelEditor" variant="ghost" class="w-full sm:w-auto">{{ __('ui.common.cancel') }}</flux:button>
+            <flux:button type="submit" variant="primary" class="w-full sm:w-auto">{{ __('ui.common.save') }}</flux:button>
         </div>
     </form>
+    @endif
 </section>

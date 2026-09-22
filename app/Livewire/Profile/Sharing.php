@@ -29,9 +29,27 @@ class Sharing extends Component
     /** @var list<string> */
     public array $selectedItems = [];
 
+    public bool $composerOpen = false;
+
     public function mount(ActorProfile $profile): void
     {
         $this->profile = $profile;
+    }
+
+    public function openComposer(): void
+    {
+        $this->reset(['recipientProfileId', 'purpose', 'selectedItems']);
+        $this->expiryDays = '30';
+        $this->resetValidation();
+        $this->composerOpen = true;
+    }
+
+    public function cancelComposer(): void
+    {
+        $this->reset(['recipientProfileId', 'purpose', 'selectedItems']);
+        $this->expiryDays = '30';
+        $this->resetValidation();
+        $this->composerOpen = false;
     }
 
     public function create(CreateProfileDisclosureGrant $createGrant): void
@@ -69,6 +87,7 @@ class Sharing extends Component
 
         $this->reset(['recipientProfileId', 'purpose', 'selectedItems']);
         $this->expiryDays = '30';
+        $this->composerOpen = false;
 
         session()->flash('status', __('ui.profile_sharing.created'));
     }

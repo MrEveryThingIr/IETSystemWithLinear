@@ -31,6 +31,8 @@ class Intents extends Component
 
     public ?int $editingIntentId = null;
 
+    public bool $editorOpen = false;
+
     public string $kind = ProfileIntentKind::Need->value;
 
     public string $conceptLabel = '';
@@ -86,6 +88,12 @@ class Intents extends Component
 
         $this->timezoneAutomatic = $user->timezone_mode === TimezoneMode::Auto;
         $this->timezone = TemporalPreferences::timezoneFor($user);
+    }
+
+    public function openCreate(): void
+    {
+        $this->resetForm();
+        $this->editorOpen = true;
     }
 
     public function toggleFacet(string $facet): void
@@ -221,6 +229,7 @@ class Intents extends Component
     {
         $intent = $this->editableIntents()->with('concept.labels')->findOrFail($intentId);
 
+        $this->editorOpen = true;
         $this->editingIntentId = $intent->id;
         $this->kind = $intent->kind->value;
         $this->conceptLabel = $intent->concept->displayLabel();
@@ -354,6 +363,7 @@ class Intents extends Component
     {
         $user = request()->user();
 
+        $this->editorOpen = false;
         $this->editingIntentId = null;
         $this->kind = ProfileIntentKind::Need->value;
         $this->conceptLabel = '';

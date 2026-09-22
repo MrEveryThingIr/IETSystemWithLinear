@@ -1,10 +1,18 @@
 <section class="space-y-5 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
-    <div>
-        <h2 class="text-lg font-semibold">{{ __('ui.profile.semantics.title') }}</h2>
-        <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.semantics.help') }}</p>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
+            <h2 class="text-lg font-semibold">{{ __('ui.profile.semantics.title') }}</h2>
+            <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.semantics.help') }}</p>
+        </div>
+        @unless ($composerOpen)
+            <flux:button wire:click="openComposer" size="sm" variant="ghost" class="w-full shrink-0 sm:w-auto">
+                {{ __('ui.profile.semantics.add') }}
+            </flux:button>
+        @endunless
     </div>
 
-    <form wire:submit="add" class="grid gap-3 md:grid-cols-[minmax(0,1fr)_13rem_11rem_auto] md:items-end">
+    @if ($composerOpen)
+    <form wire:submit="add" class="grid min-w-0 gap-3 rounded-xl bg-zinc-50 p-4 lg:grid-cols-[minmax(0,1fr)_13rem_11rem_auto] lg:items-end dark:bg-zinc-950/50">
         <div class="relative space-y-2">
             <flux:input wire:model.live.debounce.250ms="conceptLabel" :label="__('ui.profile.semantics.concept')" maxlength="120" />
             @if ($conceptSuggestions !== [])
@@ -39,13 +47,17 @@
                 <option value="private">{{ __('ui.profile.item_visibility_options.private') }}</option>
             </select>
         </div>
-        <flux:button type="submit" variant="primary">{{ __('ui.profile.semantics.add') }}</flux:button>
+        <div class="flex flex-col gap-2 sm:flex-row lg:flex-col">
+            <flux:button type="submit" variant="primary" class="w-full">{{ __('ui.profile.semantics.add') }}</flux:button>
+            <flux:button type="button" wire:click="cancelComposer" variant="ghost" class="w-full">{{ __('ui.common.cancel') }}</flux:button>
+        </div>
     </form>
+    @endif
 
     @if ($assertions->isNotEmpty())
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             @foreach ($assertions as $assertion)
-                <article class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="profile-semantic-{{ $assertion->id }}">
+                <article class="min-w-0 overflow-hidden rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="profile-semantic-{{ $assertion->id }}">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <p class="truncate font-medium" dir="auto">{{ $assertion->concept->displayLabel() }}</p>

@@ -11,6 +11,7 @@ use App\Actions\Profile\SetActorProfileIntentStatus;
 use App\Actions\Profile\UpdateActorProfile;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionVisibility;
+use App\Livewire\Profile\Sharing;
 use App\Models\Actor;
 use App\Models\ActorProfileDisclosureGrant;
 use App\ProfileIntentKind;
@@ -22,11 +23,26 @@ use App\Support\Profile\ProfileCompletenessService;
 use App\Support\Profile\ProfileRequirement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ActorProfileSharingAndCompletenessTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_selective_sharing_composer_is_collapsed_until_requested(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        Livewire::actingAs($actor->user)
+            ->test(Sharing::class, ['profile' => $profile])
+            ->assertSet('composerOpen', false)
+            ->call('openComposer')
+            ->assertSet('composerOpen', true)
+            ->call('cancelComposer')
+            ->assertSet('composerOpen', false);
+    }
 
     public function test_completeness_is_purpose_specific_and_does_not_make_profile_fields_globally_required(): void
     {

@@ -30,6 +30,24 @@ class Semantics extends Component
 
     public string $semanticVisibility = ConceptAssertionVisibility::Inherited->value;
 
+    public bool $composerOpen = false;
+
+    public function openComposer(): void
+    {
+        $this->reset(['conceptLabel']);
+        $this->predicate = ConceptAssertionPredicate::HasSkill->value;
+        $this->semanticVisibility = ConceptAssertionVisibility::Inherited->value;
+        $this->resetValidation();
+        $this->composerOpen = true;
+    }
+
+    public function cancelComposer(): void
+    {
+        $this->reset(['conceptLabel']);
+        $this->resetValidation();
+        $this->composerOpen = false;
+    }
+
     public function selectConceptSuggestion(string $label): void
     {
         $this->conceptLabel = trim($label);
@@ -68,6 +86,7 @@ class Semantics extends Component
         );
 
         $this->reset('conceptLabel');
+        $this->composerOpen = false;
         session()->flash('status', __('ui.profile.semantic_added'));
     }
 

@@ -43,6 +43,10 @@ class Manage extends Component
 
     public mixed $imageUpload = null;
 
+    public bool $identityEditorOpen = false;
+
+    public bool $mediaEditorOpen = false;
+
     public function mount(EnsureActorProfile $ensureProfile): void
     {
         $user = request()->user();
@@ -50,6 +54,30 @@ class Manage extends Component
 
         $this->profile = $ensureProfile->execute($user);
         $this->syncForm();
+    }
+
+    public function openIdentityEditor(): void
+    {
+        $this->syncForm();
+        $this->resetValidation();
+        $this->identityEditorOpen = true;
+    }
+
+    public function cancelIdentityEditor(): void
+    {
+        $this->syncForm();
+        $this->resetValidation();
+        $this->identityEditorOpen = false;
+    }
+
+    public function toggleMediaEditor(): void
+    {
+        $this->mediaEditorOpen = ! $this->mediaEditorOpen;
+
+        if (! $this->mediaEditorOpen) {
+            $this->reset('imageUpload');
+            $this->resetValidation('imageUpload');
+        }
     }
 
     public function save(UpdateActorProfile $updateProfile): void
@@ -76,6 +104,7 @@ class Manage extends Component
         ]);
 
         $this->syncForm();
+        $this->identityEditorOpen = false;
         session()->flash('status', __('ui.profile.saved'));
     }
 

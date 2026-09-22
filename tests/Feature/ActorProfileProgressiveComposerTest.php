@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Actions\Profile\EnsureActorProfile;
 use App\Livewire\Profile\Intents;
+use App\Livewire\Profile\Manage;
 use App\Livewire\Profile\Semantics;
+use App\Livewire\Profile\TemporalPreferences;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
@@ -15,6 +17,49 @@ use Tests\TestCase;
 class ActorProfileProgressiveComposerTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_profile_editors_are_read_first_and_open_on_demand(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        Livewire::actingAs($actor->user)
+            ->test(Manage::class)
+            ->assertSet('identityEditorOpen', false)
+            ->assertSet('mediaEditorOpen', false)
+            ->call('openIdentityEditor')
+            ->assertSet('identityEditorOpen', true)
+            ->call('cancelIdentityEditor')
+            ->assertSet('identityEditorOpen', false)
+            ->call('toggleMediaEditor')
+            ->assertSet('mediaEditorOpen', true)
+            ->call('toggleMediaEditor')
+            ->assertSet('mediaEditorOpen', false);
+
+        Livewire::actingAs($actor->user)
+            ->test(TemporalPreferences::class)
+            ->assertSet('editorOpen', false)
+            ->call('openEditor')
+            ->assertSet('editorOpen', true)
+            ->call('cancelEditor')
+            ->assertSet('editorOpen', false);
+
+        Livewire::actingAs($actor->user)
+            ->test(Semantics::class, ['profile' => $profile])
+            ->assertSet('composerOpen', false)
+            ->call('openComposer')
+            ->assertSet('composerOpen', true)
+            ->call('cancelComposer')
+            ->assertSet('composerOpen', false);
+
+        Livewire::actingAs($actor->user)
+            ->test(Intents::class, ['profile' => $profile])
+            ->assertSet('editorOpen', false)
+            ->call('openCreate')
+            ->assertSet('editorOpen', true)
+            ->call('cancelEdit')
+            ->assertSet('editorOpen', false);
+    }
 
     public function test_need_composer_starts_minimal_and_can_add_and_remove_optional_facets(): void
     {
@@ -107,6 +152,7 @@ class ActorProfileProgressiveComposerTest extends TestCase
         Livewire::actingAs($actor->user)
             ->test(Intents::class, ['profile' => $profile])
             ->call('edit', $intent->id)
+            ->assertSet('editorOpen', true)
             ->assertSet('activeFacets', ['route', 'timing']);
     }
 }

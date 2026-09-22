@@ -19,14 +19,34 @@ class TemporalPreferences extends Component
 
     public string $timezoneMode = TimezoneMode::Auto->value;
 
+    public bool $editorOpen = false;
+
     public function mount(): void
     {
         $user = request()->user();
         abort_unless($user instanceof User, 403);
 
-        $this->timezone = TemporalPreferenceResolver::timezoneFor($user);
-        $this->timezoneMode = $user->timezone_mode->value;
-        $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
+        $this->syncFromUser($user);
+    }
+
+    public function openEditor(): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+
+        $this->syncFromUser($user);
+        $this->resetValidation();
+        $this->editorOpen = true;
+    }
+
+    public function cancelEditor(): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+
+        $this->syncFromUser($user);
+        $this->resetValidation();
+        $this->editorOpen = false;
     }
 
     public function useBrowserTimezone(string $timezone): void
@@ -80,7 +100,15 @@ class TemporalPreferences extends Component
         $user->save();
 
         $this->dispatch('temporal-preferences-updated');
+        $this->editorOpen = false;
         session()->flash('status', __('ui.profile.temporal.saved'));
+    }
+
+    private function syncFromUser(User $user): void
+    {
+        $this->timezone = TemporalPreferenceResolver::timezoneFor($user);
+        $this->timezoneMode = $user->timezone_mode->value;
+        $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
     }
 
     public function render(): View

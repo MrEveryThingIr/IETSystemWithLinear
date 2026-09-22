@@ -5,12 +5,20 @@
         x-init="$wire.useBrowserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)"
     @endif
 >
-    <div>
-        <h2 class="text-lg font-semibold">{{ __('ui.profile.intents.title') }}</h2>
-        <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.intents.help') }}</p>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="min-w-0">
+            <h2 class="text-lg font-semibold">{{ __('ui.profile.intents.title') }}</h2>
+            <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.intents.help') }}</p>
+        </div>
+        @unless ($editorOpen)
+            <flux:button wire:click="openCreate" size="sm" variant="ghost" class="w-full shrink-0 sm:w-auto">
+                {{ __('ui.profile.intents.add') }}
+            </flux:button>
+        @endunless
     </div>
 
-    <form wire:submit="save" class="space-y-5 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950/50">
+    @if ($editorOpen)
+    <form wire:submit="save" class="min-w-0 space-y-5 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950/50">
         <div class="grid gap-4 md:grid-cols-2">
             <div class="space-y-2">
                 <label class="text-sm font-medium" for="intent-kind">{{ __('ui.profile.intents.kind') }}</label>
@@ -96,7 +104,7 @@
                         {{ __('ui.profile.intents.round_trip') }}
                     </label>
                     @if ($roundTrip)
-                        <div class="w-48">
+                        <div class="w-full sm:w-48">
                             <flux:input wire:model="returnAfterDays" type="number" min="0" max="3650" :label="__('ui.profile.intents.return_after_days')" />
                         </div>
                     @endif
@@ -174,20 +182,19 @@
             </div>
         @endif
 
-        <div class="flex flex-wrap justify-end gap-2">
-            @if ($editingIntentId !== null)
-                <flux:button type="button" wire:click="cancelEdit" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
-            @endif
-            <flux:button type="submit" variant="primary">
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+            <flux:button type="button" wire:click="cancelEdit" variant="ghost" class="w-full sm:w-auto">{{ __('ui.common.cancel') }}</flux:button>
+            <flux:button type="submit" variant="primary" class="w-full sm:w-auto">
                 {{ $editingIntentId !== null ? __('ui.profile.intents.save_changes') : __('ui.profile.intents.add') }}
             </flux:button>
         </div>
     </form>
+    @endif
 
     @if ($intents->isNotEmpty())
         <div class="grid gap-4 lg:grid-cols-2">
             @foreach ($intents as $intent)
-                <article class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="profile-intent-{{ $intent->id }}">
+                <article class="min-w-0 overflow-hidden rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="profile-intent-{{ $intent->id }}">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
@@ -270,14 +277,14 @@
                     </dl>
 
                     @if ($intent->status->value !== 'closed')
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <flux:button wire:click="edit({{ $intent->id }})" size="xs" variant="ghost">{{ __('ui.common.edit') }}</flux:button>
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            <flux:button wire:click="edit({{ $intent->id }})" size="xs" variant="ghost" class="w-full sm:w-auto">{{ __('ui.common.edit') }}</flux:button>
                             @if ($intent->status->value === 'active')
-                                <flux:button wire:click="setStatus({{ $intent->id }}, 'paused')" size="xs" variant="ghost">{{ __('ui.profile.intents.pause') }}</flux:button>
+                                <flux:button wire:click="setStatus({{ $intent->id }}, 'paused')" size="xs" variant="ghost" class="w-full sm:w-auto">{{ __('ui.profile.intents.pause') }}</flux:button>
                             @else
-                                <flux:button wire:click="setStatus({{ $intent->id }}, 'active')" size="xs" variant="ghost">{{ __('ui.profile.intents.activate') }}</flux:button>
+                                <flux:button wire:click="setStatus({{ $intent->id }}, 'active')" size="xs" variant="ghost" class="w-full sm:w-auto">{{ __('ui.profile.intents.activate') }}</flux:button>
                             @endif
-                            <flux:button wire:click="setStatus({{ $intent->id }}, 'closed')" wire:confirm="{{ __('ui.profile.intents.close_confirm') }}" size="xs" variant="danger">
+                            <flux:button wire:click="setStatus({{ $intent->id }}, 'closed')" wire:confirm="{{ __('ui.profile.intents.close_confirm') }}" size="xs" variant="danger" class="w-full sm:w-auto">
                                 {{ __('ui.profile.intents.close') }}
                             </flux:button>
                         </div>

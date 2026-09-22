@@ -1,12 +1,19 @@
 <section class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
     <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div class="min-w-0">
             <h2 class="text-lg font-semibold">{{ __('ui.profile_sharing.title') }}</h2>
             <p class="mt-1 max-w-3xl text-sm text-zinc-500">{{ __('ui.profile_sharing.help') }}</p>
         </div>
-        <div class="rounded-xl bg-zinc-100 px-4 py-3 text-center dark:bg-zinc-800">
+        <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+            @unless ($composerOpen)
+                <flux:button wire:click="openComposer" size="sm" variant="ghost" class="w-full sm:w-auto">
+                    {{ __('ui.profile_sharing.create') }}
+                </flux:button>
+            @endunless
+            <div class="rounded-xl bg-zinc-100 px-4 py-3 text-center dark:bg-zinc-800">
             <div class="text-2xl font-semibold">{{ $completeness['percent'] }}%</div>
-            <div class="text-xs text-zinc-500">{{ __('ui.profile_sharing.completeness') }}</div>
+                <div class="text-xs text-zinc-500">{{ __('ui.profile_sharing.completeness') }}</div>
+            </div>
         </div>
     </div>
 
@@ -25,7 +32,8 @@
         </div>
     </div>
 
-    <form wire:submit="create" class="space-y-5 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+    @if ($composerOpen)
+    <form wire:submit="create" class="min-w-0 space-y-5 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
         <div>
             <h3 class="font-medium">{{ __('ui.profile_sharing.share_items') }}</h3>
             <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile_sharing.share_help') }}</p>
@@ -67,12 +75,14 @@
             <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
         @enderror
 
-        <div class="flex justify-end">
-            <flux:button type="submit" variant="primary" :disabled="$availableItems === []" wire:loading.attr="disabled" wire:target="create">
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <flux:button type="button" wire:click="cancelComposer" variant="ghost" class="w-full sm:w-auto">{{ __('ui.common.cancel') }}</flux:button>
+            <flux:button type="submit" variant="primary" :disabled="$availableItems === []" wire:loading.attr="disabled" wire:target="create" class="w-full sm:w-auto">
                 {{ __('ui.profile_sharing.create') }}
             </flux:button>
         </div>
     </form>
+    @endif
 
     <div class="space-y-3">
         <div>
@@ -81,7 +91,7 @@
         </div>
 
         @forelse ($grants as $grant)
-            <article class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="grant-{{ $grant->uuid }}">
+            <article class="min-w-0 overflow-hidden rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="grant-{{ $grant->uuid }}">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0">
                         <p class="font-medium">{{ __('ui.profile_sharing.recipient_label', ['name' => $grant->grantee->profile?->display_name ?: $grant->grantee->user?->username ?: '#'.$grant->grantee_actor_id]) }}</p>
@@ -104,7 +114,7 @@
                         @endif
                     </div>
                     @if ($grant->isActive())
-                        <flux:button wire:click="revoke('{{ $grant->uuid }}')" wire:confirm="{{ __('ui.profile_sharing.revoke_confirm') }}" size="sm" variant="danger">
+                        <flux:button wire:click="revoke('{{ $grant->uuid }}')" wire:confirm="{{ __('ui.profile_sharing.revoke_confirm') }}" size="sm" variant="danger" class="w-full shrink-0 sm:w-auto">
                             {{ __('ui.profile_sharing.revoke') }}
                         </flux:button>
                     @endif
