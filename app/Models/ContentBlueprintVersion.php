@@ -144,11 +144,11 @@ class ContentBlueprintVersion extends Model
             $this->definition_schema ?? [],
             $this->initial_blocks ?? [],
             (string) ($this->render_template_key ?? 'article'),
-            is_array($this->presentation) ? $this->presentation : [],
-            is_array($this->context_kinds) ? $this->context_kinds : [],
-            is_array($this->concept_defaults) ? $this->concept_defaults : [],
-            is_array($this->interaction_defaults) ? $this->interaction_defaults : [],
-            is_array($this->authoring) ? $this->authoring : [],
+            $this->presentation ?? [],
+            $this->context_kinds ?? [],
+            $this->concept_defaults ?? [],
+            $this->interaction_defaults ?? [],
+            $this->authoring ?? [],
         );
 
         foreach ($normalized as $key => $value) {
