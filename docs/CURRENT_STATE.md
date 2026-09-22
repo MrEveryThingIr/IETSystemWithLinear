@@ -4,25 +4,26 @@
 
 Current implementation baseline:
 
-- Branch: `feat/phase-05-content-context`.
+- Branch: `feat/phase-06-content-blueprints`.
 - Phase 1 — Invitation/registration/admission journey: complete.
 - Phase 2 — Delivery and operations baseline: complete at the provider-neutral baseline.
 - Phase 3 — Concept Kernel: complete.
 - Phase 4 — Actor/Party + progressive Profile: complete and human-owner accepted.
-- Phase 5 — Generic Content Context: **complete and human-owner accepted on 2026-09-22**.
-- Frozen Phase 5 runtime candidate: `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`.
-- GitHub Actions run `35725999556` on that exact runtime commit:
-  - PHPUnit: **344 passed / 1807 assertions**;
+- Phase 5 — Generic Content Context: complete and human-owner accepted on 2026-09-22.
+- Phase 6 — Content Blueprints and unified productized authoring: **runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending**.
+- Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1`.
+- GitHub Actions run `35739828516` on that exact runtime commit:
+  - PHPUnit: **364 passed / 1934 assertions**;
   - PHPStan: no errors;
-  - Pint: **216 files passed**;
+  - Pint: **258 files passed**;
   - Vite production build: passed;
-  - Context migrations / scheduler / database-queue smoke: passed;
+  - Phase 6 migrations / scheduler / database-queue smoke: passed;
   - SQLite backup → restore smoke: passed;
   - npm audit: 0 vulnerabilities;
   - Composer security audit: clean.
-- Phase 6 — Content Blueprints and unified productized authoring is **active** on `feat/phase-06-content-blueprints`.
+- Phase 7 remains blocked until the final human Phase 6 acceptance gate passes.
 
-This document describes repository implementation truth at the final Phase 5 human acceptance gate. Future architecture remains governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
+This document describes repository implementation truth at the Phase 6 technical-completion candidate. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and Phase 6 acceptance by `docs/PHASE_06_CONTENT_BLUEPRINTS.md`.
 
 ## Established identity and platform foundation
 
@@ -89,6 +90,41 @@ Implemented:
 - terminal Admission Contexts preserve historical read access while denying mutation/interactions.
 
 Context is a bounded collaboration/artifact environment. It is not Group Membership, Profile disclosure, Workflow, Planner, Match or Contract authority.
+
+## Unified Content / Blueprint system
+
+Phase 6 converges the previously mature Group Content engine and the simpler generic Context Content UI into one application experience.
+
+Implemented:
+
+- one Content substrate for Personal, GroupSpace and Admission Contexts;
+- immutable Content revisions and sealed publication evidence remain authoritative;
+- versioned `ContentBlueprint` + immutable `ContentBlueprintVersion`;
+- built-in Blueprint catalog for diary/note, post, article, activity/report, evidence/work-sample, media album, book/booklet, lesson, workbook page and questionnaire shell;
+- Context-compatible Blueprint catalog/search;
+- Blueprint clone provenance;
+- no silent Blueprint upgrades;
+- Context-local hidden Definition materialization bound to the exact Blueprint version;
+- exact Blueprint-version provenance on both Definition and Content;
+- initial Blocks/presentation/Concept defaults created directly on revision 1;
+- interaction defaults snapshotted onto Content at creation rather than permanently delegated to Blueprint identity;
+- Blueprint-first Quick → More details → full Studio authoring;
+- raw Definition authoring retained only as an advanced/custom path;
+- generic Context Studio with structured fields, Assets/media, Blocks, appearance, Outline, immutable history, publishing and archive/restore;
+- legacy Group Content routes redirect to the same generic Context experience;
+- generic Context Reader with reactions, rich annotations, attachments and Outline;
+- immutable revision permalinks;
+- immutable `ContentEvidenceReference` locators for exact revision/field/block/asset/relationship evidence;
+- historical evidence resolves the exact sealed edition rather than the latest mutable Content.
+
+Evidence/reputation boundary:
+
+- Profile proficiency remains self-reported;
+- Content can now be cited precisely as evidence;
+- evidence references are not verification, endorsement, Contract acceptance or reputation by themselves;
+- later verification/reputation logic must evaluate evidence through explicit rubrics/policies instead of hard-coding artifact counts into Content.
+
+Current deliberate boundary: Questionnaire Blueprint authors the questionnaire artifact only. Structured respondent Submission/Response/Evaluation is Phase 7.
 
 ## Group governance kernel
 

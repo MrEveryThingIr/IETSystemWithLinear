@@ -2,11 +2,17 @@
 
 ## Status
 
-**Active** on `feat/phase-06-content-blueprints`.
+**Runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-06-content-blueprints`.
 
 Accepted Phase 5 baseline:
 
 `f3e93e953dfe58983d2da07bf9bac080896fa8ac`
+
+Frozen Phase 6 runtime candidate:
+
+`ad07445b16a708b4efd67461f5cef12201ffa8b1`
+
+GitHub Actions run `35739828516` on that exact runtime commit is fully green: **364 tests / 1934 assertions**, PHPStan clean, Pint **258 files**, Vite green, migrations/queue/scheduler and SQLite backup→restore smoke green, npm audit 0 vulnerabilities, Composer security audit clean.
 
 Phase 5 proved that Content can belong to Personal, GroupSpace and Admission Contexts. Phase 6 now removes the **experience-level split** between the simple generic Context UI and the mature Group Content Studio.
 
@@ -308,3 +314,5 @@ Phase 6 closes only when:
 8. normal users do not need raw Definition administration for common authoring;
 9. automated gates are green;
 10. browser/mobile/RTL behavior is accepted by the human owner.
+
+Automated/runtime conditions **1–9 are satisfied** on `ad07445b16a708b4efd67461f5cef12201ffa8b1`. Condition 10 remains the final owner-local acceptance gate. Phase 7 must not begin before that gate passes.

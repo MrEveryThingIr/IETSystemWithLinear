@@ -276,7 +276,7 @@ Content can safely exist in at least Group, Personal, and Admission contexts.
 
 ## Phase 6 — Content Blueprints and unified productized authoring
 
-**Status: active on `feat/phase-06-content-blueprints`.** Detailed contract: `docs/PHASE_06_CONTENT_BLUEPRINTS.md`.
+**Status: runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending.** Runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1`. Detailed contract: `docs/PHASE_06_CONTENT_BLUEPRINTS.md`.
 
 ### Purpose
 
@@ -300,16 +300,20 @@ Turn the powerful low-level Content engine into convenient reusable authoring an
 
 ### Initial Blueprints
 
+- Note / Diary;
 - Post;
 - Article;
-- Book;
+- Activity / Report;
+- Evidence / Work Sample;
+- Media Album;
+- Book / Booklet;
 - Lesson;
 - Workbook Page;
-- Questionnaire.
+- Questionnaire shell.
 
 ### Exit gate
 
-An author can create common Content without manually assembling definitions/layout/presentation every time.
+Automated/runtime gate is satisfied on `ad07445b16a708b4efd67461f5cef12201ffa8b1`: one Blueprint-first Content experience now spans Personal, GroupSpace and Admission Contexts, including the full Studio/Reader and immutable evidence locators. Final owner-local/browser/mobile/RTL acceptance remains required before Phase 6 is formally closed or Phase 7 begins.
 
 ## Phase 7 — Submission / Response / Evaluation
 

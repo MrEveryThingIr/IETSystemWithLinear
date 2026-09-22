@@ -30,30 +30,35 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 4 — Actor/Party and progressive Profile: complete and human-owner accepted at `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
 - Phase 5 — Generic Content Context: **complete and human-owner accepted on 2026-09-22**.
 - Accepted Phase 5 branch HEAD before closure docs: `2561eda91c3e1db84c77816e8c15324d8f0fd939`.
-- Phase 6 — Content Blueprints and unified productized authoring: **active** on `feat/phase-06-content-blueprints`.
-- Phase 6 must converge all Contexts onto one Content kernel/application experience. Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, or implement Phase 7 response/evaluation or later reputation scoring.
-- Phase 5 preserves existing Group Content while adding Personal and Admission Context Content. Do not mass-rename `SpaceContent`, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 6/8/9/10/11/13/14 work forward.
+- Phase 6 — Content Blueprints and unified productized authoring: **runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-06-content-blueprints`.
+- Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1` (GitHub Actions run `35739828516`: 364 tests / 1934 assertions, PHPStan/Pint/Vite/ops/security green).
+- Phase 7 is blocked until the human owner accepts Phase 6 locally and in the browser.
+- Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, turn evidence count into reputation, or implement Phase 7 response/evaluation before Phase 6 closure.
+- Phase 6 preserves the proven `SpaceContent*` substrate while making it Context-generic and Blueprint-first. Do not mass-rename it, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 7/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 
-## Current architecture baseline
+## Current technical candidate
 
-The code baseline immediately before the canonical roadmap documentation is:
+The current code-bearing candidate is:
 
-`f57ee430f96afcdb1ecc32f5b644fcb057dae6f4`
+`ad07445b16a708b4efd67461f5cef12201ffa8b1`
 
 on:
 
-`feat/group-spaces-communication`
+`feat/phase-06-content-blueprints`
 
-The human owner locally validated that baseline with:
+Remote validation on GitHub Actions run `35739828516`:
 
-- 273 PHPUnit tests passing / 1386 assertions;
+- 364 PHPUnit tests / 1934 assertions;
 - PHPStan: no errors;
-- Pint: passed;
+- Pint: 258 files passed;
 - Vite production build: passed;
-- clean working tree.
+- migration/scheduler/database-queue smoke: passed;
+- SQLite backup → restore smoke: passed;
+- npm audit: 0 vulnerabilities;
+- Composer security audit: clean.
 
-Current implementation details and known debt are maintained in `docs/CURRENT_STATE.md`; do not rely on older reports for present-state claims.
+Final owner-local/browser/mobile/RTL acceptance is still required. Current implementation details and known debt are maintained in `docs/CURRENT_STATE.md`; do not rely on older reports for present-state claims.
 
 ## Architectural stop conditions
 
