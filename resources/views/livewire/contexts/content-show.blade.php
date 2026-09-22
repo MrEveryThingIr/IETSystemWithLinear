@@ -420,9 +420,16 @@
 
                 @if ($interactionDefinitions->isNotEmpty())
                     <section class="space-y-4 border-t pt-7" style="border-color: var(--content-border)" id="structured-interactions">
-                        <div>
-                            <h2 class="text-xl {{ $headingClass }}">{{ __('structured_interactions.section_title') }}</h2>
-                            <p class="mt-1 text-sm" style="color: var(--content-muted)">{{ __('structured_interactions.section_help') }}</p>
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h2 class="text-xl {{ $headingClass }}">{{ __('structured_interactions.section_title') }}</h2>
+                                <p class="mt-1 text-sm" style="color: var(--content-muted)">{{ __('structured_interactions.section_help') }}</p>
+                            </div>
+                            @if ($canReviewInteractions)
+                                <flux:button :href="route('contexts.submissions.index', $context)" size="sm" variant="ghost" class="w-full sm:w-auto">
+                                    {{ __('structured_interactions.review_submissions') }}
+                                </flux:button>
+                            @endif
                         </div>
 
                         <div class="space-y-4">
