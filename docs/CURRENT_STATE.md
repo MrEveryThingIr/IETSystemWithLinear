@@ -9,7 +9,7 @@ Current implementation baseline:
 - Phase 2 — Delivery and operations baseline: complete at the provider-neutral baseline.
 - Phase 3 — Concept Kernel: complete.
 - Phase 4 — Actor/Party + progressive Profile: complete and human-owner accepted.
-- Phase 5 — Generic Content Context: **runtime technically complete and remote-CI green; final owner-local/browser acceptance pending**.
+- Phase 5 — Generic Content Context: **complete and human-owner accepted on 2026-09-22**.
 - Frozen Phase 5 runtime candidate: `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`.
 - GitHub Actions run `35725999556` on that exact runtime commit:
   - PHPUnit: **344 passed / 1807 assertions**;
@@ -20,7 +20,7 @@ Current implementation baseline:
   - SQLite backup → restore smoke: passed;
   - npm audit: 0 vulnerabilities;
   - Composer security audit: clean.
-- Phase 6 remains blocked until final Phase 5 owner-local/browser/mobile/RTL acceptance.
+- Phase 6 — Content Blueprints and unified productized authoring is the next active roadmap phase.
 
 This document describes repository implementation truth at the final Phase 5 human acceptance gate. Future architecture remains governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
 
@@ -562,24 +562,15 @@ These are continuous roadmap requirements, not a final afterthought.
 
 Phases 1–4 are closed.
 
-Phase 5 runtime implementation is technically complete and remote-CI green. The remaining active milestone is the **final human Phase 5 acceptance gate**.
+Phase 5 is closed. The next active implementation milestone is **Phase 6 — Content Blueprints and unified productized authoring**.
 
 Frozen runtime candidate:
 
 `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`
 
-Before Phase 6 begins, the human owner must:
+The human owner applied both Context migrations on the existing database and reported **25 focused tests / 156 assertions**, **344 full tests / 1807 assertions**, PHPStan clean, Pint clean, Vite green, `git diff --check` clean and a clean tree. Browser validation confirmed Personal Context Content creation works.
 
-- synchronize the Phase 5 branch locally;
-- apply the two Context migrations to the existing database;
-- pass focused + full local validation;
-- verify existing Group Content still behaves normally;
-- verify Personal Context Content without a fake Group;
-- verify Admission candidate/reviewer Content before Membership;
-- verify terminal Admission historical Content is readable but immutable;
-- accept mobile/responsive and Persian/Arabic RTL behavior.
-
-Phase 6 — Content Blueprints — remains blocked until that gate passes.
+Phase 6 must now productize the same advanced Content kernel across every Context instead of maintaining a second simplified authoring experience.
 
 Binding downstream invariants:
 

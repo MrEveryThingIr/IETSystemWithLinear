@@ -241,13 +241,13 @@ Architectural boundaries remain explicit: recurring Profile declarations are cur
 
 ## Phase 5 — Generic Content Context
 
-**Status: runtime technically complete / remote-CI green; final owner-local/browser acceptance pending.** Detailed contract: `docs/PHASE_05_GENERIC_CONTENT_CONTEXT.md`.
+**Status: complete and human-owner accepted on 2026-09-22.** Detailed contract: `docs/PHASE_05_GENERIC_CONTENT_CONTEXT.md`.
 
 Frozen runtime candidate: `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`.
 
 Remote proof: **344 tests / 1807 assertions**, PHPStan clean, Pint **216 files**, Vite build green, fresh migrations and operational smoke green, SQLite backup → restore green, npm/Composer audits green.
 
-Phase 6 must not begin until the final human Phase 5 acceptance gate passes.
+Human owner validation passed: Context migrations applied on the existing database; focused gate **25 tests / 156 assertions**; full suite **344 / 1807**; PHPStan/Pint/Vite clean; browser My Content creation accepted. Phase 6 is unblocked.
 
 ### Purpose
 

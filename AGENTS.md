@@ -6,7 +6,7 @@ Before any nontrivial implementation work, read the repository's canonical produ
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
 4. `docs/PRODUCTION_ROADMAP.md`
-5. the currently active phase contract (`docs/PHASE_05_GENERIC_CONTENT_CONTEXT.md`)
+5. the currently active phase contract (`docs/PHASE_06_CONTENT_BLUEPRINTS.md` once created)
 6. relevant ADRs
 7. `.ai/rules/index.md` and every matching path rule
 
@@ -28,9 +28,9 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 2 — delivery and operations baseline: complete.
 - Phase 3 — Concept Kernel: complete.
 - Phase 4 — Actor/Party and progressive Profile: complete and human-owner accepted at `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
-- Phase 5 — Generic Content Context: **runtime technically complete / remote-CI green; final owner-local/browser acceptance pending** on `feat/phase-05-content-context`.
-- Frozen Phase 5 runtime candidate: `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`.
-- Phase 6 must not begin until the human Phase 5 acceptance gate passes.
+- Phase 5 — Generic Content Context: **complete and human-owner accepted on 2026-09-22**.
+- Accepted Phase 5 branch HEAD before closure docs: `2561eda91c3e1db84c77816e8c15324d8f0fd939`.
+- Phase 6 — Content Blueprints and unified productized authoring: next active phase after its branch/contract is created.
 - Phase 5 preserves existing Group Content while adding Personal and Admission Context Content. Do not mass-rename `SpaceContent`, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 6/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Runtime implementation is technically complete and remote-CI green; final owner-local/browser acceptance is pending.**
+**Complete and human-owner accepted on 2026-09-22.**
 
 Final runtime candidate:
 
@@ -20,7 +20,7 @@ GitHub Actions run `35725999556` is green on that exact commit:
 - npm high-severity audit: passed;
 - Composer security audit: clean.
 
-Phase 6 remains blocked until the human owner synchronizes this branch locally, applies the migrations, runs the local validation gate, and accepts the browser/mobile/RTL behavior.
+The human owner synchronized the accepted branch, applied the Context migrations, passed focused/full validation, and accepted the browser My Content behavior. Phase 5 is closed.
 
 Starting baseline:
 
@@ -379,6 +379,6 @@ Phase 5 closes only when:
 8. focused/full automated gates are green;
 9. browser/mobile/RTL behavior is accepted by the human owner.
 
-Automated conditions 1–8 are satisfied on the frozen runtime candidate above. Condition 9 — final owner-local/browser/mobile/RTL acceptance — remains pending.
+All automated conditions are satisfied. The human owner additionally reported a clean existing-database migration, **25 focused tests / 156 assertions**, **344 full tests / 1807 assertions**, PHPStan clean, Pint clean, Vite build green, `git diff --check` clean, and a clean working tree. Browser validation confirmed My Content creation works.
 
-After that human gate passes, Phase 5 may be formally closed and Phase 6 — Content Blueprints — may begin.
+Phase 5 is formally closed. Phase 6 — Content Blueprints and unified productized authoring — may begin.

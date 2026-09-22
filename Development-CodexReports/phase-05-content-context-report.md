@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 5 runtime implementation is technically complete and remote-CI green. Final owner-local/browser acceptance is pending.**
+**Phase 5 is complete and human-owner accepted on 2026-09-22.**
 
 Branch:
 
@@ -32,7 +32,7 @@ Proof on that exact runtime commit:
 - npm audit: **0 vulnerabilities**;
 - Composer security audit: clean.
 
-Phase 6 remains blocked until the human owner completes the final local sync/test/browser/mobile/RTL acceptance gate.
+The human owner completed the final local gate: both Context migrations ran on the existing database; focused validation passed **25 tests / 156 assertions**; full PHPUnit passed **344 / 1807**; PHPStan/Pint/Vite passed; diff/tree were clean; browser My Content creation was accepted.
 
 ## 5A — Context identity and authorization foundation
 
@@ -212,26 +212,22 @@ Other preserved invariants:
 - existing sealed publication evidence remains immutable;
 - no fake Group represents Personal Content.
 
-## Remaining human gate
+## Final human acceptance
 
 Remote/runtime implementation is frozen at:
 
 `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`
 
-The remaining Phase 5 gate is owner-local validation:
+Accepted evidence from the owner:
 
-- synchronize the branch;
-- apply migrations on the owner's existing database;
-- focused Context tests;
-- full PHPUnit;
-- PHPStan;
-- Pint;
-- Vite production build;
-- clean diff/tree;
-- browser check of Personal Context Content;
-- browser check of Admission candidate/reviewer collaboration before Membership;
-- terminal Admission read-only historical Content;
-- existing Group Content regression;
-- narrow mobile + RTL acceptance.
+- existing database migration succeeded for `2026_09_22_150000_create_context_kernel_tables` and `2026_09_22_160000_bind_content_substrate_to_contexts`;
+- focused Context/Group Content gate: **25 tests / 156 assertions**;
+- full PHPUnit: **344 tests / 1807 assertions**;
+- PHPStan: no errors;
+- Pint: passed;
+- Vite production build: passed;
+- `git diff --check`: clean;
+- working tree: clean;
+- browser My Content creation: accepted.
 
-Only after that gate succeeds should Phase 5 be marked formally closed and Phase 6 begin.
+Phase 5 is formally closed.
