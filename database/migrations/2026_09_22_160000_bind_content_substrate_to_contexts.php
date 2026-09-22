@@ -4,8 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use RuntimeException;
-
 return new class extends Migration
 {
     public function up(): void
@@ -41,7 +39,7 @@ return new class extends Migration
                         $contextId = $contextBySpace->get((int) $row->group_space_id);
 
                         if ($contextId === null) {
-                            throw new RuntimeException('Cannot backfill '.$table.' without a GroupSpace Context.');
+                            throw new \RuntimeException('Cannot backfill '.$table.' without a GroupSpace Context.');
                         }
 
                         DB::table($table)
@@ -53,7 +51,7 @@ return new class extends Migration
 
         foreach (['space_content_definitions', 'space_contents', 'space_content_render_templates'] as $table) {
             if (DB::table($table)->whereNull('context_id')->exists()) {
-                throw new RuntimeException('Context backfill left orphaned '.$table.' rows.');
+                throw new \RuntimeException('Context backfill left orphaned '.$table.' rows.');
             }
         }
 
@@ -95,7 +93,7 @@ return new class extends Migration
             ->exists();
 
         if ($nonGroupContentExists || $nonGroupAssetsExist) {
-            throw new RuntimeException('Cannot roll back Context-bound Content after non-Group Context data exists.');
+            throw new \RuntimeException('Cannot roll back Context-bound Content after non-Group Context data exists.');
         }
 
         Schema::table('assets', function (Blueprint $table): void {
