@@ -6,7 +6,7 @@ Before any nontrivial implementation work, read the repository's canonical produ
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
 4. `docs/PRODUCTION_ROADMAP.md`
-5. the currently active phase contract (`docs/PHASE_04_ACTOR_PROFILE.md`; completed Phase 3 remains documented in `docs/PHASE_03_CONCEPT_KERNEL.md`)
+5. the currently active phase contract (`docs/PHASE_05_GENERIC_CONTENT_CONTEXT.md`)
 6. relevant ADRs
 7. `.ai/rules/index.md` and every matching path rule
 
@@ -25,11 +25,12 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 
 - Phase 0 — canonical architecture: complete.
 - Phase 1 — production invitation/registration/admission journey: complete and accepted.
-- Phase 2 — delivery and operations baseline: complete on `feat/phase-02-delivery-operations`; validated repository/local operational baseline.
-- Phase 3 — Concept Kernel: complete on `feat/phase-03-concept-kernel`.
-- Phase 4 — Actor/Party and progressive Profile: active on `feat/phase-04-actor-profile`; 4A owner-local accepted. Core 4B was technically accepted locally; 4B.1 Temporal Localization Hardening is remote-green at 310 tests / 1593 assertions and awaits a refreshed owner-local/browser gate. 4C is next after that gate. Profile recurrence records cadence only: do not pull Planner Occurrences (Phase 11), full matching (Phase 13), obligations (Phase 14), generic Context, or Admission v2 forward. Profile statement UX must remain progressive: start from relationship + Concept, then reveal only user-activated structured facets; do not regress to giant all-fields forms.
-- Temporal invariant: never infer timezone from language. Keep locale, IANA timezone, timezone mode and calendar independent. Store date-only values canonically as ISO/Gregorian dates; localize calendar/labels at presentation. Persian defaults to Persian/Jalali; English/Arabic/Simplified Chinese default to Gregorian; Hijri/Umm al-Qura is an optional override.
-- Admission collaboration, contextual conversations, structured evidence/submissions, real-time broadcasting, and negotiated contracts are recorded future architecture. They belong to their roadmap phases and must not be pulled into Phase 2 speculatively.
+- Phase 2 — delivery and operations baseline: complete.
+- Phase 3 — Concept Kernel: complete.
+- Phase 4 — Actor/Party and progressive Profile: complete and human-owner accepted at `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
+- Phase 5 — Generic Content Context: **active** on `feat/phase-05-content-context`.
+- Phase 5 must preserve existing Group Content while proving Personal and Admission Context Content. Do not mass-rename `SpaceContent`, rewrite sealed publication evidence, invent fake Groups, or pull Phase 6/8/9/10/11/13/14 work forward.
+- Temporal/Profile boundaries from Phase 4 remain binding.
 
 ## Current architecture baseline
 
