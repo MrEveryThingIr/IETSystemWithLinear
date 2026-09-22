@@ -99,7 +99,7 @@
         <article class="min-w-0">
             <header class="mx-auto {{ $contentWidthClass }} border-b pb-6" style="border-color: var(--content-border)">
                 <div class="mb-3 flex flex-wrap items-center gap-2 text-sm" style="color: var(--content-muted)">
-                    <span dir="auto">{{ __('reader.by_author', ['author' => $content->author->user?->username ?? __('ui.common.unknown_account')]) }}</span>
+                    <x-app.actor-identity :actor="$content->author" size="xs" />
                     <span aria-hidden="true">·</span>
                     <span>{{ __('reader.published', ['date' => $content->published_at?->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') ?? '—']) }}</span>
                     @unless ($legacyEvidence)
@@ -414,7 +414,7 @@
                                 <article wire:key="annotation-{{ $annotation->uuid }}" class="space-y-3 rounded-xl border p-4" style="border-color: var(--content-border); background: var(--content-bg)">
                                     <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <span class="font-medium" dir="auto">{{ $annotation->author->user?->username ?? __('ui.common.unknown_account') }}</span>
+                                            <x-app.actor-identity :actor="$annotation->author" size="xs" />
                                             <flux:badge size="sm">{{ __('interactions.kind.'.$annotation->kind) }}</flux:badge>
                                             @if ($annotation->visibility === 'private')
                                                 <flux:badge size="sm">🔒 {{ __('interactions.visibility_value.private') }}</flux:badge>
@@ -457,7 +457,7 @@
                                                 <div wire:key="reply-{{ $reply->uuid }}" class="space-y-2 rounded-lg p-3" style="background: var(--content-surface)">
                                                     <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
                                                         <div class="flex items-center gap-2">
-                                                            <span class="font-medium" dir="auto">{{ $reply->author->user?->username ?? __('ui.common.unknown_account') }}</span>
+                                                            <x-app.actor-identity :actor="$reply->author" size="xs" />
                                                             <flux:badge size="sm">{{ __('interactions.kind.'.$reply->kind) }}</flux:badge>
                                                         </div>
                                                         <div class="text-xs" style="color: var(--content-muted)">{{ $reply->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</div>
@@ -688,7 +688,7 @@
                 @foreach ($previewAnnotations as $annotation)
                     <article class="rounded-xl border p-3" style="border-color: var(--content-border)">
                         <div class="flex flex-wrap items-center gap-2 text-xs" style="color: var(--content-muted)">
-                            <span dir="auto">{{ $annotation->author->user?->username ?? __('ui.common.unknown_account') }}</span>
+                            <x-app.actor-identity :actor="$annotation->author" size="xs" />
                             <flux:badge size="sm">{{ __('interactions.kind.'.$annotation->kind) }}</flux:badge>
                             @if ($annotation->visibility === 'private')<span>🔒</span>@endif
                         </div>
