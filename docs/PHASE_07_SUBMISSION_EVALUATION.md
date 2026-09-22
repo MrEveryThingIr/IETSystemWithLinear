@@ -2,7 +2,11 @@
 
 ## Status
 
-**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete and human/local accepted**; Phases **7B, 7C and 7D are technically complete**; Phase **7E — proof and closure — is next**.
+**Runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-07-submission-evaluation`.
+
+Frozen runtime candidate: `35236f7af4ab9168467383b867cd698f2f30755c`.
+
+GitHub Actions run `35772393444` is green: **393 tests / 2086 assertions**, changed-file Pint **307 files**, PHPStan clean, Vite/build/operations/backup/security gates green. Phase 7 migrations `200000`, `210000` and `220000` are explicitly rolled back and reapplied successfully in CI.
 
 Starting baseline:
 
@@ -389,18 +393,26 @@ Original 7D deliverables:
 
 ### 7E — proof and closure
 
-**Status: next.**
+**Status: technically complete on `35236f7af4ab9168467383b867cd698f2f30755c`; final human browser/mobile/RTL acceptance pending.** GitHub Actions run `35772393444` is green: **393 tests / 2086 assertions**, changed-file Pint **307 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
 
-Deliver:
+Delivered:
 
-- school exam proof;
-- employment application proof;
-- Admission-Context pre-Membership structured-response proof without Admission-v2 UX rewrite;
-- regression coverage for Content/annotations/Assets/Admission;
+- opt-in local/testing `Phase7InteractionDemoSeeder` with browser-testable school-exam and employment-application scenarios;
+- school exam proof covering learner submission, evaluator finalization and exact historical correctness after a later Content edition + Interaction version becomes active;
+- employment application proof covering structured answers, reusable CV Asset, cross-Context immutable Personal portfolio evidence, pre-Membership Admission authorization and evaluator finalization;
+- proof that Evaluation leaves Admission `under_review` and creates no Membership;
+- regression/browser-level coverage across Content Reader, Submission Card, review queue/detail, Assets, evidence and Admission isolation;
 - full PHPUnit/PHPStan/Pint/Vite/ops/security gates;
-- migration/rollback proof;
-- implementation report;
-- human browser/mobile/RTL acceptance.
+- explicit rollback/reapply proof for all three Phase 7 migrations;
+- browser acceptance guide at `database/seeders/README-Phase7InteractionDemo.md`;
+- implementation report at `Development-CodexReports/phase-07-submission-evaluation-report.md`.
+
+Remaining:
+
+- human owner synchronization on the existing local database;
+- focused/full local validation;
+- desktop/phone browser acceptance including Persian/Arabic RTL;
+- final formal Phase 7 closure documentation after that human gate.
 
 ## Proof case A — school exam
 
@@ -532,4 +544,4 @@ Phase 7 closes only when:
 11. automated validation is green;
 12. browser/mobile/RTL behavior is accepted by the human owner.
 
-At closure, write `Development-CodexReports/phase-07-submission-evaluation-report.md` with exact implementation, migration, test, security, browser and Git evidence.
+Automated/runtime conditions **1–11 are satisfied** on `35236f7af4ab9168467383b867cd698f2f30755c`. Condition 12 remains the final human owner acceptance gate. The implementation report is maintained at `Development-CodexReports/phase-07-submission-evaluation-report.md`. Phase 8 runtime implementation must not begin before condition 12 passes and Phase 7 is formally closed.
