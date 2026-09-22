@@ -6,7 +6,7 @@
         </div>
         <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
             @unless ($composerOpen)
-                <flux:button wire:click="openComposer" size="sm" variant="ghost" class="w-full sm:w-auto">
+                <flux:button wire:click="openComposer" size="sm" variant="ghost" icon="plus" class="w-full sm:w-auto">
                     {{ __('ui.profile_sharing.create') }}
                 </flux:button>
             @endunless
@@ -94,7 +94,7 @@
             <article class="min-w-0 overflow-hidden rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" wire:key="grant-{{ $grant->uuid }}">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div class="min-w-0">
-                        <p class="font-medium">{{ __('ui.profile_sharing.recipient_label', ['name' => $grant->grantee->profile?->display_name ?: $grant->grantee->user?->username ?: '#'.$grant->grantee_actor_id]) }}</p>
+                        <x-app.actor-identity :actor="$grant->grantee" size="sm" />
                         @if ($grant->purpose)
                             <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{{ $grant->purpose }}</p>
                         @endif
