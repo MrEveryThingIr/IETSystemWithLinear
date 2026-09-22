@@ -164,10 +164,10 @@ class SystemContentBlueprints
     }
 
     /**
-     * @param list<array<string, mixed>> $fields
-     * @param list<array<string, mixed>> $blocks
-     * @param list<string> $contextKinds
-     * @param array<string, bool> $authoring
+     * @param  list<array<string, mixed>>  $fields
+     * @param  list<array<string, mixed>>  $blocks
+     * @param  list<string>  $contextKinds
+     * @param  array<string, bool>  $authoring
      * @return array<string, mixed>
      */
     private function preset(
