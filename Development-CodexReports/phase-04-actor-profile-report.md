@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 4 runtime is complete and remote-validated; final owner-local/browser acceptance is pending.**
+**Phase 4 is complete and human-owner accepted.**
 
 - 4A — professional identity + profile media: complete.
 - 4B — semantic Profile + recurring Needs/Offers: complete.
@@ -16,7 +16,7 @@ Final runtime baseline before this documentation-only closure:
 
 Final GitHub Actions run: `35700986122` — **success**.
 
-Phase 5 remains blocked until the human owner completes the final local sync/test/browser acceptance gate.
+Phase 5 is now unblocked.
 
 ## Starting point
 
@@ -556,7 +556,19 @@ All of the above are resolved in the closed milestone.
 
 ## Phase 4 closure
 
-Final Phase 4 human acceptance is **pending**. Remote implementation and CI are complete.
+Final Phase 4 human acceptance **passed on 2026-09-22**.
+
+Owner-local proof on synchronized HEAD `ec1961b`:
+
+- focused final suite: **45 passed / 237 assertions**;
+- full PHPUnit: **331 passed / 1719 assertions**;
+- PHPStan: no errors;
+- Pint: passed;
+- Vite build: passed;
+- migration applied cleanly;
+- `git diff --check`: clean;
+- working tree: clean;
+- browser/mobile/RTL/product behavior: accepted.
 
 Closed architectural invariants:
 
@@ -573,4 +585,9 @@ mutable current Profile != immutable historical evidence
 
 No Phase 5 Context model, Phase 11 Planner occurrence, Phase 13 Match, or Phase 14 Contract/Commitment state was pulled forward.
 
-The repository is technically ready for **Phase 5 — Generic Content Context**, but Phase 5 must not begin until the owner-local/browser gate passes.
+The repository is ready for **Phase 5 — Generic Content Context**.
+
+
+## Deferred refinement note
+
+The owner explicitly accepted Phase 4 while noting that semantic measurement may become richer later. Skills currently support optional self-rated proficiency; interests and learning goals do not yet carry equivalent measurement factors. This is intentionally deferred until later Context, Planner, Matching, Submission/Evaluation or Agreement layers provide enough real semantics to choose dimensions such as intensity, priority, target level, confidence or evidence without forcing a premature universal percentage model.
