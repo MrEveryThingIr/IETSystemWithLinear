@@ -108,7 +108,7 @@
                     @endphp
                     <p class="text-sm font-medium">
                         {{ $importanceValue }}%
-                        <span class="font-normal text-zinc-500">· {{ __('ui.profile.intents.importance_levels.'.AppSupportProfileProfileScale::importanceLevelKey($importanceValue)) }}</span>
+                        <span class="font-normal text-zinc-500">· {{ __('ui.profile.intents.importance_levels.'.\App\Support\Profile\ProfileScale::importanceLevelKey($importanceValue)) }}</span>
                     </p>
                 @endif
             </div>
@@ -260,7 +260,7 @@
                                 <dd class="inline">
                                     {{ $intent->importance_percent }}%
                                     ·
-                                    {{ __('ui.profile.intents.importance_levels.'.AppSupportProfileProfileScale::importanceLevelKey($intent->importance_percent)) }}
+                                    {{ __('ui.profile.intents.importance_levels.'.\App\Support\Profile\ProfileScale::importanceLevelKey($intent->importance_percent)) }}
                                 </dd>
                             </div>
                         @endif
