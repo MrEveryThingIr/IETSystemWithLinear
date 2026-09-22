@@ -113,6 +113,7 @@ return [
         'current' => 'Current',
         'about' => 'About',
         'unnamed' => 'Unnamed profile',
+        'no_shared_details' => 'No additional profile information has been shared with you.',
         'avatar_alt' => 'Profile image for :name',
         'saved' => 'Profile saved.',
         'image_uploaded' => 'Profile image uploaded.',
