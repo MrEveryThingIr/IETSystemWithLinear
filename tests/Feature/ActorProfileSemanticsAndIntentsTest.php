@@ -10,6 +10,7 @@ use App\Actions\Profile\ResolveActorProfileConcept;
 use App\Actions\Profile\SetActorProfileIntentStatus;
 use App\Actions\Profile\UpdateActorProfile;
 use App\Actions\Profile\UpdateActorProfileIntent;
+use App\Actions\Profile\UpdateProfileConceptAssertionProficiency;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
 use App\ConceptAssertionVisibility;
@@ -70,6 +71,116 @@ class ActorProfileSemanticsAndIntentsTest extends TestCase
             'predicate' => ConceptAssertionPredicate::InterestedIn->value,
             'visibility' => ConceptAssertionVisibility::Private->value,
         ]);
+    }
+
+    public function test_skill_proficiency_uses_assertion_weight_and_can_be_changed_or_cleared(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        $skill = app(AddProfileConceptAssertion::class)->execute(
+            $actor->user,
+            $profile,
+            'Laravel',
+            ConceptAssertionPredicate::HasSkill,
+            ConceptAssertionVisibility::Inherited,
+            76,
+        );
+
+        $this->assertSame('0.7600', $skill->weight);
+
+        $skill = app(UpdateProfileConceptAssertionProficiency::class)->execute(
+            $actor->user,
+            $profile,
+            $skill,
+            93,
+        );
+
+        $this->assertSame('0.9300', $skill->weight);
+
+        $skill = app(UpdateProfileConceptAssertionProficiency::class)->execute(
+            $actor->user,
+            $profile,
+            $skill,
+            null,
+        );
+
+        $this->assertNull($skill->weight);
+    }
+
+    public function test_only_skill_profile_assertions_accept_proficiency(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        $this->expectException(HttpException::class);
+
+        app(AddProfileConceptAssertion::class)->execute(
+            $actor->user,
+            $profile,
+            'Physics',
+            ConceptAssertionPredicate::InterestedIn,
+            ConceptAssertionVisibility::Inherited,
+            80,
+        );
+    }
+
+    public function test_need_importance_is_optional_bounded_and_updateable(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        $intent = app(CreateActorProfileIntent::class)->execute(
+            $actor->user,
+            $profile,
+            ProfileIntentKind::Need,
+            'Transportation',
+            [
+                'importance_percent' => 90,
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'America/Toronto',
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Inherited->value,
+            ],
+        );
+
+        $this->assertSame(90, $intent->importance_percent);
+        $this->assertSame(ProfileIntentStatus::Active, $intent->status);
+
+        $intent = app(UpdateActorProfileIntent::class)->execute(
+            $actor->user,
+            $intent,
+            [
+                'importance_percent' => 20,
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'America/Toronto',
+                'recurrence_interval' => 1,
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Inherited->value,
+            ],
+        );
+
+        $this->assertSame(20, $intent->importance_percent);
+        $this->assertSame(ProfileIntentStatus::Active, $intent->status);
+
+        try {
+            app(CreateActorProfileIntent::class)->execute(
+                $actor->user,
+                $profile,
+                ProfileIntentKind::Need,
+                'Housing',
+                [
+                    'importance_percent' => 101,
+                    'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                    'timezone' => 'America/Toronto',
+                    'round_trip' => false,
+                    'visibility' => ProfileItemVisibility::Inherited->value,
+                ],
+            );
+            $this->fail('Out-of-range importance was accepted.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('importance_percent', $exception->errors());
+        }
     }
 
     public function test_weekly_round_trip_transport_need_is_structured_for_future_matching(): void
@@ -336,6 +447,7 @@ class ActorProfileSemanticsAndIntentsTest extends TestCase
             'Laravel',
             ConceptAssertionPredicate::HasSkill,
             ConceptAssertionVisibility::Inherited,
+            76,
         );
         $add->execute(
             $owner->user,
@@ -353,6 +465,7 @@ class ActorProfileSemanticsAndIntentsTest extends TestCase
             'Tutoring',
             [
                 'title' => 'Public tutoring',
+                'importance_percent' => 65,
                 'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
                 'timezone' => 'America/Toronto',
                 'round_trip' => false,
@@ -389,7 +502,9 @@ class ActorProfileSemanticsAndIntentsTest extends TestCase
         $this->get(route('profiles.show', $profile))
             ->assertOk()
             ->assertSee('Laravel')
+            ->assertSee('76%')
             ->assertSee('Public tutoring')
+            ->assertSee('65%')
             ->assertDontSee('Private Topic')
             ->assertDontSee('Secret need')
             ->assertDontSee('Members-only need');
