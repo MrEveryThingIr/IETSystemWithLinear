@@ -788,5 +788,9 @@ return [
         'create_from_definition_help' => 'مسار خبير للمخططات المنظمة داخل السياق.',
         'open' => 'فتح',
         'open_reader' => 'فتح القارئ',
+        'create_evidence_reference' => 'إنشاء مرجع دليل',
+        'evidence_reference_created' => 'تم إنشاء مرجع الدليل:',
+        'historical_evidence' => 'نسخة دليل تاريخية',
+        'historical_evidence_help' => 'أنت تعرض النسخة المختومة الدقيقة التي يشير إليها هذا المرجع؛ ولا تغيّرها مراجعات المحتوى اللاحقة.',
     ],
 ];

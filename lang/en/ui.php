@@ -793,5 +793,9 @@ return [
         'create_from_definition_help' => 'Expert path for Context-local structured schemas.',
         'open' => 'Open',
         'open_reader' => 'Open reader',
+        'create_evidence_reference' => 'Create evidence reference',
+        'evidence_reference_created' => 'Evidence reference created:',
+        'historical_evidence' => 'Historical evidence edition',
+        'historical_evidence_help' => 'You are viewing the exact sealed edition cited by this evidence reference. Later Content revisions do not change it.',
     ],
 ];

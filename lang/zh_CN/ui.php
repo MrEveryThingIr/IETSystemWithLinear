@@ -788,5 +788,9 @@ return [
         'create_from_definition_help' => '面向专家的上下文本地结构化 schema 路径。',
         'open' => '打开',
         'open_reader' => '打开阅读器',
+        'create_evidence_reference' => '创建证据引用',
+        'evidence_reference_created' => '已创建证据引用：',
+        'historical_evidence' => '历史证据版本',
+        'historical_evidence_help' => '你正在查看此证据引用所指向的精确封存版本；后续内容修订不会改变它。',
     ],
 ];

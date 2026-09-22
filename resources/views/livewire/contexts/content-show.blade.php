@@ -34,6 +34,9 @@
         : collect();
     $mediaByPlacement = $revision->assets->keyBy(fn ($asset) => (string) $asset->pivot->uuid);
     $relationships = $revision->containedRelationships()->with(['childContent.activeRevision'])->get();
+    $readerPublishedAt = $viewingEvidenceReferenceUuid !== null
+        ? $revision->manifest_sealed_at
+        : $content->published_at;
 @endphp
 
 <section
@@ -73,9 +76,9 @@
                 />
             @endif
             @if ($canEnterStudio)
-                @unless ($legacyEvidence)
+                @unless ($legacyEvidence || $viewingEvidenceReferenceUuid)
                     <flux:button wire:click="createRevisionEvidence" variant="ghost" size="sm">
-                        Evidence reference
+                        {{ __('ui.context_content.create_evidence_reference') }}
                     </flux:button>
                 @endunless
                 <flux:button :href="route('contexts.contents.studio', [$context, $content])" variant="primary" size="sm">
@@ -84,6 +87,25 @@
             @endif
         </div>
     </div>
+
+    @if ($viewingEvidenceReferenceUuid)
+        <div class="mx-auto w-full max-w-7xl">
+            <flux:callout variant="info">
+                <div class="font-medium">{{ __('ui.context_content.historical_evidence') }}</div>
+                <div class="mt-1 text-sm">{{ __('ui.context_content.historical_evidence_help') }}</div>
+                <div class="mt-2 break-all font-mono text-xs">{{ $viewingEvidenceReferenceUuid }}</div>
+            </flux:callout>
+        </div>
+    @endif
+
+    @if ($evidenceReferenceUuid)
+        <div class="mx-auto w-full max-w-7xl">
+            <flux:callout variant="success">
+                {{ __('ui.context_content.evidence_reference_created') }}
+                <span class="font-mono">{{ $evidenceReferenceUuid }}</span>
+            </flux:callout>
+        </div>
+    @endif
 
     @if ($legacyEvidence)
         <div class="mx-auto w-full max-w-7xl">
@@ -106,7 +128,7 @@
                 <div class="mb-3 flex flex-wrap items-center gap-2 text-sm" style="color: var(--content-muted)">
                     <x-app.actor-identity :actor="$content->author" size="xs" />
                     <span aria-hidden="true">·</span>
-                    <span>{{ __('reader.published', ['date' => $content->published_at?->timezone($viewerTimezone)->format('Y-m-d H:i') ?? '—']) }}</span>
+                    <span>{{ __('reader.published', ['date' => $readerPublishedAt?->timezone($viewerTimezone)->format('Y-m-d H:i') ?? '—']) }}</span>
                     @unless ($legacyEvidence)
                         <flux:badge size="sm">{{ __('reader.verified_edition') }}</flux:badge>
                     @endunless

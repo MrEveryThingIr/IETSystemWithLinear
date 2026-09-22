@@ -788,5 +788,9 @@ return [
         'create_from_definition_help' => 'مسیر تخصصی برای ساختارهای محلی این بستر.',
         'open' => 'بازکردن',
         'open_reader' => 'نمایش خواندن',
+        'create_evidence_reference' => 'ایجاد ارجاع مدرک',
+        'evidence_reference_created' => 'ارجاع مدرک ایجاد شد:',
+        'historical_evidence' => 'نسخهٔ تاریخی مدرک',
+        'historical_evidence_help' => 'شما دقیقاً نسخهٔ مهروموم‌شده‌ای را می‌بینید که این ارجاع به آن اشاره می‌کند؛ ویرایش‌های بعدی محتوا آن را تغییر نمی‌دهند.',
     ],
 ];

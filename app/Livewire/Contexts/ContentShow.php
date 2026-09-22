@@ -8,6 +8,7 @@ use App\Actions\Groups\ToggleSpaceContentReaction;
 use App\ContentEvidenceTarget;
 use App\Models\Actor;
 use App\Models\Asset;
+use App\Models\ContentEvidenceReference;
 use App\Models\Context;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentAnnotation;
@@ -60,6 +61,8 @@ class ContentShow extends Component
 
     public ?string $evidenceReferenceUuid = null;
 
+    public ?string $viewingEvidenceReferenceUuid = null;
+
     public string $commentBody = '';
 
     public ?string $replyingTo = null;
@@ -111,10 +114,14 @@ class ContentShow extends Component
         $user = $this->user();
         Gate::forUser($user)->authorize('view', $content);
 
-        $revision = $content->activeRevisionRecord();
-        if (! $revision instanceof SpaceContentRevision
-            && Gate::forUser($user)->allows('revisions', $content)) {
-            $revision = $content->draftRevisionRecord();
+        $revision = $this->evidenceRevision($context, $content);
+
+        if (! $revision instanceof SpaceContentRevision) {
+            $revision = $content->activeRevisionRecord();
+            if (! $revision instanceof SpaceContentRevision
+                && Gate::forUser($user)->allows('revisions', $content)) {
+                $revision = $content->draftRevisionRecord();
+            }
         }
         abort_unless($revision instanceof SpaceContentRevision, 404);
 
@@ -601,10 +608,14 @@ class ContentShow extends Component
         Gate::forUser($user)->authorize('view', $current);
         $this->content = $current;
 
-        $revision = $current->activeRevision;
-        if (! $revision instanceof SpaceContentRevision
-            && Gate::forUser($user)->allows('revisions', $current)) {
-            $revision = $current->draftRevisionRecord();
+        $revision = $this->evidenceRevision($this->context, $current);
+
+        if (! $revision instanceof SpaceContentRevision) {
+            $revision = $current->activeRevision;
+            if (! $revision instanceof SpaceContentRevision
+                && Gate::forUser($user)->allows('revisions', $current)) {
+                $revision = $current->draftRevisionRecord();
+            }
         }
         abort_unless($revision instanceof SpaceContentRevision, 404);
         $revision->loadMissing('assets');
@@ -621,7 +632,8 @@ class ContentShow extends Component
         $canEnterStudio = Gate::forUser($user)->allows('update', $current)
             || Gate::forUser($user)->allows('revisions', $current);
         $legacyEvidence = ! $revision->hasVerifiableManifest();
-        $canInteract = $current->active_revision_id !== null
+        $canInteract = $this->viewingEvidenceReferenceUuid === null
+            && $current->active_revision_id !== null
             && (int) $current->active_revision_id === (int) $revision->id
             && Gate::forUser($user)->allows('interact', $current);
 
@@ -826,6 +838,32 @@ class ContentShow extends Component
                     });
             })
             ->first();
+    }
+
+    private function evidenceRevision(Context $context, SpaceContent $content): ?SpaceContentRevision
+    {
+        $evidenceUuid = $this->viewingEvidenceReferenceUuid;
+        if ($evidenceUuid === null) {
+            $queryValue = request()->query('evidence');
+            $evidenceUuid = is_string($queryValue) && $queryValue !== '' ? $queryValue : null;
+        }
+
+        if ($evidenceUuid === null) {
+            return null;
+        }
+
+        $reference = ContentEvidenceReference::query()
+            ->where('uuid', $evidenceUuid)
+            ->where('context_id', $context->id)
+            ->where('space_content_id', $content->id)
+            ->firstOrFail();
+
+        $revision = $reference->revision()->firstOrFail();
+        abort_unless($revision->hasVerifiableManifest(), 404);
+
+        $this->viewingEvidenceReferenceUuid = $reference->uuid;
+
+        return $revision;
     }
 
     private function interactionRevision(): ?SpaceContentRevision
