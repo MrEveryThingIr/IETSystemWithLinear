@@ -52,6 +52,6 @@ class ActorProfileReferenceController extends Controller
             }
         }
 
-        abort(403);
+        return view('profile.reference', ['actor' => $actor]);
     }
 }
