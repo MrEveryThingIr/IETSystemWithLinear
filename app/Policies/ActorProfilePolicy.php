@@ -27,6 +27,17 @@ class ActorProfilePolicy
         };
     }
 
+    public function viewAvatar(?User $user, ActorProfile $profile): bool
+    {
+        $profile->loadMissing('actor');
+
+        if ($profile->visibility === ProfileVisibility::Public) {
+            return true;
+        }
+
+        return $this->isActiveVerified($user);
+    }
+
     public function update(User $user, ActorProfile $profile): bool
     {
         return $this->isActiveVerified($user) && $this->owns($user, $profile);

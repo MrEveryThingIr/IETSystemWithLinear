@@ -32,7 +32,7 @@ class SharedShow extends Component
         abort_unless($user instanceof User, 403);
 
         return view('livewire.profile.shared-show', [
-            'grant' => $this->grant->load('profile'),
+            'grant' => $this->grant->load('profile.actor.user'),
             'disclosure' => $resolver->resolve($user, $this->grant),
         ]);
     }

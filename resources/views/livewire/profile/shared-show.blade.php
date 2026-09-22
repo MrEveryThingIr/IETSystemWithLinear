@@ -2,6 +2,10 @@
     <x-app.page-header :title="__('ui.profile_sharing.shared_title')" :description="__('ui.profile_sharing.shared_help')" />
 
     <div class="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="mb-4 flex items-center gap-4">
+            <x-app.actor-avatar :actor="$grant->profile->actor" size="lg" alt="" />
+            <p class="min-w-0 text-sm text-zinc-500">{{ __('ui.profile_sharing.shared_help') }}</p>
+        </div>
         @if ($grant->purpose)
             <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile_sharing.purpose_label', ['purpose' => $grant->purpose]) }}</p>
         @endif

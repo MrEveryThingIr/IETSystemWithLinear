@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\ActorAvatarController;
 use App\Http\Controllers\ActorProfileImageController;
+use App\Http\Controllers\ActorProfileReferenceController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
@@ -39,6 +41,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'));
 Route::post('/locale', LocaleController::class)->name('locale.update');
+Route::get('/people/{actor}', ActorProfileReferenceController::class)->name('actors.profile.reference');
+Route::get('/people/{actor}/avatar', ActorAvatarController::class)->name('actors.avatar');
 Route::livewire('/profiles/{profile}', ProfileShow::class)->name('profiles.show');
 Route::get('/profiles/{profile}/images/{image}', [ActorProfileImageController::class, 'show'])
     ->name('profiles.images.show');
