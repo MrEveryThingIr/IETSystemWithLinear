@@ -2,12 +2,24 @@
 
 ## Status
 
-Runtime implementation is technically complete on `feat/phase-04-actor-profile`.
+**Phase 4 is complete and human-owner accepted.**
 
-- 4A is owner-local accepted.
-- 4B and 4B.1 are owner-local accepted at `ea52eef97184aa3b06bc8946c45c513dd2586baf`.
-- 4C is remote-CI green at `18a6212d340c5ce04b61ce20b4aef26d618b6fc7`.
-- one final owner-local/browser acceptance gate remains before Phase 4 is formally closed and Phase 5 may begin.
+Final runtime baseline before this documentation-only closure:
+
+`20e7c2834fca74b652f89195094b70f86b454f80`
+
+GitHub Actions run `35700986122` is green on that exact commit:
+
+- PHPUnit: **331 passed / 1719 assertions**;
+- PHPStan: **no errors**;
+- Pint: **171 changed PHP files passed**;
+- Vite production build: passed;
+- migration / scheduler / queue smoke: passed;
+- SQLite backup → restore smoke: passed;
+- npm high-severity audit: passed;
+- Composer security audit: clean.
+
+The human owner accepted the final Phase 4 milestone on 2026-09-22 after the last product/integration review. Phase 5 may now begin from the closed Phase 4 baseline.
 
 Accepted Phase 3 closure baseline: `b2e5dc0a8b7cfd33ff9dbcb6af4c6f6027c7948c`.
 
@@ -264,7 +276,7 @@ Final hardening also proves that 4B-generated coarse Actor `needs` / `offers` su
 
 ### 4C — sharing, completeness and Phase 4 closure
 
-**Status: implementation complete and remote-CI validated at `18a6212d340c5ce04b61ce20b4aef26d618b6fc7`; owner-local/browser acceptance pending.**
+**Status: complete and accepted.**
 
 4C turns Profile into a safe upstream source for later Context, Admission, Planner, Matching and negotiated-Agreement work without pulling those later domains into Profile.
 
@@ -401,19 +413,28 @@ The Phase 4 runtime is frozen at this hardened candidate unless the refreshed ow
 
 #### Final owner-local/browser gate
 
-Before formally closing Phase 4 and beginning Phase 5, the human owner must synchronize the final branch and verify:
+**Accepted and closed on 2026-09-22.**
 
-- the disclosure migration applies;
-- focused Phase 4 tests pass;
-- full PHPUnit/PHPStan/Pint/build pass;
-- Profile readiness/selective-sharing UI is usable;
-- a private item can be shared with exactly one second active/verified Actor;
-- the recipient sees only selected items, with no account email or unselected identity leakage;
-- an unrelated Actor is denied;
-- closing a shared intent removes it from the live disclosure;
-- revoking a grant removes access immediately;
-- existing Profile semantic/temporal behavior remains correct;
-- responsive and RTL presentation is acceptable.
+The final review confirmed the Profile remains an upstream, privacy-aware participant description layer rather than absorbing Context, Planner, Matching or Contract responsibilities.
+
+### Final cross-system hardening included in the accepted closure
+
+- Profile owner UI is **read-first**: cards, image library, grants, semantics and intents remain visible; only mutation forms/composers open on demand.
+- the earlier useful Profile media layout was restored: displayed image and full image library are separate surfaces, and any ready image can be selected as the displayed image;
+- an Actor's displayed Profile image is reused as that participant's system avatar where authorized;
+- participant references use a reusable **avatar + username/display identity** component and link to the appropriate Profile/reference surface;
+- dashboard greetings use the human-facing displayed name rather than treating username as the preferred salutation;
+- the account/header menu renders the current participant avatar;
+- clicking another participant never lazily creates or mutates that participant's Profile;
+- identity-only participant references are restricted to active verified authenticated users, while genuinely public Profiles remain guest-viewable;
+- archived Actors cannot expose an avatar through the participant-avatar route;
+- skill assertions may carry an optional **self-rated proficiency from 0–100%**; storage reuses the Concept Assertion `weight` dimension as normalized `0.0000–1.0000` instead of introducing a duplicate skill table/column;
+- Profile Need/Offer declarations may carry optional **importance / urgency from 0–100%**, persisted as `importance_percent`;
+- importance labels progress from low / not urgent through moderate, important and high priority to critical / urgent;
+- proficiency/importance values remain Profile statements, not certifications, Planner priority, Match ranking, Contract evidence or obligations;
+- selected skill proficiency and intent importance travel with the corresponding item through ordinary/public rendering and selective disclosure only when that item is otherwise visible/selected;
+- English, Persian, Arabic and Simplified Chinese UI strings cover the new scales;
+- migration `2026_09_22_080000_add_importance_percent_to_actor_profile_intents.php` adds the nullable bounded intent importance field without disturbing existing declarations.
 
 ## 4A security/privacy decisions
 
@@ -461,9 +482,19 @@ Before formally closing Phase 4 and beginning Phase 5, the human owner must sync
 
 ## Phase 4 exit gate
 
-4A, 4B and 4B.1 are accepted. 4C implementation is complete and remote-CI green.
+**Passed. Phase 4 is formally closed.**
 
-The **only remaining Phase 4 gate** is final owner-local/browser acceptance of the frozen candidate. After that gate succeeds, Phase 4 can be marked formally complete and Phase 5 — Generic Content Context — may begin.
+The accepted baseline preserves the key seams required by later phases:
+
+- Profile intent ≠ Planner occurrence;
+- Profile Need/Offer declaration ≠ Match;
+- Profile disclosure ≠ Context membership/authorization;
+- Profile disclosure ≠ Contract evidence;
+- mutable current Profile state ≠ immutable historical evidence;
+- Concept remains semantic identity;
+- Actor remains participant identity.
+
+Phase 5 — Generic Content Context — is the next implementation milestone.
 
 
 ## Final 4B/4B.1 owner-local closure evidence
