@@ -123,7 +123,7 @@
                         <div wire:key="archived-{{ $item->uuid }}" class="flex flex-col gap-3 rounded-xl border border-zinc-200 p-4 opacity-80 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800">
                             <div class="min-w-0">
                                 <div class="font-semibold" dir="auto">{{ $archivedRevision?->title ?? __('ui.content.untitled') }}</div>
-                                <div class="mt-1 text-sm text-zinc-500" dir="auto">{{ $item->definition->name }} · {{ $item->author->user?->username ?? __('ui.common.unknown_account') }}</div>
+                                <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-500"><span dir="auto">{{ $item->definition->name }}</span><span>·</span><x-app.actor-identity :actor="$item->author" size="xs" /></div>
                             </div>
                             <flux:button :href="route('groups.spaces.contents.studio', [$group, $space, $item])" size="sm" variant="ghost">{{ __('studio.restore') }}</flux:button>
                         </div>
