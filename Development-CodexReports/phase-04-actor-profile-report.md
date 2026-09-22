@@ -2,14 +2,21 @@
 
 ## Status
 
-Phase 4 runtime implementation is technically complete on `feat/phase-04-actor-profile`.
+**Phase 4 is complete and human-owner accepted.**
 
-- 4A — professional identity + profile media: **complete and owner-local accepted**.
-- 4B — semantic Profile + recurring Needs/Offers: **complete and owner-local accepted at `ea52eef`**.
-- 4B.1 — temporal localization hardening: **complete and owner-local accepted at `ea52eef`**.
-- 4C — selective sharing/completeness/final Phase 4 closure: **implementation complete and remote-CI green at `02b3d97`; owner-local/browser acceptance pending**.
+- 4A — professional identity + profile media: complete.
+- 4B — semantic Profile + recurring Needs/Offers: complete.
+- 4B.1 — temporal localization hardening: complete.
+- 4C — purpose-specific completeness + selective disclosure: complete.
+- final cross-system Profile/identity/scoring hardening: complete.
 
-Phase 5 remains blocked until that final human gate succeeds.
+Final runtime baseline before this documentation-only closure:
+
+`20e7c2834fca74b652f89195094b70f86b454f80`
+
+Final GitHub Actions run: `35700986122` — **success**.
+
+Phase 5 is now unblocked.
 
 ## Starting point
 
@@ -491,60 +498,79 @@ Downstream domains may consume Profile services and explicit disclosure; they mu
 - English/Persian/Arabic/Simplified Chinese strings are present;
 - existing responsive/RTL-aware application components are used.
 
-### 4C proof
+### 4C proof and final Phase 4 hardening
 
-Focused suite:
+Final runtime baseline:
 
-`tests/Feature/ActorProfileSharingAndCompletenessTest.php`
+`20e7c2834fca74b652f89195094b70f86b454f80`
 
-Final runtime candidate:
+GitHub Actions run `35700986122` proves the exact runtime commit:
 
-`18a6212d340c5ce04b61ce20b4aef26d618b6fc7`
-
-GitHub Actions run `35695765946` after final Profile presentation hardening:
-
-- full PHPUnit: **322 passed / 1672 assertions**;
+- PHPUnit: **331 passed / 1719 assertions**;
 - PHPStan: **no errors**;
-- Pint changed-file gate: **147 files passed**;
+- Pint changed-file gate: **171 files passed**;
 - Vite production build: passed;
-- migration/scheduler/queue smoke: passed;
+- fresh migrations: passed, including `2026_09_22_080000_add_importance_percent_to_actor_profile_intents.php`;
+- migration / scheduler / database queue smoke: passed;
 - SQLite backup → restore smoke: passed;
+- npm high-severity audit: passed;
 - Composer security audit: clean.
 
-Final owner feedback found two UX issues before acceptance: editors were all visible on first load, and some narrow mobile layouts were inconsistent. The final hardening makes the owner Profile read-first, opens editors only on demand, stacks narrow-screen actions/controls, removes fixed-width mobile pressure points and anchors/bounds the calendar popover.
+The final owner review also required system-wide integration polish rather than treating Profile as an isolated page. The accepted implementation therefore includes:
 
-The hardened runtime candidate is frozen unless refreshed owner-local/browser acceptance finds another defect.
+- read-first/on-demand Profile editors while leaving existing Profile data and cards visible;
+- restoration of the useful two-column Profile layout with separate displayed-image and always-visible image-library cards;
+- reusable displayed-image avatar behavior;
+- reusable avatar + participant identity links across system surfaces that reference Actors;
+- human-facing displayed name in greetings and account UI;
+- participant-reference URLs that are side-effect free and do not create another user's Profile;
+- authenticated identity-only reference protection while preserving genuinely public guest Profile access;
+- archived-Actor avatar denial;
+- optional skill self-rating from **0–100%**, mapped to the Concept Assertion `weight` dimension;
+- optional Need/Offer **importance / urgency from 0–100%**, stored as `importance_percent`;
+- localized qualitative bands for those percentages;
+- score rendering in ordinary Profile presentation and selective disclosure only when the underlying item is visible/selected;
+- four-locale UI coverage;
+- regression coverage for persistence, update, clearing, bounds, public rendering and progressive composer behavior.
 
-## Next gate
+Important interpretation:
 
-Synchronize the final Phase 4 branch locally and perform the owner-local/browser gate.
+- skill proficiency is a self-described Profile statement, not an objective certification;
+- intent importance/urgency is a participant declaration, not Planner priority, matching rank or contractual obligation;
+- mutable Profile scores must be snapshotted/version-bound later if a Contract needs them as historical evidence.
 
-Required human proof:
+## Defects found in the final eagle-eye audit
 
-- disclosure migration applies cleanly;
-- focused Phase 4 suite passes;
-- full PHPUnit/PHPStan/Pint/Vite gates pass;
-- selective sharing is understandable and usable in-browser;
-- one private Profile item can be shared with exactly one second active/verified Actor;
-- recipient sees only selected data;
-- outsider is denied;
-- no account email or unselected identity field leaks;
-- closed shared intents disappear from live disclosure;
-- revocation immediately removes recipient access;
-- existing semantic/temporal Profile behavior is still accepted;
-- mobile/RTL presentation is acceptable.
+The closure audit found and corrected several edge issues before acceptance:
 
-If this gate is green, make one documentation-only Phase 4 closure commit and then begin **Phase 5 — Generic Content Context**. Do not start Phase 5 before that acceptance.
+1. one earlier UI pass over-collapsed the Profile page instead of collapsing only mutation forms;
+2. the displayed-image and full image-library surfaces needed to remain distinct and visible;
+3. an interrupted patch had malformed Blade references to `ProfileScale`;
+4. participant Profile references initially risked creating another Actor's Profile as a read side effect;
+5. identity-only participant reference needed authentication to avoid becoming a guest username-enumeration surface;
+6. archived Actors required explicit avatar denial;
+7. Pint caught two mechanical test-format/import issues;
+8. canonical `CURRENT_STATE` and roadmap/report documents were stale and could have caused a later agent to reimplement already-complete Concept/Profile work.
 
-## 4B/4B.1 final owner-local closure
+All of the above are resolved in the closed milestone.
 
-Accepted baseline: `ea52eef97184aa3b06bc8946c45c513dd2586baf`.
+## Phase 4 closure
 
-- focused semantic/progressive/temporal suite: **16 passed / 85 assertions**;
-- full PHPUnit: **314 passed / 1613 assertions**;
-- PHPStan: **no errors**;
-- Pint dirty-file gate: **passed**;
-- Vite production build: **passed**;
-- working tree: **clean**.
+Human owner accepted final Phase 4 closure on **2026-09-22**.
 
-4B/4B.1 is closed. 4C is the sole remaining Phase 4 milestone.
+Closed architectural invariants:
+
+~~~text
+User != Actor
+ActorProfile = mutable participant presentation/profile state
+Concept = semantic identity
+Profile intent != Planner Occurrence
+Profile Need/Offer != Match
+Profile disclosure != Context authorization
+Profile disclosure != Contract evidence
+mutable current Profile != immutable historical evidence
+~~~
+
+No Phase 5 Context model, Phase 11 Planner occurrence, Phase 13 Match, or Phase 14 Contract/Commitment state was pulled forward.
+
+The repository is ready for **Phase 5 — Generic Content Context**.
