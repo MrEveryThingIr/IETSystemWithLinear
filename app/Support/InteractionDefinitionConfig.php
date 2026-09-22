@@ -229,10 +229,13 @@ class InteractionDefinitionConfig
         ];
     }
 
-    /** @param array<string, mixed> $config @return array{mode: string, score_max: int|float|null} */
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array{mode: string, score_max: int|float|null, criteria: list<array{key: string, label: string, score_max: int|float}>}
+     */
     private function evaluationConfig(array $config): array
     {
-        $allowed = ['mode', 'score_max'];
+        $allowed = ['mode', 'score_max', 'criteria'];
         if (array_diff(array_keys($config), $allowed) !== []) {
             throw new LogicException('Unknown Interaction evaluation configuration.');
         }
@@ -248,13 +251,60 @@ class InteractionDefinitionConfig
             throw new LogicException('Interaction score maximum must be a positive bounded number or null.');
         }
 
+        $criteria = $this->evaluationCriteria(
+            is_array($config['criteria'] ?? null) ? $config['criteria'] : [],
+        );
+
         if ($mode === 'none') {
             $scoreMax = null;
+            $criteria = [];
         }
 
         return [
             'mode' => $mode,
             'score_max' => $scoreMax,
+            'criteria' => $criteria,
         ];
+    }
+
+    /** @param array<int, mixed> $criteria @return list<array{key: string, label: string, score_max: int|float}> */
+    private function evaluationCriteria(array $criteria): array
+    {
+        if (count($criteria) > 50) {
+            throw new LogicException('An Interaction evaluation rubric may contain at most 50 criteria.');
+        }
+
+        $normalized = [];
+        $keys = [];
+
+        foreach ($criteria as $criterion) {
+            if (! is_array($criterion)
+                || array_diff(array_keys($criterion), ['key', 'label', 'score_max']) !== []) {
+                throw new LogicException('Evaluation criteria may contain only key, label, and score_max.');
+            }
+
+            $key = strtolower(trim((string) ($criterion['key'] ?? '')));
+            $label = trim((string) ($criterion['label'] ?? ''));
+            $scoreMax = $criterion['score_max'] ?? null;
+
+            if (! preg_match('/^[a-z][a-z0-9_]{0,63}$/', $key) || isset($keys[$key])) {
+                throw new LogicException('Evaluation criterion keys must be unique snake_case identifiers.');
+            }
+            if ($label === '' || mb_strlen($label) > 160) {
+                throw new LogicException('Evaluation criterion labels are required and may not exceed 160 characters.');
+            }
+            if ((! is_int($scoreMax) && ! is_float($scoreMax)) || $scoreMax <= 0 || $scoreMax > 1000000) {
+                throw new LogicException('Evaluation criterion score maximum must be a positive bounded number.');
+            }
+
+            $normalized[] = [
+                'key' => $key,
+                'label' => $label,
+                'score_max' => $scoreMax,
+            ];
+            $keys[$key] = true;
+        }
+
+        return $normalized;
     }
 }

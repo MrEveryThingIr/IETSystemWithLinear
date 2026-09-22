@@ -153,6 +153,12 @@ class Submission extends Model
         return $this->hasMany(SubmissionResponse::class)->orderBy('id');
     }
 
+    /** @return HasMany<Evaluation, $this> */
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(Evaluation::class)->orderBy('id');
+    }
+
     private function assertProvenance(): void
     {
         $version = InteractionDefinitionVersion::query()

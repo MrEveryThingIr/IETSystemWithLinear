@@ -55,6 +55,17 @@ class SubmissionPolicy
             && $this->contexts->submitInteractions($user, $submission->context);
     }
 
+    public function evaluate(User $user, Submission $submission): bool
+    {
+        $submission->loadMissing('context');
+        $actor = $this->actor($user);
+
+        return $submission->status === Submission::STATUS_SUBMITTED
+            && $actor instanceof Actor
+            && (int) $submission->submitted_by_actor_id !== (int) $actor->id
+            && $this->contexts->reviewInteractions($user, $submission->context);
+    }
+
     private function owns(User $user, Submission $submission): bool
     {
         $actor = $this->actor($user);
