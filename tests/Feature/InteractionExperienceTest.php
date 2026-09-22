@@ -225,8 +225,8 @@ class InteractionExperienceTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $evaluationConfig
-     * @param list<array<string, mixed>>|null $items
+     * @param  array<string, mixed>  $evaluationConfig
+     * @param  list<array<string, mixed>>|null  $items
      * @return array{Context, SpaceContent, SpaceContentRevision, InteractionDefinition}
      */
     private function publishedInteraction(
