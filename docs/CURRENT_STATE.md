@@ -19,7 +19,7 @@ Current accepted implementation baseline:
   - SQLite backup → restore smoke: passed;
   - npm high-severity audit: passed;
   - Composer security audit: clean.
-- The next implementation milestone is **Phase 5 — Generic Content Context**.
+- Phase 5 — Generic Content Context is **active** on `feat/phase-05-content-context`.
 
 This document describes repository implementation truth after formal Phase 4 closure. Future architecture remains separately governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
 
@@ -521,7 +521,7 @@ These are continuous roadmap requirements, not a final afterthought.
 
 Phases 1–4 are closed.
 
-The next implementation milestone is:
+The active implementation milestone is:
 
 > **Phase 5 — Generic Content Context**
 
