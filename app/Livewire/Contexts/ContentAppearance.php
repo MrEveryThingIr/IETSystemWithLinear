@@ -24,7 +24,9 @@ use Livewire\Component;
 class ContentAppearance extends Component
 {
     public Context $context;
+
     public SpaceContent $content;
+
     public string $templateSource = 'builtin:article';
 
     /** @var array<string, mixed> */

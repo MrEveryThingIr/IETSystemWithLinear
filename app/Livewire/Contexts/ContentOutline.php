@@ -21,6 +21,7 @@ use Livewire\Component;
 class ContentOutline extends Component
 {
     public Context $context;
+
     public SpaceContent $content;
 
     /** @var list<int> */
@@ -30,6 +31,7 @@ class ContentOutline extends Component
     public array $savedChildIds = [];
 
     public string $selectedChildId = '';
+
     public string $search = '';
 
     public function mount(Context $context, SpaceContent $content): void

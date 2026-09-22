@@ -21,7 +21,9 @@ use Livewire\Component;
 class ContentBlocks extends Component
 {
     public Context $context;
+
     public SpaceContent $content;
+
     public string $compositionMode = SpaceContentRevision::COMPOSITION_FIELDS;
 
     /** @var list<array<string, mixed>> */

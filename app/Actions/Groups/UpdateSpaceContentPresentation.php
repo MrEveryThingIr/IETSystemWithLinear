@@ -91,7 +91,7 @@ class UpdateSpaceContentPresentation
             $uuid = substr($source, 7);
             $template = SpaceContentRenderTemplate::query()
                 ->where('uuid', $uuid)
-                ->where('group_space_id', $content->group_space_id)
+                ->where('context_id', $content->context_id)
                 ->where('status', SpaceContentRenderTemplate::STATUS_ACTIVE)
                 ->lockForUpdate()
                 ->first();

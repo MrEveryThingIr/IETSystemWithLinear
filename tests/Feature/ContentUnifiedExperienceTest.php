@@ -13,6 +13,8 @@ use App\Livewire\Contexts\ContentBlocks;
 use App\Livewire\Contexts\ContentOutline;
 use App\Models\Actor;
 use App\Models\ContentBlueprint;
+use App\Models\Context;
+use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -95,7 +97,7 @@ class ContentUnifiedExperienceTest extends TestCase
             ]));
     }
 
-    private function content(Actor $actor, \App\Models\Context $context): \App\Models\SpaceContent
+    private function content(Actor $actor, Context $context): SpaceContent
     {
         app(EnsureSystemContentBlueprints::class)->execute();
         $blueprint = ContentBlueprint::query()->where('slug', 'evidence-work-sample')->firstOrFail();

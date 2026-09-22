@@ -73,9 +73,11 @@
                 />
             @endif
             @if ($canEnterStudio)
-                <flux:button wire:click="createRevisionEvidence" variant="ghost" size="sm">
-                    Evidence reference
-                </flux:button>
+                @unless ($legacyEvidence)
+                    <flux:button wire:click="createRevisionEvidence" variant="ghost" size="sm">
+                        Evidence reference
+                    </flux:button>
+                @endunless
                 <flux:button :href="route('contexts.contents.studio', [$context, $content])" variant="primary" size="sm">
                     {{ __('reader.edit_in_studio') }}
                 </flux:button>
