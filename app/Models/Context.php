@@ -32,9 +32,6 @@ class Context extends Model
         static::creating(function (self $context): void {
             $context->uuid ??= (string) Str::uuid();
 
-            if (! $context->kind instanceof ContextKind) {
-                throw new LogicException('Context kind is invalid.');
-            }
         });
 
         static::updating(function (self $context): void {
