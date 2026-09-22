@@ -88,4 +88,10 @@ class Context extends Model
     {
         return $this->hasMany(Asset::class);
     }
+
+    /** @return HasMany<InteractionDefinition, $this> */
+    public function interactionDefinitions(): HasMany
+    {
+        return $this->hasMany(InteractionDefinition::class);
+    }
 }

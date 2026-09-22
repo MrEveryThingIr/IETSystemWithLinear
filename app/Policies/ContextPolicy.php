@@ -96,6 +96,21 @@ class ContextPolicy
         return $this->manageContent($user, $context);
     }
 
+    public function submitInteractions(User $user, Context $context): bool
+    {
+        return $this->createContent($user, $context);
+    }
+
+    public function reviewInteractions(User $user, Context $context): bool
+    {
+        return $this->reviewContent($user, $context);
+    }
+
+    public function manageInteractions(User $user, Context $context): bool
+    {
+        return $this->manageContent($user, $context);
+    }
+
     private function currentUser(User $user): ?User
     {
         $current = User::query()->with('actor')->find($user->id);
