@@ -81,7 +81,7 @@
                     </div>
                     @if ($assertion->predicate->value === 'has_skill')
                         @php
-                            $skillPercent = AppSupportProfileProfileScale::percentFromWeight($assertion->weight);
+                            $skillPercent = \App\Support\Profile\ProfileScale::percentFromWeight($assertion->weight);
                         @endphp
                         <div class="mt-3 rounded-lg bg-zinc-50 p-3 dark:bg-zinc-950/50">
                             @if ($editingProficiencyAssertionId === $assertion->id)
@@ -104,7 +104,7 @@
                                         @if ($skillPercent !== null)
                                             <p class="mt-1 text-sm font-semibold">
                                                 {{ $skillPercent }}%
-                                                <span class="font-normal text-zinc-500">· {{ __('ui.profile.semantics.proficiency_levels.'.AppSupportProfileProfileScale::skillLevelKey($skillPercent)) }}</span>
+                                                <span class="font-normal text-zinc-500">· {{ __('ui.profile.semantics.proficiency_levels.'.\App\Support\Profile\ProfileScale::skillLevelKey($skillPercent)) }}</span>
                                             </p>
                                         @else
                                             <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.semantics.proficiency_unrated') }}</p>
