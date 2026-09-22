@@ -26,6 +26,7 @@ Current implementation baseline:
 - Post-closure invitation locale-return regression fixed at `0d98dfe`; GitHub Actions run `35749114796` is green at **366 tests / 1945 assertions**, PHPStan/Pint/Vite/ops/security green.
 - Phase 7 — Submission / Response / Evaluation is **active** on `feat/phase-07-submission-evaluation`; binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 - Phase 7A — versioned InteractionDefinition kernel — complete on `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`; GitHub Actions run `35756220221`: **372 tests / 1964 assertions**, PHPStan clean, changed-file Pint **272 files**, Vite/migrations/ops/backup/security green.
+- Human/local Phase 7A acceptance recorded on 2026-09-22 from synchronized `bd4ca3a`: migration applied cleanly to the existing database; focused `InteractionDefinitionKernelTest` **6 tests / 19 assertions** passed; PHPStan **266/266** clean; dirty-only Pint passed; `git diff --check` clean; working tree clean; invitation → registration → Admission resume browser regression remained correct with intentionally unchanged visible behavior.
 - Phase 7B — Submission / Response / evidence is the next active sub-milestone.
 
 This document describes repository implementation truth at the Phase 7 kickoff baseline. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and active Phase 7 scope by `docs/PHASE_07_SUBMISSION_EVALUATION.md`.

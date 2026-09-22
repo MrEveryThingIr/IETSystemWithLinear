@@ -279,7 +279,7 @@ Therefore Phase 7 should add a new structured-interaction domain while reusing C
 
 ### 7A — versioned interaction kernel
 
-**Status: complete on `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`.** GitHub Actions run `35756220221` is green: **372 tests / 1964 assertions**, changed-file Pint **272 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
+**Status: complete and human/local accepted.** Runtime candidate `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`; GitHub Actions run `35756220221` is green: **372 tests / 1964 assertions**, changed-file Pint **272 files**, PHPStan clean, Vite/build/operations/backup/security gates green. On synchronized `bd4ca3a`, the human owner applied the migration to the existing database, passed the focused kernel suite (**6 tests / 19 assertions**), PHPStan **266/266**, dirty-only Pint, `git diff --check`, and a clean tree. Invitation/registration/Admission-resume browser regression remained correct and intentionally showed no new product behavior because 7A is domain infrastructure, not the Phase 8 Admission UX.
 
 Delivered:
 
