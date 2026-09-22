@@ -215,42 +215,29 @@ Concept semantics are reusable by both Actor Profile and Content without duplica
 
 ## Phase 4 — Actor/Party and progressive Profile
 
-**Status: runtime implementation technically complete on `feat/phase-04-actor-profile`; final owner-local/browser acceptance pending.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
+**Status: complete and human-owner accepted on 2026-09-22.** Detailed contract: `docs/PHASE_04_ACTOR_PROFILE.md`.
 
-4A, 4B and 4B.1 are owner-local accepted. 4C selective disclosure/completeness is implemented and remote-CI green at `18a6212d340c5ce04b61ce20b4aef26d618b6fc7` with **322 tests / 1672 assertions**, PHPStan clean, Pint clean, production build green, operational smoke green and Composer audit clean. Final owner feedback also hardened the Profile page to a read-first/on-demand-editor presentation and corrected narrow-screen layout pressure points.
+Final runtime baseline before documentation-only closure:
 
-Phase 5 is the next implementation phase **only after** the final Phase 4 owner-local/browser gate. Recurring Profile declarations remain current-intent cadence rather than Planner Occurrences (Phase 11); full Need/Offer matching remains Phase 13; selective Profile disclosure is live mutable access rather than immutable Contract evidence (Phase 14).
+`20e7c2834fca74b652f89195094b70f86b454f80`
 
-### Purpose
+Final CI proof on GitHub Actions run `35700986122`:
 
-Allow the system to learn more about participants over time while preparing for organizations.
+- **331 tests / 1719 assertions**;
+- PHPStan clean;
+- Pint **171 files** clean;
+- production frontend build green;
+- migrations, scheduler and database-queue smoke green;
+- SQLite backup → restore smoke green;
+- npm and Composer security audits green.
 
-### Deliverables
+Phase 4 delivers the professional Actor Profile foundation, private media/display-avatar pipeline, Concept-backed skills/interests/learning goals, recurring Profile Need/Offer intent declarations, temporal preferences, purpose-specific completeness, selective disclosure, read-first/on-demand editing, reusable participant avatar+identity presentation, optional skill proficiency (0–100%) and optional intent importance/urgency (0–100%).
 
-- Profile domain attached to Actor;
-- structured profile facts;
-- Concept assertions integrated;
-- field/assertion visibility;
-- progressive completion;
-- profile completeness/requirements service;
-- architecture-compatible Actor kind preparation;
-- explicit User→Actor acting-authority design and first safe implementation if required.
-
-### Proof cases
-
-- a person records skill/interests privately;
-- selectively shares requested fields with one context;
-- same profile facts can be reused in later onboarding.
-
-### Excluded
-
-- automatic personality inference;
-- recommendation ranking;
-- organization finance.
+Architectural boundaries remain explicit: recurring Profile declarations are current intent rather than Planner Occurrences (Phase 11); Profile Need/Offer records are not Matches (Phase 13); selective disclosure is live access rather than immutable Contract evidence (Phase 14); and Phase 4 introduces no generic Context state.
 
 ### Exit gate
 
-Profile is useful without becoming a giant registration form or leaking information across contexts.
+**Passed.** Profile is useful, progressive and privacy-aware without becoming a giant registration form or leaking information across contexts.
 
 ## Phase 5 — Generic Content Context
 
