@@ -6,9 +6,14 @@
 ])
 
 @php
-    $actor->loadMissing(['user', 'profile']);
+    $actor->loadMissing('user');
     $username = $actor->user?->username ?? __('ui.spaces.accountless_actor', ['id' => $actor->id]);
-    $displayName = $actor->profile?->display_name;
+    $displayName = null;
+
+    if ($showDisplayName) {
+        $actor->loadMissing('profile');
+        $displayName = $actor->profile?->display_name;
+    }
     $contentClass = 'inline-flex min-w-0 items-center gap-2';
 @endphp
 
