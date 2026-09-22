@@ -141,8 +141,8 @@ class ContentBlueprintVersion extends Model
     private function normalizeConfiguration(): void
     {
         $normalized = app(ContentBlueprintConfig::class)->normalize(
-            is_array($this->definition_schema) ? $this->definition_schema : [],
-            is_array($this->initial_blocks) ? $this->initial_blocks : [],
+            $this->definition_schema ?? [],
+            $this->initial_blocks ?? [],
             (string) ($this->render_template_key ?? 'article'),
             is_array($this->presentation) ? $this->presentation : [],
             is_array($this->context_kinds) ? $this->context_kinds : [],
