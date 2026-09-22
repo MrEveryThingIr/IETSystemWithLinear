@@ -67,7 +67,12 @@ class SpaceContentAssetController extends Controller
     ): void {
         abort_unless((int) $space->group_id === (int) $group->id, 404);
         abort_unless((int) $content->group_space_id === (int) $space->id, 404);
-        abort_unless((int) $asset->group_space_id === (int) $space->id, 404);
+        abort_unless(
+            $asset->group_space_id !== null
+                && (int) $asset->group_space_id === (int) $space->id
+                && (int) $asset->context_id === (int) $content->context_id,
+            404,
+        );
 
         $user = $request->user();
         abort_unless($user instanceof User, 403);

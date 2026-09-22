@@ -168,7 +168,7 @@ class SpaceContentPublicationEvidence
         foreach ($relationships as $relationship) {
             $child = $children->get((int) $relationship->child_content_id);
             abort_unless($child instanceof SpaceContent, 422, 'Contained Content no longer exists.');
-            abort_unless((int) $child->group_space_id === (int) $parent->group_space_id, 422, 'Contained Content must belong to the same Space.');
+            abort_unless((int) $child->context_id === (int) $parent->context_id, 422, 'Contained Content must belong to the same Context.');
             abort_unless($child->status === 'published' && $child->active_revision_id !== null, 422, 'Publish every contained child before publishing this parent edition.');
 
             $childRevision = $childRevisions->get((int) $child->active_revision_id);

@@ -10,6 +10,7 @@ use App\Models\SpaceContentAnnotation;
 use App\Models\SpaceContentAnnotationAnchor;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\ContextScope;
 use App\Support\SpaceContentAnnotationAnchors;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -67,7 +68,7 @@ class AddSpaceContentAnnotation
                 $anchors,
                 $uploadContext,
             ): SpaceContentAnnotation {
-                $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
+                $current = SpaceContent::query()->with(['context', 'space'])->lockForUpdate()->findOrFail($content->id);
                 Gate::forUser($user)->authorize('interact', $current);
 
                 abort_unless(
@@ -137,6 +138,7 @@ class AddSpaceContentAnnotation
                     $developmentReady = app()->environment(['local', 'testing']);
                     $asset = Asset::query()->create([
                         'uuid' => $uploadContext['uuid'],
+                        'context_id' => $current->context_id,
                         'group_space_id' => $current->group_space_id,
                         'original_filename' => $uploadContext['original_filename'],
                         'mime_type' => $uploadContext['mime'],
@@ -196,7 +198,7 @@ class AddSpaceContentAnnotation
         $caption = $caption === '' ? null : $caption;
         abort_if($caption !== null && mb_strlen($caption) > 1000, 422, 'Media caption may not exceed 1000 characters.');
 
-        $preflight = SpaceContent::query()->with('space')->findOrFail($content->id);
+        $preflight = SpaceContent::query()->with(['context', 'space'])->findOrFail($content->id);
         Gate::forUser($user)->authorize('interact', $preflight);
 
         $size = $upload->getSize();
@@ -212,7 +214,7 @@ class AddSpaceContentAnnotation
         $uuid = (string) Str::uuid();
         $extension = $upload->guessExtension();
         $filename = $uuid.($extension ? '.'.$extension : '.bin');
-        $storageKey = $upload->storeAs('assets/'.$preflight->group_space_id, $filename, 'local');
+        $storageKey = $upload->storeAs(ContextScope::storageSegment($preflight->context).'/assets', $filename, 'local');
         abort_unless(is_string($storageKey), 500, 'The uploaded media could not be stored.');
 
         return [

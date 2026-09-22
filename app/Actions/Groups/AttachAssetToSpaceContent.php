@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\ContextScope;
 use App\Support\SpaceContentRevisionComposition;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,7 @@ class AttachAssetToSpaceContent
         $mime = (string) $upload->getMimeType();
         abort_unless(Asset::supportsMime($mime), 422, 'This media type is not supported.');
 
-        $preflight = SpaceContent::query()->with('space')->findOrFail($content->id);
+        $preflight = SpaceContent::query()->with(['context', 'space'])->findOrFail($content->id);
         Gate::forUser($user)->authorize('update', $preflight);
 
         $realPath = $upload->getRealPath();
@@ -50,7 +51,7 @@ class AttachAssetToSpaceContent
         $uuid = (string) Str::uuid();
         $extension = $upload->guessExtension();
         $filename = $uuid.($extension ? '.'.$extension : '.bin');
-        $directory = 'assets/'.$preflight->group_space_id;
+        $directory = ContextScope::storageSegment($preflight->context).'/assets';
         $storageKey = $upload->storeAs($directory, $filename, 'local');
         abort_unless(is_string($storageKey), 500, 'The uploaded media could not be stored.');
 
@@ -68,7 +69,7 @@ class AttachAssetToSpaceContent
                 $extension,
                 $storageKey,
             ): SpaceContent {
-                $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
+                $current = SpaceContent::query()->with(['context', 'space'])->lockForUpdate()->findOrFail($content->id);
                 Gate::forUser($user)->authorize('update', $current);
                 abort_if($current->status === 'archived', 422, 'Archived Content cannot receive media.');
 
@@ -80,6 +81,7 @@ class AttachAssetToSpaceContent
 
                 $asset = Asset::query()->create([
                     'uuid' => $uuid,
+                    'context_id' => $current->context_id,
                     'group_space_id' => $current->group_space_id,
                     'original_filename' => mb_substr(basename($upload->getClientOriginalName()), 0, 255),
                     'mime_type' => $mime,

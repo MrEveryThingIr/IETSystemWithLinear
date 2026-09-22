@@ -23,7 +23,7 @@ class UpdateSpaceContentStructure
         abort_if(count($childContentIds) > 200, 422, 'A Content structure may contain at most 200 direct children.');
 
         return DB::transaction(function () use ($content, $user, $childContentIds): SpaceContent {
-            $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
+            $current = SpaceContent::query()->with('context')->lockForUpdate()->findOrFail($content->id);
             Gate::forUser($user)->authorize('update', $current);
             abort_if($current->status === 'archived', 422, 'Archived Content structure cannot be changed.');
             abort_if(in_array($current->id, $childContentIds, true), 422, 'Content cannot contain itself.');
@@ -32,22 +32,22 @@ class UpdateSpaceContentStructure
             abort_unless($source instanceof SpaceContentRevision, 422, 'Content has no revision to structure.');
             $source = SpaceContentRevision::query()->lockForUpdate()->findOrFail($source->id);
 
-            /** @var Collection<int, SpaceContent> $spaceContents */
-            $spaceContents = SpaceContent::query()
-                ->where('group_space_id', $current->group_space_id)
+            /** @var Collection<int, SpaceContent> $contextContents */
+            $contextContents = SpaceContent::query()
+                ->where('context_id', $current->context_id)
                 ->with('space')
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
 
             foreach ($childContentIds as $childId) {
-                $child = $spaceContents->get($childId);
+                $child = $contextContents->get($childId);
                 abort_unless($child instanceof SpaceContent, 404);
                 abort_if($child->status === 'archived', 422, 'Archived Content cannot be added to a structure.');
                 Gate::forUser($user)->authorize('view', $child);
             }
 
-            $this->assertAcyclic($current, $childContentIds, $spaceContents);
+            $this->assertAcyclic($current, $childContentIds, $contextContents);
 
             $existingIds = DB::table('space_content_revision_relationships')
                 ->where('parent_revision_id', $source->id)
@@ -104,14 +104,14 @@ class UpdateSpaceContentStructure
 
     /**
      * @param  list<int>  $proposedChildIds
-     * @param  Collection<int, SpaceContent>  $spaceContents
+     * @param  Collection<int, SpaceContent>  $contextContents
      */
     private function assertAcyclic(
         SpaceContent $parent,
         array $proposedChildIds,
-        Collection $spaceContents,
+        Collection $contextContents,
     ): void {
-        $workingRevisionIds = $spaceContents
+        $workingRevisionIds = $contextContents
             ->mapWithKeys(static function (SpaceContent $content): array {
                 $revisionId = $content->draft_revision_id ?? $content->active_revision_id;
 

@@ -19,7 +19,7 @@ class RetryAssetMediaProcessing
             Gate::forUser($user)->authorize('update', $current);
 
             $currentAsset = Asset::query()->lockForUpdate()->findOrFail($asset->id);
-            abort_unless((int) $currentAsset->group_space_id === (int) $current->group_space_id, 404);
+            abort_unless((int) $currentAsset->context_id === (int) $current->context_id, 404);
 
             $draft = $current->draftRevisionRecord();
             abort_unless($draft instanceof SpaceContentRevision, 422, 'Create a private draft before retrying media processing.');

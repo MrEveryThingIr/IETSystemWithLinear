@@ -21,7 +21,7 @@ class RemoveAssetFromSpaceContent
             $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
             Gate::forUser($user)->authorize('update', $current);
             abort_if($current->status === 'archived', 422, 'Archived Content cannot change media.');
-            abort_unless((int) $asset->group_space_id === (int) $current->group_space_id, 404);
+            abort_unless((int) $asset->context_id === (int) $current->context_id, 404);
 
             $source = $current->draftRevisionRecord() ?? $current->activeRevisionRecord();
             abort_unless($source instanceof SpaceContentRevision, 422, 'Content has no revision to change.');

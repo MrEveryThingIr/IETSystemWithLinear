@@ -51,8 +51,8 @@ class SpaceContentRevisionRelationship extends Model
                 throw new LogicException('Content cannot contain itself.');
             }
 
-            if ((int) $parent->content->group_space_id !== (int) $child->group_space_id) {
-                throw new LogicException('Content relationships must stay inside one Space.');
+            if ((int) $parent->content->context_id !== (int) $child->context_id) {
+                throw new LogicException('Content relationships must stay inside one Context.');
             }
 
             if ($relationship->child_revision_id !== null
