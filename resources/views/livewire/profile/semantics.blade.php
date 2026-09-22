@@ -58,19 +58,8 @@
                     <label class="text-sm font-medium" for="skill-proficiency">{{ __('ui.profile.semantics.proficiency') }}</label>
                     <p class="mt-1 text-xs text-zinc-500">{{ __('ui.profile.semantics.proficiency_help') }}</p>
                 </div>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <input
-                        id="skill-proficiency"
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="1"
-                        wire:model.live="proficiencyPercent"
-                        class="w-full"
-                    >
-                    <div class="w-full sm:w-28">
-                        <flux:input wire:model.live="proficiencyPercent" type="number" min="0" max="100" suffix="%" />
-                    </div>
+                <div class="w-full sm:max-w-40">
+                    <flux:input id="skill-proficiency" wire:model="proficiencyPercent" type="number" min="0" max="100" :placeholder="__('ui.common.optional')" />
                 </div>
             </div>
         @endif
@@ -97,19 +86,8 @@
                         <div class="mt-3 rounded-lg bg-zinc-50 p-3 dark:bg-zinc-950/50">
                             @if ($editingProficiencyAssertionId === $assertion->id)
                                 <div class="space-y-3">
-                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            step="1"
-                                            wire:model.live="editingProficiencyPercent"
-                                            class="w-full"
-                                            aria-label="{{ __('ui.profile.semantics.proficiency') }}"
-                                        >
-                                        <div class="w-full sm:w-28">
-                                            <flux:input wire:model.live="editingProficiencyPercent" type="number" min="0" max="100" suffix="%" />
-                                        </div>
+                                    <div class="w-full sm:max-w-40">
+                                        <flux:input wire:model="editingProficiencyPercent" type="number" min="0" max="100" :label="__('ui.profile.semantics.proficiency')" />
                                     </div>
                                     @error('editingProficiencyPercent')
                                         <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
