@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Actor;
 use App\Models\Asset;
+use App\Models\Context;
 use App\Models\Group;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
@@ -58,6 +59,60 @@ class SpaceContentAssetController extends Controller
         );
     }
 
+    public function showContext(
+        Request $request,
+        Context $context,
+        SpaceContent $content,
+        Asset $asset,
+    ): StreamedResponse {
+        $this->authorizeContextAsset($request, $context, $content, $asset);
+
+        return Storage::disk($asset->disk)->response(
+            $asset->storage_key,
+            $asset->original_filename,
+            [
+                'Content-Type' => $asset->mime_type,
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, no-store',
+            ],
+            'inline',
+        );
+    }
+
+    public function downloadContext(
+        Request $request,
+        Context $context,
+        SpaceContent $content,
+        Asset $asset,
+    ): StreamedResponse {
+        $this->authorizeContextAsset($request, $context, $content, $asset);
+
+        return Storage::disk($asset->disk)->download(
+            $asset->storage_key,
+            $asset->original_filename,
+            [
+                'Content-Type' => $asset->mime_type,
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, no-store',
+            ],
+        );
+    }
+
+    private function authorizeContextAsset(
+        Request $request,
+        Context $context,
+        SpaceContent $content,
+        Asset $asset,
+    ): void {
+        abort_unless(
+            (int) $content->context_id === (int) $context->id
+                && (int) $asset->context_id === (int) $context->id,
+            404,
+        );
+
+        $this->authorizeLinkedAsset($request, $content, $asset);
+    }
+
     private function authorizeAsset(
         Request $request,
         Group $group,
@@ -74,6 +129,11 @@ class SpaceContentAssetController extends Controller
             404,
         );
 
+        $this->authorizeLinkedAsset($request, $content, $asset);
+    }
+
+    private function authorizeLinkedAsset(Request $request, SpaceContent $content, Asset $asset): void
+    {
         $user = $request->user();
         abort_unless($user instanceof User, 403);
         Gate::forUser($user)->authorize('view', $content);

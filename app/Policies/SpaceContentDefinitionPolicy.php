@@ -7,19 +7,19 @@ use App\Models\User;
 
 class SpaceContentDefinitionPolicy
 {
-    public function __construct(private readonly GroupSpacePolicy $spaces) {}
+    public function __construct(private readonly ContextPolicy $contexts) {}
 
     public function view(User $user, SpaceContentDefinition $definition): bool
     {
-        $definition->loadMissing('space');
+        $definition->loadMissing('context');
 
-        return $this->spaces->view($user, $definition->space);
+        return $this->contexts->view($user, $definition->context);
     }
 
     public function manage(User $user, SpaceContentDefinition $definition): bool
     {
-        $definition->loadMissing('space');
+        $definition->loadMissing('context');
 
-        return $this->spaces->manage($user, $definition->space);
+        return $this->contexts->manageDefinitions($user, $definition->context);
     }
 }

@@ -3,10 +3,12 @@
 use App\Http\Controllers\ActorAvatarController;
 use App\Http\Controllers\ActorProfileImageController;
 use App\Http\Controllers\ActorProfileReferenceController;
+use App\Http\Controllers\AdmissionContextContentController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\SpaceContentAssetController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
@@ -17,6 +19,8 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Contexts\ContentIndex as ContextContentIndex;
+use App\Livewire\Contexts\ContentShow as ContextContentShow;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
 use App\Livewire\Groups\Create as CreateGroup;
@@ -36,6 +40,7 @@ use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
 use App\Livewire\Profile\Show as ProfileShow;
 use App\Models\Actor;
+use App\Models\Context;
 use App\Models\Group;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +68,14 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
+    Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
+    Route::get('/admissions/{admission}/content', AdmissionContextContentController::class)->name('admissions.context.contents');
+    Route::livewire('/contexts/{context}/contents', ContextContentIndex::class)->can('view', 'context')->name('contexts.contents.index');
+    Route::get('/contexts/{context}/contents/{content}/assets/{asset}', [SpaceContentAssetController::class, 'showContext'])
+        ->name('contexts.contents.assets.show');
+    Route::get('/contexts/{context}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'downloadContext'])
+        ->name('contexts.contents.assets.download');
+    Route::livewire('/contexts/{context}/contents/{content}', ContextContentShow::class)->name('contexts.contents.show');
     Route::livewire('/profile-shares/{grant}', SharedShow::class)->name('profiles.shares.show');
     Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
