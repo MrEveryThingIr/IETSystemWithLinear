@@ -7,6 +7,7 @@ use App\Models\Context;
 use App\Models\GroupSpace;
 use App\Models\GroupSpaceContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EnsureGroupSpaceContext
 {
@@ -25,6 +26,7 @@ class EnsureGroupSpaceContext
             }
 
             $context = Context::query()->create([
+                'uuid' => (string) Str::uuid(),
                 'kind' => ContextKind::GroupSpace,
             ]);
 
