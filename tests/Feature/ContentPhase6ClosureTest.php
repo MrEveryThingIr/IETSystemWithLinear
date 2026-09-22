@@ -12,6 +12,7 @@ use App\Actions\Groups\AttachAssetToSpaceContent;
 use App\Actions\Groups\CreateGroup;
 use App\Actions\Groups\PublishSpaceContent;
 use App\Actions\Groups\ReviseSpaceContent;
+use App\Actions\Groups\UpdateSpaceContentBlocks;
 use App\Actions\Groups\UpdateSpaceContentStructure;
 use App\ContentEvidenceTarget;
 use App\Models\Actor;
@@ -24,6 +25,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ContentPhase6ClosureTest extends TestCase
@@ -100,6 +102,40 @@ class ContentPhase6ClosureTest extends TestCase
         $draft = $content->draftRevisionRecord();
         $this->assertInstanceOf(SpaceContentRevision::class, $draft);
 
+        $placement = DB::table('space_content_revision_assets')
+            ->where('space_content_revision_id', $draft->id)
+            ->first();
+        $this->assertNotNull($placement);
+
+        $blocks = $draft->blocks()
+            ->get()
+            ->map(static fn ($block): array => [
+                'logical_uuid' => $block->logical_uuid,
+                'type' => $block->type,
+                'data' => $block->data ?? [],
+                'style' => $block->style ?? [],
+            ])
+            ->values()
+            ->all();
+        $blocks[] = [
+            'logical_uuid' => (string) Str::uuid(),
+            'type' => 'image',
+            'data' => [
+                'asset_placement_uuid' => (string) $placement->uuid,
+                'caption' => 'Screenshot of the completed work.',
+            ],
+            'style' => [],
+        ];
+
+        $content = app(UpdateSpaceContentBlocks::class)->execute(
+            $content,
+            $actor->user,
+            SpaceContentRevision::COMPOSITION_BLOCKS,
+            $blocks,
+        );
+
+        $draft = $content->draftRevisionRecord();
+        $this->assertInstanceOf(SpaceContentRevision::class, $draft);
         $placement = DB::table('space_content_revision_assets')
             ->where('space_content_revision_id', $draft->id)
             ->first();
