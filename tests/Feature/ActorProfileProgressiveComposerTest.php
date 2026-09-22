@@ -79,6 +79,52 @@ class ActorProfileProgressiveComposerTest extends TestCase
             ->assertSet('unit', null);
     }
 
+    public function test_importance_is_an_optional_progressive_intent_facet(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        Livewire::actingAs($actor->user)
+            ->test(Intents::class, ['profile' => $profile])
+            ->call('openCreate')
+            ->call('toggleFacet', 'importance')
+            ->assertSet('importancePercent', '50')
+            ->set('importancePercent', '88')
+            ->set('conceptLabel', 'Emergency transportation')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(88, ActorProfileIntent::query()->sole()->importance_percent);
+    }
+
+    public function test_skill_proficiency_can_be_added_and_edited_on_demand(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        Livewire::actingAs($actor->user)
+            ->test(Semantics::class, ['profile' => $profile])
+            ->call('openComposer')
+            ->set('conceptLabel', 'Laravel')
+            ->set('predicate', 'has_skill')
+            ->set('proficiencyPercent', '72')
+            ->call('add')
+            ->assertHasNoErrors();
+
+        $assertion = \App\Models\ConceptAssertion::query()->sole();
+        $this->assertSame('0.7200', $assertion->weight);
+
+        Livewire::actingAs($actor->user)
+            ->test(Semantics::class, ['profile' => $profile])
+            ->call('openProficiencyEditor', $assertion->id)
+            ->assertSet('editingProficiencyPercent', '72')
+            ->set('editingProficiencyPercent', '91')
+            ->call('saveProficiency')
+            ->assertHasNoErrors();
+
+        $this->assertSame('0.9100', $assertion->fresh()->weight);
+    }
+
     public function test_minimal_need_requires_only_relationship_and_concept(): void
     {
         $actor = Actor::factory()->create();
