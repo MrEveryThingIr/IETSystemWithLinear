@@ -2,7 +2,7 @@
 
 ## Status
 
-**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete and human/local accepted**; Phase **7B is technically complete**; Phase **7C is next**.
+**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete and human/local accepted**; Phases **7B and 7C are technically complete**; Phase **7D is next**.
 
 Starting baseline:
 
@@ -337,9 +337,22 @@ Original 7B deliverables:
 
 ### 7C — Evaluation
 
-**Status: next.**
+**Status: technically complete on `9e0338994f755f81c59ed6dfe9e5e96ad0afaa8f`.** GitHub Actions run `35767588253` is green: **384 tests / 2025 assertions**, changed-file Pint **293 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
 
-Deliver:
+Delivered:
+
+- additive Evaluation evidence table bound to exact Submission and evaluator Actor;
+- draft/finalized Evaluation lifecycle with finalized immutability;
+- optional immutable rubric definitions on InteractionDefinitionVersion;
+- bounded overall score, criterion scores and narrative feedback;
+- private evaluator drafts and finalized submitter/reviewer visibility;
+- canonical schema-versioned Evaluation evidence plus SHA-256 integrity hash bound to the exact Submission evidence hash;
+- idempotent evaluator finalization;
+- explicit self-evaluation and outsider rejection;
+- `mode=none` support for interactions that must not be evaluated;
+- proof that Evaluation finalization does not change Admission lifecycle or create Membership.
+
+Original 7C deliverables:
 
 - reviewer/evaluator authorization;
 - draft/finalized Evaluation;
@@ -348,6 +361,8 @@ Deliver:
 - no hidden Admission/Workflow transition side effects.
 
 ### 7D — productized interaction experience
+
+**Status: next.**
 
 Deliver:
 

@@ -61,7 +61,7 @@ GitHub Actions run `35749114796` on that exact baseline is green:
 
 Phase 7 must build the structured interaction substrate for applications/exams/questionnaires and the future conversation-first Admission experience. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 or realtime infrastructure.
 
-Phase 7A — versioned InteractionDefinition kernel — is complete and human/local accepted. Phase 7B — Submission / Response / evidence — is technically complete on `7761a2f5a57fd06b8df4fa7e97397cd9f9a2a2ab`. GitHub Actions run `35766736605` is green: 379 tests / 2000 assertions, changed-file Pint 284 files, PHPStan/Vite/migration/queue/scheduler/backup-restore/npm/Composer security gates green. Phase 7C — Evaluation — is next.
+Phase 7A — versioned InteractionDefinition kernel — is complete and human/local accepted. Phase 7B — Submission / Response / evidence — is technically complete on `7761a2f5a57fd06b8df4fa7e97397cd9f9a2a2ab`. Phase 7C — Evaluation — is technically complete on `9e0338994f755f81c59ed6dfe9e5e96ad0afaa8f`. GitHub Actions run `35767588253` is green: 384 tests / 2025 assertions, changed-file Pint 293 files, PHPStan/Vite/migration/queue/scheduler/backup-restore/npm/Composer security gates green. Phase 7D — productized interaction experience — is next.
 
 ## Architectural stop conditions
 
