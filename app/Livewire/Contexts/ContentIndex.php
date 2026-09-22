@@ -10,6 +10,7 @@ use App\Models\SpaceContentDefinition;
 use App\Models\SpaceContentDefinitionVersion;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -102,7 +103,9 @@ class ContentIndex extends Component
             ->with(['author.user', 'activeRevision', 'draftRevision', 'definition'])
             ->latest('id')
             ->limit(100)
-            ->get();
+            ->get()
+            ->filter(fn ($content): bool => Gate::forUser($user)->allows('view', $content))
+            ->values();
 
         $canManageDefinitions = Gate::forUser($user)->allows('manageDefinitions', $current);
         $canCreate = Gate::forUser($user)->allows('createContent', $current);
@@ -115,8 +118,8 @@ class ContentIndex extends Component
         ));
     }
 
-    /** @return \Illuminate\Support\Collection<int, SpaceContentDefinition> */
-    private function activeDefinitions(): \Illuminate\Support\Collection
+    /** @return Collection<int, SpaceContentDefinition> */
+    private function activeDefinitions(): Collection
     {
         return $this->context->contentDefinitions()
             ->where('status', 'active')
