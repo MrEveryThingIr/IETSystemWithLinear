@@ -10,6 +10,11 @@
                 <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
                     {{ __('ui.context_content.back') }}
                 </flux:button>
+                @if ($canUpdate)
+                    <flux:button :href="route('contexts.contents.blocks', [$context, $content])" variant="ghost">{{ __('blocks.title') }}</flux:button>
+                    <flux:button :href="route('contexts.contents.appearance', [$context, $content])" variant="ghost">{{ __('presentation.title') }}</flux:button>
+                    <flux:button :href="route('contexts.contents.outline', [$context, $content])" variant="ghost">{{ __('structure.title') }}</flux:button>
+                @endif
                 @if ($canOpenReader)
                     <flux:button :href="route('contexts.contents.show', [$context, $content])" variant="ghost">
                         {{ __('ui.context_content.open_reader') }}

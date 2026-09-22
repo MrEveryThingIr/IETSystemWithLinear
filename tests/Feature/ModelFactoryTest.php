@@ -14,6 +14,7 @@ use App\Models\AgreementAcceptance;
 use App\Models\AgreementEvent;
 use App\Models\ContentBlueprint;
 use App\Models\ContentBlueprintVersion;
+use App\Models\ContentEvidenceReference;
 use App\Models\Context;
 use App\Models\Group;
 use App\Models\GroupAgreement;
@@ -57,6 +58,7 @@ class ModelFactoryTest extends TestCase
             Context::factory()->create(),
             ContentBlueprint::factory()->create(),
             ContentBlueprintVersion::factory()->create(),
+            ContentEvidenceReference::factory()->create(),
             PersonalContext::factory()->create(),
             GroupSpaceContext::factory()->create(),
             AdmissionContext::factory()->create(),
