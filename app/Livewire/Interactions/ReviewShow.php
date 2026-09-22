@@ -21,9 +21,13 @@ use Livewire\Component;
 class ReviewShow extends Component
 {
     public Context $context;
+
     public Submission $submission;
+
     public ?string $evaluationUuid = null;
+
     public string $feedback = '';
+
     public string $score = '';
 
     /** @var array<string, string> */
