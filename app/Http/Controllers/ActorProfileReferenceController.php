@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Profile\EnsureActorProfile;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileDisclosureGrant;
@@ -18,9 +19,17 @@ class ActorProfileReferenceController extends Controller
         Request $request,
         Actor $actor,
         ActorProfilePolicy $profilePolicy,
+        EnsureActorProfile $ensureProfile,
     ): RedirectResponse|View {
         $actor->loadMissing(['user', 'profile']);
+
         $profile = $actor->profile;
+
+        if (! $profile instanceof ActorProfile && $actor->user instanceof User) {
+            $profile = $ensureProfile->execute($actor->user);
+            $actor->setRelation('profile', $profile);
+        }
+
         abort_unless($profile instanceof ActorProfile, 404);
 
         $viewer = $request->user();
