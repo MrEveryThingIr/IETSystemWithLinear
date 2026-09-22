@@ -24,34 +24,33 @@ class ActorProfileReferenceController extends Controller
         $profile = $actor->profile;
         $viewer = $request->user();
 
-        if (! $profile instanceof ActorProfile) {
-            return view('profile.reference', ['actor' => $actor]);
-        }
-
-        if ($profilePolicy->view($viewer, $profile)) {
+        if ($profile instanceof ActorProfile && $profilePolicy->view($viewer, $profile)) {
             return redirect()->route('profiles.show', $profile);
         }
 
-        if ($viewer instanceof User && $viewer->hasVerifiedEmail()) {
-            $viewer->loadMissing('actor');
+        abort_unless($viewer instanceof User && $viewer->hasVerifiedEmail(), 403);
 
-            if ($viewer->status === 'active' && $viewer->actor?->status === 'active') {
-                $grant = ActorProfileDisclosureGrant::query()
-                    ->where('actor_profile_id', $profile->id)
-                    ->where('grantee_actor_id', $viewer->actor->id)
-                    ->whereNull('revoked_at')
-                    ->where(function ($query): void {
-                        $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
-                    })
-                    ->latest('id')
-                    ->first();
+        $viewer->loadMissing('actor');
+        abort_unless(
+            $viewer->status === 'active'
+            && $viewer->actor?->status === 'active',
+            403,
+        );
 
-                if ($grant instanceof ActorProfileDisclosureGrant
-                    && Gate::forUser($viewer)->allows('view', $grant)) {
-                    return redirect()->route('profiles.shares.show', $grant);
-                }
+        if ($profile instanceof ActorProfile) {
+            $grant = ActorProfileDisclosureGrant::query()
+                ->where('actor_profile_id', $profile->id)
+                ->where('grantee_actor_id', $viewer->actor->id)
+                ->whereNull('revoked_at')
+                ->where(function ($query): void {
+                    $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })
+                ->latest('id')
+                ->first();
 
-                return view('profile.reference', ['actor' => $actor]);
+            if ($grant instanceof ActorProfileDisclosureGrant
+                && Gate::forUser($viewer)->allows('view', $grant)) {
+                return redirect()->route('profiles.shares.show', $grant);
             }
         }
 
