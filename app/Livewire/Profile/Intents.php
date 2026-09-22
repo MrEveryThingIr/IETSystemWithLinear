@@ -41,6 +41,8 @@ class Intents extends Component
 
     public ?string $description = null;
 
+    public ?string $importancePercent = null;
+
     public ?string $quantity = null;
 
     public ?string $unit = null;
@@ -98,7 +100,7 @@ class Intents extends Component
 
     public function toggleFacet(string $facet): void
     {
-        $allowed = ['title', 'description', 'quantity', 'location', 'route', 'timing', 'visibility'];
+        $allowed = ['title', 'description', 'importance', 'quantity', 'location', 'route', 'timing', 'visibility'];
         abort_unless(in_array($facet, $allowed, true), 422);
 
         if (in_array($facet, $this->activeFacets, true)) {
@@ -125,6 +127,7 @@ class Intents extends Component
         match ($facet) {
             'title' => $this->title = null,
             'description' => $this->description = null,
+            'importance' => $this->importancePercent = null,
             'quantity' => [$this->quantity, $this->unit] = [null, null],
             'location' => $this->locationText = null,
             'route' => [
@@ -188,6 +191,7 @@ class Intents extends Component
         $payload = [
             'title' => $data['title'],
             'description' => $data['description'],
+            'importance_percent' => $data['importancePercent'],
             'quantity' => $data['quantity'],
             'unit' => $data['unit'],
             'location_text' => $data['locationText'],
@@ -235,6 +239,9 @@ class Intents extends Component
         $this->conceptLabel = $intent->concept->displayLabel();
         $this->title = $intent->title;
         $this->description = $intent->description;
+        $this->importancePercent = $intent->importance_percent === null
+            ? null
+            : (string) $intent->importance_percent;
         $this->quantity = $intent->quantity;
         $this->unit = $intent->unit;
         $this->locationText = $intent->location_text;
@@ -260,6 +267,7 @@ class Intents extends Component
         $this->activeFacets = array_values(array_filter([
             $intent->title !== null ? 'title' : null,
             $intent->description !== null ? 'description' : null,
+            $intent->importance_percent !== null ? 'importance' : null,
             $intent->quantity !== null || $intent->unit !== null ? 'quantity' : null,
             $intent->location_text !== null ? 'location' : null,
             $intent->origin_text !== null || $intent->destination_text !== null || $intent->round_trip ? 'route' : null,
@@ -338,6 +346,7 @@ class Intents extends Component
             ],
             'title' => ['nullable', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:3000'],
+            'importancePercent' => ['nullable', 'integer', 'between:0,100'],
             'quantity' => ['nullable', 'numeric', 'gt:0'],
             'unit' => ['nullable', 'string', 'max:64'],
             'locationText' => ['nullable', 'string', 'max:255'],
@@ -369,6 +378,7 @@ class Intents extends Component
         $this->conceptLabel = '';
         $this->title = null;
         $this->description = null;
+        $this->importancePercent = null;
         $this->quantity = null;
         $this->unit = null;
         $this->locationText = null;
