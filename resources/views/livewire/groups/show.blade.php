@@ -79,7 +79,7 @@
             @forelse ($admissions as $admission)
                 <div class="flex flex-col gap-3 border-b border-zinc-200 pb-3 last:border-0 last:pb-0 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
                     <div class="space-y-1">
-                        <flux:heading>{{ $admission->candidate->user?->username ?? __('ui.groups.unknown_applicant') }}</flux:heading>
+                        <x-app.actor-identity :actor="$admission->candidate" />
                         <div class="flex flex-wrap items-center gap-2">
                             <flux:badge>{{ __('ui.status.'.$admission->status) }}</flux:badge>
                             @if ($admission->submitted_at)
@@ -100,7 +100,7 @@
         <div class="space-y-3">
             @foreach ($memberships as $membership)
                 <div class="flex flex-col gap-3 border-b border-zinc-200 pb-3 last:border-0 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="space-y-1"><flux:heading>{{ $membership->actor->user?->username ?? __('ui.groups.unknown_member') }}</flux:heading><div class="flex flex-wrap gap-2"><flux:text>{{ $roles[$membership->id] }}</flux:text><flux:badge :color="$membership->status === 'active' ? 'green' : 'amber'">{{ __('ui.status.'.$membership->status) }}</flux:badge></div></div>
+                    <div class="space-y-1"><x-app.actor-identity :actor="$membership->actor" /><div class="flex flex-wrap gap-2"><flux:text>{{ $roles[$membership->id] }}</flux:text><flux:badge :color="$membership->status === 'active' ? 'green' : 'amber'">{{ __('ui.status.'.$membership->status) }}</flux:badge></div></div>
                     @if ($membership->status === 'active' && $membership->actor_id === auth()->user()->actor->id && $availableRoles->whereNull('system_key')->isNotEmpty())
                         <div class="flex flex-col gap-2 sm:flex-row"><flux:select wire:model="requestedRoleTypes.{{ $membership->id }}" :aria-label="__('ui.groups.role_request_type')"><option value="grant">{{ __('ui.groups.grant_role') }}</option><option value="revoke">{{ __('ui.groups.revoke_role') }}</option></flux:select><flux:select wire:model="requestedRoles.{{ $membership->id }}" :aria-label="__('ui.groups.requested_role')"><option value="">{{ __('ui.groups.request_role') }}</option>@foreach ($availableRoles->whereNull('system_key') as $role)<option value="{{ $role->id }}">{{ $role->name }}</option>@endforeach</flux:select><flux:button wire:click="requestRole({{ $membership->id }})" size="sm" variant="ghost">{{ __('ui.groups.request_change') }}</flux:button></div>
                     @endif
@@ -124,7 +124,7 @@
             <flux:heading size="lg">{{ __('ui.groups.pending_role_changes') }}</flux:heading>
             @foreach ($pendingRequests as $request)
                 <div class="flex flex-col gap-2 border-b border-zinc-200 pb-3 last:border-0 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
-                    <flux:text>{{ __('ui.groups.role_request', ['username' => $request->membership->actor->user?->username ?? __('ui.common.unknown_account'), 'type' => __('ui.groups.'.$request->request_type.'_role'), 'role' => $request->requestedRole->name]) }}</flux:text>
+                    <div class="flex flex-wrap items-center gap-2"><x-app.actor-identity :actor="$request->membership->actor" size="xs" /><flux:text>{{ __('ui.groups.request_change') }} · {{ __('ui.groups.'.$request->request_type.'_role') }} “{{ $request->requestedRole->name }}”</flux:text></div>
                     <div class="flex gap-2">
                         <flux:button wire:click="reviewRoleRequest({{ $request->id }}, true)" size="sm" variant="primary">{{ __('ui.admission.approve') }}</flux:button>
                         <flux:button wire:click="reviewRoleRequest({{ $request->id }}, false)" size="sm" variant="ghost">{{ __('ui.admission.reject') }}</flux:button>
