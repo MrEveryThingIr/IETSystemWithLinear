@@ -16,6 +16,7 @@ use LogicException;
     'uuid',
     'context_id',
     'content_blueprint_version_id',
+    'interaction_settings',
     'group_space_id',
     'space_content_definition_id',
     'author_actor_id',
@@ -40,6 +41,7 @@ class SpaceContent extends Model
     protected function casts(): array
     {
         return [
+            'interaction_settings' => 'array',
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
         ];

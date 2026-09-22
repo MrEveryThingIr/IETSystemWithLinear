@@ -782,6 +782,8 @@ return [
         'no_blueprints' => 'لا توجد Blueprints مطابقة هنا.',
         'blueprint_version' => 'Blueprint الإصدار :version',
         'change_blueprint' => 'تغيير Blueprint',
+        'show_optional_fields' => 'تفاصيل إضافية',
+        'hide_optional_fields' => 'إخفاء التفاصيل الاختيارية',
         'create_and_open_studio' => 'إنشاء وفتح Studio',
         'advanced_authoring' => 'تأليف متقدم / مخصص',
         'create_from_definition' => 'إنشاء من Definition موجود',

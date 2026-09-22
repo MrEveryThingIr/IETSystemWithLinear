@@ -180,6 +180,29 @@ class ContentBlueprintCreationTest extends TestCase
             ->assertSee('A useful reflection.');
     }
 
+    public function test_quick_blueprint_creation_hides_optional_fields_until_requested(): void
+    {
+        $actor = Actor::factory()->create();
+        $context = app(EnsurePersonalContext::class)->execute($actor->user);
+        $blueprint = $this->systemBlueprint('evidence-work-sample');
+        $version = $blueprint->activeVersionRecord();
+
+        $this->assertInstanceOf(ContentBlueprintVersion::class, $version);
+
+        Livewire::actingAs($actor->user)
+            ->test(ContentIndex::class, ['context' => $context])
+            ->call('openCreator')
+            ->call('selectBlueprint', $version->id)
+            ->assertSee('What you did')
+            ->assertDontSee('Work date')
+            ->assertDontSee('Your role')
+            ->assertSee('More details')
+            ->call('toggleOptionalFields')
+            ->assertSee('Work date')
+            ->assertSee('Your role')
+            ->assertSee('Result / outcome');
+    }
+
     private function systemBlueprint(string $slug): ContentBlueprint
     {
         app(EnsureSystemContentBlueprints::class)->execute();

@@ -68,7 +68,7 @@
         </flux:button>
 
         <div class="flex flex-wrap items-center gap-2">
-            @if ($canInteract)
+            @if ($canAnnotate)
                 <x-app.annotation-target-menu
                     target-type="revision"
                     :target-uuid="$revision->uuid"
@@ -270,7 +270,7 @@
                                         <div class="group/field relative space-y-2" data-annotation-target="field" data-target-type="field" data-field-key="{{ $fieldKey }}" data-target-label="{{ $blockData['label'] ?? $field['label'] ?? $fieldKey }}">
                                             <div class="flex items-start justify-between gap-2">
                                                 <div class="text-xs font-semibold uppercase tracking-wide" style="color: var(--content-muted)" dir="auto">{{ $blockData['label'] ?? $field['label'] ?? $fieldKey }}</div>
-                                                @if ($canInteract)
+                                                @if ($canAnnotate)
                                                     <x-app.annotation-target-menu target-type="field" :field-key="$fieldKey" :label="$blockData['label'] ?? $field['label'] ?? $fieldKey" :marker-uuids="$fieldMarkers" />
                                                 @endif
                                             </div>
@@ -300,7 +300,7 @@
                                         @endphp
                                         <figure class="group/media relative space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-target-type="asset" data-target-uuid="{{ $placementUuid }}" data-target-label="{{ $blockData['caption'] ?? $asset->original_filename }}">
                                             <div class="absolute end-2 top-2 z-10 opacity-0 transition group-hover/media:opacity-100 group-focus-within/media:opacity-100">
-                                                @if ($canInteract)
+                                                @if ($canAnnotate)
                                                     <x-app.annotation-target-menu target-type="asset" :target-uuid="$placementUuid" :label="$blockData['caption'] ?? $asset->original_filename" :marker-uuids="$assetMarkers" />
                                                 @endif
                                             </div>
@@ -321,7 +321,7 @@
                                     @break
                             @endswitch
 
-                            @if ($canInteract && ! in_array($block->type, ['divider', 'field', 'image', 'audio', 'video', 'file'], true))
+                            @if ($canAnnotate && ! in_array($block->type, ['divider', 'field', 'image', 'audio', 'video', 'file'], true))
                                 <div class="absolute -end-10 top-0 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
                                     <x-app.annotation-target-menu target-type="block" :target-uuid="$block->uuid" :label="__('blocks.type.'.$block->type)" :marker-uuids="$blockMarkers" />
                                 </div>
@@ -359,7 +359,7 @@
                             >
                                 <div class="flex items-start justify-between gap-2">
                                     <h2 class="text-sm font-semibold uppercase tracking-wide" style="color: var(--content-muted)" dir="auto">{{ $field['label'] }}</h2>
-                                    @if ($canInteract)
+                                    @if ($canAnnotate)
                                         <x-app.annotation-target-menu target-type="field" :field-key="$field['key']" :label="$field['label']" :marker-uuids="$fieldMarkers" />
                                     @endif
                                 </div>
@@ -390,7 +390,7 @@
                             @endphp
                             <figure class="group relative space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 sm:p-4 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-target-type="asset" data-target-uuid="{{ $placementUuid }}" data-target-label="{{ $caption ?: $asset->original_filename }}">
                                 <div class="absolute end-2 top-2 z-10 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                                    @if ($canInteract)
+                                    @if ($canAnnotate)
                                         <x-app.annotation-target-menu target-type="asset" :target-uuid="$placementUuid" :label="$caption ?: $asset->original_filename" :marker-uuids="$assetMarkers" />
                                     @endif
                                 </div>
@@ -424,7 +424,7 @@
                             <h2 class="text-xl {{ $headingClass }}">{{ __('interactions.title') }}</h2>
                             <p class="mt-1 text-sm" style="color: var(--content-muted)">{{ __('interactions.edition_help') }}</p>
                         </div>
-                        @if ($canInteract)
+                        @if ($canAnnotate)
                             <x-app.annotation-target-menu target-type="revision" :target-uuid="$revision->uuid" :label="__('interactions.anchor.entire_edition')" />
                         @endif
                     </div>
@@ -443,7 +443,7 @@
                                 $reactionActive = in_array($reactionType, $viewerReactions, true);
                                 $reactionCount = $reactionCounts[$reactionType] ?? 0;
                             @endphp
-                            <flux:button wire:key="reaction-{{ $reactionType }}" wire:click="toggleReaction('{{ $reactionType }}')" wire:loading.attr="disabled" wire:target="toggleReaction" size="sm" :variant="$reactionActive ? 'primary' : 'ghost'" :disabled="! $canInteract">
+                            <flux:button wire:key="reaction-{{ $reactionType }}" wire:click="toggleReaction('{{ $reactionType }}')" wire:loading.attr="disabled" wire:target="toggleReaction" size="sm" :variant="$reactionActive ? 'primary' : 'ghost'" :disabled="! $canReact">
                                 {{ __('interactions.reaction.'.$reactionType) }} · {{ $reactionCount }}
                             </flux:button>
                         @endforeach
@@ -487,7 +487,7 @@
                                         </div>
                                     @endforeach
 
-                                    @if ($canInteract)
+                                    @if ($canAnnotate)
                                         <button type="button" data-reply-annotation="{{ $annotation->uuid }}" class="text-sm font-medium underline underline-offset-4" style="color: var(--content-accent)">
                                             {{ $annotation->kind === 'question' ? __('interactions.answer') : __('interactions.reply') }}
                                         </button>
@@ -522,7 +522,7 @@
         </article>
 
         <aside class="space-y-4 self-start xl:sticky xl:top-6">
-            @if ($canInteract)
+            @if ($canAnnotate)
                 <flux:card class="space-y-3">
                     <div>
                         <flux:heading>{{ __('interactions.markers_title') }}</flux:heading>
@@ -551,7 +551,7 @@
                 </flux:card>
             @endif
 
-            @if ($canInteract && $relationships->isNotEmpty())
+            @if ($canAnnotate && $relationships->isNotEmpty())
                 <flux:card class="space-y-3">
                     <flux:heading>{{ __('interactions.annotate_outline') }}</flux:heading>
                     @foreach ($relationships as $relationship)
@@ -566,7 +566,7 @@
         </aside>
     </div>
 
-    @if ($canInteract && count($selectedTargets) > 0)
+    @if ($canAnnotate && count($selectedTargets) > 0)
         <div class="fixed bottom-4 start-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-2 shadow-xl" style="border-color: var(--content-border); background: var(--content-surface); color: var(--content-text)">
             <span class="text-sm font-medium">{{ trans_choice('interactions.selected_count', count($selectedTargets), ['count' => count($selectedTargets)]) }}</span>
             <flux:button wire:click="openSelectionComposer('note', 24, 80)" size="sm" variant="primary">{{ __('interactions.quick.note') }}</flux:button>
@@ -608,7 +608,7 @@
         </div>
     </div>
 
-    @if ($canInteract)
+    @if ($canAnnotate)
         <section
             id="annotation-context-composer-{{ $content->uuid }}"
             class="fixed z-50 w-[22rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border p-4 shadow-2xl {{ $annotationComposerOpen ? '' : 'hidden' }}"
@@ -735,7 +735,7 @@
                             @if ($annotation->visibility === 'private')<span>🔒</span>@endif
                         </div>
                         @if ($annotation->body)<div class="mt-2 whitespace-pre-wrap text-sm" dir="auto">{{ \Illuminate\Support\Str::limit($annotation->body, 320) }}</div>@endif
-                        @if ($canInteract)
+                        @if ($canAnnotate)
                             <button type="button" data-reply-annotation="{{ $annotation->uuid }}" class="mt-2 text-xs font-medium underline underline-offset-4" style="color: var(--content-accent)">{{ $annotation->kind === 'question' ? __('interactions.answer') : __('interactions.reply') }}</button>
                         @endif
                     </article>
@@ -745,7 +745,7 @@
     @endif
 </section>
 
-@if ($canInteract)
+@if ($canAnnotate)
     @script
     <script>
         (() => {

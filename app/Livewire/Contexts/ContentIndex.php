@@ -32,6 +32,8 @@ class ContentIndex extends Component
 
     public string $blueprintVersionId = '';
 
+    public bool $showOptionalFields = false;
+
     public string $title = '';
 
     /** @var array<string, mixed> */
@@ -75,6 +77,7 @@ class ContentIndex extends Component
         abort_unless($blueprint instanceof ContentBlueprint, 404);
 
         $this->blueprintVersionId = (string) $versionId;
+        $this->showOptionalFields = false;
         $this->title = '';
         $this->payload = [];
 
@@ -86,8 +89,14 @@ class ContentIndex extends Component
 
     public function backToBlueprints(): void
     {
-        $this->reset('blueprintVersionId', 'title', 'payload');
+        $this->reset('blueprintVersionId', 'showOptionalFields', 'title', 'payload');
         $this->resetErrorBag();
+    }
+
+    public function toggleOptionalFields(): void
+    {
+        abort_if($this->blueprintVersionId === '', 422);
+        $this->showOptionalFields = ! $this->showOptionalFields;
     }
 
     public function createFromBlueprint(CreateContentFromBlueprint $create): mixed
@@ -205,6 +214,9 @@ class ContentIndex extends Component
             fn (ContentBlueprint $item): bool => (int) $item->active_version_id === (int) $this->blueprintVersionId,
         );
         $selectedBlueprintVersion = $selectedBlueprint?->activeVersion;
+        $hasOptionalBlueprintFields = $selectedBlueprintVersion instanceof ContentBlueprintVersion
+            && collect($selectedBlueprintVersion->definition_schema['fields'] ?? [])
+                ->contains(fn (mixed $field): bool => is_array($field) && ! (bool) ($field['required'] ?? false));
 
         $definitions = $this->activeDefinitions();
         $selectedDefinition = $definitions->firstWhere('id', (int) $this->definitionId);
@@ -233,6 +245,7 @@ class ContentIndex extends Component
             'blueprints',
             'selectedBlueprint',
             'selectedBlueprintVersion',
+            'hasOptionalBlueprintFields',
             'definitions',
             'selectedDefinition',
             'selectedDefinitionVersion',
@@ -266,7 +279,7 @@ class ContentIndex extends Component
 
     private function resetCreator(): void
     {
-        $this->reset('blueprintSearch', 'blueprintVersionId', 'title', 'payload');
+        $this->reset('blueprintSearch', 'blueprintVersionId', 'showOptionalFields', 'title', 'payload');
         $this->resetErrorBag();
     }
 

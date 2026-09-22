@@ -10,6 +10,7 @@ use App\Models\SpaceContentAnnotation;
 use App\Models\SpaceContentAnnotationAnchor;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\ContentInteractionSettings;
 use App\Support\ContextScope;
 use App\Support\SpaceContentAnnotationAnchors;
 use Illuminate\Http\UploadedFile;
@@ -21,7 +22,10 @@ use Throwable;
 
 class AddSpaceContentAnnotation
 {
-    public function __construct(private readonly SpaceContentAnnotationAnchors $anchorNormalizer) {}
+    public function __construct(
+        private readonly SpaceContentAnnotationAnchors $anchorNormalizer,
+        private readonly ContentInteractionSettings $interactions,
+    ) {}
 
     /** @param list<array<string, mixed>> $anchors */
     public function execute(
@@ -70,6 +74,7 @@ class AddSpaceContentAnnotation
             ): SpaceContentAnnotation {
                 $current = SpaceContent::query()->with(['context', 'space'])->lockForUpdate()->findOrFail($content->id);
                 Gate::forUser($user)->authorize('interact', $current);
+                abort_unless($this->interactions->annotationsEnabled($current), 422, 'Annotations are disabled for this Content.');
 
                 abort_unless(
                     $current->active_revision_id !== null
@@ -200,6 +205,7 @@ class AddSpaceContentAnnotation
 
         $preflight = SpaceContent::query()->with(['context', 'space'])->findOrFail($content->id);
         Gate::forUser($user)->authorize('interact', $preflight);
+        abort_unless($this->interactions->annotationsEnabled($preflight), 422, 'Annotations are disabled for this Content.');
 
         $size = $upload->getSize();
         abort_unless(is_int($size) && $size > 0 && $size <= 12 * 1024 * 1024, 422, 'Media must be between 1 byte and 12 MB.');

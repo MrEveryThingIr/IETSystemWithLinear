@@ -782,6 +782,8 @@ return [
         'no_blueprints' => 'Blueprint سازگاری پیدا نشد.',
         'blueprint_version' => 'Blueprint نسخه :version',
         'change_blueprint' => 'تغییر Blueprint',
+        'show_optional_fields' => 'جزئیات بیشتر',
+        'hide_optional_fields' => 'پنهان‌کردن جزئیات اختیاری',
         'create_and_open_studio' => 'ایجاد و بازکردن Studio',
         'advanced_authoring' => 'نویسندگی پیشرفته / سفارشی',
         'create_from_definition' => 'ایجاد از Definition موجود',

@@ -782,6 +782,8 @@ return [
         'no_blueprints' => '这里没有匹配的 Blueprints。',
         'blueprint_version' => 'Blueprint v:version',
         'change_blueprint' => '更换 Blueprint',
+        'show_optional_fields' => '更多详情',
+        'hide_optional_fields' => '隐藏可选详情',
         'create_and_open_studio' => '创建并打开 Studio',
         'advanced_authoring' => '高级 / 自定义创作',
         'create_from_definition' => '从现有 Definition 创建',

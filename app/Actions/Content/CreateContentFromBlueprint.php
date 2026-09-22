@@ -16,6 +16,7 @@ use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContentBlueprintAccess;
+use App\Support\ContentInteractionSettings;
 use App\Support\ContextScope;
 use App\Support\SpaceContentBlocks;
 use App\Support\SpaceContentSchema;
@@ -28,6 +29,7 @@ class CreateContentFromBlueprint
     public function __construct(
         private readonly ContentBlueprintAccess $access,
         private readonly SpaceContentBlocks $blocks,
+        private readonly ContentInteractionSettings $interactions,
     ) {}
 
     /** @param array<string, mixed> $payload */
@@ -86,6 +88,7 @@ class CreateContentFromBlueprint
             $content = SpaceContent::query()->create([
                 'context_id' => $currentContext->id,
                 'content_blueprint_version_id' => $currentBlueprintVersion->id,
+                'interaction_settings' => $this->interactions->normalize($currentBlueprintVersion->interaction_defaults ?? []),
                 'group_space_id' => ContextScope::legacyGroupSpaceId($currentContext),
                 'space_content_definition_id' => $definition->id,
                 'author_actor_id' => $actor->id,

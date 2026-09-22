@@ -7,11 +7,14 @@ use App\Models\SpaceContent;
 use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\ContentInteractionSettings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class ToggleSpaceContentReaction
 {
+    public function __construct(private readonly ContentInteractionSettings $interactions) {}
+
     public function execute(
         SpaceContent $content,
         SpaceContentRevision $revision,
@@ -23,6 +26,7 @@ class ToggleSpaceContentReaction
         return DB::transaction(function () use ($content, $revision, $user, $type): bool {
             $current = SpaceContent::query()->with('space')->lockForUpdate()->findOrFail($content->id);
             Gate::forUser($user)->authorize('interact', $current);
+            abort_unless($this->interactions->reactionsEnabled($current), 422, 'Reactions are disabled for this Content.');
 
             abort_unless(
                 $current->active_revision_id !== null

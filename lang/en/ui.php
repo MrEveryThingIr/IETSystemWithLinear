@@ -787,6 +787,8 @@ return [
         'no_blueprints' => 'No matching Blueprints are available here.',
         'blueprint_version' => 'Blueprint v:version',
         'change_blueprint' => 'Change Blueprint',
+        'show_optional_fields' => 'More details',
+        'hide_optional_fields' => 'Hide optional details',
         'create_and_open_studio' => 'Create and open Studio',
         'advanced_authoring' => 'Advanced / custom authoring',
         'create_from_definition' => 'Create from an existing Definition',

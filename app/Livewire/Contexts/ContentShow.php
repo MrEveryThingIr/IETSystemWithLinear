@@ -16,6 +16,7 @@ use App\Models\SpaceContentAnnotationAnchor;
 use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\ContentInteractionSettings;
 use App\Support\SpaceContentPublishedOutline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
@@ -234,7 +235,7 @@ class ContentShow extends Component
             'idea' => SpaceContentAnnotation::KIND_IDEA,
             default => SpaceContentAnnotation::KIND_NOTE,
         };
-        $this->annotationVisibility = SpaceContentAnnotation::VISIBILITY_PRIVATE;
+        $this->annotationVisibility = $this->defaultAnnotationVisibility();
         $this->annotationComposerX = max(12, min(3000, $x));
         $this->annotationComposerY = max(12, min(3000, $y));
         $this->annotationAnchors = $this->mergeAnchors(array_map(
@@ -600,7 +601,7 @@ class ContentShow extends Component
         $this->previewAnnotationUuids = [];
     }
 
-    public function render(SpaceContentPublishedOutline $outlineBuilder): View
+    public function render(SpaceContentPublishedOutline $outlineBuilder, ContentInteractionSettings $interactionSettings): View
     {
         $user = $this->user();
         $current = SpaceContent::query()
@@ -639,6 +640,8 @@ class ContentShow extends Component
             && $current->active_revision_id !== null
             && (int) $current->active_revision_id === (int) $revision->id
             && Gate::forUser($user)->allows('interact', $current);
+        $canAnnotate = $canInteract && $interactionSettings->annotationsEnabled($current);
+        $canReact = $canInteract && $interactionSettings->reactionsEnabled($current);
 
         $actor = $this->actor();
         $reactionCounts = $revision->reactions()
@@ -707,6 +710,8 @@ class ContentShow extends Component
             'canEnterStudio',
             'legacyEvidence',
             'canInteract',
+            'canAnnotate',
+            'canReact',
             'reactionCounts',
             'viewerReactions',
             'reactionTypes',
@@ -733,7 +738,7 @@ class ContentShow extends Component
         $this->annotationComposerOpen = true;
         $this->annotationComposerMode = 'advanced';
         $this->annotationMedium = 'advanced';
-        $this->annotationVisibility = SpaceContentAnnotation::VISIBILITY_PRIVATE;
+        $this->annotationVisibility = $this->defaultAnnotationVisibility();
         $this->annotationAnchors = $this->mergeAnchors([
             ...$this->annotationAnchors,
             $this->sanitizeClientAnchor($anchor),
@@ -918,7 +923,7 @@ class ContentShow extends Component
             'annotationUploadIsRecording',
         );
         $this->annotationKind = SpaceContentAnnotation::KIND_NOTE;
-        $this->annotationVisibility = SpaceContentAnnotation::VISIBILITY_PRIVATE;
+        $this->annotationVisibility = $this->defaultAnnotationVisibility();
         $this->annotationRightsStatus = 'unknown';
         $this->annotationComposerMode = 'note';
         $this->annotationMedium = 'text';
@@ -1019,6 +1024,11 @@ class ContentShow extends Component
         }
 
         return null;
+    }
+
+    private function defaultAnnotationVisibility(): string
+    {
+        return app(ContentInteractionSettings::class)->defaultAnnotationVisibility($this->content);
     }
 
     private function user(): User

@@ -75,27 +75,37 @@
                     <flux:input wire:model="title" :label="__('ui.content.title')" maxlength="255" />
 
                     @foreach ($selectedBlueprintVersion->definition_schema['fields'] as $field)
-                        @switch($field['type'])
-                            @case('short_text')
-                                <x-space-content.fields.short-text :field="$field" :model="'payload.'.$field['key']" />
-                                @break
-                            @case('long_text')
-                                <x-space-content.fields.long-text :field="$field" :model="'payload.'.$field['key']" />
-                                @break
-                            @case('number')
-                                <x-space-content.fields.number :field="$field" :model="'payload.'.$field['key']" />
-                                @break
-                            @case('date')
-                                <x-space-content.fields.date :field="$field" :model="'payload.'.$field['key']" />
-                                @break
-                            @case('boolean')
-                                <x-space-content.fields.boolean :field="$field" :model="'payload.'.$field['key']" />
-                                @break
-                            @case('select')
-                                <x-space-content.fields.select :field="$field" :model="'payload.'.$field['key']" />
-                                @break
-                        @endswitch
+                        @if (($field['required'] ?? false) || $showOptionalFields)
+                            @switch($field['type'])
+                                @case('short_text')
+                                    <x-space-content.fields.short-text :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('long_text')
+                                    <x-space-content.fields.long-text :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('number')
+                                    <x-space-content.fields.number :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('date')
+                                    <x-space-content.fields.date :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('boolean')
+                                    <x-space-content.fields.boolean :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                                @case('select')
+                                    <x-space-content.fields.select :field="$field" :model="'payload.'.$field['key']" />
+                                    @break
+                            @endswitch
+                        @endif
                     @endforeach
+
+                    @if ($hasOptionalBlueprintFields)
+                        <div>
+                            <flux:button type="button" wire:click="toggleOptionalFields" variant="ghost" size="sm">
+                                {{ $showOptionalFields ? __('ui.context_content.hide_optional_fields') : __('ui.context_content.show_optional_fields') }}
+                            </flux:button>
+                        </div>
+                    @endif
 
                     <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <flux:button type="button" wire:click="cancelCreator" variant="ghost" class="w-full sm:w-auto">
