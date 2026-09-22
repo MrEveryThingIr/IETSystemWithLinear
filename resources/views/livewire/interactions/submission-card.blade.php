@@ -91,7 +91,11 @@
                         @case('asset')
                             @if ($response?->asset)
                                 <div class="flex items-center justify-between gap-2 rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
-                                    <span class="break-all" dir="auto">{{ $response->asset->original_filename }}</span>
+                                    <a
+                                        href="{{ route('contexts.submissions.assets.download', [$definition->context, $submission, $response->asset]) }}"
+                                        class="break-all font-medium underline underline-offset-4"
+                                        dir="auto"
+                                    >{{ $response->asset->original_filename }}</a>
                                     <flux:button type="button" wire:click="clearResponse('{{ $key }}')" size="sm" variant="ghost">{{ __('structured_interactions.remove') }}</flux:button>
                                 </div>
                             @endif
@@ -140,7 +144,10 @@
                         <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500" dir="auto">{{ $item['label'] }}</div>
                         <div class="mt-2 text-sm" dir="auto">
                             @if ($response->asset)
-                                <span class="font-medium">{{ $response->asset->original_filename }}</span>
+                                <a
+                                    href="{{ route('contexts.submissions.assets.download', [$definition->context, $submission, $response->asset]) }}"
+                                    class="font-medium underline underline-offset-4"
+                                >{{ $response->asset->original_filename }}</a>
                             @elseif ($response->contentEvidenceReference)
                                 <a href="{{ route('content-evidence.show', $response->contentEvidenceReference) }}" class="font-medium underline underline-offset-4">{{ __('structured_interactions.open_evidence') }}</a>
                             @elseif (is_array($response->value))
