@@ -160,7 +160,7 @@ class InteractionDefinitionConfig
             throw new LogicException('Interaction choice options must be unique.');
         }
 
-        return array_values($normalized);
+        return $normalized;
     }
 
     /** @param array<string, mixed> $constraints @return array<string, int|float> */

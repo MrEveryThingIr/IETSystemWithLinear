@@ -153,9 +153,9 @@ class InteractionDefinitionVersion extends Model
             (string) ($this->purpose_key ?? 'general'),
             (string) ($this->title ?? ''),
             $this->instructions !== null ? (string) $this->instructions : null,
-            is_array($this->items) ? $this->items : [],
-            is_array($this->settings) ? $this->settings : [],
-            is_array($this->evaluation_config) ? $this->evaluation_config : [],
+            $this->items,
+            $this->settings,
+            $this->evaluation_config,
             $revisionUuid,
         );
 
