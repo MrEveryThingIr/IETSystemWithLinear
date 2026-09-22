@@ -55,7 +55,7 @@
                 <flux:card class="space-y-4">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <flux:heading>{{ $accessRequest->user->username }}</flux:heading>
+                            @if ($accessRequest->user->actor)<x-app.actor-identity :actor="$accessRequest->user->actor" />@else<flux:heading>{{ $accessRequest->user->username }}</flux:heading>@endif
                             <flux:text>{{ $accessRequest->user->email }} · {{ str($accessRequest->role->value)->replace('_', ' ')->title() }}</flux:text>
                         </div>
                         <flux:badge>Pending</flux:badge>
