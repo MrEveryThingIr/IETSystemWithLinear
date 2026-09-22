@@ -21,6 +21,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Contexts\ContentIndex as ContextContentIndex;
 use App\Livewire\Contexts\ContentShow as ContextContentShow;
+use App\Livewire\Contexts\ContentStudio as ContextContentStudio;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
 use App\Livewire\Groups\Create as CreateGroup;
@@ -74,6 +75,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->name('contexts.contents.assets.show');
     Route::get('/contexts/{context}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'downloadContext'])
         ->name('contexts.contents.assets.download');
+    Route::livewire('/contexts/{context}/contents/{content}/studio', ContextContentStudio::class)->name('contexts.contents.studio');
     Route::livewire('/contexts/{context}/contents/{content}', ContextContentShow::class)->name('contexts.contents.show');
     Route::livewire('/profile-shares/{grant}', SharedShow::class)->name('profiles.shares.show');
     Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');

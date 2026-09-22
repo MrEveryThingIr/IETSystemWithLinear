@@ -14,6 +14,7 @@ use App\Models\ContentBlueprintVersion;
 use App\Models\SpaceContentRevision;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ContentBlueprintCreationTest extends TestCase
@@ -148,6 +149,34 @@ class ContentBlueprintCreationTest extends TestCase
 
         $this->assertSame($v1->id, $content->content_blueprint_version_id);
         $this->assertSame($v2->id, $blueprint->refresh()->active_version_id);
+    }
+
+    public function test_context_library_uses_blueprints_and_created_content_opens_advanced_studio(): void
+    {
+        $actor = Actor::factory()->create();
+        $context = app(EnsurePersonalContext::class)->execute($actor->user);
+        $blueprint = $this->systemBlueprint('note-diary');
+        $version = $blueprint->activeVersionRecord();
+
+        $this->assertInstanceOf(ContentBlueprintVersion::class, $version);
+
+        Livewire::actingAs($actor->user)
+            ->test(\App\Livewire\Contexts\ContentIndex::class, ['context' => $context])
+            ->call('openCreator')
+            ->assertSee('Note / Diary')
+            ->call('selectBlueprint', $version->id)
+            ->set('title', 'Today')
+            ->set('payload.body', 'A useful reflection.')
+            ->call('createFromBlueprint')
+            ->assertRedirect();
+
+        $content = $context->contents()->sole();
+
+        $this->actingAs($actor->user)
+            ->get(route('contexts.contents.studio', [$context, $content]))
+            ->assertOk()
+            ->assertSee('Today')
+            ->assertSee('A useful reflection.');
     }
 
     private function systemBlueprint(string $slug): ContentBlueprint
