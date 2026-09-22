@@ -56,6 +56,23 @@ class ContextPolicy
         return $this->createContent($user, $context);
     }
 
+    public function reviewContent(User $user, Context $context): bool
+    {
+        $current = $this->currentUser($user);
+
+        if (! $current instanceof User) {
+            return false;
+        }
+
+        return match ($context->kind) {
+            ContextKind::Personal => $this->ownsPersonalContext($current, $context),
+            ContextKind::GroupSpace => ($space = $this->groupSpace($context)) instanceof GroupSpace
+                && $this->spaces->manage($current, $space),
+            ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
+                && $this->isAdmissionReviewer($current, $admission),
+        };
+    }
+
     public function manageContent(User $user, Context $context): bool
     {
         $current = $this->currentUser($user);
