@@ -29,10 +29,10 @@ class SpaceContentPolicy
                 return false;
             }
 
-            return $revision->hasVerifiableManifest() || $this->canOwnOrManage($user, $content);
+            return $revision->hasVerifiableManifest() || $this->canReadPrivate($user, $content);
         }
 
-        return $this->canOwnOrManage($user, $content);
+        return $this->canReadPrivate($user, $content);
     }
 
     public function create(User $user, GroupSpace $space): bool
@@ -55,32 +55,51 @@ class SpaceContentPolicy
 
     public function update(User $user, SpaceContent $content): bool
     {
-        return $content->status !== 'archived' && $this->canOwnOrManage($user, $content);
+        return $content->status !== 'archived' && $this->canMutate($user, $content);
     }
 
     public function publish(User $user, SpaceContent $content): bool
     {
         return $content->status !== 'archived'
             && $content->draftRevisionRecord() !== null
-            && $this->canOwnOrManage($user, $content);
+            && $this->canMutate($user, $content);
     }
 
     public function archive(User $user, SpaceContent $content): bool
     {
-        return $content->status !== 'archived' && $this->canOwnOrManage($user, $content);
+        return $content->status !== 'archived' && $this->canMutate($user, $content);
     }
 
     public function restore(User $user, SpaceContent $content): bool
     {
-        return $content->status === 'archived' && $this->canOwnOrManage($user, $content);
+        return $content->status === 'archived' && $this->canMutate($user, $content);
     }
 
     public function revisions(User $user, SpaceContent $content): bool
     {
-        return $this->canOwnOrManage($user, $content);
+        return $this->canReadPrivate($user, $content);
     }
 
-    private function canOwnOrManage(User $user, SpaceContent $content): bool
+    private function canReadPrivate(User $user, SpaceContent $content): bool
+    {
+        $content->loadMissing('context');
+
+        if (! $this->contexts->view($user, $content->context)) {
+            return false;
+        }
+
+        $current = User::query()->with('actor')->find($user->id);
+
+        if (! $current instanceof User || ! $current->actor instanceof Actor) {
+            return false;
+        }
+
+        $isAuthor = (int) $content->author_actor_id === (int) $current->actor->id;
+
+        return $isAuthor || $this->contexts->reviewContent($current, $content->context);
+    }
+
+    private function canMutate(User $user, SpaceContent $content): bool
     {
         $content->loadMissing('context');
 
