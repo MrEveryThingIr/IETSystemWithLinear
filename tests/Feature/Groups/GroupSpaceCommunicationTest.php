@@ -55,6 +55,8 @@ class GroupSpaceCommunicationTest extends TestCase
         Livewire::actingAs($owner->user)
             ->test(SpaceChat::class, ['group' => $group, 'space' => $space])
             ->assertSee($member->user->username)
+            ->assertSee(route('actors.profile.reference', $member), false)
+            ->assertSee(route('actors.avatar', $member), false)
             ->assertSee('Hello from the first group space.');
     }
 
