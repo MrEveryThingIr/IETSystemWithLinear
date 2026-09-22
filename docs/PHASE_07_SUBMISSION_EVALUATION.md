@@ -2,7 +2,7 @@
 
 ## Status
 
-**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete**; Phase **7B is next**.
+**Active** on `feat/phase-07-submission-evaluation`. Phase **7A is complete and human/local accepted**; Phase **7B is technically complete**; Phase **7C is next**.
 
 Starting baseline:
 
@@ -308,9 +308,24 @@ Original 7A deliverables:
 
 ### 7B — Submission / Response / evidence
 
-**Status: next.**
+**Status: technically complete on `7761a2f5a57fd06b8df4fa7e97397cd9f9a2a2ab`.** GitHub Actions run `35766736605` is green: **379 tests / 2000 assertions**, changed-file Pint **284 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
 
-Deliver:
+Delivered:
+
+- additive `submissions` + `submission_responses` migration;
+- exact immutable InteractionDefinitionVersion and optional Content-revision binding per Submission attempt;
+- idempotent draft start with max-attempt enforcement;
+- normalized scalar Responses for text/boolean/number/date/single/multiple choice;
+- reusable Context Asset evidence through the existing private Asset/security-processing pipeline;
+- authorized immutable Content-evidence references, including deliberate cross-Context evidence when the submitter may view the source;
+- explicit submit and withdraw Actions;
+- canonical schema-versioned submission evidence manifest plus SHA-256 integrity hash;
+- immutable submitted Responses and durable withdrawn evidence;
+- candidate-owned Admission drafts hidden from reviewers until submit;
+- reviewer visibility after submit without granting candidate Membership or GroupSpace authority;
+- focused tests for attempt isolation, required answers, Asset provenance, cross-Context evidence, Admission isolation and withdrawal preservation.
+
+Original 7B deliverables:
 
 - atomic draft creation;
 - normalized Responses;
@@ -321,6 +336,8 @@ Deliver:
 - cross-Context authorization tests.
 
 ### 7C — Evaluation
+
+**Status: next.**
 
 Deliver:
 
