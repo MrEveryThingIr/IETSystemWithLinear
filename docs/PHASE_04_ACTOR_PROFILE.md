@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 4 is complete and human-owner accepted.**
+**Phase 4 runtime is complete and remote-validated; final owner-local/browser acceptance is pending.**
 
 Final runtime baseline before this documentation-only closure:
 
@@ -19,7 +19,7 @@ GitHub Actions run `35700986122` is green on that exact commit:
 - npm high-severity audit: passed;
 - Composer security audit: clean.
 
-The human owner accepted the final Phase 4 milestone on 2026-09-22 after the last product/integration review. Phase 5 may now begin from the closed Phase 4 baseline.
+The remote runtime and documentation closure are green. Phase 5 must not begin until the human owner synchronizes this final branch locally, applies migrations, runs the local validation gate, and accepts the final browser/mobile/RTL behavior.
 
 Accepted Phase 3 closure baseline: `b2e5dc0a8b7cfd33ff9dbcb6af4c6f6027c7948c`.
 
@@ -276,7 +276,7 @@ Final hardening also proves that 4B-generated coarse Actor `needs` / `offers` su
 
 ### 4C — sharing, completeness and Phase 4 closure
 
-**Status: complete and accepted.**
+**Status: implementation complete and remote-validated; final owner-local/browser acceptance pending.**
 
 4C turns Profile into a safe upstream source for later Context, Admission, Planner, Matching and negotiated-Agreement work without pulling those later domains into Profile.
 
@@ -413,7 +413,7 @@ The Phase 4 runtime is frozen at this hardened candidate unless the refreshed ow
 
 #### Final owner-local/browser gate
 
-**Accepted and closed on 2026-09-22.**
+**Final owner-local/browser gate pending.**
 
 The final review confirmed the Profile remains an upstream, privacy-aware participant description layer rather than absorbing Context, Planner, Matching or Contract responsibilities.
 
@@ -482,7 +482,7 @@ The final review confirmed the Profile remains an upstream, privacy-aware partic
 
 ## Phase 4 exit gate
 
-**Passed. Phase 4 is formally closed.**
+**Pending final human acceptance.**
 
 The accepted baseline preserves the key seams required by later phases:
 
@@ -494,7 +494,7 @@ The accepted baseline preserves the key seams required by later phases:
 - Concept remains semantic identity;
 - Actor remains participant identity.
 
-Phase 5 — Generic Content Context — is the next implementation milestone.
+After the owner-local/browser gate passes, Phase 4 may be formally closed and Phase 5 — Generic Content Context — becomes the next implementation milestone.
 
 
 ## Final 4B/4B.1 owner-local closure evidence
