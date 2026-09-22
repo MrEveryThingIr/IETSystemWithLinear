@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -83,21 +84,21 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('space_contents', function (Blueprint $table): void {
-            $table->dropForeign('sc_blueprint_version_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['content_blueprint_version_id'] : 'sc_blueprint_version_fk');
             $table->dropIndex('sc_blueprint_status_ix');
             $table->dropColumn('content_blueprint_version_id');
         });
 
         Schema::table('space_content_definitions', function (Blueprint $table): void {
-            $table->dropForeign('scd_blueprint_version_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['content_blueprint_version_id'] : 'scd_blueprint_version_fk');
             $table->dropUnique('scd_context_blueprint_version_uq');
             $table->dropColumn('content_blueprint_version_id');
         });
 
         Schema::table('content_blueprints', function (Blueprint $table): void {
-            $table->dropForeign('cb_active_version_fk');
-            $table->dropForeign('cb_draft_version_fk');
-            $table->dropForeign('cb_clone_version_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['active_version_id'] : 'cb_active_version_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['draft_version_id'] : 'cb_draft_version_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['cloned_from_version_id'] : 'cb_clone_version_fk');
         });
 
         Schema::dropIfExists('content_blueprint_versions');
