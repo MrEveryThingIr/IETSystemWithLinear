@@ -96,7 +96,6 @@ class CreateContentEvidenceReference
                 ->where('uuid', $targetUuid)
                 ->exists(),
             ContentEvidenceTarget::Relationship => $revision->relationships()->where('uuid', $targetUuid)->exists(),
-            default => false,
         };
 
         abort_unless($exists, 422, 'Evidence target is not part of this revision.');
