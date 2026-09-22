@@ -276,7 +276,7 @@ Content can safely exist in at least Group, Personal, and Admission contexts.
 
 ## Phase 6 — Content Blueprints and unified productized authoring
 
-**Status: runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending.** Runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1`. Detailed contract: `docs/PHASE_06_CONTENT_BLUEPRINTS.md`.
+**Status: complete and human-owner accepted for roadmap progression on 2026-09-22.** Runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1`. Closure HEAD before documentation update: `b33bdcf`. Detailed contract: `docs/PHASE_06_CONTENT_BLUEPRINTS.md`.
 
 ### Purpose
 
@@ -313,9 +313,11 @@ Turn the powerful low-level Content engine into convenient reusable authoring an
 
 ### Exit gate
 
-Automated/runtime gate is satisfied on `ad07445b16a708b4efd67461f5cef12201ffa8b1`: one Blueprint-first Content experience now spans Personal, GroupSpace and Admission Contexts, including the full Studio/Reader and immutable evidence locators. Final owner-local/browser/mobile/RTL acceptance remains required before Phase 6 is formally closed or Phase 7 begins.
+Passed. Automated/runtime conditions were satisfied on `ad07445b16a708b4efd67461f5cef12201ffa8b1`. On 2026-09-22 the owner synchronized `b33bdcf`, applied the three Phase 6 migrations to the existing database, passed 20 focused tests / 121 assertions and the full 364 / 1934 suite, PHPStan, Vite, clean diff/tree checks, and performed a non-exhaustive browser review that found no blocking defect. Non-blocking Content-view polish is deferred in `docs/CURRENT_STATE.md`; it does not keep Phase 6 open.
 
 ## Phase 7 — Submission / Response / Evaluation
+
+**Status: next roadmap phase; not yet started. Establish and accept the Phase 7 contract before runtime implementation.**
 
 ### Purpose
 

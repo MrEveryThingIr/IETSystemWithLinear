@@ -2,7 +2,7 @@
 
 ## Status
 
-**Runtime technically complete and remote-CI green. Final owner-local/browser/mobile/RTL acceptance is pending.**
+**Complete and human-owner accepted for roadmap progression on 2026-09-22.**
 
 Branch:
 
@@ -281,31 +281,24 @@ Phase 6 does not:
 - convert all domain truth into Content;
 - grant Admission candidates ordinary Group access.
 
-## Remaining human gate
+## Human closure evidence
 
-Before formal Phase 6 closure, the owner must synchronize the branch locally and verify:
+On 2026-09-22 the owner synchronized local branch `feat/phase-06-content-blueprints` at `b33bdcf` and completed the practical closure gate.
 
-- the three Phase 6 migrations apply on the existing database;
-- focused Phase 6 tests pass;
-- full PHPUnit/PHPStan/Pint/Vite pass;
-- working tree remains clean;
-- My Content:
-  - Blueprint picker is understandable;
-  - required fields appear first;
-  - optional fields appear only after **More details**;
-  - created Content opens the full Studio;
-- Evidence / Work Sample:
-  - media upload works;
-  - block composition works;
-  - publication works;
-  - exact evidence link shows the old sealed edition after later revision;
-- GroupSpace:
-  - old Group Content URLs safely reach the generic Context experience;
-  - Book/Booklet → Lesson Outline works;
-- Admission:
-  - candidate can create evidence before Membership;
-  - candidate still cannot access ordinary GroupSpace Content;
-- narrow mobile widths have no horizontal page overflow or clipped controls;
-- Persian and Arabic RTL layout remains usable.
+Local evidence:
 
-Only after that owner-local/browser/mobile/RTL gate passes should Phase 6 be formally closed and Phase 7 begin.
+- Phase 6 migrations `170000`, `180000` and `190000`: applied successfully to the existing database;
+- focused Phase 6 gate: **20 tests / 121 assertions**;
+- full test suite: **364 tests / 1934 assertions**;
+- PHPStan: **no errors**;
+- Vite production build: **passed**;
+- `git diff --check`: **clean**;
+- after a broad local Pint command reformatted 16 inherited files outside the Phase 6/CI change scope, those unrelated formatter-only rewrites were restored;
+- final `git status --short`: **clean**;
+- final synchronized HEAD before closure documentation: `b33bdcf`.
+
+The owner then performed a non-exhaustive browser review and reported that the system appeared to work as expected with no blocking correctness issue. Some Content-view behavior/UX improvements remain desirable, but the owner explicitly chose to defer them rather than keep Phase 6 open.
+
+Those improvements are tracked in `docs/CURRENT_STATE.md` under **Deferred polish backlog** and should be addressed during the later whole-system polish pass unless a specific item proves to be a correctness, security, authorization, accessibility or data-integrity blocker earlier.
+
+**Phase 6 is therefore closed. Phase 7 — Submission / Response / Evaluation is unblocked as the next roadmap phase.**

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-06-content-blueprints`.
+**Complete and human-owner accepted for roadmap progression on 2026-09-22** on `feat/phase-06-content-blueprints`.
 
 Accepted Phase 5 baseline:
 
@@ -13,6 +13,8 @@ Frozen Phase 6 runtime candidate:
 `ad07445b16a708b4efd67461f5cef12201ffa8b1`
 
 GitHub Actions run `35739828516` on that exact runtime commit is fully green: **364 tests / 1934 assertions**, PHPStan clean, Pint **258 files**, Vite green, migrations/queue/scheduler and SQLite backup→restore smoke green, npm audit 0 vulnerabilities, Composer security audit clean.
+
+Owner-local closure on synchronized HEAD `b33bdcf` applied migrations `170000`, `180000` and `190000`, passed **20 focused tests / 121 assertions**, the full **364 / 1934** suite, PHPStan, Vite build, `git diff --check`, and returned to a clean working tree after restoring unrelated whole-repository Pint rewrites. A non-exhaustive browser review found no blocking defect; non-blocking Content-view behavior/UX improvements are intentionally deferred to the later system-wide polish pass.
 
 Phase 5 proved that Content can belong to Personal, GroupSpace and Admission Contexts. Phase 6 now removes the **experience-level split** between the simple generic Context UI and the mature Group Content Studio.
 
@@ -315,4 +317,4 @@ Phase 6 closes only when:
 9. automated gates are green;
 10. browser/mobile/RTL behavior is accepted by the human owner.
 
-Automated/runtime conditions **1–9 are satisfied** on `ad07445b16a708b4efd67461f5cef12201ffa8b1`. Condition 10 remains the final owner-local acceptance gate. Phase 7 must not begin before that gate passes.
+Conditions **1–10 are accepted for roadmap progression**. Conditions 1–9 are backed by the automated/runtime evidence on `ad07445b16a708b4efd67461f5cef12201ffa8b1`; condition 10 was accepted by the human owner on 2026-09-22 after synchronized local validation and browser review found no blocking issue. Further Content-view polish remains tracked as non-blocking deferred work in `docs/CURRENT_STATE.md`. Phase 7 may now be contracted and started.

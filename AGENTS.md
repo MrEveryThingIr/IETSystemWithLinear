@@ -6,7 +6,7 @@ Before any nontrivial implementation work, read the repository's canonical produ
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
 4. `docs/PRODUCTION_ROADMAP.md`
-5. the currently active phase contract (`docs/PHASE_06_CONTENT_BLUEPRINTS.md`)
+5. the currently active phase contract (Phase 7 is next; establish and accept its repository contract before Phase 7 runtime implementation)
 6. relevant ADRs
 7. `.ai/rules/index.md` and every matching path rule
 
@@ -30,10 +30,11 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Phase 4 — Actor/Party and progressive Profile: complete and human-owner accepted at `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
 - Phase 5 — Generic Content Context: **complete and human-owner accepted on 2026-09-22**.
 - Accepted Phase 5 branch HEAD before closure docs: `2561eda91c3e1db84c77816e8c15324d8f0fd939`.
-- Phase 6 — Content Blueprints and unified productized authoring: **runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-06-content-blueprints`.
+- Phase 6 — Content Blueprints and unified productized authoring: **complete and human-owner accepted for roadmap progression on 2026-09-22**.
 - Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1` (GitHub Actions run `35739828516`: 364 tests / 1934 assertions, PHPStan/Pint/Vite/ops/security green).
-- Phase 7 is blocked until the human owner accepts Phase 6 locally and in the browser.
-- Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, turn evidence count into reputation, or implement Phase 7 response/evaluation before Phase 6 closure.
+- Local Phase 6 closure on synchronized HEAD `b33bdcf`: three migrations applied; focused gate 20 tests / 121 assertions; full suite 364 / 1934; PHPStan and Vite green; clean diff/tree after restoring unrelated whole-repository Pint rewrites; browser review found no blocking defect.
+- Phase 7 — Submission / Response / Evaluation is the **next roadmap phase**. It has not started yet; establish its phase contract before runtime implementation.
+- Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, or turn evidence count into reputation.
 - Phase 6 preserves the proven `SpaceContent*` substrate while making it Context-generic and Blueprint-first. Do not mass-rename it, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 7/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 
@@ -58,7 +59,7 @@ Remote validation on GitHub Actions run `35739828516`:
 - npm audit: 0 vulnerabilities;
 - Composer security audit: clean.
 
-Final owner-local/browser/mobile/RTL acceptance is still required. Current implementation details and known debt are maintained in `docs/CURRENT_STATE.md`; do not rely on older reports for present-state claims.
+Human-owner acceptance for roadmap progression was recorded on 2026-09-22 after synchronized local validation and a non-exhaustive browser review found no blocking defect. Non-blocking Content-view behavior/UX improvements are explicitly deferred in `docs/CURRENT_STATE.md` for the later whole-system polish pass.
 
 ## Architectural stop conditions
 

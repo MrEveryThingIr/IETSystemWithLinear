@@ -10,7 +10,7 @@ Current implementation baseline:
 - Phase 3 — Concept Kernel: complete.
 - Phase 4 — Actor/Party + progressive Profile: complete and human-owner accepted.
 - Phase 5 — Generic Content Context: complete and human-owner accepted on 2026-09-22.
-- Phase 6 — Content Blueprints and unified productized authoring: **runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending**.
+- Phase 6 — Content Blueprints and unified productized authoring: **complete and human-owner accepted for roadmap progression on 2026-09-22**.
 - Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1`.
 - GitHub Actions run `35739828516` on that exact runtime commit:
   - PHPUnit: **364 passed / 1934 assertions**;
@@ -21,9 +21,11 @@ Current implementation baseline:
   - SQLite backup → restore smoke: passed;
   - npm audit: 0 vulnerabilities;
   - Composer security audit: clean.
-- Phase 7 remains blocked until the final human Phase 6 acceptance gate passes.
+- Local closure on synchronized HEAD `b33bdcf` applied all three Phase 6 migrations; passed **20 focused tests / 121 assertions**, **364 full tests / 1934 assertions**, PHPStan, Vite build, `git diff --check`, and a clean working tree after restoring unrelated whole-repository Pint rewrites.
+- Human browser review was intentionally non-exhaustive but found no blocking correctness problem; remaining Content-view behavior/UX improvements are deferred to the later whole-system polish pass.
+- Phase 7 — Submission / Response / Evaluation is the next roadmap phase and has not started yet.
 
-This document describes repository implementation truth at the Phase 6 technical-completion candidate. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and Phase 6 acceptance by `docs/PHASE_06_CONTENT_BLUEPRINTS.md`.
+This document describes repository implementation truth at the accepted Phase 6 closure. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and Phase 6 evidence by `docs/PHASE_06_CONTENT_BLUEPRINTS.md` plus `Development-CodexReports/phase-06-content-blueprints-report.md`.
 
 ## Established identity and platform foundation
 
@@ -594,21 +596,36 @@ Required before broad production release includes:
 
 These are continuous roadmap requirements, not a final afterthought.
 
+## Deferred polish backlog
+
+The owner accepted Phase 6 for roadmap progression while deliberately deferring non-blocking Content-view polish until the later whole-system review.
+
+Track these items without pulling them into Phase 7 unless a concrete issue becomes a correctness, security, authorization, accessibility or data-integrity blocker:
+
+- review Content library, creation, Studio and Reader behavior for interaction consistency and unnecessary friction;
+- polish action/state feedback, navigation, disclosure behavior and view transitions where the current experience can be clearer;
+- revisit Content-view responsive/mobile behavior and RTL presentation more exhaustively;
+- fix small visual/behavioral defects discovered during later end-to-end use;
+- perform a final cross-system UX/accessibility/cohesion pass after the roadmap capabilities are substantially complete;
+- preserve the accepted Content/Context/Blueprint architecture while polishing views; do not replace proven domain boundaries merely for cosmetic consistency.
+
+Specific defects should be added when observed rather than guessed or implemented speculatively now.
+
 ## Current highest-priority next milestone
 
-Phases 1–4 are closed.
+Phases 1–6 are closed.
 
-Phase 5 is closed. The active implementation milestone is **Phase 6 — Content Blueprints and unified productized authoring**.
+The next roadmap milestone is **Phase 7 — Submission / Response / Evaluation**.
 
-Phase 6 is explicitly converging the simple Context authoring surface and mature Group Content Studio into one product experience over the same Content kernel.
+Phase 7 must add structured interactions that annotations cannot correctly represent, while reusing the accepted Context, Content, Asset and immutable-evidence foundations rather than creating a second form/content engine.
 
-Frozen runtime candidate:
+Before Phase 7 runtime implementation:
 
-`34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`
-
-The human owner applied both Context migrations on the existing database and reported **25 focused tests / 156 assertions**, **344 full tests / 1807 assertions**, PHPStan clean, Pint clean, Vite green, `git diff --check` clean and a clean tree. Browser validation confirmed Personal Context Content creation works.
-
-Phase 6 must now productize the same advanced Content kernel across every Context instead of maintaining a second simplified authoring experience.
+- establish and accept the Phase 7 repository contract from `docs/PRODUCTION_ROADMAP.md`;
+- audit the current Content interaction, Asset and Context authorization seams;
+- preserve exact Content/Blueprint/revision provenance;
+- keep ordinary annotations/conversation separate from authoritative Submission/Response/Evaluation lifecycle;
+- do not pull Admission v2, realtime infrastructure, generic Workflow, Planner, matching, Contract or reputation work forward.
 
 Binding downstream invariants:
 
@@ -618,8 +635,8 @@ Binding downstream invariants:
 - Profile disclosure is not Context authorization;
 - Admission Context access does not imply Group access;
 - mutable Content drafts remain distinct from sealed publication evidence;
-- Content Blueprint productization belongs to Phase 6;
+- Content Blueprints remain creation recipes, not permanent hidden authority/type systems;
 - Submission/Response/Evaluation belongs to Phase 7;
 - full Admission v2 requirements/Conversation belongs to Phase 8.
 
-See `docs/PHASE_05_GENERIC_CONTENT_CONTEXT.md`, `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md`.
+See `docs/PHASE_06_CONTENT_BLUEPRINTS.md`, `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md`.
