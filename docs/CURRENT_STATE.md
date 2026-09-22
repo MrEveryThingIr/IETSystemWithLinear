@@ -29,7 +29,8 @@ Current implementation baseline:
 - Human/local Phase 7A acceptance recorded on 2026-09-22 from synchronized `bd4ca3a`: migration applied cleanly to the existing database; focused `InteractionDefinitionKernelTest` **6 tests / 19 assertions** passed; PHPStan **266/266** clean; dirty-only Pint passed; `git diff --check` clean; working tree clean; invitation → registration → Admission resume browser regression remained correct with intentionally unchanged visible behavior.
 - Phase 7B — Submission / Response / evidence — technically complete on `7761a2f5a57fd06b8df4fa7e97397cd9f9a2a2ab`; GitHub Actions run `35766736605`: **379 tests / 2000 assertions**, PHPStan clean, changed-file Pint **284 files**, Vite/migrations/ops/backup/security green.
 - Phase 7C — Evaluation — technically complete on `9e0338994f755f81c59ed6dfe9e5e96ad0afaa8f`; GitHub Actions run `35767588253`: **384 tests / 2025 assertions**, PHPStan clean, changed-file Pint **293 files**, Vite/migrations/ops/backup/security green.
-- Phase 7D — productized interaction experience is the next active sub-milestone.
+- Phase 7D — productized interaction experience — technically complete on `d828dc43c9ef469a3532bfee9b6274d5dceb5f24`; GitHub Actions run `35771215549`: **390 tests / 2052 assertions**, PHPStan clean, changed-file Pint **305 files**, Vite/migrations/ops/backup/security green.
+- Phase 7E — proof and closure is the next active sub-milestone.
 
 This document describes repository implementation truth at the Phase 7 kickoff baseline. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and active Phase 7 scope by `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 
@@ -627,9 +628,9 @@ Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
 
 Starting runtime baseline: `0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533`.
 
-Current Phase 7 runtime candidate: `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`.
+Current Phase 7 runtime candidate: `d828dc43c9ef469a3532bfee9b6274d5dceb5f24`.
 
-Phase 7A is complete and locally accepted. Phase 7B is technically complete: one immutable-version-bound Submission attempt owns normalized draft Responses, explicit submit/withdraw Actions, reusable same-Context Asset evidence, authorized cross-Context immutable Content evidence, max-attempt enforcement, private pre-submit Admission drafts, and a canonical SHA-256 sealed submission manifest. Phase 7C is technically complete: authorized evaluator drafts, immutable version-bound rubric configuration, bounded score/criterion feedback, finalized Evaluation evidence hashes, draft privacy, finalized submitter visibility, and no hidden Admission/Membership transition. Phase 7D productizes these kernels in the browser.
+Phase 7A is complete and locally accepted. Phase 7B is technically complete: one immutable-version-bound Submission attempt owns normalized draft Responses, explicit submit/withdraw Actions, reusable same-Context Asset evidence, authorized cross-Context immutable Content evidence, max-attempt enforcement, private pre-submit Admission drafts, and a canonical SHA-256 sealed submission manifest. Phase 7C is technically complete: authorized evaluator drafts, immutable version-bound rubric configuration, bounded score/criterion feedback, finalized Evaluation evidence hashes, draft privacy, finalized submitter visibility, and no hidden Admission/Membership transition. Phase 7D is technically complete: exact-revision Content Reader interaction cards, draft/resume/submit/withdraw UX, reusable Asset/evidence inputs, reviewer discovery/queue/detail, protected Submission-asset delivery, explicit Evaluation UX, four-locale copy, RTL-ready responsive layouts, and no Admission lifecycle side effects. Phase 7E now owns proof and closure.
 
 Phase 7 builds one versioned structured-interaction kernel for applications, exams, questionnaires, evidence responses and evaluations.
 
