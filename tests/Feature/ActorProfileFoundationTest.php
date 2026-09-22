@@ -275,7 +275,7 @@ class ActorProfileFoundationTest extends TestCase
             ->assertSee(route('actors.avatar', $actor), false);
     }
 
-    public function test_participant_profile_reference_lazily_creates_profile_and_shows_identity_shell(): void
+    public function test_participant_profile_reference_without_profile_is_identity_only_and_side_effect_free(): void
     {
         $target = Actor::factory()->create();
         $viewer = Actor::factory()->create();
@@ -288,6 +288,6 @@ class ActorProfileFoundationTest extends TestCase
             ->assertSee($target->user->username)
             ->assertSee(route('actors.avatar', $target), false);
 
-        $this->assertDatabaseHas('actor_profiles', ['actor_id' => $target->id]);
+        $this->assertDatabaseMissing('actor_profiles', ['actor_id' => $target->id]);
     }
 }
