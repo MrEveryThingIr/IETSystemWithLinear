@@ -13,6 +13,7 @@ use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\SpaceContentAssetController;
+use App\Http\Controllers\SubmissionAssetController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -36,6 +37,8 @@ use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
 use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceManagement;
+use App\Livewire\Interactions\ReviewQueue;
+use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
@@ -82,6 +85,12 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/contexts/{context}/contents/{content}/revisions/{revision}', ContentRevisionController::class)
         ->name('contexts.contents.revisions.show');
     Route::livewire('/contexts/{context}/contents/{content}', ContextContentShow::class)->name('contexts.contents.show');
+    Route::livewire('/contexts/{context}/submissions', ReviewQueue::class)->name('contexts.submissions.index');
+    Route::livewire('/contexts/{context}/submissions/{submission}', ReviewShow::class)->name('contexts.submissions.show');
+    Route::get('/contexts/{context}/submissions/{submission}/assets/{asset}', [SubmissionAssetController::class, 'show'])
+        ->name('contexts.submissions.assets.show');
+    Route::get('/contexts/{context}/submissions/{submission}/assets/{asset}/download', [SubmissionAssetController::class, 'download'])
+        ->name('contexts.submissions.assets.download');
     Route::get('/content-evidence/{reference}', ContentEvidenceReferenceController::class)->name('content-evidence.show');
     Route::livewire('/profile-shares/{grant}', SharedShow::class)->name('profiles.shares.show');
     Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');
