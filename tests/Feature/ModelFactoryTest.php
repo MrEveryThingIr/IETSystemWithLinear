@@ -13,6 +13,8 @@ use App\Models\AdmissionEvent;
 use App\Models\AgreementAcceptance;
 use App\Models\AgreementEvent;
 use App\Models\Context;
+use App\Models\ContentBlueprint;
+use App\Models\ContentBlueprintVersion;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
@@ -53,6 +55,8 @@ class ModelFactoryTest extends TestCase
             ActorProfileDisclosureGrant::factory()->create(),
             ActorProfileDisclosureItem::factory()->create(),
             Context::factory()->create(),
+            ContentBlueprint::factory()->create(),
+            ContentBlueprintVersion::factory()->create(),
             PersonalContext::factory()->create(),
             GroupSpaceContext::factory()->create(),
             AdmissionContext::factory()->create(),

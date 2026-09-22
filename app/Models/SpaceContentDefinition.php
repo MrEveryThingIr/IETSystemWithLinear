@@ -12,6 +12,7 @@ use LogicException;
 
 #[Fillable([
     'context_id',
+    'content_blueprint_version_id',
     'group_space_id',
     'created_by_actor_id',
     'name',
@@ -70,7 +71,7 @@ class SpaceContentDefinition extends Model
         });
 
         static::updating(function (self $definition): void {
-            if ($definition->isDirty(['context_id', 'group_space_id', 'created_by_actor_id', 'slug'])) {
+            if ($definition->isDirty(['context_id', 'content_blueprint_version_id', 'group_space_id', 'created_by_actor_id', 'slug'])) {
                 throw new LogicException('Content Definition provenance and stable slug cannot be reassigned.');
             }
 
@@ -116,6 +117,12 @@ class SpaceContentDefinition extends Model
     public function context(): BelongsTo
     {
         return $this->belongsTo(Context::class);
+    }
+
+    /** @return BelongsTo<ContentBlueprintVersion, $this> */
+    public function blueprintVersion(): BelongsTo
+    {
+        return $this->belongsTo(ContentBlueprintVersion::class, 'content_blueprint_version_id');
     }
 
     /** @return BelongsTo<GroupSpace, $this> */

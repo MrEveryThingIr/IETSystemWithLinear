@@ -15,6 +15,7 @@ use LogicException;
 #[Fillable([
     'uuid',
     'context_id',
+    'content_blueprint_version_id',
     'group_space_id',
     'space_content_definition_id',
     'author_actor_id',
@@ -75,7 +76,7 @@ class SpaceContent extends Model
         });
 
         static::updating(function (self $content): void {
-            if ($content->isDirty(['uuid', 'context_id', 'group_space_id', 'space_content_definition_id', 'author_actor_id'])) {
+            if ($content->isDirty(['uuid', 'context_id', 'content_blueprint_version_id', 'group_space_id', 'space_content_definition_id', 'author_actor_id'])) {
                 throw new LogicException('Content identity and provenance cannot be reassigned.');
             }
 
@@ -146,6 +147,12 @@ class SpaceContent extends Model
     public function context(): BelongsTo
     {
         return $this->belongsTo(Context::class);
+    }
+
+    /** @return BelongsTo<ContentBlueprintVersion, $this> */
+    public function blueprintVersion(): BelongsTo
+    {
+        return $this->belongsTo(ContentBlueprintVersion::class, 'content_blueprint_version_id');
     }
 
     /** @return BelongsTo<GroupSpace, $this> */

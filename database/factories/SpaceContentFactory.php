@@ -16,6 +16,7 @@ class SpaceContentFactory extends Factory
     public function definition(): array
     {
         return [
+            'content_blueprint_version_id' => null,
             'group_space_id' => GroupSpace::factory()->restricted(),
             'context_id' => function (array $attributes): int {
                 $space = GroupSpace::query()->findOrFail($attributes['group_space_id']);
