@@ -788,4 +788,5 @@ return [
         'create_from_definition_help' => 'مسار خبير للمخططات المنظمة داخل السياق.',
         'open' => 'فتح',
         'open_reader' => 'فتح القارئ',
-    ],];
+    ],
+];
