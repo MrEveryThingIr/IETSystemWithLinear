@@ -10,6 +10,7 @@ use App\Models\Actor;
 use App\Models\Asset;
 use App\Models\ContentEvidenceReference;
 use App\Models\Context;
+use App\Models\InteractionDefinition;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentAnnotation;
 use App\Models\SpaceContentAnnotationAnchor;
@@ -703,6 +704,25 @@ class ContentShow extends Component
 
         $viewerTimezone = $user->timezone ?: 'UTC';
 
+        $interactionDefinitions = collect();
+        if ($current->active_revision_id !== null
+            && (int) $current->active_revision_id === (int) $revision->id
+            && $revision->hasVerifiableManifest()
+            && $this->viewingEvidenceReferenceUuid === null
+            && $this->viewingRevisionUuid === null) {
+            $interactionDefinitions = $this->context->interactionDefinitions()
+                ->where('status', InteractionDefinition::STATUS_ACTIVE)
+                ->where('space_content_id', $current->id)
+                ->whereNotNull('active_version_id')
+                ->with('activeVersion')
+                ->orderBy('id')
+                ->get()
+                ->filter(fn (InteractionDefinition $definition): bool => $definition->activeVersion !== null
+                    && (int) $definition->activeVersion->space_content_revision_id === (int) $revision->id
+                    && Gate::forUser($user)->allows('view', $definition))
+                ->values();
+        }
+
         return view('livewire.contexts.content-show', compact(
             'revision',
             'definitionVersion',
@@ -725,6 +745,7 @@ class ContentShow extends Component
             'viewerTimezone',
             'blockMarkerUuids',
             'previewAnnotations',
+            'interactionDefinitions',
         ));
     }
 
