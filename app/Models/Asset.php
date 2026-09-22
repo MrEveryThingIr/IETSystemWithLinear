@@ -139,7 +139,10 @@ class Asset extends Model
         });
 
         static::deleting(function (self $asset): void {
-            if ($asset->revisions()->exists() || $asset->annotations()->exists() || $asset->profileImages()->exists()) {
+            if ($asset->revisions()->exists()
+                || $asset->annotations()->exists()
+                || $asset->profileImages()->exists()
+                || $asset->submissionResponses()->exists()) {
                 throw new LogicException('Referenced Assets are preserved with Content, Profile, and interaction history.');
             }
         });
@@ -220,5 +223,11 @@ class Asset extends Model
         return $this->belongsToMany(SpaceContentAnnotation::class, 'space_content_annotation_assets', 'asset_id', 'annotation_id')
             ->withPivot(['uuid', 'role', 'position', 'caption'])
             ->withTimestamps();
+    }
+
+    /** @return HasMany<SubmissionResponse, $this> */
+    public function submissionResponses(): HasMany
+    {
+        return $this->hasMany(SubmissionResponse::class);
     }
 }

@@ -28,4 +28,13 @@ class InteractionDefinitionPolicy
     {
         return $this->update($user, $definition);
     }
+
+    public function submit(User $user, InteractionDefinition $definition): bool
+    {
+        $definition->loadMissing('context');
+
+        return $definition->status === InteractionDefinition::STATUS_ACTIVE
+            && $definition->active_version_id !== null
+            && $this->contexts->submitInteractions($user, $definition->context);
+    }
 }
