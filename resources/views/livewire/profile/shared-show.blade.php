@@ -39,8 +39,19 @@
             <div class="mt-4 flex flex-wrap gap-2">
                 @foreach ($disclosure['assertions'] as $assertion)
                     <span class="rounded-full bg-zinc-100 px-3 py-1.5 text-sm dark:bg-zinc-800">
+                        @php
+                            $sharedSkillPercent = $assertion->predicate->value === 'has_skill'
+                                ? \App\Support\Profile\ProfileScale::percentFromWeight($assertion->weight)
+                                : null;
+                        @endphp
                         {{ $assertion->concept->displayLabel() }}
-                        <span class="text-zinc-500">· {{ __('ui.profile.semantics.types.'.$assertion->predicate->value) }}</span>
+                        <span class="text-zinc-500">
+                            · {{ __('ui.profile.semantics.types.'.$assertion->predicate->value) }}
+                            @if ($sharedSkillPercent !== null)
+                                · {{ $sharedSkillPercent }}%
+                                · {{ __('ui.profile.semantics.proficiency_levels.'.\App\Support\Profile\ProfileScale::skillLevelKey($sharedSkillPercent)) }}
+                            @endif
+                        </span>
                     </span>
                 @endforeach
             </div>
@@ -60,6 +71,13 @@
                         <p class="mt-2 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $intent->description }}</p>
                     @endif
                     <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+                        @if ($intent->importance_percent !== null)
+                            <span>
+                                {{ $intent->kind->value === 'need' ? __('ui.profile.intents.importance_urgency') : __('ui.profile.intents.importance') }}:
+                                {{ $intent->importance_percent }}%
+                                · {{ __('ui.profile.intents.importance_levels.'.\App\Support\Profile\ProfileScale::importanceLevelKey($intent->importance_percent)) }}
+                            </span>
+                        @endif
                         @if ($intent->quantity)
                             <span>{{ $intent->quantity }} {{ $intent->unit }}</span>
                         @endif
