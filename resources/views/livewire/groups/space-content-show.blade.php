@@ -243,7 +243,7 @@
                                 {{ __('ui.content.revision_number', ['revision' => $revision->revision]) }} · {{ $revision->title }}
                             </summary>
                             <div class="mt-3 space-y-2 text-sm">
-                                <div class="text-zinc-500">{{ $revision->createdBy->user?->username ?? __('ui.common.unknown_account') }} · {{ $revision->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</div>
+                                <div class="flex flex-wrap items-center gap-2 text-zinc-500"><x-app.actor-identity :actor="$revision->createdBy" size="xs" /><span>· {{ $revision->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</span></div>
                                 <div class="font-mono text-[11px] text-zinc-500">content: {{ $revision->content_hash }}</div>
                                 @if ($revision->manifest_hash)
                                     <div class="font-mono text-[11px] text-zinc-500">manifest v{{ $revision->manifest_version ?? 0 }}: {{ $revision->manifest_hash }}</div>
@@ -311,7 +311,7 @@
                                         <div class="text-xs text-zinc-500">{{ $event->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</div>
                                     </div>
                                     <div class="mt-1 text-zinc-600 dark:text-zinc-400" dir="auto">{{ $event->reason }}</div>
-                                    <div class="mt-1 text-xs text-zinc-500">{{ $event->actor->user?->username ?? __('ui.common.unknown_account') }} · {{ $event->from_status }} → {{ $event->to_status }}</div>
+                                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500"><x-app.actor-identity :actor="$event->actor" size="xs" /><span>· {{ $event->from_status }} → {{ $event->to_status }}</span></div>
                                 </div>
                             @empty
                                 <flux:text>{{ __('studio.no_lifecycle_events') }}</flux:text>
