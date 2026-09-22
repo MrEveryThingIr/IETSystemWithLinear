@@ -14,7 +14,7 @@
         @forelse ($submissions as $submission)
             @php
                 $version = $submission->definitionVersion;
-                $finalized = $submission->evaluations->where('status', AppModelsEvaluation::STATUS_FINALIZED)->count();
+                $finalized = $submission->evaluations->where('status', \App\Models\Evaluation::STATUS_FINALIZED)->count();
                 $purposeLabel = __('structured_interactions.purpose.'.$version->purpose_key);
                 if ($purposeLabel === 'structured_interactions.purpose.'.$version->purpose_key) {
                     $purposeLabel = __('structured_interactions.purpose.general');
