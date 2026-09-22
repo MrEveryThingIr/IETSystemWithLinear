@@ -8,6 +8,7 @@ use App\Models\Context;
 use App\Models\PersonalContext;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EnsurePersonalContext
 {
@@ -37,6 +38,7 @@ class EnsurePersonalContext
             }
 
             $context = Context::query()->create([
+                'uuid' => (string) Str::uuid(),
                 'kind' => ContextKind::Personal,
             ]);
 
