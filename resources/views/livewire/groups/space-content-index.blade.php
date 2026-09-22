@@ -36,7 +36,7 @@
                             <div class="space-y-4 p-4">
                                 <div class="space-y-2">
                                     <div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                                        <span dir="auto">{{ $item->author->user?->username ?? __('ui.common.unknown_account') }}</span>
+                                        <x-app.actor-identity :actor="$item->author" size="xs" />
                                         <span>·</span>
                                         <span>{{ $item->published_at?->timezone($group->timezone ?: 'UTC')->format('Y-m-d') }}</span>
                                         <flux:badge size="sm">{{ $item->definition->name }}</flux:badge>
@@ -99,7 +99,7 @@
                         <div wire:key="space-draft-{{ $item->uuid }}" class="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/60 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-amber-900/60 dark:bg-amber-950/20">
                             <div class="min-w-0">
                                 <div class="font-semibold" dir="auto">{{ $item->draftRevision?->title ?? __('ui.content.untitled') }}</div>
-                                <div class="mt-1 text-sm text-zinc-500" dir="auto">{{ $item->definition->name }} · {{ $item->author->user?->username ?? __('ui.common.unknown_account') }}</div>
+                                <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-500"><span dir="auto">{{ $item->definition->name }}</span><span>·</span><x-app.actor-identity :actor="$item->author" size="xs" /></div>
                             </div>
                             <flux:button :href="route('groups.spaces.contents.studio', [$group, $space, $item])" size="sm" variant="ghost">{{ __('workflow.content.review_space_draft') }}</flux:button>
                         </div>
