@@ -793,4 +793,5 @@ return [
         'create_from_definition_help' => 'Expert path for Context-local structured schemas.',
         'open' => 'Open',
         'open_reader' => 'Open reader',
-    ],];
+    ],
+];
