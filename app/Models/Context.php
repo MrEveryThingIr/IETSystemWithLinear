@@ -30,8 +30,9 @@ class Context extends Model
     protected static function booted(): void
     {
         static::creating(function (self $context): void {
-            $context->uuid ??= (string) Str::uuid();
-
+            if ($context->getAttribute('uuid') === null) {
+                $context->setAttribute('uuid', (string) Str::uuid());
+            }
         });
 
         static::updating(function (self $context): void {
