@@ -10,6 +10,7 @@ use App\Actions\Groups\ActivateSpaceContentDefinition;
 use App\Actions\Groups\AddSpaceContentAnnotation;
 use App\Actions\Groups\AttachAssetToSpaceContent;
 use App\Actions\Groups\CreateGroup;
+use App\Actions\Groups\ManageAdmission;
 use App\Actions\Groups\PublishSpaceContent;
 use App\Models\Actor;
 use App\Models\Admission;
@@ -129,6 +130,55 @@ class ContextContentIntegrationTest extends TestCase
         $this->assertTrue(Gate::forUser($candidate->user)->allows('view', $context));
         $this->assertFalse(Gate::forUser($candidate->user)->allows('createContent', $context));
         $this->assertFalse(Gate::forUser($reviewer->user)->allows('manageDefinitions', $context));
+    }
+
+    public function test_terminal_admission_keeps_historical_drafts_readable_but_immutable(): void
+    {
+        $reviewer = Actor::factory()->create();
+        $candidate = Actor::factory()->create();
+        $group = app(CreateGroup::class)->execute($reviewer, 'Historical admission context group', null);
+
+        $admission = Admission::factory()->create([
+            'group_id' => $group->id,
+            'candidate_actor_id' => $candidate->id,
+            'status' => 'under_review',
+        ]);
+
+        $context = app(EnsureAdmissionContext::class)->execute($admission, $reviewer->user);
+        $definition = $this->activeNoteDefinition($context, $reviewer);
+        $content = app(CreateContextContent::class)->execute(
+            $context,
+            $definition,
+            $candidate->user,
+            'Historical draft',
+            ['body' => 'Preserve this collaboration record'],
+        );
+
+        app(ManageAdmission::class)->review($admission, $reviewer, 'rejected', 'Closed after review.');
+        $admission->refresh();
+
+        $this->assertSame('rejected', $admission->status);
+        $this->assertTrue(Gate::forUser($candidate->user)->allows('view', $content));
+        $this->assertTrue(Gate::forUser($reviewer->user)->allows('view', $content));
+        $this->assertTrue(Gate::forUser($candidate->user)->allows('revisions', $content));
+        $this->assertTrue(Gate::forUser($reviewer->user)->allows('revisions', $content));
+
+        $this->assertFalse(Gate::forUser($candidate->user)->allows('update', $content));
+        $this->assertFalse(Gate::forUser($reviewer->user)->allows('update', $content));
+        $this->assertFalse(Gate::forUser($candidate->user)->allows('publish', $content));
+        $this->assertFalse(Gate::forUser($reviewer->user)->allows('publish', $content));
+        $this->assertFalse(Gate::forUser($candidate->user)->allows('interact', $content));
+        $this->assertFalse(Gate::forUser($reviewer->user)->allows('interact', $content));
+
+        $this->actingAs($candidate->user)
+            ->get(route('contexts.contents.show', [$context, $content]))
+            ->assertOk()
+            ->assertSee('Historical draft');
+
+        $this->actingAs($reviewer->user)
+            ->get(route('contexts.contents.show', [$context, $content]))
+            ->assertOk()
+            ->assertSee('Historical draft');
     }
 
     public function test_context_content_media_and_annotations_stay_context_scoped(): void
