@@ -282,6 +282,9 @@ class ActorProfileFoundationTest extends TestCase
 
         $this->assertDatabaseMissing('actor_profiles', ['actor_id' => $target->id]);
 
+        $this->get(route('actors.profile.reference', $target))
+            ->assertForbidden();
+
         $this->actingAs($viewer->user)
             ->get(route('actors.profile.reference', $target))
             ->assertOk()
