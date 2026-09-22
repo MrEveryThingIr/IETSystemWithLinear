@@ -11,7 +11,7 @@
             <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.intents.help') }}</p>
         </div>
         @unless ($editorOpen)
-            <flux:button wire:click="openCreate" size="sm" variant="ghost" class="w-full shrink-0 sm:w-auto">
+            <flux:button wire:click="openCreate" size="sm" variant="ghost" icon="plus" class="w-full shrink-0 sm:w-auto">
                 {{ __('ui.profile.intents.add') }}
             </flux:button>
         @endunless
