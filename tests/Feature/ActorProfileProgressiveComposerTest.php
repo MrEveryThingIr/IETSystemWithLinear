@@ -9,6 +9,7 @@ use App\Livewire\Profile\Semantics;
 use App\Livewire\Profile\TemporalPreferences;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
+use App\Models\ConceptAssertion;
 use App\Models\Concept;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -111,7 +112,7 @@ class ActorProfileProgressiveComposerTest extends TestCase
             ->call('add')
             ->assertHasNoErrors();
 
-        $assertion = \App\Models\ConceptAssertion::query()->sole();
+        $assertion = ConceptAssertion::query()->sole();
         $this->assertSame('0.7200', $assertion->weight);
 
         Livewire::actingAs($actor->user)
