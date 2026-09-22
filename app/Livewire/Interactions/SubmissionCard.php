@@ -240,7 +240,7 @@ class SubmissionCard extends Component
 
         foreach ($submission->responses as $response) {
             if ($response->response_type === InteractionResponseTypeRegistry::CONTENT_EVIDENCE) {
-                $this->evidenceReferences[$response->item_key] = $response->contentEvidenceReference?->uuid ?? '';
+                $this->evidenceReferences[$response->item_key] = $response->contentEvidenceReference->uuid;
             } elseif ($response->response_type !== InteractionResponseTypeRegistry::ASSET) {
                 $this->answers[$response->item_key] = $response->value;
             }
