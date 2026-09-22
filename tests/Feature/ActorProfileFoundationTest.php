@@ -194,4 +194,101 @@ class ActorProfileFoundationTest extends TestCase
         $this->assertSame(0, ActorProfileImage::query()->count());
         $this->assertSame(0, Asset::query()->whereNull('group_space_id')->count());
     }
+    public function test_profile_image_library_stays_visible_while_upload_form_is_collapsed(): void
+    {
+        Storage::fake('local');
+
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+        $upload = app(UploadActorProfileImage::class);
+
+        $first = $upload->execute($actor->user, $profile, UploadedFile::fake()->image('first.jpg', 400, 400));
+        $second = $upload->execute($actor->user, $profile, UploadedFile::fake()->image('second.jpg', 400, 400));
+
+        $this->actingAs($actor->user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee(route('profiles.images.show', [$profile, $first]), false)
+            ->assertSee(route('profiles.images.show', [$profile, $second]), false)
+            ->assertSee(__('ui.profile.use_as_display'))
+            ->assertDontSee('type="file"', false);
+    }
+
+    public function test_private_display_avatar_is_system_identity_for_verified_users_but_not_guests(): void
+    {
+        Storage::fake('local');
+
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+        app(UploadActorProfileImage::class)->execute(
+            $owner->user,
+            $profile,
+            UploadedFile::fake()->image('avatar.jpg', 400, 400),
+        );
+
+        $this->get(route('actors.avatar', $owner))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/svg+xml; charset=UTF-8');
+
+        $viewer = Actor::factory()->create();
+
+        $this->actingAs($viewer->user)
+            ->get(route('actors.avatar', $owner))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/jpeg');
+
+        app(UpdateActorProfile::class)->execute($owner->user, $profile->fresh(), [
+            'display_name' => null,
+            'headline' => null,
+            'bio' => null,
+            'location_text' => null,
+            'website_url' => null,
+            'visibility' => ProfileVisibility::Public->value,
+        ]);
+
+        auth()->logout();
+
+        $this->get(route('actors.avatar', $owner))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/jpeg');
+    }
+
+    public function test_dashboard_uses_display_name_and_header_uses_actor_avatar(): void
+    {
+        $actor = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($actor->user);
+
+        app(UpdateActorProfile::class)->execute($actor->user, $profile, [
+            'display_name' => 'Displayed Person',
+            'headline' => null,
+            'bio' => null,
+            'location_text' => null,
+            'website_url' => null,
+            'visibility' => ProfileVisibility::Private->value,
+        ]);
+
+        $this->actingAs($actor->user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Displayed Person')
+            ->assertSee(route('actors.avatar', $actor), false);
+    }
+
+    public function test_participant_profile_reference_lazily_creates_profile_and_shows_identity_shell(): void
+    {
+        $target = Actor::factory()->create();
+        $viewer = Actor::factory()->create();
+
+        $this->assertDatabaseMissing('actor_profiles', ['actor_id' => $target->id]);
+
+        $this->actingAs($viewer->user)
+            ->get(route('actors.profile.reference', $target))
+            ->assertOk()
+            ->assertSee($target->user->username)
+            ->assertSee(route('actors.avatar', $target), false);
+
+        $this->assertDatabaseHas('actor_profiles', ['actor_id' => $target->id]);
+    }
+
+
 }
