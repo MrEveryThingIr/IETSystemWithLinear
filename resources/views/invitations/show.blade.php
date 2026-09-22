@@ -27,7 +27,7 @@
                 <div class="grid gap-3 rounded-xl bg-zinc-100 p-4 text-sm dark:bg-zinc-800 sm:grid-cols-2">
                     <div>
                         <p class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('ui.invitation.invited_by') }}</p>
-                        <p class="mt-1 font-semibold">{{ $invitation->inviter->user?->username ?? __('ui.invitation.group_member') }}</p>
+                        <div class="mt-2"><x-app.actor-identity :actor="$invitation->inviter" size="sm" /></div>
                     </div>
                     <div>
                         <p class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('ui.invitation.access') }}</p>
