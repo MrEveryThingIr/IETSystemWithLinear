@@ -11,6 +11,7 @@ use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\ContentBlueprint;
 use App\Models\ContentBlueprintVersion;
+use App\Livewire\Contexts\ContentIndex;
 use App\Models\SpaceContentRevision;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -161,7 +162,7 @@ class ContentBlueprintCreationTest extends TestCase
         $this->assertInstanceOf(ContentBlueprintVersion::class, $version);
 
         Livewire::actingAs($actor->user)
-            ->test(\App\Livewire\Contexts\ContentIndex::class, ['context' => $context])
+            ->test(ContentIndex::class, ['context' => $context])
             ->call('openCreator')
             ->assertSee('Note / Diary')
             ->call('selectBlueprint', $version->id)
