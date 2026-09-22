@@ -2,12 +2,15 @@
 
 namespace App\Actions\Groups;
 
+use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupSpace;
 
 class EnsureDefaultGroupSpace
 {
+    public function __construct(private readonly EnsureGroupSpaceContext $contexts) {}
+
     public function execute(Group $group, Actor $creator): GroupSpace
     {
         abort_unless((int) $group->created_by_actor_id === (int) $creator->id, 422, 'The default space must be provisioned by the group creator.');
@@ -38,6 +41,8 @@ class EnsureDefaultGroupSpace
         if ($space->isDirty()) {
             $space->save();
         }
+
+        $this->contexts->execute($space);
 
         return $space->refresh();
     }

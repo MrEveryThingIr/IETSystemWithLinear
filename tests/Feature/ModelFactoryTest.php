@@ -11,6 +11,8 @@ use App\Models\Admission;
 use App\Models\AdmissionEvent;
 use App\Models\AgreementAcceptance;
 use App\Models\AgreementEvent;
+use App\Models\AdmissionContext;
+use App\Models\Context;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
@@ -20,9 +22,11 @@ use App\Models\GroupMembership;
 use App\Models\GroupMembershipEvent;
 use App\Models\GroupRoleChangeRequest;
 use App\Models\GroupSpace;
+use App\Models\GroupSpaceContext;
 use App\Models\GroupSpaceMessage;
 use App\Models\GroupSpaceParticipant;
 use App\Models\MembershipAgreementAcceptance;
+use App\Models\PersonalContext;
 use App\Models\PlatformAccessGrant;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinition;
@@ -48,6 +52,10 @@ class ModelFactoryTest extends TestCase
             ActorProfileIntent::factory()->create(),
             ActorProfileDisclosureGrant::factory()->create(),
             ActorProfileDisclosureItem::factory()->create(),
+            Context::factory()->create(),
+            PersonalContext::factory()->create(),
+            GroupSpaceContext::factory()->create(),
+            AdmissionContext::factory()->create(),
             Group::factory()->create(),
             GroupMembership::factory()->create(),
             GroupMembershipEvent::factory()->create(),

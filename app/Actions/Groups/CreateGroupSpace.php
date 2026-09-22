@@ -2,6 +2,7 @@
 
 namespace App\Actions\Groups;
 
+use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupSpace;
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
 
 class CreateGroupSpace
 {
+    public function __construct(private readonly EnsureGroupSpaceContext $contexts) {}
+
     public function execute(Group $group, User $user, string $name, string $accessMode): GroupSpace
     {
         $normalizedName = trim($name);
@@ -24,7 +27,7 @@ class CreateGroupSpace
 
             Gate::forUser($user)->authorize('manageSpaces', $lockedGroup);
 
-            return GroupSpace::query()->create([
+            $space = GroupSpace::query()->create([
                 'group_id' => $lockedGroup->id,
                 'created_by_actor_id' => $actor->id,
                 'name' => $normalizedName,
@@ -34,6 +37,10 @@ class CreateGroupSpace
                 'status' => 'active',
                 'is_default' => false,
             ]);
+
+            $this->contexts->execute($space);
+
+            return $space->refresh();
         }, attempts: 3);
     }
 
