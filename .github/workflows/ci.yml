@@ -78,8 +78,11 @@ jobs:
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress
 
-      - name: Migration, scheduler, and queue smoke
+      - name: Phase 7 rollback/reapply, scheduler, and queue smoke
         run: |
+          php artisan migrate:status
+          php artisan migrate:rollback --step=3 --force
+          php artisan migrate --force
           php artisan migrate:status
           php artisan schedule:list
           php artisan schedule:run
