@@ -40,7 +40,6 @@ use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
 use App\Livewire\Profile\Show as ProfileShow;
 use App\Models\Actor;
-use App\Models\Context;
 use App\Models\Group;
 use Illuminate\Support\Facades\Route;
 
