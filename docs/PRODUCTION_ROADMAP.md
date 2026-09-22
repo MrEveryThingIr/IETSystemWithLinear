@@ -241,6 +241,8 @@ Architectural boundaries remain explicit: recurring Profile declarations are cur
 
 ## Phase 5 — Generic Content Context
 
+**Status: active on `feat/phase-05-content-context`.** Detailed contract: `docs/PHASE_05_GENERIC_CONTENT_CONTEXT.md`.
+
 ### Purpose
 
 Remove the architectural requirement that all Content belong to a GroupSpace.
