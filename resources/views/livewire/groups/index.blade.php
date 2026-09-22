@@ -28,7 +28,7 @@
                 <div class="space-y-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <flux:heading>{{ $accessRequest->user->username }}</flux:heading>
+                            @if ($accessRequest->user->actor)<x-app.actor-identity :actor="$accessRequest->user->actor" />@else<flux:heading>{{ $accessRequest->user->username }}</flux:heading>@endif
                             <flux:text>{{ $accessRequest->user->email }}</flux:text>
                         </div>
                         <flux:badge>Pending</flux:badge>
@@ -54,7 +54,7 @@
             <flux:heading size="lg">{{ __('ui.groups.ownership_requests') }}</flux:heading>
             @foreach ($ownershipTransfers as $transfer)
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <flux:text>{{ __('ui.groups.ownership_request_from', ['group' => $transfer->group->name, 'username' => $transfer->sourceMembership->actor->user?->username ?? __('ui.common.unknown_account')]) }}</flux:text>
+                    <div class="flex flex-wrap items-center gap-2"><x-app.actor-identity :actor="$transfer->sourceMembership->actor" size="xs" /><flux:text>{{ $transfer->group->name }} · {{ __('ui.groups.transfer_ownership') }}</flux:text></div>
                     <div class="flex gap-2">
                         <flux:button wire:click="respondToOwnershipTransfer({{ $transfer->id }}, true)" variant="primary">{{ __('ui.common.accept') }}</flux:button>
                         <flux:button wire:click="respondToOwnershipTransfer({{ $transfer->id }}, false)" variant="ghost">{{ __('ui.admission.reject') }}</flux:button>
@@ -98,7 +98,7 @@
                         <div class="space-y-1">
                             <flux:heading>{{ $admission->group->name }}</flux:heading>
                             <flux:text>
-                                {{ __('ui.groups.invited_by', ['username' => $admission->sourceInvitation->inviter->user?->username ?? __('ui.invitation.group_member')]) }}
+                                <span class="inline-flex flex-wrap items-center gap-2"><span>{{ __('ui.invitation.invited_by') }}</span><x-app.actor-identity :actor="$admission->sourceInvitation->inviter" size="xs" /></span>
                             </flux:text>
                             <flux:badge>{{ __('ui.status.'.$admission->status) }}</flux:badge>
                         </div>
@@ -126,7 +126,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($invitation->admissions as $admission)
                                     <a href="{{ route('admissions.show', $admission) }}" class="rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                        <flux:badge>{{ $admission->candidate->user?->username ?? __('ui.common.unknown_account') }} · {{ __('ui.status.'.$admission->status) }}</flux:badge>
+                                        <div class="flex flex-wrap items-center gap-2"><x-app.actor-identity :actor="$admission->candidate" size="xs" /><flux:badge>{{ __('ui.status.'.$admission->status) }}</flux:badge></div>
                                     </a>
                                 @endforeach
                             </div>
