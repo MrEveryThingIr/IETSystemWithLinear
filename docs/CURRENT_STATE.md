@@ -2,26 +2,27 @@
 
 ## Snapshot
 
-Current accepted implementation baseline:
+Current implementation baseline:
 
-- Branch: `feat/phase-04-actor-profile`.
+- Branch: `feat/phase-05-content-context`.
 - Phase 1 — Invitation/registration/admission journey: complete.
 - Phase 2 — Delivery and operations baseline: complete at the provider-neutral baseline.
 - Phase 3 — Concept Kernel: complete.
-- Phase 4 — Actor/Party + progressive Profile: **complete and human-owner accepted on 2026-09-22**.
-- Final Phase 4 runtime baseline before documentation-only closure: `20e7c2834fca74b652f89195094b70f86b454f80`.
-- GitHub Actions run `35700986122` on that exact commit:
-  - PHPUnit: **331 passed / 1719 assertions**;
+- Phase 4 — Actor/Party + progressive Profile: complete and human-owner accepted.
+- Phase 5 — Generic Content Context: **runtime technically complete and remote-CI green; final owner-local/browser acceptance pending**.
+- Frozen Phase 5 runtime candidate: `34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`.
+- GitHub Actions run `35725999556` on that exact runtime commit:
+  - PHPUnit: **344 passed / 1807 assertions**;
   - PHPStan: no errors;
-  - Pint: **171 files passed**;
+  - Pint: **216 files passed**;
   - Vite production build: passed;
-  - migration/scheduler/database-queue smoke: passed;
+  - Context migrations / scheduler / database-queue smoke: passed;
   - SQLite backup → restore smoke: passed;
-  - npm high-severity audit: passed;
+  - npm audit: 0 vulnerabilities;
   - Composer security audit: clean.
-- Phase 5 — Generic Content Context is **active** on `feat/phase-05-content-context`.
+- Phase 6 remains blocked until final Phase 5 owner-local/browser/mobile/RTL acceptance.
 
-This document describes repository implementation truth after formal Phase 4 closure. Future architecture remains separately governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
+This document describes repository implementation truth at the final Phase 5 human acceptance gate. Future architecture remains governed by `docs/TARGET_ARCHITECTURE.md` and execution order by `docs/PRODUCTION_ROADMAP.md`.
 
 ## Established identity and platform foundation
 
@@ -63,6 +64,31 @@ Current Phase 4 identity/Profile state:
 - purpose-specific Profile completeness/requirements and recipient-specific selective disclosure are implemented;
 - Profile owner UX is read-first: existing data/cards stay visible while mutation forms/composers open on demand;
 - Profile remains upstream state only: it does not create Planner Occurrences, Matches, Contracts, Commitments or Fulfillment.
+
+## Context Kernel
+
+Phase 5 introduces the first production Context abstraction.
+
+Implemented:
+
+- first-class `Context` UUID identity;
+- explicit kinds:
+  - Personal;
+  - GroupSpace;
+  - Admission;
+- explicit relational subtype bindings rather than polymorphic owner columns;
+- one Personal Context per Actor;
+- one GroupSpace Context per GroupSpace;
+- one Admission Context per Admission;
+- idempotent provisioning Actions;
+- deterministic existing GroupSpace backfill;
+- Context authorization for viewing, creating/interacting with Content, Content management, Definition management and historical review;
+- Personal Context restricted to its active verified Actor;
+- GroupSpace Context delegating to existing GroupSpace authorization;
+- Admission Context allowing candidate/reviewer collaboration before Membership without granting ordinary GroupSpace authority;
+- terminal Admission Contexts preserve historical read access while denying mutation/interactions.
+
+Context is a bounded collaboration/artifact environment. It is not Group Membership, Profile disclosure, Workflow, Planner, Match or Contract authority.
 
 ## Group governance kernel
 
@@ -127,14 +153,15 @@ Phase 1 hardening now includes:
 
 Current limitations / deliberate future work:
 
-- Admission does not yet host a configurable questionnaire, progressive Profile requirements, structured document/evidence requests, or a pre-membership Admission Context;
-- current clarification uses Admission lifecycle/events/notes rather than a persistent candidate-reviewer Conversation;
-- direct invitation email delivery remains a documented manual private-link product choice for Phase 1; operational transactional-email configuration belongs to Phase 2;
-- context-scoped Admission collaboration, structured submissions/evidence, live broadcasting, and negotiated Contracts belong to later roadmap phases and must not be retrofitted into Phase 1 ad hoc.
+- a pre-membership Admission Context now exists and supports candidate/reviewer Content collaboration;
+- Admission does not yet host a configurable questionnaire, progressive Profile requirements or structured Submission/Response evidence requests;
+- current clarification still uses Admission lifecycle/events/notes rather than a persistent candidate-reviewer Conversation;
+- Phase 8 remains responsible for productizing Admission Context around Profile requirements, Submissions/evidence and shared/internal Conversations;
+- realtime broadcasting and negotiated Contracts remain later roadmap work.
 
 ## Admission collaboration direction
 
-The next Admission architecture must preserve the proven `Invitation → Admission → Membership` boundary while replacing note-heavy clarification UX with context-scoped collaboration when its dependencies exist.
+The first Admission Context dependency now exists while preserving the proven `Invitation → Admission → Membership` boundary. Later Admission phases must build on this Context rather than granting pre-membership GroupSpace access.
 
 Recorded direction:
 
@@ -178,7 +205,7 @@ Implemented:
 ### Content identity and lifecycle
 
 - `SpaceContent` with stable public UUID;
-- GroupSpace ownership;
+- Context ownership with retained nullable GroupSpace compatibility provenance;
 - Definition reference;
 - Actor authorship;
 - draft / published / archived lifecycle;
@@ -189,7 +216,7 @@ Implemented:
 
 ### Content Definitions
 
-- Space-scoped Content Definitions;
+- Context-scoped Content Definitions;
 - immutable activated Definition versions;
 - active/draft version pointers;
 - safe field registry;
@@ -244,7 +271,10 @@ Implemented:
 - local/testing developer flow;
 - production-oriented processing pipeline;
 - content media placements;
-- annotation attachments.
+- annotation attachments;
+- optional Context provenance for Content Assets;
+- Profile Assets remain outside Content Contexts;
+- generic Context asset streaming/download authorization.
 
 ### Presentation
 
@@ -271,7 +301,7 @@ Safe presentation tokens include:
 - media style
 - per-field safe styles
 
-Space-scoped saved Render Templates and favorites exist.
+Context-scoped saved Render Templates and favorites exist; existing GroupSpace templates retain compatibility provenance.
 
 ### Outline / composition relationships
 
@@ -295,6 +325,17 @@ Separate routes and concerns exist for:
 - asset access.
 
 Published readers do not expose ordinary workflow controls.
+
+Phase 5 also adds a focused generic Context Content surface:
+
+- Personal “My Content” entry from the dashboard;
+- Admission workspace entry from the Admission page;
+- Context-local Definition creation/activation;
+- draft creation, revision and publishing;
+- Context Content list/read surface;
+- generic Context asset access.
+
+This first non-Group surface is intentionally simpler than the mature Group Reader/Studio. Productized reusable authoring belongs to Phase 6 Blueprints.
 
 ### Interactions
 
@@ -322,12 +363,12 @@ Current limitations:
 
 - annotations are not a replacement for structured Submissions;
 - no application/exam/questionnaire response engine exists yet;
-- Content is still hard-bound to GroupSpace;
-- Definitions and saved Render Templates are Space-local;
+- legacy `group_space_id` compatibility columns remain intentionally while Context migration proves stable;
+- the generic Personal/Admission authoring surface does not yet expose the full Group Reader/Studio builder experience;
 - Outline currently exposes only contains;
 - nested block storage exists but authoring remains mostly flat;
 - search, taxonomy and semantic classification are not implemented;
-- content audience is primarily inherited from Space;
+- Content audience is inherited from its Context authorization model; finer productized audience semantics remain future work;
 - archive library/recovery UX is incomplete;
 - Reader/chat still need a coherent real-time event/broadcast architecture;
 - reusable Content Blueprints do not exist.
@@ -521,28 +562,35 @@ These are continuous roadmap requirements, not a final afterthought.
 
 Phases 1–4 are closed.
 
-The active implementation milestone is:
+Phase 5 runtime implementation is technically complete and remote-CI green. The remaining active milestone is the **final human Phase 5 acceptance gate**.
 
-> **Phase 5 — Generic Content Context**
+Frozen runtime candidate:
 
-Phase 5 starts from the accepted Phase 4 baseline and removes the architectural requirement that all Content belong to a GroupSpace.
+`34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`
 
-Primary proof targets:
+Before Phase 6 begins, the human owner must:
 
-- existing Group Content remains behaviorally unchanged;
-- a personal private Content context exists without a fake Group;
-- Admission-scoped Content/collaboration can exist for candidate/reviewer before Membership;
-- authorization becomes Context-aware without granting ordinary Group access;
-- no destructive mass rename/migration occurs before compatibility is proven.
+- synchronize the Phase 5 branch locally;
+- apply the two Context migrations to the existing database;
+- pass focused + full local validation;
+- verify existing Group Content still behaves normally;
+- verify Personal Context Content without a fake Group;
+- verify Admission candidate/reviewer Content before Membership;
+- verify terminal Admission historical Content is readable but immutable;
+- accept mobile/responsive and Persian/Arabic RTL behavior.
 
-Phase 4's final invariants remain binding downstream:
+Phase 6 — Content Blueprints — remains blocked until that gate passes.
+
+Binding downstream invariants:
 
 - Actor is participant identity;
-- Profile is mutable participant description;
-- Concept is semantic identity;
-- Profile intent ≠ Planner occurrence;
-- Profile Need/Offer ≠ Match;
-- selective Profile disclosure ≠ Context authorization;
-- current mutable Profile state ≠ immutable Contract evidence.
+- Context is bounded collaboration/artifact environment;
+- Group Membership is not universal Context authorization;
+- Profile disclosure is not Context authorization;
+- Admission Context access does not imply Group access;
+- mutable Content drafts remain distinct from sealed publication evidence;
+- Content Blueprint productization belongs to Phase 6;
+- Submission/Response/Evaluation belongs to Phase 7;
+- full Admission v2 requirements/Conversation belongs to Phase 8.
 
-See `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md` before implementation.
+See `docs/PHASE_05_GENERIC_CONTENT_CONTEXT.md`, `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md`.
