@@ -14,6 +14,7 @@ use App\Actions\Interactions\UpdateEvaluation;
 use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\Evaluation;
+use App\Models\Group;
 use App\Models\InteractionDefinition;
 use App\Models\InteractionDefinitionVersion;
 use App\Models\Submission;
@@ -159,7 +160,7 @@ class EvaluationKernelTest extends TestCase
         $this->assertFalse(Gate::forUser($outsider->user)->allows('evaluate', $submission));
     }
 
-    /** @return array{Actor, Actor, \App\Models\Group, Admission, Submission} */
+    /** @return array{Actor, Actor, Group, Admission, Submission} */
     private function submittedAdmission(): array
     {
         [$reviewer, $candidate, $group, $admission] = $this->admissionFixture();
@@ -169,7 +170,7 @@ class EvaluationKernelTest extends TestCase
         return [$reviewer, $candidate, $group, $admission, $this->submit($version, $candidate)];
     }
 
-    /** @return array{Actor, Actor, \App\Models\Group, Admission} */
+    /** @return array{Actor, Actor, Group, Admission} */
     private function admissionFixture(): array
     {
         $reviewer = Actor::factory()->create();
