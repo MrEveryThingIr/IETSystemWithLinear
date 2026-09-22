@@ -59,6 +59,17 @@ class LocalizationTest extends TestCase
             ->assertSee('تسجيل الدخول');
     }
 
+    public function test_locale_switch_rejects_external_return_targets(): void
+    {
+        $this->from(route('login'))
+            ->post(route('locale.update'), [
+                'locale' => 'ar',
+                'return_to' => 'https://example.test/steal',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('locale', 'ar');
+    }
+
     public function test_authenticated_locale_preference_is_persisted_and_overrides_the_session(): void
     {
         $user = User::factory()->create(['locale' => 'en']);

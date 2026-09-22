@@ -9,6 +9,7 @@
             <form method="POST" action="{{ route('locale.update') }}">
                 @csrf
                 <input type="hidden" name="locale" value="{{ $code }}">
+                <input type="hidden" name="return_to" value="{{ request()->getRequestUri() }}">
                 <flux:menu.item type="submit" :icon="$code === app()->getLocale() ? 'check' : null">
                     <span lang="{{ str_replace('_', '-', $code) }}" dir="{{ $locale['direction'] }}">{{ $locale['native_name'] }}</span>
                 </flux:menu.item>

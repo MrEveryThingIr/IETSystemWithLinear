@@ -13,6 +13,7 @@ class LocaleController extends Controller
     {
         $data = $request->validate([
             'locale' => ['required', 'string', Rule::in(Localization::codes())],
+            'return_to' => ['nullable', 'string', 'max:4096'],
         ]);
         $locale = $data['locale'];
 
@@ -23,6 +24,22 @@ class LocaleController extends Controller
             $request->user()->save();
         }
 
-        return back();
+        $returnTo = $this->safeReturnPath($data['return_to'] ?? null);
+
+        return $returnTo !== null ? redirect($returnTo) : back();
+    }
+
+    private function safeReturnPath(?string $returnTo): ?string
+    {
+        if ($returnTo === null
+            || ! str_starts_with($returnTo, '/')
+            || str_starts_with($returnTo, '//')
+            || str_contains($returnTo, '\\')
+            || str_contains($returnTo, "\r")
+            || str_contains($returnTo, "\n")) {
+            return null;
+        }
+
+        return $returnTo;
     }
 }

@@ -47,6 +47,27 @@ class InvitationJourneyTest extends TestCase
             ->assertSee('p•••••••••••••@example.com');
     }
 
+    public function test_invitation_locale_switch_returns_to_the_token_page_even_after_avatar_request(): void
+    {
+        $this->withoutVite();
+        [$owner, $invitation] = $this->invitation();
+        $returnPath = '/invitations/'.$invitation->token;
+
+        $this->get(route('invitations.show', $invitation->token))
+            ->assertOk()
+            ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertSee('name="return_to" value="'.$returnPath.'"', false);
+
+        $this->get(route('actors.avatar', $owner))->assertOk();
+
+        $this->post(route('locale.update'), [
+            'locale' => 'fa',
+            'return_to' => $returnPath,
+        ])
+            ->assertRedirect($returnPath)
+            ->assertSessionHas('locale', 'fa');
+    }
+
     public function test_invitation_page_has_distinct_token_scoped_login_and_registration_paths(): void
     {
         $this->withoutVite();
