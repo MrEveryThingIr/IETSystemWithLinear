@@ -10,7 +10,7 @@
         </div>
 
         <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-            <flux:button wire:click="openEditor" size="sm" variant="ghost" class="w-full sm:w-auto">
+            <flux:button wire:click="openEditor" size="sm" variant="ghost" icon="plus" class="w-full sm:w-auto">
                 {{ __('ui.common.edit') }}
             </flux:button>
 
