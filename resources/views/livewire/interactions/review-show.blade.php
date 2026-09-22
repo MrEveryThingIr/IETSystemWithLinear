@@ -69,7 +69,7 @@
             @else
                 <flux:callout>{{ __('structured_interactions.evaluation_not_available') }}</flux:callout>
             @endif
-        @elseif ($evaluation->status === AppModelsEvaluation::STATUS_FINALIZED)
+        @elseif ($evaluation->status === \App\Models\Evaluation::STATUS_FINALIZED)
             <flux:callout variant="success">{{ __('structured_interactions.evaluation_finalized') }}</flux:callout>
             @if ($evaluation->score !== null)
                 <div class="text-sm">{{ __('structured_interactions.score') }}: <strong>{{ $evaluation->score }}</strong></div>
