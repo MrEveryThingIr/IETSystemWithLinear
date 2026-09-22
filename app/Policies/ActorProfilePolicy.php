@@ -31,6 +31,10 @@ class ActorProfilePolicy
     {
         $profile->loadMissing('actor');
 
+        if ($profile->actor->status !== 'active') {
+            return false;
+        }
+
         if ($profile->visibility === ProfileVisibility::Public) {
             return true;
         }
