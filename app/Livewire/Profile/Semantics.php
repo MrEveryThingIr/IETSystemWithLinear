@@ -4,6 +4,7 @@ namespace App\Livewire\Profile;
 
 use App\Actions\Profile\AddProfileConceptAssertion;
 use App\Actions\Profile\RemoveProfileConceptAssertion;
+use App\Actions\Profile\UpdateProfileConceptAssertionProficiency;
 use App\Actions\Profile\UpdateProfileConceptAssertionVisibility;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
@@ -12,6 +13,7 @@ use App\Models\ActorProfile;
 use App\Models\ConceptAssertion;
 use App\Models\ConceptLabel;
 use App\Models\User;
+use App\Support\Profile\ProfileScale;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -30,6 +32,12 @@ class Semantics extends Component
 
     public string $semanticVisibility = ConceptAssertionVisibility::Inherited->value;
 
+    public ?string $proficiencyPercent = null;
+
+    public ?int $editingProficiencyAssertionId = null;
+
+    public ?string $editingProficiencyPercent = null;
+
     public bool $composerOpen = false;
 
     public function openComposer(): void
@@ -37,15 +45,23 @@ class Semantics extends Component
         $this->reset(['conceptLabel']);
         $this->predicate = ConceptAssertionPredicate::HasSkill->value;
         $this->semanticVisibility = ConceptAssertionVisibility::Inherited->value;
+        $this->proficiencyPercent = null;
         $this->resetValidation();
         $this->composerOpen = true;
     }
 
     public function cancelComposer(): void
     {
-        $this->reset(['conceptLabel']);
+        $this->reset(['conceptLabel', 'proficiencyPercent']);
         $this->resetValidation();
         $this->composerOpen = false;
+    }
+
+    public function updatedPredicate(string $predicate): void
+    {
+        if ($predicate !== ConceptAssertionPredicate::HasSkill->value) {
+            $this->proficiencyPercent = null;
+        }
     }
 
     public function selectConceptSuggestion(string $label): void
@@ -75,6 +91,7 @@ class Semantics extends Component
                     ConceptAssertionVisibility::Private->value,
                 ]),
             ],
+            'proficiencyPercent' => ['nullable', 'integer', 'between:0,100'],
         ]);
 
         $addAssertion->execute(
@@ -83,11 +100,55 @@ class Semantics extends Component
             $data['conceptLabel'],
             ConceptAssertionPredicate::from($data['predicate']),
             ConceptAssertionVisibility::from($data['semanticVisibility']),
+            ($data['proficiencyPercent'] ?? null) === null || $data['proficiencyPercent'] === ''
+                ? null
+                : (int) $data['proficiencyPercent'],
         );
 
-        $this->reset('conceptLabel');
+        $this->reset(['conceptLabel', 'proficiencyPercent']);
         $this->composerOpen = false;
         session()->flash('status', __('ui.profile.semantic_added'));
+    }
+
+    public function openProficiencyEditor(int $assertionId): void
+    {
+        $assertion = $this->assertions()->findOrFail($assertionId);
+        abort_unless($assertion->predicate === ConceptAssertionPredicate::HasSkill, 404);
+
+        $this->editingProficiencyAssertionId = $assertion->id;
+        $percent = ProfileScale::percentFromWeight($assertion->weight);
+        $this->editingProficiencyPercent = $percent === null ? null : (string) $percent;
+        $this->resetValidation('editingProficiencyPercent');
+    }
+
+    public function cancelProficiencyEditor(): void
+    {
+        $this->editingProficiencyAssertionId = null;
+        $this->editingProficiencyPercent = null;
+        $this->resetValidation('editingProficiencyPercent');
+    }
+
+    public function saveProficiency(UpdateProfileConceptAssertionProficiency $updateProficiency): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+        abort_unless($this->editingProficiencyAssertionId !== null, 422);
+
+        $data = $this->validate([
+            'editingProficiencyPercent' => ['nullable', 'integer', 'between:0,100'],
+        ]);
+
+        $assertion = $this->assertions()->findOrFail($this->editingProficiencyAssertionId);
+        $value = $data['editingProficiencyPercent'] ?? null;
+
+        $updateProficiency->execute(
+            $user,
+            $this->profile,
+            $assertion,
+            $value === null || $value === '' ? null : (int) $value,
+        );
+
+        $this->cancelProficiencyEditor();
     }
 
     public function setVisibility(
