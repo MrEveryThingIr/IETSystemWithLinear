@@ -4,6 +4,28 @@
 
 Phase 5 is active on `feat/phase-05-content-context`.
 
+### 5A — Context identity and authorization foundation — complete / remote-CI green
+
+Accepted 5A runtime checkpoint:
+
+`5dedada9796e8758760de209aea885c90e562340`
+
+GitHub Actions run `35720951117`:
+
+- PHPUnit: **338 passed / 1763 assertions**;
+- PHPStan: **no errors**;
+- Pint: **188 files passed**;
+- Vite production build: passed;
+- Context migration + scheduler + database queue smoke: passed;
+- SQLite backup → restore smoke: passed;
+- Composer security audit: clean.
+
+5A introduced first-class Context UUID identity, explicit Personal/GroupSpace/Admission bindings, idempotent provisioning Actions, GroupSpace backfill, ContextPolicy authorization, and normal GroupSpace provisioning integration.
+
+A final audit caught an important maintenance-path defect: repository seeders may disable Eloquent events, so Context UUID identity cannot rely only on a model `creating` hook. Provisioning Actions now generate UUIDs explicitly, and regression coverage proves provisioning works inside `Model::withoutEvents(...)`.
+
+
+
 Starting baseline: `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
 
 No runtime Phase 5 changes had been made when this report was initialized.
@@ -44,7 +66,7 @@ The Context migration must preserve existing evidence byte-for-byte/semantically
 
 ## Initial implementation order
 
-1. Context identity/bindings + policy;
+1. Context identity/bindings + policy — **complete (5A)**;
 2. GroupSpace Context backfill and proof;
 3. Content/Definition/template/Asset context compatibility migration;
 4. generic Context Content seam;
