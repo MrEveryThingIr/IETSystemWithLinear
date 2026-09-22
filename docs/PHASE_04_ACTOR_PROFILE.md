@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 4 runtime is complete and remote-validated; final owner-local/browser acceptance is pending.**
+**Phase 4 is formally complete and human-owner accepted.**
 
 Final runtime baseline before this documentation-only closure:
 
@@ -19,7 +19,21 @@ GitHub Actions run `35700986122` is green on that exact commit:
 - npm high-severity audit: passed;
 - Composer security audit: clean.
 
-The remote runtime and documentation closure are green. Phase 5 must not begin until the human owner synchronizes this final branch locally, applies migrations, runs the local validation gate, and accepts the final browser/mobile/RTL behavior.
+The final owner-local/browser gate passed on 2026-09-22.
+
+Owner-local proof on synchronized HEAD `ec1961b`:
+
+- migration `2026_09_22_080000_add_importance_percent_to_actor_profile_intents`: applied successfully;
+- focused final Phase 4 suite: **45 passed / 237 assertions**;
+- full PHPUnit: **331 passed / 1719 assertions**;
+- PHPStan: **no errors**;
+- Pint dirty-file gate: passed;
+- Vite production build: passed;
+- `git diff --check`: clean;
+- working tree: clean;
+- browser/mobile/RTL/product review: accepted by the human owner.
+
+Phase 5 may now begin from this accepted baseline.
 
 Accepted Phase 3 closure baseline: `b2e5dc0a8b7cfd33ff9dbcb6af4c6f6027c7948c`.
 
@@ -276,7 +290,7 @@ Final hardening also proves that 4B-generated coarse Actor `needs` / `offers` su
 
 ### 4C — sharing, completeness and Phase 4 closure
 
-**Status: implementation complete and remote-validated; final owner-local/browser acceptance pending.**
+**Status: complete and accepted.**
 
 4C turns Profile into a safe upstream source for later Context, Admission, Planner, Matching and negotiated-Agreement work without pulling those later domains into Profile.
 
@@ -413,7 +427,7 @@ The Phase 4 runtime is frozen at this hardened candidate unless the refreshed ow
 
 #### Final owner-local/browser gate
 
-**Final owner-local/browser gate pending.**
+**Final owner-local/browser gate passed.**
 
 The final review confirmed the Profile remains an upstream, privacy-aware participant description layer rather than absorbing Context, Planner, Matching or Contract responsibilities.
 
@@ -435,6 +449,19 @@ The final review confirmed the Profile remains an upstream, privacy-aware partic
 - selected skill proficiency and intent importance travel with the corresponding item through ordinary/public rendering and selective disclosure only when that item is otherwise visible/selected;
 - English, Persian, Arabic and Simplified Chinese UI strings cover the new scales;
 - migration `2026_09_22_080000_add_importance_percent_to_actor_profile_intents.php` adds the nullable bounded intent importance field without disturbing existing declarations.
+
+
+### Deferred Profile refinement opportunities
+
+Phase 4 is intentionally closed without pretending the Profile semantics are permanently finished.
+
+Known refinement opportunity:
+
+- skills currently support an optional 0–100 self-rated proficiency;
+- interests and learning goals do not yet have equivalent measurement dimensions;
+- a future refinement may introduce better typed dimensions such as interest intensity, learning priority, confidence, desired proficiency, evidence/verification, or context-specific scoring.
+
+This is **not a Phase 4 blocker**. Those dimensions should be designed only when later Context, Planner, Matching, Submission/Evaluation or Agreement layers provide clearer semantics and real integration requirements. Avoid prematurely forcing every predicate into one generic percentage merely for symmetry.
 
 ## 4A security/privacy decisions
 
@@ -482,7 +509,7 @@ The final review confirmed the Profile remains an upstream, privacy-aware partic
 
 ## Phase 4 exit gate
 
-**Pending final human acceptance.**
+**Passed. Phase 4 is formally closed.**
 
 The accepted baseline preserves the key seams required by later phases:
 
@@ -494,7 +521,7 @@ The accepted baseline preserves the key seams required by later phases:
 - Concept remains semantic identity;
 - Actor remains participant identity.
 
-After the owner-local/browser gate passes, Phase 4 may be formally closed and Phase 5 — Generic Content Context — becomes the next implementation milestone.
+Phase 5 — Generic Content Context — is the next implementation milestone.
 
 
 ## Final 4B/4B.1 owner-local closure evidence
