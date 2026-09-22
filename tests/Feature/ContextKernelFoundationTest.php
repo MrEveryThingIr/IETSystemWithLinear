@@ -20,6 +20,16 @@ class ContextKernelFoundationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_context_generates_uuid_when_created_without_one(): void
+    {
+        $context = Context::query()->create([
+            'kind' => ContextKind::Personal,
+        ]);
+
+        $this->assertNotNull($context->uuid);
+        $this->assertSame(36, strlen($context->uuid));
+    }
+
     public function test_group_creation_provisions_one_group_space_context_and_ensure_is_idempotent(): void
     {
         $owner = Actor::factory()->create();
