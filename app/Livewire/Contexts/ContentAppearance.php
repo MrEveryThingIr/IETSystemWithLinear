@@ -13,7 +13,6 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentPresentation;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -133,7 +132,7 @@ class ContentAppearance extends Component
 
     private function currentBaseKey(): string
     {
-        if (!str_starts_with($this->templateSource, 'custom:')) {
+        if (! str_starts_with($this->templateSource, 'custom:')) {
             return 'article';
         }
 
