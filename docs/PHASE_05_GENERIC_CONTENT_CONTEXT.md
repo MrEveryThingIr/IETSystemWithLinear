@@ -2,7 +2,25 @@
 
 ## Status
 
-**Active** on `feat/phase-05-content-context`.
+**Runtime implementation is technically complete and remote-CI green; final owner-local/browser acceptance is pending.**
+
+Final runtime candidate:
+
+`34bd6b8957e4ecc2b0474bc0b7d163ae010dc749`
+
+GitHub Actions run `35725999556` is green on that exact commit:
+
+- PHPUnit: **344 passed / 1807 assertions**;
+- PHPStan: **no errors**;
+- Pint: **216 files passed**;
+- Vite production build: passed;
+- fresh migrations: passed;
+- migration / scheduler / database-queue smoke: passed;
+- SQLite backup → restore smoke: passed;
+- npm high-severity audit: passed;
+- Composer security audit: clean.
+
+Phase 6 remains blocked until the human owner synchronizes this branch locally, applies the migrations, runs the local validation gate, and accepts the browser/mobile/RTL behavior.
 
 Starting baseline:
 
@@ -227,7 +245,7 @@ Group navigation may continue to present Content through GroupSpace tabs. Person
 
 ## Phase milestones
 
-### 5A — Context identity and authorization foundation
+### 5A — Context identity and authorization foundation — **complete**
 
 Deliver:
 
@@ -240,7 +258,7 @@ Deliver:
 
 No Content foreign keys move until this foundation is proven.
 
-### 5B — Context-bind the Content substrate
+### 5B — Context-bind the Content substrate — **complete**
 
 Deliver:
 
@@ -251,7 +269,7 @@ Deliver:
 - all existing Group Content tests remain green;
 - publication evidence remains verifiable.
 
-### 5C — Personal and Admission Content proof
+### 5C — Personal and Admission Content proof — **complete**
 
 Deliver:
 
@@ -263,7 +281,7 @@ Deliver:
 - terminal Admission mutation denied;
 - Content Assets/annotations honor Context authorization where used by proof flows.
 
-### 5D — closure and migration proof
+### 5D — closure and migration proof — **remote automated proof complete; human acceptance pending**
 
 Deliver:
 
@@ -322,6 +340,31 @@ For an active Admission whose candidate has no Group Membership:
 - rollback must not destroy existing Group Content data;
 - if a non-Group Context has been populated, rollback limitations must be explicit rather than fabricating a GroupSpace to preserve shape.
 
+## Final implementation notes
+
+The completed runtime now provides:
+
+- first-class Context UUID identity with explicit Personal, GroupSpace and Admission bindings;
+- idempotent Context provisioning that remains correct even when Eloquent model events are disabled;
+- deterministic GroupSpace Context backfill;
+- canonical `context_id` on Content, Content Definitions, saved Render Templates and Content Assets;
+- retained nullable legacy `group_space_id` compatibility columns for safe migration;
+- same-Context integrity across Definitions, Content, templates, media, annotations and parent/child composition;
+- unchanged historical publication manifest semantics;
+- generic Personal Content with no fake Group;
+- Admission candidate/reviewer Content collaboration before Membership;
+- generic Context asset delivery with policy checks;
+- dashboard entry to Personal Content and Admission-page entry to its Context workspace;
+- terminal Admission Contexts that remain readable historically while denying mutation/interactions;
+- existing Group Content routes and behavior preserved.
+
+A final eagle-eye audit caught two subtle authorization/read-model defects before closure:
+
+1. generic Context listings initially risked showing drafts that the viewer could not individually view;
+2. terminal Admission Content correctly became immutable, but the first implementation also hid historical drafts because the page used “can update” as a proxy for “can view revisions.”
+
+Both are fixed and regression-tested.
+
 ## Exit gate
 
 Phase 5 closes only when:
@@ -336,4 +379,6 @@ Phase 5 closes only when:
 8. focused/full automated gates are green;
 9. browser/mobile/RTL behavior is accepted by the human owner.
 
-After that gate, Phase 6 — Content Blueprints — may begin.
+Automated conditions 1–8 are satisfied on the frozen runtime candidate above. Condition 9 — final owner-local/browser/mobile/RTL acceptance — remains pending.
+
+After that human gate passes, Phase 5 may be formally closed and Phase 6 — Content Blueprints — may begin.
