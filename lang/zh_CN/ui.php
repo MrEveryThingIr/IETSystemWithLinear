@@ -113,6 +113,7 @@ return [
         'current' => '当前',
         'about' => '关于',
         'unnamed' => '未命名资料',
+        'no_shared_details' => '此个人资料没有向你共享更多信息。',
         'avatar_alt' => ':name 的头像',
         'saved' => '个人资料已保存。',
         'image_uploaded' => '头像已上传。',
