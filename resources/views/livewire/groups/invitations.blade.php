@@ -60,7 +60,7 @@
                             @foreach ($invitation->admissions as $admission)
                                 <a href="{{ route('admissions.show', $admission) }}" class="rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <flux:badge>
-                                        {{ $admission->candidate->user?->username ?? __('ui.common.unknown_account') }} &middot; {{ __('ui.status.'.$admission->status) }}
+                                        <span class="inline-flex flex-wrap items-center gap-2"><x-app.actor-identity :actor="$admission->candidate" size="xs" /><span>&middot; {{ __('ui.status.'.$admission->status) }}</span></span>
                                     </flux:badge>
                                 </a>
                             @endforeach
