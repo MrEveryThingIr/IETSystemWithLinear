@@ -194,6 +194,7 @@ class ActorProfileFoundationTest extends TestCase
         $this->assertSame(0, ActorProfileImage::query()->count());
         $this->assertSame(0, Asset::query()->whereNull('group_space_id')->count());
     }
+
     public function test_profile_image_library_stays_visible_while_upload_form_is_collapsed(): void
     {
         Storage::fake('local');
@@ -289,6 +290,4 @@ class ActorProfileFoundationTest extends TestCase
 
         $this->assertDatabaseHas('actor_profiles', ['actor_id' => $target->id]);
     }
-
-
 }
