@@ -98,13 +98,13 @@ return new class extends Migration
         }
 
         Schema::table('assets', function (Blueprint $table): void {
-            $table->dropForeign('asset_context_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['context_id'] : 'asset_context_fk');
             $table->dropIndex('asset_context_created_ix');
             $table->dropColumn('context_id');
         });
 
         Schema::table('space_content_render_templates', function (Blueprint $table): void {
-            $table->dropForeign('scrt_context_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['context_id'] : 'scrt_context_fk');
             $table->dropUnique('scrt_context_name_uq');
             $table->dropIndex('scrt_context_status_name_ix');
             $table->dropColumn('context_id');
@@ -112,14 +112,14 @@ return new class extends Migration
         });
 
         Schema::table('space_contents', function (Blueprint $table): void {
-            $table->dropForeign('sc_context_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['context_id'] : 'sc_context_fk');
             $table->dropIndex('sc_context_status_ix');
             $table->dropColumn('context_id');
             $table->unsignedBigInteger('group_space_id')->nullable(false)->change();
         });
 
         Schema::table('space_content_definitions', function (Blueprint $table): void {
-            $table->dropForeign('scd_context_fk');
+            $table->dropForeign(DB::connection()->getDriverName() === 'sqlite' ? ['context_id'] : 'scd_context_fk');
             $table->dropUnique('scd_context_slug_uq');
             $table->dropIndex('scd_context_status_ix');
             $table->dropColumn('context_id');
