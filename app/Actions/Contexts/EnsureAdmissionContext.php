@@ -9,6 +9,7 @@ use App\Models\AdmissionContext;
 use App\Models\Context;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Gate;
 
 class EnsureAdmissionContext
@@ -44,6 +45,7 @@ class EnsureAdmissionContext
             }
 
             $context = Context::query()->create([
+                'uuid' => (string) Str::uuid(),
                 'kind' => ContextKind::Admission,
             ]);
 
