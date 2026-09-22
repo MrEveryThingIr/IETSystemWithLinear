@@ -42,6 +42,8 @@ class InteractionExperienceTest extends TestCase
             ->assertOk()
             ->assertSee('Structured interaction')
             ->assertSee('Questionnaire')
+            ->assertSee('Review submissions')
+            ->assertSee(route('contexts.submissions.index', $context), false)
             ->assertSee($interaction->activeVersion->title);
     }
 
