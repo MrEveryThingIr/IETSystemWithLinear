@@ -22,6 +22,7 @@ class NormalizeProfileIntentData
         foreach ([
             'title',
             'description',
+            'importance_percent',
             'quantity',
             'unit',
             'location_text',
@@ -51,6 +52,7 @@ class NormalizeProfileIntentData
         $validator = Validator::make($input, [
             'title' => ['nullable', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:3000'],
+            'importance_percent' => ['nullable', 'integer', 'between:0,100'],
             'quantity' => ['nullable', 'numeric', 'gt:0', 'max:99999999999999'],
             'unit' => ['nullable', 'string', 'max:64'],
             'location_text' => ['nullable', 'string', 'max:255'],
@@ -116,6 +118,9 @@ class NormalizeProfileIntentData
             $data[$key] = $value !== '' ? $value : null;
         }
 
+        $data['importance_percent'] = isset($data['importance_percent'])
+            ? (int) $data['importance_percent']
+            : null;
         $data['quantity'] = isset($data['quantity']) ? (float) $data['quantity'] : null;
         $data['round_trip'] = (bool) $data['round_trip'];
         $data['recurrence_interval'] = (int) $data['recurrence_interval'];
