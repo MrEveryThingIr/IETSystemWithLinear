@@ -17,8 +17,8 @@ class AiAssistanceRunFactory extends Factory
     {
         return [
             'uuid' => (string) Str::uuid(),
-            'context_id' => fn (array $attributes): int => SpaceContent::query()->findOrFail($attributes['space_content_id'])->context_id,
             'space_content_id' => SpaceContent::factory(),
+            'context_id' => fn (array $attributes): int => SpaceContent::query()->findOrFail($attributes['space_content_id'])->context_id,
             'base_revision_id' => function (array $attributes): int {
                 return SpaceContentRevision::factory()->create([
                     'space_content_id' => $attributes['space_content_id'],
