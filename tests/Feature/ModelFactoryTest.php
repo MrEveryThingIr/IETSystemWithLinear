@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\AccessInvitation;
+use App\Models\AccessInvitationAcceptance;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileDisclosureGrant;
@@ -52,6 +54,8 @@ class ModelFactoryTest extends TestCase
     {
         $models = [
             User::factory()->create(),
+            AccessInvitation::factory()->create(),
+            AccessInvitationAcceptance::factory()->create(),
             Actor::factory()->create(),
             ActorProfile::factory()->create(),
             ActorProfileIntent::factory()->create(),
