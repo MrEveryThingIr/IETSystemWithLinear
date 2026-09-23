@@ -112,6 +112,27 @@ return [
     'cancel' => '取消',
     'no_comments' => '还没有批注或讨论。',
     'edition_changed' => '已有更新版本生效。请先查看新版本再继续互动。',
+    'disposition' => [
+        'label' => '反馈状态',
+        'maintainer_actions' => '维护者操作',
+        'recorded' => '反馈状态已记录。',
+        'no_newer_edition' => '请先发布更新的正式版本，再将此反馈标记为已采纳。',
+        'incorporated_revision' => '已采纳到版本 :revision',
+        'status' => [
+            'reviewed' => '已审阅',
+            'accepted' => '已接受',
+            'rejected' => '已拒绝',
+            'incorporated' => '已采纳',
+            'superseded' => '已取代',
+        ],
+        'action' => [
+            'reviewed' => '标记为已审阅',
+            'accepted' => '接受',
+            'rejected' => '拒绝',
+            'incorporated' => '已采纳到当前版本',
+            'superseded' => '标记为已取代',
+        ],
+    ],
     'anchor' => [
         'entire_edition' => '整个版本',
         'revision' => '版本',
