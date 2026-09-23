@@ -15,20 +15,16 @@ class ActorProfileIntentPolicy
     {
         $intent->loadMissing('profile.actor');
 
-        if (! $this->profiles->view($user, $intent->profile)) {
-            return false;
-        }
-
         if ($this->owns($user, $intent)) {
             return true;
         }
 
-        if ($intent->status !== ProfileIntentStatus::Active) {
+        if ($intent->profile->actor->status !== 'active' || $intent->status !== ProfileIntentStatus::Active) {
             return false;
         }
 
         return match ($intent->visibility) {
-            ProfileItemVisibility::Inherited,
+            ProfileItemVisibility::Inherited => $this->profiles->view($user, $intent->profile),
             ProfileItemVisibility::Public => true,
             ProfileItemVisibility::Authenticated => $this->isActiveVerified($user),
             ProfileItemVisibility::Private => false,
