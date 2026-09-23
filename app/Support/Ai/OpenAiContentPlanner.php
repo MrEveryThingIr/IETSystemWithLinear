@@ -51,14 +51,14 @@ class OpenAiContentPlanner
             ->throw()
             ->json();
 
-        if (!is_array($response)) {
+        if (is_array($response) === false) {
             throw new RuntimeException('AI provider returned an invalid response.');
         }
 
         $text = $this->outputText($response);
         $proposal = json_decode($text, true, 512, JSON_THROW_ON_ERROR);
 
-        if (!is_array($proposal)) {
+        if (is_array($proposal) === false) {
             throw new RuntimeException('AI provider did not return a structured Content proposal.');
         }
 
@@ -82,7 +82,7 @@ class OpenAiContentPlanner
     private function outputText(array $response): string
     {
         foreach (($response['output'] ?? []) as $item) {
-            if (!is_array($item)) {
+            if (is_array($item) === false) {
                 continue;
             }
 
