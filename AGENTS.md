@@ -64,29 +64,30 @@ Canonical architecture documents remain authoritative over explanatory System Ma
 
 ## Current technical candidate
 
-The current Phase 7 runtime candidate is:
+The current Phase 7 + Documentation-as-Content runtime candidate is:
 
-`bd45c994535a2045fde7e23c924d103aaa666c25`
+`6e6443051e93d4f0fd653758ba1979a7dc831de1`
 
 on:
 
 `feat/phase-07-submission-evaluation`
 
-GitHub Actions run `35824650618` on that exact runtime candidate is green:
+GitHub Actions run `35848121420` on that exact runtime candidate is green:
 
-- 394 PHPUnit tests / 2092 assertions;
+- **398 PHPUnit tests / 2169 assertions**;
 - PHPStan: no errors;
-- changed-file Pint: 307 files passed;
+- changed-file Pint: **327 files passed**;
 - Vite production build: passed;
-- Phase 7 migrations `200000`, `210000`, `220000` rolled back and reapplied successfully;
-- scheduler/database-queue smoke: passed;
+- Phase 7 rollback/reapply + scheduler/database-queue smoke: passed;
 - SQLite backup → restore smoke: passed;
 - npm audit: 0 vulnerabilities;
 - Composer security audit: clean.
 
-Phases 7A–7E are technically complete. The school-exam and employment-application proof cases, exact historical version preservation, pre-Membership Admission isolation, reusable Asset/evidence flows and Evaluation-without-domain-side-effects are automated and green. Opt-in browser fixture: `database/seeders/Phase7InteractionDemoSeeder.php`; guide: `database/seeders/README-Phase7InteractionDemo.md`; implementation report: `Development-CodexReports/phase-07-submission-evaluation-report.md`.
+Phases 7A–7E remain technically complete. The post-Phase-7 documentation/audit slice is also technically green: authenticated Reference Context, official versioned System Manual Content, Guide/Documentation Blueprint, contextual Help routing, exact-section Question/Correction/Idea feedback, immutable feedback-disposition provenance, and explicit repository-source manual sync are automated.
 
-Do not begin Phase 8 runtime work until Phase 7 is formally closed. Local engineering validation is reported green. The reviewer-discoverability concern has been corrected on `bd45c99` by surfacing a persistent Context Content review link/count with regression coverage; final browser/mobile/RTL owner acceptance of that corrected experience remains open. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 Conversation or realtime infrastructure. Future work must also preserve the canonical connected-life proof in PROJECT_COMPASS: direct Contract → Commitment → Planner/Occurrence → Fulfillment/evidence → obligation → settlement/accounting, with Need/Offer/Matching optional and downstream of direct contracting.
+The docs/audit pass also hardened Content Actions so required UUID/hash/evidence identity is supplied explicitly by authoritative Actions rather than relying only on Eloquent create events. This preserves deterministic behavior even in tests or tooling that fake events.
+
+Do not begin Phase 8 runtime work until the owner completes the local migration/seed/browser acceptance of this candidate. The browser gate now includes both the existing Phase 7 submit/review journey and the System Manual / contextual Help / feedback experience. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 Conversation or realtime infrastructure. Future work must preserve the canonical connected-life proof in PROJECT_COMPASS: direct Contract → Commitment → Planner/Occurrence → Fulfillment/evidence → obligation → settlement/accounting, with Need/Offer/Matching optional and downstream of direct contracting.
 
 ## Architectural stop conditions
 
