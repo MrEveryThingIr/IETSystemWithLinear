@@ -295,21 +295,11 @@ These remain in their accepted downstream phases.
 
 ## Remaining human gate
 
-Automated/runtime exit conditions are satisfied on `35236f7af4ab9168467383b867cd698f2f30755c`.
+The owner has completed the requested local engineering validation successfully.
 
-Before formal Phase 7 closure, the human owner should synchronize this candidate, apply migrations to the existing local database, seed the opt-in Phase 7 demo, run focused/full validation, and accept the browser experience at desktop/phone widths including Persian/Arabic RTL.
+Final browser acceptance is still open. During manual school-exam/employment use, responses could be entered, but reviewer-side consequence/discoverability was not clear enough to the owner. Before Phase 7 closes, determine whether this is:
 
-The browser gate should verify at minimum:
+- an actual reviewer-state/visibility defect; or
+- a discoverability/composition issue in the current standalone Phase 7 UX.
 
-- learner exam start → save → reload/resume → submit;
-- submitted attempt read-only;
-- reviewer queue excludes drafts and includes submitted attempts;
-- reviewer Evaluation can be finalized;
-- employment candidate can upload CV and cite Personal immutable evidence;
-- candidate has Admission Context access but no ordinary GroupSpace access;
-- Evaluation does not change Admission from `under_review` or create Membership;
-- file/evidence links remain authorized;
-- English + Persian/Arabic layout has no blocking overflow/clipped controls;
-- invitation/registration/Admission-resume regression remains intact.
-
-After that human gate passes, Phase 7 may be formally closed and Phase 8 — Admission v2: contextual onboarding / conversation-first Admission — may begin.
+Do not mark the phase human-accepted until that distinction is resolved and the reviewer/candidate consequences are understandable in browser use. The broader product direction is now anchored by the connected paid-work north-star scenario in `docs/PROJECT_COMPASS.md`.
