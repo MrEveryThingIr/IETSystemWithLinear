@@ -7,6 +7,7 @@ use App\Models\ActorProfile;
 use App\Models\ActorProfileDisclosureGrant;
 use App\Models\ActorProfileDisclosureItem;
 use App\Models\ActorProfileIntent;
+use App\Models\AiAssistanceRun;
 use App\Models\Admission;
 use App\Models\AdmissionContext;
 use App\Models\AdmissionEvent;
@@ -55,6 +56,7 @@ class ModelFactoryTest extends TestCase
             ActorProfileIntent::factory()->create(),
             ActorProfileDisclosureGrant::factory()->create(),
             ActorProfileDisclosureItem::factory()->create(),
+            AiAssistanceRun::factory()->create(),
             Context::factory()->create(),
             ContentBlueprint::factory()->create(),
             ContentBlueprintVersion::factory()->create(),
