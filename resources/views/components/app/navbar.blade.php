@@ -1,8 +1,10 @@
 @props(['title'])
 
 @php
-    $manualTopic = app(\App\Support\SystemManualHelpMap::class)
-        ->topicForRoute(request()->route()?->getName());
+    $manualTopic = request()->query('manual') === '1'
+        ? 'feedback'
+        : app(\App\Support\SystemManualHelpMap::class)
+            ->topicForRoute(request()->route()?->getName());
 @endphp
 
 <flux:header class="gap-3 border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
