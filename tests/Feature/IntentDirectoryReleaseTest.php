@@ -28,6 +28,7 @@ class IntentDirectoryReleaseTest extends TestCase
 
         Livewire::actingAs($actor->user)
             ->test(Create::class)
+            ->call('chooseJourney', 'buy')
             ->set('kind', ProfileIntentKind::Need->value)
             ->set('subjectKind', ProfileIntentSubjectKind::Property->value)
             ->set('conceptLabel', 'Family house')
