@@ -112,6 +112,7 @@ class SystemManualContentTest extends TestCase
             'status' => ContentBlueprint::STATUS_ACTIVE,
         ]);
     }
+
     public function test_feedback_can_be_accepted_and_linked_to_the_later_official_revision_that_incorporated_it(): void
     {
         $manager = Actor::factory()->create();
@@ -179,5 +180,4 @@ class SystemManualContentTest extends TestCase
             $idea->fresh()->latestDisposition()->firstOrFail()->status,
         );
     }
-
 }
