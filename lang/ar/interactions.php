@@ -112,6 +112,27 @@ return [
     'cancel' => 'إلغاء',
     'no_comments' => 'لا توجد ملاحظات أو مناقشات بعد.',
     'edition_changed' => 'أصبحت هناك نسخة أحدث نشطة. راجعها قبل التفاعل مرة أخرى.',
+    'disposition' => [
+        'label' => 'حالة الملاحظة',
+        'maintainer_actions' => 'إدارة الملاحظة',
+        'recorded' => 'تم تسجيل حالة الملاحظة.',
+        'no_newer_edition' => 'انشر نسخة رسمية أحدث قبل اعتبار هذه الملاحظة مدمجة.',
+        'incorporated_revision' => 'مدمجة في النسخة :revision',
+        'status' => [
+            'reviewed' => 'تمت المراجعة',
+            'accepted' => 'مقبولة',
+            'rejected' => 'مرفوضة',
+            'incorporated' => 'مدمجة',
+            'superseded' => 'مستبدلة',
+        ],
+        'action' => [
+            'reviewed' => 'وضع علامة تمت المراجعة',
+            'accepted' => 'قبول',
+            'rejected' => 'رفض',
+            'incorporated' => 'مدمجة في النسخة الحالية',
+            'superseded' => 'وضع علامة مستبدلة',
+        ],
+    ],
     'anchor' => [
         'entire_edition' => 'النسخة كاملة',
         'revision' => 'النسخة',
