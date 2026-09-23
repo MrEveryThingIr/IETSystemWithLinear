@@ -21,9 +21,13 @@ class SpaceContentAnnotationDisposition extends Model
     public const UPDATED_AT = null;
 
     public const STATUS_REVIEWED = 'reviewed';
+
     public const STATUS_ACCEPTED = 'accepted';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_INCORPORATED = 'incorporated';
+
     public const STATUS_SUPERSEDED = 'superseded';
 
     /** @var list<string> */
@@ -44,7 +48,7 @@ class SpaceContentAnnotationDisposition extends Model
                 : null;
             $disposition->note = $disposition->note === '' ? null : $disposition->note;
 
-            if (! in_array($disposition->status, self::STATUSES, true)) {
+            if (!in_array($disposition->status, self::STATUSES, true)) {
                 throw new LogicException('Unknown Content annotation disposition.');
             }
 
