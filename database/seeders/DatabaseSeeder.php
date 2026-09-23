@@ -32,5 +32,7 @@ class DatabaseSeeder extends Seeder
                 'reason' => 'Local development bootstrap superadmin.',
             ]);
         }
+
+        $this->call(SystemManualSeeder::class);
     }
 }
