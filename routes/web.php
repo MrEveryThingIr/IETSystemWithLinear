@@ -14,6 +14,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\SpaceContentAssetController;
 use App\Http\Controllers\SubmissionAssetController;
+use App\Http\Controllers\SystemManualController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -72,6 +73,7 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
+    Route::get('/manual', SystemManualController::class)->name('manual');
     Route::get('/admissions/{admission}/content', AdmissionContextContentController::class)->name('admissions.context.contents');
     Route::livewire('/contexts/{context}/contents', ContextContentIndex::class)->can('view', 'context')->name('contexts.contents.index');
     Route::get('/contexts/{context}/contents/{content}/assets/{asset}', [SpaceContentAssetController::class, 'showContext'])
