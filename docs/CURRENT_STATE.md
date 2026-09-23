@@ -89,16 +89,19 @@ Implemented:
   - Personal;
   - GroupSpace;
   - Admission;
+  - Reference;
 - explicit relational subtype bindings rather than polymorphic owner columns;
 - one Personal Context per Actor;
 - one GroupSpace Context per GroupSpace;
 - one Admission Context per Admission;
+- keyed managed Reference Contexts for shared maintained knowledge such as the official System Manual;
 - idempotent provisioning Actions;
 - deterministic existing GroupSpace backfill;
 - Context authorization for viewing, creating/interacting with Content, Content management, Definition management and historical review;
 - Personal Context restricted to its active verified Actor;
 - GroupSpace Context delegating to existing GroupSpace authorization;
 - Admission Context allowing candidate/reviewer collaboration before Membership without granting ordinary GroupSpace authority;
+- Reference Context allowing active verified users to read/interact while its designated manager alone authors/manages the official material;
 - terminal Admission Contexts preserve historical read access while denying mutation/interactions.
 
 Context is a bounded collaboration/artifact environment. It is not Group Membership, Profile disclosure, Workflow, Planner, Match or Contract authority.
@@ -109,10 +112,10 @@ Phase 6 converges the previously mature Group Content engine and the simpler gen
 
 Implemented:
 
-- one Content substrate for Personal, GroupSpace and Admission Contexts;
+- one Content substrate for Personal, GroupSpace, Admission and Reference Contexts;
 - immutable Content revisions and sealed publication evidence remain authoritative;
 - versioned `ContentBlueprint` + immutable `ContentBlueprintVersion`;
-- built-in Blueprint catalog for diary/note, post, article, activity/report, evidence/work-sample, media album, book/booklet, lesson, workbook page and questionnaire shell;
+- built-in Blueprint catalog for diary/note, post, article, activity/report, evidence/work-sample, media album, book/booklet, lesson, workbook page, questionnaire shell and Guide/Documentation;
 - Context-compatible Blueprint catalog/search;
 - Blueprint clone provenance;
 - no silent Blueprint upgrades;
@@ -136,7 +139,27 @@ Evidence/reputation boundary:
 - evidence references are not verification, endorsement, Contract acceptance or reputation by themselves;
 - later verification/reputation logic must evaluate evidence through explicit rubrics/policies instead of hard-coding artifact counts into Content.
 
-Current deliberate boundary: Questionnaire Blueprint authors the questionnaire artifact only. Structured respondent Submission/Response/Evaluation is Phase 7.
+Questionnaire remains the human-facing authored artifact; the now-implemented Phase 7 InteractionDefinition/Submission/Response/Evaluation kernel owns structured respondent attempts and review evidence.
+
+### System Manual / contextual Help
+
+Implemented on the Phase 7 branch as a cross-cutting delivery capability:
+
+- official English `IET System Manual` is normal Content rather than a parallel docs application;
+- Book/Booklet root with independently revisioned Guide/Documentation child pages;
+- current manual coverage includes system mental model, User/Actor identity, Groups/roles, Contexts, Content/Blueprints, Reader/annotations, publishing/evidence, Invitation/Admission, Submission/Evaluation, roadmap target, feedback workflow, Profile/Concepts/Need/Offer semantics and Group Agreements;
+- every guide page separates current implemented behavior, efficient usage, authorization, ideal target behavior and common misunderstandings;
+- `/manual` is linked from primary navigation;
+- global Help/feedback maps the current route to the most relevant manual topic and deep-links to the usage section;
+- active verified users can read and annotate the Reference Context without fake Group membership;
+- only the Reference Context manager may author/manage official editions;
+- user questions/corrections/ideas remain bound to the exact historical edition/section;
+- maintainers can record immutable reviewed/accepted/rejected/superseded/incorporated dispositions;
+- incorporated feedback is linked to the exact later sealed official revision;
+- normal seed/bootstrap preserves authorized maintainer edits; explicit source sync is required to publish repository-source changes.
+
+Translation boundary: English is currently the canonical manual content. Persian is next and must use a separately reviewable translation lifecycle; Arabic and Simplified Chinese follow. Localized navigation/feedback controls already exist, but generated translation must not be presented as native-reviewed documentation.
+
 
 ## Group governance kernel
 
@@ -391,7 +414,7 @@ Implemented:
 
 - reactions;
 - annotations;
-- private and Space visibility;
+- private and Context-audience visibility;
 - annotation kinds:
   - comment
   - note
@@ -405,21 +428,22 @@ Implemented:
 - composite/multi-target annotations;
 - persistent authorized markers;
 - focused contextual annotation UI;
-- annotation attachments and voice/file flows.
+- annotation attachments and voice/file flows;
+- immutable feedback-disposition history for reviewed / accepted / rejected / superseded / incorporated states;
+- incorporated feedback must reference a later sealed revision of the same Content, preserving proposal → official-revision provenance;
+- Reference Content opens in clean-reading mode with annotation markers hidden by default while the discussion/overlay layer remains available.
 
 Current limitations:
 
-- annotations are not a replacement for structured Submissions;
-- no application/exam/questionnaire response engine exists yet;
+- annotations remain collaboration and are not a replacement for structured Submissions or authoritative domain Actions;
+- feedback disposition does not yet provide a full maintainer triage queue, release-note linkage or official/support identity distinction;
 - legacy `group_space_id` compatibility columns remain intentionally while Context migration proves stable;
-- the generic Personal/Admission authoring surface does not yet expose the full Group Reader/Studio builder experience;
 - Outline currently exposes only contains;
 - nested block storage exists but authoring remains mostly flat;
-- search, taxonomy and semantic classification are not implemented;
+- search/taxonomy/discovery UX is incomplete;
 - Content audience is inherited from its Context authorization model; finer productized audience semantics remain future work;
 - archive library/recovery UX is incomplete;
-- Reader/chat still need a coherent real-time event/broadcast architecture;
-- reusable Content Blueprints do not exist.
+- Reader/chat still need the Phase 9 real-time event/broadcast architecture.
 
 ## English workbook demonstration
 
@@ -436,7 +460,7 @@ An opt-in local/testing fixture exists:
 
 It proves that one Content kernel can represent book/course, lesson, and independently revisioned page material with styling, Outline and annotations.
 
-The default `DatabaseSeeder` remains minimal and currently bootstraps only the local test User/Actor and active Superadmin access.
+The default local/testing `DatabaseSeeder` now also materializes the official English IET System Manual as normal sealed Content in the shared authenticated Reference Context. Bootstrap is non-destructive to later maintainer edits; repository-source updates are applied intentionally with `php artisan system-manual:sync <owner-email>`, which creates/publishes newer Content revisions.
 
 Known fixture debt:
 
