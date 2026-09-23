@@ -183,6 +183,10 @@ Repository Markdown remains appropriate for developer/architecture authority and
 
 A production-wide official manual must use normal Context/access rules. Do not create a documentation-only authorization bypass.
 
+Documentation is multilingual content. English is the initial canonical editorial source; Persian is the next supported presentation language, followed by Arabic and Simplified Chinese. Machine/AI translation may create a draft, but a translation must carry its own review state and must not be presented as native-quality/verified merely because it was generated.
+
+User feedback remains attached to the exact edition/section where it was made. If an authorized maintainer incorporates a correction or idea, the later official revision should record provenance back to the originating annotation(s); a later product release may additionally reference those incorporated contributions.
+
 ## Content as contextual work surface
 
 Content should be the place where a human understands an artifact and discovers the actions that make sense around it.
