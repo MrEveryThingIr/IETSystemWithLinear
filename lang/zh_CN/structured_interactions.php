@@ -45,6 +45,7 @@ return [
     'evidence_invalid' => '证据引用不是有效的 UUID 或链接。',
     'open_evidence' => '打开精确证据',
     'review_submissions' => '审核提交',
+    'review_submissions_with_count' => '审核提交（:count 个已提交）',
     'review_queue_help' => '审核此上下文中的已提交尝试。草稿仅对提交者可见。',
     'back_to_context' => '返回上下文',
     'review' => '审核',
