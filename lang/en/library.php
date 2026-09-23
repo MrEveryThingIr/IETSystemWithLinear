@@ -1,0 +1,39 @@
+<?php
+
+return [
+    'title' => 'Content Library',
+    'help' => 'Browse published Content you are authorized to read, then reuse the same artifact in other Contexts without copying it.',
+    'open' => 'Open',
+    'none' => 'No published Content matches these filters',
+    'none_help' => 'Change the filters or publish Content in a Context you can access.',
+    'presented_in' => 'Presented in',
+    'remove' => 'Remove presentation',
+    'placed' => 'Content is now presented in the selected Context.',
+    'removed' => 'The Content presentation was removed.',
+    'boundary' => 'The Library never exposes drafts. A presentation reuses the same Content identity and follows its current published edition; exact Evidence References still pin one immutable edition.',
+    'filters' => [
+        'search' => 'Search published Content',
+        'search_placeholder' => 'Title, Blueprint, category…',
+        'type' => 'Content type / Blueprint',
+        'all_types' => 'All types',
+        'concept' => 'Concept / topic',
+        'concept_placeholder' => 'Example: Laravel, housing, safety…',
+        'clear' => 'Clear filters',
+    ],
+    'place' => [
+        'title' => 'Present this Content in another Context',
+        'help' => 'Choose where “:title” should be presented.',
+        'target' => 'Target Context',
+        'choose_target' => 'Choose a Context you manage',
+        'action' => 'Present Content',
+        'short' => 'Present elsewhere',
+        'boundary' => 'Presentation grants read access to the published artifact through the target Context. It does not move ownership, grant Studio access, or copy the Content. Only someone who can also read the home Context may create a new presentation, preventing transitive re-sharing.',
+    ],
+    'context' => [
+        'personal' => 'Personal workspace',
+        'group_space' => 'Group Space',
+        'admission' => 'Admission · :group',
+        'reference' => 'Reference · :key',
+        'unknown' => 'Context',
+    ],
+];
