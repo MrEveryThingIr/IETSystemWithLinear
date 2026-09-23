@@ -27,6 +27,6 @@ class SystemManualController extends Controller
             ->orderBy('id')
             ->firstOrFail();
 
-        return redirect()->route('contexts.contents.show', [$binding->context, $root]);
+        return redirect()->route('contexts.contents.show', [$binding->context, $root, 'manual' => 1]);
     }
 }
