@@ -267,7 +267,7 @@
                                         $fieldMarkers = $fieldMarkerUuids[$fieldKey] ?? [];
                                     @endphp
                                     @if ($value !== null && $value !== '')
-                                        <div class="group/field relative space-y-2" data-annotation-target="field" data-target-type="field" data-field-key="{{ $fieldKey }}" data-target-label="{{ $blockData['label'] ?? $field['label'] ?? $fieldKey }}">
+                                        <div id="field-{{ $fieldKey }}" class="group/field relative scroll-mt-24 space-y-2" data-annotation-target="field" data-target-type="field" data-field-key="{{ $fieldKey }}" data-target-label="{{ $blockData['label'] ?? $field['label'] ?? $fieldKey }}">
                                             <div class="flex items-start justify-between gap-2">
                                                 <div class="text-xs font-semibold uppercase tracking-wide" style="color: var(--content-muted)" dir="auto">{{ $blockData['label'] ?? $field['label'] ?? $fieldKey }}</div>
                                                 @if ($canAnnotate)
@@ -350,7 +350,8 @@
 
                         @if ($displayValue !== null && $displayValue !== '')
                             <section
-                                class="group relative space-y-2 {{ ($fieldStyle['emphasis'] ?? null) === 'callout' ? 'border-s-4 ps-4' : '' }} {{ ($fieldStyle['emphasis'] ?? null) === 'strong' ? 'font-semibold' : '' }} {{ ($fieldStyle['emphasis'] ?? null) === 'muted' ? 'opacity-70' : '' }} {{ $radiusClass }}"
+                                id="field-{{ $field['key'] }}"
+                                class="group relative scroll-mt-24 space-y-2 {{ ($fieldStyle['emphasis'] ?? null) === 'callout' ? 'border-s-4 ps-4' : '' }} {{ ($fieldStyle['emphasis'] ?? null) === 'strong' ? 'font-semibold' : '' }} {{ ($fieldStyle['emphasis'] ?? null) === 'muted' ? 'opacity-70' : '' }} {{ $radiusClass }}"
                                 style="{{ $fieldInline }}; {{ ($fieldStyle['emphasis'] ?? null) === 'callout' ? 'border-color: '.($fieldStyle['accent_color'] ?? $readerAccent) : '' }}"
                                 data-annotation-target="field"
                                 data-target-type="field"
