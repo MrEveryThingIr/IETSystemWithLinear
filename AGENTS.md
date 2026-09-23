@@ -62,7 +62,7 @@ GitHub Actions run `35772393444` on that exact runtime candidate is green:
 
 Phases 7A–7E are technically complete. The school-exam and employment-application proof cases, exact historical version preservation, pre-Membership Admission isolation, reusable Asset/evidence flows and Evaluation-without-domain-side-effects are automated and green. Opt-in browser fixture: `database/seeders/Phase7InteractionDemoSeeder.php`; guide: `database/seeders/README-Phase7InteractionDemo.md`; implementation report: `Development-CodexReports/phase-07-submission-evaluation-report.md`.
 
-Do not begin Phase 8 runtime work until the human owner completes the final local/existing-database and browser/mobile/RTL acceptance gate. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 Conversation or realtime infrastructure.
+Do not begin Phase 8 runtime work until Phase 7 is formally closed. Local engineering validation is now reported green, but final browser acceptance is still open because reviewer-side consequence/discoverability was not clear enough during manual use; classify/fix that before closure. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 Conversation or realtime infrastructure. Future work must also preserve the canonical connected-life proof in PROJECT_COMPASS: direct Contract → Commitment → Planner/Occurrence → Fulfillment/evidence → obligation → settlement/accounting, with Need/Offer/Matching optional and downstream of direct contracting.
 
 ## Architectural stop conditions
 
