@@ -11,6 +11,7 @@ use App\Models\ContentBlueprintVersion;
 use App\Models\Context;
 use App\Models\SpaceContentDefinition;
 use App\Models\SpaceContentDefinitionVersion;
+use App\Models\Submission;
 use App\Models\User;
 use App\Support\ContentBlueprintCatalog;
 use Illuminate\Contracts\View\View;
@@ -240,6 +241,13 @@ class ContentIndex extends Component
 
         $canManageDefinitions = Gate::forUser($user)->allows('manageDefinitions', $current);
         $canCreate = Gate::forUser($user)->allows('createContent', $current);
+        $canReviewInteractions = Gate::forUser($user)->allows('reviewInteractions', $current);
+        $reviewSubmissionCount = $canReviewInteractions
+            ? Submission::query()
+                ->where('context_id', $current->id)
+                ->where('status', Submission::STATUS_SUBMITTED)
+                ->count()
+            : 0;
 
         return view('livewire.contexts.content-index', compact(
             'blueprints',
@@ -252,6 +260,8 @@ class ContentIndex extends Component
             'contents',
             'canManageDefinitions',
             'canCreate',
+            'canReviewInteractions',
+            'reviewSubmissionCount',
         ));
     }
 
