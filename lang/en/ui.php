@@ -11,6 +11,7 @@ return [
         'profile' => 'Profile',
         'groups' => 'Groups',
         'manual' => 'System Manual',
+        'help' => 'Help / feedback',
         'actors' => 'Actors',
         'account_menu' => 'Account menu',
     ],
