@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\Content\EnsureSystemManualContent;
 use App\Actions\Groups\AddSpaceContentAnnotation;
+use App\ContextKind;
 use App\Models\Actor;
 use App\Models\ContentBlueprint;
 use App\Models\SpaceContentAnnotation;
@@ -12,6 +13,7 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SystemManualContent;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
 
 class SystemManualContentTest extends TestCase
@@ -26,11 +28,16 @@ class SystemManualContentTest extends TestCase
         $actor = $user->actor()->create();
         $this->assertInstanceOf(Actor::class, $actor);
 
+        $reader = Actor::factory()->create();
         $first = app(EnsureSystemManualContent::class)->execute($user);
 
-        $this->assertSame(SystemManualContent::GROUP_NAME, $first['group']->name);
-        $this->assertSame(SystemManualContent::SPACE_SLUG, $first['space']->slug);
+        $this->assertSame(ContextKind::Reference, $first['context']->kind);
         $this->assertCount(11, $first['chapters']);
+        $this->assertTrue(Gate::forUser($reader->user)->allows('view', $first['context']));
+        $this->assertTrue(Gate::forUser($reader->user)->allows('interactContent', $first['context']));
+        $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $first['context']));
+        $this->assertFalse(Gate::forUser($reader->user)->allows('manageContent', $first['context']));
+        $this->assertTrue(Gate::forUser($user)->allows('manageContent', $first['context']));
         $this->assertSame('published', $first['root']->status);
 
         $rootRevision = $first['root']->activeRevisionRecord();
@@ -59,7 +66,7 @@ class SystemManualContentTest extends TestCase
         $idea = app(AddSpaceContentAnnotation::class)->execute(
             $chapter,
             $chapterRevision,
-            $user,
+            $reader->user,
             'This target section could explain the future capability more clearly.',
             kind: SpaceContentAnnotation::KIND_IDEA,
             visibility: SpaceContentAnnotation::VISIBILITY_SPACE,
