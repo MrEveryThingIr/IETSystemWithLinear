@@ -49,6 +49,7 @@ return [
     'evidence_invalid' => 'The evidence reference is not a valid UUID or link.',
     'open_evidence' => 'Open exact evidence',
     'review_submissions' => 'Review submissions',
+    'review_submissions_with_count' => 'Review submissions (:count submitted)',
     'review_queue_help' => 'Review submitted attempts in this Context. Draft answers remain private to their submitters.',
     'back_to_context' => 'Back to Context',
     'review' => 'Review',
