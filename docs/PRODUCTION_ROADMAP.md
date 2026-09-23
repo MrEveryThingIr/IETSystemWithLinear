@@ -343,7 +343,7 @@ Support structured interactions that annotations cannot represent correctly, whi
 
 ### Exit gate
 
-Automated/runtime gate satisfied on `35236f7af4ab9168467383b867cd698f2f30755c`: both proof cases work without abusing annotations or creating separate form engines; submitted evidence remains historically exact after newer Content/interaction versions; pre-Membership Admission isolation is preserved; and the application components can later be composed into Conversation without changing their domain semantics. Final owner local/existing-database plus browser/mobile/RTL acceptance remains required before Phase 7 is formally closed or Phase 8 runtime work begins.
+Automated/runtime gate satisfied on `35236f7af4ab9168467383b867cd698f2f30755c`: both proof cases work without abusing annotations or creating separate form engines; submitted evidence remains historically exact after newer Content/interaction versions; pre-Membership Admission isolation is preserved; and the application components can later be composed into Conversation without changing their domain semantics. The owner subsequently reported all requested local engineering commands green, but did **not** grant final browser acceptance because reviewer-side consequence/discoverability was not clear enough during manual use. Treat this as a product-integration signal: verify/fix any actual reviewer-state defect before formal Phase 7 closure, and make the reviewer/candidate consequences obvious when Phase 8 composes these components into Conversation. Phase 8 runtime work remains gated on formal Phase 7 closure.
 
 ## Phase 8 — Admission v2: contextual onboarding
 
@@ -367,11 +367,14 @@ Upgrade the current Admission flow to use Profile requirements, Admission Contex
 - proposed Group Agreement revision references where discussion reveals a Group-wide rule change, without mutating the active version;
 - candidate-specific proposed terms routed toward the future negotiated Agreement/Contract model rather than Group-wide Agreement mutation;
 - initial role/context provisioning policy;
+- explicit reviewer attention/discovery state so submitted requirements cannot exist only on a hard-to-find review page;
+- conversation-embedded structured cards/actions for requested evidence, Submission state and Evaluation/review state, with durable system timeline entries after authoritative actions;
+- candidate-visible review/clarification/evaluation state so both sides can understand what changed without hunting across unrelated screens;
 - audit trail.
 
 ### Exit gate
 
-Invitation onboarding can represent simple instant-ish membership and reviewed application flows without granting premature Membership; a reviewed application can carry persistent candidate/reviewer collaboration and structured evidence while all authoritative state remains explicit and auditable.
+Invitation onboarding can represent simple instant-ish membership and reviewed application flows without granting premature Membership; a reviewed application can carry persistent candidate/reviewer collaboration and structured evidence while all authoritative state remains explicit and auditable. A candidate submission or reviewer action is visibly discoverable to the authorized other side and produces an understandable conversation/system-timeline consequence without making message wording authoritative.
 
 ## Phase 9 — Real-time collaboration infrastructure
 
@@ -438,14 +441,16 @@ Unify personal and collaborative temporal planning.
 - Evidence;
 - recurrence;
 - timezone correctness;
+- actual execution start/end tracking where appropriate;
 - reminders/notifications;
-- calendar/list views.
+- calendar/list views;
+- explicit source/provenance hooks so future Contract Commitments can materialize Plans/Occurrences without Planner becoming obligation authority.
 
 ### Proof cases
 
 - nightly chess study;
 - weekly class;
-- construction shift.
+- paid workday/shift such as 08:00–17:00 across selected consecutive or non-consecutive dates.
 
 ### Exit gate
 
@@ -482,11 +487,45 @@ Make the generic kernels usable as focused products.
 
 A user can create each focused environment without understanding generic infrastructure.
 
-## Phase 13 — Need / Offer / Matching
+## Phase 13 — Negotiation, Agreement, Commitment and Fulfillment
 
 ### Purpose
 
-Model supply and demand explicitly.
+Turn a direct human/organization request or a future matched opportunity into explicit obligations and evidence. This phase must **not** depend on Need/Offer/Matching; people who already know each other can negotiate and contract directly.
+
+### Deliverables
+
+- direct Proposal creation;
+- Negotiation Context;
+- negotiated Agreement/Contract distinct from Group Agreement;
+- party model and explicit required-party acceptance;
+- immutable proposed/accepted Contract versions with activation/supersession/effective-time semantics;
+- versioned terms referencing sealed Content;
+- negotiation Conversation as collaborative evidence, with explicit domain Actions as the only source of acceptance/activation truth;
+- Commitment, including paired performance/payment obligations where applicable;
+- Planner handoff/binding so recurring or selected-date Commitments can materialize Plans/Occurrences without duplicating obligation truth;
+- partial/full Fulfillment;
+- actual start/end, quantity/duration and outcome/status where appropriate;
+- Content/Asset evidence references;
+- authorized fulfillment review: accept, reject, request clarification/correction;
+- disputes/corrections as explicit lifecycle where required;
+- Contract amendment behavior that affects future work while preserving historical governed versions;
+- financial-obligation handoff interface.
+
+### Proof cases
+
+- direct paid-work relationship: 1,500,000 per accepted 08:00–17:00 workday across one or more selected dates, with work evidence, review, earned amount and future amendment semantics;
+- a non-family service/provider relationship proving the same kernels are not employment-specific.
+
+### Exit gate
+
+A service relationship can progress from direct proposal through exact Contract acceptance to scheduled work, evidence-bearing Fulfillment and explicit review with full provenance. No Match record is required, and accepted Fulfillment can hand off an exact financial obligation without yet implementing the ledger.
+
+## Phase 14 — Need / Offer / Matching
+
+### Purpose
+
+Model discoverable supply and demand and hand a useful match into the already-proven Proposal/Negotiation/Contract path.
 
 ### Deliverables
 
@@ -498,7 +537,8 @@ Model supply and demand explicitly.
 - lifecycle;
 - matching service;
 - explanations for matches;
-- privacy/access.
+- privacy/access;
+- explicit proposal handoff into Phase 13 Negotiation/Contract without creating obligations from the match itself.
 
 ### Proof cases
 
@@ -507,32 +547,7 @@ Model supply and demand explicitly.
 
 ### Exit gate
 
-Matching is useful but creates no obligation until explicit Proposal/Agreement.
-
-## Phase 14 — Negotiation, Agreement, Commitment and Fulfillment
-
-### Purpose
-
-Turn matched intent into explicit obligations and evidence.
-
-### Deliverables
-
-- Proposal;
-- Negotiation Context;
-- negotiated Agreement/Contract distinct from Group Agreement;
-- party model and explicit required-party acceptance;
-- immutable proposed/accepted Contract versions with activation/supersession semantics;
-- versioned terms referencing sealed Content;
-- negotiation Conversation as collaborative evidence, with explicit domain Actions as the only source of acceptance/activation truth;
-- Commitment;
-- partial/full Fulfillment;
-- evidence;
-- disputes/corrections as explicit lifecycle where required;
-- financial-obligation handoff interface.
-
-### Exit gate
-
-A service relationship can progress from proposal to verified fulfillment with full provenance.
+Matching is useful, explainable and privacy-safe; it can initiate the same Proposal/Negotiation flow used by direct relationships, but never creates an obligation by itself.
 
 ## Phase 15 — Production Accounting Kernel
 
@@ -554,12 +569,13 @@ Record financial truth safely.
 - idempotent posting;
 - balance cache/snapshot;
 - source-domain accounting actions;
+- obligation/settlement reporting that can answer earned/owed, paid, outstanding and disputed amounts by Actor/Contract/period;
 - reporting foundation.
 
 ### Proof cases
 
 - personal expense;
-- worker payroll accrual/payment;
+- direct paid-work accrual/payment sourced from accepted Phase 13 Fulfillment;
 - restaurant payable/payment.
 
 ### Exit gate
