@@ -4,8 +4,8 @@ namespace App\Livewire\Intents;
 
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
-use App\Models\ActorProfile;
 use App\IntentJourneyPreset;
+use App\Models\ActorProfile;
 use App\Models\User;
 use App\ProfileIntentArrangementKind;
 use App\ProfileIntentExchangePreference;
