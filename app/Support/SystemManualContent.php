@@ -21,6 +21,8 @@ class SystemManualContent
         'submissions' => '9. Submission, Response, and Evaluation',
         'roadmap' => '10. Connected-Life Target and Roadmap',
         'feedback' => '11. Reporting Questions, Problems, Corrections, and Ideas',
+        'profile-concepts' => '12. Profile, Concepts, Skills, Interests, Goals, Needs, and Offers',
+        'agreements' => '13. Group Agreements and Versioned Governance',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -333,6 +335,84 @@ TEXT,
                     'misunderstandings' => <<<'TEXT'
 An annotation is never silently edited into the origin. The origin stays clean and historically exact. Community enhancements and proposed changes are overlays until an authorized revision incorporates them.
 TEXT,
+                [
+                    'title' => '12. Profile, Concepts, Skills, Interests, Goals, Needs, and Offers',
+                    'summary' => <<<'TEXT'
+The Profile describes an Actor progressively. Concepts provide reusable semantic meaning; predicates describe how the Actor relates to that meaning. This lets the same Concept represent “I know Laravel”, “I want to learn Laravel”, “I need Laravel help”, or “I offer Laravel work” without creating four duplicate Laravel concepts.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+ActorProfile currently supports display identity, headline, biography, location, website, privacy controls, profile media, locale/time preferences, semantic skills/interests/learning goals, recurring Profile Needs/Offers, purpose-specific completeness requirements, and selective disclosure to a chosen recipient.
+
+Skills, interests, and learning goals reuse Concept Assertions with different predicates. Skill proficiency may optionally use a normalized 0–100 percentage. Profile Need/Offer declarations may carry optional importance/urgency, quantity/unit, location/route, cadence, weekdays/month-days, dates, timezone, and time windows.
+
+Need/Offer cadence describes current intent only. It does not generate Planner Occurrences, matches, proposals, Contracts, Commitments, or financial records.
+
+Selective disclosure grants live access to selected current Profile information. If the underlying mutable Profile fact changes, closes, expires, or becomes invalid, the shared view follows the current state. It is not immutable Contract evidence.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Build the Profile progressively instead of trying to complete every field at registration.
+
+Reuse an existing Concept when the meaning already exists. Create a personal Concept only when no suitable reusable Concept exists. Add the relationship that actually applies: skill, interest, learning goal, Need, or Offer.
+
+Use Need/Offer declarations for recurring current intent and discovery preparation. Use visibility deliberately. Use selective disclosure when one specific Actor should see otherwise-private Profile information for a clear purpose.
+
+Do not use Profile cadence as a substitute for a future Planner schedule, and do not treat a self-reported proficiency percentage as externally verified reputation.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Profile mutation is owner-controlled. Individual semantic items and intents may have their own visibility. Private information is not exposed merely because the overall Profile is public.
+
+A selective disclosure grant is explicit, recipient-specific, optionally expiring, revocable, and limited to selected Profile fields/assertions/intents. Possessing a grant URL does not bypass recipient authorization.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Profile should remain the trustworthy upstream description of an Actor while later Admission, Planner, Matching, Contract, and reputation systems consume only the information they are explicitly allowed to use.
+
+Measurement should become semantically appropriate rather than forcing every relationship into one percentage. Skill proficiency, learning progress, interest strength, goal priority, evidence maturity, verification, and reputation are different dimensions and should remain explainable.
+
+Future organization/system Actors and explicit acting authority should reuse the same semantic foundations without collapsing User authentication into Actor identity.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A Concept is the meaning; “skill”, “interest”, “wants to learn”, “needs”, and “offers” are relationships to that meaning.
+
+A recurring Profile Need is not a calendar. A Profile Offer is not a binding promise. A disclosure is not Membership or Context authorization. A self-rating is not verification or reputation.
+TEXT,
+                ],
+                [
+                    'title' => '13. Group Agreements and Versioned Governance',
+                    'summary' => <<<'TEXT'
+A Group Agreement defines Group-wide participation rules through explicit immutable versions, governance approval, activation, and exact-version acceptance evidence. It is different from a future party-specific negotiated Contract.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Groups can maintain versioned Agreements. Agreement versions preserve exact terms, content hashes, approvals, activation/effective state, and acceptance evidence.
+
+Invitation/Admission flows can require the candidate to accept the exact Agreement version. The system rechecks required acceptance at authoritative transitions such as candidate submission/finalization so a stale or different version cannot silently satisfy the requirement.
+
+Current Group Agreement versions still own their human-readable long-text terms directly. The Content kernel now has stronger authored-document capabilities, so the long-term architecture plans to let an Agreement version reference an exact sealed Content revision without moving Agreement lifecycle/party/acceptance authority into Content.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Use a Group Agreement for rules that govern the Group or its participation. Publish/activate a new version when those rules change; do not edit accepted historical terms in place.
+
+When a candidate/member must accept terms, make sure the UI/action is the explicit Agreement acceptance flow for the exact version. A discussion comment or Content annotation saying “I agree” is useful evidence of conversation but is not the acceptance action.
+
+If a rule applies only to specific parties, such as negotiated compensation for one worker, do not mutate the Group-wide Agreement. That belongs to the future negotiated Contract model.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Agreement drafting, approval, activation, and governance actions require the relevant Group permissions. Acceptance evidence records the exact Agreement/version and the authorized acting identity.
+
+Group authority is scoped to that Group. It does not grant authority over another Group or platform-wide governance.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Group-wide governance should remain distinct from negotiated bilateral/multi-party Contracts.
+
+Human-readable terms should increasingly use exact sealed Content revisions for rich authoring, media, annotations, evidence and historical permalinks, while the Agreement domain continues to own versions, required approvals, effective periods, acceptance/reacceptance rules, and governance history.
+
+When discussion reveals that Group-wide rules should change, the system should create/propose a new Agreement version with explicit activation/effective timing rather than mutating the active version. Party-specific negotiated terms should route into the future Contract/Commitment system.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+Agreement is not merely a document. The document explains the terms; the Agreement domain records which version is proposed/approved/active and who accepted it.
+
+A candidate-specific negotiation must not silently rewrite the rules for every Group member. An annotation saying “accepted” is not acceptance authority.
+TEXT,
+                ],
                 ],
             ],
         ];
