@@ -32,6 +32,8 @@ The office-alpha Intent model reuses `ActorProfileIntent`; cash/mixed-value fiel
 
 Content/Context direction is now explicit: one independent Content system, home Context for authoring/authorization, cross-context presentation/reference, exact immutable revision targets for evidence, and no Group-specific duplicate Content stores.
 
+Foundation F0 runtime checkpoint is now remotely green at `f5b55fb3f1d426e995549efc90856cfd9ac60b34` on GitHub Actions run `35924838454`: **411 tests / 2257 assertions**, changed-file Pint **366 files**, PHPStan clean, Vite build green, migration rollback/reapply + scheduler/database-queue smoke green, SQLite backup/restore green, npm audit 0 vulnerabilities and Composer security audit clean.
+
 Remote milestones continue automatically after green CI; exact SHA/CI/report/worksheet evidence is recorded at each integration checkpoint.
 
 ## Established identity and platform foundation
@@ -646,6 +648,8 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-Close **Foundation F0** on `integration/ideal-v1` with green remote CI and synchronized canonical/manual documentation, then begin **Phase 8 — Progressive Intent Journey v2**.
+**Phase 8 — Progressive Intent Journey v2** is the next active milestone after the F0 documentation-only closure head passes CI.
+
+Phase 8 should reuse `ActorProfileIntent` and the existing Concept/visibility/exchange fields. The first implementation should add human intention presets and conditional progressive disclosure rather than a generic wizard engine or new domain table.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

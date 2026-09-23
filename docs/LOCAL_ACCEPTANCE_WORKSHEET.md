@@ -40,7 +40,13 @@ Remote branch:
 integration/ideal-v1
 ~~~
 
-Exact checkpoint SHA and CI run are filled by the closure report when F0 turns green.
+Remote runtime checkpoint:
+
+~~~text
+SHA: f5b55fb3f1d426e995549efc90856cfd9ac60b34
+CI: 35924838454
+Result: 411 tests / 2257 assertions; Pint 366 files; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
 
 ### Local sync
 
@@ -50,6 +56,8 @@ git switch integration/ideal-v1
 git pull --ff-only origin integration/ideal-v1
 git status --short
 git rev-parse HEAD
+# the F0 runtime checkpoint is:
+# f5b55fb3f1d426e995549efc90856cfd9ac60b34
 
 php artisan optimize:clear
 php artisan migrate --force
