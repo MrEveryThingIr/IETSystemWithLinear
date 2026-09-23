@@ -40,7 +40,7 @@ Identity
 → Content and Communication
 → Interaction
 → Planning
-→ Need / Offer
+→ Intent / Opportunity (direct request or Need / Offer)
 → Proposal / Negotiation
 → Agreement / Commitment
 → Fulfillment / Evidence
@@ -55,6 +55,47 @@ The platform should support many domains without creating unrelated identity, au
 The design goal is not "everything is one database object." The design goal is:
 
 > Everything can participate in a small, coherent set of reusable capabilities while specialized domains retain their own invariants.
+
+### Whole-life composition proof — paid work relationship
+
+A permanent north-star proof for the platform is a direct paid-work relationship that does **not** require marketplace matching.
+
+Example:
+
+~~~text
+Father asks son to work
+→ invite/register only if needed
+→ discuss terms in a shared Context/Conversation
+→ propose Contract version:
+   work 08:00–17:00
+   compensation 1,500,000 per accepted workday
+   one or more selected dates, consecutive or not
+   evidence/review/payment terms
+→ both required parties explicitly accept the exact Contract version
+→ Contract activates
+→ work Commitment(s) and payment Commitment(s) exist
+→ Planner materializes the selected workday Occurrences
+→ worker records actual start/end, status, notes and optional Content/Asset evidence
+→ counterparty reviews the Fulfillment, accepts/rejects/requests clarification through explicit actions
+→ accepted Fulfillment creates/recognizes the financial obligation
+→ Accounting records what was earned/owed
+→ Settlement/payment records what was actually paid
+→ the system can always answer:
+   scheduled
+   worked
+   accepted
+   earned
+   paid
+   outstanding
+   disputed
+→ later term changes create a new Contract version effective for future work; history never changes
+~~~
+
+The same composition must work when the parties are family, employer/employee, customer/provider, organization/person, or other Actor kinds. A direct relationship may begin from a human request or Proposal; Need/Offer/Matching is optional discovery infrastructure, never a prerequisite for Contract.
+
+Content, diary entries, photos, audio, reports and annotations may provide human-readable context/evidence around the work. They do not replace Plan/Occurrence, Contract/Commitment, Fulfillment, Settlement or Ledger truth.
+
+This is the intended meaning of **“everything is one thing”** in IET: not one universal database row, but one connected life/work graph in which identity, relationships, plans, conversations, evidence, obligations, money and history remain linked and explainable from each Actor's perspective.
 
 ## Core distinctions
 
@@ -112,6 +153,8 @@ The design goal is not "everything is one database object." The design goal is:
 22. Conversation is collaboration, not authority. Approvals, Agreement acceptances, Membership finalization, Contract activation, Commitments, and comparable domain truth require explicit authorized domain actions and durable evidence.
 23. Group-wide Agreements and party-specific negotiated Agreements/Contracts remain distinct. A candidate discussion must never silently rewrite the rules for every Group member.
 24. Effective terms are versioned and immutable. Changes create new draft/proposed versions with explicit approval, activation/effective dates, supersession, and reacceptance where required; historical accepted versions are never edited in place.
+25. Direct Proposal/Contract creation must not depend on Need/Offer/Matching. Matching is discovery and may hand off into the same Proposal/Negotiation/Contract path used by people who already know each other.
+26. Cross-kernel composition must preserve provenance: a Plan/Occurrence may be linked to a Commitment, a Fulfillment to its Occurrence/Commitment, a financial obligation to accepted Fulfillment/Contract terms, and a Settlement to the obligation it satisfies. Do not duplicate the same fact independently across modules.
 
 ## "Generic inside, specific outside"
 
