@@ -389,6 +389,53 @@ The first slice may land on the Phase 7 + Documentation-as-Content baseline befo
 
 Future expansion into form filling must preserve a strict distinction between suggesting/populating draft values and executing submit/approve/accept/finalize/pay actions.
 
+## Pre-release gate — Invitation-only Intent Directory Alpha
+
+**Status: implementation candidate on `feat/pre-release-office-intent-registry`; owner-local/browser acceptance pending.**
+
+This is an explicitly approved productization slice on top of the Phase 7 + Documentation + AI/provenance baseline. It is not Phase 14 Matching and does not reorder the obligation roadmap.
+
+### Purpose
+
+Produce a deliberately small first publishable alpha that can replace a real office paper notebook for current Needs and Offers while preserving the later architecture.
+
+### Included
+
+- standalone system Access Invitations for new-account registration without Group Membership;
+- Group Invitations presented as invitations for existing verified users;
+- invitation-only welcome → register → verify → Get Started flow;
+- guided Need/Offer wizard over the existing `ActorProfileIntent` domain;
+- subject classification: Property, Good, Service, Capital, Collaboration, Other;
+- plain-language arrangement classification for buy/sell, temporary use/rent, service, financing and collaboration cases;
+- optional location and cash-range discovery data;
+- non-binding value-exchange preference for cash-only or negotiated mixed-value openness;
+- read-only permission-aware Needs, Offers & Services directory with practical filters;
+- explicit intent visibility independent from unrelated private Profile details;
+- unfinished AI assistance disabled by default.
+
+### Explicitly excluded
+
+- automated Match records, ranking or recommendations;
+- Proposal/Negotiation/Contract/Commitment;
+- ownership-share or capital-right creation;
+- Planner Occurrences;
+- Fulfillment;
+- invoices, ledger entries, payments or accounting;
+- automatic contact disclosure;
+- any interpretation of a cash range or mixed-value preference as binding terms.
+
+### Exit gate
+
+- standalone Access Invitation registration and verification works on the existing database;
+- Group invitation behavior for existing users remains correct;
+- user can record property/service/capital/collaboration Needs and Offers through the wizard;
+- cash/mixed-value preference remains explicitly advisory and non-binding;
+- private records are not visible to other users; authenticated records are discoverable without exposing otherwise-private Profile identity;
+- directory Need/Offer/Service and domain filters work on desktop/mobile/RTL;
+- AI assistance is hidden/inaccessible when disabled;
+- full PHPUnit, PHPStan, Pint, Vite, migration/rollback, queue/scheduler, backup/restore and security gates are green;
+- owner completes local/browser acceptance before release-branch integration or tagging.
+
 ## Phase 8 — Admission v2: contextual onboarding
 
 ### Purpose

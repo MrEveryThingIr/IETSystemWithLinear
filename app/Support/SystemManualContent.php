@@ -228,15 +228,19 @@ TEXT,
                 [
                     'title' => '8. Invitations and Admissions',
                     'summary' => <<<'TEXT'
-Invitations bring a person toward a Group. Admission handles reviewed onboarding before Membership. The candidate can collaborate in an Admission Context without receiving ordinary Group access.
+IET now distinguishes system Access Invitations from Group Invitations. An Access Invitation allows a new person to inspect the invitation-only welcome experience and create an account without joining a Group. A Group Invitation is for an existing verified account and begins the Group Admission journey before Membership.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Invitations can support registration/login and resume Admission. Admission has formal lifecycle state and can own an Admission Context. Candidates remain outside normal Group participation until an explicit authorized finalization creates Membership.
+A standalone Access Invitation is the preferred new-account doorway. It may be reserved for one email or issued as a bounded reusable private office link. Registration creates the User and Actor identity, records immutable invitation acceptance evidence, requires email verification, and then returns the person to Get Started. It does not create Group Membership.
 
-Phase 7 can place structured applications/evidence inside the Admission Context, but the conversation-first Admission v2 experience is still the next major product phase.
+Group Invitations are now presented as invitations between existing verified users. Opening one leads into the existing Group Admission journey, where the candidate remains outside normal Group participation until an explicit authorized finalization creates Membership.
+
+Phase 7 can place structured applications/evidence inside an Admission Context, but the conversation-first Admission v2 experience remains later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use the invitation link to enter the intended Group onboarding journey. If review is required, the candidate completes requested structured work inside the Admission Context. Reviewers should use explicit Admission and Evaluation actions rather than interpreting free-form notes as state transitions.
+For a new person, issue a system Access Invitation. The invitee may inspect the welcome page before registering, then verifies email and continues to Get Started without being forced into a Group.
+
+Use a Group Invitation only when inviting an existing verified account to a specific Group. If Group review is required, the candidate completes the Admission journey and any requested structured work inside the Admission Context. Reviewers should use explicit Admission and Evaluation actions rather than interpreting free-form notes as state transitions.
 TEXT,
                     'authorization' => <<<'TEXT'
 Candidates may access their Admission Context but not normal GroupSpace Content unless separately authorized. Admission reviewers require the Group's manage_admissions authority; they do not have to be the owner.
@@ -345,9 +349,13 @@ TEXT,
                     'current_behavior' => <<<'TEXT'
 ActorProfile currently supports display identity, headline, biography, location, website, privacy controls, profile media, locale/time preferences, semantic skills/interests/learning goals, recurring Profile Needs/Offers, purpose-specific completeness requirements, and selective disclosure to a chosen recipient.
 
-Skills, interests, and learning goals reuse Concept Assertions with different predicates. Skill proficiency may optionally use a normalized 0–100 percentage. Profile Need/Offer declarations may carry optional importance/urgency, quantity/unit, location/route, cadence, weekdays/month-days, dates, timezone, and time windows.
+The first publishable Intent Directory builds directly on those Profile Need/Offer declarations rather than inventing a parallel marketplace model. A guided wizard records Need or Offer, broad subject such as Property/Good/Service/Capital/Collaboration, a reusable Concept, the requested arrangement, location, optional cash range, timing, visibility, and a non-binding value-exchange preference.
 
-Need/Offer cadence describes current intent only. It does not generate Planner Occurrences, matches, proposals, Contracts, Commitments, or financial records.
+Value-exchange preference distinguishes cash-only, cash-preferred-but-open-to-mixed-value, open-to-mixed-value, and discuss-later cases. Mixed value may be described as money plus clearly valued property/use rights, capital participation, or services/skills, but this preference creates no ownership share, debt, Contract, Commitment, payment, or accounting entry.
+
+The read-only Needs, Offers & Services directory shows only active records the viewer is authorized to see and supports practical filters for needs, offers, services, property, capital, collaboration, subject text, and location.
+
+Need/Offer cadence and directory discovery describe current intent only. They do not generate Planner Occurrences, Match records, proposals, Contracts, Commitments, or financial records.
 
 Selective disclosure grants live access to selected current Profile information. If the underlying mutable Profile fact changes, closes, expires, or becomes invalid, the shared view follows the current state. It is not immutable Contract evidence.
 TEXT,
@@ -356,7 +364,11 @@ Build the Profile progressively instead of trying to complete every field at reg
 
 Reuse an existing Concept when the meaning already exists. Create a personal Concept only when no suitable reusable Concept exists. Add the relationship that actually applies: skill, interest, learning goal, Need, or Offer.
 
-Use Need/Offer declarations for recurring current intent and discovery preparation. Use visibility deliberately. Use selective disclosure when one specific Actor should see otherwise-private Profile information for a clear purpose.
+For the first office-oriented release, prefer Record need / offer for new entries. Choose Need when seeking something and Offer when making something available. Choose the broad subject and the plain-language arrangement, then add only the location, cash range, description, timing, and negotiation preference that are actually useful.
+
+Use Registered users visibility when the intent should appear in the invitation-only directory without making unrelated Profile information public. Private keeps the intent out of other users' directory results. The directory is discovery only: staff or users manually compare suitable cases for now.
+
+Use the value-exchange preference to state negotiating openness, not final terms. Exact percentages, ownership, service valuation, capital rights, or payment obligations belong to a future explicit Proposal/Negotiation/Contract flow.
 
 Do not use Profile cadence as a substitute for a future Planner schedule, and do not treat a self-reported proficiency percentage as externally verified reputation.
 TEXT,
@@ -421,14 +433,14 @@ TEXT,
 AI assistance in IET helps translate a user's intent into trusted, reviewable changes without making the model an authority. Development Origins preserve a curated historical link from important design conversations to the roadmap, repository documents, commits, and system versions they influenced.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Authorized Content editors can open AI Content Assistant from the Content Studio, describe a desired result, review a structured proposal, and explicitly apply that proposal to a new draft revision. Creating a proposal sends the user's prompt and the exact current Content snapshot to the configured AI provider; the server-side provider credential is never exposed to the browser. The assistant may propose changes to existing structured fields, safe document blocks, and presentation tokens. It uses the same Content policies and Actions as ordinary Studio editing, refuses stale proposals after the Content has changed, and never publishes automatically.
+The AI Content Assistant architecture exists but is feature-gated off by default in the first published alpha. When an operator deliberately enables and configures it, authorized Content editors can open AI Content Assistant from the Content Studio, describe a desired result, review a structured proposal, and explicitly apply that proposal to a new draft revision. Creating a proposal then sends the user's prompt and the exact current Content snapshot to the configured AI provider; the server-side provider credential is never exposed to the browser. The assistant may propose changes to existing structured fields, safe document blocks, and presentation tokens. It uses the same Content policies and Actions as ordinary Studio editing, refuses stale proposals after the Content has changed, and never publishes automatically.
 
 Requests for generated image, audio, or video are currently recorded as media requests only. This first slice does not invent Asset identities or bypass the private Asset scanning, rights, readiness, and publication pipeline.
 
 Platform users with View Platform Audit authority can also capture a Development Origin: a reviewed summary plus optional source link, roadmap phase, system version, branch, baseline/result Git commit SHAs, and related repository paths. Development Origins are immutable provenance. They do not replace canonical repository documents.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-From an editable Content Studio, choose AI Content Assistant. Describe the exact section, wording, structure, or appearance you want. Review the proposed changes before applying them. After application, return to Studio, inspect the new draft revision, adjust it normally if necessary, and publish only through the ordinary explicit publish action.
+When AI assistance has been explicitly enabled by the operator, open an editable Content Studio and choose AI Content Assistant. Describe the exact section, wording, structure, or appearance you want. Review the proposed changes before applying them. After application, return to Studio, inspect the new draft revision, adjust it normally if necessary, and publish only through the ordinary explicit publish action.
 
 For a meaningful product-development conversation, an authorized platform auditor can open Development Origins and store a concise reviewed summary rather than copying an entire private conversation by default. Relate it to the phase, branch, exact baseline/result commits, and canonical repository paths that were changed because of the discussion.
 TEXT,

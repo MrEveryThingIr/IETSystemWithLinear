@@ -77,9 +77,17 @@ Binding cross-cutting contract: `docs/AI_ASSISTANCE_AND_DEVELOPMENT_PROVENANCE.m
 - Phase 6 preserves the proven `SpaceContent*` substrate while making it Context-generic and Blueprint-first. Do not mass-rename it, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 7/8/9/10/11/13/14 work forward.
 - Temporal/Profile boundaries from Phase 4 remain binding.
 
-## Current technical candidate
+## Current pre-release slice
 
-The current Phase 7 + Documentation-as-Content runtime candidate is:
+The explicitly authorized active slice is `feat/pre-release-office-intent-registry`, based on the accepted Phase 7/manual/AI-provenance line. Its purpose is a small invitation-only alpha: standalone account Access Invitation, guided Profile Need/Offer creation, permission-aware read-only Intent Directory, and non-binding cash/mixed-value negotiation preference.
+
+This slice must not introduce automated Matching, Proposal/Contract/Commitment, Planner, ownership/capital rights, payment, or Accounting semantics. `ActorProfileIntent` remains current intent only. Phase 8 stays closed until this release gate is accepted.
+
+AI assistance is disabled by default for the alpha; enabling it later still requires the binding AI contract.
+
+## Previous technical candidate
+
+The Phase 7 + Documentation-as-Content runtime candidate is:
 
 `6e6443051e93d4f0fd653758ba1979a7dc831de1`
 

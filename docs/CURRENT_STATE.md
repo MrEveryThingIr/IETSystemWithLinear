@@ -2,6 +2,31 @@
 
 ## Snapshot
 
+### Pre-release office registry candidate
+
+An explicitly approved pre-release slice is being built on `feat/pre-release-office-intent-registry` from `cd04d576b3e426846c65d05c33f78e75a4034503`.
+
+Its narrow release purpose is to replace a physical office notebook with an invitation-only digital flow:
+
+```text
+Access Invitation
+→ inspect welcome
+→ register
+→ verify email
+→ Get Started
+→ record Need / Offer
+→ permission-aware read-only Intent Directory
+→ manual human discovery/introduction
+```
+
+The slice reuses `ActorProfileIntent` rather than creating a parallel marketplace entity. It adds queryable subject/arrangement/cash-range fields and a non-binding value-exchange preference. The value preference may express openness to cash plus clearly valued property/use rights, capital participation or services/skills, but creates no Match, Contract, ownership interest, debt, payment or accounting truth.
+
+Standalone Access Invitations are the preferred path for new accounts. Group Invitations are presented for existing verified users. The legacy Group-registration route remains temporarily for historical compatibility but is no longer linked as the forward registration path.
+
+AI assistance remains implemented as an architecture seam but is disabled by default for this first alpha through `AI_ASSISTANCE_ENABLED=false`.
+
+Phase 8 remains closed while this pre-release productization gate is implemented and locally accepted.
+
 Current implementation baseline:
 
 - Branch: `feat/phase-07-submission-evaluation`.
