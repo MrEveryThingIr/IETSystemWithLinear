@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'title' => 'AI Content Assistant',
+    'description' => 'Describe the result you want. The assistant proposes safe Content changes before anything is applied.',
+    'back_to_studio' => 'Back to Studio',
+    'open_reader' => 'Open Reader',
+    'safety_note' => 'AI assistance is advisory. It can only apply trusted Content fields, blocks, and presentation options through the same authorization rules as the Studio. It cannot execute generated code or silently publish Content.',
+    'ask_heading' => 'Describe your vision',
+    'ask_help' => 'Mention the exact section, wording, structure, or appearance you want changed. Existing unrelated work is preserved where possible.',
+    'prompt' => 'What should change?',
+    'prompt_placeholder' => 'For example: after the introduction add a short callout explaining the main idea, make the conclusion stronger, and use a calmer reading layout.',
+    'create_plan' => 'Create proposal',
+    'proposal' => 'Proposed changes',
+    'title_change' => 'Title',
+    'field_changes' => 'Field changes',
+    'block_changes' => 'Block changes',
+    'presentation_change' => 'Presentation',
+    'media_requests' => 'Media requested',
+    'media_requests_help' => 'This first slice records image/audio/video generation needs but does not invent or publish generated Assets. Media generation will be added through an authorized Asset adapter.',
+    'apply_plan' => 'Apply proposal to draft',
+    'applied' => 'AI proposal applied to a new Content draft revision.',
+    'recent' => 'Recent AI assistance',
+    'none' => 'No AI assistance yet.',
+    'provider_failed' => 'The AI provider could not create a proposal. No Content was changed.',
+];

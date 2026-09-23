@@ -35,6 +35,10 @@ class SystemManualHelpMap
             return 'evidence';
         }
 
+        if (str_starts_with($routeName, 'contexts.contents.ai')) {
+            return 'content';
+        }
+
         if (str_starts_with($routeName, 'contexts.contents.studio')
             || str_contains($routeName, '.appearance')
             || str_contains($routeName, '.blocks')

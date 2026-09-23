@@ -24,6 +24,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Contexts\ContentAiAssistant;
 use App\Livewire\Contexts\ContentAppearance as ContextContentAppearance;
 use App\Livewire\Contexts\ContentBlocks as ContextContentBlocks;
 use App\Livewire\Contexts\ContentIndex as ContextContentIndex;
@@ -81,6 +82,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/contexts/{context}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'downloadContext'])
         ->name('contexts.contents.assets.download');
     Route::livewire('/contexts/{context}/contents/{content}/studio', ContextContentStudio::class)->name('contexts.contents.studio');
+    Route::livewire('/contexts/{context}/contents/{content}/studio/ai', ContentAiAssistant::class)->name('contexts.contents.ai');
     Route::livewire('/contexts/{context}/contents/{content}/studio/blocks', ContextContentBlocks::class)->name('contexts.contents.blocks');
     Route::livewire('/contexts/{context}/contents/{content}/studio/appearance', ContextContentAppearance::class)->name('contexts.contents.appearance');
     Route::livewire('/contexts/{context}/contents/{content}/outline', ContextContentOutline::class)->name('contexts.contents.outline');

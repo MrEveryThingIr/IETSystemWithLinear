@@ -11,6 +11,7 @@
                     {{ __('ui.context_content.back') }}
                 </flux:button>
                 @if ($canUpdate)
+                    <flux:button :href="route('contexts.contents.ai', [$context, $content])" variant="ghost" icon="sparkles">{{ __('ai.title') }}</flux:button>
                     <flux:button :href="route('contexts.contents.blocks', [$context, $content])" variant="ghost">{{ __('blocks.title') }}</flux:button>
                     <flux:button :href="route('contexts.contents.appearance', [$context, $content])" variant="ghost">{{ __('presentation.title') }}</flux:button>
                     <flux:button :href="route('contexts.contents.outline', [$context, $content])" variant="ghost">{{ __('structure.title') }}</flux:button>
