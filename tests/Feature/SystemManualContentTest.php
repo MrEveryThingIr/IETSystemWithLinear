@@ -165,6 +165,16 @@ class SystemManualContentTest extends TestCase
         $this->assertGreaterThan($oldRevision->revision, $newRevision->revision);
         $this->assertTrue($newRevision->hasVerifiableManifest());
 
+        $this->actingAs($manager->user)
+            ->get(route('contexts.contents.show', [
+                $manual['context'],
+                $chapter,
+                'revision' => $oldRevision->uuid,
+            ]))
+            ->assertOk()
+            ->assertSee('Accepted')
+            ->assertSee('Incorporated in current edition');
+
         $incorporated = app(RecordContentAnnotationDisposition::class)->execute(
             $idea,
             $manager->user,
