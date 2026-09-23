@@ -409,10 +409,11 @@ Delivered:
 
 Remaining:
 
-- human owner synchronization on the existing local database;
-- focused/full local validation;
-- desktop/phone browser acceptance including Persian/Arabic RTL;
-- final formal Phase 7 closure documentation after that human gate.
+- local engineering validation is complete and reported green by the human owner;
+- final browser acceptance is not yet granted because the owner could enter school-exam/employment responses but reviewer-side consequence/discoverability was not clear enough;
+- determine whether that observation is a real reviewer-state defect or a discoverability/composition problem;
+- desktop/phone browser acceptance including Persian/Arabic RTL remains pending;
+- final formal Phase 7 closure documentation follows only after that human gate.
 
 ## Proof case A — school exam
 
@@ -544,4 +545,4 @@ Phase 7 closes only when:
 11. automated validation is green;
 12. browser/mobile/RTL behavior is accepted by the human owner.
 
-Automated/runtime conditions **1–11 are satisfied** on `35236f7af4ab9168467383b867cd698f2f30755c`. Condition 12 remains the final human owner acceptance gate. The implementation report is maintained at `Development-CodexReports/phase-07-submission-evaluation-report.md`. Phase 8 runtime implementation must not begin before condition 12 passes and Phase 7 is formally closed.
+Automated/runtime conditions **1–11 are satisfied** on `35236f7af4ab9168467383b867cd698f2f30755c`. The owner subsequently reported the requested local engineering validation green, but condition 12 remains open because reviewer-side consequence/discoverability was not clear enough in manual browser use. This does not invalidate the Phase 7 kernel; it is unresolved acceptance evidence that must be classified as defect versus UX/composition friction before closure. The implementation report is maintained at `Development-CodexReports/phase-07-submission-evaluation-report.md`. Phase 8 runtime implementation must not begin before condition 12 passes and Phase 7 is formally closed.
