@@ -335,6 +335,7 @@ TEXT,
                     'misunderstandings' => <<<'TEXT'
 An annotation is never silently edited into the origin. The origin stays clean and historically exact. Community enhancements and proposed changes are overlays until an authorized revision incorporates them.
 TEXT,
+                ],
                 [
                     'title' => '12. Profile, Concepts, Skills, Interests, Goals, Needs, and Offers',
                     'summary' => <<<'TEXT'
