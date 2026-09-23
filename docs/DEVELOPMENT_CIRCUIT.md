@@ -2,380 +2,169 @@
 
 ## Purpose
 
-IET is developed through a repository-first, phase-gated human + AI circuit.
+IET now operates in **continuous remote roadmap mode**.
 
-The repository holds durable architecture, implementation, reports, and validation evidence. Chat history is useful for discussion but is not the long-term source of truth. Important conversations may be preserved as curated immutable Development Origins that point back to the canonical repository decisions they influenced.
+The repository remains the durable source of truth. The owner has explicitly deferred local Laragon/browser acceptance until the remotely integrated Ideal-v1 roadmap is complete enough for the cumulative 0→100 worksheet.
 
-The default circuit is:
+The circuit is:
 
 ~~~text
-Human owner + ChatGPT architecture/decision hub
-→ repository canonical docs
-→ one accepted roadmap phase
-→ Codex / Work / another implementation agent
-→ GitHub branch + commits + tests
-→ phase report
-→ human/ChatGPT review gate
-→ next phase
+owner-approved architecture
+→ canonical repository docs
+→ one remote milestone branch
+→ implementation + migrations + tests + manual source
+→ remote CI gate
+→ milestone report + acceptance worksheet entry
+→ integration/ideal-v1 checkpoint
+→ next milestone
+→ ...
+→ integrated release candidate
+→ owner local/browser 0→100 validation
+→ correction pass
+→ release
 ~~~
-
-Issue trackers such as Linear may manage live task state, but they do not replace the repository's canonical architecture or source history.
 
 ## Authority order
 
-1. Human owner
-2. Accepted architecture decisions / ADRs
-3. `docs/PROJECT_COMPASS.md`
-4. `docs/TARGET_ARCHITECTURE.md`
-5. `docs/PRODUCTION_ROADMAP.md`
-6. active phase contract, e.g. `docs/PHASE_01_INVITATION_ONBOARDING.md`
-7. path-specific `.ai/rules/`
-8. source code and tests for actual implemented behavior
-9. phase reports / historical evidence
-10. immutable Development Origin / phase provenance records
-11. issue tracker/live planning metadata
-12. raw chat summaries or legacy migrations
+1. human owner;
+2. accepted ADRs / explicit architecture decisions;
+3. `docs/PROJECT_COMPASS.md`;
+4. `docs/CURRENT_STATE.md`;
+5. `docs/TARGET_ARCHITECTURE.md`;
+6. `docs/PRODUCTION_ROADMAP.md`;
+7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`;
+8. active milestone contract/report;
+9. matching `.ai/rules/`;
+10. source code and tests for implemented behavior;
+11. historical reports/handoffs;
+12. issue trackers and chat history.
 
-When two authoritative sources conflict materially, stop and resolve the contradiction before implementation.
+## Agent startup
 
-## Canonical reading order for an agent
-
-Before meaningful implementation:
+Before code:
 
 1. read `AGENTS.md`;
-2. read `.ai/rules/index.md` and matching rules;
-3. read `docs/PROJECT_COMPASS.md`;
-4. read `docs/CURRENT_STATE.md`;
-5. read `docs/TARGET_ARCHITECTURE.md`;
-6. read `docs/PRODUCTION_ROADMAP.md`;
-7. read only the currently active phase contract;
-8. read relevant ADRs;
-9. inspect actual source/tests before proposing changes.
+2. read matching `.ai/rules/`;
+3. read the canonical docs above;
+4. read `docs/EXAMPLE_STORY_WORLD.md`;
+5. inspect latest `integration/ideal-v1` SHA and CI;
+6. inspect the active milestone branch/report if it exists;
+7. continue from repository evidence, never from presumed chat memory.
 
-Do not read every future phase as implementation scope.
+## Milestone cycle
 
-## Roles
+### 1. Branch
 
-### Human owner
-
-- owns product intent;
-- approves architecture changes;
-- accepts phase gates;
-- resolves ambiguous semantics;
-- authorizes destructive/irreversible operations;
-- decides when a phase is ready to merge/release.
-
-### ChatGPT architecture/decision hub
-
-- synthesizes current evidence and alternatives;
-- maintains consistency between product vision and implementation;
-- updates or proposes canonical docs when product decisions change;
-- reviews phase results;
-- identifies contradictions and hidden coupling;
-- does not replace GitHub as source truth.
-
-### Codex / implementation agent
-
-- reads repository authority first;
-- audits existing implementation before editing;
-- changes only the accepted phase scope;
-- writes tests;
-- runs validation;
-- records a durable implementation report;
-- stops at the phase gate.
-
-### ChatGPT Work
-
-Work may be used instead of or alongside Codex for a substantial scoped phase, especially when multi-file repository inspection, browser workflows, connectors, or artifact production are useful.
-
-The same repository/phase rules apply.
-
-### Linear or another issue tracker
-
-Optional live planning layer.
-
-May hold:
-
-- issue breakdown;
-- dependencies;
-- live status;
-- assignees;
-- links to commits/PRs.
-
-It is not the architecture authority.
-
-### GitHub
-
-Authoritative for:
-
-- files;
-- commits;
-- branches;
-- pull requests;
-- CI;
-- review discussion;
-- release history.
-
-## One phase at a time
-
-A phase contract defines:
-
-- objective;
-- accepted semantics;
-- included scope;
-- excluded scope;
-- dependencies;
-- acceptance criteria;
-- tests;
-- stop conditions.
-
-An agent must not implement future phases merely because the target architecture describes them.
-
-Example:
-
-During Phase 1, do not build:
-
-- Concepts;
-- Profile;
-- generic Submission engine;
-- Planner;
-- Ledger.
-
-Phase 1 may leave compatible seams for later work, but no speculative database structure is required unless the active phase needs it.
-
-## Implementation cycle
-
-### 1. Synchronize
-
-Before editing:
-
-~~~text
-git status --short
-git branch --show-current
-git fetch origin
-git pull --ff-only <remote> <current-branch>
-git rev-parse --short HEAD
-~~~
-
-If tracked local changes exist, preserve them before pulling. Do not reset, discard, or overwrite them casually.
+Create a coherent feature branch from the current integration SHA.
 
 ### 2. Inspect
 
-Inspect:
+Audit the exact current implementation, migrations, policies, Actions, UI, tests, docs and applicable rules before editing.
 
-- active phase docs;
-- source;
-- migrations;
-- policies;
-- Actions;
-- tests;
-- applicable rules;
-- relevant Laravel/package docs when version-specific behavior matters.
+### 3. Implement
 
-### 3. Report pre-change findings
+Prefer existing kernels. Add a new domain layer only when an existing object cannot truthfully own the state.
 
-For nontrivial phases, record:
-
-- what currently exists;
-- exact defects/gaps;
-- proposed minimal architecture-compatible change;
-- migrations/data risks;
-- tests required.
-
-If this reveals a frozen-boundary conflict, stop before coding.
-
-### 4. Implement atomically
-
-Prefer coherent commits.
-
-Examples:
+Use atomic commits such as:
 
 ~~~text
-feat(onboarding): ...
-test(onboarding): ...
-docs(onboarding): ...
+feat(...)
+test(...)
+docs(...)
+fix(...)
 ~~~
 
-Avoid one giant commit mixing unrelated cleanup.
+### 4. Validate remotely
 
-### 5. Validate progressively
-
-Start focused.
-
-Then phase gate.
-
-Typical final validation:
+At minimum where applicable:
 
 ~~~text
-php artisan test --compact
-vendor/bin/phpstan analyse
-vendor/bin/pint --dirty --format agent
-npm run build
-git status --short
+focused PHPUnit
+full PHPUnit
+PHPStan
+Pint
+Vite production build
+migration rollback/reapply
+scheduler/queue smoke
+backup/restore smoke
+npm audit
+Composer audit
 ~~~
 
-Run additional concurrency/browser/manual checks when required by the phase.
+Also add authorization/privacy/concurrency/idempotency tests when the milestone can fail in those dimensions.
 
-Never report a command as passed unless it actually ran.
+### 5. Document as versioned product knowledge
 
-### 6. Write the phase report
+Update both Markdown authority and `SystemManualContent`.
 
-Path:
+Manual pages must document exact controls/actions and reuse the Alice/Bob/Carol/Diego story.
 
-`Development-CodexReports/<phase>-report.md`
+### 6. Record checkpoint
 
-Reports should contain:
+Write/update:
 
-- phase;
-- baseline;
-- objective;
-- files inspected;
-- issues discovered;
-- changes made;
-- migrations;
-- tests;
-- exact validation;
-- manual checks;
-- unresolved risks;
-- Git commits;
-- next recommended gate.
+- `Development-CodexReports/<milestone>-report.md`;
+- `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`;
+- `docs/handoffs/continuous-ideal-v1.md`;
+- `docs/CURRENT_STATE.md`.
 
-Do not store giant duplicated diffs in reports when Git already preserves them.
+Record exact result SHA and CI run.
 
-### 7. Review gate
+### 7. Integrate and continue
 
-Human/ChatGPT reviews:
+When remote gates are green and no stop condition exists, integrate into `integration/ideal-v1` and activate the next milestone without waiting for local browser acceptance.
 
-- correctness;
-- architecture consistency;
-- UX;
-- authorization;
-- migration safety;
-- test evidence;
-- whether the phase exit gate is actually satisfied.
-
-Only then activate the next phase.
-
-## Git discipline
-
-Current project reality takes precedence over an idealized branching model.
-
-Rules:
-
-- never develop directly on `main`;
-- preserve the current accepted integration/feature branch strategy until a dedicated Git-flow decision changes it;
-- use fast-forward pulls when synchronizing a clean branch;
-- never force-push shared branches without explicit approval;
-- never reset/discard local user work without explicit confirmation and backup;
-- isolate unrelated work;
-- use PRs for integration/release boundaries;
-- tag production releases.
-
-For the current accepted implementation line, the active runtime baseline is:
-
-`feat/phase-07-submission-evaluation`
-
-The current authorized cross-cutting slice is developed separately on `feat/context-ai-assistance-provenance` and must rejoin the Phase 7 line only after automated and owner-local/browser acceptance.
-
-Future phase branching should be decided at each phase start from the then-current accepted integration baseline.
-
-## Database discipline
-
-- migrations are append-only once shared;
-- no `migrate:fresh` assumption for production migration design;
-- preserve immutable evidence;
-- use explicit data migrations where semantics change;
-- restrict deletes where history matters;
-- test forward migration;
-- document rollback limitations;
-- use transactions/locks for race-sensitive transitions.
-
-## AI behavior rules
-
-An implementation agent must not:
-
-- invent missing product semantics;
-- silently weaken authorization;
-- replace domain models with generic JSON merely to simplify code;
-- introduce dependencies without approval;
-- implement later roadmap phases;
-- claim production readiness from tests alone;
-- claim browser/manual validation it did not perform;
-- rewrite a stable subsystem because a future name is cleaner;
-- connect experimental financial instruments to external money.
-
-## When to stop immediately
-
-Stop and request review when:
-
-- architecture docs conflict;
-- a frozen boundary must change;
-- a destructive migration appears necessary;
-- user data might be lost;
-- authorization implications are unclear;
-- legal/financial product semantics would change;
-- tests expose a deeper invariant contradiction;
-- local repository state is unsafe to synchronize;
-- required validation cannot run.
-
-## Development origin provenance
-
-A meaningful design chat, external discussion, or architecture session may be preserved in the application as an immutable `DevelopmentOrigin` when doing so improves historical traceability.
-
-Store a reviewed summary and references rather than copying a private raw transcript by default. A Development Origin may record:
-
-- source type and optional source URL;
-- title and curated summary;
-- roadmap phase and system version;
-- branch;
-- exact baseline and result commit SHAs;
-- canonical repository paths affected by the discussion;
-- the time of the originating discussion/decision;
-- an explicit superseded-origin link when a later record corrects earlier provenance.
-
-Development Origins are supporting evidence, not architecture authority. The human owner, accepted ADRs, Project Compass, Target Architecture, Production Roadmap, active phase contract, source/tests, and Git history retain their authority order.
-
-## Handoffs
-
-Use `docs/handoffs/` for a task that spans agents/sessions and needs a concise operational state.
-
-Do not create a new handoff for every small correction.
-
-A handoff records:
-
-- task/phase;
-- current status;
-- accepted decisions;
-- work completed;
-- Git state;
-- validation;
-- unresolved items;
-- exact next step.
-
-The canonical architecture remains in the main docs, not copied into every handoff.
-
-## Prompting Codex
-
-The normal prompt should be short because the repository now contains the long context.
-
-Example:
+## Git topology
 
 ~~~text
-Work on IET Phase 1 only.
-
-Read AGENTS.md, .ai/rules/index.md and matching rules, then:
-- docs/PROJECT_COMPASS.md
-- docs/CURRENT_STATE.md
-- docs/TARGET_ARCHITECTURE.md
-- docs/PRODUCTION_ROADMAP.md
-- docs/PHASE_01_INVITATION_ONBOARDING.md
-
-Inspect the current branch completely for the Phase 1 scope before changing code.
-Do not implement later phases.
-Preserve all frozen invariants.
-Write/update Development-CodexReports/phase-01-invitation-onboarding-report.md.
-Run all validation required by the phase.
-Stop at the exit gate and report exact Git state and any unresolved risks.
+main                         public/stable release line
+  ↑
+release/*                    release stabilization after final human gate
+  ↑
+integration/ideal-v1         cumulative remotely-green Ideal-v1
+  ↑
+feat/ideal-v1-*              one remote milestone
 ~~~
 
-This is preferred to pasting the whole architecture conversation into the prompt.
+Legacy branches remain historical evidence. Never force-reset them just to make the graph prettier.
+
+## Deferred local gate
+
+The owner later follows `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` in chronological order using the continuing database.
+
+No `migrate:fresh`.
+
+Failures discovered during deferred acceptance become new correction commits on the current integration/release line with regression tests. Historical checkpoint SHAs remain honest.
+
+## Documentation story continuity
+
+The canonical cast is defined in `docs/EXAMPLE_STORY_WORLD.md`.
+
+Prefer:
+
+- Diego — office operator / Group owner;
+- Alice — property owner/requester;
+- Bob — service provider/worker;
+- Carol — capital provider;
+- Maple Housing Office;
+- Riverside Home Project.
+
+Do not invent unrelated example users on every page unless a genuinely different role is needed.
+
+## Stop conditions
+
+Stop only for:
+
+- contradictory canonical architecture;
+- unavoidable destructive/data-losing migration;
+- unresolved authorization or legal/financial semantics;
+- owner approval required for dependency/credential/provider;
+- external-money/custody regulatory boundary;
+- unsafe Git operation;
+- required validation unavailable.
+
+Normal implementation defects should be repaired and the milestone continued.
+
+## Handoff
+
+`docs/handoffs/continuous-ideal-v1.md` is the short operational restart point after interruption. Canonical architecture remains in the main docs.

@@ -2,77 +2,37 @@
 
 ## Snapshot
 
-### Pre-release office registry candidate
+### Continuous Ideal-v1 integration
 
-An explicitly approved pre-release slice is being built on `feat/pre-release-office-intent-registry` from `cd04d576b3e426846c65d05c33f78e75a4034503`.
+Active integration branch:
 
-Its narrow release purpose is to replace a physical office notebook with an invitation-only digital flow:
+`integration/ideal-v1`
 
-```text
+Root baseline:
+
+`2c7a5c35a31fe86d761a1cafd189560bec220784`
+
+The owner has authorized continuous remote development with local/browser acceptance deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+
+The active line intentionally excludes the experimental/unused AI-assistance and Development-Origin runtime. AI returns only at the later dedicated roadmap phase.
+
+Foundation F0 reconstructs the useful office alpha on the clean baseline:
+
+~~~text
 Access Invitation
 → inspect welcome
 → register
 → verify email
 → Get Started
-→ record Need / Offer
+→ guided Need / Offer
 → permission-aware read-only Intent Directory
-→ manual human discovery/introduction
-```
+~~~
 
-The slice reuses `ActorProfileIntent` rather than creating a parallel marketplace entity. It adds queryable subject/arrangement/cash-range fields and a non-binding value-exchange preference. The value preference may express openness to cash plus clearly valued property/use rights, capital participation or services/skills, but creates no Match, Contract, ownership interest, debt, payment or accounting truth.
+The office-alpha Intent model reuses `ActorProfileIntent`; cash/mixed-value fields are negotiation preferences only and create no Match, Contract, ownership, debt, payment or accounting truth.
 
-Standalone Access Invitations are the preferred path for new accounts. Group Invitations are presented for existing verified users. The legacy Group-registration route remains temporarily for historical compatibility but is no longer linked as the forward registration path.
+Content/Context direction is now explicit: one independent Content system, home Context for authoring/authorization, cross-context presentation/reference, exact immutable revision targets for evidence, and no Group-specific duplicate Content stores.
 
-The published experience defaults to `IET_RELEASE_PROFILE=office_alpha`: ordinary navigation is limited to Dashboard, Needs/Offers/Services, Profile and contextual Help, while authorized administrators retain Access Invitations. Advanced Groups/Content/Audit kernels remain implemented and can be exposed again with the `full` release profile without changing their data model.
-
-AI assistance remains implemented as an architecture seam but is disabled by default for this first alpha through `AI_ASSISTANCE_ENABLED=false`.
-
-The remote runtime candidate is `cb4ae0783dc8f0d8ad424422b4cc7d6a9dc01520`. GitHub Actions run `35903601901` is green at **419 tests / 2306 assertions**, PHPStan clean, changed-file Pint **391 files**, Vite/build green, migration rollback/reapply + scheduler/database-queue smoke green, SQLite backup/restore green, npm audit 0 vulnerabilities, and Composer security audit clean.
-
-Phase 8 remains closed. The only remaining gate before freezing/tagging the first alpha is owner-local migration/manual-sync plus browser/mobile/RTL acceptance of this exact candidate.
-
-Current implementation baseline:
-
-- Branch: `feat/phase-07-submission-evaluation`.
-- Phase 1 — Invitation/registration/admission journey: complete.
-- Phase 2 — Delivery and operations baseline: complete at the provider-neutral baseline.
-- Phase 3 — Concept Kernel: complete.
-- Phase 4 — Actor/Party + progressive Profile: complete and human-owner accepted.
-- Phase 5 — Generic Content Context: complete and human-owner accepted on 2026-09-22.
-- Phase 6 — Content Blueprints and unified productized authoring: **complete and human-owner accepted for roadmap progression on 2026-09-22**.
-- Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1`.
-- GitHub Actions run `35739828516` on that exact runtime commit:
-  - PHPUnit: **364 passed / 1934 assertions**;
-  - PHPStan: no errors;
-  - Pint: **258 files passed**;
-  - Vite production build: passed;
-  - Phase 6 migrations / scheduler / database-queue smoke: passed;
-  - SQLite backup → restore smoke: passed;
-  - npm audit: 0 vulnerabilities;
-  - Composer security audit: clean.
-- Local closure on synchronized HEAD `b33bdcf` applied all three Phase 6 migrations; passed **20 focused tests / 121 assertions**, **364 full tests / 1934 assertions**, PHPStan, Vite build, `git diff --check`, and a clean working tree after restoring unrelated whole-repository Pint rewrites.
-- Human browser review was intentionally non-exhaustive but found no blocking correctness problem; remaining Content-view behavior/UX improvements are deferred to the later whole-system polish pass.
-- Post-closure invitation locale-return regression fixed at `0d98dfe`; GitHub Actions run `35749114796` is green at **366 tests / 1945 assertions**, PHPStan/Pint/Vite/ops/security green.
-- Phase 7 — Submission / Response / Evaluation is **runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-07-submission-evaluation`; binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
-- Phase 7A — versioned InteractionDefinition kernel — complete on `ceeb85b63c92385a0b714b5d5e9116dfe9e94932`; GitHub Actions run `35756220221`: **372 tests / 1964 assertions**, PHPStan clean, changed-file Pint **272 files**, Vite/migrations/ops/backup/security green.
-- Human/local Phase 7A acceptance recorded on 2026-09-22 from synchronized `bd4ca3a`: migration applied cleanly to the existing database; focused `InteractionDefinitionKernelTest` **6 tests / 19 assertions** passed; PHPStan **266/266** clean; dirty-only Pint passed; `git diff --check` clean; working tree clean; invitation → registration → Admission resume browser regression remained correct with intentionally unchanged visible behavior.
-- Phase 7B — Submission / Response / evidence — technically complete on `7761a2f5a57fd06b8df4fa7e97397cd9f9a2a2ab`; GitHub Actions run `35766736605`: **379 tests / 2000 assertions**, PHPStan clean, changed-file Pint **284 files**, Vite/migrations/ops/backup/security green.
-- Phase 7C — Evaluation — technically complete on `9e0338994f755f81c59ed6dfe9e5e96ad0afaa8f`; GitHub Actions run `35767588253`: **384 tests / 2025 assertions**, PHPStan clean, changed-file Pint **293 files**, Vite/migrations/ops/backup/security green.
-- Phase 7D — productized interaction experience — technically complete on `d828dc43c9ef469a3532bfee9b6274d5dceb5f24`; GitHub Actions run `35771215549`: **390 tests / 2052 assertions**, PHPStan clean, changed-file Pint **305 files**, Vite/migrations/ops/backup/security green.
-- Phase 7E — proof and closure — technically complete on `35236f7af4ab9168467383b867cd698f2f30755c`; GitHub Actions run `35772393444`: **393 tests / 2086 assertions**, PHPStan clean, changed-file Pint **307 files**, Vite/security/ops/backup green; migrations `200000`, `210000`, `220000` rollback and reapply successfully in CI.
-- Owner local engineering validation is green on the synchronized Phase 7 branch. Manual browser feedback exposed reviewer discoverability friction: after entering/submitting work, the reviewer-side consequence was not obvious enough.
-- Post-7E reviewer-attention correction is complete on `bd45c994535a2045fde7e23c924d103aaa666c25`: authorized Context reviewers now see a persistent `Review submissions (:count submitted)` entry on the Context Content page, with regression coverage proving the count changes after submit. GitHub Actions run `35824650618`: **394 tests / 2092 assertions**, PHPStan clean, changed-file Pint **307 files**, Vite/security/ops/backup green.
-- Final browser/mobile/RTL acceptance remains open only to confirm the corrected reviewer discoverability and the existing interaction surfaces in real use.
-- Cross-cutting Documentation-as-Content / system-audit runtime candidate is **technically green** at `6e6443051e93d4f0fd653758ba1979a7dc831de1`; GitHub Actions run `35848121420`: **398 tests / 2169 assertions**, PHPStan clean, changed-file Pint **327 files**, Vite/ops/backup/security green.
-- That slice adds the authenticated `Reference` Context, official English IET System Manual as normal versioned Content, Guide/Documentation Blueprint, global contextual Help routing, precise Question/Correction/Idea feedback, immutable disposition → later sealed revision provenance, and explicit non-destructive manual source synchronization.
-- While dogfooding the manual bootstrap, the full suite exposed hidden dependence on Eloquent create events for required UUID/hash/evidence fields. The authoritative Content/Blueprint revision Actions now supply those durable values explicitly, keeping materialization deterministic even when tests/tooling fake events.
-- Owner-local acceptance is still required before formal Phase 7 closure: migrate + materialize the manual on the existing local database, run the focused/manual gates, inspect the System Manual/Help/feedback flows in browser (including a second non-manager user and RTL/mobile), then reconfirm the Phase 7 submit → reviewer-count → Evaluation flow.
-- Human-directed AI Content assistance + Development Origin provenance is **technically green** on the cross-cutting branch `feat/context-ai-assistance-provenance` at runtime candidate `f75332d5a5a25ee895c0b043a4693fe1b8803de0`; GitHub Actions run `35882242039`: **406 tests / 2219 assertions**, PHPStan clean, changed-file Pint **353 files**, Vite/build green, migration rollback/reapply + scheduler/database-queue smoke green, SQLite backup/restore green, npm audit 0 vulnerabilities, Composer security audit clean.
-- This slice adds plan-first AI Content editing through the existing Content policies/Actions, immutable `AiAssistanceRun` provenance with stale-revision protection, provider-side structured-output planning, explicit no-auto-publish/no-generated-code boundaries, immutable platform-audit `DevelopmentOrigin` history, System Manual chapter 14, contextual Help coverage, and four-locale UI catalogs.
-- AI media requests are intentionally **not** treated as implemented generated Assets yet. Image/audio/video generation remains a later authorized Asset-provider adapter that must feed the existing private Asset provenance/rights/scan/readiness/publication pipeline.
-- Phase 8 remains closed. The remaining gate for this cross-cutting slice is owner-local migration/manual synchronization plus browser/mobile/RTL acceptance, including one real provider-backed AI proposal/apply journey when an API key is configured.
-
-This document describes repository implementation truth at the Phase 7 technical-completion candidate. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and Phase 7 acceptance by `docs/PHASE_07_SUBMISSION_EVALUATION.md` plus `Development-CodexReports/phase-07-submission-evaluation-report.md`.
+Remote milestones continue automatically after green CI; exact SHA/CI/report/worksheet evidence is recorded at each integration checkpoint.
 
 ## Established identity and platform foundation
 
@@ -686,51 +646,6 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-Phases 1–6 are closed.
+Close **Foundation F0** on `integration/ideal-v1` with green remote CI and synchronized canonical/manual documentation, then begin **Phase 8 — Progressive Intent Journey v2**.
 
-The active milestone is **Phase 7 — Submission / Response / Evaluation**.
-
-Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
-
-Starting runtime baseline: `0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533`.
-
-Current Phase 7 runtime candidate: `bd45c994535a2045fde7e23c924d103aaa666c25`.
-
-Phase 7A is complete and locally accepted. Phase 7B is technically complete: one immutable-version-bound Submission attempt owns normalized draft Responses, explicit submit/withdraw Actions, reusable same-Context Asset evidence, authorized cross-Context immutable Content evidence, max-attempt enforcement, private pre-submit Admission drafts, and a canonical SHA-256 sealed submission manifest. Phase 7C is technically complete: authorized evaluator drafts, immutable version-bound rubric configuration, bounded score/criterion feedback, finalized Evaluation evidence hashes, draft privacy, finalized submitter visibility, and no hidden Admission/Membership transition. Phase 7D is technically complete: exact-revision Content Reader interaction cards, draft/resume/submit/withdraw UX, reusable Asset/evidence inputs, reviewer discovery/queue/detail, protected Submission-asset delivery, explicit Evaluation UX, four-locale copy, RTL-ready responsive layouts, and no Admission lifecycle side effects. Phase 7E is technically complete: opt-in school-exam and employment-application browser fixtures, historical version-drift proof, pre-Membership Admission isolation, full regression coverage, migration rollback/reapply proof and the Phase 7 implementation report are green. Local engineering validation is green, but the owner has **not** accepted the final browser UX because reviewer-side consequences were not obvious enough during manual use; Phase 7 remains at the human gate.
-
-Phase 7 builds one versioned structured-interaction kernel for applications, exams, questionnaires, evidence responses and evaluations.
-
-The owner-approved product direction is conversation-ready and now has a permanent connected-life north-star proof:
-
-- a direct paid-work relationship must eventually connect Contract → Commitment → Planner/Occurrence → Fulfillment/evidence → financial obligation → payment/settlement/accounting;
-- the system must always be able to explain scheduled/worked/accepted/earned/paid/outstanding/disputed state from linked authoritative records;
-- direct Contract creation must not require Need/Offer/Matching; Matching is optional discovery and is therefore sequenced after the Contract/Commitment/Fulfillment kernel;
-- structured interactions must be able to render later as cards inside Conversation;
-- conversation/messages remain collaboration, never hidden authority;
-- Phase 7 does not implement Admission v2 Conversation or realtime infrastructure;
-- current Admission remains compatible until Phase 8 composes these capabilities into the conversation-first workspace.
-
-Pre-implementation audit confirms reuse of:
-
-- Context authorization, including Admission Context before Membership;
-- private reusable Assets;
-- immutable Content revisions/evidence;
-- rich annotations for discussion rather than structured answers.
-
-Phase 7 must not create a parallel form engine, a second Asset store, an Admission-only response system, or a generic Workflow/Conversation subsystem.
-
-Binding downstream invariants:
-
-- Actor is participant identity;
-- Context is bounded collaboration/artifact environment;
-- Group Membership is not universal Context authorization;
-- Profile disclosure is not Context authorization;
-- Admission Context access does not imply Group access;
-- mutable Content drafts remain distinct from sealed publication evidence;
-- Content Blueprints remain creation recipes, not permanent hidden authority/type systems;
-- Submission/Response/Evaluation is authoritative structured interaction state;
-- Conversation is collaboration, not authority;
-- Admission v2 belongs to Phase 8;
-- real-time transport belongs to Phase 9.
-
-See `docs/PHASE_07_SUBMISSION_EVALUATION.md`, `docs/ADMISSION_COLLABORATION_ARCHITECTURE.md`, `docs/PRODUCTION_ROADMAP.md` and `docs/TARGET_ARCHITECTURE.md`.
+Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

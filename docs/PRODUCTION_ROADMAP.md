@@ -370,477 +370,359 @@ A production-wide official manual needs a general system/reference Content acces
 
 Before beginning a major new kernel after Phase 7, use the manual/audit pass to re-evaluate the remaining roadmap against the connected-life north star. Reordering or splitting later phases is allowed when the audit exposes a clearer dependency, but canonical boundaries (identity/authority, immutable evidence, conversation-not-authority, domain truth outside Content) must remain intact unless the human owner explicitly changes them.
 
-### Cross-cutting AI assistance and development provenance
+## Foundation F0 — Clean pre-AI office foundation
 
-This is an authorized cross-cutting capability, not a new numbered phase and not Phase 18 recommendation/personalization work.
+**Status: active on `integration/ideal-v1`.**
 
-The first slice may land on the Phase 7 + Documentation-as-Content baseline before Phase 8 when all of these remain true:
+Purpose: establish the cumulative Ideal-v1 trunk from the accepted pre-AI baseline while preserving the revised standalone Access Invitation, office-alpha Intent wizard/directory, Content/Context/manual foundations and Phase 7 structured interactions.
 
-- AI is plan-first and human-directed;
-- provider output is schema-constrained and treated as untrusted input;
-- Content mutations reuse existing policies and Actions;
-- stale proposals are rejected rather than overwriting newer revisions;
-- AI never auto-publishes or performs hidden authoritative transitions;
-- arbitrary generated code is rejected;
-- media generation is not treated as complete until an authorized Asset adapter feeds the existing private Asset/rights/scan/readiness pipeline;
-- Development Origins preserve curated provenance while repository docs/Git remain canonical;
-- the System Manual documents the behavior and contextual Help resolves to it;
-- tests, static analysis, formatting, build, migrations/rollback, backup/restore, security gates, and owner local/browser/mobile/RTL review pass.
+Included:
 
-Future expansion into form filling must preserve a strict distinction between suggesting/populating draft values and executing submit/approve/accept/finalize/pay actions.
+- standalone Access Invitation → welcome → register → verify → Get Started;
+- Group Invitations for existing verified users;
+- Need/Offer Intent capture for Property/Good/Service/Capital/Collaboration;
+- non-binding cash/mixed-value negotiation preference;
+- permission-aware read-only Intent Directory;
+- `office_alpha` focused navigation profile;
+- Documentation-as-Content;
+- removal of unused AI-assistance / Development-Origin runtime.
 
-## Pre-release gate — Invitation-only Intent Directory Alpha
+Exit: remote CI green, canonical docs synchronized, F0 report/worksheet recorded.
 
-**Status: implementation candidate on `feat/pre-release-office-intent-registry`; owner-local/browser acceptance pending.**
+## Phase 8 — Progressive Intent Journey v2
 
-This is an explicitly approved productization slice on top of the Phase 7 + Documentation + AI/provenance baseline. It is not Phase 14 Matching and does not reorder the obligation roadmap.
+Purpose: turn the first Intent wizard into a reusable decision graph without prematurely building a generic wizard engine.
 
-### Purpose
+Proof paths:
 
-Produce a deliberately small first publishable alpha that can replace a real office paper notebook for current Needs and Offers while preserving the later architecture.
+- buy/sell a simple product;
+- buy/rent property;
+- request/provide a service;
+- paid work / hire;
+- project collaboration combining property, service and capital.
 
-### Included
+Rules:
 
-- standalone system Access Invitations for new-account registration without Group Membership;
-- Group Invitations presented as invitations for existing verified users;
-- invitation-only welcome → register → verify → Get Started flow;
-- guided Need/Offer wizard over the existing `ActorProfileIntent` domain;
-- subject classification: Property, Good, Service, Capital, Collaboration, Other;
-- plain-language arrangement classification for buy/sell, temporary use/rent, service, financing and collaboration cases;
-- optional location and cash-range discovery data;
-- non-binding value-exchange preference for cash-only or negotiated mixed-value openness;
-- read-only permission-aware Needs, Offers & Services directory with practical filters;
-- explicit intent visibility independent from unrelated private Profile details;
-- unfinished AI assistance disabled by default.
+- previous answers determine later questions/blocks;
+- irrelevant fields stay hidden;
+- wizard state is orchestration state, not universal domain truth;
+- reuse `ActorProfileIntent`, Concepts and existing policies/Actions.
 
-### Explicitly excluded
+Exit: all proof paths create understandable, queryable current-intent state with no Match/Contract implication.
 
-- automated Match records, ranking or recommendations;
-- Proposal/Negotiation/Contract/Commitment;
-- ownership-share or capital-right creation;
-- Planner Occurrences;
-- Fulfillment;
-- invoices, ledger entries, payments or accounting;
-- automatic contact disclosure;
-- any interpretation of a cash range or mixed-value preference as binding terms.
+## Phase 9 — Published Content Library and reference/placement semantics
 
-### Exit gate
+Purpose: productize Content as an independent published artifact system usable across Personal, GroupSpace, Admission and future Relationship/Project Contexts.
 
-- standalone Access Invitation registration and verification works on the existing database;
-- Group invitation behavior for existing users remains correct;
-- user can record property/service/capital/collaboration Needs and Offers through the wizard;
-- cash/mixed-value preference remains explicitly advisory and non-binding;
-- private records are not visible to other users; authenticated records are discoverable without exposing otherwise-private Profile identity;
-- directory Need/Offer/Service and domain filters work on desktop/mobile/RTL;
-- AI assistance is hidden/inaccessible when disabled;
-- full PHPUnit, PHPStan, Pint, Vite, migration/rollback, queue/scheduler, backup/restore and security gates are green;
-- owner completes local/browser acceptance before release-branch integration or tagging.
+Deliverables:
 
-## Phase 8 — Admission v2: contextual onboarding
+- viewer-authorized library of **published** Content only;
+- filters by purpose/type: Post, Article, Book/Booklet, Diary/Note, Album, Lesson, Report/Activity, Evidence, Questionnaire and future Blueprint purposes;
+- orthogonal semantic filters through Concepts/classification;
+- author/context/language/date filters where useful;
+- contextual card/page `⋮` actions derived from permission;
+- normal Content placement/presentation that may follow current published revision;
+- evidence/citation that pins exact published revision + optional block/field/asset/relationship target;
+- Content or exact blocks/revisions may be referenced from GroupSpace, Relationship, Timeline, Planner, Contract/Fulfillment evidence without copying the artifact.
 
-### Purpose
+No parallel `group_posts`, `personal_articles`, album, diary or evidence tables.
 
-Upgrade the current Admission flow to use Profile requirements, Admission Context and Submissions.
+Exit: Alice can publish an Article/Album in her home Context, Diego can present/reference it in an authorized GroupSpace, and Bob can cite an exact revision/block as evidence without historical drift.
 
-### Deliverables
+## Phase 10 — Relationship + Relationship Context
 
-- configurable admission mode;
-- requested profile facts/assertions;
-- reuse/share-existing-profile flow;
-- admission-specific questionnaire;
-- document/evidence requirements;
-- agreement requirements;
-- shared candidate/reviewer Conversation inside Admission Context;
-- optional reviewer-internal Conversation with independent audience authorization;
-- read-only system timeline generated from durable Admission/domain events;
-- reviewer clarification/evidence requests expressed through conversation plus structured requirements rather than multiplying lifecycle states for every question;
-- explicit authoritative actions for submission, review, approval/rejection, exact Agreement-version acceptance, and Membership finalization;
-- proposed Group Agreement revision references where discussion reveals a Group-wide rule change, without mutating the active version;
-- candidate-specific proposed terms routed toward the future negotiated Agreement/Contract model rather than Group-wide Agreement mutation;
-- initial role/context provisioning policy;
-- explicit reviewer attention/discovery state so submitted requirements cannot exist only on a hard-to-find review page;
-- conversation-embedded structured cards/actions for requested evidence, Submission state and Evaluation/review state, with durable system timeline entries after authoritative actions;
-- candidate-visible review/clarification/evaluation state so both sides can understand what changed without hunting across unrelated screens;
-- audit trail.
+Purpose: represent meaningful ongoing Actor-to-Actor / Actor-to-organization participation outside Group Membership.
 
-### Exit gate
+Deliverables:
 
-Invitation onboarding can represent simple instant-ish membership and reviewed application flows without granting premature Membership; a reviewed application can carry persistent candidate/reviewer collaboration and structured evidence while all authoritative state remains explicit and auditable. A candidate submission or reviewer action is visibly discoverable to the authorized other side and produces an understandable conversation/system-timeline consequence without making message wording authoritative.
+- Relationship;
+- explicit participants/roles;
+- purpose/Concept;
+- lifecycle;
+- dedicated Context/access policy;
+- links to originating Intent/direct request;
+- capability discovery based on relationship purpose, not combinatorial type enums.
 
-## Phase 9 — Real-time collaboration infrastructure
+Proof: Alice ↔ Bob client/provider; Alice ↔ Carol collaborator/capital relationship.
 
-### Purpose
+Exit: direct relationships exist without fake Groups and can host independent Content/Conversation/Planner capabilities later.
 
-Make collaborative experiences live without making WebSockets authoritative.
+## Phase 11 — Conversation + Unified Timeline
 
-### Deliverables
+Purpose: make collaboration understandable while keeping messages non-authoritative.
 
-- domain event/outbox pattern;
-- post-commit dispatch;
-- queue-backed broadcasting;
-- authorized channels;
-- notifications;
-- GroupSpace and Admission-context chat/reply live delivery over the same authorized real-time infrastructure;
-- system conversation entries derived from committed domain events rather than messages triggering hidden state changes;
-- annotation/reaction live delivery;
-- submission/workflow event delivery;
-- reconnect/reload correctness;
-- idempotent clients where necessary.
+Deliverables:
 
-### Exit gate
+- Context-scoped Conversation/messages/replies;
+- attachments/reference cards through existing Assets/Content;
+- read-only Timeline projection from durable domain events;
+- links from timeline entries to authoritative source object/action;
+- relationship/admission/group composition.
 
-Two browser sessions receive authorized updates live, and a reload reconstructs identical authoritative state from DB.
+Exit: a reload reconstructs the same conversation/timeline state; “I agree” text alone changes no authoritative lifecycle.
 
-## Phase 10 — Generic Workflow Kernel
+## Phase 12 — Personal Activity / Planner
 
-### Purpose
+Purpose: support everyday one-time and recurring activity for personal and collaborative life.
 
-Extract reusable state/transition behavior only where proven.
-
-### Deliverables
-
-- WorkflowDefinition/Version;
-- State;
-- Transition;
-- Requirement;
-- role/permission authorization;
-- transition evidence/history;
-- integration adapters.
-
-### Proof cases
-
-- Admission;
-- a second unrelated review/approval domain.
-
-### Exit gate
-
-The engine supports both without weakening their domain invariants.
-
-## Phase 11 — Planner
-
-### Purpose
-
-Unify personal and collaborative temporal planning.
-
-### Deliverables
+Deliverables:
 
 - Plan;
 - ScheduleRule;
 - Occurrence;
 - Participant;
-- Completion;
-- Evidence;
-- recurrence;
-- timezone correctness;
-- actual execution start/end tracking where appropriate;
-- reminders/notifications;
-- calendar/list views;
-- explicit source/provenance hooks so future Contract Commitments can materialize Plans/Occurrences without Planner becoming obligation authority.
+- actual start/end;
+- completion;
+- Content/Asset evidence;
+- reminders seam;
+- list/calendar/today views.
 
-### Proof cases
+Proof: Bob studies, Alice has an appointment, Bob works selected 08:00–17:00 days.
 
-- nightly chess study;
-- weekly class;
-- paid workday/shift such as 08:00–17:00 across selected consecutive or non-consecutive dates.
+Exit: one planner supports personal and relationship-sourced activity without becoming Contract authority.
 
-### Exit gate
+## Phase 13 — Personal Accounting v1
 
-One planner handles all three with purpose-specific UX.
+Purpose: give immediate everyday money tracking with rigorous accounting underneath.
 
-## Phase 12 — Group Blueprints and Domain Packs v1
+Friendly actions:
 
-### Purpose
+- Opening balance;
+- Add expense;
+- Add income;
+- Transfer.
 
-Make the generic kernels usable as focused products.
-
-### Deliverables
-
-- versioned GroupBlueprint;
-- roles/permissions provisioning;
-- Spaces/Contexts;
-- Content Blueprints;
-- onboarding requirements;
-- planner templates;
-- explicit upgrade semantics.
-
-### First Domain Packs
-
-- Learning;
-- Project / Work;
-- Personal.
-
-### Proof cases
-
-- Chess Learning Group;
-- Construction/Project Group.
-
-### Exit gate
-
-A user can create each focused environment without understanding generic infrastructure.
-
-## Phase 13 — Negotiation, Agreement, Commitment and Fulfillment
-
-### Purpose
-
-Turn a direct human/organization request or a future matched opportunity into explicit obligations and evidence. This phase must **not** depend on Need/Offer/Matching; people who already know each other can negotiate and contract directly.
-
-### Deliverables
-
-- direct Proposal creation;
-- Negotiation Context;
-- negotiated Agreement/Contract distinct from Group Agreement;
-- party model and explicit required-party acceptance;
-- immutable proposed/accepted Contract versions with activation/supersession/effective-time semantics;
-- versioned terms referencing sealed Content;
-- negotiation Conversation as collaborative evidence, with explicit domain Actions as the only source of acceptance/activation truth;
-- Commitment, including paired performance/payment obligations where applicable;
-- Planner handoff/binding so recurring or selected-date Commitments can materialize Plans/Occurrences without duplicating obligation truth;
-- partial/full Fulfillment;
-- actual start/end, quantity/duration and outcome/status where appropriate;
-- Content/Asset evidence references;
-- authorized fulfillment review: accept, reject, request clarification/correction;
-- disputes/corrections as explicit lifecycle where required;
-- Contract amendment behavior that affects future work while preserving historical governed versions;
-- financial-obligation handoff interface.
-
-### Proof cases
-
-- direct paid-work relationship: 1,500,000 per accepted 08:00–17:00 workday across one or more selected dates, with work evidence, review, earned amount and future amendment semantics;
-- a non-family service/provider relationship proving the same kernels are not employment-specific.
-
-### Exit gate
-
-A service relationship can progress from direct proposal through exact Contract acceptance to scheduled work, evidence-bearing Fulfillment and explicit review with full provenance. No Match record is required, and accepted Fulfillment can hand off an exact financial obligation without yet implementing the ledger.
-
-## Phase 14 — Need / Offer / Matching
-
-### Purpose
-
-Model discoverable supply and demand and hand a useful match into the already-proven Proposal/Negotiation/Contract path.
-
-### Deliverables
-
-- Need;
-- Offer;
-- semantic Concept requirements;
-- quantity/unit constraints;
-- time/location/context constraints;
-- lifecycle;
-- matching service;
-- explanations for matches;
-- privacy/access;
-- explicit proposal handoff into Phase 13 Negotiation/Contract without creating obligations from the match itself.
-
-### Proof cases
-
-- construction labor need/offer;
-- tourism/restaurant service need/offer.
-
-### Exit gate
-
-Matching is useful, explainable and privacy-safe; it can initiate the same Proposal/Negotiation flow used by direct relationships, but never creates an obligation by itself.
-
-## Phase 15 — Production Accounting Kernel
-
-Architecture: `docs/FINANCIAL_ARCHITECTURE.md`.
-
-### Purpose
-
-Record financial truth safely.
-
-### Deliverables
+Kernel:
 
 - MonetaryUnit;
-- ExchangeRate;
 - Ledger;
-- Account/chart structure;
+- Account;
 - JournalEntry;
 - JournalLine;
-- reversal;
-- idempotent posting;
-- balance cache/snapshot;
-- source-domain accounting actions;
-- obligation/settlement reporting that can answer earned/owed, paid, outstanding and disputed amounts by Actor/Contract/period;
-- reporting foundation.
+- reversal/correction;
+- derived balances and period summaries.
 
-### Proof cases
+Proof: Bob starts with X cash, buys gloves for W, current balance derives to X−W; daily/week/month/year income/expense/net reports reconcile to immutable entries.
 
-- personal expense;
-- direct paid-work accrual/payment sourced from accepted Phase 13 Fulfillment;
-- restaurant payable/payment.
+Exit: normal users never need debit/credit terminology for routine entry, while ledger truth remains balanced/immutable.
 
-### Exit gate
+## Phase 14 — Proposal + Negotiation
 
-All proof cases produce correct immutable balanced accounting and survive concurrency/idempotency tests.
+Purpose: turn a direct request or discovered opportunity into explicit proposed terms.
 
-## Phase 16 — Financial Laboratory
+Deliverables:
 
-### Purpose
+- Proposal;
+- Negotiation Context;
+- parties;
+- versioned proposed terms using sealed Content revisions where appropriate;
+- Conversation around proposal;
+- accept/reject/request-change UI that still does not create Contract until the explicit Contract action.
 
-Experiment safely with internal value systems.
+Proof: Alice proposes Riverside construction collaboration to Bob and Carol.
 
-### Deliverables
+## Phase 15 — Contract, ContractVersion and explicit acceptance
 
-- FinancialInstrument;
-- immutable instrument versions;
-- issuance/transfer/burn;
-- versioned valuation policy;
-- valuation snapshots;
-- reserve/distribution policy;
-- simulated redemption;
-- OperationalCycle experiment model;
-- strict separation from real payment infrastructure.
+Purpose: create exact party-specific authoritative terms.
 
-### Exit gate
+Deliverables:
 
-A Group can run a repeatable instrument experiment without creating real-world cash obligations or corrupting the production ledger.
+- Contract;
+- immutable ContractVersion;
+- exact parties/roles;
+- sealed terms Content reference;
+- required-party acceptance;
+- activation/supersession/effective-time;
+- amendments for future behavior without historical mutation.
 
-## Phase 17 — Controlled external-money integration
+Proof: Alice/Bob paid-work terms and Alice/Bob/Carol Riverside multi-party terms.
 
-### Purpose
+## Phase 16 — Commitment + Fulfillment
 
-Support approved real payment/payout flows without turning arbitrary Group instruments into money.
+Purpose: distinguish what must happen from what actually happened.
 
-### Preconditions
+Deliverables:
 
-- Accounting Kernel stable;
-- operational monitoring/backups mature;
-- selected provider;
-- jurisdiction/use-case compliance review;
-- explicit product approval.
+- Commitment;
+- Planner binding/materialization;
+- Fulfillment;
+- quantity/duration/start/end/status;
+- exact Content/Asset evidence;
+- accept/reject/request-clarification review;
+- dispute/correction lifecycle where required.
 
-### Deliverables
+Proof: Bob performs and submits one construction workday; Alice reviews it.
 
-- PaymentIntent;
-- ProviderAttempt;
-- PayoutRequest;
-- webhook verification/idempotency;
-- reconciliation;
-- accounting posting;
-- limits/holds;
-- fraud/abuse controls;
-- approved redemption policy where legally/operationally valid.
+## Phase 17 — Financial Obligation + Settlement bridge
 
-### Exit gate
+Purpose: let authoritative relationship events create financial consequences safely.
 
-External money movement reconciles exactly to provider evidence and the accounting ledger.
-
-## Phase 18 — Discovery and personalization
-
-### Purpose
-
-Use explicit semantic/profile data to improve usefulness.
-
-### Deliverables
-
-- semantic search;
-- Content/Group/Blueprint discovery;
-- Need/Offer discovery;
-- explainable recommendation reasons;
-- user controls;
-- privacy-preserving signals;
-- feedback loops.
-
-### Rule
-
-Do not infer sensitive facts merely to improve recommendations.
-
-### Exit gate
-
-Recommendations can explain why an item appears and users can control relevant profile/discovery inputs.
-
-## Phase 19 — Production hardening and real-domain pilots
-
-### Purpose
-
-Validate the whole platform under real usage.
-
-### Pilot domains
-
-At minimum:
-
-- Learning;
-- Project/Construction;
-- Personal workspace.
-
-### Hardening
-
-- security assessment;
-- authorization audit;
-- privacy/export/deletion;
-- retention;
-- moderation/reporting;
-- accessibility audit;
-- mobile/browser matrix;
-- performance/load tests;
-- DB/index review;
-- queue failure drills;
-- backup/restore drill;
-- incident runbook;
-- observability dashboards;
-- deployment rollback;
-- dependency vulnerability process.
-
-### Exit gate
-
-Each pilot runs real workflows without bypassing kernels, and critical operational/security issues are resolved.
-
-## Phase 20 — Production release and operating loop
-
-### Purpose
-
-Establish a supportable production release rather than declaring the project "finished forever."
-
-### Release gate
-
-- all Phase 19 critical gates pass;
-- documented deployment;
-- tested rollback;
-- tested restore;
-- alerting;
-- support/incident ownership;
-- migration plan;
-- release notes;
-- version tag;
-- known limitations documented;
-- privacy/security obligations addressed for enabled features;
-- no experimental financial capability is exposed as production redeemable value unless Phase 17 specifically approved it.
-
-### Post-release loop
+Chain:
 
 ~~~text
-Observe
-→ measure
-→ collect user friction
-→ classify problem
-→ improve Blueprint/UX first
-→ change kernel only when evidence requires it
-→ test
-→ release
+accepted ContractVersion
+→ Commitment
+→ accepted Fulfillment or other defined economic event
+→ Financial Obligation
+→ explicit accounting posting Action
+→ JournalEntry
+→ Settlement / Payment record
+→ settlement accounting
 ~~~
 
-The platform is never "complete" in the sense of requiring no future evolution. Phase 20 means the defined product scope is reliably operable in production.
+Exit: the system derives scheduled/worked/accepted/earned/paid/outstanding/disputed values and never mutates a magic balance directly.
 
-## What not to do during this roadmap
+## Phase 18 — Journey / Relationship / Domain Blueprints
 
-- do not implement all phases in one agent session;
-- do not create speculative tables for distant phases;
-- do not rewrite stable kernels because a future name may be cleaner;
-- do not use seeders as product architecture;
-- do not introduce a universal JSON entity table;
-- do not turn all Content into domain truth;
-- do not turn all domain objects into Content;
-- do not build recommendation AI before trustworthy semantic/profile data exists;
-- do not connect laboratory tokens to bank payouts before the controlled-money phase;
-- do not claim production readiness from test count alone.
+Purpose: productize proven compositions only after their patterns exist.
 
-## Agent stop rule
+Initial compositions:
 
-At the completion of each phase:
+- Simple Sale;
+- Rental;
+- Service Job;
+- Employment / paid work;
+- Construction Partnership;
+- Personal activity.
 
-1. write/update the phase report;
-2. report exact Git state;
-3. report validation actually run;
-4. identify unresolved issues;
-5. stop;
-6. wait for human/architecture review before beginning the next phase.
+Blueprints configure terminology, recommended capabilities, Content templates and guided entry; they never replace domain authority.
+
+## Phase 19 — Need / Offer Matching
+
+Purpose: add explainable discovery after the downstream Relationship/Proposal/Contract path is proven.
+
+Deliverables:
+
+- candidate matching over Concept/quantity/location/time/value constraints;
+- explanation;
+- privacy-safe discovery;
+- explicit handoff to Relationship/Proposal;
+- no obligation from Match itself.
+
+Proof: Alice's construction Need finds Bob's Service Offer; Alice's Capital Need finds Carol's Capital Offer.
+
+## Phase 20 — Groups / Communities social composition
+
+Purpose: make Groups feel like focused social/application environments composed from independent kernels.
+
+GroupSpace may present, as authorized:
+
+- Posts/Articles/Books/Albums;
+- Conversation;
+- people/roles;
+- Needs/Offers;
+- Plans/activities;
+- Submissions;
+- Relationships/projects;
+- timelines.
+
+Do not duplicate module storage inside Groups.
+
+## Phase 21 — Home / Today personal operating view
+
+Purpose: make the connected system feel like one simple application.
+
+Derived view may answer:
+
+- what should I do today?
+- what changed?
+- who is waiting on me?
+- who am I waiting for?
+- current relationships/groups;
+- active Needs/Offers;
+- today's income/expense/net;
+- earned/paid/outstanding obligations;
+- recent Content/activity.
+
+Everything links back to authoritative sources.
+
+## Phase 22 — Realtime + Notifications
+
+Add outbox/post-commit delivery, queue-backed broadcasting, authorized channels, notifications and reconnect correctness **after** non-realtime Conversation/Timeline semantics are proven.
+
+Database/domain Actions remain authoritative.
+
+## Phase 23 — Generic Workflow extraction
+
+Extract WorkflowDefinition/State/Transition/Requirement only after Admission plus at least one unrelated proven domain demonstrate the same reusable pattern.
+
+Do not make Workflow a universal interpreter.
+
+## Phase 24 — Reputation / verified history
+
+Derive context-sensitive trust/history from real evidence such as accepted Fulfillment, Evaluations, verified skills and completed relationships.
+
+No universal opaque score.
+
+## Phase 25 — Discovery / recommendations
+
+Recommend people, Groups, Content, projects and opportunities from explicit authorized data with human-readable reasons and user control.
+
+Avoid addictive opaque-feed optimization.
+
+## Phase 26 — AI Copilot
+
+Reintroduce AI only after deterministic UX/domain Actions are excellent.
+
+AI may:
+
+- interpret natural language;
+- prefill wizard drafts;
+- prepare Content revisions;
+- prepare activity/expense records;
+- prepare Proposal/Contract revisions.
+
+AI may not silently submit, approve, accept, publish, finalize, pay or post accounting truth.
+
+Provider output remains untrusted and must pass the same server-side validation/policy/Action as human UI.
+
+## Phase 27 — System-wide UX / accessibility / localization polish
+
+Unify:
+
+- responsive/mobile/RTL;
+- navigation/progressive disclosure;
+- empty/loading/error states;
+- accessible keyboard/focus behavior;
+- consistent cards/tables/`⋮` menus;
+- canonical English manual/UI copy;
+- reviewed Persian translation workflow;
+- Arabic/Simplified Chinese after the translation process is proven.
+
+## Phase 28 — Production hardening and real-domain pilots
+
+Pilot the complete system with:
+
+- Riverside housing/construction story;
+- paid-work relationship;
+- simple sale/rental;
+- personal activity/accounting;
+- Group/community collaboration.
+
+Hardening includes security assessment, privacy/export/deletion/retention, moderation, performance/index review, queue failure drills, backup/restore, observability, deployment/rollback and incident runbook.
+
+## Phase 29 — Integrated release candidate + deferred owner acceptance
+
+Freeze one immutable candidate from `integration/ideal-v1`.
+
+Generate the completed `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+
+Owner validates milestone checkpoints and then the full Alice/Bob/Carol/Diego 0→100 browser story on the continuing local database.
+
+Defects become regression-tested correction commits; do not rewrite historical checkpoint SHAs.
+
+## Phase 30 — Stable release and operating loop
+
+After the final human gate:
+
+- release branch;
+- immutable release tag;
+- deployment artifact;
+- migration/backup/rollback confirmation;
+- release notes + known limitations;
+- support/incident ownership;
+- feedback → roadmap loop.
+
+## Remote progression rule
+
+The agent proceeds from one remotely-green milestone to the next without waiting for local browser acceptance, unless a stop condition in `docs/CONTINUOUS_REMOTE_EXECUTION.md` is met.

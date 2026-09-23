@@ -1,133 +1,128 @@
 # IET Project Authority
 
-Before any nontrivial implementation work, read the repository's canonical product documents in this order:
+Before nontrivial implementation, read in this order:
 
 1. `docs/PROJECT_COMPASS.md`
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
 4. `docs/PRODUCTION_ROADMAP.md`
-5. the currently active phase contract (`docs/PHASE_07_SUBMISSION_EVALUATION.md`)
-6. relevant ADRs
-7. `.ai/rules/index.md` and every matching path rule
+5. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
+6. `docs/EXAMPLE_STORY_WORLD.md`
+7. the active milestone contract/report
+8. relevant ADRs
+9. `.ai/rules/index.md` and every matching path rule
 
-The repository is the durable source of truth. Chat transcripts, legacy migrations, issue comments, and historical reports are supporting evidence only.
+The repository is the durable source of truth. Chat history is discussion evidence only.
+
+## Active development mode
+
+The human owner has authorized **continuous remote Ideal-v1 development**.
+
+Integration trunk:
+
+`integration/ideal-v1`
+
+Remote milestones still run full automated quality gates, but owner-local/browser acceptance is deferred to the cumulative worksheet in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+
+Do not stop merely because a milestone reached its old human-local gate. When remote CI is green, docs/report/checkpoint are complete, and no stop condition exists, integrate the milestone and continue to the next roadmap phase.
+
+## Current foundation
+
+The clean Ideal-v1 line is rooted at the last accepted pre-AI baseline:
+
+`2c7a5c35a31fe86d761a1cafd189560bec220784`
+
+The office Access Invitation + Intent Registry work is being rebuilt on that line. The unused AI-assistance and Development-Origin runtime is intentionally absent. AI returns only at its dedicated later roadmap milestone.
 
 ## Phase discipline
 
-- Work on one accepted roadmap phase at a time.
-- Do not implement later phases speculatively.
-- Audit existing code/tests before changing architecture.
-- Preserve frozen boundaries unless the human owner explicitly approves a new architecture decision.
-- Record meaningful phase results under `Development-CodexReports/`.
-- Stop at the phase exit gate for review before beginning the next phase.
+- Work on one **remote milestone** at a time.
+- A milestone may consume earlier domains but must not silently redefine their authority.
+- Do not implement later milestones inside an earlier branch merely because target architecture describes them.
+- Prefer the smallest new authoritative layer needed; reuse existing Context, Content, Concept, Asset, Profile, Submission, Group and policy/action systems.
+- Never replace specialized domain truth with generic JSON merely for convenience.
+- Record meaningful milestone results under `Development-CodexReports/`.
+- Append exact deferred local/browser checks to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+- Update `docs/handoffs/continuous-ideal-v1.md` after each integration checkpoint.
+
+## Content / Context rule
+
+There is one independent Content system.
+
+- A Content item has an origin/home Context for authoring, ownership and authorization.
+- GroupSpace is one Context kind, not the universal Content owner.
+- Published Content may be presented/referenced from other authorized Contexts without copying it.
+- Normal presentation may follow the current published revision.
+- Evidence/history must pin the exact published revision and optional exact block/field/asset/relationship target.
+- Posts, Articles, Books, Diaries, Albums, Evidence pages, Lessons and Questionnaires are Content purposes/Blueprint experiences, not parallel storage systems.
+- Contexts compose independent capabilities. Do not create duplicate per-Group/per-Relationship versions of Content, Planner, Accounting, Submission, etc.
+
+## Progressive capability rule
+
+User journeys start with human intent and progressively reveal only relevant capabilities.
+
+Examples:
+
+- simple sale: Intent + optional Relationship/discussion + optional finance;
+- paid work: Intent + Relationship + Contract + Planner + Fulfillment + finance;
+- Riverside Home Project: Property + Service + Capital + Collaboration + multi-party Contract + Planner + Fulfillment + Accounting.
+
+Do not create combinatorial domain types such as `employment_sale_financing`. Compose trustworthy kernels.
 
 ## Documentation discipline
 
-IET has one architecture and two intentionally different documentation surfaces:
+Every material user-facing milestone updates both:
 
-- repository Markdown under `docs/` is developer/architecture authority;
-- end-user manuals/help/courses are normal versioned IET Content, currently materialized in the authenticated `Reference` Context through the ordinary Blueprint/Reader/annotation system.
+- repository developer/architecture docs;
+- `App\Support\SystemManualContent`, which is materialized as ordinary versioned IET Content.
 
-Do not create a parallel user-documentation product or a separately evolving handbook branch.
+Manual content must teach exact UI interaction:
 
-For every milestone that changes material user-facing behavior:
+`WHO → WHERE → WHAT UI → CLICK/SELECT/TYPE → DURABLE RESULT → WHO CAN SEE → WHAT IT DOES NOT IMPLY`.
 
-- update the official System Manual Content source while runtime work is still active;
-- document WHO → WHERE/Context → WHAT object → ACTION → durable RESULT → WHO CAN SEE IT;
-- distinguish current implemented behavior from ideal target behavior;
-- preserve official editions as immutable published Content revisions;
-- keep questions, notes, corrections and ideas as edition/section-specific annotation overlays until an authorized maintainer resolves them;
-- when feedback is incorporated, link the immutable disposition to the later sealed official revision;
-- keep contextual Help routing accurate for affected product surfaces;
-- do not formally close the milestone until its material workflow is understandable from the System Manual.
+Use the canonical Alice/Bob/Carol/Diego story in `docs/EXAMPLE_STORY_WORLD.md` so registration examples continue naturally into Groups, intents, relationships, work, evidence and accounting.
 
-English is the initial canonical editorial source. Persian is the next reviewed translation target; Arabic and Simplified Chinese follow the same reviewed translation lifecycle. AI-assisted translation may be draft material but is not automatically native-quality/verified.
+English is the canonical editorial source. Other language catalogs may remain draft-equivalent until reviewed; never call machine-generated translation native-reviewed.
 
-Canonical architecture documents remain authoritative over explanatory System Manual prose when a conflict is discovered; fix the manual through a new official revision rather than silently changing architecture.
+## Git discipline
 
-## AI assistance and development provenance discipline
+- never develop directly on `main`;
+- integrate completed remote milestones into `integration/ideal-v1`;
+- use coherent feature branches for new milestones;
+- never force-push shared history;
+- never rewrite an already recorded checkpoint to hide a later correction;
+- use PR/integration boundaries where supported;
+- record exact SHA when checkpoint-tag tooling is unavailable;
+- production/public release tags remain separate from development checkpoints.
 
-For AI-assisted application behavior:
+## Database discipline
 
-- AI plans against the exact current authorized object/revision; it does not receive direct database authority.
-- Apply through existing policies and domain Actions, and reauthorize at mutation time.
-- Reject stale plans after the target changes.
-- Never auto-publish or convert natural-language wording into submit/approve/accept/finalize/payment authority.
-- Never accept arbitrary generated PHP, Blade, JavaScript, SQL, shell code, or executable validation/configuration.
-- Generated media must enter through the normal private Asset provenance/rights/scan/readiness pipeline before it can be attached or published.
-- Development Origins are immutable supporting provenance. They may link a curated chat/design summary to phase/version/commits/docs, but canonical repository authority remains unchanged.
-- Do not automatically copy private raw chat history into durable application records.
+- shared migrations are append-only;
+- never assume `migrate:fresh`;
+- preserve immutable evidence/history;
+- test forward migration and rollback/reapply where supported;
+- use transactions/locks/idempotency for race-sensitive mutations;
+- derived balances/caches are never authoritative financial truth.
 
-Binding cross-cutting contract: `docs/AI_ASSISTANCE_AND_DEVELOPMENT_PROVENANCE.md`.
+## Architectural invariants
 
-## Current roadmap position
+- User authentication and Actor participation remain distinct.
+- Platform authority, Group Membership and Context access remain distinct.
+- Conversation/Content wording is collaboration/evidence, not hidden approval/acceptance/payment authority.
+- Group Agreement and party-specific negotiated Contract remain distinct.
+- Need/Offer is current intent, not Match/Proposal/Contract/obligation.
+- Match is advisory and creates no obligation.
+- Contract versions are explicit and immutable once accepted.
+- Fulfillment records what happened against Commitments.
+- financial consequence flows through explicit obligation/accounting actions; balance is derived.
+- realtime transport is never authoritative.
+- AI, when reintroduced later, may prepare proposals/drafts but does not bypass domain Actions.
 
-- Phase 0 — canonical architecture: complete.
-- Phase 1 — production invitation/registration/admission journey: complete and accepted.
-- Phase 2 — delivery and operations baseline: complete.
-- Phase 3 — Concept Kernel: complete.
-- Phase 4 — Actor/Party and progressive Profile: complete and human-owner accepted at `fef290d2f1d58f69ddab1fbfd00ec68ff2a186d7`.
-- Phase 5 — Generic Content Context: **complete and human-owner accepted on 2026-09-22**.
-- Accepted Phase 5 branch HEAD before closure docs: `2561eda91c3e1db84c77816e8c15324d8f0fd939`.
-- Phase 6 — Content Blueprints and unified productized authoring: **complete and human-owner accepted for roadmap progression on 2026-09-22**.
-- Frozen Phase 6 runtime candidate: `ad07445b16a708b4efd67461f5cef12201ffa8b1` (GitHub Actions run `35739828516`: 364 tests / 1934 assertions, PHPStan/Pint/Vite/ops/security green).
-- Local Phase 6 closure on synchronized HEAD `b33bdcf`: three migrations applied; focused gate 20 tests / 121 assertions; full suite 364 / 1934; PHPStan and Vite green; clean diff/tree after restoring unrelated whole-repository Pint rewrites; browser review found no blocking defect.
-- Phase 7 — Submission / Response / Evaluation is **runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending** on `feat/phase-07-submission-evaluation`. Binding contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`.
-- Do not create parallel Personal/Group/Admission Content systems, silently upgrade existing Content, or turn evidence count into reputation.
-- Phase 6 preserves the proven `SpaceContent*` substrate while making it Context-generic and Blueprint-first. Do not mass-rename it, remove legacy compatibility columns, rewrite sealed publication evidence, invent fake Groups, or pull Phase 7/8/9/10/11/13/14 work forward.
-- Temporal/Profile boundaries from Phase 4 remain binding.
+## Stop conditions
 
-## Current pre-release slice
+Pause continuous mode only for a genuine architecture contradiction, destructive/data-loss requirement, unresolved authorization/legal/financial meaning, explicit new dependency/credential approval, unsafe Git state, or unavailable required remote validation.
 
-The explicitly authorized active slice is `feat/pre-release-office-intent-registry`, based on the accepted Phase 7/manual/AI-provenance line. Its purpose is a small invitation-only alpha: standalone account Access Invitation, guided Profile Need/Offer creation, permission-aware read-only Intent Directory, and non-binding cash/mixed-value negotiation preference.
-
-This slice must not introduce automated Matching, Proposal/Contract/Commitment, Planner, ownership/capital rights, payment, or Accounting semantics. `ActorProfileIntent` remains current intent only. Phase 8 stays closed until this release gate is accepted.
-
-The default release profile is `office_alpha`: keep ordinary navigation intentionally focused on Dashboard, Needs/Offers/Services and Profile, while preserving advanced kernels behind the `full` release profile. Do not delete mature domains merely to simplify the published surface.
-
-AI assistance is disabled by default for the alpha; enabling it later still requires the binding AI contract.
-
-Remote runtime candidate: `cb4ae0783dc8f0d8ad424422b4cc7d6a9dc01520`. GitHub Actions run `35903601901` is green at 419 tests / 2306 assertions with PHPStan/Pint/Vite/migrations/ops/backup/security green. Do not tag until owner-local/browser/mobile/RTL acceptance is recorded.
-
-## Previous technical candidate
-
-The Phase 7 + Documentation-as-Content runtime candidate is:
-
-`6e6443051e93d4f0fd653758ba1979a7dc831de1`
-
-on:
-
-`feat/phase-07-submission-evaluation`
-
-GitHub Actions run `35848121420` on that exact runtime candidate is green:
-
-- **398 PHPUnit tests / 2169 assertions**;
-- PHPStan: no errors;
-- changed-file Pint: **327 files passed**;
-- Vite production build: passed;
-- Phase 7 rollback/reapply + scheduler/database-queue smoke: passed;
-- SQLite backup → restore smoke: passed;
-- npm audit: 0 vulnerabilities;
-- Composer security audit: clean.
-
-Phases 7A–7E remain technically complete. The post-Phase-7 documentation/audit slice is also technically green: authenticated Reference Context, official versioned System Manual Content, Guide/Documentation Blueprint, contextual Help routing, exact-section Question/Correction/Idea feedback, immutable feedback-disposition provenance, and explicit repository-source manual sync are automated.
-
-The docs/audit pass also hardened Content Actions so required UUID/hash/evidence identity is supplied explicitly by authoritative Actions rather than relying only on Eloquent create events. This preserves deterministic behavior even in tests or tooling that fake events.
-
-Do not begin Phase 8 runtime work until the owner completes the local migration/seed/browser acceptance of this candidate. The browser gate now includes both the existing Phase 7 submit/review journey and the System Manual / contextual Help / feedback experience. Conversation remains collaboration rather than authority; Phase 7 does not implement Admission v2 Conversation or realtime infrastructure. Future work must preserve the canonical connected-life proof in PROJECT_COMPASS: direct Contract → Commitment → Planner/Occurrence → Fulfillment/evidence → obligation → settlement/accounting, with Need/Offer/Matching optional and downstream of direct contracting.
-
-## Architectural stop conditions
-
-Stop and request review before code changes that would:
-
-- change User/Actor identity semantics;
-- bypass Invitation → Admission → Membership;
-- weaken immutable Agreement/Content/accounting evidence;
-- introduce a universal JSON entity in place of specialized domains;
-- make GroupSpace the permanent universal container for all future Content;
-- connect experimental financial instruments to external money;
-- add destructive migrations or discard user data;
-- silently change a frozen boundary in `docs/PROJECT_COMPASS.md`.
+Ordinary test failures are not stop conditions: fix them, add regression coverage and continue.
 
 ---
 

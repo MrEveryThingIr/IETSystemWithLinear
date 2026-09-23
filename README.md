@@ -1,80 +1,65 @@
 # IET / EveryThing
 
-IET is a Laravel-based coordination platform designed around reusable kernels for identity, governed groups, structured interactive Content, semantics, planning, workflows, exchange, commitments, and accounting.
+IET is a Laravel-based coordination platform for connected personal, social, community, work, Content, planning, relationship and financial activity.
 
-The project deliberately aims for **generic infrastructure internally and focused experiences externally**. A user should interact with concrete products such as a learning group, project workspace, personal planner, hiring flow, or tourism workflow rather than raw generic primitives.
+The architecture is **generic inside and specific outside**: users should experience understandable actions such as “record a need”, “publish an article”, “start work”, “add an expense”, “propose terms” or “join a project”, while specialized kernels preserve trustworthy domain state underneath.
 
-## Current baseline
+## Active development line
 
-Current accepted product line:
+Continuous remote Ideal-v1 integration:
 
-- Phases 0–6 are complete and accepted.
-- Phase 7 — Submission / Response / Evaluation is runtime-complete and automated-green; owner-local/browser/mobile/RTL acceptance remains the gate before Phase 8.
-- The Documentation-as-Content audit is implemented on the Phase 7 line.
-- The active pre-release branch is `feat/pre-release-office-intent-registry`, productizing a small invitation-only alpha without opening Phase 8.
-- The alpha adds standalone Access Invitations, a guided Need/Offer wizard, and a permission-aware read-only Needs/Offers/Services directory over the existing Profile Intent domain.
-- AI assistance remains in the codebase but is disabled by default for this alpha; Development Origin provenance remains available to authorized platform auditors.
+~~~text
+integration/ideal-v1
+~~~
 
-Read `docs/CURRENT_STATE.md` for exact commits, CI evidence, and the current local acceptance gate.
+The line is rooted at the accepted pre-AI baseline and intentionally excludes the currently unused AI-assistance / Development-Origin runtime.
 
-## Canonical project documents
+The first reconstructed foundation retains:
 
-Read these instead of relying on chat history:
+- standalone Access Invitations for new accounts;
+- Group Invitations for existing verified users;
+- User/Actor/Profile;
+- Groups/Membership/permissions;
+- Contexts;
+- one independent versioned Content system;
+- Content Blueprints, blocks, Assets, publication/evidence;
+- Submission/Response/Evaluation;
+- system manual as versioned Content;
+- guided Need/Offer capture;
+- permission-aware Intent Directory.
+
+AI is deferred to its later roadmap phase.
+
+## Canonical reading order
 
 1. [Project Compass](docs/PROJECT_COMPASS.md)
 2. [Current State](docs/CURRENT_STATE.md)
 3. [Target Architecture](docs/TARGET_ARCHITECTURE.md)
 4. [Production Roadmap](docs/PRODUCTION_ROADMAP.md)
-5. [Phase 7 — Submission / Response / Evaluation](docs/PHASE_07_SUBMISSION_EVALUATION.md)
-6. [AI Assistance and Development Provenance](docs/AI_ASSISTANCE_AND_DEVELOPMENT_PROVENANCE.md)
-7. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
-8. [Admission Collaboration Architecture](docs/ADMISSION_COLLABORATION_ARCHITECTURE.md)
+5. [Continuous Remote Execution](docs/CONTINUOUS_REMOTE_EXECUTION.md)
+6. [Example Story World](docs/EXAMPLE_STORY_WORLD.md)
+7. [Local Acceptance Worksheet](docs/LOCAL_ACCEPTANCE_WORKSHEET.md)
+8. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
 9. [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
-10. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
 
-Completed phase contracts and historical implementation reports remain under `docs/` and `Development-CodexReports/`.
+Historical phase contracts/reports remain under `docs/` and `Development-CodexReports/`.
 
-## Current implemented foundation
+## Product direction
 
-The repository already contains substantial implementations for:
+Content is independent of Groups. A Content item has a home Context for authoring/authorization, but published Content or exact blocks/revisions may be presented/referenced anywhere the viewer is authorized. Evidence pins exact historical revisions.
 
-- User/Actor identity separation;
-- authentication, verification and password reset;
-- platform access grants;
-- Groups, Memberships, contextual roles/permissions;
-- standalone system Access Invitations for new accounts;
-- invitation-based Group Admission and Agreement evidence;
-- ownership transfer integrity;
-- Group Spaces and restricted participation;
-- chat and replies;
-- structured Content Definitions and immutable versions;
-- Content revisions with active/draft pointers;
-- blocks and rich media/assets;
-- safe presentation templates;
-- Book/Lesson/Page Outline composition;
-- immutable publication evidence;
-- Reader/Studio separation;
-- contextual annotations, questions/answers/replies, private notes and reactions;
-- versioned Content Blueprints and unified Context authoring;
-- Submission / Response / Evaluation with immutable evidence;
-- authenticated Reference Context and the official System Manual as normal Content;
-- guided current-intent capture for Needs/Offers across property, goods, services, capital and collaboration;
-- permission-aware read-only intent discovery with clear Need/Offer/Service filtering;
-- plan-first AI-assisted Content editing through existing policies/Actions, feature-gated off by default for the first alpha;
-- immutable Development Origins linking design discussions to phases, versions, commits, and repository paths.
+User journeys progressively reveal capabilities. A simple sale stays simple; a paid-work relationship may compose Contract, Planner, Fulfillment and Accounting; a construction partnership can additionally compose property, service, capital and collaboration.
 
-See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
+The canonical end-to-end examples reuse Diego, Alice, Bob, Carol, Maple Housing Office and Riverside Home Project so documentation and final browser acceptance form one coherent story.
 
-## Development rule
+## Development mode
 
-Work on one accepted roadmap phase at a time. The active pre-release office-intent slice is explicitly authorized over the Phase 7/manual/AI-provenance baseline; it is not Phase 8 and must not invent automated Matching, Contract, Planner, payment, or Accounting truth.
+Remote milestones are implemented, tested, documented and integrated one at a time. Owner-local/browser acceptance is deferred until the cumulative Ideal-v1 candidate is ready.
 
-Do not begin Admission v2, generic Conversation, realtime infrastructure, Workflow, Planner, Contract/Commitment, Matching, or Accounting work until their roadmap gate is opened.
+Automated testing is **not** deferred.
 
-Agents must read `AGENTS.md`, the canonical docs, and matching `.ai/rules/` before changing code. AI assistance never bypasses authorization, executes generated code, or turns natural-language wording into an authoritative domain transition.
+See `AGENTS.md` and `docs/CONTINUOUS_REMOTE_EXECUTION.md`.
 
 ## Laravel
 
-This is a Laravel 13 application running on PHP 8.4. Project-specific Laravel/Boost guidance is committed in `AGENTS.md` and `.ai/rules/`.
-
-Do not infer package versions from generic documentation; inspect the repository before making version-dependent changes.
+Laravel 13 / PHP 8.4. Inspect repository package versions before relying on version-specific APIs.

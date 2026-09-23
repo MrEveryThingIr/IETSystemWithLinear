@@ -375,53 +375,30 @@ The Blueprint kernel supports system-, Actor-, and Context-scoped identities plu
 
 Blueprint changes never silently mutate existing published Content.
 
-## 7A. Human-directed AI assistance
+## 7A. Published Content placement, discovery, and exact references
 
-AI assistance is a cross-cutting application layer over trusted kernels, not a new universal domain model.
+Content identity is independent from GroupSpace.
 
-The first production seam is Content authoring:
+A Content item keeps an origin/home Context for authoring, lifecycle and authorization, but published Content may be presented in other authorized surfaces.
 
-~~~text
-Content Studio
-→ exact editable Content revision snapshot
-→ user vision
-→ provider returns schema-constrained proposal
-→ user reviews proposal
-→ reauthorize + reject stale base revision
-→ existing Revise / Blocks / Presentation Actions
-→ normal Content draft revision
-~~~
+Do not copy Content merely to show it elsewhere.
 
-The provider must not invent database IDs, Assets, permissions, or executable behavior. Provider output is untrusted until validated against trusted registries.
-
-Future section/form assistants reuse the same architecture:
+Use two semantics:
 
 ~~~text
-current route/object + field/action manifest + current authorized state
-→ AI proposal
-→ local schema normalization
-→ policy check
-→ explicit confirmation when the action is authoritative
-→ existing Action
+Placement / presentation
+    Content identity
+    optionally follows current published revision
+
+Evidence / citation
+    Content identity
+    exact immutable published revision
+    optional exact block / field / Asset placement / relationship target
 ~~~
 
-Form completion and submission are deliberately separate. AI may populate a draft when authorized; submitting an application, accepting an Agreement/Contract, approving Admission, finalizing Evaluation, publishing Content, recording payment, or any similarly authoritative fact stays an explicit domain Action.
+Published discovery is a read model over authorized published Content, Blueprint/purpose, Concepts, origin Context, author, language and publication time. It is not a new Content store.
 
-Media generation target:
-
-~~~text
-AI media request
-→ authorized provider adapter
-→ private Context Asset
-→ immutable provider/file provenance
-→ rights declaration
-→ scan/process/readiness
-→ user review
-→ ordinary Content Asset placement
-→ publication rules
-~~~
-
-Development provenance is separate from runtime Content assistance. An immutable Development Origin may connect a curated design-conversation summary to roadmap phase, system version, branch, Git baseline/result, and canonical repository paths. It does not outrank canonical repository authority.
+Context-specific modules reference Content; they do not own parallel Post/Article/Album/Diary tables.
 
 ## 8. Submission / Response / Evaluation
 
@@ -808,6 +785,24 @@ Mature Home should answer:
 Modules are progressively disclosed. Users do not see unused complexity.
 
 Recommendations use explicit Profile/Concept data and should be explainable and controllable.
+
+## 18A. Relationship and capability composition
+
+A Relationship is a durable multi-Actor coordination boundary outside Group Membership. It owns participant roles/purpose/lifecycle and a Context, then composes existing capabilities.
+
+Do not encode every combination in one relationship-type enum. Purpose/Blueprint/capability configuration decides which presentation blocks are useful while specialized kernels remain authoritative.
+
+Examples:
+
+- simple sale → Intent + optional Relationship/discussion + finance;
+- paid work → Relationship + Contract + Planner + Fulfillment + Accounting;
+- Riverside Home → Property + Service + Capital + Collaboration + multi-party Contract + Planner + Fulfillment + Accounting.
+
+A unified Timeline is a projection over durable source events and always links back to source truth.
+
+## 18B. Deferred AI copilot
+
+AI is a later application layer. It consumes trusted context and prepares validated drafts/proposals for existing Actions. It does not become an authoritative domain or direct database actor.
 
 ## 19. Cross-cutting production requirements
 

@@ -187,34 +187,11 @@ Documentation is multilingual content. English is the initial canonical editoria
 
 User feedback remains attached to the exact edition/section where it was made. If an authorized maintainer incorporates a correction or idea, the later official revision should record provenance back to the originating annotation(s); a later product release may additionally reference those incorporated contributions.
 
-## Human-directed AI assistance and development provenance
+## Deferred AI copilot
 
-AI is an intent interpreter and orchestration aid, not a parallel authority system.
+AI is intentionally **not** part of the active runtime foundation. It returns only after the deterministic Ideal-v1 domains and user journeys are proven.
 
-Target seam:
-
-~~~text
-current Context + exact object/revision + authorized capability registry
-→ human describes intent
-→ AI proposes trusted structured changes/actions
-→ deterministic schema/invariant validation
-→ human review or explicit confirmation where authority matters
-→ existing policy + domain Action
-→ durable revision/domain state
-→ provenance
-~~~
-
-Rules:
-
-- AI never receives direct database authority merely because it generated a proposal.
-- The same server-side policy and domain Action used by a human UI performs the actual mutation.
-- Stale proposals must not overwrite newer human or system work.
-- Generated code, SQL, Blade, JavaScript, shell commands, or arbitrary executable database configuration are not accepted as Content functionality.
-- Generated image/audio/video must become ordinary private Assets through an authorized provider adapter and then pass the existing provenance, rights, malware/readiness, Context-access, and publication rules.
-- AI may help fill a draft form, but submit/approve/accept/publish/finalize/pay and other authoritative transitions remain explicit Actions with the existing authorization and evidence semantics.
-- Prompts and conversational wording are collaboration/intention, not Contract acceptance, Membership finalization, Evaluation finalization, accounting truth, or another hidden transition.
-
-Important product-development conversations may be captured as immutable Development Origins tied to phase/version/branch/baseline-result commits and canonical repository paths. This improves explainability of *why* the system changed without making chat history the source of truth.
+When reintroduced, AI is an intent interpreter/draft assistant over existing policies and Actions. It never gains independent authority to submit, approve, accept, publish, pay, post accounting entries, or mutate domain truth from natural-language wording alone.
 
 ## Content as contextual work surface
 
@@ -295,3 +272,33 @@ It is a platform kernel from which focused applications can be instantiated.
 Technical success means that several unrelated real workflows can operate comfortably over the same kernels without bypassing invariants or exposing generic complexity to users.
 
 Product adoption cannot be guaranteed by architecture. The release process therefore uses measurable usability, reliability, security, and operational gates and then validates the system with real domain pilots.
+
+
+## Independent Content, contextual composition, and placement
+
+Content is one independent human-facing artifact system.
+
+Every Content item has an origin/home Context for authoring, ownership and authorization. That home does not confine where published Content may be presented or referenced.
+
+Two reuse modes are distinct:
+
+~~~text
+presentation / placement
+→ may follow the current published revision
+
+evidence / historical citation
+→ exact Content UUID + exact published Revision UUID
+→ optional block / field / Asset placement / relationship target
+~~~
+
+A GroupSpace, Relationship Context, Project Context or future surface may present authorized Content without duplicating it. Posts, Articles, Books, Diaries, Albums, Lessons, Reports, Evidence and Questionnaires are purpose/Blueprint experiences over the same Content kernel.
+
+## Progressive capability composition
+
+User-facing journeys begin with intent and reveal only useful capabilities.
+
+Do not model Simple Sale, Employment, Service, Financing and Construction Partnership as mutually exclusive top-level entities. Compose reusable authoritative kernels according to the case.
+
+A simple sale may use only Intent, discussion and money recording. Paid work can compose Relationship, Contract, Planner, Fulfillment and Accounting. Riverside Home may additionally compose property, service, capital, multi-party collaboration and Content evidence.
+
+The visible experience should become simpler as the underlying system becomes more capable.
