@@ -6,6 +6,11 @@
         :description="__('ui.context_content.help')"
     >
         <x-slot:actions>
+            @if ($canReviewInteractions)
+                <flux:button :href="route('contexts.submissions.index', $context)" variant="ghost" class="w-full sm:w-auto">
+                    {{ __('structured_interactions.review_submissions_with_count', ['count' => $reviewSubmissionCount]) }}
+                </flux:button>
+            @endif
             @if ($canCreate && ! $creatorOpen)
                 <flux:button wire:click="openCreator" variant="primary" class="w-full sm:w-auto">
                     {{ __('ui.context_content.create_with_blueprint') }}
