@@ -73,7 +73,7 @@ return [
     'open_annotations' => 'باز کردن یادداشت‌های این انتخاب',
     'browse_discussion' => 'مرور یادداشت‌ها و گفت‌وگو',
     'discard_draft_confirm' => 'این یادداشت ذخیره‌نشده کنار گذاشته شود؟',
-    'make_space_visible' => 'برای این فضا قابل مشاهده شود',
+    'make_space_visible' => 'در این زمینه قابل مشاهده شود',
     'make_private' => 'خصوصی شود',
     'save' => 'ذخیره',
     'role' => 'نقش',
@@ -88,7 +88,7 @@ return [
     ],
     'visibility' => 'دیده‌شدن',
     'visibility_value' => [
-        'space' => 'قابل مشاهده در این فضا',
+        'space' => 'قابل مشاهده در این زمینه',
         'private' => 'فقط برای من',
     ],
     'note_body' => 'متن',
