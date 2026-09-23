@@ -21,6 +21,27 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 - Record meaningful phase results under `Development-CodexReports/`.
 - Stop at the phase exit gate for review before beginning the next phase.
 
+## Documentation discipline
+
+IET uses two synchronized milestone workstreams:
+
+- runtime branch: the active `feat/phase-XX-...` branch for migrations/models/Actions/policies/UI/tests;
+- living handbook branch: `docs/living-system-handbook` for human-facing object definitions, exact workflows, permissions, examples and troubleshooting.
+
+These are parallel workstreams over one architecture, not independently evolving products.
+
+For every milestone that changes material user-facing behavior:
+
+- update the living handbook while runtime work is still active;
+- document WHO → WHERE/Context → WHAT object → ACTION → durable RESULT → WHO CAN SEE IT;
+- distinguish implemented behavior from future architecture;
+- update existing handbook pages instead of creating contradictory documentation;
+- document permissions/roles and important negative guarantees/side effects;
+- do not formally close the milestone until its material workflow is understandable from the handbook;
+- synchronize accepted handbook changes back into the runtime/closure history before moving to the next phase.
+
+Canonical architecture documents remain authoritative over explanatory handbook prose when a conflict is discovered; fix the handbook immediately rather than silently changing architecture.
+
 ## Current roadmap position
 
 - Phase 0 — canonical architecture: complete.
