@@ -11,6 +11,7 @@ use App\Support\SpaceContentRevisionComposition;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class UpdateSpaceContentStructure
 {
@@ -64,6 +65,7 @@ class UpdateSpaceContentStructure
             $actor = $this->actor($user);
             $nextRevision = ((int) $current->revisions()->max('revision')) + 1;
             $revision = $current->revisions()->create([
+                'uuid' => (string) Str::uuid(),
                 'definition_version_id' => $source->definition_version_id,
                 'revision' => $nextRevision,
                 'title' => $source->title,
@@ -73,6 +75,14 @@ class UpdateSpaceContentStructure
                 'presentation' => $source->presentation,
                 'composition_mode' => $source->composition_mode,
                 'created_by_actor_id' => $actor->id,
+                'content_hash' => SpaceContentSchema::hashRevision($source->title, $source->payload),
+                'evidence_status' => SpaceContentRevision::EVIDENCE_UNSEALED,
+                'manifest_hash' => null,
+                'manifest_version' => null,
+                'canonicalization_version' => null,
+                'manifest_algorithm' => null,
+                'canonical_manifest' => null,
+                'manifest_sealed_at' => null,
             ]);
 
             $placementMap = $this->composition->copyAssets($source, $revision);
