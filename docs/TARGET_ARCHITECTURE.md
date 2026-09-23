@@ -399,8 +399,10 @@ Must support:
 - assignments/participants;
 - due windows;
 - completion/skipping/cancellation;
+- actual start/end timestamps where execution is tracked;
 - evidence;
-- reminders.
+- reminders;
+- explicit optional source/provenance links so an Occurrence may later be materialized from a Contract/Commitment without making Planner itself the source of obligation truth.
 
 Proof cases:
 
@@ -441,6 +443,8 @@ A match never creates an obligation.
 
 Only explicit agreement/commitment transitions establish obligations.
 
+Need/Offer/Matching is optional discovery. Parties who already know each other may create a Proposal/Negotiation/Contract directly; the obligation kernel must never require a Match record.
+
 ## 12. Agreements, Contracts and Commitments
 
 Keep distinct layers:
@@ -476,6 +480,17 @@ A concrete obligation such as:
 
 Evidence that a Commitment was performed wholly or partly.
 
+For time-based work, Fulfillment may bind a concrete Planner Occurrence and record facts such as actual start/end, quantity/duration, completion status, notes and exact Content/Asset evidence. Review/acceptance/rejection/clarification remains explicit domain state; a chat message or annotation may explain a decision but does not itself perform it.
+
+A Contract may create or govern multiple Commitments, including paired obligations such as:
+
+~~~text
+Worker Commitment: perform agreed work
+Counterparty Commitment: pay agreed compensation for accepted fulfillment
+~~~
+
+Amendments create a new Contract version with explicit effective timing. Future Commitments/Occurrences use the new effective version; historical work, fulfillment, accepted evidence and earned obligations remain bound to the version that governed them.
+
 Human-readable terms should eventually reference exact sealed Content revisions, while operational state remains in Agreement/Contract models. Agreement/Contract acceptance evidence records exact version/content identity, party/Actor, acting User/authority, time, and integrity hash as appropriate.
 
 ## 13. Accounting Kernel
@@ -507,6 +522,41 @@ Rules:
 - cached balance is not source of truth.
 
 See `docs/FINANCIAL_ARCHITECTURE.md`.
+
+### Cross-kernel composition proof — direct paid work
+
+The architecture must support this connected chain without duplicating truth:
+
+~~~text
+Actors
+  ↓
+Negotiation Context + Conversation
+  ↓
+accepted ContractVersion
+  ↓
+Commitments
+  ├── perform work
+  └── pay compensation
+  ↓
+Plan / ScheduleRule
+  ↓
+Occurrence(s)
+  ↓
+Fulfillment
+  ├── actual start/end
+  ├── status/quantity
+  └── Content / Asset evidence
+  ↓ explicit review / acceptance
+Financial Obligation
+  ↓
+Ledger posting
+  ↓
+Settlement / Payment
+~~~
+
+The user-facing system must be able to derive **scheduled, worked, accepted, earned, paid, outstanding and disputed** amounts/statuses from those linked records. “Amount owed” is not a manually maintained magic counter; it is derived from authoritative obligation/accounting state. Conversation and Content provide context/evidence around this chain but do not replace its domain facts.
+
+The same primitives must also support personal plans that have no Contract, unpaid commitments, non-time-based deliverables, and organization-to-person relationships.
 
 ## 14. Financial Laboratory
 
