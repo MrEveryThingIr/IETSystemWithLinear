@@ -2,9 +2,7 @@
 
 namespace App\Actions\Content;
 
-use App\Actions\Contexts\EnsureGroupSpaceContext;
-use App\Actions\Groups\CreateGroup;
-use App\Actions\Groups\CreateGroupSpace;
+use App\Actions\Contexts\EnsureReferenceContext;
 use App\Actions\Groups\PublishSpaceContent;
 use App\Actions\Groups\ReviseSpaceContent;
 use App\Actions\Groups\UpdateSpaceContentStructure;
@@ -12,8 +10,6 @@ use App\Models\Actor;
 use App\Models\ContentBlueprint;
 use App\Models\ContentBlueprintVersion;
 use App\Models\Context;
-use App\Models\Group;
-use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
@@ -29,15 +25,11 @@ class EnsureSystemManualContent
         private readonly ReviseSpaceContent $reviseContent,
         private readonly PublishSpaceContent $publishContent,
         private readonly UpdateSpaceContentStructure $updateStructure,
-        private readonly CreateGroup $createGroup,
-        private readonly CreateGroupSpace $createSpace,
-        private readonly EnsureGroupSpaceContext $ensureContext,
+        private readonly EnsureReferenceContext $ensureContext,
     ) {}
 
     /**
      * @return array{
-     *     group: Group,
-     *     space: GroupSpace,
      *     context: Context,
      *     root: SpaceContent,
      *     chapters: Collection<int, SpaceContent>
@@ -45,10 +37,8 @@ class EnsureSystemManualContent
      */
     public function execute(User $owner): array
     {
-        $actor = $this->actor($owner);
-        $group = $this->manualGroup($actor);
-        $space = $this->manualSpace($group, $owner);
-        $context = $this->ensureContext->execute($space);
+        $this->actor($owner);
+        $context = $this->ensureContext->execute($owner, SystemManualContent::REFERENCE_KEY);
         $catalog = $this->blueprints->execute();
 
         $guideVersion = $this->activeBlueprintVersion($catalog, 'guide-documentation');
@@ -58,7 +48,7 @@ class EnsureSystemManualContent
         $chapters = collect();
 
         foreach ($manual['chapters'] as $chapter) {
-            $content = $this->ensureContent(
+            $chapters->push($this->ensureContent(
                 $context,
                 $guideVersion,
                 $owner,
@@ -71,9 +61,7 @@ class EnsureSystemManualContent
                     'ideal_target' => $chapter['ideal_target'],
                     'misunderstandings' => $chapter['misunderstandings'],
                 ],
-            );
-
-            $chapters->push($content);
+            ));
         }
 
         $root = $this->ensureContent(
@@ -91,58 +79,14 @@ class EnsureSystemManualContent
             $chapters->pluck('id')->map(static fn (mixed $id): int => (int) $id)->all(),
         );
 
-        $root = $this->publishIfDraft($root, $owner);
-
         return [
-            'group' => $group->refresh(),
-            'space' => $space->refresh(),
             'context' => $context->refresh(),
-            'root' => $root->refresh(),
+            'root' => $this->publishIfDraft($root, $owner)->refresh(),
             'chapters' => $chapters->map(static fn (SpaceContent $content): SpaceContent => $content->refresh()),
         ];
     }
 
-    private function manualGroup(Actor $actor): Group
-    {
-        $group = Group::query()
-            ->where('created_by_actor_id', $actor->id)
-            ->where('name', SystemManualContent::GROUP_NAME)
-            ->first();
-
-        if ($group instanceof Group) {
-            return $group;
-        }
-
-        return $this->createGroup->execute(
-            $actor,
-            SystemManualContent::GROUP_NAME,
-            'Official IET educational content, product guidance, questions, corrections, and improvement proposals.',
-            'UTC',
-        );
-    }
-
-    private function manualSpace(Group $group, User $owner): GroupSpace
-    {
-        $space = GroupSpace::query()
-            ->where('group_id', $group->id)
-            ->where('slug', SystemManualContent::SPACE_SLUG)
-            ->first();
-
-        if ($space instanceof GroupSpace) {
-            return $space;
-        }
-
-        return $this->createSpace->execute(
-            $group,
-            $owner,
-            SystemManualContent::SPACE_NAME,
-            'group',
-        );
-    }
-
-    /**
-     * @param  Collection<int, ContentBlueprint>  $catalog
-     */
+    /** @param Collection<int, ContentBlueprint> $catalog */
     private function activeBlueprintVersion(Collection $catalog, string $slug): ContentBlueprintVersion
     {
         $blueprint = $catalog->first(
@@ -161,9 +105,7 @@ class EnsureSystemManualContent
         return $version;
     }
 
-    /**
-     * @param  array<string, mixed>  $payload
-     */
+    /** @param array<string, mixed> $payload */
     private function ensureContent(
         Context $context,
         ContentBlueprintVersion $blueprint,
