@@ -8,17 +8,17 @@ Branch:
 
 `feat/phase-07-submission-evaluation`
 
-Frozen runtime candidate:
+Current runtime candidate:
 
-`35236f7af4ab9168467383b867cd698f2f30755c`
+`bd45c994535a2045fde7e23c924d103aaa666c25`
 
 GitHub Actions run:
 
-`35772393444`
+`35824650618`
 
 Remote validation on that exact runtime candidate:
 
-- PHPUnit: **393 passed / 2086 assertions**;
+- PHPUnit: **394 passed / 2092 assertions**;
 - changed-file Pint: **307 files passed**;
 - PHPStan: **no errors**;
 - Vite production build: passed;
@@ -136,6 +136,7 @@ Delivered:
 - scalar, choice, file and exact Content-evidence inputs;
 - protected Submission Asset delivery;
 - reviewer discovery from the Reader;
+- persistent reviewer attention entry/count from Context Content (`Review submissions (:count submitted)`), added after owner browser feedback;
 - Context-level review queue;
 - reviewer detail surface;
 - Evaluation draft/save/finalize UX;
@@ -297,9 +298,6 @@ These remain in their accepted downstream phases.
 
 The owner has completed the requested local engineering validation successfully.
 
-Final browser acceptance is still open. During manual school-exam/employment use, responses could be entered, but reviewer-side consequence/discoverability was not clear enough to the owner. Before Phase 7 closes, determine whether this is:
+Final browser acceptance is still open. The owner's manual feedback identified reviewer discoverability as insufficient; this is now classified and corrected on `bd45c994535a2045fde7e23c924d103aaa666c25` by exposing a persistent reviewer entry/count from Context Content and adding a regression test proving the submitted count changes after candidate submit.
 
-- an actual reviewer-state/visibility defect; or
-- a discoverability/composition issue in the current standalone Phase 7 UX.
-
-Do not mark the phase human-accepted until that distinction is resolved and the reviewer/candidate consequences are understandable in browser use. The broader product direction is now anchored by the connected paid-work north-star scenario in `docs/PROJECT_COMPASS.md`.
+Do not mark the phase human-accepted until the owner confirms that corrected reviewer consequence is understandable in browser use and completes the mobile/RTL acceptance. The broader product direction is anchored by the connected paid-work north-star scenario in `docs/PROJECT_COMPASS.md`.
