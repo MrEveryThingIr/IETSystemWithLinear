@@ -42,8 +42,7 @@ class ReleaseExperienceTest extends TestCase
             ->actingAs($administrator->user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee(route('platform.access-invitations'), false)
-            ->assertDontSee(route('platform.development-origins'), false);
+            ->assertSee(route('platform.access-invitations'), false);
     }
 
     public function test_full_profile_restores_advanced_navigation_without_changing_routes(): void

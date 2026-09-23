@@ -23,6 +23,7 @@ class SystemManualContent
         'feedback' => '11. Reporting Questions, Problems, Corrections, and Ideas',
         'profile-concepts' => '12. Profile, Concepts, Skills, Interests, Goals, Needs, and Offers',
         'agreements' => '13. Group Agreements and Versioned Governance',
+        'end-to-end' => '14. End-to-End Guided Example and UI Testing',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -41,14 +42,25 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, invitations and Admission, Personal/GroupSpace/Admission Contexts, versioned Content with Blueprints and immutable published revisions, annotations/evidence locators, and Phase 7 Submission/Response/Evaluation.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, and the first guided Need/Offer + Intent Directory experience.
 
-Later kernels such as Conversation-first collaboration, Planner, negotiated Contract/Commitment/Fulfillment, and Accounting are not yet fully implemented. The current product should therefore be understood as a growing platform kernel rather than the final connected-life experience.
+The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
+
+Relationship, Conversation/Timeline, Planner, Accounting, negotiated Contract/Commitment/Fulfillment, Matching, realtime, reputation/discovery, and AI remain later roadmap milestones.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-When using IET, first identify the boundary you are operating in: your personal workspace, a Group, a Group Space, or an Admission. Then identify whether you are reading human-facing Content, changing an authoritative domain object, or collaborating around one.
+Start with the action you actually want, not with an internal model name.
 
-Prefer the purpose-specific UI. You should not need to manipulate raw database concepts to perform ordinary work.
+In the office-alpha experience:
+1. Dashboard is the simple starting point.
+2. Needs, offers & services opens the current Intent Directory.
+3. Record need / offer starts the guided Intent wizard.
+4. Profile manages the Actor information you intentionally maintain/share.
+5. Contextual Help opens the relevant section of this manual.
+
+Example: Alice does not need to understand ActorProfileIntent. She chooses “Need / wanted”, “Property / real estate”, enters what she needs, selects the arrangement and visibility, reviews the result, and records it.
+
+Advanced kernels may exist without appearing in normal navigation. The UI should reveal the next meaningful capability only when the current situation makes it useful.
 TEXT,
                     'authorization' => <<<'TEXT'
 Authorization is contextual. Platform authority does not imply Group authority. Group Membership does not imply access to every Context. Context access does not necessarily mean Membership. Critical transitions are always rechecked by server-side policy and domain Actions.
@@ -126,12 +138,16 @@ TEXT,
                     'current_behavior' => <<<'TEXT'
 Current Context kinds are Personal, GroupSpace, Admission, and Reference.
 
-Personal Context holds an Actor's personal Content. GroupSpace Context powers Content/collaboration in a Group Space. Admission Context allows a candidate and authorized reviewers to work together before Membership exists. Reference Context hosts maintained system/reference knowledge that all active verified users may read and annotate while only its designated manager may author/manage official Content.
+Personal Context can be the home of an Actor's Content. GroupSpace Context provides a governed Group collaboration surface. Admission Context lets a candidate and authorized reviewers collaborate before Membership exists. Reference Context hosts maintained shared knowledge such as this System Manual.
+
+Content is not permanently “inside Groups”. A Content item has a home/origin Context for authoring, lifecycle and authorization, while authorized published Content can later be presented or referenced from other Contexts without copying it.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-When something seems “missing”, first verify that you are looking in the correct Context. Submission counts, Content libraries, annotations, and reviewer queues are Context-scoped.
+When something seems missing, first verify the Context you are operating in. Content libraries, annotations, Submissions and review queues are Context-scoped.
 
-Use Personal Context for private/general artifacts. Use GroupSpace Context for Group collaboration. Use Admission Context for pre-membership onboarding/application work. Use Reference Context for shared maintained manuals, policies, and reference knowledge.
+Use Personal Context as the normal home for Alice's own Article or Album. Use GroupSpace Context for Maple Housing Office collaboration. Use Admission Context for a candidate/reviewer onboarding journey. Use Reference Context for maintained manuals/reference material.
+
+When a later GroupSpace or Relationship needs Alice's already-published Article, reference/present the existing Content rather than creating a duplicate “group article”. Authorization is still checked for the viewer.
 TEXT,
                     'authorization' => <<<'TEXT'
 Context authorization is distinct from Group Membership. Admission is the main proof: a candidate may access their Admission Context while still being forbidden from normal Group participation.
@@ -149,22 +165,30 @@ TEXT,
 Content is IET's universal human-facing artifact layer. Definitions describe structured fields. Blueprints are reusable recipes that create normal Content with sensible structure, presentation, semantics, and interaction defaults.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-One Content kernel powers Personal, GroupSpace, and Admission Content. Built-in Blueprints include Note/Diary, Post, Article, Activity/Report, Evidence/Work Sample, Media Album, Book/Booklet, Lesson, Workbook Page, Questionnaire, and Guide/Documentation.
+One Content kernel powers Personal, GroupSpace, Admission and Reference Content. Built-in Blueprints include Note/Diary, Post, Article, Activity/Report, Evidence/Work Sample, Media Album, Book/Booklet, Lesson, Workbook Page, Questionnaire, and Guide/Documentation.
 
-Blueprint identities and versions are durable. System-, Actor-, and Context-scoped Blueprint identities already exist in the kernel. Clone provenance is supported. The full end-user Blueprint editor/versioning experience is not yet productized.
+Blueprint identities and versions are durable. Creating from a Blueprint creates normal independently versioned Content.
+
+A Content item has a home Context for authoring/authorization. Published Content and exact published revisions/blocks can be referenced from other authorized surfaces; this does not require separate Post/Article/Album tables per Group or future Relationship.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-For ordinary authoring, start from the closest Blueprint instead of creating raw Definitions. Use Quick creation for essential fields, then the Studio when you need blocks, media, appearance, outline, revisions, or publication.
+For ordinary authoring, choose the closest human purpose instead of creating a raw Definition.
 
-Use a Blueprint as a starting recipe, not as the permanent owner of the resulting Content.
+Example: Alice wants to document Riverside Lot. Choose an Article or Report when the artifact is explanatory, or Media Album when the main purpose is photos. Enter the essential fields in Quick creation, then open Studio only if blocks, media, appearance, outline, revisions or publication are needed.
+
+After publication, reuse that Content by reference. Do not recreate the same article merely because Maple Housing Office later wants to present it.
+
+Type/purpose answers “what kind of artifact is this?” Concepts/categories answer “what is it about?”. Keep those dimensions separate.
 TEXT,
                     'authorization' => <<<'TEXT'
 Creating Content requires create authority in the Context. Advanced Definition/structure management requires stronger permissions. Blueprint visibility is filtered by Context compatibility and access.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Authorized users should be able to clone a Blueprint, create Actor- or Context-owned Blueprints from scratch, edit safe draft versions, preview them, and publish immutable Blueprint versions.
+The published Content Library should show only viewer-authorized published Content and provide clear filters by purpose/type (Post, Article, Book, Diary, Album, Lesson, Report, Evidence, Questionnaire), semantic Concepts, origin Context, author, language and time where useful.
 
-Blueprints may suggest relevant contextual capabilities, but they never execute arbitrary code or grant authority.
+Each card/page should expose a permission-aware ⋮ menu. Viewer actions may include open/copy reference/evidence citation/present elsewhere; editor actions may additionally include edit/new revision/blocks/media/appearance/relationships/publication/archive.
+
+Content remains one kernel. Contexts compose it rather than duplicating it.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 Content is not a replacement for every domain model. A Contract may have terms Content, but its parties/acceptances/commitments remain Contract-domain truth. An invoice may render through Content, but accounting truth belongs to the ledger.
@@ -181,9 +205,25 @@ The Reader supports reactions and annotations. Top-level annotation kinds includ
 Annotations can target a whole revision, field, exact text range, Asset, relationship, or block. They are immutable interaction history and may be private or shared with the Space audience.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use a private note for personal study. Use a question when you want an answer. Use correction when the official material appears wrong. Use idea when proposing an enhancement.
+Reader is for consuming the current or selected published edition. Studio is for authorized authoring.
 
-Select the most precise target possible: the exact text, block, field, image/file, or section. This gives future maintainers clear context and preserves what you actually commented on even when later editions change.
+Typical author flow:
+1. open the Content;
+2. choose Studio when editing is allowed;
+3. edit structured fields;
+4. use Blocks for document structure;
+5. attach image/audio/video/files through Assets;
+6. use Appearance only for safe presentation choices;
+7. use Outline for composition/contains relationships;
+8. publish when the edition is ready.
+
+Typical reader flow:
+1. read cleanly;
+2. open contextual controls only when needed;
+3. select the smallest relevant text/block/field/Asset;
+4. choose Question, Correction, Idea, Note or Comment.
+
+Example: Bob notices one sentence in Alice's construction Article is wrong. He anchors a Correction to that exact sentence rather than posting an unrelated general comment.
 TEXT,
                     'authorization' => <<<'TEXT'
 You may annotate only when the current Content/Context interaction policy and your permissions allow it. Shared annotations are visible only to the authorized audience of that Context. Attachments follow Asset authorization.
@@ -208,9 +248,15 @@ Published revisions receive verifiable publication evidence and cannot be silent
 Edition permalinks continue resolving the chosen historical revision after newer editions exist. Evidence References may target a whole revision or precise field/block/Asset/relationship and are authorization-controlled.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use the normal Content URL when you want the current artifact. Use an edition permalink when a human needs a stable historical page. Use an Evidence Reference when another domain, such as a Submission, must persist exactly what evidence was cited.
+Use the normal Content URL when the intent is “show me this artifact as currently published”.
 
-Authorized editors can create a whole-revision Evidence Reference from the published Reader.
+Use an edition permalink when the intent is “show this exact historical edition”.
+
+Use an Evidence Reference when another domain must persist exactly what was relied on.
+
+Example: Alice's Article may later be presented in Maple Housing Office and follow the current published edition. If Bob submits one exact block as evidence of completed work, the evidence must pin the exact published revision/block so Alice's later edits cannot rewrite history.
+
+A Content link, edition permalink and evidence reference can lead to similar-looking pages but have different semantics: current presentation, human historical navigation, and durable domain provenance.
 TEXT,
                     'authorization' => <<<'TEXT'
 A permalink or evidence UUID is not a security capability. The viewer must still be authorized to see the underlying Content and Context.
@@ -227,15 +273,31 @@ TEXT,
                 [
                     'title' => '8. Invitations and Admissions',
                     'summary' => <<<'TEXT'
-Invitations bring a person toward a Group. Admission handles reviewed onboarding before Membership. The candidate can collaborate in an Admission Context without receiving ordinary Group access.
+IET separates account access from Group participation. A standalone Access Invitation lets a new person inspect/register without joining a Group. A Group Invitation is the collaboration/admission path for an existing verified account.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Invitations can support registration/login and resume Admission. Admission has formal lifecycle state and can own an Admission Context. Candidates remain outside normal Group participation until an explicit authorized finalization creates Membership.
+An authorized platform administrator can issue a private standalone Access Invitation. The invitee may inspect the welcome page, register, verify email and continue to Get Started without Group Membership.
 
-Phase 7 can place structured applications/evidence inside the Admission Context, but the conversation-first Admission v2 experience is still the next major product phase.
+Group Invitations are presented for existing verified users. They lead toward Group Admission/Membership under Group authority.
+
+Admission still has formal lifecycle state and can own an Admission Context. Structured applications/evidence can use Phase 7 Submission/Response/Evaluation. Conversation-first Admission remains a later roadmap composition.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use the invitation link to enter the intended Group onboarding journey. If review is required, the candidate completes requested structured work inside the Admission Context. Reviewers should use explicit Admission and Evaluation actions rather than interpreting free-form notes as state transitions.
+Example A — new person:
+1. Diego opens Access Invitations.
+2. He creates a private invitation for Alice.
+3. Alice opens the link and reads the welcome page before registering.
+4. Alice creates her account and verifies email.
+5. Alice lands on Get Started. She is registered but is not automatically a Maple Housing Office member.
+
+Example B — existing user joins a Group:
+1. Bob already has a verified account.
+2. Diego opens Maple Housing Office → Invitations.
+3. Diego enters Bob's registered email.
+4. Bob opens the Group invitation and follows the Admission/Agreement journey.
+5. Membership exists only after the authoritative Group flow finalizes it.
+
+Do not use a Group Invitation as the normal new-account mechanism.
 TEXT,
                     'authorization' => <<<'TEXT'
 Candidates may access their Admission Context but not normal GroupSpace Content unless separately authorized. Admission reviewers require the Group's manage_admissions authority; they do not have to be the owner.
@@ -342,22 +404,33 @@ TEXT,
 The Profile describes an Actor progressively. Concepts provide reusable semantic meaning; predicates describe how the Actor relates to that meaning. This lets the same Concept represent “I know Laravel”, “I want to learn Laravel”, “I need Laravel help”, or “I offer Laravel work” without creating four duplicate Laravel concepts.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-ActorProfile currently supports display identity, headline, biography, location, website, privacy controls, profile media, locale/time preferences, semantic skills/interests/learning goals, recurring Profile Needs/Offers, purpose-specific completeness requirements, and selective disclosure to a chosen recipient.
+ActorProfile supports display identity, biography/location/media/preferences, semantic skills/interests/learning goals, selective disclosure and current Need/Offer declarations.
 
-Skills, interests, and learning goals reuse Concept Assertions with different predicates. Skill proficiency may optionally use a normalized 0–100 percentage. Profile Need/Offer declarations may carry optional importance/urgency, quantity/unit, location/route, cadence, weekdays/month-days, dates, timezone, and time windows.
+The first Intent release extends Need/Offer with queryable subject kind (Property, Good, Service, Capital, Collaboration, Other), arrangement kind, optional cash range/currency/basis, location, visibility and a non-binding value-exchange preference.
 
-Need/Offer cadence describes current intent only. It does not generate Planner Occurrences, matches, proposals, Contracts, Commitments, or financial records.
+The value-exchange preference can express cash-only, cash-preferred-open-to-mixed-value, open-to-mixed-value, or discuss-later. It never creates ownership, equity, debt, Contract, service obligation, payment or accounting truth.
 
-Selective disclosure grants live access to selected current Profile information. If the underlying mutable Profile fact changes, closes, expires, or becomes invalid, the shared view follows the current state. It is not immutable Contract evidence.
+Need/Offer remains current intent only. It does not create Planner Occurrences, Matches, Proposals, Contracts, Commitments or Fulfillment.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Build the Profile progressively instead of trying to complete every field at registration.
+Use the dedicated Record need / offer wizard for a new current intention.
 
-Reuse an existing Concept when the meaning already exists. Create a personal Concept only when no suitable reusable Concept exists. Add the relationship that actually applies: skill, interest, learning goal, Need, or Offer.
+Alice example:
+1. choose Need / wanted;
+2. choose Property / real estate or Service / skill depending on the need;
+3. enter the exact subject, for example “residential construction”;
+4. choose the arrangement;
+5. optionally enter location and cash range;
+6. choose the value-exchange preference;
+7. describe the case;
+8. choose who may see it;
+9. review and Record intent.
 
-Use Need/Offer declarations for recurring current intent and discovery preparation. Use visibility deliberately. Use selective disclosure when one specific Actor should see otherwise-private Profile information for a clear purpose.
+Bob can record an Offer / available → Service / skill → Provide a service. Carol can record an Offer / available → Capital / financing.
 
-Do not use Profile cadence as a substitute for a future Planner schedule, and do not treat a self-reported proficiency percentage as externally verified reputation.
+Use the Directory quick filters Needs, Offers, Services, Property, Capital and Collaboration to search the records you are authorized to see.
+
+If Alice's intent is shared with authenticated users while her Profile remains private, Bob may discover the opportunity without automatically gaining access to Alice's otherwise-private Profile identity.
 TEXT,
                     'authorization' => <<<'TEXT'
 Profile mutation is owner-controlled. Individual semantic items and intents may have their own visibility. Private information is not exposed merely because the overall Profile is public.
@@ -412,6 +485,94 @@ TEXT,
 Agreement is not merely a document. The document explains the terms; the Agreement domain records which version is proposed/approved/active and who accepted it.
 
 A candidate-specific negotiation must not silently rewrite the rules for every Group member. An annotation saying “accepted” is not acceptance authority.
+TEXT,
+                ],
+                [
+                    'title' => '14. End-to-End Guided Example and UI Testing',
+                    'summary' => <<<'TEXT'
+This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, independent Content/Context usage, and Phase 7 structured Submission/Response/Evaluation.
+
+Relationship, Conversation/Timeline, Planner, Accounting, Proposal/Contract/Commitment/Fulfillment, Matching and AI are roadmap steps and must be labelled as future until their milestone is remotely integrated.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Run the story in this order.
+
+1. Diego / Access Invitations
+   - Sign in as an authorized platform administrator.
+   - Open Access Invitations.
+   - Create one private invitation reserved for Alice's new email.
+   - Copy the generated private link.
+
+2. Alice / registration
+   - Open the link in a private browser.
+   - Inspect Welcome before registration.
+   - Create Alice's account with the reserved email.
+   - Open the verification link from the configured local mail transport.
+   - Confirm Get Started opens.
+
+3. Alice / first intents
+   - Choose Record need / offer.
+   - Record a Property/Collaboration case for Riverside Lot.
+   - Record a Construction Service Need.
+   - Record a Capital Need.
+   - For one case choose “cash preferred, open to a structured mixed-value arrangement”.
+   - Confirm the screen explains this is only negotiating openness, not a Contract/ownership/payment fact.
+
+4. Bob / service
+   - Use a separate verified Bob account.
+   - Record Offer / Service for residential construction or electrical work.
+   - Open Needs, offers & services and use Needs, Services and Property filters.
+
+5. Carol / capital
+   - Record Offer / Capital.
+   - Confirm Capital filtering separates it from Bob's service.
+
+6. Visibility
+   - Make one Alice intent visible to registered users while her Profile remains private.
+   - From Bob, confirm the intent is discoverable without unintended private Profile disclosure.
+   - Make another intent Private and confirm Bob cannot see it.
+
+7. Group collaboration
+   - Diego creates/opens Maple Housing Office.
+   - Invite already-registered Bob from Group Invitations.
+   - Confirm an unknown/new email is rejected by the Group-invitation creation flow.
+   - Complete only the explicit Admission/Agreement/Membership actions required by the configured Group flow.
+
+8. Content
+   - In an authorized Context create an Article/Report/Album through the closest Blueprint.
+   - Open Studio only for fields/blocks/media/appearance/outline.
+   - Publish.
+   - Use normal Content navigation for the current artifact.
+   - Use an exact edition/evidence reference when historical identity matters.
+
+9. Structured interaction
+   - Start a configured interaction.
+   - Save draft and confirm reviewer count does not treat it as submitted.
+   - Submit explicitly.
+   - From an authorized reviewer, open Review submissions.
+   - Finalize Evaluation through the explicit review action.
+
+At every step verify: what object was created, who can see it, what exact action changed state, and what did *not* happen implicitly.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
+
+Future milestones should extend this same story rather than replace it. When Relationship, Planner, Accounting or Contract capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+The final Ideal-v1 browser story continues naturally:
+
+Alice/Bob/Carol opportunity → Relationship/Project Context → Conversation/Timeline → Proposal → exact ContractVersion → Commitments → planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
+
+The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A demo story is not permission to auto-create domain consequences. Do not skip explicit acceptance/review/payment actions just because later steps are known in advance.
+
+Documentation examples must never describe a future capability as currently implemented.
 TEXT,
                 ],
             ],
