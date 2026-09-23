@@ -414,7 +414,6 @@ Agreement is not merely a document. The document explains the terms; the Agreeme
 A candidate-specific negotiation must not silently rewrite the rules for every Group member. An annotation saying “accepted” is not acceptance authority.
 TEXT,
                 ],
-                ],
             ],
         ];
     }
