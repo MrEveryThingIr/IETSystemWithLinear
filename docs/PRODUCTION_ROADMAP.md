@@ -355,6 +355,8 @@ Before/alongside Phase 8 and later milestones:
 - materialize the user-facing manual as normal versioned Content using existing Content/Blueprint/Reader capabilities;
 - keep official system-authored editions visually identifiable and clean;
 - preserve private/community annotations, questions, replies, voice/image/video additions as overlays unless an authorized maintainer accepts them into a new official revision;
+- add explicit feedback disposition/provenance so a later official revision can identify which exact questions/corrections/ideas it addressed or incorporated;
+- begin with complete English manual content, then add Persian through a separately reviewable translation lifecycle; Arabic and Simplified Chinese follow after the translation workflow is proven;
 - document every important object with purpose, authority, Context, lifecycle, relationships and negative guarantees;
 - document every workflow as WHO → WHERE → WHAT → ACTION → durable RESULT → WHO CAN SEE IT;
 - update the manual in parallel with runtime changes and do not formally close material user-facing milestones while their behavior is undocumented;
@@ -365,6 +367,8 @@ Before/alongside Phase 8 and later milestones:
 Initial manual coverage should include identity/Actors, Groups/Membership/roles, Contexts, Content/Definitions/Blueprints, revisions/permalinks/evidence, annotations/media, Submission/Response/Evaluation, and Admission/invitation boundaries.
 
 A production-wide official manual needs a general system/reference Content access solution; never bypass authorization specifically for documentation.
+
+Before beginning a major new kernel after Phase 7, use the manual/audit pass to re-evaluate the remaining roadmap against the connected-life north star. Reordering or splitting later phases is allowed when the audit exposes a clearer dependency, but canonical boundaries (identity/authority, immutable evidence, conversation-not-authority, domain truth outside Content) must remain intact unless the human owner explicitly changes them.
 
 ## Phase 8 — Admission v2: contextual onboarding
 
