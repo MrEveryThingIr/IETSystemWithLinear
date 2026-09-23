@@ -107,14 +107,14 @@ TEXT,
 A Context is a bounded collaboration and visibility environment. It answers who may enter, view, create, interact, review, and manage the artifacts inside it.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Current Context kinds are Personal, GroupSpace, and Admission.
+Current Context kinds are Personal, GroupSpace, Admission, and Reference.
 
-Personal Context holds an Actor's personal Content. GroupSpace Context powers Content/collaboration in a Group Space. Admission Context allows a candidate and authorized reviewers to work together before Membership exists.
+Personal Context holds an Actor's personal Content. GroupSpace Context powers Content/collaboration in a Group Space. Admission Context allows a candidate and authorized reviewers to work together before Membership exists. Reference Context hosts maintained system/reference knowledge that all active verified users may read and annotate while only its designated manager may author/manage official Content.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 When something seems “missing”, first verify that you are looking in the correct Context. Submission counts, Content libraries, annotations, and reviewer queues are Context-scoped.
 
-Use Personal Context for private/general artifacts. Use GroupSpace Context for Group collaboration. Use Admission Context for pre-membership onboarding/application work.
+Use Personal Context for private/general artifacts. Use GroupSpace Context for Group collaboration. Use Admission Context for pre-membership onboarding/application work. Use Reference Context for shared maintained manuals, policies, and reference knowledge.
 TEXT,
                     'authorization' => <<<'TEXT'
 Context authorization is distinct from Group Membership. Admission is the main proof: a candidate may access their Admission Context while still being forbidden from normal Group participation.
