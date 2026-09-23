@@ -49,6 +49,10 @@ class SystemManualContentTest extends TestCase
                 $first['root'],
                 'manual' => 1,
             ]));
+        $this->actingAs($reader->user)
+            ->get(route('contexts.contents.show', [$first['context'], $first['root']]))
+            ->assertOk()
+            ->assertSee('1. The IET Mental Model');
         $this->assertSame('published', $first['root']->status);
 
         $rootRevision = $first['root']->activeRevisionRecord();
@@ -190,4 +194,47 @@ class SystemManualContentTest extends TestCase
             $idea->fresh()->latestDisposition()->firstOrFail()->status,
         );
     }
+    public function test_bootstrap_preserves_authorized_manual_edits_until_explicit_source_sync(): void
+    {
+        $manager = Actor::factory()->create();
+        $manual = app(EnsureSystemManualContent::class)->execute($manager->user);
+        $chapter = $manual['chapters']->first();
+        $this->assertNotNull($chapter);
+
+        $official = $chapter->activeRevisionRecord();
+        $this->assertInstanceOf(SpaceContentRevision::class, $official);
+
+        $editedPayload = $official->payload;
+        $editedPayload['summary'] = 'Maintainer-authored official clarification.';
+
+        $chapter = app(ReviseSpaceContent::class)->execute(
+            $chapter,
+            $manager->user,
+            $official->title,
+            $editedPayload,
+        );
+        $chapter = app(PublishSpaceContent::class)->execute($chapter, $manager->user);
+        $edited = $chapter->activeRevisionRecord();
+
+        $this->assertInstanceOf(SpaceContentRevision::class, $edited);
+        $this->assertSame('Maintainer-authored official clarification.', $edited->payload['summary']);
+
+        app(EnsureSystemManualContent::class)->execute($manager->user);
+
+        $preserved = $chapter->fresh()->activeRevisionRecord();
+        $this->assertInstanceOf(SpaceContentRevision::class, $preserved);
+        $this->assertSame($edited->id, $preserved->id);
+        $this->assertSame('Maintainer-authored official clarification.', $preserved->payload['summary']);
+
+        app(EnsureSystemManualContent::class)->execute($manager->user, syncSource: true);
+
+        $synced = $chapter->fresh()->activeRevisionRecord();
+        $source = app(SystemManualContent::class)->english()['chapters'][0];
+
+        $this->assertInstanceOf(SpaceContentRevision::class, $synced);
+        $this->assertGreaterThan($edited->revision, $synced->revision);
+        $this->assertSame($source['summary'], $synced->payload['summary']);
+        $this->assertTrue($synced->hasVerifiableManifest());
+    }
+
 }
