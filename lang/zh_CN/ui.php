@@ -11,6 +11,7 @@ return [
         'profile' => '个人资料',
         'groups' => '群组',
         'manual' => '系统手册',
+        'help' => '帮助 / 反馈',
         'actors' => '参与者',
         'account_menu' => '账户菜单',
     ],
