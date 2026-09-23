@@ -112,6 +112,27 @@ return [
     'cancel' => 'انصراف',
     'no_comments' => 'هنوز یادداشت یا گفت‌وگویی وجود ندارد.',
     'edition_changed' => 'نسخهٔ تازه‌تری اکنون فعال است. پیش از تعامل دوباره آن را بررسی کنید.',
+    'disposition' => [
+        'label' => 'وضعیت بازخورد',
+        'maintainer_actions' => 'مدیریت بازخورد',
+        'recorded' => 'وضعیت بازخورد ثبت شد.',
+        'no_newer_edition' => 'پیش از ثبت این بازخورد به‌عنوان اعمال‌شده، یک نسخهٔ رسمی تازه‌تر منتشر کنید.',
+        'incorporated_revision' => 'اعمال‌شده در نسخهٔ :revision',
+        'status' => [
+            'reviewed' => 'بررسی‌شده',
+            'accepted' => 'پذیرفته‌شده',
+            'rejected' => 'ردشده',
+            'incorporated' => 'اعمال‌شده',
+            'superseded' => 'جایگزین‌شده',
+        ],
+        'action' => [
+            'reviewed' => 'علامت‌گذاری به‌عنوان بررسی‌شده',
+            'accepted' => 'پذیرفتن',
+            'rejected' => 'رد کردن',
+            'incorporated' => 'اعمال‌شده در نسخهٔ فعلی',
+            'superseded' => 'علامت‌گذاری به‌عنوان جایگزین‌شده',
+        ],
+    ],
     'anchor' => [
         'entire_edition' => 'تمام نسخه',
         'revision' => 'نسخه',
