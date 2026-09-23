@@ -16,6 +16,11 @@
         <flux:sidebar.item :href="route('manual')" :current="request()->routeIs('manual') || request()->query('manual') === '1'" icon="book-open">
             {{ __('ui.navigation.manual') }}
         </flux:sidebar.item>
+        @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ViewPlatformAudit))
+            <flux:sidebar.item :href="route('platform.development-origins')" :current="request()->routeIs('platform.development-origins')" icon="clock">
+                {{ __('development.title') }}
+            </flux:sidebar.item>
+        @endif
         @can('viewAny', App\Models\Actor::class)
             <flux:sidebar.item :href="route('actors.index')" :current="request()->routeIs('actors.*')" icon="users">
                 {{ __('ui.navigation.actors') }}

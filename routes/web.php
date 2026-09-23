@@ -42,6 +42,7 @@ use App\Livewire\Groups\SpaceManagement;
 use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Platform\Access as PlatformAccess;
+use App\Livewire\Platform\DevelopmentOrigins;
 use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
 use App\Livewire\Profile\Show as ProfileShow;
@@ -98,6 +99,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/content-evidence/{reference}', ContentEvidenceReferenceController::class)->name('content-evidence.show');
     Route::livewire('/profile-shares/{grant}', SharedShow::class)->name('profiles.shares.show');
     Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');
+    Route::livewire('/platform/development-origins', DevelopmentOrigins::class)->name('platform.development-origins');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
     Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');
