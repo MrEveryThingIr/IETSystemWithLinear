@@ -27,10 +27,10 @@ class ContentBlueprintKernelTest extends TestCase
         $first = app(EnsureSystemContentBlueprints::class)->execute();
         $second = app(EnsureSystemContentBlueprints::class)->execute();
 
-        $this->assertCount(10, $first);
-        $this->assertCount(10, $second);
-        $this->assertDatabaseCount('content_blueprints', 10);
-        $this->assertDatabaseCount('content_blueprint_versions', 10);
+        $this->assertCount(11, $first);
+        $this->assertCount(11, $second);
+        $this->assertDatabaseCount('content_blueprints', 11);
+        $this->assertDatabaseCount('content_blueprint_versions', 11);
 
         $evidence = ContentBlueprint::query()->where('slug', 'evidence-work-sample')->firstOrFail();
         $version = $evidence->activeVersionRecord();
