@@ -317,7 +317,7 @@ Passed. Automated/runtime conditions were satisfied on `ad07445b16a708b4efd67461
 
 ## Phase 7 — Submission / Response / Evaluation
 
-**Status: runtime technically complete / remote-CI green; final owner-local/browser/mobile/RTL acceptance pending.** Detailed contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`. Runtime candidate: `35236f7af4ab9168467383b867cd698f2f30755c` (GitHub Actions run `35772393444`: 393 tests / 2086 assertions; changed-file Pint 307 files; PHPStan/Vite/ops/backup/security green; Phase 7 migrations rollback/reapply green).
+**Status: runtime technically complete / remote-CI green; final owner browser/mobile/RTL acceptance pending.** Detailed contract: `docs/PHASE_07_SUBMISSION_EVALUATION.md`. Current runtime candidate: `bd45c994535a2045fde7e23c924d103aaa666c25` (GitHub Actions run `35824650618`: 394 tests / 2092 assertions; changed-file Pint 307 files; PHPStan/Vite/ops/backup/security green; Phase 7 migrations rollback/reapply green). The post-7E correction makes submitted reviewer work visible from the Context content header as `Review submissions (:count submitted)`.
 
 ### Purpose
 
@@ -343,7 +343,7 @@ Support structured interactions that annotations cannot represent correctly, whi
 
 ### Exit gate
 
-Automated/runtime gate satisfied on `35236f7af4ab9168467383b867cd698f2f30755c`: both proof cases work without abusing annotations or creating separate form engines; submitted evidence remains historically exact after newer Content/interaction versions; pre-Membership Admission isolation is preserved; and the application components can later be composed into Conversation without changing their domain semantics. The owner subsequently reported all requested local engineering commands green, but did **not** grant final browser acceptance because reviewer-side consequence/discoverability was not clear enough during manual use. Treat this as a product-integration signal: verify/fix any actual reviewer-state defect before formal Phase 7 closure, and make the reviewer/candidate consequences obvious when Phase 8 composes these components into Conversation. Phase 8 runtime work remains gated on formal Phase 7 closure.
+Automated/runtime conditions are green on current candidate `bd45c994535a2045fde7e23c924d103aaa666c25`. Both proof cases work without abusing annotations or creating separate form engines; submitted evidence remains historically exact after newer Content/interaction versions; pre-Membership Admission isolation is preserved; and the application components can later be composed into Conversation without changing their domain semantics. The owner's manual feedback exposed insufficient reviewer discoverability, so Phase 7 now surfaces a persistent review entry/count from Context Content and protects that behavior with regression coverage. Final browser/mobile/RTL owner acceptance of this corrected UX remains required before formal Phase 7 closure or Phase 8 runtime work.
 
 ## Phase 8 — Admission v2: contextual onboarding
 
