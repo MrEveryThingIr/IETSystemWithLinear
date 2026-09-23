@@ -393,7 +393,7 @@ Original 7D deliverables:
 
 ### 7E — proof and closure
 
-**Status: technically complete on `35236f7af4ab9168467383b867cd698f2f30755c`; final human browser/mobile/RTL acceptance pending.** GitHub Actions run `35772393444` is green: **393 tests / 2086 assertions**, changed-file Pint **307 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
+**Status: technically complete; current runtime candidate `bd45c994535a2045fde7e23c924d103aaa666c25`; final human browser/mobile/RTL acceptance pending.** Original 7E proof candidate `35236f7af4ab9168467383b867cd698f2f30755c` passed GitHub Actions run `35772393444` at **393 tests / 2086 assertions**. Post-7E reviewer-discoverability correction `bd45c994535a2045fde7e23c924d103aaa666c25` passed run `35824650618` at **394 tests / 2092 assertions**, changed-file Pint **307 files**, PHPStan clean, Vite/build/operations/backup/security gates green.
 
 Delivered:
 
@@ -411,8 +411,8 @@ Remaining:
 
 - local engineering validation is complete and reported green by the human owner;
 - final browser acceptance is not yet granted because the owner could enter school-exam/employment responses but reviewer-side consequence/discoverability was not clear enough;
-- determine whether that observation is a real reviewer-state defect or a discoverability/composition problem;
-- desktop/phone browser acceptance including Persian/Arabic RTL remains pending;
+- the observation was classified as a concrete discoverability problem and corrected: authorized reviewers now get a persistent Context Content review link with submitted-attempt count, backed by a regression test;
+- owner browser re-check of that corrected reviewer entry/count plus desktop/phone Persian/Arabic RTL acceptance remains pending;
 - final formal Phase 7 closure documentation follows only after that human gate.
 
 ## Proof case A — school exam
@@ -545,4 +545,4 @@ Phase 7 closes only when:
 11. automated validation is green;
 12. browser/mobile/RTL behavior is accepted by the human owner.
 
-Automated/runtime conditions **1–11 are satisfied** on `35236f7af4ab9168467383b867cd698f2f30755c`. The owner subsequently reported the requested local engineering validation green, but condition 12 remains open because reviewer-side consequence/discoverability was not clear enough in manual browser use. This does not invalidate the Phase 7 kernel; it is unresolved acceptance evidence that must be classified as defect versus UX/composition friction before closure. The implementation report is maintained at `Development-CodexReports/phase-07-submission-evaluation-report.md`. Phase 8 runtime implementation must not begin before condition 12 passes and Phase 7 is formally closed.
+Automated/runtime conditions **1–11 are satisfied** on current candidate `bd45c994535a2045fde7e23c924d103aaa666c25`. The owner's earlier reviewer-discoverability concern has a concrete tested correction: Context Content now exposes `Review submissions (:count submitted)` for authorized reviewers and the count is proven to change after submit. Condition 12 remains open only for the owner's browser/mobile/RTL acceptance of the corrected experience. The implementation report is maintained at `Development-CodexReports/phase-07-submission-evaluation-report.md`. Phase 8 runtime implementation must not begin before condition 12 passes and Phase 7 is formally closed.
