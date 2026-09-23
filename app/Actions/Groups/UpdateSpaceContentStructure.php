@@ -8,6 +8,7 @@ use App\Models\SpaceContentRevision;
 use App\Models\SpaceContentRevisionRelationship;
 use App\Models\User;
 use App\Support\SpaceContentRevisionComposition;
+use App\Support\SpaceContentSchema;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
