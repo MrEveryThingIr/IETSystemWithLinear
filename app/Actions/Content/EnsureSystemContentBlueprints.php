@@ -80,6 +80,7 @@ class EnsureSystemContentBlueprints
                         'interaction_defaults' => $normalized['interaction_defaults'],
                         'authoring' => $normalized['authoring'],
                         'created_by_actor_id' => null,
+                        'content_hash' => $normalized['content_hash'],
                         'published_at' => null,
                     ]);
                     $active->publish();
