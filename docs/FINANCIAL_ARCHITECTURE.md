@@ -257,6 +257,8 @@ Source objects may include:
 - Settlement;
 - Refund.
 
+For obligation-generating work, accounting adapters must preserve source provenance to the governing Contract version and accepted Fulfillment. Reporting may aggregate by Actor, Contract and period, but must remain explainable down to those source facts.
+
 The accounting kernel should not need a type enum containing every business event.
 
 ## 4. Examples
@@ -289,6 +291,36 @@ When paid:
 Wages Payable   Debit  800 EUR
 Bank            Credit 800 EUR
 ~~~
+
+Work fulfillment, payroll obligation, and payment are distinct domain facts.
+
+### Direct paid-work lifecycle
+
+For a Contract such as **1,500,000 per accepted 08:00–17:00 workday**, the source chain should remain explicit:
+
+~~~text
+accepted ContractVersion
+→ work Commitment + payment Commitment
+→ scheduled Occurrence
+→ actual Fulfillment (start/end/status/evidence)
+→ authorized acceptance of Fulfillment
+→ financial obligation recognized
+→ JournalEntry posts earned/payable amount
+→ Payment/Settlement
+→ JournalEntry reduces payable/receivable
+~~~
+
+If three accepted days have been earned and only two have been paid, the UI may show:
+
+~~~text
+earned:      4,500,000
+paid:        3,000,000
+outstanding: 1,500,000
+~~~
+
+Those figures are projections from authoritative source-domain + posted accounting state. Do not persist one user-editable “owed balance” as the source of truth.
+
+A Contract amendment, changed daily rate, rejected/disputed day or partial payment must remain traceable to the exact governed version, Fulfillment and accounting entries that produced the displayed result.
 
 Work fulfillment, payroll obligation, and payment are distinct domain facts.
 
