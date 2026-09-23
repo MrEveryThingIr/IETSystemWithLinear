@@ -7,6 +7,7 @@ use App\Actions\Ai\PlanContentChanges;
 use App\Actions\Content\CreateContentFromBlueprint;
 use App\Actions\Content\EnsureSystemContentBlueprints;
 use App\Actions\Contexts\EnsurePersonalContext;
+use App\Actions\Groups\ReviseSpaceContent;
 use App\Models\Actor;
 use App\Models\AiAssistanceRun;
 use App\Models\ContentBlueprint;
@@ -118,7 +119,7 @@ class AiContentAssistanceTest extends TestCase
 
         $run = app(PlanContentChanges::class)->execute($content, $actor->user, 'Improve this.');
 
-        app(\App\Actions\Groups\ReviseSpaceContent::class)->execute(
+        app(ReviseSpaceContent::class)->execute(
             $content,
             $actor->user,
             'Human edit',

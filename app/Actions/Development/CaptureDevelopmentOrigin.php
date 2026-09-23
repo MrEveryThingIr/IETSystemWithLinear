@@ -11,7 +11,7 @@ use Carbon\CarbonImmutable;
 class CaptureDevelopmentOrigin
 {
     /**
-     * @param list<string> $repositoryPaths
+     * @param  list<string>  $repositoryPaths
      */
     public function execute(
         User $user,
