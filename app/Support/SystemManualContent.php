@@ -413,24 +413,43 @@ The value-exchange preference can express cash-only, cash-preferred-open-to-mixe
 Need/Offer remains current intent only. It does not create Planner Occurrences, Matches, Proposals, Contracts, Commitments or Fulfillment.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use the dedicated Record need / offer wizard for a new current intention.
+Use Record need / offer and begin with the real-world question **What do you want to do?**
+
+Current journey choices are grouped so a normal user does not have to translate their situation into internal model terminology:
+
+- Buy or acquire something
+- Sell or transfer something
+- Rent / temporarily use something
+- Rent out / provide temporary use
+- I need a service
+- I provide a service
+- I want to hire someone
+- I am looking for work
+- I need capital or financing
+- I can provide capital or financing
+- I need collaborators or partners
+- I want to join/contribute to a collaboration
+- Something else
+
+The chosen journey preselects existing Need/Offer and arrangement semantics. It is an authoring path, not a stored business type.
 
 Alice example:
-1. choose Need / wanted;
-2. choose Property / real estate or Service / skill depending on the need;
-3. enter the exact subject, for example “residential construction”;
-4. choose the arrangement;
-5. optionally enter location and cash range;
-6. choose the value-exchange preference;
-7. describe the case;
-8. choose who may see it;
-9. review and Record intent.
+1. Alice chooses **I need a service**.
+2. The system already understands this is a Need + Service arrangement and only shows the relevant Service/skill subject.
+3. Alice types “Residential construction”.
+4. She adds location/cash range only if useful.
+5. She chooses her value-exchange preference.
+6. She adds human details/visibility.
+7. Review shows both the friendly journey and the underlying Need/Offer interpretation.
+8. **Record intent** creates one normal ActorProfileIntent.
 
-Bob can record an Offer / available → Service / skill → Provide a service. Carol can record an Offer / available → Capital / financing.
+Bob example: **I am looking for work** maps to Offer + Service. Diego's “I want to hire someone” maps to Need + Service. These do not create an Employment domain or Contract.
 
-Use the Directory quick filters Needs, Offers, Services, Property, Capital and Collaboration to search the records you are authorized to see.
+Carol example: **I can provide capital or financing** maps to Offer + Capital + Financing. It does not create equity, debt or a loan.
 
-If Alice's intent is shared with authenticated users while her Profile remains private, Bob may discover the opportunity without automatically gaining access to Alice's otherwise-private Profile identity.
+For unusual cases choose **Something else**; step 2 then exposes Need/Offer, subject and arrangement controls manually.
+
+Use the Directory quick filters Needs, Offers, Services, Property, Capital and Collaboration to search records you are authorized to see.
 TEXT,
                     'authorization' => <<<'TEXT'
 Profile mutation is owner-controlled. Individual semantic items and intents may have their own visibility. Private information is not exposed merely because the overall Profile is public.
@@ -513,42 +532,49 @@ Run the story in this order.
    - Open the verification link from the configured local mail transport.
    - Confirm Get Started opens.
 
-3. Alice / first intents
+3. Alice / progressive Intent Journey
    - Choose Record need / offer.
-   - Record a Property/Collaboration case for Riverside Lot.
-   - Record a Construction Service Need.
-   - Record a Capital Need.
+   - On “What do you want to do?” select **Sell or transfer something** for Riverside Lot; on step 2 refine the subject from Thing/good to Property.
+   - Repeat with **I need a service** for Residential construction.
+   - Repeat with **I need capital or financing**.
    - For one case choose “cash preferred, open to a structured mixed-value arrangement”.
-   - Confirm the screen explains this is only negotiating openness, not a Contract/ownership/payment fact.
+   - Confirm the review screen shows the friendly journey plus the underlying Need/Offer/subject/arrangement.
+   - Confirm saving creates Intent only: no Match, Contract, ownership, loan, employment or payment.
 
-4. Bob / service
+4. Bob / service and work
    - Use a separate verified Bob account.
-   - Record Offer / Service for residential construction or electrical work.
-   - Open Needs, offers & services and use Needs, Services and Property filters.
+   - Choose **I provide a service** for electrical/construction services.
+   - Also inspect **I am looking for work** and confirm it resolves to Offer + Service rather than a separate employment engine.
+   - Open Needs, offers & services and use Needs, Offers and Services filters.
 
 5. Carol / capital
-   - Record Offer / Capital.
+   - Choose **I can provide capital or financing**.
    - Confirm Capital filtering separates it from Bob's service.
 
-6. Visibility
+6. Simple product/rental proof
+   - Alice can choose **Sell or transfer something** → Thing/good for a used desk.
+   - Bob can choose **Buy or acquire something** for the same Concept.
+   - A rental uses **Rent or temporarily use something** / **Rent out or provide temporary use** and keeps ownership-transfer semantics out of the record.
+
+7. Visibility
    - Make one Alice intent visible to registered users while her Profile remains private.
    - From Bob, confirm the intent is discoverable without unintended private Profile disclosure.
    - Make another intent Private and confirm Bob cannot see it.
 
-7. Group collaboration
+8. Group collaboration
    - Diego creates/opens Maple Housing Office.
    - Invite already-registered Bob from Group Invitations.
    - Confirm an unknown/new email is rejected by the Group-invitation creation flow.
-   - Complete only the explicit Admission/Agreement/Membership actions required by the configured Group flow.
+   - Complete only explicit Admission/Agreement/Membership actions required by the configured Group flow.
 
-8. Content
+9. Content
    - In an authorized Context create an Article/Report/Album through the closest Blueprint.
    - Open Studio only for fields/blocks/media/appearance/outline.
    - Publish.
    - Use normal Content navigation for the current artifact.
    - Use an exact edition/evidence reference when historical identity matters.
 
-9. Structured interaction
+10. Structured interaction
    - Start a configured interaction.
    - Save draft and confirm reviewer count does not treat it as submitted.
    - Submit explicitly.
