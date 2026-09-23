@@ -2,6 +2,27 @@
 
 return [
     'created' => 'Your need or offer was recorded.',
+    'journey_groups' => [
+        'exchange' => 'Buy, sell, rent or make something available',
+        'services_work' => 'Services and work',
+        'capital_collaboration' => 'Capital and collaboration',
+        'other' => 'Something else',
+    ],
+    'journeys' => [
+        'buy' => ['title' => 'Buy or acquire something', 'help' => 'You need ownership of a property, product, or another thing.'],
+        'sell' => ['title' => 'Sell or transfer something', 'help' => 'You own or control something you want to make available for ownership transfer.'],
+        'rent' => ['title' => 'Rent or temporarily use something', 'help' => 'You need temporary use of a property, equipment, vehicle, or another thing.'],
+        'rent_out' => ['title' => 'Rent out or provide temporary use', 'help' => 'You can let another person use a property or thing without transferring ownership.'],
+        'need_service' => ['title' => 'I need a service', 'help' => 'You need someone to perform a skill or service for you.'],
+        'offer_service' => ['title' => 'I provide a service', 'help' => 'You can perform a skill or service for another person or project.'],
+        'hire' => ['title' => 'I want to hire someone', 'help' => 'You need ongoing or specific work from a worker/provider. This records the need, not an employment contract.'],
+        'find_work' => ['title' => 'I am looking for work', 'help' => 'You can provide work or skills. This records availability, not an employment contract.'],
+        'seek_capital' => ['title' => 'I need capital or financing', 'help' => 'You are looking for funding/capital. Exact rights or repayment terms require later explicit negotiation.'],
+        'offer_capital' => ['title' => 'I can provide capital or financing', 'help' => 'You may fund a suitable case. Recording this does not create ownership or a loan.'],
+        'seek_collaboration' => ['title' => 'I need collaborators or partners', 'help' => 'You have a project or purpose and want others to contribute.'],
+        'offer_collaboration' => ['title' => 'I want to join or contribute to a collaboration', 'help' => 'You can contribute to a project or shared purpose.'],
+        'other' => ['title' => 'Something else', 'help' => 'Choose the direction, subject and arrangement manually.'],
+    ],
     'kinds' => ['need' => 'Need / wanted', 'offer' => 'Offer / available'],
     'kind_help' => [
         'need' => 'Something you want to obtain, use, receive, fund, or arrange.',
@@ -67,6 +88,7 @@ return [
         'public' => 'Public',
     ],
     'fields' => [
+        'journey' => 'What you want to do',
         'kind' => 'Intent',
         'subject_kind' => 'What kind of thing is involved?',
         'subject' => 'What exactly is it about?',
@@ -88,10 +110,11 @@ return [
     'create' => [
         'title' => 'Record a need or offer',
         'help' => 'A short guided flow for the same information an office would normally keep in a notebook.',
-        'step1' => 'What are you recording?',
-        'step1_help' => 'Start with the direction of the intent, then choose the broad subject.',
-        'step2' => 'What is it, and what do you want to do?',
-        'step2_help' => 'Use ordinary words. The system keeps a reusable Concept behind the record.',
+        'step1' => 'What do you want to do?',
+        'step1_help' => 'Choose the closest real-world goal. The system preselects the underlying Need/Offer and arrangement while keeping the final record generic and reusable.',
+        'step2' => 'What exactly is involved?',
+        'step2_help' => 'Confirm the broad subject when needed, then name the actual property, product, service, skill, capital need, or collaboration purpose.',
+        'preset_maps_to' => 'This path records :kind with the arrangement “:arrangement”. Go back and choose another path if that does not describe your intent.',
         'step3' => 'Where and what cash range applies?',
         'step3_help' => 'All fields here are optional unless you enter a cash range.',
         'cash_note' => 'Cash figures are asking/budget information for discovery. They are not invoices, accounting entries, or binding contract terms.',

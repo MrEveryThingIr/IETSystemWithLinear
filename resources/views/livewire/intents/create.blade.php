@@ -16,29 +16,29 @@
 
     <flux:card class="space-y-6">
         @if ($step === 1)
-            <div class="space-y-5">
+            <div class="space-y-6">
                 <div>
                     <flux:heading size="lg">{{ __('intents.create.step1') }}</flux:heading>
                     <flux:text>{{ __('intents.create.step1_help') }}</flux:text>
                 </div>
-                <div class="grid gap-3 sm:grid-cols-2">
-                    @foreach (['need', 'offer'] as $option)
-                        <button type="button" wire:click="$set('kind', '{{ $option }}')" class="rounded-2xl border p-5 text-start {{ $kind === $option ? 'border-zinc-900 ring-2 ring-zinc-900/10 dark:border-white' : 'border-zinc-200 dark:border-zinc-800' }}">
-                            <div class="text-lg font-semibold">{{ __('intents.kinds.'.$option) }}</div>
-                            <div class="mt-1 text-sm text-zinc-500">{{ __('intents.kind_help.'.$option) }}</div>
-                        </button>
-                    @endforeach
-                </div>
-                <div>
-                    <div class="mb-2 text-sm font-medium">{{ __('intents.fields.subject_kind') }}</div>
-                    <div class="grid gap-2 sm:grid-cols-3">
-                        @foreach ($subjectKinds as $option)
-                            <button type="button" wire:click="$set('subjectKind', '{{ $option->value }}')" class="rounded-xl border px-4 py-3 text-start text-sm {{ $subjectKind === $option->value ? 'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-800' }}">
-                                {{ __('intents.subjects.'.$option->value) }}
-                            </button>
-                        @endforeach
+
+                @foreach ($journeyGroups as $group => $presets)
+                    <div class="space-y-2">
+                        <div class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{{ __('intents.journey_groups.'.$group) }}</div>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            @foreach ($presets as $preset)
+                                <button
+                                    type="button"
+                                    wire:click="chooseJourney('{{ $preset->value }}')"
+                                    class="rounded-2xl border p-5 text-start transition {{ $journeyPreset === $preset->value ? 'border-zinc-900 bg-zinc-50 ring-2 ring-zinc-900/10 dark:border-white dark:bg-zinc-900' : 'border-zinc-200 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600' }}"
+                                >
+                                    <div class="font-semibold">{{ __('intents.journeys.'.$preset->value.'.title') }}</div>
+                                    <div class="mt-1 text-sm leading-5 text-zinc-500">{{ __('intents.journeys.'.$preset->value.'.help') }}</div>
+                                </button>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endforeach
             </div>
         @elseif ($step === 2)
             <div class="space-y-5">
@@ -46,17 +46,61 @@
                     <flux:heading size="lg">{{ __('intents.create.step2') }}</flux:heading>
                     <flux:text>{{ __('intents.create.step2_help') }}</flux:text>
                 </div>
-                <flux:input wire:model="conceptLabel" :label="__('intents.fields.subject')" :placeholder="__('intents.fields.subject_placeholder')" maxlength="120" />
-                <div>
-                    <div class="mb-2 text-sm font-medium">{{ __('intents.fields.arrangement') }}</div>
-                    <div class="grid gap-2 sm:grid-cols-2">
-                        @foreach ($arrangementKinds as $option)
-                            <button type="button" wire:click="$set('arrangementKind', '{{ $option->value }}')" class="rounded-xl border px-4 py-3 text-start {{ $arrangementKind === $option->value ? 'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-800' }}">
-                                <div class="font-medium">{{ __('intents.arrangements.'.$kind.'.'.$option->value) }}</div>
-                            </button>
-                        @endforeach
+
+                @if ($journey)
+                    <flux:callout>
+                        <div class="font-medium">{{ __('intents.journeys.'.$journey->value.'.title') }}</div>
+                        <div class="mt-1 text-sm">{{ __('intents.create.preset_maps_to', [
+                            'kind' => __('intents.kinds.'.$kind),
+                            'arrangement' => __('intents.arrangements.'.$kind.'.'.$arrangementKind),
+                        ]) }}</div>
+                    </flux:callout>
+                @endif
+
+                @if (count($journeySubjectKinds) > 1)
+                    <div>
+                        <div class="mb-2 text-sm font-medium">{{ __('intents.fields.subject_kind') }}</div>
+                        <div class="grid gap-2 sm:grid-cols-3">
+                            @foreach ($journeySubjectKinds as $option)
+                                <button type="button" wire:click="$set('subjectKind', '{{ $option->value }}')" class="rounded-xl border px-4 py-3 text-start text-sm {{ $subjectKind === $option->value ? 'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-800' }}">
+                                    {{ __('intents.subjects.'.$option->value) }}
+                                </button>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @else
+                    <div class="rounded-xl bg-zinc-50 p-4 text-sm dark:bg-zinc-950">
+                        <span class="text-zinc-500">{{ __('intents.fields.subject_kind') }}:</span>
+                        <span class="ms-1 font-medium">{{ __('intents.subjects.'.$subjectKind) }}</span>
+                    </div>
+                @endif
+
+                <flux:input wire:model="conceptLabel" :label="__('intents.fields.subject')" :placeholder="__('intents.fields.subject_placeholder')" maxlength="120" />
+
+                @if ($journey?->isManual())
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <div class="mb-2 text-sm font-medium">{{ __('intents.fields.kind') }}</div>
+                            <div class="grid gap-2">
+                                @foreach (['need', 'offer'] as $option)
+                                    <button type="button" wire:click="$set('kind', '{{ $option }}')" class="rounded-xl border px-4 py-3 text-start {{ $kind === $option ? 'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-800' }}">
+                                        {{ __('intents.kinds.'.$option) }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div>
+                            <div class="mb-2 text-sm font-medium">{{ __('intents.fields.arrangement') }}</div>
+                            <div class="grid gap-2">
+                                @foreach ($arrangementKinds as $option)
+                                    <button type="button" wire:click="$set('arrangementKind', '{{ $option->value }}')" class="rounded-xl border px-4 py-3 text-start {{ $arrangementKind === $option->value ? 'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' : 'border-zinc-200 dark:border-zinc-800' }}">
+                                        {{ __('intents.arrangements.'.$kind.'.'.$option->value) }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         @elseif ($step === 3)
             <div class="space-y-5">
@@ -136,6 +180,9 @@
                     <flux:text>{{ __('intents.create.step6_help') }}</flux:text>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-2">
+                    @if ($journey)
+                        <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950 sm:col-span-2"><span class="text-xs text-zinc-500">{{ __('intents.fields.journey') }}</span><div class="font-medium">{{ __('intents.journeys.'.$journey->value.'.title') }}</div></div>
+                    @endif
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.kind') }}</span><div class="font-medium">{{ __('intents.kinds.'.$kind) }}</div></div>
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.subject_kind') }}</span><div class="font-medium">{{ __('intents.subjects.'.$subjectKind) }}</div></div>
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.subject') }}</span><div class="font-medium" dir="auto">{{ $conceptLabel }}</div></div>

@@ -5,6 +5,7 @@ namespace App\Livewire\Intents;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
 use App\Models\ActorProfile;
+use App\IntentJourneyPreset;
 use App\Models\User;
 use App\ProfileIntentArrangementKind;
 use App\ProfileIntentExchangePreference;
@@ -28,6 +29,8 @@ class Create extends Component
     public ActorProfile $profile;
 
     public int $step = 1;
+
+    public string $journeyPreset = '';
 
     public string $kind = ProfileIntentKind::Need->value;
 
@@ -68,9 +71,24 @@ class Create extends Component
         $this->timezone = TemporalPreferences::timezoneFor($user);
     }
 
+    public function chooseJourney(string $preset): void
+    {
+        $journey = IntentJourneyPreset::from($preset);
+
+        $this->journeyPreset = $journey->value;
+        $this->kind = $journey->kind()->value;
+        $this->subjectKind = $journey->subjectKind()->value;
+        $this->arrangementKind = $journey->arrangementKind()->value;
+        $this->resetValidation();
+    }
+
     public function next(): void
     {
         $this->validate($this->rulesForStep($this->step));
+
+        if ($this->step === 1) {
+            $this->applyJourneyPreset();
+        }
 
         if ($this->step < 6) {
             $this->step++;
@@ -119,7 +137,34 @@ class Create extends Component
 
     public function render(): View
     {
+        $journey = $this->selectedJourney();
+
         return view('livewire.intents.create', [
+            'journeyGroups' => [
+                'exchange' => [
+                    IntentJourneyPreset::Buy,
+                    IntentJourneyPreset::Sell,
+                    IntentJourneyPreset::Rent,
+                    IntentJourneyPreset::RentOut,
+                ],
+                'services_work' => [
+                    IntentJourneyPreset::NeedService,
+                    IntentJourneyPreset::OfferService,
+                    IntentJourneyPreset::Hire,
+                    IntentJourneyPreset::FindWork,
+                ],
+                'capital_collaboration' => [
+                    IntentJourneyPreset::SeekCapital,
+                    IntentJourneyPreset::OfferCapital,
+                    IntentJourneyPreset::SeekCollaboration,
+                    IntentJourneyPreset::OfferCollaboration,
+                ],
+                'other' => [
+                    IntentJourneyPreset::Other,
+                ],
+            ],
+            'journey' => $journey,
+            'journeySubjectKinds' => $journey?->subjectKinds() ?? ProfileIntentSubjectKind::cases(),
             'subjectKinds' => ProfileIntentSubjectKind::cases(),
             'arrangementKinds' => ProfileIntentArrangementKind::cases(),
             'exchangePreferences' => ProfileIntentExchangePreference::cases(),
@@ -134,6 +179,7 @@ class Create extends Component
     private function allRules(): array
     {
         return [
+            'journeyPreset' => ['required', Rule::enum(IntentJourneyPreset::class)],
             'kind' => ['required', Rule::enum(ProfileIntentKind::class)],
             'subjectKind' => ['required', Rule::enum(ProfileIntentSubjectKind::class)],
             'conceptLabel' => ['required', 'string', 'max:120'],
@@ -171,13 +217,31 @@ class Create extends Component
         $all = $this->allRules();
 
         return match ($step) {
-            1 => array_intersect_key($all, array_flip(['kind', 'subjectKind'])),
-            2 => array_intersect_key($all, array_flip(['conceptLabel', 'arrangementKind'])),
+            1 => array_intersect_key($all, array_flip(['journeyPreset'])),
+            2 => array_intersect_key($all, array_flip(['kind', 'subjectKind', 'conceptLabel', 'arrangementKind'])),
             3 => array_intersect_key($all, array_flip(['locationText', 'cashMin', 'cashMax', 'currencyCode', 'cashBasis'])),
             4 => array_intersect_key($all, array_flip(['exchangePreference', 'exchangeNotes'])),
             5 => array_intersect_key($all, array_flip(['title', 'description', 'scheduleKind', 'visibility'])),
             default => $all,
         };
+    }
+
+    private function applyJourneyPreset(): void
+    {
+        $journey = $this->selectedJourney();
+        abort_unless($journey instanceof IntentJourneyPreset, 422);
+
+        $this->kind = $journey->kind()->value;
+        $this->arrangementKind = $journey->arrangementKind()->value;
+
+        if (! in_array(ProfileIntentSubjectKind::from($this->subjectKind), $journey->subjectKinds(), true)) {
+            $this->subjectKind = $journey->subjectKind()->value;
+        }
+    }
+
+    private function selectedJourney(): ?IntentJourneyPreset
+    {
+        return IntentJourneyPreset::tryFrom($this->journeyPreset);
     }
 
     private function user(): User
