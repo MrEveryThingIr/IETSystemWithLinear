@@ -97,6 +97,7 @@ class UpdateSpaceContentStructure
 
             foreach ($childContentIds as $position => $childId) {
                 SpaceContentRevisionRelationship::query()->create([
+                    'uuid' => (string) Str::uuid(),
                     'parent_revision_id' => $revision->id,
                     'child_content_id' => $childId,
                     'relation_type' => SpaceContentRevisionRelationship::TYPE_CONTAINS,
