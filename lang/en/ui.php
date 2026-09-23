@@ -10,6 +10,7 @@ return [
         'dashboard' => 'Dashboard',
         'profile' => 'Profile',
         'groups' => 'Groups',
+        'manual' => 'System Manual',
         'actors' => 'Actors',
         'account_menu' => 'Account menu',
     ],
