@@ -48,7 +48,7 @@ class SpaceContentAnnotationDisposition extends Model
                 : null;
             $disposition->note = $disposition->note === '' ? null : $disposition->note;
 
-            if (!in_array($disposition->status, self::STATUSES, true)) {
+            if (! in_array($disposition->status, self::STATUSES, true)) {
                 throw new LogicException('Unknown Content annotation disposition.');
             }
 
