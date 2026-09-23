@@ -12,8 +12,11 @@ class SystemManualHelpMap
             return 'feedback';
         }
 
-        if (str_starts_with($routeName, 'profile.')
-            || str_starts_with($routeName, 'actors.')
+        if (str_starts_with($routeName, 'profile.')) {
+            return 'profile-concepts';
+        }
+
+        if (str_starts_with($routeName, 'actors.')
             || str_starts_with($routeName, 'platform.')) {
             return 'identity';
         }
@@ -42,6 +45,10 @@ class SystemManualHelpMap
         if (str_starts_with($routeName, 'contexts.contents.')
             || str_starts_with($routeName, 'groups.contents.')) {
             return 'content';
+        }
+
+        if (str_contains($routeName, 'agreement')) {
+            return 'agreements';
         }
 
         if (str_starts_with($routeName, 'groups.')) {
