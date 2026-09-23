@@ -10,6 +10,7 @@ return [
         'dashboard' => 'داشبورد',
         'profile' => 'پروفایل',
         'groups' => 'گروه‌ها',
+        'manual' => 'راهنمای سیستم',
         'actors' => 'کنشگران',
         'account_menu' => 'منوی حساب',
     ],
