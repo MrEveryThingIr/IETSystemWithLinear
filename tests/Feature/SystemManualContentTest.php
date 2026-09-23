@@ -36,7 +36,7 @@ class SystemManualContentTest extends TestCase
         $first = app(EnsureSystemManualContent::class)->execute($user);
 
         $this->assertSame(ContextKind::Reference, $first['context']->kind);
-        $this->assertCount(11, $first['chapters']);
+        $this->assertCount(13, $first['chapters']);
         $this->assertTrue(Gate::forUser($reader->user)->allows('view', $first['context']));
         $this->assertTrue(Gate::forUser($reader->user)->allows('interactContent', $first['context']));
         $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $first['context']));
@@ -75,7 +75,7 @@ class SystemManualContentTest extends TestCase
         $rootRevision = $first['root']->activeRevisionRecord();
         $this->assertInstanceOf(SpaceContentRevision::class, $rootRevision);
         $this->assertTrue($rootRevision->hasVerifiableManifest());
-        $this->assertCount(11, $rootRevision->relationships()->get());
+        $this->assertCount(13, $rootRevision->relationships()->get());
 
         $chapter = $first['chapters']->first();
         $this->assertNotNull($chapter);
