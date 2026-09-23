@@ -23,24 +23,27 @@ The repository is the durable source of truth. Chat transcripts, legacy migratio
 
 ## Documentation discipline
 
-IET uses two synchronized milestone workstreams:
+IET has one architecture and two intentionally different documentation surfaces:
 
-- runtime branch: the active `feat/phase-XX-...` branch for migrations/models/Actions/policies/UI/tests;
-- living handbook branch: `docs/living-system-handbook` for human-facing object definitions, exact workflows, permissions, examples and troubleshooting.
+- repository Markdown under `docs/` is developer/architecture authority;
+- end-user manuals/help/courses are normal versioned IET Content, currently materialized in the authenticated `Reference` Context through the ordinary Blueprint/Reader/annotation system.
 
-These are parallel workstreams over one architecture, not independently evolving products.
+Do not create a parallel user-documentation product or a separately evolving handbook branch.
 
 For every milestone that changes material user-facing behavior:
 
-- update the living handbook while runtime work is still active;
+- update the official System Manual Content source while runtime work is still active;
 - document WHO → WHERE/Context → WHAT object → ACTION → durable RESULT → WHO CAN SEE IT;
-- distinguish implemented behavior from future architecture;
-- update existing handbook pages instead of creating contradictory documentation;
-- document permissions/roles and important negative guarantees/side effects;
-- do not formally close the milestone until its material workflow is understandable from the handbook;
-- synchronize accepted handbook changes back into the runtime/closure history before moving to the next phase.
+- distinguish current implemented behavior from ideal target behavior;
+- preserve official editions as immutable published Content revisions;
+- keep questions, notes, corrections and ideas as edition/section-specific annotation overlays until an authorized maintainer resolves them;
+- when feedback is incorporated, link the immutable disposition to the later sealed official revision;
+- keep contextual Help routing accurate for affected product surfaces;
+- do not formally close the milestone until its material workflow is understandable from the System Manual.
 
-Canonical architecture documents remain authoritative over explanatory handbook prose when a conflict is discovered; fix the handbook immediately rather than silently changing architecture.
+English is the initial canonical editorial source. Persian is the next reviewed translation target; Arabic and Simplified Chinese follow the same reviewed translation lifecycle. AI-assisted translation may be draft material but is not automatically native-quality/verified.
+
+Canonical architecture documents remain authoritative over explanatory System Manual prose when a conflict is discovered; fix the manual through a new official revision rather than silently changing architecture.
 
 ## Current roadmap position
 
