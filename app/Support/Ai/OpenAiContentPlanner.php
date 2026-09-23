@@ -9,7 +9,7 @@ use RuntimeException;
 class OpenAiContentPlanner
 {
     /**
-     * @param array<string, mixed> $snapshot
+     * @param  array<string, mixed>  $snapshot
      * @return array{provider: string, model: string, external_response_id: string|null, proposal: array<string, mixed>}
      */
     public function plan(array $snapshot, string $prompt): array
@@ -78,7 +78,7 @@ class OpenAiContentPlanner
             ->timeout((int) config('ai.openai.timeout', 60));
     }
 
-    /** @param array<string, mixed> $response */
+    /** @param  array<string, mixed>  $response */
     private function outputText(array $response): string
     {
         foreach (($response['output'] ?? []) as $item) {
