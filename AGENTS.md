@@ -45,6 +45,21 @@ English is the initial canonical editorial source. Persian is the next reviewed 
 
 Canonical architecture documents remain authoritative over explanatory System Manual prose when a conflict is discovered; fix the manual through a new official revision rather than silently changing architecture.
 
+## AI assistance and development provenance discipline
+
+For AI-assisted application behavior:
+
+- AI plans against the exact current authorized object/revision; it does not receive direct database authority.
+- Apply through existing policies and domain Actions, and reauthorize at mutation time.
+- Reject stale plans after the target changes.
+- Never auto-publish or convert natural-language wording into submit/approve/accept/finalize/payment authority.
+- Never accept arbitrary generated PHP, Blade, JavaScript, SQL, shell code, or executable validation/configuration.
+- Generated media must enter through the normal private Asset provenance/rights/scan/readiness pipeline before it can be attached or published.
+- Development Origins are immutable supporting provenance. They may link a curated chat/design summary to phase/version/commits/docs, but canonical repository authority remains unchanged.
+- Do not automatically copy private raw chat history into durable application records.
+
+Binding cross-cutting contract: `docs/AI_ASSISTANCE_AND_DEVELOPMENT_PROVENANCE.md`.
+
 ## Current roadmap position
 
 - Phase 0 — canonical architecture: complete.

@@ -370,6 +370,25 @@ A production-wide official manual needs a general system/reference Content acces
 
 Before beginning a major new kernel after Phase 7, use the manual/audit pass to re-evaluate the remaining roadmap against the connected-life north star. Reordering or splitting later phases is allowed when the audit exposes a clearer dependency, but canonical boundaries (identity/authority, immutable evidence, conversation-not-authority, domain truth outside Content) must remain intact unless the human owner explicitly changes them.
 
+### Cross-cutting AI assistance and development provenance
+
+This is an authorized cross-cutting capability, not a new numbered phase and not Phase 18 recommendation/personalization work.
+
+The first slice may land on the Phase 7 + Documentation-as-Content baseline before Phase 8 when all of these remain true:
+
+- AI is plan-first and human-directed;
+- provider output is schema-constrained and treated as untrusted input;
+- Content mutations reuse existing policies and Actions;
+- stale proposals are rejected rather than overwriting newer revisions;
+- AI never auto-publishes or performs hidden authoritative transitions;
+- arbitrary generated code is rejected;
+- media generation is not treated as complete until an authorized Asset adapter feeds the existing private Asset/rights/scan/readiness pipeline;
+- Development Origins preserve curated provenance while repository docs/Git remain canonical;
+- the System Manual documents the behavior and contextual Help resolves to it;
+- tests, static analysis, formatting, build, migrations/rollback, backup/restore, security gates, and owner local/browser/mobile/RTL review pass.
+
+Future expansion into form filling must preserve a strict distinction between suggesting/populating draft values and executing submit/approve/accept/finalize/pay actions.
+
 ## Phase 8 — Admission v2: contextual onboarding
 
 ### Purpose

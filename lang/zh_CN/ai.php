@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'title' => 'AI 内容助手',
+    'description' => '描述你希望得到的结果。助手会先提出安全的内容修改方案，再由你决定是否应用。',
+    'back_to_studio' => '返回工作室',
+    'open_reader' => '打开阅读器',
+    'safety_note' => 'AI 辅助仅提供建议。它只能通过与工作室相同的授权规则应用受信任的内容字段、区块和展示选项；不会执行生成的代码，也不会静默发布内容。',
+    'ask_heading' => '描述你的设想',
+    'ask_help' => '请说明要修改的具体章节、措辞、结构或外观。系统会尽量保留其他已有内容。',
+    'prompt' => '需要怎样修改？',
+    'prompt_placeholder' => '例如：在引言后加入一个简短提示说明核心观点，加强结论，并使用更平静的阅读布局。',
+    'create_plan' => '生成方案',
+    'proposal' => '建议的修改',
+    'title_change' => '标题',
+    'field_changes' => '字段修改',
+    'block_changes' => '区块修改',
+    'presentation_change' => '展示',
+    'media_requests' => '媒体请求',
+    'media_requests_help' => '当前第一阶段只记录图片、音频或视频生成需求，不会伪造或发布 Asset。媒体生成将通过受授权的 Asset 适配器在后续加入。',
+    'apply_plan' => '应用到草稿',
+    'applied' => 'AI 建议已应用为新的内容草稿修订版。',
+    'recent' => '最近的 AI 辅助',
+    'none' => '还没有 AI 辅助记录。',
+    'provider_failed' => 'AI 提供方无法生成方案。内容未发生任何修改。',
+];

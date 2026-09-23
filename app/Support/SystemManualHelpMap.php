@@ -12,6 +12,11 @@ class SystemManualHelpMap
             return 'feedback';
         }
 
+        if (str_starts_with($routeName, 'contexts.contents.ai')
+            || $routeName === 'platform.development-origins') {
+            return 'ai-assistance';
+        }
+
         if (str_starts_with($routeName, 'profile.')) {
             return 'profile-concepts';
         }
@@ -33,10 +38,6 @@ class SystemManualHelpMap
         if (str_starts_with($routeName, 'content-evidence.')
             || str_contains($routeName, '.revisions.')) {
             return 'evidence';
-        }
-
-        if (str_starts_with($routeName, 'contexts.contents.ai')) {
-            return 'content';
         }
 
         if (str_starts_with($routeName, 'contexts.contents.studio')

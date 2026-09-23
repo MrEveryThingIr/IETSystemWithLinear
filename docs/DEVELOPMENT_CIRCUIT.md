@@ -4,7 +4,7 @@
 
 IET is developed through a repository-first, phase-gated human + AI circuit.
 
-The repository holds durable architecture, implementation, reports, and validation evidence. Chat history is useful for discussion but is not the long-term source of truth.
+The repository holds durable architecture, implementation, reports, and validation evidence. Chat history is useful for discussion but is not the long-term source of truth. Important conversations may be preserved as curated immutable Development Origins that point back to the canonical repository decisions they influenced.
 
 The default circuit is:
 
@@ -32,8 +32,9 @@ Issue trackers such as Linear may manage live task state, but they do not replac
 7. path-specific `.ai/rules/`
 8. source code and tests for actual implemented behavior
 9. phase reports / historical evidence
-10. issue tracker/live planning metadata
-11. chat summaries or legacy migrations
+10. immutable Development Origin / phase provenance records
+11. issue tracker/live planning metadata
+12. raw chat summaries or legacy migrations
 
 When two authoritative sources conflict materially, stop and resolve the contradiction before implementation.
 
@@ -270,9 +271,11 @@ Rules:
 - use PRs for integration/release boundaries;
 - tag production releases.
 
-For the current accepted implementation baseline, the active branch is:
+For the current accepted implementation line, the active runtime baseline is:
 
-`feat/phase-05-content-context`
+`feat/phase-07-submission-evaluation`
+
+The current authorized cross-cutting slice is developed separately on `feat/context-ai-assistance-provenance` and must rejoin the Phase 7 line only after automated and owner-local/browser acceptance.
 
 Future phase branching should be decided at each phase start from the then-current accepted integration baseline.
 
@@ -314,6 +317,23 @@ Stop and request review when:
 - tests expose a deeper invariant contradiction;
 - local repository state is unsafe to synchronize;
 - required validation cannot run.
+
+## Development origin provenance
+
+A meaningful design chat, external discussion, or architecture session may be preserved in the application as an immutable `DevelopmentOrigin` when doing so improves historical traceability.
+
+Store a reviewed summary and references rather than copying a private raw transcript by default. A Development Origin may record:
+
+- source type and optional source URL;
+- title and curated summary;
+- roadmap phase and system version;
+- branch;
+- exact baseline and result commit SHAs;
+- canonical repository paths affected by the discussion;
+- the time of the originating discussion/decision;
+- an explicit superseded-origin link when a later record corrects earlier provenance.
+
+Development Origins are supporting evidence, not architecture authority. The human owner, accepted ADRs, Project Compass, Target Architecture, Production Roadmap, active phase contract, source/tests, and Git history retain their authority order.
 
 ## Handoffs
 

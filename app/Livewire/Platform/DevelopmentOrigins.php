@@ -10,11 +10,13 @@ use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 #[Title('Development Origins')]
 class DevelopmentOrigins extends Component
 {
+    use WithPagination;
     public string $sourceType = 'chatgpt';
 
     public string $sourceUrl = '';

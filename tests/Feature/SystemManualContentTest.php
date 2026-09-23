@@ -36,7 +36,7 @@ class SystemManualContentTest extends TestCase
         $first = app(EnsureSystemManualContent::class)->execute($user);
 
         $this->assertSame(ContextKind::Reference, $first['context']->kind);
-        $this->assertCount(13, $first['chapters']);
+        $this->assertCount(14, $first['chapters']);
         $this->assertTrue(Gate::forUser($reader->user)->allows('view', $first['context']));
         $this->assertTrue(Gate::forUser($reader->user)->allows('interactContent', $first['context']));
         $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $first['context']));
@@ -60,6 +60,22 @@ class SystemManualContentTest extends TestCase
         );
         $this->assertNotNull($submissionChapter);
 
+        $aiChapter = $first['chapters']->first(
+            static fn ($content): bool => $content->activeRevisionRecord()?->title
+                === SystemManualContent::CHAPTER_TITLES['ai-assistance'],
+        );
+        $this->assertNotNull($aiChapter);
+
+        $this->actingAs($reader->user)
+            ->get(route('manual', ['topic' => 'ai-assistance']))
+            ->assertRedirect(
+                route('contexts.contents.show', [
+                    $first['context'],
+                    $aiChapter,
+                    'manual' => 1,
+                ]).'#field-how_to_use',
+            );
+
         $this->actingAs($reader->user)
             ->get(route('manual', ['topic' => 'submissions']))
             ->assertRedirect(
@@ -75,7 +91,7 @@ class SystemManualContentTest extends TestCase
         $rootRevision = $first['root']->activeRevisionRecord();
         $this->assertInstanceOf(SpaceContentRevision::class, $rootRevision);
         $this->assertTrue($rootRevision->hasVerifiableManifest());
-        $this->assertCount(13, $rootRevision->relationships()->get());
+        $this->assertCount(14, $rootRevision->relationships()->get());
 
         $chapter = $first['chapters']->first();
         $this->assertNotNull($chapter);

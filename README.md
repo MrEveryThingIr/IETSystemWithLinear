@@ -6,25 +6,14 @@ The project deliberately aims for **generic infrastructure internally and focuse
 
 ## Current baseline
 
-Active roadmap phase:
+Current accepted product line:
 
-`Phase 4 — Actor/Party and Progressive Profile`
+- Phases 0–6 are complete and accepted.
+- Phase 7 — Submission / Response / Evaluation is runtime-complete and automated-green; owner-local/browser/mobile/RTL acceptance remains the gate before Phase 8.
+- The Documentation-as-Content audit is implemented on the Phase 7 line.
+- The current cross-cutting working branch is `feat/context-ai-assistance-provenance`, adding human-directed AI Content assistance and immutable Development Origin provenance without pulling Phase 8 forward.
 
-Completed Phase 2 branch:
-
-`feat/phase-02-delivery-operations`
-
-Accepted Phase 1 closure commit:
-
-`a91c0dea1e770614d1d419f26a9bf1783b38e023`
-
-Phase 1 closure validation:
-
-- 282 tests passed / 1437 assertions
-- PHPStan: no errors
-- Pint: passed
-- Vite production build: passed
-- browser onboarding/hardening accepted by the human owner
+Read `docs/CURRENT_STATE.md` for exact commits, CI evidence, and the current local acceptance gate.
 
 ## Canonical project documents
 
@@ -34,18 +23,14 @@ Read these instead of relying on chat history:
 2. [Current State](docs/CURRENT_STATE.md)
 3. [Target Architecture](docs/TARGET_ARCHITECTURE.md)
 4. [Production Roadmap](docs/PRODUCTION_ROADMAP.md)
-5. [Phase 2 — Delivery and Operations](docs/PHASE_02_DELIVERY_OPERATIONS.md)
-6. [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
-7. [Admission Collaboration Architecture](docs/ADMISSION_COLLABORATION_ARCHITECTURE.md)
-8. [Completed Phase 1 — Invitation / Registration / Admission](docs/PHASE_01_INVITATION_ONBOARDING.md)
-9. [Concept Kernel](docs/CONCEPT_KERNEL.md)
-10. [Completed Phase 3 — Concept Kernel](docs/PHASE_03_CONCEPT_KERNEL.md)
-11. [Active Phase 4 — Actor/Party and Progressive Profile](docs/PHASE_04_ACTOR_PROFILE.md)
-12. [Financial Architecture](docs/FINANCIAL_ARCHITECTURE.md)
-13. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
-14. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
+5. [Phase 7 — Submission / Response / Evaluation](docs/PHASE_07_SUBMISSION_EVALUATION.md)
+6. [AI Assistance and Development Provenance](docs/AI_ASSISTANCE_AND_DEVELOPMENT_PROVENANCE.md)
+7. [Development Circuit](docs/DEVELOPMENT_CIRCUIT.md)
+8. [Admission Collaboration Architecture](docs/ADMISSION_COLLABORATION_ARCHITECTURE.md)
+9. [Operations Runbook](docs/OPERATIONS_RUNBOOK.md)
+10. [ADR-001 — Identity, authority and simulation boundaries](docs/ADR-001-identity-authority-and-simulation-boundaries.md)
 
-Historical implementation reports are under `Development-CodexReports/`.
+Completed phase contracts and historical implementation reports remain under `docs/` and `Development-CodexReports/`.
 
 ## Current implemented foundation
 
@@ -66,17 +51,22 @@ The repository already contains substantial implementations for:
 - Book/Lesson/Page Outline composition;
 - immutable publication evidence;
 - Reader/Studio separation;
-- contextual annotations, questions/answers/replies, private notes and reactions.
+- contextual annotations, questions/answers/replies, private notes and reactions;
+- versioned Content Blueprints and unified Context authoring;
+- Submission / Response / Evaluation with immutable evidence;
+- authenticated Reference Context and the official System Manual as normal Content;
+- plan-first AI-assisted Content editing through existing policies/Actions;
+- immutable Development Origins linking design discussions to phases, versions, commits, and repository paths.
 
 See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
 
 ## Development rule
 
-Work on one accepted roadmap phase at a time.
+Work on one accepted roadmap phase at a time. The AI/provenance work on `feat/context-ai-assistance-provenance` is an explicitly authorized cross-cutting slice over the Phase 7/manual baseline; it is not Phase 8.
 
-Phases 2 and 3 are complete. **Phase 4 — Actor/Party and Progressive Profile** is active on `feat/phase-04-actor-profile`. Milestone 4A is owner-local accepted. Milestone 4B (semantic Profile + recurring Needs/Offers) is implementation-complete. Browser acceptance exposed a temporal input edge case, so 4B.1 Temporal Localization Hardening was added and is remote-CI green at 310 tests / 1593 assertions. One refreshed owner-local/browser gate remains before 4C begins. Production-host-specific deployment, mail-provider, supervisor, monitoring, and backup/restore proof remain mandatory before production release and are tracked by the operations runbook and later production-hardening/release phases.
+Do not begin Admission v2, generic Conversation, realtime infrastructure, Workflow, Planner, Contract/Commitment, Matching, or Accounting work until their roadmap gate is opened.
 
-Agents must read `AGENTS.md` and the canonical docs before changing code.
+Agents must read `AGENTS.md`, the canonical docs, and matching `.ai/rules/` before changing code. AI assistance never bypasses authorization, executes generated code, or turns natural-language wording into an authoritative domain transition.
 
 ## Laravel
 

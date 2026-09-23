@@ -23,6 +23,7 @@ class SystemManualContent
         'feedback' => '11. Reporting Questions, Problems, Corrections, and Ideas',
         'profile-concepts' => '12. Profile, Concepts, Skills, Interests, Goals, Needs, and Offers',
         'agreements' => '13. Group Agreements and Versioned Governance',
+        'ai-assistance' => '14. AI-Assisted Authoring and Development Origins',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -412,6 +413,48 @@ TEXT,
 Agreement is not merely a document. The document explains the terms; the Agreement domain records which version is proposed/approved/active and who accepted it.
 
 A candidate-specific negotiation must not silently rewrite the rules for every Group member. An annotation saying “accepted” is not acceptance authority.
+TEXT,
+                ],
+                [
+                    'title' => '14. AI-Assisted Authoring and Development Origins',
+                    'summary' => <<<'TEXT'
+AI assistance in IET helps translate a user's intent into trusted, reviewable changes without making the model an authority. Development Origins preserve a curated historical link from important design conversations to the roadmap, repository documents, commits, and system versions they influenced.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Authorized Content editors can open AI Content Assistant from the Content Studio, describe a desired result, review a structured proposal, and explicitly apply that proposal to a new draft revision. The assistant may propose changes to existing structured fields, safe document blocks, and presentation tokens. It uses the same Content policies and Actions as ordinary Studio editing, refuses stale proposals after the Content has changed, and never publishes automatically.
+
+Requests for generated image, audio, or video are currently recorded as media requests only. This first slice does not invent Asset identities or bypass the private Asset scanning, rights, readiness, and publication pipeline.
+
+Platform users with View Platform Audit authority can also capture a Development Origin: a reviewed summary plus optional source link, roadmap phase, system version, branch, baseline/result Git commit SHAs, and related repository paths. Development Origins are immutable provenance. They do not replace canonical repository documents.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+From an editable Content Studio, choose AI Content Assistant. Describe the exact section, wording, structure, or appearance you want. Review the proposed changes before applying them. After application, return to Studio, inspect the new draft revision, adjust it normally if necessary, and publish only through the ordinary explicit publish action.
+
+For a meaningful product-development conversation, an authorized platform auditor can open Development Origins and store a concise reviewed summary rather than copying an entire private conversation by default. Relate it to the phase, branch, exact baseline/result commits, and canonical repository paths that were changed because of the discussion.
+TEXT,
+                    'authorization' => <<<'TEXT'
+AI assistance never grants authority. Planning and application both require the same authenticated Content update permission that a human editor needs, and application rechecks authorization. The provider API key remains server-side. Generated proposals cannot execute arbitrary PHP, JavaScript, HTML, SQL, shell commands, or hidden domain transitions.
+
+Development Origins are platform-audit history and currently require View Platform Audit capability. Group roles alone do not grant this platform authority.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+The same human-directed seam can later support section-specific assistants and form assistance throughout IET:
+
+current Context/object + user's intent
+→ AI proposes trusted structured values/actions
+→ schema and authorization validation
+→ human review/confirmation where authority matters
+→ existing domain Action
+→ durable state + provenance
+
+Future media generation should create normal private Assets through an authorized provider adapter, then pass scanning, rights, readiness, and Content attachment rules before publication. Later Admission/Conversation experiences may embed AI-assisted structured cards, but messages or AI wording must never silently submit, approve, accept an Agreement/Contract, finalize Membership, create financial truth, or perform another authoritative transition.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+An AI proposal is not a system decision. “Submit”, “approve”, “accept”, “publish”, “paid”, and similar authoritative facts still require explicit authorized domain Actions.
+
+A source chat is useful provenance, not canonical architecture. The repository's accepted architecture/roadmap documents remain authoritative. Development Origins should normally preserve a curated summary and references, not automatically ingest private raw chat history.
+
+AI-assisted Content does not mean arbitrary executable widgets. New functionality must be implemented as a trusted platform capability, component, Blueprint, or domain Action and then exposed to the assistant through a validated registry.
 TEXT,
                 ],
             ],
