@@ -8,6 +8,21 @@ class SystemManualContent
 
     public const ROOT_TITLE = 'IET System Manual';
 
+    /** @var array<string, string> */
+    public const CHAPTER_TITLES = [
+        'mental-model' => '1. The IET Mental Model',
+        'identity' => '2. User, Actor, and Identity',
+        'groups' => '3. Groups, Memberships, Roles, and Permissions',
+        'contexts' => '4. Contexts: Where Work Happens',
+        'content' => '5. Content, Definitions, and Blueprints',
+        'reader' => '6. Reader, Studio, Blocks, Assets, and Annotations',
+        'evidence' => '7. Publishing, Editions, Permalinks, and Evidence References',
+        'admission' => '8. Invitations and Admissions',
+        'submissions' => '9. Submission, Response, and Evaluation',
+        'roadmap' => '10. Connected-Life Target and Roadmap',
+        'feedback' => '11. Reporting Questions, Problems, Corrections, and Ideas',
+    ];
+
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
     public function english(): array
     {
