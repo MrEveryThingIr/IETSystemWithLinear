@@ -234,7 +234,7 @@ class Create extends Component
         $this->kind = $journey->kind()->value;
         $this->arrangementKind = $journey->arrangementKind()->value;
 
-        if (! in_array(ProfileIntentSubjectKind::from($this->subjectKind), $journey->subjectKinds(), true)) {
+        if (!in_array(ProfileIntentSubjectKind::from($this->subjectKind), $journey->subjectKinds(), true)) {
             $this->subjectKind = $journey->subjectKind()->value;
         }
     }
