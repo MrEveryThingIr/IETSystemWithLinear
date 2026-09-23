@@ -17,9 +17,11 @@
             <flux:button :href="route('intents.index')" variant="ghost" icon="magnifying-glass">
                 {{ __('intents.directory.title') }}
             </flux:button>
-            <flux:button :href="route('contexts.personal')" variant="ghost" icon="document-text">
-                {{ __('ui.context_content.my_content') }}
-            </flux:button>
+            @unless (config('release.profile') === 'office_alpha')
+                <flux:button :href="route('contexts.personal')" variant="ghost" icon="document-text">
+                    {{ __('ui.context_content.my_content') }}
+                </flux:button>
+            @endunless
         </div>
     </div>
 @endsection
