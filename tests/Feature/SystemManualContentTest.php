@@ -53,6 +53,23 @@ class SystemManualContentTest extends TestCase
             ->get(route('contexts.contents.show', [$first['context'], $first['root']]))
             ->assertOk()
             ->assertSee('1. The IET Mental Model');
+
+        $submissionChapter = $first['chapters']->first(
+            static fn ($content): bool => $content->activeRevisionRecord()?->title
+                === SystemManualContent::CHAPTER_TITLES['submissions'],
+        );
+        $this->assertNotNull($submissionChapter);
+
+        $this->actingAs($reader->user)
+            ->get(route('manual', ['topic' => 'submissions']))
+            ->assertRedirect(
+                route('contexts.contents.show', [
+                    $first['context'],
+                    $submissionChapter,
+                    'manual' => 1,
+                ]).'#field-how_to_use',
+            );
+
         $this->assertSame('published', $first['root']->status);
 
         $rootRevision = $first['root']->activeRevisionRecord();
