@@ -122,3 +122,53 @@ What previous Alice/Bob/Carol/Diego objects should still exist and be reused.
 ~~~
 
 The final release section will include the entire 0→100 path in one chronological browser script.
+
+
+---
+
+## Checkpoint 08 — Progressive Intent Journey v2
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-08-intent-journey
+~~~
+
+Exact integration SHA/CI are filled by the milestone closure report.
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-08-intent-journey
+git pull --ff-only origin feat/ideal-v1-08-intent-journey
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+
+php artisan test --compact \
+  tests/Feature/IntentJourneyV2Test.php \
+  tests/Feature/IntentDirectoryReleaseTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+~~~
+
+No Phase 8 migration is expected.
+
+### Browser story
+
+- [ ] Alice opens Record need / offer and first sees “What do you want to do?” rather than raw Need/Offer schema.
+- [ ] Sell → step 2 can refine Thing/good to Property for Riverside Lot.
+- [ ] Buy maps to Need + ownership transfer.
+- [ ] Rent maps to Need + temporary use; Rent out maps to Offer + temporary use.
+- [ ] Need service and Hire show Service/skill rather than unrelated Property/Capital choices.
+- [ ] Offer service and Find work create Offer + Service semantics.
+- [ ] Seek/Offer capital use Financing semantics and explicitly create no loan/equity.
+- [ ] Seek/Offer collaboration create current collaboration Intent only.
+- [ ] Something else still permits manual Need/Offer + subject + arrangement.
+- [ ] Review shows the friendly journey and underlying interpretation.
+- [ ] saving creates one ActorProfileIntent and no Submission/Evaluation/Match/Contract side effect.
+- [ ] existing Directory/visibility/privacy behavior still passes.
