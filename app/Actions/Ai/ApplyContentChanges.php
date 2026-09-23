@@ -24,6 +24,7 @@ class ApplyContentChanges
 
     public function execute(AiAssistanceRun $run, User $user): AiAssistanceRun
     {
+        abort_unless((bool) config('ai.enabled'), 404);
         return DB::transaction(function () use ($run, $user): AiAssistanceRun {
             $currentRun = AiAssistanceRun::query()->lockForUpdate()->findOrFail($run->id);
             abort_unless($currentRun->status === AiAssistanceRun::STATUS_PLANNED, 409, 'This AI proposal is no longer pending.');

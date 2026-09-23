@@ -17,6 +17,7 @@ class PlanContentChanges
 
     public function execute(SpaceContent $content, User $user, string $prompt): AiAssistanceRun
     {
+        abort_unless((bool) config('ai.enabled'), 404);
         $prompt = trim($prompt);
         abort_if($prompt === '' || mb_strlen($prompt) > 8000, 422, 'Describe the change you want in 8,000 characters or fewer.');
 

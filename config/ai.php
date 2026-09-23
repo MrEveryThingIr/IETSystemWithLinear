@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'enabled' => (bool) env('AI_ASSISTANCE_ENABLED', false),
+
     'provider' => env('AI_PROVIDER', 'openai'),
 
     'openai' => [

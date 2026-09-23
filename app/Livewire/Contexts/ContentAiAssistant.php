@@ -31,6 +31,7 @@ class ContentAiAssistant extends Component
 
     public function mount(Context $context, SpaceContent $content): void
     {
+        abort_unless((bool) config('ai.enabled'), 404);
         abort_unless((int) $content->context_id === (int) $context->id, 404);
         Gate::forUser($this->user())->authorize('update', $content);
 

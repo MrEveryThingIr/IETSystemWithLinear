@@ -22,6 +22,12 @@ class AiContentAssistanceTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config()->set('ai.enabled', true);
+    }
+
     public function test_authorized_user_can_plan_and_apply_structured_ai_changes_without_direct_database_authority(): void
     {
         config()->set('ai.provider', 'openai');
