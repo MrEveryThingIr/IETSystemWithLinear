@@ -345,6 +345,27 @@ Support structured interactions that annotations cannot represent correctly, whi
 
 Automated/runtime conditions are green on current candidate `bd45c994535a2045fde7e23c924d103aaa666c25`. Both proof cases work without abusing annotations or creating separate form engines; submitted evidence remains historically exact after newer Content/interaction versions; pre-Membership Admission isolation is preserved; and the application components can later be composed into Conversation without changing their domain semantics. The owner's manual feedback exposed insufficient reviewer discoverability, so Phase 7 now surfaces a persistent review entry/count from Context Content and protects that behavior with regression coverage. Final browser/mobile/RTL owner acceptance of this corrected UX remains required before formal Phase 7 closure or Phase 8 runtime work.
 
+## Cross-cutting gate — Documentation as Content
+
+This is not a new domain kernel or a parallel documentation product. It is a standing delivery rule for every remaining phase.
+
+Before/alongside Phase 8 and later milestones:
+
+- review implemented kernels in human learning order and maintain a complete educational manual;
+- materialize the user-facing manual as normal versioned Content using existing Content/Blueprint/Reader capabilities;
+- keep official system-authored editions visually identifiable and clean;
+- preserve private/community annotations, questions, replies, voice/image/video additions as overlays unless an authorized maintainer accepts them into a new official revision;
+- document every important object with purpose, authority, Context, lifecycle, relationships and negative guarantees;
+- document every workflow as WHO → WHERE → WHAT → ACTION → durable RESULT → WHO CAN SEE IT;
+- update the manual in parallel with runtime changes and do not formally close material user-facing milestones while their behavior is undocumented;
+- introduce contextual Reader capability providers incrementally as domains exist, always reusing existing policies/Actions;
+- maintain a clean-reading mode so contextual controls never obscure the origin artifact;
+- productize Actor/Context Blueprint cloning/versioning/editing when it becomes the next authoring blocker, reusing the existing Blueprint kernel.
+
+Initial manual coverage should include identity/Actors, Groups/Membership/roles, Contexts, Content/Definitions/Blueprints, revisions/permalinks/evidence, annotations/media, Submission/Response/Evaluation, and Admission/invitation boundaries.
+
+A production-wide official manual needs a general system/reference Content access solution; never bypass authorization specifically for documentation.
+
 ## Phase 8 — Admission v2: contextual onboarding
 
 ### Purpose
