@@ -9,8 +9,8 @@ use App\Models\Concept;
 use App\ProfileIntentArrangementKind;
 use App\ProfileIntentExchangePreference;
 use App\ProfileIntentKind;
-use App\ProfileIntentSubjectKind;
 use App\ProfileIntentScheduleKind;
+use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
