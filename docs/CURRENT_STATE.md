@@ -27,7 +27,9 @@ The published experience defaults to `IET_RELEASE_PROFILE=office_alpha`: ordinar
 
 AI assistance remains implemented as an architecture seam but is disabled by default for this first alpha through `AI_ASSISTANCE_ENABLED=false`.
 
-Phase 8 remains closed while this pre-release productization gate is implemented and locally accepted.
+The remote runtime candidate is `cb4ae0783dc8f0d8ad424422b4cc7d6a9dc01520`. GitHub Actions run `35903601901` is green at **419 tests / 2306 assertions**, PHPStan clean, changed-file Pint **391 files**, Vite/build green, migration rollback/reapply + scheduler/database-queue smoke green, SQLite backup/restore green, npm audit 0 vulnerabilities, and Composer security audit clean.
+
+Phase 8 remains closed. The only remaining gate before freezing/tagging the first alpha is owner-local migration/manual-sync plus browser/mobile/RTL acceptance of this exact candidate.
 
 Current implementation baseline:
 

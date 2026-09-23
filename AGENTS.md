@@ -87,6 +87,8 @@ The default release profile is `office_alpha`: keep ordinary navigation intentio
 
 AI assistance is disabled by default for the alpha; enabling it later still requires the binding AI contract.
 
+Remote runtime candidate: `cb4ae0783dc8f0d8ad424422b4cc7d6a9dc01520`. GitHub Actions run `35903601901` is green at 419 tests / 2306 assertions with PHPStan/Pint/Vite/migrations/ops/backup/security green. Do not tag until owner-local/browser/mobile/RTL acceptance is recorded.
+
 ## Previous technical candidate
 
 The Phase 7 + Documentation-as-Content runtime candidate is:

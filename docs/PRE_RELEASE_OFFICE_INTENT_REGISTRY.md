@@ -2,10 +2,12 @@
 
 ## Status
 
-Explicitly approved pre-release productization slice before Phase 8.
+Technically complete remote release candidate; owner-local/browser acceptance remains before tagging.
 
 - Branch: `feat/pre-release-office-intent-registry`
 - Baseline: `cd04d576b3e426846c65d05c33f78e75a4034503`
+- Runtime candidate: `cb4ae0783dc8f0d8ad424422b4cc7d6a9dc01520`
+- GitHub Actions: `35903601901` — 419 tests / 2306 assertions; PHPStan/Pint/Vite/migrations/ops/backup/security green
 - Intended release family: `v0.1.0-alpha.1`
 - Release meaning: invitation-only development alpha, not Phase 20 production
 
