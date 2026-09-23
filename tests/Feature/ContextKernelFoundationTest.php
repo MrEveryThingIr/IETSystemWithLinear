@@ -13,6 +13,7 @@ use App\Models\Admission;
 use App\Models\Context;
 use App\Models\GroupSpace;
 use App\Models\GroupSpaceContext;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -150,7 +151,7 @@ class ContextKernelFoundationTest extends TestCase
     {
         $manager = Actor::factory()->create();
         $reader = Actor::factory()->create();
-        $unverifiedUser = \App\Models\User::factory()->unverified()->create();
+        $unverifiedUser = User::factory()->unverified()->create();
         $unverifiedUser->actor()->create();
 
         $context = app(EnsureReferenceContext::class)->execute($manager->user, 'system-reference');
