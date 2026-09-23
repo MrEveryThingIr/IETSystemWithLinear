@@ -31,7 +31,7 @@ Current implementation baseline:
 - Phase 7C — Evaluation — technically complete on `9e0338994f755f81c59ed6dfe9e5e96ad0afaa8f`; GitHub Actions run `35767588253`: **384 tests / 2025 assertions**, PHPStan clean, changed-file Pint **293 files**, Vite/migrations/ops/backup/security green.
 - Phase 7D — productized interaction experience — technically complete on `d828dc43c9ef469a3532bfee9b6274d5dceb5f24`; GitHub Actions run `35771215549`: **390 tests / 2052 assertions**, PHPStan clean, changed-file Pint **305 files**, Vite/migrations/ops/backup/security green.
 - Phase 7E — proof and closure — technically complete on `35236f7af4ab9168467383b867cd698f2f30755c`; GitHub Actions run `35772393444`: **393 tests / 2086 assertions**, PHPStan clean, changed-file Pint **307 files**, Vite/security/ops/backup green; migrations `200000`, `210000`, `220000` rollback and reapply successfully in CI.
-- Final human owner gate remains: synchronize/apply Phase 7 migrations on the existing local database, run the focused/full local validation, and accept the school-exam + employment-application browser experience at desktop/phone widths including RTL.
+- Owner local engineering validation is now green on the synchronized Phase 7 branch: migrations, focused/full tests, PHPStan, build/diff/tree checks were reported successful. Final browser acceptance is **not yet granted**: during manual school-exam/employment testing, the owner could enter responses but reviewer-side consequence/discoverability was not clear enough. Treat this as unresolved product UX/integration evidence; determine whether it is a true reviewer-state defect or a discoverability problem before formal Phase 7 closure.
 
 This document describes repository implementation truth at the Phase 7 technical-completion candidate. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and Phase 7 acceptance by `docs/PHASE_07_SUBMISSION_EVALUATION.md` plus `Development-CodexReports/phase-07-submission-evaluation-report.md`.
 
@@ -529,21 +529,23 @@ Current Phase 4 Profile declarations support:
 
 These declarations describe **current participant intent**. They do not create matches, obligations or materialized schedules.
 
-Future Phase 13 remains responsible for:
+Future Phase 13 now comes first for the obligation path and remains responsible for:
 
-- Match;
-- ranking/eligibility logic;
-- proposal handoff.
-
-Future Phase 14 remains responsible for:
-
-- Proposal;
+- direct Proposal;
 - Negotiation;
 - Agreement/Contract;
 - Commitment;
-- Fulfillment.
+- Planner/Occurrence binding where commitments are scheduled;
+- Fulfillment and review;
+- financial-obligation handoff.
 
-No matching result itself creates an obligation.
+Future Phase 14 remains responsible for discovery:
+
+- Match;
+- ranking/eligibility logic;
+- proposal handoff into the already-proven Phase 13 path.
+
+A direct relationship never requires Need/Offer/Match, and no matching result itself creates an obligation.
 
 ## Accounting
 
@@ -631,12 +633,15 @@ Starting runtime baseline: `0d98dfe3c99e79dbdbc72dfc9b6f3fbe50a7f533`.
 
 Current Phase 7 runtime candidate: `35236f7af4ab9168467383b867cd698f2f30755c`.
 
-Phase 7A is complete and locally accepted. Phase 7B is technically complete: one immutable-version-bound Submission attempt owns normalized draft Responses, explicit submit/withdraw Actions, reusable same-Context Asset evidence, authorized cross-Context immutable Content evidence, max-attempt enforcement, private pre-submit Admission drafts, and a canonical SHA-256 sealed submission manifest. Phase 7C is technically complete: authorized evaluator drafts, immutable version-bound rubric configuration, bounded score/criterion feedback, finalized Evaluation evidence hashes, draft privacy, finalized submitter visibility, and no hidden Admission/Membership transition. Phase 7D is technically complete: exact-revision Content Reader interaction cards, draft/resume/submit/withdraw UX, reusable Asset/evidence inputs, reviewer discovery/queue/detail, protected Submission-asset delivery, explicit Evaluation UX, four-locale copy, RTL-ready responsive layouts, and no Admission lifecycle side effects. Phase 7E is technically complete: opt-in school-exam and employment-application browser fixtures, historical version-drift proof, pre-Membership Admission isolation, full regression coverage, migration rollback/reapply proof and the Phase 7 implementation report are green. Only the final owner-local/browser/mobile/RTL acceptance gate remains.
+Phase 7A is complete and locally accepted. Phase 7B is technically complete: one immutable-version-bound Submission attempt owns normalized draft Responses, explicit submit/withdraw Actions, reusable same-Context Asset evidence, authorized cross-Context immutable Content evidence, max-attempt enforcement, private pre-submit Admission drafts, and a canonical SHA-256 sealed submission manifest. Phase 7C is technically complete: authorized evaluator drafts, immutable version-bound rubric configuration, bounded score/criterion feedback, finalized Evaluation evidence hashes, draft privacy, finalized submitter visibility, and no hidden Admission/Membership transition. Phase 7D is technically complete: exact-revision Content Reader interaction cards, draft/resume/submit/withdraw UX, reusable Asset/evidence inputs, reviewer discovery/queue/detail, protected Submission-asset delivery, explicit Evaluation UX, four-locale copy, RTL-ready responsive layouts, and no Admission lifecycle side effects. Phase 7E is technically complete: opt-in school-exam and employment-application browser fixtures, historical version-drift proof, pre-Membership Admission isolation, full regression coverage, migration rollback/reapply proof and the Phase 7 implementation report are green. Local engineering validation is green, but the owner has **not** accepted the final browser UX because reviewer-side consequences were not obvious enough during manual use; Phase 7 remains at the human gate.
 
 Phase 7 builds one versioned structured-interaction kernel for applications, exams, questionnaires, evidence responses and evaluations.
 
-The owner-approved product direction is conversation-ready:
+The owner-approved product direction is conversation-ready and now has a permanent connected-life north-star proof:
 
+- a direct paid-work relationship must eventually connect Contract → Commitment → Planner/Occurrence → Fulfillment/evidence → financial obligation → payment/settlement/accounting;
+- the system must always be able to explain scheduled/worked/accepted/earned/paid/outstanding/disputed state from linked authoritative records;
+- direct Contract creation must not require Need/Offer/Matching; Matching is optional discovery and is therefore sequenced after the Contract/Commitment/Fulfillment kernel;
 - structured interactions must be able to render later as cards inside Conversation;
 - conversation/messages remain collaboration, never hidden authority;
 - Phase 7 does not implement Admission v2 Conversation or realtime infrastructure;
