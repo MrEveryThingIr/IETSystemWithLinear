@@ -6,7 +6,10 @@ use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
+use App\ProfileIntentArrangementKind;
+use App\ProfileIntentExchangePreference;
 use App\ProfileIntentKind;
+use App\ProfileIntentSubjectKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileItemVisibility;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,6 +23,9 @@ class ActorProfileIntentFactory extends Factory
             'actor_profile_id' => ActorProfile::factory(),
             'concept_id' => Concept::factory(),
             'kind' => ProfileIntentKind::Need,
+            'subject_kind' => ProfileIntentSubjectKind::Other,
+            'arrangement_kind' => ProfileIntentArrangementKind::Other,
+            'exchange_preference' => ProfileIntentExchangePreference::DiscussLater,
             'title' => fake()->sentence(4),
             'description' => fake()->sentence(),
             'schedule_kind' => ProfileIntentScheduleKind::Once,
