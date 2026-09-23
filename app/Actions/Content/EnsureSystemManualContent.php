@@ -35,9 +35,9 @@ class EnsureSystemManualContent
      *     chapters: Collection<int, SpaceContent>
      * }
      */
-    public function execute(User $owner): array
+    public function execute(User $owner, bool $syncSource = false): array
     {
-        $this->actor($owner);
+        $actor = $this->actor($owner);
         $context = $this->ensureContext->execute($owner, SystemManualContent::REFERENCE_KEY);
         $catalog = $this->blueprints->execute();
 
@@ -61,8 +61,11 @@ class EnsureSystemManualContent
                     'ideal_target' => $chapter['ideal_target'],
                     'misunderstandings' => $chapter['misunderstandings'],
                 ],
+                syncSource: $syncSource,
             ));
         }
+
+        $existingRoot = $this->findContent($context, $actor, SystemManualContent::ROOT_TITLE);
 
         $root = $this->ensureContent(
             $context,
@@ -71,13 +74,16 @@ class EnsureSystemManualContent
             SystemManualContent::ROOT_TITLE,
             ['summary' => $manual['summary']],
             publish: false,
+            syncSource: $syncSource,
         );
 
-        $root = $this->updateStructure->execute(
-            $root,
-            $owner,
-            $chapters->pluck('id')->map(static fn (mixed $id): int => (int) $id)->all(),
-        );
+        if (! $existingRoot instanceof SpaceContent || $syncSource) {
+            $root = $this->updateStructure->execute(
+                $root,
+                $owner,
+                $chapters->pluck('id')->map(static fn (mixed $id): int => (int) $id)->all(),
+            );
+        }
 
         return [
             'context' => $context->refresh(),
@@ -113,15 +119,11 @@ class EnsureSystemManualContent
         string $title,
         array $payload,
         bool $publish = true,
+        bool $syncSource = false,
     ): SpaceContent {
         $actor = $this->actor($owner);
 
-        $content = SpaceContent::query()
-            ->where('context_id', $context->id)
-            ->where('author_actor_id', $actor->id)
-            ->whereHas('revisions', static fn ($query) => $query->where('title', $title))
-            ->orderBy('id')
-            ->first();
+        $content = $this->findContent($context, $actor, $title);
 
         if (! $content instanceof SpaceContent) {
             $content = $this->createContent->execute(
@@ -131,7 +133,7 @@ class EnsureSystemManualContent
                 $title,
                 $payload,
             );
-        } else {
+        } elseif ($syncSource) {
             $revision = $content->currentRevisionRecord();
 
             if ($revision->title !== $title || $revision->payload !== $payload) {
@@ -157,6 +159,16 @@ class EnsureSystemManualContent
         return $publish
             ? $this->publishIfDraft($content, $owner)
             : $content->refresh();
+    }
+
+    private function findContent(Context $context, Actor $actor, string $title): ?SpaceContent
+    {
+        return SpaceContent::query()
+            ->where('context_id', $context->id)
+            ->where('author_actor_id', $actor->id)
+            ->whereHas('revisions', static fn ($query) => $query->where('title', $title))
+            ->orderBy('id')
+            ->first();
     }
 
     private function publishIfDraft(SpaceContent $content, User $owner): SpaceContent
