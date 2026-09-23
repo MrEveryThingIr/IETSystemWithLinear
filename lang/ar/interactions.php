@@ -73,7 +73,7 @@ return [
     'open_annotations' => 'فتح التعليقات لهذا التحديد',
     'browse_discussion' => 'تصفح الملاحظات والنقاش',
     'discard_draft_confirm' => 'هل تريد تجاهل هذا التعليق غير المحفوظ؟',
-    'make_space_visible' => 'جعله مرئياً في هذه المساحة',
+    'make_space_visible' => 'جعله مرئياً في هذا السياق',
     'make_private' => 'جعله خاصاً',
     'save' => 'حفظ',
     'role' => 'الدور',
@@ -88,7 +88,7 @@ return [
     ],
     'visibility' => 'الظهور',
     'visibility_value' => [
-        'space' => 'مرئي في هذه المساحة',
+        'space' => 'مرئي في هذا السياق',
         'private' => 'خاص بي',
     ],
     'note_body' => 'النص',
