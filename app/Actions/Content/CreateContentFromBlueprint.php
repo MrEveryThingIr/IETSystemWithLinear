@@ -86,6 +86,7 @@ class CreateContentFromBlueprint
             );
 
             $content = SpaceContent::query()->create([
+                'uuid' => (string) Str::uuid(),
                 'context_id' => $currentContext->id,
                 'content_blueprint_version_id' => $currentBlueprintVersion->id,
                 'interaction_settings' => $this->interactions->normalize($currentBlueprintVersion->interaction_defaults ?? []),
@@ -100,6 +101,7 @@ class CreateContentFromBlueprint
 
             $initialBlocks = $currentBlueprintVersion->initial_blocks ?? [];
             $revision = $content->revisions()->create([
+                'uuid' => (string) Str::uuid(),
                 'definition_version_id' => $definitionVersion->id,
                 'revision' => 1,
                 'title' => $title,
@@ -110,6 +112,14 @@ class CreateContentFromBlueprint
                     ? SpaceContentRevision::COMPOSITION_FIELDS
                     : SpaceContentRevision::COMPOSITION_BLOCKS,
                 'created_by_actor_id' => $actor->id,
+                'content_hash' => SpaceContentSchema::hashRevision($title, $normalizedPayload),
+                'evidence_status' => SpaceContentRevision::EVIDENCE_UNSEALED,
+                'manifest_hash' => null,
+                'manifest_version' => null,
+                'canonicalization_version' => null,
+                'manifest_algorithm' => null,
+                'canonical_manifest' => null,
+                'manifest_sealed_at' => null,
             ]);
 
             $this->createInitialBlocks($revision, $initialBlocks);
@@ -166,11 +176,16 @@ class CreateContentFromBlueprint
             'current_version' => 1,
         ]);
 
+        $normalizedDefinition = SpaceContentSchema::normalizeDefinitionFields(
+            ($blueprintVersion->definition_schema ?? [])['fields'] ?? [],
+        );
+
         $version = $definition->versions()->create([
             'version' => 1,
-            'schema' => $blueprintVersion->definition_schema,
+            'schema' => $normalizedDefinition,
             'display' => null,
             'created_by_actor_id' => $actor->id,
+            'content_hash' => SpaceContentSchema::hashArray($normalizedDefinition),
             'published_at' => null,
         ]);
         $version->publish();
