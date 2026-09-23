@@ -71,6 +71,42 @@ class InteractionExperienceTest extends TestCase
         ]);
     }
 
+    public function test_context_content_index_surfaces_submitted_work_to_reviewer(): void
+    {
+        $reviewer = Actor::factory()->create();
+        $candidate = Actor::factory()->create();
+        $group = app(CreateGroup::class)->execute($reviewer, 'Reviewer attention group', null);
+        $admission = Admission::factory()->create([
+            'group_id' => $group->id,
+            'candidate_actor_id' => $candidate->id,
+            'status' => 'under_review',
+        ]);
+        $context = app(EnsureAdmissionContext::class)->execute($admission, $candidate->user);
+        [, , , $interaction] = $this->publishedInteraction($reviewer, 'application', $context);
+        $version = $interaction->activeVersionRecord();
+        $this->assertInstanceOf(InteractionDefinitionVersion::class, $version);
+
+        $this->actingAs($reviewer->user)
+            ->get(route('contexts.contents.index', $context))
+            ->assertOk()
+            ->assertSee('Review submissions (0 submitted)')
+            ->assertSee(route('contexts.submissions.index', $context), false);
+
+        $submission = app(StartSubmission::class)->execute($version, $candidate->user);
+        app(SaveSubmissionResponse::class)->execute(
+            $submission,
+            $candidate->user,
+            'statement',
+            'This should become visible to the reviewer.',
+        );
+        app(SubmitSubmission::class)->execute($submission, $candidate->user);
+
+        $this->actingAs($reviewer->user)
+            ->get(route('contexts.contents.index', $context))
+            ->assertOk()
+            ->assertSee('Review submissions (1 submitted)');
+    }
+
     public function test_reviewer_queue_hides_candidate_draft_then_exposes_submitted_attempt(): void
     {
         $reviewer = Actor::factory()->create();
