@@ -51,7 +51,7 @@ class AccessInvitationJourneyTest extends TestCase
         $this->withoutVite()
             ->get(route('access-invitations.show', $token))
             ->assertOk()
-            ->assertHeader('Cache-Control', 'private, no-store')
+            ->assertHeader('Cache-Control', 'no-store, private')
             ->assertHeader('Referrer-Policy', 'no-referrer')
             ->assertSee('Welcome to IET')
             ->assertSee('n•••••••••@example.com')
