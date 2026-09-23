@@ -648,8 +648,10 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 8 — Progressive Intent Journey v2** is the next active milestone after the F0 documentation-only closure head passes CI.
+**Phase 8 — Progressive Intent Journey v2** is remotely complete on feature checkpoint `eb82f8af1bac3c75e7bd5550db6d2a4dc6badfce` / CI `35926251822`.
 
-Phase 8 should reuse `ActorProfileIntent` and the existing Concept/visibility/exchange fields. The first implementation should add human intention presets and conditional progressive disclosure rather than a generic wizard engine or new domain table.
+It adds migration-free real-world journey presets over existing `ActorProfileIntent` semantics: Buy/Sell/Rent/Rent out, Need/Offer service, Hire/Find work, Seek/Offer capital, Seek/Offer collaboration, and a manual Other path. Presets are UI orchestration only and are not stored as new authoritative business types.
+
+Next after integration: **Phase 9 — Published Content Library and reference/placement semantics**.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

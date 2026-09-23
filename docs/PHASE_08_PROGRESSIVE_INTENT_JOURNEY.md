@@ -2,7 +2,20 @@
 
 ## Status
 
-Implementation in progress on `feat/ideal-v1-08-intent-journey`.
+Remote implementation complete and green on `feat/ideal-v1-08-intent-journey`.
+
+Runtime checkpoint:
+
+~~~text
+SHA: eb82f8af1bac3c75e7bd5550db6d2a4dc6badfce
+GitHub Actions: 35926251822
+428 tests / 2378 assertions
+Pint: 368 files
+PHPStan: clean
+Vite/migrations/scheduler/database-queue/backup: green
+npm audit: 0 vulnerabilities
+Composer audit: no advisories
+~~~
 
 Baseline:
 
@@ -75,6 +88,16 @@ Steps 3–6 reuse location/value, exchange preference, human details/visibility 
 - Carol: Offer capital.
 - Simple product: Alice sells Used desk; Bob buys Used desk.
 - Rental: Rent/Rent out preserves temporary-use rather than ownership-transfer semantics.
+
+## Remote validation
+
+The final run proves:
+
+- every preset mapping regression-covered;
+- legacy Intent wizard coverage adapted to enter through the friendly journey;
+- no migration added;
+- full suite green;
+- static analysis/formatting/ops/audits green.
 
 ## Exit gate
 

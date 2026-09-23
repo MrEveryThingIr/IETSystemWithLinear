@@ -134,7 +134,15 @@ Remote branch:
 feat/ideal-v1-08-intent-journey
 ~~~
 
-Exact integration SHA/CI are filled by the milestone closure report.
+Remote feature checkpoint:
+
+~~~text
+SHA: eb82f8af1bac3c75e7bd5550db6d2a4dc6badfce
+CI: 35926251822
+Result: 428 tests / 2378 assertions; Pint 368 files; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+The final integration merge SHA is recorded in the Phase 8 closure report after PR merge.
 
 ### Local sync
 
