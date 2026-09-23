@@ -5,7 +5,7 @@ return [
     'description' => 'Describe the result you want. The assistant proposes safe Content changes before anything is applied.',
     'back_to_studio' => 'Back to Studio',
     'open_reader' => 'Open Reader',
-    'safety_note' => 'AI assistance is advisory. It can only apply trusted Content fields, blocks, and presentation options through the same authorization rules as the Studio. It cannot execute generated code or silently publish Content.',
+    'safety_note' => 'AI assistance is advisory. Creating a proposal sends your prompt and the current Content snapshot to the configured AI provider. It can only apply trusted Content fields, blocks, and presentation options through the same authorization rules as the Studio. It cannot execute generated code or silently publish Content.',
     'ask_heading' => 'Describe your vision',
     'ask_help' => 'Mention the exact section, wording, structure, or appearance you want changed. Existing unrelated work is preserved where possible.',
     'prompt' => 'What should change?',

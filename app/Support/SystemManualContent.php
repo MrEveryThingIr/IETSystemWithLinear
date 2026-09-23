@@ -421,7 +421,7 @@ TEXT,
 AI assistance in IET helps translate a user's intent into trusted, reviewable changes without making the model an authority. Development Origins preserve a curated historical link from important design conversations to the roadmap, repository documents, commits, and system versions they influenced.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Authorized Content editors can open AI Content Assistant from the Content Studio, describe a desired result, review a structured proposal, and explicitly apply that proposal to a new draft revision. The assistant may propose changes to existing structured fields, safe document blocks, and presentation tokens. It uses the same Content policies and Actions as ordinary Studio editing, refuses stale proposals after the Content has changed, and never publishes automatically.
+Authorized Content editors can open AI Content Assistant from the Content Studio, describe a desired result, review a structured proposal, and explicitly apply that proposal to a new draft revision. Creating a proposal sends the user's prompt and the exact current Content snapshot to the configured AI provider; the server-side provider credential is never exposed to the browser. The assistant may propose changes to existing structured fields, safe document blocks, and presentation tokens. It uses the same Content policies and Actions as ordinary Studio editing, refuses stale proposals after the Content has changed, and never publishes automatically.
 
 Requests for generated image, audio, or video are currently recorded as media requests only. This first slice does not invent Asset identities or bypass the private Asset scanning, rights, readiness, and publication pipeline.
 
