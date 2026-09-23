@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -163,6 +164,20 @@ class SpaceContentAnnotation extends Model
     public function anchors(): HasMany
     {
         return $this->hasMany(SpaceContentAnnotationAnchor::class, 'annotation_id')->orderBy('position');
+    }
+
+    /** @return HasMany<SpaceContentAnnotationDisposition, $this> */
+    public function dispositions(): HasMany
+    {
+        return $this->hasMany(SpaceContentAnnotationDisposition::class, 'annotation_id')
+            ->orderBy('id');
+    }
+
+    /** @return HasOne<SpaceContentAnnotationDisposition, $this> */
+    public function latestDisposition(): HasOne
+    {
+        return $this->hasOne(SpaceContentAnnotationDisposition::class, 'annotation_id')
+            ->ofMany('id', 'max');
     }
 
     /** @return BelongsToMany<Asset, $this> */
