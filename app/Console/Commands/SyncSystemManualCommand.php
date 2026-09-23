@@ -44,7 +44,7 @@ class SyncSystemManualCommand extends Command
             $result['root'],
             'manual' => 1,
         ]));
-        $this->line('Root edition: '.($revision?->revision ?? 'unknown'));
+        $this->line('Root edition: '.$revision->revision);
 
         return self::SUCCESS;
     }
