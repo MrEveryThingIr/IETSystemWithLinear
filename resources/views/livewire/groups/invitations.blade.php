@@ -23,11 +23,10 @@
     <flux:card class="space-y-4">
         <div>
             <flux:heading size="lg">{{ __('ui.invitations.create') }}</flux:heading>
-            <flux:text>{{ __('ui.invitations.create_help') }}</flux:text>
+            <flux:text>{{ __('access.group_existing_help') }}</flux:text>
         </div>
-        <form wire:submit="create" class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_10rem_auto] sm:items-end">
-            <flux:input wire:model="email" type="email" :label="__('ui.invitations.target_email')" />
-            <flux:input wire:model="maxUses" type="number" :label="__('ui.invitations.maximum_uses')" min="1" />
+        <form wire:submit="create" class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+            <flux:input wire:model="email" type="email" :label="__('access.group_existing_email')" />
             <flux:button type="submit" variant="primary">{{ __('ui.invitations.create_button') }}</flux:button>
         </form>
     </flux:card>

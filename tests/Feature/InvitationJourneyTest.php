@@ -68,7 +68,7 @@ class InvitationJourneyTest extends TestCase
             ->assertSessionHas('locale', 'fa');
     }
 
-    public function test_invitation_page_has_distinct_token_scoped_login_and_registration_paths(): void
+    public function test_group_invitation_page_is_for_existing_accounts_and_does_not_offer_new_registration(): void
     {
         $this->withoutVite();
         [, $invitation] = $this->invitation();
@@ -76,13 +76,8 @@ class InvitationJourneyTest extends TestCase
         $this->get(route('invitations.show', $invitation->token))
             ->assertOk()
             ->assertSee(route('invitations.login', $invitation->token), false)
-            ->assertSee(route('invitations.register', $invitation->token), false)
-            ->assertSee('New accounts can only be created through a valid group invitation.');
-
-        $this->assertNotSame(
-            route('invitations.login', $invitation->token),
-            route('invitations.register', $invitation->token),
-        );
+            ->assertDontSee(route('invitations.register', $invitation->token), false)
+            ->assertSee('Group invitations are for existing accounts.');
     }
 
     public function test_registration_is_invitation_only_and_invalid_invites_are_rejected(): void

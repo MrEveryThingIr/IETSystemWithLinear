@@ -3,7 +3,10 @@
 namespace App\Actions\Profile;
 
 use App\Models\User;
+use App\ProfileIntentArrangementKind;
+use App\ProfileIntentExchangePreference;
 use App\ProfileIntentScheduleKind;
+use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use App\Support\TemporalPreferences;
 use Illuminate\Support\Facades\Validator;
@@ -24,6 +27,11 @@ class NormalizeProfileIntentData
             'description',
             'importance_percent',
             'quantity',
+            'cash_min',
+            'cash_max',
+            'currency_code',
+            'cash_basis',
+            'exchange_notes',
             'unit',
             'location_text',
             'origin_text',
@@ -48,12 +56,23 @@ class NormalizeProfileIntentData
         $input['recurrence_interval'] ??= 1;
         $input['round_trip'] ??= false;
         $input['visibility'] ??= ProfileItemVisibility::Inherited->value;
+        $input['subject_kind'] ??= ProfileIntentSubjectKind::Other->value;
+        $input['arrangement_kind'] ??= ProfileIntentArrangementKind::Other->value;
+        $input['exchange_preference'] ??= ProfileIntentExchangePreference::DiscussLater->value;
 
         $validator = Validator::make($input, [
             'title' => ['nullable', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:3000'],
             'importance_percent' => ['nullable', 'integer', 'between:0,100'],
+            'subject_kind' => ['required', Rule::enum(ProfileIntentSubjectKind::class)],
+            'arrangement_kind' => ['required', Rule::enum(ProfileIntentArrangementKind::class)],
+            'exchange_preference' => ['required', Rule::enum(ProfileIntentExchangePreference::class)],
             'quantity' => ['nullable', 'numeric', 'gt:0', 'max:99999999999999'],
+            'cash_min' => ['nullable', 'numeric', 'min:0', 'max:9999999999999999'],
+            'cash_max' => ['nullable', 'numeric', 'min:0', 'max:9999999999999999', 'gte:cash_min'],
+            'currency_code' => ['nullable', 'string', 'size:3', 'regex:/^[A-Za-z]{3}$/'],
+            'cash_basis' => ['nullable', Rule::in(['total', 'hour', 'day', 'week', 'month', 'year'])],
+            'exchange_notes' => ['nullable', 'string', 'max:2000'],
             'unit' => ['nullable', 'string', 'max:64'],
             'location_text' => ['nullable', 'string', 'max:255'],
             'origin_text' => ['nullable', 'string', 'max:255'],
@@ -104,6 +123,11 @@ class NormalizeProfileIntentData
             if (($input['quantity'] ?? null) !== null && trim((string) ($input['unit'] ?? '')) === '') {
                 $validator->errors()->add('unit', 'A unit is required when quantity is specified.');
             }
+
+            if ((($input['cash_min'] ?? null) !== null || ($input['cash_max'] ?? null) !== null)
+                && trim((string) ($input['currency_code'] ?? '')) === '') {
+                $validator->errors()->add('currency_code', 'Currency is required when a cash range is specified.');
+            }
         });
 
         if ($validator->fails()) {
@@ -117,6 +141,18 @@ class NormalizeProfileIntentData
             $value = isset($data[$key]) ? Str::of((string) $data[$key])->squish()->toString() : '';
             $data[$key] = $value !== '' ? $value : null;
         }
+
+        $data['currency_code'] = isset($data['currency_code']) && trim((string) $data['currency_code']) !== ''
+            ? strtoupper(trim((string) $data['currency_code']))
+            : null;
+        $data['cash_min'] = isset($data['cash_min']) ? trim((string) $data['cash_min']) : null;
+        $data['cash_max'] = isset($data['cash_max']) ? trim((string) $data['cash_max']) : null;
+        $data['cash_basis'] = isset($data['cash_basis']) && trim((string) $data['cash_basis']) !== ''
+            ? (string) $data['cash_basis']
+            : null;
+        $data['exchange_notes'] = isset($data['exchange_notes']) && trim((string) $data['exchange_notes']) !== ''
+            ? trim((string) $data['exchange_notes'])
+            : null;
 
         $data['importance_percent'] = isset($data['importance_percent'])
             ? (int) $data['importance_percent']

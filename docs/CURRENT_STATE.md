@@ -2,6 +2,35 @@
 
 ## Snapshot
 
+### Pre-release office registry candidate
+
+An explicitly approved pre-release slice is being built on `feat/pre-release-office-intent-registry` from `cd04d576b3e426846c65d05c33f78e75a4034503`.
+
+Its narrow release purpose is to replace a physical office notebook with an invitation-only digital flow:
+
+```text
+Access Invitation
+→ inspect welcome
+→ register
+→ verify email
+→ Get Started
+→ record Need / Offer
+→ permission-aware read-only Intent Directory
+→ manual human discovery/introduction
+```
+
+The slice reuses `ActorProfileIntent` rather than creating a parallel marketplace entity. It adds queryable subject/arrangement/cash-range fields and a non-binding value-exchange preference. The value preference may express openness to cash plus clearly valued property/use rights, capital participation or services/skills, but creates no Match, Contract, ownership interest, debt, payment or accounting truth.
+
+Standalone Access Invitations are the preferred path for new accounts. Group Invitations are presented for existing verified users. The legacy Group-registration route remains temporarily for historical compatibility but is no longer linked as the forward registration path.
+
+The published experience defaults to `IET_RELEASE_PROFILE=office_alpha`: ordinary navigation is limited to Dashboard, Needs/Offers/Services, Profile and contextual Help, while authorized administrators retain Access Invitations. Advanced Groups/Content/Audit kernels remain implemented and can be exposed again with the `full` release profile without changing their data model.
+
+AI assistance remains implemented as an architecture seam but is disabled by default for this first alpha through `AI_ASSISTANCE_ENABLED=false`.
+
+The remote runtime candidate is `cb4ae0783dc8f0d8ad424422b4cc7d6a9dc01520`. GitHub Actions run `35903601901` is green at **419 tests / 2306 assertions**, PHPStan clean, changed-file Pint **391 files**, Vite/build green, migration rollback/reapply + scheduler/database-queue smoke green, SQLite backup/restore green, npm audit 0 vulnerabilities, and Composer security audit clean.
+
+Phase 8 remains closed. The only remaining gate before freezing/tagging the first alpha is owner-local migration/manual-sync plus browser/mobile/RTL acceptance of this exact candidate.
+
 Current implementation baseline:
 
 - Branch: `feat/phase-07-submission-evaluation`.
@@ -38,6 +67,10 @@ Current implementation baseline:
 - That slice adds the authenticated `Reference` Context, official English IET System Manual as normal versioned Content, Guide/Documentation Blueprint, global contextual Help routing, precise Question/Correction/Idea feedback, immutable disposition → later sealed revision provenance, and explicit non-destructive manual source synchronization.
 - While dogfooding the manual bootstrap, the full suite exposed hidden dependence on Eloquent create events for required UUID/hash/evidence fields. The authoritative Content/Blueprint revision Actions now supply those durable values explicitly, keeping materialization deterministic even when tests/tooling fake events.
 - Owner-local acceptance is still required before formal Phase 7 closure: migrate + materialize the manual on the existing local database, run the focused/manual gates, inspect the System Manual/Help/feedback flows in browser (including a second non-manager user and RTL/mobile), then reconfirm the Phase 7 submit → reviewer-count → Evaluation flow.
+- Human-directed AI Content assistance + Development Origin provenance is **technically green** on the cross-cutting branch `feat/context-ai-assistance-provenance` at runtime candidate `f75332d5a5a25ee895c0b043a4693fe1b8803de0`; GitHub Actions run `35882242039`: **406 tests / 2219 assertions**, PHPStan clean, changed-file Pint **353 files**, Vite/build green, migration rollback/reapply + scheduler/database-queue smoke green, SQLite backup/restore green, npm audit 0 vulnerabilities, Composer security audit clean.
+- This slice adds plan-first AI Content editing through the existing Content policies/Actions, immutable `AiAssistanceRun` provenance with stale-revision protection, provider-side structured-output planning, explicit no-auto-publish/no-generated-code boundaries, immutable platform-audit `DevelopmentOrigin` history, System Manual chapter 14, contextual Help coverage, and four-locale UI catalogs.
+- AI media requests are intentionally **not** treated as implemented generated Assets yet. Image/audio/video generation remains a later authorized Asset-provider adapter that must feed the existing private Asset provenance/rights/scan/readiness/publication pipeline.
+- Phase 8 remains closed. The remaining gate for this cross-cutting slice is owner-local migration/manual synchronization plus browser/mobile/RTL acceptance, including one real provider-backed AI proposal/apply journey when an API key is configured.
 
 This document describes repository implementation truth at the Phase 7 technical-completion candidate. Architecture remains governed by `docs/TARGET_ARCHITECTURE.md`, execution order by `docs/PRODUCTION_ROADMAP.md`, and Phase 7 acceptance by `docs/PHASE_07_SUBMISSION_EVALUATION.md` plus `Development-CodexReports/phase-07-submission-evaluation-report.md`.
 

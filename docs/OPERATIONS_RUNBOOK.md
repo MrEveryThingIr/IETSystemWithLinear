@@ -33,6 +33,7 @@ Required production values include at minimum:
 - session/cache/queue configuration
 - mail transport/from identity for enabled transactional mail
 - private filesystem/object-storage credentials when not using local private storage
+- for the first invitation-only alpha, `AI_ASSISTANCE_ENABLED=false` unless the owner deliberately enables/configures the provider-backed assistant
 
 Production logging should normally use `daily` files on a single host or `stderr` under a platform/container that centralizes logs. Use `LOG_LEVEL=info` or stricter unless a temporary diagnostic window is approved.
 
@@ -52,8 +53,10 @@ A release should be built from an immutable commit.
 8. Run `php artisan optimize`.
 9. Restart long-lived workers with `php artisan queue:restart`.
 10. Exit maintenance mode.
-11. Verify `/up`, login, and the current invitation/onboarding smoke path.
-12. Confirm logs show the expected `app_version` and requests return `X-Request-Id`.
+11. Verify `/up` and login.
+12. Verify the release smoke path with a fresh private Access Invitation: welcome/inspect → register → verify email → Get Started → create one authenticated Need/Offer → confirm it appears in the directory with the expected Need/Offer/Service filter.
+13. Verify a Group Invitation can be issued to an existing verified account and does not advertise new-account registration.
+14. Confirm private invitation responses are non-cacheable/no-referrer/noindex, disabled AI is not exposed, logs show the expected `app_version`, and requests return `X-Request-Id`.
 
 Do not run destructive schema resets in production.
 

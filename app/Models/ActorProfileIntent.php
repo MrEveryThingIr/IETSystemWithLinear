@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\ProfileIntentArrangementKind;
+use App\ProfileIntentExchangePreference;
 use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
+use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use Database\Factories\ActorProfileIntentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,6 +21,14 @@ use LogicException;
     'title',
     'description',
     'importance_percent',
+    'subject_kind',
+    'arrangement_kind',
+    'exchange_preference',
+    'cash_min',
+    'cash_max',
+    'currency_code',
+    'cash_basis',
+    'exchange_notes',
     'quantity',
     'unit',
     'location_text',
@@ -48,6 +59,9 @@ class ActorProfileIntent extends Model
         'recurrence_interval' => 1,
         'visibility' => ProfileItemVisibility::Inherited->value,
         'status' => ProfileIntentStatus::Active->value,
+        'subject_kind' => ProfileIntentSubjectKind::Other->value,
+        'arrangement_kind' => ProfileIntentArrangementKind::Other->value,
+        'exchange_preference' => ProfileIntentExchangePreference::DiscussLater->value,
     ];
 
     private bool $applyingStatus = false;
@@ -120,10 +134,15 @@ class ActorProfileIntent extends Model
     {
         return [
             'kind' => ProfileIntentKind::class,
+            'subject_kind' => ProfileIntentSubjectKind::class,
+            'arrangement_kind' => ProfileIntentArrangementKind::class,
+            'exchange_preference' => ProfileIntentExchangePreference::class,
             'schedule_kind' => ProfileIntentScheduleKind::class,
             'visibility' => ProfileItemVisibility::class,
             'status' => ProfileIntentStatus::class,
             'quantity' => 'decimal:4',
+            'cash_min' => 'decimal:2',
+            'cash_max' => 'decimal:2',
             'importance_percent' => 'integer',
             'round_trip' => 'boolean',
             'starts_on' => 'date',

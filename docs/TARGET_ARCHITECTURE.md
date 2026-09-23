@@ -375,6 +375,54 @@ The Blueprint kernel supports system-, Actor-, and Context-scoped identities plu
 
 Blueprint changes never silently mutate existing published Content.
 
+## 7A. Human-directed AI assistance
+
+AI assistance is a cross-cutting application layer over trusted kernels, not a new universal domain model.
+
+The first production seam is Content authoring:
+
+~~~text
+Content Studio
+→ exact editable Content revision snapshot
+→ user vision
+→ provider returns schema-constrained proposal
+→ user reviews proposal
+→ reauthorize + reject stale base revision
+→ existing Revise / Blocks / Presentation Actions
+→ normal Content draft revision
+~~~
+
+The provider must not invent database IDs, Assets, permissions, or executable behavior. Provider output is untrusted until validated against trusted registries.
+
+Future section/form assistants reuse the same architecture:
+
+~~~text
+current route/object + field/action manifest + current authorized state
+→ AI proposal
+→ local schema normalization
+→ policy check
+→ explicit confirmation when the action is authoritative
+→ existing Action
+~~~
+
+Form completion and submission are deliberately separate. AI may populate a draft when authorized; submitting an application, accepting an Agreement/Contract, approving Admission, finalizing Evaluation, publishing Content, recording payment, or any similarly authoritative fact stays an explicit domain Action.
+
+Media generation target:
+
+~~~text
+AI media request
+→ authorized provider adapter
+→ private Context Asset
+→ immutable provider/file provenance
+→ rights declaration
+→ scan/process/readiness
+→ user review
+→ ordinary Content Asset placement
+→ publication rules
+~~~
+
+Development provenance is separate from runtime Content assistance. An immutable Development Origin may connect a curated design-conversation summary to roadmap phase, system version, branch, Git baseline/result, and canonical repository paths. It does not outrank canonical repository authority.
+
 ## 8. Submission / Response / Evaluation
 
 Annotations answer:

@@ -72,10 +72,7 @@
                         <flux:button href="{{ route('invitations.login', ['token' => $token]) }}" variant="primary" class="w-full">
                             {{ __('ui.invitation.login_and_continue') }}
                         </flux:button>
-                        <flux:button href="{{ route('invitations.register', ['token' => $token]) }}" variant="ghost" class="w-full">
-                            {{ __('ui.auth.create_invited_account') }}
-                        </flux:button>
-                        <flux:text class="text-center text-sm">{{ __('ui.invitation.new_accounts_only') }}</flux:text>
+                        <flux:text class="text-center text-sm">{{ __('access.group_existing_account_required') }}</flux:text>
                     </div>
                 @endif
             </flux:card>

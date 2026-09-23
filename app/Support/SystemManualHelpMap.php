@@ -12,8 +12,14 @@ class SystemManualHelpMap
             return 'feedback';
         }
 
-        if (str_starts_with($routeName, 'profile.')) {
+        if (str_starts_with($routeName, 'profile.')
+            || str_starts_with($routeName, 'intents.')) {
             return 'profile-concepts';
+        }
+
+        if (str_starts_with($routeName, 'access-invitations.')
+            || $routeName === 'getting-started') {
+            return 'identity';
         }
 
         if (str_starts_with($routeName, 'actors.')

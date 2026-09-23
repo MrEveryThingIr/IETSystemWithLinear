@@ -187,6 +187,35 @@ Documentation is multilingual content. English is the initial canonical editoria
 
 User feedback remains attached to the exact edition/section where it was made. If an authorized maintainer incorporates a correction or idea, the later official revision should record provenance back to the originating annotation(s); a later product release may additionally reference those incorporated contributions.
 
+## Human-directed AI assistance and development provenance
+
+AI is an intent interpreter and orchestration aid, not a parallel authority system.
+
+Target seam:
+
+~~~text
+current Context + exact object/revision + authorized capability registry
+→ human describes intent
+→ AI proposes trusted structured changes/actions
+→ deterministic schema/invariant validation
+→ human review or explicit confirmation where authority matters
+→ existing policy + domain Action
+→ durable revision/domain state
+→ provenance
+~~~
+
+Rules:
+
+- AI never receives direct database authority merely because it generated a proposal.
+- The same server-side policy and domain Action used by a human UI performs the actual mutation.
+- Stale proposals must not overwrite newer human or system work.
+- Generated code, SQL, Blade, JavaScript, shell commands, or arbitrary executable database configuration are not accepted as Content functionality.
+- Generated image/audio/video must become ordinary private Assets through an authorized provider adapter and then pass the existing provenance, rights, malware/readiness, Context-access, and publication rules.
+- AI may help fill a draft form, but submit/approve/accept/publish/finalize/pay and other authoritative transitions remain explicit Actions with the existing authorization and evidence semantics.
+- Prompts and conversational wording are collaboration/intention, not Contract acceptance, Membership finalization, Evaluation finalization, accounting truth, or another hidden transition.
+
+Important product-development conversations may be captured as immutable Development Origins tied to phase/version/branch/baseline-result commits and canonical repository paths. This improves explainability of *why* the system changed without making chat history the source of truth.
+
 ## Content as contextual work surface
 
 Content should be the place where a human understands an artifact and discovers the actions that make sense around it.

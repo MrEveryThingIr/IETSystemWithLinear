@@ -18,6 +18,17 @@ class UpdateActorProfileIntent
         Gate::forUser($user)->authorize('update', $intent);
         abort_if($intent->status === ProfileIntentStatus::Closed, 409, 'Closed Profile declarations cannot be edited.');
 
+        $input += [
+            'subject_kind' => $intent->subject_kind->value,
+            'arrangement_kind' => $intent->arrangement_kind->value,
+            'exchange_preference' => $intent->exchange_preference->value,
+            'cash_min' => $intent->cash_min,
+            'cash_max' => $intent->cash_max,
+            'currency_code' => $intent->currency_code,
+            'cash_basis' => $intent->cash_basis,
+            'exchange_notes' => $intent->exchange_notes,
+        ];
+
         $data = app(NormalizeProfileIntentData::class)->execute($user, $input);
 
         return DB::transaction(function () use ($user, $intent, $data): ActorProfileIntent {

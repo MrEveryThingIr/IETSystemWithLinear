@@ -16,6 +16,8 @@ class ContentLocaleCatalogTest extends TestCase
             'interactions' => ['interactions'],
             'presentation' => ['presentation'],
             'blocks' => ['blocks'],
+            'access' => ['access'],
+            'intents' => ['intents'],
         ];
     }
 

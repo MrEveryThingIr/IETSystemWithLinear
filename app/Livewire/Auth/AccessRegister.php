@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Livewire\Auth;
+
+use App\Actions\Auth\RegisterAccessInvitedUser;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+#[Layout('layouts.auth')]
+#[Title('Create your account')]
+class AccessRegister extends Component
+{
+    public string $invitationToken = '';
+
+    public ?string $targetEmailHint = null;
+
+    public string $username = '';
+
+    public string $email = '';
+
+    public string $password = '';
+
+    public string $password_confirmation = '';
+
+    public function mount(string $token, RegisterAccessInvitedUser $registration): void
+    {
+        $invitation = $registration->preview($token);
+        $this->invitationToken = $token;
+        $this->targetEmailHint = $invitation->maskedEmail();
+    }
+
+    public function register(RegisterAccessInvitedUser $registration): void
+    {
+        $key = 'register:'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            throw ValidationException::withMessages(['email' => __('ui.messages.too_many_attempts')]);
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $user = $registration->handle(
+            $this->only(['username', 'email', 'password', 'password_confirmation']),
+            $this->invitationToken,
+        );
+
+        Auth::login($user);
+        session()->regenerate();
+        session()->put('url.intended', route('getting-started'));
+
+        $this->reset('password', 'password_confirmation');
+        $this->redirectRoute('verification.notice');
+    }
+
+    public function render(): View
+    {
+        return view('livewire.auth.access-register');
+    }
+}
