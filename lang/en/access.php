@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'root' => [
+        'invitation_only' => 'Invitation-only access',
+        'help' => 'New accounts are created only through a private Access Invitation. If you already have an account, log in normally.',
+        'open' => 'Open system',
+        'registration_by_invitation' => 'Registration requires an Access Invitation',
+    ],
     'invalid_use_limit' => 'Choose a valid invitation use limit.',
     'invalid_expiry' => 'Choose an expiry between 1 and 90 days.',
     'already_registered' => 'That email already belongs to an account. Use a Group invitation when inviting an existing user to a Group.',

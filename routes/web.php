@@ -41,6 +41,8 @@ use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
 use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceManagement;
+use App\Livewire\Intents\Create as IntentCreate;
+use App\Livewire\Intents\Directory as IntentDirectory;
 use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Platform\Access as PlatformAccess;
@@ -81,6 +83,8 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
+    Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
+    Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
     Route::get('/manual', SystemManualController::class)->name('manual');
     Route::get('/admissions/{admission}/content', AdmissionContextContentController::class)->name('admissions.context.contents');

@@ -9,7 +9,7 @@
         <flux:card class="space-y-3">
             <flux:heading size="lg">{{ __('access.getting_started.intent_title') }}</flux:heading>
             <flux:text>{{ __('access.getting_started.intent_help') }}</flux:text>
-            <flux:button :href="route('profile.edit')" variant="primary">{{ __('access.getting_started.intent_button') }}</flux:button>
+            <flux:button :href="route('intents.create')" variant="primary">{{ __('access.getting_started.intent_button') }}</flux:button>
         </flux:card>
         <flux:card class="space-y-3">
             <flux:heading size="lg">{{ __('access.getting_started.profile_title') }}</flux:heading>
