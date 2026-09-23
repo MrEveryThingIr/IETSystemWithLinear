@@ -286,6 +286,46 @@ SpaceContentDefinition     → ContentDefinition
 
 Do not perform a cosmetic mass rename before ContentContext exists. Rename only at a migration boundary where the old Space-only assumption is truly removed.
 
+### Contextual Reader capability composition
+
+The Content Reader is the preferred human-facing orchestration surface, while each domain kernel remains authoritative.
+
+Target seam:
+
+~~~text
+Content Reader
+→ trusted ContentCapability providers
+→ inspect Context + exact revision + Blueprint/Concept hints + explicit domain links
+→ recheck viewer policies
+→ render relevant document/block capability cards
+→ explicit domain Action
+→ authoritative domain state
+~~~
+
+Rules:
+
+- no hidden authorization shortcuts;
+- capability discovery prefers explicit provenance/links over text heuristics;
+- Blueprint metadata may hint at useful capabilities but does not execute application code;
+- capability cards may anchor to the whole document or an exact field/block;
+- the Reader offers a clean mode that hides capability chrome;
+- derived summaries such as earned/paid/outstanding are calculated from authoritative domain/accounting state, not stored as editable Content fields;
+- domain objects own their Content/evidence links; do not introduce one universal polymorphic “everything relationship” table merely for Reader convenience.
+
+### Documentation / learning composition
+
+Official system documentation should be normal Content:
+
+- system-authored sealed origin editions;
+- Book/Booklet roots with Lesson/Article children;
+- private notes/questions/bookmarks as personal overlays;
+- shared annotations/replies and permitted media as community overlays;
+- proposed contributions reviewed before they become a new official revision;
+- exact edition permalinks/evidence references for historical learning/support;
+- later learning objectives/progress/practice composed from the appropriate learning/planning kernels rather than invented as Content fields.
+
+The current Content engine can support the artifact, revisions, blocks, media, annotations and evidence. Production-wide access to official documentation should be solved through a general system/reference Context/access policy, not a docs-only bypass.
+
 ## 7. Content Blueprints
 
 RenderTemplate remains appearance only.
@@ -317,6 +357,8 @@ Examples:
 - Exam;
 - Project Report;
 - Job Posting.
+
+The Blueprint kernel supports system-, Actor-, and Context-scoped identities plus clone provenance. Product UX should eventually let authorized users clone visible Blueprints, create Actor/Context variants from scratch, edit draft Blueprint versions through safe registries/forms, preview them, and publish/activate immutable versions.
 
 Blueprint changes never silently mutate existing published Content.
 
