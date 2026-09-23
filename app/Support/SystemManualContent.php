@@ -292,9 +292,9 @@ TEXT,
 The preferred feedback path is section-specific annotation on the exact documentation or system Content edition that caused the question or idea.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The Content annotation system already supports question, correction, idea, note, and comment kinds with exact revision/block/field/text/Asset/relationship anchors. Replies and answers preserve discussion history.
+The Content annotation system supports question, correction, idea, note, and comment kinds with exact revision/block/field/text/Asset/relationship anchors. Replies and answers preserve discussion history.
 
-Annotations remain attached to the exact edition where they were created. A formal “this correction/idea was incorporated into official revision N” contribution-resolution relation is not implemented yet.
+Annotations remain attached to the exact edition where they were created. Authorized maintainers can append immutable feedback dispositions such as reviewed, accepted, rejected, superseded, and incorporated. An incorporated disposition must point to a later sealed revision of the same Content, preserving a durable chain from the original user feedback to the official edition that incorporated it.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 When you encounter a problem, open the most relevant manual page or system Content. Select the exact sentence, word, block, field, image, or section if possible. Choose:
@@ -311,9 +311,9 @@ TEXT,
 Annotation visibility never bypasses the Context audience. Shared feedback is visible only to users authorized for that Context. Accepting a suggestion into official documentation or product behavior requires maintainer/domain authority.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-A contribution-resolution workflow should let maintainers mark a question/correction/idea as reviewed, accepted, rejected, superseded, or incorporated. When incorporated, the new official Content revision and relevant product release should explicitly reference the originating annotations.
+The disposition history should grow into a complete contribution workflow: triage queues, optional maintainer notes, official/support answer identity, release-note linkage, filtering by status, and clear visibility of which product release addressed an accepted issue.
 
-Support/community participants should be able to answer questions, while official answers or accepted changes remain distinguishable from ordinary replies.
+Support/community participants should be able to answer questions, while official answers and accepted/incorporated changes remain visually distinguishable from ordinary replies.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 An annotation is never silently edited into the origin. The origin stays clean and historically exact. Community enhancements and proposed changes are overlays until an authorized revision incorporates them.
