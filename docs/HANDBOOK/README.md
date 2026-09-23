@@ -2,6 +2,10 @@
 
 ## Purpose
 
+This repository material is the **source/manifests for the IET user manual**, not a separate documentation product. The intended product experience is for these materials to be materialized into ordinary versioned IET Content and read through the normal Content Reader.
+
+Until that materialization pipeline is implemented, these files keep the educational source reviewable in Git.
+
 This handbook explains IET from the user's and operator's point of view.
 
 Architecture documents answer **how the platform is designed**. Phase contracts answer **what a development milestone must deliver**. This handbook answers:
@@ -28,10 +32,16 @@ feat/phase-XX-...
     ↓
 models / migrations / Actions / policies / UI / tests
 
-Documentation track
+Documentation-source track
 docs/living-system-handbook
     ↓
-object definitions / user journeys / permissions / examples / troubleshooting
+reviewable source/manifests
+    ↓
+idempotent seeding/materialization
+    ↓
+normal IET Book/Lesson/Article Content
+    ↓
+Reader / revisions / annotations / evidence
 ~~~
 
 These are parallel workstreams, not separate architectures.
