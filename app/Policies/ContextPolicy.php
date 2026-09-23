@@ -7,6 +7,7 @@ use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\Context;
 use App\Models\GroupSpace;
+use App\Models\ReferenceContext;
 use App\Models\User;
 
 class ContextPolicy
@@ -30,6 +31,7 @@ class ContextPolicy
                 && $this->spaces->view($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->canViewAdmissionContext($current, $admission),
+            ContextKind::Reference => $this->reference($context) instanceof ReferenceContext,
         };
     }
 
@@ -48,11 +50,16 @@ class ContextPolicy
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->admissionIsMutable($admission)
                 && $this->canViewAdmissionContext($current, $admission),
+            ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
 
     public function interactContent(User $user, Context $context): bool
     {
+        if ($context->kind === ContextKind::Reference) {
+            return $this->view($user, $context);
+        }
+
         return $this->createContent($user, $context);
     }
 
@@ -70,6 +77,7 @@ class ContextPolicy
                 && $this->spaces->manage($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->isAdmissionReviewer($current, $admission),
+            ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
 
@@ -88,6 +96,7 @@ class ContextPolicy
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->admissionIsMutable($admission)
                 && $this->isAdmissionReviewer($current, $admission),
+            ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
 
@@ -148,6 +157,21 @@ class ContextPolicy
         $context->loadMissing('admissionBinding.admission.group');
 
         return $context->admissionBinding?->admission;
+    }
+
+    private function reference(Context $context): ?ReferenceContext
+    {
+        $context->loadMissing('referenceBinding');
+
+        return $context->referenceBinding;
+    }
+
+    private function isReferenceManager(User $user, Context $context): bool
+    {
+        $reference = $this->reference($context);
+
+        return $reference instanceof ReferenceContext
+            && (int) $reference->managed_by_actor_id === (int) $user->actor?->id;
     }
 
     private function canViewAdmissionContext(User $user, Admission $admission): bool
