@@ -53,6 +53,7 @@ class AccessInvitationJourneyTest extends TestCase
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
             ->assertSee('Welcome to IET')
             ->assertSee('n•••••••••@example.com')
             ->assertSee(route('access-invitations.register', $token), false);

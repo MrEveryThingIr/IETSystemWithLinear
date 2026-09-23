@@ -23,6 +23,7 @@ class AccessInvitationController
             ->withHeaders([
                 'Cache-Control' => 'private, no-store',
                 'Referrer-Policy' => 'no-referrer',
+                'X-Robots-Tag' => 'noindex, nofollow, noarchive',
             ]);
     }
 }
