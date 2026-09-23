@@ -11,7 +11,9 @@ Current accepted product line:
 - Phases 0–6 are complete and accepted.
 - Phase 7 — Submission / Response / Evaluation is runtime-complete and automated-green; owner-local/browser/mobile/RTL acceptance remains the gate before Phase 8.
 - The Documentation-as-Content audit is implemented on the Phase 7 line.
-- The current cross-cutting working branch is `feat/context-ai-assistance-provenance`, adding human-directed AI Content assistance and immutable Development Origin provenance without pulling Phase 8 forward.
+- The active pre-release branch is `feat/pre-release-office-intent-registry`, productizing a small invitation-only alpha without opening Phase 8.
+- The alpha adds standalone Access Invitations, a guided Need/Offer wizard, and a permission-aware read-only Needs/Offers/Services directory over the existing Profile Intent domain.
+- AI assistance remains in the codebase but is disabled by default for this alpha; Development Origin provenance remains available to authorized platform auditors.
 
 Read `docs/CURRENT_STATE.md` for exact commits, CI evidence, and the current local acceptance gate.
 
@@ -40,7 +42,8 @@ The repository already contains substantial implementations for:
 - authentication, verification and password reset;
 - platform access grants;
 - Groups, Memberships, contextual roles/permissions;
-- invitation-based Admission and Agreement evidence;
+- standalone system Access Invitations for new accounts;
+- invitation-based Group Admission and Agreement evidence;
 - ownership transfer integrity;
 - Group Spaces and restricted participation;
 - chat and replies;
@@ -55,14 +58,16 @@ The repository already contains substantial implementations for:
 - versioned Content Blueprints and unified Context authoring;
 - Submission / Response / Evaluation with immutable evidence;
 - authenticated Reference Context and the official System Manual as normal Content;
-- plan-first AI-assisted Content editing through existing policies/Actions;
+- guided current-intent capture for Needs/Offers across property, goods, services, capital and collaboration;
+- permission-aware read-only intent discovery with clear Need/Offer/Service filtering;
+- plan-first AI-assisted Content editing through existing policies/Actions, feature-gated off by default for the first alpha;
 - immutable Development Origins linking design discussions to phases, versions, commits, and repository paths.
 
 See `docs/CURRENT_STATE.md` for the precise snapshot and known limitations.
 
 ## Development rule
 
-Work on one accepted roadmap phase at a time. The AI/provenance work on `feat/context-ai-assistance-provenance` is an explicitly authorized cross-cutting slice over the Phase 7/manual baseline; it is not Phase 8.
+Work on one accepted roadmap phase at a time. The active pre-release office-intent slice is explicitly authorized over the Phase 7/manual/AI-provenance baseline; it is not Phase 8 and must not invent automated Matching, Contract, Planner, payment, or Accounting truth.
 
 Do not begin Admission v2, generic Conversation, realtime infrastructure, Workflow, Planner, Contract/Commitment, Matching, or Accounting work until their roadmap gate is opened.
 
