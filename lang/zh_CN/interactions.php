@@ -73,7 +73,7 @@ return [
     'open_annotations' => '打开此选择的批注',
     'browse_discussion' => '浏览笔记与讨论',
     'discard_draft_confirm' => '放弃这个尚未保存的批注吗？',
-    'make_space_visible' => '在此空间中公开',
+    'make_space_visible' => '在此上下文中公开',
     'make_private' => '设为私密',
     'save' => '保存',
     'role' => '角色',
@@ -88,7 +88,7 @@ return [
     ],
     'visibility' => '可见性',
     'visibility_value' => [
-        'space' => '此空间内可见',
+        'space' => '此上下文内可见',
         'private' => '仅自己可见',
     ],
     'note_body' => '文字',
