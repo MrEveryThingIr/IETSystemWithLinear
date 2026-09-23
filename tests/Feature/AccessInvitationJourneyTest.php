@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Access\IssueAccessInvitation;
+use App\Actions\Groups\CreateGroup;
 use App\Livewire\Auth\AccessRegister;
 use App\Livewire\Groups\Invitations as GroupInvitations;
 use App\Livewire\Platform\AccessInvitations;
@@ -142,7 +143,7 @@ class AccessInvitationJourneyTest extends TestCase
     public function test_group_invitation_creation_requires_an_existing_verified_account(): void
     {
         $owner = Actor::factory()->create();
-        $group = app(\App\Actions\Groups\CreateGroup::class)->execute(
+        $group = app(CreateGroup::class)->execute(
             $owner,
             'Office collaborators',
             null,
