@@ -10,6 +10,7 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class RecordContentAnnotationDisposition
 {
@@ -79,6 +80,7 @@ class RecordContentAnnotationDisposition
             }
 
             return SpaceContentAnnotationDisposition::query()->create([
+                'uuid' => (string) Str::uuid(),
                 'annotation_id' => $currentAnnotation->id,
                 'status' => $status,
                 'incorporated_revision_id' => $revision?->id,
