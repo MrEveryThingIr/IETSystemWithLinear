@@ -3,9 +3,11 @@
 namespace App\Livewire\Contexts;
 
 use App\Actions\Content\CreateContentEvidenceReference;
+use App\Actions\Content\RecordContentAnnotationDisposition;
 use App\Actions\Groups\AddSpaceContentAnnotation;
 use App\Actions\Groups\ToggleSpaceContentReaction;
 use App\ContentEvidenceTarget;
+use App\ContextKind;
 use App\Models\Actor;
 use App\Models\Asset;
 use App\Models\ContentEvidenceReference;
@@ -14,6 +16,7 @@ use App\Models\InteractionDefinition;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentAnnotation;
 use App\Models\SpaceContentAnnotationAnchor;
+use App\Models\SpaceContentAnnotationDisposition;
 use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
@@ -132,6 +135,10 @@ class ContentShow extends Component
         $this->context = $context;
         $this->content = $content;
         $this->revisionUuid = $revision->uuid;
+
+        if ($context->kind === ContextKind::Reference) {
+            $this->markerFilter = 'hidden';
+        }
     }
 
     public function createRevisionEvidence(CreateContentEvidenceReference $create): void
@@ -147,6 +154,46 @@ class ContentShow extends Component
         );
 
         $this->evidenceReferenceUuid = $reference->uuid;
+    }
+
+    public function recordAnnotationDisposition(
+        string $annotationUuid,
+        string $status,
+        RecordContentAnnotationDisposition $record,
+    ): void {
+        abort_unless(in_array($status, SpaceContentAnnotationDisposition::STATUSES, true), 422);
+
+        $annotation = SpaceContentAnnotation::query()
+            ->with('revision')
+            ->where('uuid', $annotationUuid)
+            ->where('space_content_id', $this->content->id)
+            ->firstOrFail();
+
+        $incorporatedRevision = null;
+
+        if ($status === SpaceContentAnnotationDisposition::STATUS_INCORPORATED) {
+            $current = SpaceContent::query()->findOrFail($this->content->id);
+            $active = $current->activeRevisionRecord();
+
+            abort_unless(
+                $active instanceof SpaceContentRevision
+                    && $active->revision > $annotation->revision->revision
+                    && $active->hasVerifiableManifest(),
+                422,
+                __('interactions.disposition.no_newer_edition'),
+            );
+
+            $incorporatedRevision = $active;
+        }
+
+        $record->execute(
+            $annotation,
+            $this->user(),
+            $status,
+            $incorporatedRevision,
+        );
+
+        session()->flash('annotation-disposition-status', __('interactions.disposition.recorded'));
     }
 
     public function toggleReaction(string $type, ToggleSpaceContentReaction $toggle): void
@@ -644,6 +691,8 @@ class ContentShow extends Component
         $canAnnotate = $canInteract && $interactionSettings->annotationsEnabled($current);
         $canReact = $canInteract && $interactionSettings->reactionsEnabled($current);
         $canReviewInteractions = Gate::forUser($user)->allows('reviewInteractions', $this->context);
+        $canResolveFeedback = Gate::forUser($user)->allows('update', $current);
+        $activeRevision = $current->activeRevisionRecord();
 
         $actor = $this->actor();
         $reactionCounts = $revision->reactions()
@@ -673,6 +722,8 @@ class ContentShow extends Component
                 'author.user',
                 'anchors',
                 'assets',
+                'latestDisposition.incorporatedRevision',
+                'latestDisposition.resolvedBy.user',
                 'replies.author.user',
                 'replies.anchors',
                 'replies.assets',
@@ -734,6 +785,8 @@ class ContentShow extends Component
             'canAnnotate',
             'canReact',
             'canReviewInteractions',
+            'canResolveFeedback',
+            'activeRevision',
             'reactionCounts',
             'viewerReactions',
             'reactionTypes',
