@@ -112,6 +112,27 @@ return [
     'cancel' => 'Cancel',
     'no_comments' => 'No notes or discussion yet.',
     'edition_changed' => 'A newer edition is now active. Review it before interacting again.',
+    'disposition' => [
+        'label' => 'Feedback status',
+        'maintainer_actions' => 'Maintainer',
+        'recorded' => 'Feedback status recorded.',
+        'no_newer_edition' => 'Publish a newer official edition before marking this feedback as incorporated.',
+        'incorporated_revision' => 'Incorporated in edition :revision',
+        'status' => [
+            'reviewed' => 'Reviewed',
+            'accepted' => 'Accepted',
+            'rejected' => 'Rejected',
+            'incorporated' => 'Incorporated',
+            'superseded' => 'Superseded',
+        ],
+        'action' => [
+            'reviewed' => 'Mark reviewed',
+            'accepted' => 'Accept',
+            'rejected' => 'Reject',
+            'incorporated' => 'Incorporated in current edition',
+            'superseded' => 'Mark superseded',
+        ],
+    ],
     'anchor' => [
         'entire_edition' => 'Entire edition',
         'revision' => 'Edition',
