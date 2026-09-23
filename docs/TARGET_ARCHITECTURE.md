@@ -321,10 +321,23 @@ Official system documentation should be normal Content:
 - private notes/questions/bookmarks as personal overlays;
 - shared annotations/replies and permitted media as community overlays;
 - proposed contributions reviewed before they become a new official revision;
+- explicit contribution/disposition provenance so accepted corrections/ideas can be linked to the official revision that incorporated them;
 - exact edition permalinks/evidence references for historical learning/support;
 - later learning objectives/progress/practice composed from the appropriate learning/planning kernels rather than invented as Content fields.
 
 The current Content engine can support the artifact, revisions, blocks, media, annotations and evidence. Production-wide access to official documentation should be solved through a general system/reference Context/access policy, not a docs-only bypass.
+
+Translation target:
+
+~~~text
+canonical English Content identity/edition
+→ translation draft for locale
+→ translator/reviewer provenance
+→ reviewed locale presentation/edition
+→ independent correction history
+~~~
+
+English ships first. Persian follows after the English information architecture stabilizes. Arabic and Simplified Chinese follow the same pipeline. AI-assisted translation is allowed as draft material but never substitutes for native-language review state.
 
 ## 7. Content Blueprints
 
