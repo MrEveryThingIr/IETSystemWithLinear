@@ -73,7 +73,7 @@ return [
     'open_annotations' => 'Open annotations for this selection',
     'browse_discussion' => 'Browse notes & discussion',
     'discard_draft_confirm' => 'Discard this unsaved annotation?',
-    'make_space_visible' => 'Make visible in this Space',
+    'make_space_visible' => 'Make visible in this Context',
     'make_private' => 'Make private',
     'save' => 'Save',
     'role' => 'Role',
@@ -88,7 +88,7 @@ return [
     ],
     'visibility' => 'Visibility',
     'visibility_value' => [
-        'space' => 'Visible in this Space',
+        'space' => 'Visible in this Context',
         'private' => 'Private to me',
     ],
     'note_body' => 'Text',
