@@ -45,11 +45,15 @@ TEXT,
 Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, invitations and Admission, Personal/GroupSpace/Admission Contexts, versioned Content with Blueprints and immutable published revisions, annotations/evidence locators, and Phase 7 Submission/Response/Evaluation.
 
 Later kernels such as Conversation-first collaboration, Planner, negotiated Contract/Commitment/Fulfillment, and Accounting are not yet fully implemented. The current product should therefore be understood as a growing platform kernel rather than the final connected-life experience.
+
+For the first invitation-only office alpha, the normal navigation is intentionally smaller than the full implemented kernel. Ordinary users see Dashboard, Needs/Offers/Services, Profile, and contextual Help; authorized platform administrators also see Access Invitations. Groups, Content authoring, audit surfaces, and other advanced kernels remain implemented but are not promoted in normal alpha navigation.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 When using IET, first identify the boundary you are operating in: your personal workspace, a Group, a Group Space, or an Admission. Then identify whether you are reading human-facing Content, changing an authoritative domain object, or collaborating around one.
 
 Prefer the purpose-specific UI. You should not need to manipulate raw database concepts to perform ordinary work.
+
+In the office alpha, begin with the Access Invitation journey and the Needs/Offers/Services directory. The reduced navigation is a release-experience choice, not deletion of the deeper architecture. Development or later releases can restore the full navigation profile without rewriting domain data.
 TEXT,
                     'authorization' => <<<'TEXT'
 Authorization is contextual. Platform authority does not imply Group authority. Group Membership does not imply access to every Context. Context access does not necessarily mean Membership. Critical transitions are always rechecked by server-side policy and domain Actions.

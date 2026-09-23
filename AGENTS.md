@@ -83,6 +83,8 @@ The explicitly authorized active slice is `feat/pre-release-office-intent-regist
 
 This slice must not introduce automated Matching, Proposal/Contract/Commitment, Planner, ownership/capital rights, payment, or Accounting semantics. `ActorProfileIntent` remains current intent only. Phase 8 stays closed until this release gate is accepted.
 
+The default release profile is `office_alpha`: keep ordinary navigation intentionally focused on Dashboard, Needs/Offers/Services and Profile, while preserving advanced kernels behind the `full` release profile. Do not delete mature domains merely to simplify the published surface.
+
 AI assistance is disabled by default for the alpha; enabling it later still requires the binding AI contract.
 
 ## Previous technical candidate

@@ -109,6 +109,24 @@ Additional filters include free-text subject/description and location. The first
 
 No Match row or score is created. Human staff/users manually compare records and introduce suitable cases.
 
+## Release experience profile
+
+The first published alpha defaults to:
+
+```text
+IET_RELEASE_PROFILE=office_alpha
+```
+
+In `office_alpha`:
+
+- ordinary navigation exposes Dashboard, Needs/Offers/Services, and Profile;
+- contextual Help remains available from the header;
+- authorized platform administrators still see Access Invitations;
+- Groups, advanced Content entry points, Actor administration and development-audit navigation are hidden from the ordinary release surface;
+- the underlying routes/kernels are preserved so development can continue without destructive feature removal.
+
+Set `IET_RELEASE_PROFILE=full` only when deliberately testing or operating the full platform experience.
+
 ## AI
 
 The AI authoring seam remains in source but is disabled by default:

@@ -23,6 +23,8 @@ The slice reuses `ActorProfileIntent` rather than creating a parallel marketplac
 
 Standalone Access Invitations are the preferred path for new accounts. Group Invitations are presented for existing verified users. The legacy Group-registration route remains temporarily for historical compatibility but is no longer linked as the forward registration path.
 
+The published experience defaults to `IET_RELEASE_PROFILE=office_alpha`: ordinary navigation is limited to Dashboard, Needs/Offers/Services, Profile and contextual Help, while authorized administrators retain Access Invitations. Advanced Groups/Content/Audit kernels remain implemented and can be exposed again with the `full` release profile without changing their data model.
+
 AI assistance remains implemented as an architecture seam but is disabled by default for this first alpha through `AI_ASSISTANCE_ENABLED=false`.
 
 Phase 8 remains closed while this pre-release productization gate is implemented and locally accepted.
