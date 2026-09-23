@@ -75,6 +75,7 @@ class ActorManagementTest extends TestCase
 
     public function test_superadmin_can_view_actor_administration_and_navigation(): void
     {
+        config()->set('release.profile', 'full');
         $this->withoutVite();
         $user = User::factory()->superadmin()->create();
         $actor = Actor::factory()->withoutUser()->create();
