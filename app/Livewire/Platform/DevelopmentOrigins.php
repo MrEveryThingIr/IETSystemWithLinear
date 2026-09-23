@@ -17,6 +17,7 @@ use Livewire\WithPagination;
 class DevelopmentOrigins extends Component
 {
     use WithPagination;
+
     public string $sourceType = 'chatgpt';
 
     public string $sourceUrl = '';
