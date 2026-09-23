@@ -444,6 +444,10 @@
                 @endif
 
                 <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)" id="discussion">
+                    @if (session('annotation-disposition-status'))
+                        <flux:callout variant="success">{{ session('annotation-disposition-status') }}</flux:callout>
+                    @endif
+
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 class="text-xl {{ $headingClass }}">{{ __('interactions.title') }}</h2>
@@ -489,8 +493,61 @@
                                         </div>
                                         <div class="text-xs" style="color: var(--content-muted)">{{ $annotation->created_at->timezone($viewerTimezone)->format('Y-m-d H:i') }}</div>
                                     </div>
+                                    @php
+                                        $latestDisposition = $annotation->latestDisposition;
+                                        $isFeedback = in_array($annotation->kind, ['question', 'correction', 'idea'], true);
+                                        $canIncorporate = $activeRevision instanceof \App\Models\SpaceContentRevision
+                                            && $activeRevision->revision > $revision->revision
+                                            && $activeRevision->hasVerifiableManifest();
+                                    @endphp
+
+                                    @if ($latestDisposition)
+                                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                                            <span class="font-medium" style="color: var(--content-muted)">{{ __('interactions.disposition.label') }}</span>
+                                            <flux:badge size="sm">{{ __('interactions.disposition.status.'.$latestDisposition->status) }}</flux:badge>
+                                            @if ($latestDisposition->incorporatedRevision)
+                                                <a
+                                                    href="{{ route('contexts.contents.revisions.show', [$context, $content, $latestDisposition->incorporatedRevision]) }}"
+                                                    class="font-medium underline underline-offset-4"
+                                                >
+                                                    {{ __('interactions.disposition.incorporated_revision', ['revision' => $latestDisposition->incorporatedRevision->revision]) }}
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @endif
+
                                     @if ($annotation->body)
                                         <div class="whitespace-pre-wrap break-words text-sm leading-7" dir="auto">{{ $annotation->body }}</div>
+                                    @endif
+
+                                    @if ($canResolveFeedback && $isFeedback)
+                                        <div class="flex flex-wrap gap-2 rounded-lg border p-2" style="border-color: var(--content-border)">
+                                            <span class="self-center text-xs font-medium" style="color: var(--content-muted)">
+                                                {{ __('interactions.disposition.maintainer_actions') }}
+                                            </span>
+                                            @foreach (['reviewed', 'accepted', 'rejected', 'superseded'] as $dispositionStatus)
+                                                <flux:button
+                                                    wire:click="recordAnnotationDisposition('{{ $annotation->uuid }}', '{{ $dispositionStatus }}')"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="recordAnnotationDisposition"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                >
+                                                    {{ __('interactions.disposition.action.'.$dispositionStatus) }}
+                                                </flux:button>
+                                            @endforeach
+                                            @if ($canIncorporate)
+                                                <flux:button
+                                                    wire:click="recordAnnotationDisposition('{{ $annotation->uuid }}', 'incorporated')"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="recordAnnotationDisposition"
+                                                    size="sm"
+                                                    variant="primary"
+                                                >
+                                                    {{ __('interactions.disposition.action.incorporated') }}
+                                                </flux:button>
+                                            @endif
+                                        </div>
                                     @endif
                                     @foreach ($annotation->assets as $attachment)
                                         @php
