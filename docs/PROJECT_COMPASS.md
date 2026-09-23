@@ -155,6 +155,58 @@ This is the intended meaning of **“everything is one thing”** in IET: not on
 24. Effective terms are versioned and immutable. Changes create new draft/proposed versions with explicit approval, activation/effective dates, supersession, and reacceptance where required; historical accepted versions are never edited in place.
 25. Direct Proposal/Contract creation must not depend on Need/Offer/Matching. Matching is discovery and may hand off into the same Proposal/Negotiation/Contract path used by people who already know each other.
 26. Cross-kernel composition must preserve provenance: a Plan/Occurrence may be linked to a Commitment, a Fulfillment to its Occurrence/Commitment, a financial obligation to accepted Fulfillment/Contract terms, and a Settlement to the obligation it satisfies. Do not duplicate the same fact independently across modules.
+27. Content is the primary human-facing work surface. Permission-aware contextual capabilities may appear around a Content revision or exact block/field, but every authoritative mutation still goes through the owning domain policy/Action.
+28. User-facing system documentation should itself use the Content kernel: official sealed editions remain the clean origin; personal/community learning overlays and proposed enhancements remain distinct until an authorized maintainer publishes a new official revision.
+
+## Documentation as Content
+
+The end-user IET manual/help/course should prove the same Content system used elsewhere instead of becoming a separate documentation product.
+
+Target flow:
+
+~~~text
+repository-owned documentation source/manifests
+→ idempotent materialization through normal Content/Blueprint Actions
+→ Book/Booklet + Lesson/Article Content
+→ immutable official revisions
+→ Reader
+   ├── clean origin view
+   ├── private learning notes/questions
+   ├── shared annotations/replies/media
+   ├── exact evidence/permalinks
+   └── later learning-progress/practice capabilities
+→ accepted contribution
+→ new official revision
+~~~
+
+Repository Markdown remains appropriate for developer/architecture authority and as seed source where useful. The user-facing documentation experience should be ordinary IET Content.
+
+A production-wide official manual must use normal Context/access rules. Do not create a documentation-only authorization bypass.
+
+## Content as contextual work surface
+
+Content should be the place where a human understands an artifact and discovers the actions that make sense around it.
+
+The Reader should eventually expose two modes:
+
+- **clean reading mode** — authored Content with optional overlays hidden;
+- **contextual/work mode** — viewer-specific summaries, filters and actions derived from explicit domain relationships and authorization.
+
+Examples:
+
+~~~text
+Work report Content
+├── authored report / diary / photos / audio
+├── related Contract versions
+├── scheduled/completed workday summary
+├── Start / End / Submit evidence actions when authorized
+├── reviewer Accept / Reject / Clarify actions when authorized
+└── earned / paid / outstanding summaries from authoritative accounting state
+~~~
+
+The Content text is never itself the Contract, Fulfillment, Plan or Ledger truth. Capability UI calls explicit domain Actions.
+
+Blueprints may provide safe structural/semantic/capability hints, but they never grant authority and never execute arbitrary PHP/Blade/JavaScript/SQL from database configuration.
 
 ## "Generic inside, specific outside"
 
