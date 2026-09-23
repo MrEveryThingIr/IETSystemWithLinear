@@ -16,6 +16,11 @@
         <flux:sidebar.item :href="route('manual')" :current="request()->routeIs('manual') || request()->query('manual') === '1'" icon="book-open">
             {{ __('ui.navigation.manual') }}
         </flux:sidebar.item>
+        @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ManageUsers))
+            <flux:sidebar.item :href="route('platform.access-invitations')" :current="request()->routeIs('platform.access-invitations')" icon="user-plus">
+                {{ __('access.admin.title') }}
+            </flux:sidebar.item>
+        @endif
         @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ViewPlatformAudit))
             <flux:sidebar.item :href="route('platform.development-origins')" :current="request()->routeIs('platform.development-origins')" icon="clock">
                 {{ __('development.title') }}

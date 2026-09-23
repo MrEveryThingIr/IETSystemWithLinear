@@ -6,6 +6,7 @@ use App\Actions\Groups\RevokeGroupInvitation;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupInvitation;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -34,12 +35,15 @@ class Invitations extends Component
     public function create(): void
     {
         Gate::authorize('createInvitation', $this->group);
-        $data = $this->validate(['email' => ['nullable', 'email'], 'maxUses' => ['nullable', 'integer', 'min:1', 'max:10000']]);
+        $data = $this->validate(['email' => ['required', 'email', 'exists:users,email']]);
+        $target = User::query()->where('email', $data['email'])->firstOrFail();
+        abort_unless($target->status === 'active' && $target->email_verified_at !== null, 422, __('access.group_existing_verified_only'));
         $actor = $this->actor();
         $token = GroupInvitation::issueToken();
-        GroupInvitation::create(['group_id' => $this->group->id, 'invited_by_actor_id' => $actor->id, 'email' => $data['email'] ?: null, 'token' => $token, 'expires_at' => now()->addDays(14), 'max_uses' => $data['maxUses'], 'uses_count' => 0]);
+        GroupInvitation::create(['group_id' => $this->group->id, 'invited_by_actor_id' => $actor->id, 'email' => $data['email'] ?: null, 'token' => $token, 'expires_at' => now()->addDays(14), 'max_uses' => 1, 'uses_count' => 0]);
         $this->createdInvitationUrl = route('invitations.show', $token);
         $this->reset('email');
+        $this->maxUses = 1;
         $this->resetPage();
         session()->flash('status', __('ui.messages.invitation_created'));
     }
