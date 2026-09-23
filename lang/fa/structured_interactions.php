@@ -45,6 +45,7 @@ return [
     'evidence_invalid' => 'مرجع مدرک یک شناسه یا پیوند معتبر نیست.',
     'open_evidence' => 'باز کردن مدرک دقیق',
     'review_submissions' => 'بررسی ارسال‌ها',
+    'review_submissions_with_count' => 'بررسی ارسال‌ها (:count ارسال‌شده)',
     'review_queue_help' => 'تلاش‌های ارسال‌شده در این زمینه را بررسی کنید. پیش‌نویس‌ها برای ارسال‌کننده خصوصی می‌مانند.',
     'back_to_context' => 'بازگشت به زمینه',
     'review' => 'بررسی',
