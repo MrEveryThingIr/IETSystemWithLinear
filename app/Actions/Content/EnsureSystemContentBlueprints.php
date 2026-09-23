@@ -8,6 +8,7 @@ use App\Support\ContentBlueprintConfig;
 use App\Support\SystemContentBlueprints;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EnsureSystemContentBlueprints
 {
@@ -31,6 +32,7 @@ class EnsureSystemContentBlueprints
 
                 if (! $blueprint instanceof ContentBlueprint) {
                     $blueprint = ContentBlueprint::query()->create([
+                        'uuid' => (string) Str::uuid(),
                         'slug' => $preset['slug'],
                         'name' => $preset['name'],
                         'description' => $preset['description'],
