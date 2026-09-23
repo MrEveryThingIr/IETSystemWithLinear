@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Contexts\EnsureAdmissionContext;
 use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Actions\Contexts\EnsurePersonalContext;
+use App\Actions\Contexts\EnsureReferenceContext;
 use App\Actions\Groups\CreateGroup;
 use App\ContextKind;
 use App\Models\Actor;
@@ -143,6 +144,30 @@ class ContextKernelFoundationTest extends TestCase
         $this->assertFalse(Gate::forUser($candidate->user)->allows('createContent', $context));
         $this->assertFalse(Gate::forUser($reviewer->user)->allows('createContent', $context));
         $this->assertFalse(Gate::forUser($reviewer->user)->allows('manageDefinitions', $context));
+    }
+
+    public function test_reference_context_is_shared_for_reading_and_feedback_but_manager_owned_for_authoring(): void
+    {
+        $manager = Actor::factory()->create();
+        $reader = Actor::factory()->create();
+        $unverifiedUser = \App\Models\User::factory()->unverified()->create();
+        $unverifiedUser->actor()->create();
+
+        $context = app(EnsureReferenceContext::class)->execute($manager->user, 'system-reference');
+        $again = app(EnsureReferenceContext::class)->execute($manager->user, 'system-reference');
+
+        $this->assertSame(ContextKind::Reference, $context->kind);
+        $this->assertSame($context->id, $again->id);
+
+        $this->assertTrue(Gate::forUser($reader->user)->allows('view', $context));
+        $this->assertTrue(Gate::forUser($reader->user)->allows('interactContent', $context));
+        $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $context));
+        $this->assertFalse(Gate::forUser($reader->user)->allows('manageContent', $context));
+
+        $this->assertTrue(Gate::forUser($manager->user)->allows('createContent', $context));
+        $this->assertTrue(Gate::forUser($manager->user)->allows('manageContent', $context));
+        $this->assertFalse(Gate::forUser($unverifiedUser)->allows('view', $context));
+        $this->assertDatabaseCount('reference_contexts', 1);
     }
 
     public function test_context_kind_and_binding_identity_are_immutable(): void
