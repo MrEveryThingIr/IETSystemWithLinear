@@ -45,6 +45,7 @@ return [
     'evidence_invalid' => 'مرجع الدليل ليس معرّفاً أو رابطاً صالحاً.',
     'open_evidence' => 'فتح الدليل الدقيق',
     'review_submissions' => 'مراجعة الإرسالات',
+    'review_submissions_with_count' => 'مراجعة الإرسالات (:count مُرسل)',
     'review_queue_help' => 'راجع المحاولات المرسلة في هذا السياق. تبقى المسودات خاصة بأصحابها.',
     'back_to_context' => 'العودة إلى السياق',
     'review' => 'مراجعة',
