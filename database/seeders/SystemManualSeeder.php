@@ -25,9 +25,8 @@ class SystemManualSeeder extends Seeder
         $manual = app(EnsureSystemManualContent::class)->execute($owner->refresh());
 
         $this->command?->info('IET System Manual materialized as normal versioned Content.');
-        $this->command?->line('Manual group: '.route('groups.show', $manual['group']));
         $this->command?->line('Manual library: '.route('contexts.contents.index', $manual['context']));
         $this->command?->line('Manual reader: '.route('contexts.contents.show', [$manual['context'], $manual['root']]));
-        $this->command?->line('Owner login: test@example.com / password');
+        $this->command?->line('All active verified users may read/annotate; test@example.com manages the official editions.');
     }
 }
