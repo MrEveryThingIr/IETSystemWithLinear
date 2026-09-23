@@ -25,17 +25,25 @@ use LogicException;
 class SpaceContentAnnotation extends Model
 {
     public const KIND_COMMENT = 'comment';
+
     public const KIND_NOTE = 'note';
+
     public const KIND_QUESTION = 'question';
+
     public const KIND_ANSWER = 'answer';
+
     public const KIND_REPLY = 'reply';
+
     public const KIND_CORRECTION = 'correction';
+
     public const KIND_IDEA = 'idea';
 
     public const VISIBILITY_SPACE = 'space';
+
     public const VISIBILITY_PRIVATE = 'private';
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_WITHDRAWN = 'withdrawn';
 
     /** @var list<string> */
@@ -68,15 +76,15 @@ class SpaceContentAnnotation extends Model
             $annotation->uuid ??= (string) Str::uuid();
             $annotation->body = trim((string) ($annotation->body ?? ''));
 
-            if (! in_array($annotation->kind, self::KINDS, true)) {
+            if (!in_array($annotation->kind, self::KINDS, true)) {
                 throw new LogicException('Unknown Content annotation kind.');
             }
 
-            if (! in_array($annotation->visibility, self::VISIBILITIES, true)) {
+            if (!in_array($annotation->visibility, self::VISIBILITIES, true)) {
                 throw new LogicException('Unknown Content annotation visibility.');
             }
 
-            if (! in_array($annotation->status, self::STATUSES, true)) {
+            if (!in_array($annotation->status, self::STATUSES, true)) {
                 throw new LogicException('Unknown Content annotation status.');
             }
 
@@ -90,7 +98,7 @@ class SpaceContentAnnotation extends Model
             }
 
             if ($annotation->parent_annotation_id === null) {
-                if (! in_array($annotation->kind, self::TOP_LEVEL_KINDS, true)) {
+                if (!in_array($annotation->kind, self::TOP_LEVEL_KINDS, true)) {
                     throw new LogicException('This annotation role must be a reply to another annotation.');
                 }
 
