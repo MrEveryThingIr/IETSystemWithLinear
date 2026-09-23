@@ -4,11 +4,7 @@ namespace App\Support;
 
 class SystemManualContent
 {
-    public const GROUP_NAME = 'IET System Manual';
-
-    public const SPACE_NAME = 'Manual';
-
-    public const SPACE_SLUG = 'manual';
+    public const REFERENCE_KEY = 'system-manual';
 
     public const ROOT_TITLE = 'IET System Manual';
 
