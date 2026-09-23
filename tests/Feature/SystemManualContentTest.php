@@ -194,6 +194,7 @@ class SystemManualContentTest extends TestCase
             $idea->fresh()->latestDisposition()->firstOrFail()->status,
         );
     }
+
     public function test_bootstrap_preserves_authorized_manual_edits_until_explicit_source_sync(): void
     {
         $manager = Actor::factory()->create();
@@ -236,5 +237,4 @@ class SystemManualContentTest extends TestCase
         $this->assertSame($source['summary'], $synced->payload['summary']);
         $this->assertTrue($synced->hasVerifiableManifest());
     }
-
 }
