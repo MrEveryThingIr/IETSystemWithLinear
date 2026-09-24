@@ -241,3 +241,81 @@ npm run build
 - [ ] Present the same source/target again; the existing placement identity is reactivated rather than duplicated.
 - [ ] Action visibility remains permission-aware and no placement silently changes ownership/home Context.
 - [ ] Mobile, accessibility and RTL presentation remain part of the later cumulative polish/acceptance pass.
+
+
+---
+
+## Checkpoint 10 — Relationship + Relationship Context
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-10-relationship-context
+~~~
+
+Remote runtime checkpoint:
+
+~~~text
+SHA: 6cb21465489c14efffc589c41070f46160e029c2
+CI: 36025406749
+Result: 439 tests / 2481 assertions; Pint/PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_24_010000_create_relationship_kernel.php
+~~~
+
+The final integration merge SHA is recorded by Git history/PR after the Phase 10 closure is merged.
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-10-relationship-context
+git pull --ff-only origin feat/ideal-v1-10-relationship-context
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/RelationshipContextKernelTest.php \
+  tests/Feature/RelationshipExperienceTest.php \
+  tests/Feature/ModelFactoryTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — Alice ↔ Bob
+
+- [ ] Set a non-office-alpha release profile for the cumulative Ideal-v1 browser pass so Relationships navigation is visible.
+- [ ] Alice has a visible Riverside construction/electrical Need.
+- [ ] Bob opens **Needs, offers & services**, finds Alice's Intent, and chooses **Start relationship**.
+- [ ] Purpose is inherited from the Intent and Alice is fixed as the counterpart; Bob enters roles such as service provider / client.
+- [ ] Bob sends the request; one proposed Relationship and one Relationship Context exist.
+- [ ] Before Alice accepts, Bob and Alice can inspect the request/Context but cannot create Content in it.
+- [ ] An unrelated Carol/outsider session cannot open Bob/Alice's Relationship or Context.
+- [ ] Alice opens **Relationships**, opens the pending request, and chooses **Accept relationship**.
+- [ ] Relationship becomes active; active participants can now create/interact with ordinary Content in the Relationship workspace.
+- [ ] No Group Membership was created for Alice/Bob by Relationship activation.
+- [ ] No Match, Proposal, Contract, employment, ownership, loan/equity, Commitment, payment obligation or accounting entry was created.
+- [ ] Alice or the managing participant ends the Relationship; the Context remains readable to participants and becomes read-only.
+
+### Browser story — Alice ↔ Carol direct request
+
+- [ ] Alice opens **Relationships → Start relationship** without an originating Intent.
+- [ ] Alice selects the relevant Capital/Collaboration Concept.
+- [ ] Alice enters Carol's exact username and explicit roles such as project owner / capital collaborator.
+- [ ] Carol must explicitly accept before the Context becomes writable.
+- [ ] Mentioning investment/property/ownership in labels or Content grants no ownership or financial rights.
+
+### Continuity
+
+Reuse the existing Alice, Bob, Carol, Riverside Lot/Home and Maple Housing Office examples. Relationship is now current implemented behavior. Conversation/Timeline is the next milestone; Proposal/Contract/Planner/Fulfillment/Accounting remain future until their own explicit phases.

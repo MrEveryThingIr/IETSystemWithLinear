@@ -24,6 +24,7 @@ class SystemManualContent
         'profile-concepts' => '12. Profile, Concepts, Skills, Interests, Goals, Needs, and Offers',
         'agreements' => '13. Group Agreements and Versioned Governance',
         'end-to-end' => '14. End-to-End Guided Example and UI Testing',
+        'relationships' => '15. Relationships and Direct Collaboration',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -42,11 +43,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, and the first guided Need/Offer + Intent Directory experience.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, and consent-aware direct Relationships with explicit participant roles and their own Context.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Relationship, Conversation/Timeline, Planner, Accounting, negotiated Contract/Commitment/Fulfillment, Matching, realtime, reputation/discovery, and AI remain later roadmap milestones.
+Conversation/Timeline, Planner, Accounting, negotiated Proposal/Contract/Commitment/Fulfillment, Matching, realtime, reputation/discovery, and AI remain later roadmap milestones.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -136,16 +137,16 @@ TEXT,
 A Context is a bounded collaboration and visibility environment. It answers who may enter, view, create, interact, review, and manage the artifacts inside it.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Current Context kinds are Personal, GroupSpace, Admission, and Reference.
+Current Context kinds are Personal, GroupSpace, Admission, Relationship, and Reference.
 
-Personal Context can be the home of an Actor's Content. GroupSpace Context provides a governed Group collaboration surface. Admission Context lets a candidate and authorized reviewers collaborate before Membership exists. Reference Context hosts maintained shared knowledge such as this System Manual.
+Personal Context can be the home of an Actor's Content. GroupSpace Context provides a governed Group collaboration surface. Admission Context lets a candidate and authorized reviewers collaborate before Membership exists. Relationship Context provides a direct participant-scoped collaboration boundary outside Group Membership. Reference Context hosts maintained shared knowledge such as this System Manual.
 
 Content is not permanently “inside Groups”. A Content item has a home/origin Context for authoring, lifecycle and authorization, while authorized published Content can later be presented or referenced from other Contexts without copying it.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 When something seems missing, first verify the Context you are operating in. Content libraries, annotations, Submissions and review queues are Context-scoped.
 
-Use Personal Context as the normal home for Alice's own Article or Album. Use GroupSpace Context for Maple Housing Office collaboration. Use Admission Context for a candidate/reviewer onboarding journey. Use Reference Context for maintained manuals/reference material.
+Use Personal Context as the normal home for Alice's own Article or Album. Use GroupSpace Context for Maple Housing Office collaboration. Use Admission Context for a candidate/reviewer onboarding journey. Use Relationship Context after Alice and Bob explicitly accept a direct client/provider Relationship. Use Reference Context for maintained manuals/reference material.
 
 When a later GroupSpace or Relationship needs Alice's already-published Article, reference/present the existing Content rather than creating a duplicate “group article”. Authorization is still checked for the viewer.
 TEXT,
@@ -153,7 +154,7 @@ TEXT,
 Context authorization is distinct from Group Membership. Admission is the main proof: a candidate may access their Admission Context while still being forbidden from normal Group participation.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Future Context kinds include DirectCollaboration, Negotiation, Contract, and Project. The same Content, Conversation, Submission, Asset and annotation capabilities should compose inside them under their own access policies.
+Direct collaboration now uses Relationship Context. Future specialized coordination may add Negotiation, Contract and Project Contexts where their own authorization/lifecycle semantics justify a distinct boundary. The same Content, Conversation, Submission, Asset and annotation capabilities should compose under Context-specific policies rather than duplicate storage engines.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 If a reviewer page shows zero items, it may simply be another Context. URLs or IDs do not grant access; server authorization is always rechecked.
@@ -518,9 +519,9 @@ TEXT,
 This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, and Phase 7 structured Submission/Response/Evaluation.
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, and Phase 10 direct Relationships with explicit consent and a dedicated Relationship Context.
 
-Relationship, Conversation/Timeline, Planner, Accounting, Proposal/Contract/Commitment/Fulfillment, Matching and AI are roadmap steps and must be labelled as future until their milestone is remotely integrated.
+Conversation/Timeline, Planner, Accounting, Proposal/Contract/Commitment/Fulfillment, Matching and AI are roadmap steps and must be labelled as future until their milestone is remotely integrated.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Run the story in this order.
@@ -582,7 +583,19 @@ Run the story in this order.
    - Publish a newer source edition. Confirm the normal placement follows the newest publication while the exact Evidence Reference still resolves the older sealed target.
    - Remove the placement and confirm Bob's target-only access disappears; presenting it again should reactivate the same placement identity rather than duplicate provenance.
 
-10. Structured interaction
+10. Direct Relationship / Relationship Context
+   - From Bob, open Alice's visible Riverside service Intent and choose **Start relationship**.
+   - Confirm the purpose is inherited from the Intent and Alice is the invited counterpart.
+   - Enter explicit roles such as service provider / client and send the request.
+   - Before acceptance, open the Relationship/Context from Bob and Alice and confirm it is inspectable but read-only.
+   - Confirm an unrelated Actor cannot open it.
+   - From Alice, choose **Accept relationship**.
+   - Confirm the Relationship becomes active and its Context now allows active participants to create/interact with ordinary Content.
+   - Confirm no Group Membership, Match, Proposal, Contract, ownership, financing right, employment, obligation or payment was created.
+   - Separately, Alice can start a direct capital/collaboration Relationship with Carol by selecting the purpose Concept and entering Carol's exact username.
+   - End a Relationship and confirm its Context remains readable history but becomes read-only.
+
+11. Structured interaction
    - Start a configured interaction.
    - Save draft and confirm reviewer count does not treat it as submitted.
    - Submit explicitly.
@@ -594,12 +607,12 @@ TEXT,
                     'authorization' => <<<'TEXT'
 Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
 
-Future milestones should extend this same story rather than replace it. When Relationship, Planner, Accounting or Contract capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+Future milestones should extend this same story rather than replace it. Relationship is now implemented. When Conversation/Timeline, Planner, Accounting or Contract capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 The final Ideal-v1 browser story continues naturally:
 
-Alice/Bob/Carol opportunity → Relationship/Project Context → Conversation/Timeline → Proposal → exact ContractVersion → Commitments → planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
+Alice/Bob/Carol Intent/discovery → Relationship Context (current) → Conversation/Timeline → Proposal → exact ContractVersion → Commitments → planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
 
 The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
 TEXT,
@@ -607,6 +620,62 @@ TEXT,
 A demo story is not permission to auto-create domain consequences. Do not skip explicit acceptance/review/payment actions just because later steps are known in advance.
 
 Documentation examples must never describe a future capability as currently implemented.
+TEXT,
+                ],
+                [
+                    'title' => '15. Relationships and Direct Collaboration',
+                    'summary' => <<<'TEXT'
+A Relationship is IET's explicit direct coordination boundary between named Actors outside Group Membership. It records why the relationship exists, who participates, each human role, lifecycle, provenance, and the dedicated Context where current capabilities can compose.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 10 implements Relationship, RelationshipParticipant, RelationshipContext and immutable RelationshipEvent history.
+
+Creating a Relationship produces a proposed request. The creator is an active managing participant; invited Actors remain invited. The Relationship Context exists immediately so participants can inspect the request, but it is read-only until every initial invitee explicitly accepts.
+
+After activation, active participants can create/interact with ordinary Content in that Relationship Context. A participant marked can_manage may manage Content/definitions/review capability. Ending or cancelling preserves participant-readable history but removes write authority.
+
+A Relationship may link to the active visible Intent that originated it. That provenance link does not convert the Intent into a Match, Proposal, Contract, obligation or payment.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+From a discovered Intent:
+1. Bob opens **Needs, offers & services**.
+2. Bob finds Alice's visible Riverside construction-service Need.
+3. Bob chooses **Start relationship**.
+4. The form fixes the purpose to the Intent's Concept and fixes Alice as the counterpart.
+5. Bob enters explicit roles such as service provider / client and optionally a clear label such as Riverside electrical work.
+6. Bob chooses **Send relationship request**.
+7. Alice opens **Relationships**, opens the pending request, reviews purpose and roles, then chooses **Accept relationship** or **Decline**.
+8. Only after acceptance does the Relationship Context become writable.
+
+For a direct known-person request:
+1. Alice opens **Relationships → Start relationship**.
+2. Alice selects a purpose Concept.
+3. Alice enters Carol's exact active verified username.
+4. Alice records both roles, such as project owner / capital collaborator.
+5. Alice sends the request; Carol must accept before collaboration becomes active.
+
+Inside an active Relationship, choose **Open workspace** to use ordinary Context Content. Use Content for human-facing artifacts and evidence; do not write authoritative Contract/payment state into arbitrary Content fields.
+
+To close coordination, an authorized manager chooses **End relationship**. The history remains readable to participants while the workspace becomes read-only.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Relationship access comes from RelationshipParticipant records, not Group Membership.
+
+Recorded participants may view the Relationship and Context history. An invited participant may respond but cannot create/interact with workspace Content while the Relationship is proposed. Active participants gain normal participant collaboration. can_manage participants receive the stronger Context-management capabilities. Outsiders cannot view the Relationship or Context. Ended/cancelled Relationships remain participant-readable and non-writable.
+
+Relationship activation never grants platform authority, Group authority, Group Membership, source authority for unrelated Content, or authority over another Relationship.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Phase 11 composes Conversation and a source-linked Timeline inside Relationship and other Contexts without making messages authoritative.
+
+Later phases progressively attach Planner, Proposal/Negotiation, Contract, Commitments, Fulfillment and Accounting when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
+
+Multi-party creation, participant changes, broader people discovery and richer capability presentation may extend the same kernel without replacing its consent and authorization boundaries.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+Relationship does not mean friendship, Match, Contract, employment, ownership, investment right, loan/equity, fulfilled work, debt or payment.
+
+A visible Need/Offer can originate a Relationship, but complementary Intents do not automatically Match. A participant accepting the Relationship accepts the coordination boundary only; exact negotiated terms still require later Proposal/Contract actions. Text saying “I agree” inside Content or future Conversation must not silently change authoritative lifecycle.
 TEXT,
                 ],
             ],

@@ -671,10 +671,12 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 9 — Published Content Library and reference/placement semantics** is remotely complete on feature checkpoint `fdb7c1cbfbe1a81c284c67df79a71b0e5ee3074a` / CI `36020336046`.
+**Phase 10 — Relationship + Relationship Context** is remotely complete on runtime checkpoint `6cb21465489c14efffc589c41070f46160e029c2` / CI `36025406749` (439 tests / 2481 assertions).
 
-It adds the published Content Library plus explicit `ContentPlacement` semantics: the Content stays owned by its home Context, an authorized presenter can expose the same published artifact in another managed Context, target-only readers gain read access without Studio/source authority, normal placement follows later publications, and immutable Evidence References continue resolving their exact historical revision/target.
+It adds a consent-aware direct Relationship kernel outside Group Membership: explicit participants/roles, semantic purpose Concept, optional originating Intent provenance, immutable lifecycle events, and a dedicated Relationship Context. Creating a Relationship is only a proposal; the shared Context remains read-only until every initial invitee explicitly accepts. Active participants may collaborate through the existing Content kernel, authorized managers can manage that Context, outsiders have no access, and ended/cancelled Relationships remain readable history without write authority.
 
-Next after integration: **Phase 10 — Relationship + Relationship Context**.
+The normal UI now supports both a visible Intent → **Start relationship** handoff and a direct known-username request. Neither path creates Match, Proposal, Contract, ownership, employment, financing rights, obligations or payment.
+
+Next after integration: **Phase 11 — Conversation + Unified Timeline**.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

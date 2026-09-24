@@ -77,6 +77,14 @@ Alice and Carol do **not** need Group Membership merely to have an account or to
 
 ### Riverside Home Project — compositional proof case
 
+Through Phase 10, the direct Relationship step is implemented:
+
+- Bob can open Alice's visible Riverside service Intent and choose **Start relationship**;
+- the request records purpose plus explicit client/provider roles;
+- Alice must explicitly accept before their Relationship Context becomes writable;
+- Alice can separately start a direct capital/collaboration Relationship with Carol by known username and Concept;
+- neither Relationship creates Group Membership, Contract, ownership, financing rights or payment.
+
 The long-running example can eventually compose:
 
 ~~~text

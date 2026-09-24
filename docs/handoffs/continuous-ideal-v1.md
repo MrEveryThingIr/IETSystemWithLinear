@@ -40,9 +40,11 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 9 — Published Content Library and reference/placement semantics — is remote-green at `fdb7c1cbfbe1a81c284c67df79a71b0e5ee3074a` / CI `36020336046` and is the current integration checkpoint.
+Phase 9 is integrated on `integration/ideal-v1` at merge checkpoint `71ffb7af0d2bda56af0df5e3aba2a0377fee8afc`.
 
-After Phase 9 integration, continue directly with **Phase 10 — Relationship + Relationship Context** from the integration trunk.
+Phase 10 — Relationship + Relationship Context — is remote-green on `feat/ideal-v1-10-relationship-context` at runtime checkpoint `6cb21465489c14efffc589c41070f46160e029c2` / CI `36025406749` (439 tests / 2481 assertions).
+
+After Phase 10 integration, continue directly with **Phase 11 — Conversation + Unified Timeline** from the integration trunk.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 
@@ -54,6 +56,8 @@ Do not reintroduce AI runtime until the dedicated later AI milestone.
 - Contexts compose modules; they do not require duplicate module tables.
 - user journeys progressively activate capabilities rather than selecting a giant universal type.
 - Need/Offer is intent, not Match/Contract/obligation.
+- Relationship is an explicit direct coordination boundary, not Group Membership, Contract, ownership, employment, financing rights or payment.
+- Relationship Context is writable only after explicit participant consent and becomes read-only when terminal.
 - Conversation is collaboration evidence, not authoritative acceptance.
 - finance uses explicit domain-event → obligation → accounting actions; balances are derived.
 - user-facing UX uses plain actions while specialized kernels retain authority.

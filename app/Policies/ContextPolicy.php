@@ -8,6 +8,7 @@ use App\Models\Admission;
 use App\Models\Context;
 use App\Models\GroupSpace;
 use App\Models\ReferenceContext;
+use App\Models\Relationship;
 use App\Models\User;
 
 class ContextPolicy
@@ -15,6 +16,7 @@ class ContextPolicy
     public function __construct(
         private readonly GroupSpacePolicy $spaces,
         private readonly GroupPolicy $groups,
+        private readonly RelationshipPolicy $relationships,
     ) {}
 
     public function view(User $user, Context $context): bool
@@ -31,6 +33,8 @@ class ContextPolicy
                 && $this->spaces->view($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->canViewAdmissionContext($current, $admission),
+            ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
+                && $this->relationships->view($current, $relationship),
             ContextKind::Reference => $this->reference($context) instanceof ReferenceContext,
         };
     }
@@ -50,6 +54,8 @@ class ContextPolicy
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->admissionIsMutable($admission)
                 && $this->canViewAdmissionContext($current, $admission),
+            ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
+                && $this->relationships->participate($current, $relationship),
             ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
@@ -77,6 +83,8 @@ class ContextPolicy
                 && $this->spaces->manage($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->isAdmissionReviewer($current, $admission),
+            ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
+                && $this->relationships->manage($current, $relationship),
             ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
@@ -96,6 +104,8 @@ class ContextPolicy
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
                 && $this->admissionIsMutable($admission)
                 && $this->isAdmissionReviewer($current, $admission),
+            ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
+                && $this->relationships->manage($current, $relationship),
             ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
@@ -157,6 +167,13 @@ class ContextPolicy
         $context->loadMissing('admissionBinding.admission.group');
 
         return $context->admissionBinding?->admission;
+    }
+
+    private function relationship(Context $context): ?Relationship
+    {
+        $context->loadMissing('relationshipBinding.relationship');
+
+        return $context->relationshipBinding?->relationship;
     }
 
     private function reference(Context $context): ?ReferenceContext

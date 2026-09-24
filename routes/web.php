@@ -50,8 +50,12 @@ use App\Livewire\Platform\AccessInvitations;
 use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
 use App\Livewire\Profile\Show as ProfileShow;
+use App\Livewire\Relationships\Create as RelationshipCreate;
+use App\Livewire\Relationships\Index as RelationshipIndex;
+use App\Livewire\Relationships\Show as RelationshipShow;
 use App\Models\Actor;
 use App\Models\Group;
+use App\Models\Relationship;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'));
@@ -84,6 +88,9 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
+    Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
+    Route::livewire('/relationships/create', RelationshipCreate::class)->can('create', Relationship::class)->name('relationships.create');
+    Route::livewire('/relationships/{relationship}', RelationshipShow::class)->can('view', 'relationship')->name('relationships.show');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
     Route::get('/manual', SystemManualController::class)->name('manual');
