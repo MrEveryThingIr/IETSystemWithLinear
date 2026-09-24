@@ -16,14 +16,13 @@ use App\ContractVersionStatus;
 use App\Models\Actor;
 use App\Models\Contract;
 use App\Models\ContractAcceptance;
-use App\Models\ContractVersion;
-use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\ProposalDecisionKind;
 use App\ProposalStatus;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class ContractKernelTest extends TestCase
@@ -318,7 +317,7 @@ class ContractKernelTest extends TestCase
             );
 
             $this->fail('Duplicate Contract was created from one ProposalVersion.');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
+        } catch (HttpException $exception) {
             $this->assertSame(422, $exception->getStatusCode());
         }
 
