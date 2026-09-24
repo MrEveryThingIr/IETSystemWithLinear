@@ -197,7 +197,9 @@ class Create extends Component
                     ?: $context->uuid,
             ]),
             ContextKind::GroupSpace => (string) __('planner.context.group_space', [
-                'space' => $context->groupSpaceBinding?->groupSpace->name ?? $context->uuid,
+                'space' => $context->groupSpaceBinding === null
+                    ? $context->uuid
+                    : $context->groupSpaceBinding->groupSpace->name,
             ]),
             default => $context->kind->value,
         };
