@@ -18,6 +18,7 @@ use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\SpaceContentAssetController;
 use App\Http\Controllers\SubmissionAssetController;
 use App\Http\Controllers\SystemManualController;
+use App\Livewire\Accounting\Index as AccountingIndex;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -101,6 +102,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/create', PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
+    Route::livewire('/accounting', AccountingIndex::class)->name('accounting.index');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
     Route::get('/manual', SystemManualController::class)->name('manual');

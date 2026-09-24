@@ -21,6 +21,9 @@
             <flux:sidebar.item :href="route('planner.index')" :current="request()->routeIs('planner.*')" icon="calendar-days">
                 {{ __('planner.title') }}
             </flux:sidebar.item>
+            <flux:sidebar.item :href="route('accounting.index')" :current="request()->routeIs('accounting.*')" icon="banknotes">
+                {{ __('accounting.title') }}
+            </flux:sidebar.item>
             <flux:sidebar.item :href="route('content.library')" :current="request()->routeIs('content.library')" icon="rectangle-stack">
                 {{ __('library.title') }}
             </flux:sidebar.item>
