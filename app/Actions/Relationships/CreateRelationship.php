@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
 class CreateRelationship
 {
     /**
-     * @param  list<array{actor: Actor, role: string, can_manage?: bool}>  $invitees
+     * @param  list<array<string, mixed>>  $invitees
      */
     public function execute(
         User $user,
