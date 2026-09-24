@@ -10,7 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['uuid','journal_entry_id','account_id','debit_minor','credit_minor','memo'])]
+#[Fillable([
+    'uuid',
+    'journal_entry_id',
+    'account_id',
+    'debit_minor',
+    'credit_minor',
+    'memo',
+])]
 class JournalLine extends Model
 {
     /** @use HasFactory<JournalLineFactory> */
@@ -44,11 +51,23 @@ class JournalLine extends Model
         });
     }
 
-    public function entry(): BelongsTo { return $this->belongsTo(JournalEntry::class, 'journal_entry_id'); }
-    public function account(): BelongsTo { return $this->belongsTo(Account::class); }
+    /** @return BelongsTo<JournalEntry, $this> */
+    public function entry(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntry::class, 'journal_entry_id');
+    }
+
+    /** @return BelongsTo<Account, $this> */
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
+    }
 
     protected function casts(): array
     {
-        return ['debit_minor' => 'integer', 'credit_minor' => 'integer'];
+        return [
+            'debit_minor' => 'integer',
+            'credit_minor' => 'integer',
+        ];
     }
 }

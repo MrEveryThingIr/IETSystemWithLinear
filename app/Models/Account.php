@@ -12,7 +12,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['uuid','ledger_id','code','name','type','system_key','status','created_by_actor_id'])]
+#[Fillable([
+    'uuid',
+    'ledger_id',
+    'code',
+    'name',
+    'type',
+    'system_key',
+    'status',
+    'created_by_actor_id',
+])]
 class Account extends Model
 {
     /** @use HasFactory<AccountFactory> */
@@ -27,7 +36,7 @@ class Account extends Model
         });
 
         static::updating(function (self $account): void {
-            if ($account->isDirty(['uuid','ledger_id','code','type','system_key','created_by_actor_id'])) {
+            if ($account->isDirty(['uuid', 'ledger_id', 'code', 'type', 'system_key', 'created_by_actor_id'])) {
                 throw new LogicException('Account ledger, code, type and provenance are immutable.');
             }
         });

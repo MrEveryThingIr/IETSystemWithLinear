@@ -13,10 +13,11 @@ class CorrectJournalEntry
     public function __construct(
         private readonly ReverseJournalEntry $reverse,
         private readonly PostJournalEntry $entries,
-    ) {}
+    ) {
+    }
 
     /**
-     * @param list<array{account: Account, debit_minor?: int, credit_minor?: int, memo?: ?string}> $replacementLines
+     * @param  list<array{account: Account, debit_minor?: int, credit_minor?: int, memo?: ?string}>  $replacementLines
      * @return array{reversal: JournalEntry, correction: JournalEntry}
      */
     public function execute(

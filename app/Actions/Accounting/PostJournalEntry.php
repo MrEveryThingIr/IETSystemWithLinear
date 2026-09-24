@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Gate;
 class PostJournalEntry
 {
     /**
-     * @param list<array{account: Account, debit_minor?: int, credit_minor?: int, memo?: ?string}> $lines
+     * @param  list<array{account: Account, debit_minor?: int, credit_minor?: int, memo?: ?string}>  $lines
      */
     public function execute(
         Ledger $ledger,

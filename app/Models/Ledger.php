@@ -11,7 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['uuid','context_id','monetary_unit_id','key','name','status','created_by_actor_id'])]
+#[Fillable([
+    'uuid',
+    'context_id',
+    'monetary_unit_id',
+    'key',
+    'name',
+    'status',
+    'created_by_actor_id',
+])]
 class Ledger extends Model
 {
     /** @use HasFactory<LedgerFactory> */
@@ -26,7 +34,7 @@ class Ledger extends Model
         });
 
         static::updating(function (self $ledger): void {
-            if ($ledger->isDirty(['uuid','context_id','monetary_unit_id','key','created_by_actor_id'])) {
+            if ($ledger->isDirty(['uuid', 'context_id', 'monetary_unit_id', 'key', 'created_by_actor_id'])) {
                 throw new LogicException('Ledger identity, Context, unit and creator are immutable.');
             }
         });

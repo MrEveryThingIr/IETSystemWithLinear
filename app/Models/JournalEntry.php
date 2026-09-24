@@ -12,7 +12,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['uuid','ledger_id','kind','occurred_on','description','reverses_entry_id','correction_of_entry_id','created_by_actor_id','posted_at'])]
+#[Fillable([
+    'uuid',
+    'ledger_id',
+    'kind',
+    'occurred_on',
+    'description',
+    'reverses_entry_id',
+    'correction_of_entry_id',
+    'created_by_actor_id',
+    'posted_at',
+])]
 class JournalEntry extends Model
 {
     /** @use HasFactory<JournalEntryFactory> */
@@ -39,13 +49,47 @@ class JournalEntry extends Model
         return 'uuid';
     }
 
-    public function ledger(): BelongsTo { return $this->belongsTo(Ledger::class); }
-    public function creator(): BelongsTo { return $this->belongsTo(Actor::class, 'created_by_actor_id'); }
-    public function reverses(): BelongsTo { return $this->belongsTo(self::class, 'reverses_entry_id'); }
-    public function correctionOf(): BelongsTo { return $this->belongsTo(self::class, 'correction_of_entry_id'); }
-    public function reversals(): HasMany { return $this->hasMany(self::class, 'reverses_entry_id'); }
-    public function corrections(): HasMany { return $this->hasMany(self::class, 'correction_of_entry_id'); }
-    public function lines(): HasMany { return $this->hasMany(JournalLine::class); }
+    /** @return BelongsTo<Ledger, $this> */
+    public function ledger(): BelongsTo
+    {
+        return $this->belongsTo(Ledger::class);
+    }
+
+    /** @return BelongsTo<Actor, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(Actor::class, 'created_by_actor_id');
+    }
+
+    /** @return BelongsTo<JournalEntry, $this> */
+    public function reverses(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reverses_entry_id');
+    }
+
+    /** @return BelongsTo<JournalEntry, $this> */
+    public function correctionOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'correction_of_entry_id');
+    }
+
+    /** @return HasMany<JournalEntry, $this> */
+    public function reversals(): HasMany
+    {
+        return $this->hasMany(self::class, 'reverses_entry_id');
+    }
+
+    /** @return HasMany<JournalEntry, $this> */
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(self::class, 'correction_of_entry_id');
+    }
+
+    /** @return HasMany<JournalLine, $this> */
+    public function lines(): HasMany
+    {
+        return $this->hasMany(JournalLine::class);
+    }
 
     protected function casts(): array
     {
