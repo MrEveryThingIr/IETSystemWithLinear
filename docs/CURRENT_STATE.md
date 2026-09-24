@@ -671,12 +671,14 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 13 — Personal Accounting v1** is remotely complete on final runtime checkpoint `c5a45f7d4178637e322855e71318709610e835b8` / CI `36042662030` (469 tests / 2714 assertions).
+**Phase 14 — Proposal + Negotiation** is remotely runtime-complete on checkpoint `a27a2538161ff36d123eef1bd0f9d9c153298987` / CI `36048778108` (477 tests / 2799 assertions).
 
-It adds Personal-Context MonetaryUnit/Ledger/Account/JournalEntry/JournalLine accounting with integer minor units, enforced balanced double-entry, immutable posted history, reversal/correction, derived balances, day/week/month/year Income/Expense/Net summaries, plain Opening balance / Expense / Income / Transfer actions, and source-linked Accounting entries in the unified Timeline.
+It adds Proposal, ProposalParty, immutable exact ProposalVersion terms backed by sealed Content revisions, immutable per-party ProposalDecision, ProposalEvent history, a dedicated Negotiation Context, Conversation/Content/Timeline composition, direct and active-Relationship proposal creation, and Accept / Reject / Request changes / Propose revision / Cancel UX.
 
-Personal Accounting v1 is deliberately not a shared/Relationship obligation system. Relationship/Contract money becomes authoritative only through later Financial Obligation + Settlement phases.
+A Proposal becomes accepted only when every required party accepts the same current version. Old-version decisions never carry forward.
 
-Next after integration: **Phase 14 — Proposal + Negotiation**.
+Accepted Proposal state is deliberately not Contract authority and creates no ContractVersion, Commitment, Fulfillment, ownership, Financial Obligation, Accounting posting or Settlement/payment.
+
+Next after integration: **Phase 15 — Contract, ContractVersion and explicit acceptance**.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

@@ -594,3 +594,94 @@ composer audit
 - [ ] Confirm Conversation text such as “paid” does not auto-post Accounting.
 - [ ] Confirm Content text does not auto-post Accounting.
 - [ ] Do not expect shared debt/invoice/settlement behavior until the explicit later Financial Obligation + Settlement phases.
+
+
+---
+
+## Checkpoint 14 — Proposal + Negotiation
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-14-proposal-negotiation
+~~~
+
+Remote kernel checkpoint:
+
+~~~text
+SHA: 3a30f21af06e478fc269d7db1e4085ce73500133
+CI: 36047890895
+Result: 474 tests / 2771 assertions
+~~~
+
+Remote final runtime checkpoint:
+
+~~~text
+SHA: a27a2538161ff36d123eef1bd0f9d9c153298987
+CI: 36048778108
+Result: 477 tests / 2799 assertions; Pint/PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_24_050000_create_proposal_negotiation_kernel.php
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-14-proposal-negotiation
+git pull --ff-only origin feat/ideal-v1-14-proposal-negotiation
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/ProposalNegotiationKernelTest.php \
+  tests/Feature/ProposalExperienceTest.php \
+  tests/Feature/ConversationTimelineExperienceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — Riverside negotiation
+
+- [ ] Alice creates **Riverside construction collaboration** with Bob and Carol.
+- [ ] Confirm version 1 terms are an exact sealed published Content revision.
+- [ ] Bob accepts version 1.
+- [ ] Carol requests changes with a clear note.
+- [ ] Confirm version 1 and all version-1 decisions remain unchanged.
+- [ ] Carol publishes version 2 with clarified site responsibilities.
+- [ ] Confirm Carol is Accepted for version 2 as proposer while Alice/Bob are Pending.
+- [ ] Alice accepts version 2; Proposal remains Negotiating while Bob is pending.
+- [ ] Bob accepts version 2; Proposal becomes **Accepted proposal**.
+- [ ] Confirm version-1 decisions did not count toward version 2.
+- [ ] Confirm Negotiation Timeline shows source-linked Proposal events.
+- [ ] Confirm terminal Negotiation Conversation becomes read-only.
+
+### Active Relationship handoff
+
+- [ ] Open Alice ↔ Bob active Relationship and choose **Start proposal**.
+- [ ] Confirm Bob is prefilled from active participation.
+- [ ] Create a paid-work Proposal.
+- [ ] Confirm source Relationship provenance is preserved.
+- [ ] Confirm Proposal owns a separate Negotiation Context.
+- [ ] Confirm Proposal lifecycle does not mutate Relationship lifecycle.
+
+### Negative guarantees
+
+- [ ] Typing “I accept” in Conversation does not create ProposalDecision.
+- [ ] Outsiders cannot open Proposal or Negotiation Context.
+- [ ] ProposalVersion/ProposalDecision cannot be edited or deleted in place.
+- [ ] Accepted/Rejected/Cancelled Proposal accepts no further versions/responses.
+- [ ] Accepted Proposal creates no Contract/ContractVersion.
+- [ ] Accepted Proposal creates no Commitment/Fulfillment.
+- [ ] Accepted Proposal creates no Financial Obligation, Accounting posting or Settlement/payment.
