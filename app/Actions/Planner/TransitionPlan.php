@@ -22,11 +22,16 @@ class TransitionPlan
         $current = $this->currentUser($user);
 
         return DB::transaction(function () use ($plan, $current, $status): Plan {
-            $locked = Plan::query()->with(['scheduleRules', 'occurrences'])->lockForUpdate()->findOrFail($plan->id);
+            $locked = Plan::query()
+                ->with(['scheduleRules', 'occurrences'])
+                ->lockForUpdate()
+                ->findOrFail($plan->id);
+
             Gate::forUser($current)->authorize('manage', $locked);
 
             $from = $locked->status;
             $locked->applyStatus($status);
+
             $eventType = match ($status) {
                 PlanStatus::Paused => PlanEventType::Paused,
                 PlanStatus::Active => PlanEventType::Resumed,
@@ -47,24 +52,24 @@ class TransitionPlan
                     if (in_array($occurrence->status, [
                         PlanOccurrenceStatus::Scheduled,
                         PlanOccurrenceStatus::InProgress,
-                    ], true)) {
-                        // Terminal Occurrences remain untouched.
-                    } else {
+                    ], true) === false) {
+                        continue;
                     }
 
-                        $actualEnd = $occurrence->status === PlanOccurrenceStatus::InProgress ? now() : null;
-                        $occurrence->transition(
-                            PlanOccurrenceStatus::Cancelled,
-                            actualStartAt: $occurrence->actual_start_at,
-                            actualEndAt: $actualEnd,
-                        );
-                        PlanOccurrenceEvent::query()->create([
-                            'plan_occurrence_id' => $occurrence->id,
-                            'actor_id' => $actor->id,
-                            'event_type' => PlanOccurrenceEventType::Cancelled,
-                            'payload' => ['reason' => 'plan_'.$status->value],
-                        ]);
-                    }
+                    $actualEnd = $occurrence->status === PlanOccurrenceStatus::InProgress ? now() : null;
+
+                    $occurrence->transition(
+                        PlanOccurrenceStatus::Cancelled,
+                        actualStartAt: $occurrence->actual_start_at,
+                        actualEndAt: $actualEnd,
+                    );
+
+                    PlanOccurrenceEvent::query()->create([
+                        'plan_occurrence_id' => $occurrence->id,
+                        'actor_id' => $actor->id,
+                        'event_type' => PlanOccurrenceEventType::Cancelled,
+                        'payload' => ['reason' => 'plan_'.$status->value],
+                    ]);
                 }
             }
 
@@ -86,6 +91,7 @@ class TransitionPlan
     private function currentUser(User $user): User
     {
         $current = User::query()->with('actor')->find($user->id);
+
         abort_unless(
             $current instanceof User
             && $current->status === 'active'
