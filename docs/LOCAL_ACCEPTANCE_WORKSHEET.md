@@ -180,3 +180,64 @@ No Phase 8 migration is expected.
 - [ ] Review shows the friendly journey and underlying interpretation.
 - [ ] saving creates one ActorProfileIntent and no Submission/Evaluation/Match/Contract side effect.
 - [ ] existing Directory/visibility/privacy behavior still passes.
+
+---
+
+## Checkpoint 09 — Published Content Library and reference/placement semantics
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-09-content-library-placement
+~~~
+
+Remote feature checkpoint:
+
+~~~text
+SHA: fdb7c1cbfbe1a81c284c67df79a71b0e5ee3074a
+CI: 36020336046
+Result: 432 tests / 2413 assertions; Pint 378 files; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_24_000000_create_content_placements_table.php
+~~~
+
+The final integration merge SHA is recorded by Git history/PR after the Phase 9 closure is merged.
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-09-content-library-placement
+git pull --ff-only origin feat/ideal-v1-09-content-library-placement
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+
+php artisan test --compact   tests/Feature/PublishedContentLibraryTest.php   tests/Feature/ModelFactoryTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+~~~
+
+### Browser story
+
+- [ ] Alice creates an Article/Report/Album in an authorized home Context and publishes it.
+- [ ] Draft/unsealed Content does not appear in Content Library.
+- [ ] The published item appears only for a viewer who is authorized to read it.
+- [ ] Search, Content type/Blueprint and Concept filters narrow the Library meaningfully.
+- [ ] An actor who can read the source/home Context and manage a second Context chooses **Present elsewhere**, selects the target Context and confirms **Present Content**.
+- [ ] Bob, authorized only through the target Context, can open the placed published artifact.
+- [ ] Bob cannot thereby open the source/home Context, Studio, revision-management or authoring surfaces.
+- [ ] Bob cannot transitively present the artifact elsewhere unless he separately gains the required source-read and target-management authority.
+- [ ] Publish a newer edition of the source Content; the normal placement follows the current published edition.
+- [ ] Create/use an exact Evidence Reference to the earlier revision/block; confirm it still resolves that historical target after the newer publication.
+- [ ] Remove the placement; Bob's target-only read access disappears.
+- [ ] Present the same source/target again; the existing placement identity is reactivated rather than duplicated.
+- [ ] Action visibility remains permission-aware and no placement silently changes ownership/home Context.
+- [ ] Mobile, accessibility and RTL presentation remain part of the later cumulative polish/acceptance pass.

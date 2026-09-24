@@ -412,6 +412,8 @@ Exit: all proof paths create understandable, queryable current-intent state with
 
 ## Phase 9 — Published Content Library and reference/placement semantics
 
+**Status: remote implementation complete and green on `feat/ideal-v1-09-content-library-placement` at `fdb7c1cbfbe1a81c284c67df79a71b0e5ee3074a` / GitHub Actions `36020336046`.**
+
 Purpose: productize Content as an independent published artifact system usable across Personal, GroupSpace, Admission and future Relationship/Project Contexts.
 
 Deliverables:
@@ -427,7 +429,7 @@ Deliverables:
 
 No parallel `group_posts`, `personal_articles`, album, diary or evidence tables.
 
-Exit: Alice can publish an Article/Album in her home Context, Diego can present/reference it in an authorized GroupSpace, and Bob can cite an exact revision/block as evidence without historical drift.
+Exit: Alice can publish an Article/Album in its home Context; an actor who independently has source-read authority and target-management authority can present/reference it in an authorized GroupSpace; Bob can consume the placed artifact through that target and cite an exact revision/block as evidence without historical drift. Placement never manufactures source authority or transitive resharing.
 
 ## Phase 10 — Relationship + Relationship Context
 

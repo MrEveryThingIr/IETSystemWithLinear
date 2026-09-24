@@ -131,6 +131,29 @@ Implemented:
 - immutable `ContentEvidenceReference` locators for exact revision/field/block/asset/relationship evidence;
 - historical evidence resolves the exact sealed edition rather than the latest mutable Content.
 
+### Published Content Library and cross-Context placement
+
+Phase 9 adds a viewer-authorized published Content Library and explicit cross-Context presentation without moving or copying the source artifact.
+
+Implemented:
+
+- only sealed, published Content the current viewer is authorized to read appears in the Library;
+- Library filtering by search, Blueprint/purpose and semantic Concept;
+- Content retains one immutable home Context for authoring and source authorization;
+- `ContentPlacement` presents that same Content identity in another Context;
+- placement creation requires the acting User to be able to read the source/home Context **and** manage Content in the target Context;
+- placement grants the target Context audience read access to the published artifact only; it does not grant source Context visibility, Studio/edit/revision authority or transitive resharing;
+- normal placement follows the Content item's current published revision;
+- exact `ContentEvidenceReference` identity remains pinned to its sealed historical revision/target even after later publication;
+- removing a placement revokes target-only access; presenting it again reactivates the same placement identity instead of creating duplicate provenance.
+
+Current limitations:
+
+- placement is direct authorized presentation, not yet a cross-party request/approval workflow;
+- Library filtering does not yet expose every roadmap refinement such as author/language/date;
+- placement access is intentionally read-oriented; interaction still follows the Content home Context rules;
+- richer card action menus and broad UX polish remain in the later cross-system polish pass.
+
 Evidence/reputation boundary:
 
 - Profile proficiency remains self-reported;
@@ -442,7 +465,7 @@ Current limitations:
 - search/taxonomy/discovery UX is incomplete;
 - Content audience is inherited from its Context authorization model; finer productized audience semantics remain future work;
 - archive library/recovery UX is incomplete;
-- Reader/chat still need the Phase 9 real-time event/broadcast architecture.
+- Reader/chat still need the later dedicated Conversation/realtime event-broadcast architecture; Phase 9 is Content placement/reference semantics, not realtime delivery.
 
 ## English workbook demonstration
 
@@ -648,10 +671,10 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 8 — Progressive Intent Journey v2** is remotely complete on feature checkpoint `eb82f8af1bac3c75e7bd5550db6d2a4dc6badfce` / CI `35926251822`.
+**Phase 9 — Published Content Library and reference/placement semantics** is remotely complete on feature checkpoint `fdb7c1cbfbe1a81c284c67df79a71b0e5ee3074a` / CI `36020336046`.
 
-It adds migration-free real-world journey presets over existing `ActorProfileIntent` semantics: Buy/Sell/Rent/Rent out, Need/Offer service, Hire/Find work, Seek/Offer capital, Seek/Offer collaboration, and a manual Other path. Presets are UI orchestration only and are not stored as new authoritative business types.
+It adds the published Content Library plus explicit `ContentPlacement` semantics: the Content stays owned by its home Context, an authorized presenter can expose the same published artifact in another managed Context, target-only readers gain read access without Studio/source authority, normal placement follows later publications, and immutable Evidence References continue resolving their exact historical revision/target.
 
-Next after integration: **Phase 9 — Published Content Library and reference/placement semantics**.
+Next after integration: **Phase 10 — Relationship + Relationship Context**.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
