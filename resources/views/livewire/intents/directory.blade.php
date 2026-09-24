@@ -76,14 +76,28 @@
                     @if ($intent->exchange_notes)<div><dt class="inline font-medium">{{ __('intents.fields.exchange_notes') }}:</dt> <dd class="inline" dir="auto">{{ $intent->exchange_notes }}</dd></div>@endif
                 </dl>
 
-                <div class="mt-4 border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800">
-                    @can('view', $intent->profile)
-                        <a href="{{ route('profiles.show', $intent->profile) }}" class="font-medium hover:underline">
-                            {{ $intent->profile->display_name ?: ($intent->profile->actor->user?->username ?? __('intents.directory.participant')) }}
-                        </a>
-                    @else
-                        <span class="text-zinc-500">{{ __('intents.directory.private_participant') }}</span>
-                    @endcan
+                <div class="mt-4 flex flex-col gap-3 border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        @can('view', $intent->profile)
+                            <a href="{{ route('profiles.show', $intent->profile) }}" class="font-medium hover:underline">
+                                {{ $intent->profile->display_name ?: ($intent->profile->actor->user?->username ?? __('intents.directory.participant')) }}
+                            </a>
+                        @else
+                            <span class="text-zinc-500">{{ __('intents.directory.private_participant') }}</span>
+                        @endcan
+                    </div>
+
+                    @unless (config('release.profile') === 'office_alpha')
+                        @if ((int) $intent->profile->actor_id !== (int) request()->user()?->actor?->id)
+                            <flux:button
+                                :href="route('relationships.create', ['intent' => $intent->uuid])"
+                                size="sm"
+                                variant="ghost"
+                            >
+                                {{ __('relationships.from_intent') }}
+                            </flux:button>
+                        @endif
+                    @endunless
                 </div>
             </article>
         @empty
