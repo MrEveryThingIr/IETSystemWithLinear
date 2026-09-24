@@ -71,8 +71,7 @@ class CreateProposal
             $seen = [$creator->id => true];
 
             foreach ($invitees as $spec) {
-                $actor = $spec['actor'] ?? null;
-                abort_unless($actor instanceof Actor, 422, 'Each Proposal party must be an Actor.');
+                $actor = $spec['actor'];
 
                 $party = Actor::query()->with('user')->lockForUpdate()->findOrFail($actor->id);
                 abort_if(isset($seen[$party->id]), 422, 'A Proposal cannot contain the same Actor twice.');
