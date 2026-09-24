@@ -22,12 +22,10 @@ use Illuminate\Support\Str;
 
 class CreateProposal
 {
-    public function __construct(private readonly ProposeTermsVersion $versions)
-    {
-    }
+    public function __construct(private readonly ProposeTermsVersion $versions) {}
 
     /**
-     * @param list<array{actor: Actor, role?: string, required?: bool}> $invitees
+     * @param  list<array{actor: Actor, role?: string, required?: bool}>  $invitees
      */
     public function execute(
         User $user,
