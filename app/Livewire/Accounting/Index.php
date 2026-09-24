@@ -77,7 +77,7 @@ class Index extends Component
         if ($this->ledgerUuid !== '') {
             abort_unless($ledgers->contains('uuid', $this->ledgerUuid), 404);
         } elseif ($ledgers->isNotEmpty()) {
-            $this->ledgerUuid = (string) $ledgers->first()?->uuid;
+            $this->ledgerUuid = (string) $ledgers->first()->uuid;
         }
     }
 
@@ -255,7 +255,7 @@ class Index extends Component
                 ->get();
 
             if ($this->accountUuid === '' && $assetAccounts->isNotEmpty()) {
-                $this->accountUuid = (string) $assetAccounts->first()?->uuid;
+                $this->accountUuid = (string) $assetAccounts->first()->uuid;
             }
         }
 
