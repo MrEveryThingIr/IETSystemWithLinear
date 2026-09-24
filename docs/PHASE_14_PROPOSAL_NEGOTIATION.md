@@ -28,6 +28,20 @@ npm audit: 0 vulnerabilities
 Composer audit: no advisories
 ~~~
 
+Documentation/manual closure checkpoint:
+
+~~~text
+SHA: f19684c1adad09e1801a666ddfb9e3cb73f53d84
+GitHub Actions: 36050118440
+477 tests / 2803 assertions
+PHPStan: clean
+Vite/migrations/scheduler/database-queue/backup: green
+npm audit: 0 vulnerabilities
+Composer audit: no advisories
+~~~
+
+The closure checkpoint adds the Phase-14 roadmap/manual/help/acceptance contract; runtime Proposal architecture remains the validated `a27a253` checkpoint.
+
 Baseline: Phase 13 integration merge `e3bf30dfd344939bd6d3ca939f5149133bff6f7a`.
 
 ## Purpose
