@@ -503,3 +503,94 @@ composer audit
 - [ ] cross-Context Assets/Evidence References are rejected.
 - [ ] Planner state is not Contract/payment/Fulfillment authority.
 - [ ] Timeline remains a projection, not a duplicated Planner transaction store.
+
+
+---
+
+## Checkpoint 13 — Personal Accounting v1
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-13-personal-accounting
+~~~
+
+Remote kernel checkpoint:
+
+~~~text
+SHA: 81f66c6934c39cbaad26d5363deaad9239777a75
+CI: 36041431006
+Result: 465 tests / 2669 assertions
+~~~
+
+Remote final runtime checkpoint:
+
+~~~text
+SHA: c5a45f7d4178637e322855e71318709610e835b8
+CI: 36042662030
+Result: 469 tests / 2714 assertions; Pint/PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_24_040000_create_accounting_kernel.php
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-13-personal-accounting
+git pull --ff-only origin feat/ideal-v1-13-personal-accounting
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/AccountingKernelTest.php \
+  tests/Feature/AccountingExperienceTest.php \
+  tests/Feature/ConversationTimelineExperienceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — Bob personal EUR
+
+- [ ] Open **Accounting** from the advanced sidebar.
+- [ ] Create **Bob personal EUR**.
+- [ ] Confirm the normal UI does not ask Bob to choose Debit or Credit.
+- [ ] Record Opening balance = EUR 1000.00 to Cash.
+- [ ] Record Expense = EUR 25.00, category **Work gloves**.
+- [ ] Record Income = EUR 100.00, category **Service income**.
+- [ ] Confirm monthly summary: Income EUR 100.00, Expense EUR 25.00, Net EUR 75.00.
+- [ ] Add Asset Account **Bank**.
+- [ ] Transfer EUR 200.00 Cash → Bank.
+- [ ] Confirm Cash EUR 875.00, Bank EUR 200.00, total assets EUR 1075.00.
+- [ ] Switch period summary to Day/Week/Month/Year and verify values derive from posted history.
+- [ ] Reverse the Work gloves entry.
+- [ ] Confirm the original entry remains visible/unchanged and a Reversal entry restores its effect.
+- [ ] Open the Personal Context Timeline and confirm Accounting activity appears with a source link.
+
+### Accounting integrity
+
+- [ ] Inspect one Journal Entry and confirm line debits equal line credits.
+- [ ] Confirm posted Journal Entries cannot be directly edited/deleted.
+- [ ] Confirm posted Journal Lines cannot be directly edited/deleted.
+- [ ] Confirm an Account from another Ledger cannot be used in the entry.
+- [ ] Confirm amounts use exact MonetaryUnit precision and round-trip through integer minor units.
+- [ ] Confirm a second Actor cannot select/open Bob's Ledger via URL/query parameter.
+
+### Authority boundary
+
+- [ ] Confirm Bob's personal expense/income does not create a Relationship financial obligation.
+- [ ] Confirm Planner occurrence completion does not auto-post Accounting.
+- [ ] Confirm Conversation text such as “paid” does not auto-post Accounting.
+- [ ] Confirm Content text does not auto-post Accounting.
+- [ ] Do not expect shared debt/invoice/settlement behavior until the explicit later Financial Obligation + Settlement phases.
