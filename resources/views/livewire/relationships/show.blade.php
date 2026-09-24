@@ -114,6 +114,9 @@
                             {{ __('collaboration.tabs.timeline') }}
                         </flux:button>
                         @if ($relationship->status === \App\RelationshipStatus::Active)
+                            <flux:button :href="route('proposals.create', ['relationship' => $relationship->uuid])" variant="ghost" class="w-full">
+                                {{ __('proposals.relationship_action') }}
+                            </flux:button>
                             <flux:button :href="route('planner.index', ['context' => $context->uuid])" variant="ghost" class="w-full">
                                 {{ __('planner.title') }}
                             </flux:button>

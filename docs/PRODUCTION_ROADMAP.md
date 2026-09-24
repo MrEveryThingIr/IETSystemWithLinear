@@ -518,6 +518,8 @@ Exit: normal users never need debit/credit terminology for routine entry, while 
 
 ## Phase 14 — Proposal + Negotiation
 
+**Status: remote runtime implementation complete and green on `feat/ideal-v1-14-proposal-negotiation` at `a27a2538161ff36d123eef1bd0f9d9c153298987` / GitHub Actions `36048778108` — 477 tests / 2799 assertions.**
+
 Purpose: turn a direct request or discovered opportunity into explicit proposed terms.
 
 Deliverables:

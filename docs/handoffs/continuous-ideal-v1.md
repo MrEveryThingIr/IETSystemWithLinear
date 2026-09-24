@@ -40,13 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 12 is integrated on `integration/ideal-v1` at merge checkpoint `6769b8632084f33a464145ae7501f2a4e88f5531`.
+Phase 13 is integrated on `integration/ideal-v1` at merge checkpoint `e3bf30dfd344939bd6d3ca939f5149133bff6f7a`.
 
-Phase 13 — Personal Accounting v1 — is remote-green on `feat/ideal-v1-13-personal-accounting` at final runtime checkpoint `c5a45f7d4178637e322855e71318709610e835b8` / CI `36042662030` (469 tests / 2714 assertions), pending integration.
+Phase 14 — Proposal + Negotiation — is runtime-green on `feat/ideal-v1-14-proposal-negotiation` at `a27a2538161ff36d123eef1bd0f9d9c153298987` / CI `36048778108` (477 tests / 2799 assertions), pending documentation closure/integration.
 
-After Phase 13 integration, continue directly with **Phase 14 — Proposal + Negotiation** from the integration trunk.
+After Phase 14 integration, continue directly with **Phase 15 — Contract, ContractVersion and explicit acceptance** from the integration trunk.
 
-Persistent Phase 13 boundary: Accounting v1 is Personal Context money truth. Relationship collaboration, Planner state, Conversation wording or Content prose does not create shared debt, obligation, invoice, settlement, ownership or payment truth. Those bridges require later explicit Financial Obligation + Settlement actions.
+Persistent Phase 14 boundary: Proposal acceptance means every required party accepted the same exact ProposalVersion. It is negotiation truth only and must not create Contract, Commitment, Fulfillment, ownership, Financial Obligation, Accounting posting, Settlement or payment truth. Phase 15 owns Contract authority.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 

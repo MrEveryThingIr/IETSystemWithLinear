@@ -28,6 +28,7 @@ class SystemManualContent
         'conversation-timeline' => '16. Conversation and Unified Timeline',
         'planner' => '17. Personal Activity and Planner',
         'accounting' => '18. Personal Accounting',
+        'proposals' => '19. Proposals and Negotiation',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -46,11 +47,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, and Personal Accounting with balanced immutable journal truth.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, and exact-version Proposal negotiation.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Negotiated Proposal/Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement bridges, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones.
+Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement bridges, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal + Negotiation is now implemented.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -354,7 +355,7 @@ TEXT,
 The long-term proof for IET is not “can it store many object types?” but “can real life flow through one connected system without losing authority or provenance?”
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner and Personal Accounting foundations exist. Realtime transport, generic Workflow, Domain Packs, direct Contract/Commitment/Fulfillment, matching, shared Financial Obligation/Settlement bridges, financial laboratory, discovery, pilots, and production release remain later roadmap work.
+Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner, Personal Accounting and Proposal/Negotiation foundations exist. Realtime transport, generic Workflow, Domain Packs, direct Contract/Commitment/Fulfillment, matching, shared Financial Obligation/Settlement bridges, financial laboratory, discovery, pilots, and production release remain later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity and Personal Accounting may record the Actor's own money history, but neither a Plan/Occurrence nor a personal Journal Entry nor prose in Content becomes shared Contract, payment, financial-obligation, Settlement, or Fulfillment-acceptance truth.
@@ -524,7 +525,7 @@ TEXT,
                     'current_behavior' => <<<'TEXT'
 The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, Phase 12 personal/Relationship Planner activity, and Phase 13 Bob Personal Accounting with opening balance, expense, income, transfer and reversal.
 
-Proposal/Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement, Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner and Personal Accounting are current implemented behavior.
+Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement, Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner, Personal Accounting and Proposal/Negotiation are current implemented behavior.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Run the story in this order.
@@ -618,12 +619,12 @@ TEXT,
                     'authorization' => <<<'TEXT'
 Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
 
-Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline, Planner and Personal Accounting are now implemented. When Proposal/Contract, Fulfillment or shared Financial Obligation/Settlement capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline, Planner, Personal Accounting and Proposal/Negotiation are now implemented. When Contract, Fulfillment or shared Financial Obligation/Settlement capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 The final Ideal-v1 browser story continues naturally:
 
-Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner (current), with Personal Accounting independently available today → Proposal → exact ContractVersion → Commitments linked to planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → explicit Accounting posting/Settlement bridge → Home/Today summaries.
+Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner → Proposal/Negotiation (current), with Personal Accounting independently available today → exact ContractVersion → Commitments linked to planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → explicit Accounting posting/Settlement bridge → Home/Today summaries.
 
 The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
 TEXT,
@@ -679,7 +680,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Conversation and source-linked Timeline now compose inside Relationship, Admission and GroupSpace Contexts without making messages authoritative. Realtime delivery remains future transport work.
 
-Planner now composes inside active Relationship Contexts. Personal Accounting is implemented separately in the Actor's Personal Context. Later phases progressively attach Proposal/Negotiation, Contract, Commitments, Fulfillment and explicit shared Financial Obligation/Settlement-to-Accounting bridges when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
+Planner composes inside active Relationship Contexts. Personal Accounting is implemented separately in the Actor's Personal Context. Proposal/Negotiation can now start directly or from an active Relationship while preserving a separate Negotiation Context. Later phases progressively attach Contract, Commitments, Fulfillment and explicit shared Financial Obligation/Settlement-to-Accounting bridges when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
 
 Multi-party creation, participant changes, broader people discovery and richer capability presentation may extend the same kernel without replacing its consent and authorization boundaries.
 TEXT,
@@ -701,7 +702,7 @@ Existing GroupSpace chat was migrated into this generic store; the former Group-
 
 A message may reference existing Assets from the same Context and exact Content Evidence References from the same Context. Those relationships reuse the original artifact/evidence identities rather than copying files or Content.
 
-Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, Personal Accounting Journal Entries, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
+Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, Personal Accounting Journal Entries, Proposal negotiation events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Relationship:
@@ -736,7 +737,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Later realtime delivery should publish committed database/domain events through an outbox/queue/authorized broadcast path. Realtime transport must remain replaceable: reloading from source truth should always reconstruct the same Conversation/Timeline state.
 
-Future domains such as Proposal, Contract, Fulfillment and Financial Obligation/Settlement can add their own source events to Timeline without turning Timeline into their authority. Planner already contributes Plan/Occurrence source events and Personal Accounting contributes Journal Entry sources this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
+Future domains such as Contract, Fulfillment and Financial Obligation/Settlement can add their own source events to Timeline without turning Timeline into their authority. Planner contributes Plan/Occurrence events, Personal Accounting contributes Journal Entries, and Proposal/Negotiation contributes Proposal Events this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 A message is not an authoritative action. Writing “I agree”, “approved”, “paid”, “accepted”, “I own 20%”, or similar text records only what a participant said.
@@ -880,6 +881,77 @@ Writing “paid” in Conversation or Content must not post Accounting.
 Reversing an entry does not delete history. The original remains, and a reversing Journal Entry records the correction path.
 
 Current balance and period summaries are derived from Journal Lines; they are not independently editable totals.
+TEXT,
+                ],
+                [
+                    'title' => '19. Proposals and Negotiation',
+                    'summary' => <<<'TEXT'
+A Proposal turns a direct request or opportunity into explicit proposed terms that named parties can negotiate against exact immutable versions before any Contract exists.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 14 provides Proposal, ProposalParty, ProposalVersion, ProposalDecision, ProposalEvent and a dedicated Negotiation Context.
+
+Each ProposalVersion points to one exact published/sealed Content revision containing the proposed terms. Proposal versions and party decisions are immutable history.
+
+A party may Accept, Reject or Request changes against the current exact version. Requesting changes does not mutate that version. Any current party may publish the next sealed version; the proposing party records Accepted for the version they proposed and every other required party must decide again.
+
+A Proposal becomes Accepted only when every required party has an Accepted decision for the same current version.
+
+Proposal may start directly or preserve an active Relationship as provenance. A sourced Proposal receives its own Negotiation Context rather than reusing Relationship Context authority.
+
+Negotiation Context composes Conversation, Content and Timeline. Conversation text has no acceptance authority. Terminal Proposal states make new negotiation interaction read-only.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Riverside example:
+1. Open **Proposals** and choose **New proposal**.
+2. Enter “Riverside construction collaboration”.
+3. Add Bob and Carol by verified username.
+4. Enter summary/terms and create the Proposal.
+5. Open the exact sealed current terms.
+6. Bob chooses **Accept this version**.
+7. Carol chooses **Request changes** and explains what needs clarification.
+8. Carol or another current party chooses **Propose revised terms**.
+9. Review version 2: old version-1 decisions remain visible but do not count.
+10. Alice explicitly accepts version 2.
+11. Bob explicitly accepts version 2.
+12. When every required party accepted version 2, status becomes **Accepted proposal**.
+13. Use Conversation for discussion and Timeline for source-linked negotiation history.
+
+Relationship-sourced flow:
+1. Open an active Relationship.
+2. Choose **Start proposal**.
+3. Active Relationship participants are prefilled.
+4. Create the Proposal and continue in its separate Negotiation Context.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Only active verified user-backed Actors may currently become Proposal parties.
+
+Only Proposal parties can view the Proposal and its Negotiation Context.
+
+Only current parties may participate or publish revised terms while status is Negotiating. A party may record only one decision for a given ProposalVersion.
+
+Only the Proposal creator may cancel an open Proposal.
+
+When sourced from a Relationship, every Proposal party must already be an active Relationship participant. Relationship access alone does not authorize the separate Proposal.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Phase 15 should allow an explicitly accepted ProposalVersion to become input to a separate Contract creation Action. Contract must have its own immutable ContractVersion, exact parties/roles, sealed terms reference, required-party acceptance, effective time, supersession and amendment semantics.
+
+Preserve the trace:
+Relationship/opportunity → ProposalVersion/decisions → ContractVersion/acceptances.
+
+Later Matching may hand a discovered opportunity into Proposal creation, and notification delivery may alert parties about pending decisions or requested changes.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+An Accepted Proposal is not a Contract.
+
+Typing “I accept” in Conversation is not Proposal acceptance. Use the explicit Accept action.
+
+Accepting version 1 does not accept version 2. Every required party must decide again for the new exact version.
+
+Request changes does not edit existing terms. The next terms must be published as a new ProposalVersion.
+
+Proposal acceptance does not create Commitment, Fulfillment, employment, ownership, Financial Obligation, Accounting posting, Settlement or payment.
 TEXT,
                 ],
             ],

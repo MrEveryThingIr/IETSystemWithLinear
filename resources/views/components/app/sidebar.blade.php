@@ -18,6 +18,9 @@
             <flux:sidebar.item :href="route('relationships.index')" :current="request()->routeIs('relationships.*')" icon="link">
                 {{ __('relationships.title') }}
             </flux:sidebar.item>
+            <flux:sidebar.item :href="route('proposals.index')" :current="request()->routeIs('proposals.*')" icon="document-text">
+                {{ __('proposals.title') }}
+            </flux:sidebar.item>
             <flux:sidebar.item :href="route('planner.index')" :current="request()->routeIs('planner.*')" icon="calendar-days">
                 {{ __('planner.title') }}
             </flux:sidebar.item>

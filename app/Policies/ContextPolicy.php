@@ -7,6 +7,7 @@ use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\Context;
 use App\Models\GroupSpace;
+use App\Models\Proposal;
 use App\Models\ReferenceContext;
 use App\Models\Relationship;
 use App\Models\User;
@@ -17,6 +18,7 @@ class ContextPolicy
         private readonly GroupSpacePolicy $spaces,
         private readonly GroupPolicy $groups,
         private readonly RelationshipPolicy $relationships,
+        private readonly ProposalPolicy $proposals,
     ) {}
 
     public function view(User $user, Context $context): bool
@@ -35,6 +37,8 @@ class ContextPolicy
                 && $this->canViewAdmissionContext($current, $admission),
             ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
                 && $this->relationships->view($current, $relationship),
+            ContextKind::Negotiation => ($proposal = $this->proposal($context)) instanceof Proposal
+                && $this->proposals->view($current, $proposal),
             ContextKind::Reference => $this->reference($context) instanceof ReferenceContext,
         };
     }
@@ -56,6 +60,8 @@ class ContextPolicy
                 && $this->canViewAdmissionContext($current, $admission),
             ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
                 && $this->relationships->participate($current, $relationship),
+            ContextKind::Negotiation => ($proposal = $this->proposal($context)) instanceof Proposal
+                && $this->proposals->participate($current, $proposal),
             ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
@@ -85,6 +91,7 @@ class ContextPolicy
                 && $this->isAdmissionReviewer($current, $admission),
             ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
                 && $this->relationships->manage($current, $relationship),
+            ContextKind::Negotiation => false,
             ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
@@ -106,6 +113,7 @@ class ContextPolicy
                 && $this->isAdmissionReviewer($current, $admission),
             ContextKind::Relationship => ($relationship = $this->relationship($context)) instanceof Relationship
                 && $this->relationships->manage($current, $relationship),
+            ContextKind::Negotiation => false,
             ContextKind::Reference => $this->isReferenceManager($current, $context),
         };
     }
@@ -174,6 +182,13 @@ class ContextPolicy
         $context->loadMissing('relationshipBinding.relationship');
 
         return $context->relationshipBinding?->relationship;
+    }
+
+    private function proposal(Context $context): ?Proposal
+    {
+        $context->loadMissing('proposalBinding.proposal');
+
+        return $context->proposalBinding?->proposal;
     }
 
     private function reference(Context $context): ?ReferenceContext

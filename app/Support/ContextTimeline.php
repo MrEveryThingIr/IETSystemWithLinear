@@ -8,6 +8,7 @@ use App\Models\ConversationMessage;
 use App\Models\JournalEntry;
 use App\Models\PlanEvent;
 use App\Models\PlanOccurrenceEvent;
+use App\Models\ProposalEvent;
 use App\Models\RelationshipEvent;
 use App\Models\SpaceContentLifecycleEvent;
 use App\Models\User;
@@ -136,9 +137,31 @@ class ContextTimeline
             });
 
         $context->loadMissing([
+            'proposalBinding.proposal',
             'relationshipBinding.relationship',
             'admissionBinding.admission',
         ]);
+
+        $proposal = $context->proposalBinding?->proposal;
+        if ($proposal !== null) {
+            ProposalEvent::query()
+                ->with('actor.user')
+                ->where('proposal_id', $proposal->id)
+                ->latest('id')
+                ->limit($limit)
+                ->get()
+                ->each(function (ProposalEvent $event) use ($proposal, $entries): void {
+                    $entries->push(new TimelineEntry(
+                        key: 'proposal-event:'.$event->uuid,
+                        kind: 'proposal',
+                        title: (string) __('proposals.events.'.$event->event_type->value),
+                        summary: $proposal->title,
+                        occurredAt: $event->created_at ?? now(),
+                        actor: $event->actor,
+                        url: route('proposals.show', $proposal),
+                    ));
+                });
+        }
 
         $relationship = $context->relationshipBinding?->relationship;
         if ($relationship !== null) {

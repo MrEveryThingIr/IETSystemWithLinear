@@ -8,5 +8,6 @@ enum ContextKind: string
     case GroupSpace = 'group_space';
     case Admission = 'admission';
     case Relationship = 'relationship';
+    case Negotiation = 'negotiation';
     case Reference = 'reference';
 }

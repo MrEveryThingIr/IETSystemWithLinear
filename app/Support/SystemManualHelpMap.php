@@ -24,6 +24,10 @@ class SystemManualHelpMap
             return 'accounting';
         }
 
+        if (str_starts_with($routeName, 'proposals.')) {
+            return 'proposals';
+        }
+
         if (str_starts_with($routeName, 'profile.')
             || str_starts_with($routeName, 'intents.')) {
             return 'profile-concepts';
