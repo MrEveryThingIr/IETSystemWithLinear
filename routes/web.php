@@ -55,6 +55,9 @@ use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Planner\Show as PlannerShow;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Livewire\Platform\AccessInvitations;
+use App\Livewire\Proposals\Create as ProposalCreate;
+use App\Livewire\Proposals\Index as ProposalIndex;
+use App\Livewire\Proposals\Show as ProposalShow;
 use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
 use App\Livewire\Profile\Show as ProfileShow;
@@ -63,6 +66,7 @@ use App\Livewire\Relationships\Index as RelationshipIndex;
 use App\Livewire\Relationships\Show as RelationshipShow;
 use App\Models\Actor;
 use App\Models\Group;
+use App\Models\Proposal;
 use App\Models\Relationship;
 use Illuminate\Support\Facades\Route;
 
@@ -99,6 +103,9 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
     Route::livewire('/relationships/create', RelationshipCreate::class)->can('create', Relationship::class)->name('relationships.create');
     Route::livewire('/relationships/{relationship}', RelationshipShow::class)->can('view', 'relationship')->name('relationships.show');
+    Route::livewire('/proposals', ProposalIndex::class)->can('viewAny', Proposal::class)->name('proposals.index');
+    Route::livewire('/proposals/create', ProposalCreate::class)->can('create', Proposal::class)->name('proposals.create');
+    Route::livewire('/proposals/{proposal}', ProposalShow::class)->can('view', 'proposal')->name('proposals.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/create', PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
