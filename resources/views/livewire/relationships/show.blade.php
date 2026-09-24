@@ -14,6 +14,11 @@
                 <flux:button :href="route('contexts.timeline', $context)" variant="ghost">
                     {{ __('collaboration.tabs.timeline') }}
                 </flux:button>
+                @if ($relationship->status === AppRelationshipStatus::Active)
+                    <flux:button :href="route('planner.index', ['context' => $context->uuid])" variant="ghost">
+                        {{ __('planner.title') }}
+                    </flux:button>
+                @endif
                 <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
                     {{ __('collaboration.tabs.content') }}
                 </flux:button>
@@ -108,6 +113,11 @@
                         <flux:button :href="route('contexts.timeline', $context)" variant="ghost" class="w-full">
                             {{ __('collaboration.tabs.timeline') }}
                         </flux:button>
+                        @if ($relationship->status === AppRelationshipStatus::Active)
+                            <flux:button :href="route('planner.index', ['context' => $context->uuid])" variant="ghost" class="w-full">
+                                {{ __('planner.title') }}
+                            </flux:button>
+                        @endif
                         <flux:button :href="route('contexts.contents.index', $context)" variant="ghost" class="w-full">
                             {{ __('collaboration.tabs.content') }}
                         </flux:button>
