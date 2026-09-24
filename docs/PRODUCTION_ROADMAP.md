@@ -469,6 +469,8 @@ Exit: a reload reconstructs the same conversation/timeline state; “I agree” 
 
 ## Phase 12 — Personal Activity / Planner
 
+**Status: remote implementation complete and green on `feat/ideal-v1-12-personal-activity-planner` at `8d9f5690ba73daf0f73e03d86981d076ade1cd4e` / GitHub Actions `36037941878` — 458 tests / 2615 assertions.**
+
 Purpose: support everyday one-time and recurring activity for personal and collaborative life.
 
 Deliverables:

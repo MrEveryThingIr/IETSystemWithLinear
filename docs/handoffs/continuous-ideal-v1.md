@@ -40,13 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 10 is integrated on `integration/ideal-v1` at merge checkpoint `1ea4e1d84dedf0f666fcc3818ac75d7b21f5abb9`.
+Phase 11 is integrated on `integration/ideal-v1` at merge checkpoint `912d057c917532c183a7d45f405efe25e4674555`.
 
-Phase 11 — Conversation + Unified Timeline — is remote-green on `feat/ideal-v1-11-conversation-timeline` at runtime checkpoint `6dcd43a056290730eaab608b6291a96ce8ff4b62` / CI `36030315938` (448 tests / 2533 assertions).
+Phase 12 — Personal Activity / Planner — is remote-green on `feat/ideal-v1-12-personal-activity-planner` at final runtime checkpoint `8d9f5690ba73daf0f73e03d86981d076ade1cd4e` / CI `36037941878` (458 tests / 2615 assertions), pending integration.
 
-After Phase 11 integration, continue directly with **Phase 12 — Personal Activity / Planner** from the integration trunk.
+After Phase 12 integration, continue directly with **Phase 13 — Personal Accounting v1** from the integration trunk.
 
-Persistent Phase 11 boundary: Conversation is immutable collaboration evidence; Timeline is a projection; neither may become a substitute for authoritative domain Actions/events.
+Persistent Phase 12 boundary: Planner is scheduling/execution truth, not Contract, employment, ownership, financial obligation, Fulfillment acceptance or payment truth. Reminder rows are only the delivery seam until the later notifications phase.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 

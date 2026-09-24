@@ -407,3 +407,99 @@ Continue with the same Alice/Bob/Carol/Diego objects.
 - [ ] message text cannot perform authoritative acceptance/approval/payment;
 - [ ] message references do not copy Assets/Content;
 - [ ] Timeline does not leak Content the viewer cannot read.
+
+
+---
+
+## Checkpoint 12 — Personal Activity / Planner
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-12-personal-activity-planner
+~~~
+
+Remote kernel checkpoint:
+
+~~~text
+SHA: 84dfcf76aca7a3a2df1b9c4c955fde82eb14a06a
+CI: 36035381347
+Result: 454 tests / 2581 assertions
+~~~
+
+Remote final runtime checkpoint:
+
+~~~text
+SHA: 8d9f5690ba73daf0f73e03d86981d076ade1cd4e
+CI: 36037941878
+Result: 458 tests / 2615 assertions; Pint/PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_24_030000_create_planner_kernel.php
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-12-personal-activity-planner
+git pull --ff-only origin feat/ideal-v1-12-personal-activity-planner
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/PlannerKernelTest.php \
+  tests/Feature/PlannerExperienceTest.php \
+  tests/Feature/ConversationTimelineExperienceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — Bob personal planning
+
+- [ ] Open **Planner** from the advanced sidebar.
+- [ ] Create **Dentist appointment** in Bob's Personal Context for one date/time with reminder offsets.
+- [ ] Confirm it appears in **Today**, **List** and the correct **Calendar** day.
+- [ ] Create a recurring **Study session** and confirm local clock time remains stable across the Europe/Berlin DST boundary.
+- [ ] Open the Plan detail and confirm timezone, participants, rules/reminders and materialized occurrences are understandable.
+- [ ] Start an occurrence and confirm actual start time is recorded separately from scheduled time.
+- [ ] Complete it later and confirm actual end/completion time is preserved.
+- [ ] Attach an existing Personal-Context Asset and exact Evidence Reference; confirm the original artifacts are reused, not copied.
+- [ ] Open the Context Timeline and confirm Plan/Occurrence events appear with source links.
+
+### Browser story — Alice ↔ Bob Riverside workdays
+
+- [ ] Open the active Alice ↔ Bob Relationship.
+- [ ] Choose **Planner**.
+- [ ] Create **Riverside selected workdays** for 2026-09-25, 2026-09-27 and 2026-10-02 at 08:00 for 540 minutes.
+- [ ] Confirm Bob is included from active Relationship participation with his explicit role.
+- [ ] Confirm the Plan records Relationship provenance.
+- [ ] Confirm the Relationship status/events remain unchanged.
+- [ ] Confirm no Group Membership, Proposal, Contract, employment, ownership, obligation, Fulfillment acceptance, accounting entry or payment is created by scheduling.
+- [ ] Bob can view/participate; an unrelated Actor cannot open the private Relationship Plan.
+- [ ] Start/complete one work occurrence and attach same-Context evidence.
+- [ ] Confirm the unified Relationship Timeline includes the Planner source events.
+
+### Reminder seam
+
+- [ ] Confirm reminder offsets are stored on the Plan/Schedule Rule.
+- [ ] Do not expect push/email/realtime delivery yet; that belongs to Phase 22.
+- [ ] Run `php artisan planner:materialize --days=120` locally and confirm recurring horizons extend idempotently.
+
+### Negative guarantees
+
+- [ ] Schedule Rules cannot be silently edited in place; cancel/replace preserves provenance.
+- [ ] Occurrence scheduled/provenance fields cannot be mutated directly.
+- [ ] cross-Context Assets/Evidence References are rejected.
+- [ ] Planner state is not Contract/payment/Fulfillment authority.
+- [ ] Timeline remains a projection, not a duplicated Planner transaction store.
