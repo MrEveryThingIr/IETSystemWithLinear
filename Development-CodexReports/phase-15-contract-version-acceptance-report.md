@@ -8,7 +8,7 @@ Phase 15 runtime is remotely complete.
 - Baseline: `dfdfd33c99db57e36f11591fd9a84a1c32cbb333`
 - Kernel checkpoint: `cd39e8861844b598e3e9fe81f659b93648e7c4b5` / CI `36054184003` — 483 tests / 2869 assertions
 - Final runtime/UI checkpoint: `df63697b3734bc3a8dfe1b70f58655d4b2c9da72` / CI `36055829092` — 487 tests / 2903 assertions
-- Documentation closure checkpoint: pending closure CI
+- Documentation closure checkpoint: `188e55f494d728b4e3cb7867385ce1320567f831` / CI `36056881847` — 487 tests / 2907 assertions
 - Local/browser/mobile/RTL/accessibility acceptance: deferred cumulatively
 
 ## Authority result

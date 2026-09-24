@@ -42,7 +42,7 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 Phase 14 is integrated on `integration/ideal-v1` at merge checkpoint `dfdfd33c99db57e36f11591fd9a84a1c32cbb333`.
 
-Phase 15 — Contract, ContractVersion and explicit acceptance — is runtime-green on `feat/ideal-v1-15-contract-version-acceptance` at `df63697b3734bc3a8dfe1b70f58655d4b2c9da72` / CI `36055829092` (487 tests / 2903 assertions), pending documentation closure/integration.
+Phase 15 — Contract, ContractVersion and explicit acceptance — is closure-green on `feat/ideal-v1-15-contract-version-acceptance` at `188e55f494d728b4e3cb7867385ce1320567f831` / CI `36056881847` (487 tests / 2907 assertions), pending integration.
 
 After Phase 15 integration, continue directly with **Phase 16 — Commitment + Fulfillment** from the integration trunk.
 
