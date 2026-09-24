@@ -4,7 +4,6 @@ namespace App\Actions\Contracts;
 
 use App\ContractEventType;
 use App\Models\Actor;
-use App\Models\Contract;
 use App\Models\ContractAcceptance;
 use App\Models\ContractEvent;
 use App\Models\ContractVersion;
@@ -15,7 +14,9 @@ use Illuminate\Support\Facades\Gate;
 
 class AcceptContractVersion
 {
-    public function __construct(private readonly FinalizeContractVersionAcceptance $finalize) {}
+    public function __construct(
+        private readonly FinalizeContractVersionAcceptance $finalize,
+    ) {}
 
     public function execute(ContractVersion $version, User $user): ContractAcceptance
     {
