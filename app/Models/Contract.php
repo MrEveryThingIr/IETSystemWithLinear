@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\ContractStatus;
+use App\ContractVersionStatus;
 use Database\Factories\ContractFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -102,7 +103,7 @@ class Contract extends Model
     public function activeVersionRecord(): ?ContractVersion
     {
         return $this->versions()
-            ->where('status', \App\ContractVersionStatus::Active->value)
+            ->where('status', ContractVersionStatus::Active->value)
             ->first();
     }
 
@@ -110,8 +111,8 @@ class Contract extends Model
     {
         return $this->versions()
             ->whereIn('status', [
-                \App\ContractVersionStatus::Proposed->value,
-                \App\ContractVersionStatus::Accepted->value,
+                ContractVersionStatus::Proposed->value,
+                ContractVersionStatus::Accepted->value,
             ])
             ->latest('version')
             ->first();
