@@ -7,7 +7,7 @@
         </x-slot:actions>
     </x-app.page-header>
 
-    @if ($proposal->status === AppProposalStatus::Accepted)
+    @if ($proposal->status->value === 'accepted')
         @php($derivedContract = $currentVersion->derivedContract)
         <flux:callout>
             <div class="flex flex-wrap items-center justify-between gap-3">
