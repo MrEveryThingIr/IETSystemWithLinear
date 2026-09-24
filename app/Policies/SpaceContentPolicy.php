@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Actor;
+use App\Models\ContentPlacement;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
@@ -19,9 +20,7 @@ class SpaceContentPolicy
     {
         $content->loadMissing('context');
 
-        if (! $this->contexts->view($user, $content->context)) {
-            return false;
-        }
+        $sourceVisible = $this->contexts->view($user, $content->context);
 
         if ($content->status === 'published') {
             $revision = $content->activeRevisionRecord();
@@ -29,10 +28,14 @@ class SpaceContentPolicy
                 return false;
             }
 
-            return $revision->hasVerifiableManifest() || $this->canReadPrivate($user, $content);
+            if ($revision->hasVerifiableManifest()) {
+                return $sourceVisible || $this->canReadThroughPlacement($user, $content);
+            }
+
+            return $sourceVisible && $this->canReadPrivate($user, $content);
         }
 
-        return $this->canReadPrivate($user, $content);
+        return $sourceVisible && $this->canReadPrivate($user, $content);
     }
 
     public function create(User $user, GroupSpace $space): bool
@@ -78,6 +81,15 @@ class SpaceContentPolicy
     public function revisions(User $user, SpaceContent $content): bool
     {
         return $this->canReadPrivate($user, $content);
+    }
+
+    private function canReadThroughPlacement(User $user, SpaceContent $content): bool
+    {
+        return $content->placements()
+            ->where('status', ContentPlacement::STATUS_ACTIVE)
+            ->with('context')
+            ->get()
+            ->contains(fn (ContentPlacement $placement): bool => $this->contexts->view($user, $placement->context));
     }
 
     private function canReadPrivate(User $user, SpaceContent $content): bool

@@ -40,7 +40,9 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Close foundation F0 remotely, then begin the revised roadmap in `docs/PRODUCTION_ROADMAP.md`.
+Phase 9 — Published Content Library and reference/placement semantics — is remote-green at `fdb7c1cbfbe1a81c284c67df79a71b0e5ee3074a` / CI `36020336046` and is the current integration checkpoint.
+
+After Phase 9 integration, continue directly with **Phase 10 — Relationship + Relationship Context** from the integration trunk.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 

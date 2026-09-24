@@ -169,24 +169,30 @@ One Content kernel powers Personal, GroupSpace, Admission and Reference Content.
 
 Blueprint identities and versions are durable. Creating from a Blueprint creates normal independently versioned Content.
 
-A Content item has a home Context for authoring/authorization. Published Content and exact published revisions/blocks can be referenced from other authorized surfaces; this does not require separate Post/Article/Album tables per Group or future Relationship.
+A Content item has a home Context for authoring/authorization. The published Content Library shows only sealed published Content the current viewer is authorized to read and supports search, Blueprint/type and semantic Concept filtering.
+
+“Present elsewhere” creates a ContentPlacement that exposes the same published Content identity through another Context; it does not copy or move the artifact. Normal placement follows the current published revision. Exact Evidence References remain pinned to the historical sealed revision/field/block/Asset/relationship they identify.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 For ordinary authoring, choose the closest human purpose instead of creating a raw Definition.
 
 Example: Alice wants to document Riverside Lot. Choose an Article or Report when the artifact is explanatory, or Media Album when the main purpose is photos. Enter the essential fields in Quick creation, then open Studio only if blocks, media, appearance, outline, revisions or publication are needed.
 
-After publication, reuse that Content by reference. Do not recreate the same article merely because Maple Housing Office later wants to present it.
+After publication, open **Content Library**. Use Search, Content type and Concept filters to find the artifact. If you can both read its home Context and manage Content in the destination Context, choose **Present elsewhere**, select the target Context, then choose **Present Content**. The destination presents the existing artifact; it does not receive a clone.
+
+Use the normal Content/placement when the meaning is “show the current published artifact”. Use an exact edition permalink or Evidence Reference when history must not drift.
 
 Type/purpose answers “what kind of artifact is this?” Concepts/categories answer “what is it about?”. Keep those dimensions separate.
 TEXT,
                     'authorization' => <<<'TEXT'
 Creating Content requires create authority in the Context. Advanced Definition/structure management requires stronger permissions. Blueprint visibility is filtered by Context compatibility and access.
+
+Creating a placement requires both independent read authority for the source/home Context and Content-management authority for the target Context. The target audience receives read access to the published artifact through that target only. Placement does not grant source Context visibility, Studio/edit/revision authority, interaction authority, or permission to reshare transitively.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-The published Content Library should show only viewer-authorized published Content and provide clear filters by purpose/type (Post, Article, Book, Diary, Album, Lesson, Report, Evidence, Questionnaire), semantic Concepts, origin Context, author, language and time where useful.
+The Library should continue toward richer origin-Context, author, language and date filtering, saved/discovery views, and a compact permission-aware ⋮ action menu. Viewer actions may include open/copy reference/evidence citation/present elsewhere; editor actions may additionally include edit/new revision/blocks/media/appearance/relationships/publication/archive.
 
-Each card/page should expose a permission-aware ⋮ menu. Viewer actions may include open/copy reference/evidence citation/present elsewhere; editor actions may additionally include edit/new revision/blocks/media/appearance/relationships/publication/archive.
+A later cross-party workflow may support requesting or approving presentation when no single actor holds both source-read and target-management authority; it must not weaken the current authorization boundary.
 
 Content remains one kernel. Contexts compose it rather than duplicating it.
 TEXT,
@@ -512,7 +518,7 @@ TEXT,
 This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, independent Content/Context usage, and Phase 7 structured Submission/Response/Evaluation.
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, and Phase 7 structured Submission/Response/Evaluation.
 
 Relationship, Conversation/Timeline, Planner, Accounting, Proposal/Contract/Commitment/Fulfillment, Matching and AI are roadmap steps and must be labelled as future until their milestone is remotely integrated.
 TEXT,
@@ -567,12 +573,14 @@ Run the story in this order.
    - Confirm an unknown/new email is rejected by the Group-invitation creation flow.
    - Complete only explicit Admission/Agreement/Membership actions required by the configured Group flow.
 
-9. Content
-   - In an authorized Context create an Article/Report/Album through the closest Blueprint.
-   - Open Studio only for fields/blocks/media/appearance/outline.
-   - Publish.
-   - Use normal Content navigation for the current artifact.
-   - Use an exact edition/evidence reference when historical identity matters.
+9. Content Library / placement / exact evidence
+   - Alice creates an Article/Report/Album through the closest Blueprint in an authorized home Context and publishes it.
+   - Open **Content Library**; confirm drafts are absent, then use Search, Content type and Concept filters.
+   - For the cross-Context proof, use an actor who independently can read the source/home Context and manage Content in Maple Housing Office. Choose **Present elsewhere**, select the target Context, then choose **Present Content**.
+   - From Bob's target-authorized session, open the presented artifact. Confirm Bob did not gain source Context, Studio, edit or revision authority and cannot transitively reshare it.
+   - Create/use an exact edition or Evidence Reference for the current revision/block.
+   - Publish a newer source edition. Confirm the normal placement follows the newest publication while the exact Evidence Reference still resolves the older sealed target.
+   - Remove the placement and confirm Bob's target-only access disappears; presenting it again should reactivate the same placement identity rather than duplicate provenance.
 
 10. Structured interaction
    - Start a configured interaction.

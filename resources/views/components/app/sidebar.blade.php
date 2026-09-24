@@ -15,6 +15,9 @@
             {{ __('ui.navigation.profile') }}
         </flux:sidebar.item>
         @unless ($officeAlpha)
+            <flux:sidebar.item :href="route('content.library')" :current="request()->routeIs('content.library')" icon="rectangle-stack">
+                {{ __('library.title') }}
+            </flux:sidebar.item>
             <flux:sidebar.item :href="route('groups.index')" :current="request()->routeIs('groups.*')" icon="users">
                 {{ __('ui.navigation.groups') }}
             </flux:sidebar.item>

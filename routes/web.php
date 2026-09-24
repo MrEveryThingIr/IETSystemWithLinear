@@ -26,6 +26,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Content\Library as ContentLibrary;
 use App\Livewire\Contexts\ContentAppearance as ContextContentAppearance;
 use App\Livewire\Contexts\ContentBlocks as ContextContentBlocks;
 use App\Livewire\Contexts\ContentIndex as ContextContentIndex;
@@ -83,6 +84,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
+    Route::livewire('/library', ContentLibrary::class)->name('content.library');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
     Route::get('/manual', SystemManualController::class)->name('manual');
     Route::get('/admissions/{admission}/content', AdmissionContextContentController::class)->name('admissions.context.contents');

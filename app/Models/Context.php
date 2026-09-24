@@ -83,6 +83,12 @@ class Context extends Model
         return $this->hasMany(SpaceContent::class);
     }
 
+    /** @return HasMany<ContentPlacement, $this> */
+    public function contentPlacements(): HasMany
+    {
+        return $this->hasMany(ContentPlacement::class);
+    }
+
     /** @return HasMany<SpaceContentRenderTemplate, $this> */
     public function renderTemplates(): HasMany
     {

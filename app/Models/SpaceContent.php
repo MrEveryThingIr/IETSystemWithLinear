@@ -181,6 +181,12 @@ class SpaceContent extends Model
         return $this->hasMany(SpaceContentRevision::class, 'space_content_id');
     }
 
+    /** @return HasMany<ContentPlacement, $this> */
+    public function placements(): HasMany
+    {
+        return $this->hasMany(ContentPlacement::class, 'space_content_id');
+    }
+
     /** @return HasMany<SpaceContentLifecycleEvent, $this> */
     public function lifecycleEvents(): HasMany
     {

@@ -17,6 +17,7 @@ use App\Models\AgreementEvent;
 use App\Models\ContentBlueprint;
 use App\Models\ContentBlueprintVersion;
 use App\Models\ContentEvidenceReference;
+use App\Models\ContentPlacement;
 use App\Models\Context;
 use App\Models\Group;
 use App\Models\GroupAgreement;
@@ -63,6 +64,7 @@ class ModelFactoryTest extends TestCase
             ContentBlueprint::factory()->create(),
             ContentBlueprintVersion::factory()->create(),
             ContentEvidenceReference::factory()->create(),
+            ContentPlacement::factory()->create(),
             PersonalContext::factory()->create(),
             GroupSpaceContext::factory()->create(),
             AdmissionContext::factory()->create(),
@@ -120,6 +122,7 @@ class ModelFactoryTest extends TestCase
         $this->assertSame('manager', GroupSpaceParticipant::factory()->manager()->create()->role);
         $this->assertSame('active', SpaceContentDefinition::factory()->active()->create()->status);
         $this->assertSame('archived', SpaceContent::factory()->archived()->create()->status);
+        $this->assertSame('removed', ContentPlacement::factory()->removed()->create()->status);
         $this->assertNotNull(PlatformAccessGrant::factory()->revoked()->create()->revoked_at);
         $this->assertNotNull(ActorProfileDisclosureGrant::factory()->revoked()->create()->revoked_at);
         $this->assertFalse(ActorProfileDisclosureGrant::factory()->expired()->create()->isActive());
