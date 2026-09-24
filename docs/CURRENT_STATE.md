@@ -671,12 +671,12 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 12 — Personal Activity / Planner** is remotely complete on final runtime checkpoint `8d9f5690ba73daf0f73e03d86981d076ade1cd4e` / CI `36037941878` (458 tests / 2615 assertions).
+**Phase 13 — Personal Accounting v1** is remotely complete on final runtime checkpoint `c5a45f7d4178637e322855e71318709610e835b8` / CI `36042662030` (469 tests / 2714 assertions).
 
-It adds one Context-scoped Planner for Personal, GroupSpace and active Relationship activity: Plan, Participant, immutable Schedule Rules, materialized Occurrences, actual execution time, same-Context evidence, durable reminder offsets, Today/List/Calendar views and Planner source events in the unified Timeline.
+It adds Personal-Context MonetaryUnit/Ledger/Account/JournalEntry/JournalLine accounting with integer minor units, enforced balanced double-entry, immutable posted history, reversal/correction, derived balances, day/week/month/year Income/Expense/Net summaries, plain Opening balance / Expense / Income / Transfer actions, and source-linked Accounting entries in the unified Timeline.
 
-Relationship-sourced planning preserves provenance and participants without changing Relationship lifecycle or creating Group Membership, Contract, ownership, obligation, Fulfillment acceptance or payment authority. Reminder delivery remains deferred to Realtime + Notifications.
+Personal Accounting v1 is deliberately not a shared/Relationship obligation system. Relationship/Contract money becomes authoritative only through later Financial Obligation + Settlement phases.
 
-Next after integration: **Phase 13 — Personal Accounting v1**.
+Next after integration: **Phase 14 — Proposal + Negotiation**.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

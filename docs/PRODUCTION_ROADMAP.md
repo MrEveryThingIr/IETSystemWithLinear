@@ -491,6 +491,8 @@ Exit: one planner supports personal and relationship-sourced activity without be
 
 ## Phase 13 — Personal Accounting v1
 
+**Status: remote implementation complete and green on `feat/ideal-v1-13-personal-accounting` at `c5a45f7d4178637e322855e71318709610e835b8` / GitHub Actions `36042662030` — 469 tests / 2714 assertions.**
+
 Purpose: give immediate everyday money tracking with rigorous accounting underneath.
 
 Friendly actions:

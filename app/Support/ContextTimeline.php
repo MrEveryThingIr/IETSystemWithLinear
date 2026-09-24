@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\AdmissionEvent;
 use App\Models\Context;
 use App\Models\ConversationMessage;
+use App\Models\JournalEntry;
 use App\Models\PlanEvent;
 use App\Models\PlanOccurrenceEvent;
 use App\Models\RelationshipEvent;
@@ -39,6 +40,34 @@ class ContextTimeline
                     occurredAt: $message->created_at ?? now(),
                     actor: $message->author,
                     url: route('contexts.conversation', $context).'#message-'.$message->uuid,
+                ));
+            });
+
+        JournalEntry::query()
+            ->with(['ledger', 'creator.user'])
+            ->whereHas('ledger', fn ($query) => $query->where('context_id', $context->id))
+            ->latest('posted_at')
+            ->limit($limit)
+            ->get()
+            ->each(function (JournalEntry $entry) use ($entries, $user): void {
+                if (! Gate::forUser($user)->allows('view', $entry->ledger)) {
+                    return;
+                }
+
+                $kind = (string) __('accounting.entry_kind.'.$entry->kind->value);
+                $description = $entry->description ?: $kind;
+
+                $entries->push(new TimelineEntry(
+                    key: 'journal-entry:'.$entry->uuid,
+                    kind: 'accounting',
+                    title: (string) __('accounting.timeline.entry', [
+                        'kind' => $kind,
+                        'description' => $description,
+                    ]),
+                    summary: $entry->description,
+                    occurredAt: $entry->posted_at ?? $entry->created_at ?? now(),
+                    actor: $entry->creator,
+                    url: route('accounting.index', ['ledger' => $entry->ledger->uuid]).'#entry-'.$entry->uuid,
                 ));
             });
 

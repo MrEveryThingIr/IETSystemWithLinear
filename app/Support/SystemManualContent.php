@@ -27,6 +27,7 @@ class SystemManualContent
         'relationships' => '15. Relationships and Direct Collaboration',
         'conversation-timeline' => '16. Conversation and Unified Timeline',
         'planner' => '17. Personal Activity and Planner',
+        'accounting' => '18. Personal Accounting',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -45,11 +46,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, and a timezone-aware Planner with durable schedules/occurrences.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, and Personal Accounting with balanced immutable journal truth.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Accounting, negotiated Proposal/Contract/Commitment/Fulfillment, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones.
+Negotiated Proposal/Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement bridges, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -353,10 +354,10 @@ TEXT,
 The long-term proof for IET is not “can it store many object types?” but “can real life flow through one connected system without losing authority or provenance?”
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline and Planner foundations exist. Realtime transport, generic Workflow, Domain Packs, direct Contract/Commitment/Fulfillment, matching, Accounting, financial laboratory, discovery, pilots, and production release remain later roadmap work.
+Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner and Personal Accounting foundations exist. Realtime transport, generic Workflow, Domain Packs, direct Contract/Commitment/Fulfillment, matching, shared Financial Obligation/Settlement bridges, financial laboratory, discovery, pilots, and production release remain later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity, but do not treat a Plan/Occurrence—or prose in Content—as future Contract, payment, financial-obligation, or Fulfillment-acceptance truth.
+Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity and Personal Accounting may record the Actor's own money history, but neither a Plan/Occurrence nor a personal Journal Entry nor prose in Content becomes shared Contract, payment, financial-obligation, Settlement, or Fulfillment-acceptance truth.
 
 When a real use case exposes friction, annotate the relevant manual/system Content precisely. That feedback should influence the next official documentation edition and, when appropriate, the product roadmap.
 TEXT,
@@ -521,9 +522,9 @@ TEXT,
 This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, and Phase 12 personal/Relationship Planner activity.
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, Phase 12 personal/Relationship Planner activity, and Phase 13 Bob Personal Accounting with opening balance, expense, income, transfer and reversal.
 
-Accounting, Proposal/Contract/Commitment/Fulfillment, Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner is current implemented behavior.
+Proposal/Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement, Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner and Personal Accounting are current implemented behavior.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Run the story in this order.
@@ -617,12 +618,12 @@ TEXT,
                     'authorization' => <<<'TEXT'
 Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
 
-Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline and Planner are now implemented. When Accounting, Proposal/Contract or Fulfillment capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline, Planner and Personal Accounting are now implemented. When Proposal/Contract, Fulfillment or shared Financial Obligation/Settlement capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 The final Ideal-v1 browser story continues naturally:
 
-Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner (current) → Proposal → exact ContractVersion → Commitments linked to planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
+Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner (current), with Personal Accounting independently available today → Proposal → exact ContractVersion → Commitments linked to planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → explicit Accounting posting/Settlement bridge → Home/Today summaries.
 
 The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
 TEXT,
@@ -678,7 +679,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Conversation and source-linked Timeline now compose inside Relationship, Admission and GroupSpace Contexts without making messages authoritative. Realtime delivery remains future transport work.
 
-Planner now composes inside active Relationship Contexts. Later phases progressively attach Proposal/Negotiation, Contract, Commitments, Fulfillment and Accounting when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
+Planner now composes inside active Relationship Contexts. Personal Accounting is implemented separately in the Actor's Personal Context. Later phases progressively attach Proposal/Negotiation, Contract, Commitments, Fulfillment and explicit shared Financial Obligation/Settlement-to-Accounting bridges when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
 
 Multi-party creation, participant changes, broader people discovery and richer capability presentation may extend the same kernel without replacing its consent and authorization boundaries.
 TEXT,
@@ -700,7 +701,7 @@ Existing GroupSpace chat was migrated into this generic store; the former Group-
 
 A message may reference existing Assets from the same Context and exact Content Evidence References from the same Context. Those relationships reuse the original artifact/evidence identities rather than copying files or Content.
 
-Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
+Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, Personal Accounting Journal Entries, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Relationship:
@@ -735,7 +736,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Later realtime delivery should publish committed database/domain events through an outbox/queue/authorized broadcast path. Realtime transport must remain replaceable: reloading from source truth should always reconstruct the same Conversation/Timeline state.
 
-Future domains such as Proposal, Contract, Fulfillment and Accounting can add their own source events to Timeline without turning Timeline into their authority. Planner already contributes Plan/Occurrence source events this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
+Future domains such as Proposal, Contract, Fulfillment and Financial Obligation/Settlement can add their own source events to Timeline without turning Timeline into their authority. Planner already contributes Plan/Occurrence source events and Personal Accounting contributes Journal Entry sources this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 A message is not an authoritative action. Writing “I agree”, “approved”, “paid”, “accepted”, “I own 20%”, or similar text records only what a participant said.
@@ -816,6 +817,69 @@ An Occurrence marked completed means the activity occurrence was recorded comple
 A reminder row means a reminder should be deliverable later; Phase 12 does not yet promise push/email/realtime delivery.
 
 Changing a recurring schedule should not rewrite historical rules/occurrences. Cancel/replace preserves provenance.
+TEXT,
+                ],
+                [
+                    'title' => '18. Personal Accounting',
+                    'summary' => <<<'TEXT'
+Personal Accounting is IET's current everyday-money kernel for one Actor's Personal Context. The UI offers plain Opening balance, Add expense, Add income and Transfer actions while the underlying Ledger posts balanced, immutable double-entry history.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 13 provides MonetaryUnit, Ledger, Account, JournalEntry and JournalLine.
+
+Money amounts are stored as integer minor units using the MonetaryUnit exponent rather than floating-point values.
+
+Every posted Journal Entry belongs to one Ledger, contains at least two lines, uses Accounts from that Ledger only, gives every line exactly one positive debit or credit amount, and must balance total debits to total credits before the database transaction commits.
+
+The normal Accounting page hides debit/credit terminology. It shows Ledgers, cash/bank Asset Accounts, current balances, daily/weekly/monthly/yearly Income/Expense/Net summaries and immutable activity history.
+
+Posted Journal Entries and Lines cannot be edited/deleted. Mistakes use reversal/correction. Personal Journal Entries also project into the unified Context Timeline with links back to Accounting.
+
+Phase 13 is Personal Context accounting only. It does not create shared Relationship debt, invoice, obligation, settlement, ownership or payment authority.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Bob's ordinary flow:
+1. Open **Accounting**.
+2. Choose the Monetary Unit, for example EUR, and create a Personal Ledger.
+3. Choose **Opening balance**, select Cash, enter 1000.00 and record it.
+4. Choose **Add expense**, enter 25.00, category “Work gloves”, and record it.
+5. Choose **Add income**, enter 100.00, category “Service income”, and record it.
+6. Review the Month summary: Income 100.00, Expense 25.00, Net 75.00.
+7. Add another cash/bank Account such as **Bank**.
+8. Choose **Transfer**, move 200.00 Cash → Bank.
+9. Confirm derived balances: Cash 875.00, Bank 200.00, total Asset balance 1075.00.
+10. Change Day/Week/Month/Year to inspect period summaries.
+11. If an entry is wrong, choose **Reverse entry**. The original remains visible and an equal/opposite entry restores its accounting effect.
+12. Use the Personal Context Timeline when you want Accounting activity beside other Context history.
+
+Routine users should never need to manually choose Debit or Credit.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Phase 13 Ledgers belong only to Personal Contexts.
+
+The Personal Context owner may view/manage the Ledger and post friendly accounting actions. Another Actor cannot select, view, manage or post into that Ledger through a guessed URL/query parameter.
+
+A Journal Line cannot use an Account from another Ledger.
+
+Personal Accounting does not inherit authority from a Relationship, Group Membership, Planner occurrence, Conversation message or Content document.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Later Financial Obligation and Settlement phases should create explicit audited bridges into Accounting when authoritative shared money events actually occur.
+
+For example, a reviewed Fulfillment may earn a Financial Obligation; a later explicit posting action may create the appropriate receivable/payable/accounting effect; Settlement may then reconcile payment against that obligation. Those bridges must reference their source objects and must never be inferred from prose or Planner completion alone.
+
+Future accounting work may add receivables/payables, bank reconciliation/import, exchange rates, taxes, budgeting/forecasting and richer correction UX while preserving immutable balanced journal truth.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A Personal Accounting entry records the Actor's own accounting history. It does not by itself prove that another person legally owes money or that a shared Contract/Invoice/Settlement exists.
+
+A Planner occurrence marked complete must not automatically post income/expense.
+
+Writing “paid” in Conversation or Content must not post Accounting.
+
+Reversing an entry does not delete history. The original remains, and a reversing Journal Entry records the correction path.
+
+Current balance and period summaries are derived from Journal Lines; they are not independently editable totals.
 TEXT,
                 ],
             ],

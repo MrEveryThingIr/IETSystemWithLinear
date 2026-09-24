@@ -40,13 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 11 is integrated on `integration/ideal-v1` at merge checkpoint `912d057c917532c183a7d45f405efe25e4674555`.
+Phase 12 is integrated on `integration/ideal-v1` at merge checkpoint `6769b8632084f33a464145ae7501f2a4e88f5531`.
 
-Phase 12 — Personal Activity / Planner — is remote-green on `feat/ideal-v1-12-personal-activity-planner` at final runtime checkpoint `8d9f5690ba73daf0f73e03d86981d076ade1cd4e` / CI `36037941878` (458 tests / 2615 assertions), pending integration.
+Phase 13 — Personal Accounting v1 — is remote-green on `feat/ideal-v1-13-personal-accounting` at final runtime checkpoint `c5a45f7d4178637e322855e71318709610e835b8` / CI `36042662030` (469 tests / 2714 assertions), pending integration.
 
-After Phase 12 integration, continue directly with **Phase 13 — Personal Accounting v1** from the integration trunk.
+After Phase 13 integration, continue directly with **Phase 14 — Proposal + Negotiation** from the integration trunk.
 
-Persistent Phase 12 boundary: Planner is scheduling/execution truth, not Contract, employment, ownership, financial obligation, Fulfillment acceptance or payment truth. Reminder rows are only the delivery seam until the later notifications phase.
+Persistent Phase 13 boundary: Accounting v1 is Personal Context money truth. Relationship collaboration, Planner state, Conversation wording or Content prose does not create shared debt, obligation, invoice, settlement, ownership or payment truth. Those bridges require later explicit Financial Obligation + Settlement actions.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 
