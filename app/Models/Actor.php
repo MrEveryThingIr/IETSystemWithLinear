@@ -53,6 +53,18 @@ class Actor extends Model
         return $this->hasMany(GroupMembership::class);
     }
 
+    /** @return HasMany<PlanParticipant, $this> */
+    public function planParticipations(): HasMany
+    {
+        return $this->hasMany(PlanParticipant::class);
+    }
+
+    /** @return HasMany<Plan, $this> */
+    public function createdPlans(): HasMany
+    {
+        return $this->hasMany(Plan::class, 'created_by_actor_id');
+    }
+
     /** @return HasMany<RelationshipParticipant, $this> */
     public function relationshipParticipations(): HasMany
     {
