@@ -5,6 +5,8 @@ namespace App\Support;
 use App\Models\AdmissionEvent;
 use App\Models\Context;
 use App\Models\ConversationMessage;
+use App\Models\PlanEvent;
+use App\Models\PlanOccurrenceEvent;
 use App\Models\RelationshipEvent;
 use App\Models\SpaceContentLifecycleEvent;
 use App\Models\User;
@@ -37,6 +39,42 @@ class ContextTimeline
                     occurredAt: $message->created_at ?? now(),
                     actor: $message->author,
                     url: route('contexts.conversation', $context).'#message-'.$message->uuid,
+                ));
+            });
+
+        PlanEvent::query()
+            ->with(['plan', 'actor.user'])
+            ->whereHas('plan', fn ($query) => $query->where('context_id', $context->id))
+            ->latest('created_at')
+            ->limit($limit)
+            ->get()
+            ->each(function (PlanEvent $event) use ($entries): void {
+                $entries->push(new TimelineEntry(
+                    key: 'plan-event:'.$event->uuid,
+                    kind: 'planner',
+                    title: (string) __('planner.events.'.$event->event_type->value),
+                    summary: $event->plan->title,
+                    occurredAt: $event->created_at ?? now(),
+                    actor: $event->actor,
+                    url: route('planner.show', $event->plan),
+                ));
+            });
+
+        PlanOccurrenceEvent::query()
+            ->with(['occurrence.plan', 'actor.user'])
+            ->whereHas('occurrence.plan', fn ($query) => $query->where('context_id', $context->id))
+            ->latest('created_at')
+            ->limit($limit)
+            ->get()
+            ->each(function (PlanOccurrenceEvent $event) use ($entries): void {
+                $entries->push(new TimelineEntry(
+                    key: 'plan-occurrence-event:'.$event->uuid,
+                    kind: 'planner',
+                    title: (string) __('planner.events.occurrence_'.$event->event_type->value),
+                    summary: $event->occurrence->plan->title,
+                    occurredAt: $event->created_at ?? now(),
+                    actor: $event->actor,
+                    url: route('planner.show', $event->occurrence->plan).'#occurrence-'.$event->occurrence->uuid,
                 ));
             });
 

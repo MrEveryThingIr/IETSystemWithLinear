@@ -12,6 +12,13 @@
     </flux:button>
     @if ($context)
         <flux:button
+            :href="route('planner.index', ['context' => $context->uuid])"
+            size="sm"
+            :variant="$current === 'planner' ? 'primary' : 'ghost'"
+        >
+            {{ __('planner.title') }}
+        </flux:button>
+        <flux:button
             :href="route('contexts.timeline', $context)"
             size="sm"
             :variant="$current === 'timeline' ? 'primary' : 'ghost'"

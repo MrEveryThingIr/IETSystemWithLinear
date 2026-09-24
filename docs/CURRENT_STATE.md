@@ -671,12 +671,12 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 11 — Conversation + Unified Timeline** is remotely complete on runtime checkpoint `6dcd43a056290730eaab608b6291a96ce8ff4b62` / CI `36030315938` (448 tests / 2533 assertions).
+**Phase 12 — Personal Activity / Planner** is remotely complete on final runtime checkpoint `8d9f5690ba73daf0f73e03d86981d076ade1cd4e` / CI `36037941878` (458 tests / 2615 assertions).
 
-It replaces the GroupSpace-only message datastore with one Context-scoped Conversation kernel, preserving legacy Group chat history while composing the same immutable message/reply substrate into Relationship and Admission Contexts. Same-Context Assets and exact Content Evidence References may be reused by messages without copying artifacts.
+It adds one Context-scoped Planner for Personal, GroupSpace and active Relationship activity: Plan, Participant, immutable Schedule Rules, materialized Occurrences, actual execution time, same-Context evidence, durable reminder offsets, Today/List/Calendar views and Planner source events in the unified Timeline.
 
-Timeline is read-only projection code, not a table: it reconstructs authorized Conversation, Relationship, Admission and Content-lifecycle activity on reload and links every entry back to source truth. Text such as “I agree” remains message evidence only and cannot perform an authoritative domain transition.
+Relationship-sourced planning preserves provenance and participants without changing Relationship lifecycle or creating Group Membership, Contract, ownership, obligation, Fulfillment acceptance or payment authority. Reminder delivery remains deferred to Realtime + Notifications.
 
-Next after integration: **Phase 12 — Personal Activity / Planner**.
+Next after integration: **Phase 13 — Personal Accounting v1**.
 
-Realtime transport remains future work; the database source records remain authoritative. Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

@@ -35,6 +35,7 @@ return [
             'content' => 'Content',
             'relationship' => 'Relationship',
             'admission' => 'Admission',
+            'planner' => 'Planner',
         ],
         'projection_notice' => 'Timeline entries are projections. Follow “Open source” for the authoritative object or event context.',
     ],

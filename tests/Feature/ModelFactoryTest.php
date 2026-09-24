@@ -35,6 +35,13 @@ use App\Models\GroupSpaceMessage;
 use App\Models\GroupSpaceParticipant;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\PersonalContext;
+use App\Models\Plan;
+use App\Models\PlanEvent;
+use App\Models\PlanOccurrence;
+use App\Models\PlanOccurrenceEvent;
+use App\Models\PlanParticipant;
+use App\Models\PlanReminder;
+use App\Models\PlanScheduleRule;
 use App\Models\PlatformAccessGrant;
 use App\Models\Relationship;
 use App\Models\RelationshipContext;
@@ -76,6 +83,13 @@ class ModelFactoryTest extends TestCase
             ContentEvidenceReference::factory()->create(),
             ContentPlacement::factory()->create(),
             PersonalContext::factory()->create(),
+            Plan::factory()->create(),
+            PlanParticipant::factory()->create(),
+            PlanScheduleRule::factory()->create(),
+            PlanReminder::factory()->create(),
+            PlanOccurrence::factory()->create(),
+            PlanEvent::factory()->create(),
+            PlanOccurrenceEvent::factory()->create(),
             GroupSpaceContext::factory()->create(),
             AdmissionContext::factory()->create(),
             Relationship::factory()->create(),

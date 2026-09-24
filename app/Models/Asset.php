@@ -142,7 +142,8 @@ class Asset extends Model
             if ($asset->revisions()->exists()
                 || $asset->annotations()->exists()
                 || $asset->profileImages()->exists()
-                || $asset->submissionResponses()->exists()) {
+                || $asset->submissionResponses()->exists()
+                || $asset->planOccurrences()->exists()) {
                 throw new LogicException('Referenced Assets are preserved with Content, Profile, and interaction history.');
             }
         });
@@ -222,6 +223,14 @@ class Asset extends Model
     {
         return $this->belongsToMany(SpaceContentAnnotation::class, 'space_content_annotation_assets', 'asset_id', 'annotation_id')
             ->withPivot(['uuid', 'role', 'position', 'caption'])
+            ->withTimestamps();
+    }
+
+    /** @return BelongsToMany<PlanOccurrence, $this> */
+    public function planOccurrences(): BelongsToMany
+    {
+        return $this->belongsToMany(PlanOccurrence::class, 'plan_occurrence_assets')
+            ->withPivot(['uuid', 'added_by_actor_id'])
             ->withTimestamps();
     }
 

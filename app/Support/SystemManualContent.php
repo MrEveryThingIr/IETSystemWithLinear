@@ -26,6 +26,7 @@ class SystemManualContent
         'end-to-end' => '14. End-to-End Guided Example and UI Testing',
         'relationships' => '15. Relationships and Direct Collaboration',
         'conversation-timeline' => '16. Conversation and Unified Timeline',
+        'planner' => '17. Personal Activity and Planner',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -44,11 +45,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, and consent-aware direct Relationships with explicit participant roles and their own Context.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, and a timezone-aware Planner with durable schedules/occurrences.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Planner, Accounting, negotiated Proposal/Contract/Commitment/Fulfillment, Matching, realtime transport, reputation/discovery, and AI remain later roadmap milestones.
+Accounting, negotiated Proposal/Contract/Commitment/Fulfillment, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -352,10 +353,10 @@ TEXT,
 The long-term proof for IET is not “can it store many object types?” but “can real life flow through one connected system without losing authority or provenance?”
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation and source-linked Timeline foundations exist. Realtime transport, generic Workflow, Planner, Domain Packs, direct Contract/Commitment/Fulfillment, matching, Accounting, financial laboratory, discovery, pilots, and production release remain later roadmap work.
+Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline and Planner foundations exist. Realtime transport, generic Workflow, Domain Packs, direct Contract/Commitment/Fulfillment, matching, Accounting, financial laboratory, discovery, pilots, and production release remain later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use today's implemented kernels for what they already guarantee. Do not fake future Contract, Planner, payment, or fulfillment truth by writing prose into Content fields.
+Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity, but do not treat a Plan/Occurrence—or prose in Content—as future Contract, payment, financial-obligation, or Fulfillment-acceptance truth.
 
 When a real use case exposes friction, annotate the relevant manual/system Content precisely. That feedback should influence the next official documentation edition and, when appropriate, the product roadmap.
 TEXT,
@@ -520,9 +521,9 @@ TEXT,
 This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, and Phase 11 Context Conversation + source-linked Timeline.
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, and Phase 12 personal/Relationship Planner activity.
 
-Planner, Accounting, Proposal/Contract/Commitment/Fulfillment, Matching, realtime transport and AI are roadmap steps and must be labelled as future until their milestone is remotely integrated.
+Accounting, Proposal/Contract/Commitment/Fulfillment, Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner is current implemented behavior.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Run the story in this order.
@@ -616,12 +617,12 @@ TEXT,
                     'authorization' => <<<'TEXT'
 Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
 
-Future milestones should extend this same story rather than replace it. Relationship and Conversation/Timeline are now implemented. When Planner, Accounting or Contract capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline and Planner are now implemented. When Accounting, Proposal/Contract or Fulfillment capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 The final Ideal-v1 browser story continues naturally:
 
-Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline (current) → Proposal → exact ContractVersion → Commitments → planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
+Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner (current) → Proposal → exact ContractVersion → Commitments linked to planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
 
 The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
 TEXT,
@@ -663,7 +664,7 @@ For a direct known-person request:
 4. Alice records both roles, such as project owner / capital collaborator.
 5. Alice sends the request; Carol must accept before collaboration becomes active.
 
-Inside an active Relationship, choose **Conversation** for collaboration messages/replies, **Timeline** for source-linked activity, or **Content** for human-facing artifacts/evidence. Do not write authoritative Contract/payment state into message text or arbitrary Content fields.
+Inside an active Relationship, choose **Conversation** for collaboration messages/replies, **Timeline** for source-linked activity, **Planner** for scheduled/actual activity, or **Content** for human-facing artifacts/evidence. Do not treat a Plan, message, or arbitrary Content field as authoritative Contract/payment state.
 
 To close coordination, an authorized manager chooses **End relationship**. The history remains readable to participants while the workspace becomes read-only.
 TEXT,
@@ -677,7 +678,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Conversation and source-linked Timeline now compose inside Relationship, Admission and GroupSpace Contexts without making messages authoritative. Realtime delivery remains future transport work.
 
-Later phases progressively attach Planner, Proposal/Negotiation, Contract, Commitments, Fulfillment and Accounting when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
+Planner now composes inside active Relationship Contexts. Later phases progressively attach Proposal/Negotiation, Contract, Commitments, Fulfillment and Accounting when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
 
 Multi-party creation, participant changes, broader people discovery and richer capability presentation may extend the same kernel without replacing its consent and authorization boundaries.
 TEXT,
@@ -699,7 +700,7 @@ Existing GroupSpace chat was migrated into this generic store; the former Group-
 
 A message may reference existing Assets from the same Context and exact Content Evidence References from the same Context. Those relationships reuse the original artifact/evidence identities rather than copying files or Content.
 
-Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
+Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Relationship:
@@ -734,7 +735,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Later realtime delivery should publish committed database/domain events through an outbox/queue/authorized broadcast path. Realtime transport must remain replaceable: reloading from source truth should always reconstruct the same Conversation/Timeline state.
 
-Future domains such as Planner, Proposal, Contract, Fulfillment and Accounting can add their own source events to Timeline without turning Timeline into their authority. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
+Future domains such as Proposal, Contract, Fulfillment and Accounting can add their own source events to Timeline without turning Timeline into their authority. Planner already contributes Plan/Occurrence source events this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 A message is not an authoritative action. Writing “I agree”, “approved”, “paid”, “accepted”, “I own 20%”, or similar text records only what a participant said.
@@ -742,6 +743,79 @@ A message is not an authoritative action. Writing “I agree”, “approved”,
 A Timeline entry is not a duplicated transaction. It is a projection linking back to the source event/object.
 
 Attaching an Asset or Evidence Reference to a message does not copy or transfer ownership of that artifact.
+TEXT,
+                ],
+                [
+                    'title' => '17. Personal Activity and Planner',
+                    'summary' => <<<'TEXT'
+Planner is IET's current scheduling and execution-time kernel for personal and collaborative activity. It records when something is intended to happen, materialized occurrences, who participates, actual start/end/completion, reminders and linked evidence without pretending that scheduling is Contract or financial authority.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 12 provides Plan, PlanParticipant, immutable PlanScheduleRule, PlanOccurrence, PlanReminder and immutable Plan/Occurrence event history.
+
+Planner is enabled in Personal, GroupSpace and active Relationship Contexts.
+
+Supported schedules are one-time, daily, weekly and selected dates. Schedule Rules preserve local clock time in the Plan timezone across daylight-saving changes and materialize durable Occurrences. Recurring horizons are extended by the scheduled planner:materialize command.
+
+Occurrences preserve scheduled time separately from actual start/end/completion. They may reuse existing Assets and exact Content Evidence References from the same Context.
+
+The normal product exposes Planner with Today, List and Calendar views, plan creation/detail, lifecycle actions, occurrence execution controls and evidence attachment. Planner source events also appear in the unified Context Timeline.
+
+A Relationship-sourced Plan records Relationship provenance and active participants/roles. It does not change Relationship lifecycle or create Membership, Contract, ownership, obligation, Fulfillment acceptance or payment.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Personal activity:
+1. Open **Planner**.
+2. Choose **New plan**.
+3. Enter the activity title/description.
+4. Confirm the timezone.
+5. Choose One time, Daily, Weekly, or Selected dates.
+6. Set start date/time and duration.
+7. For recurring activity, optionally set interval/end/occurrence limit.
+8. For weekly activity, select weekdays.
+9. For selected dates, enter exact dates separated by commas/spaces.
+10. Add reminder offsets such as 1440, 60, 15 minutes before.
+11. Create the Plan.
+12. Use Today/List/Calendar to find Occurrences.
+13. Open the Plan and use Start/Complete/Skip/Cancel on an Occurrence.
+14. Attach existing same-Context Assets or exact Evidence References when useful.
+
+Relationship work:
+1. Open an **active** Relationship.
+2. Choose **Planner**.
+3. Create the activity in that Relationship Context.
+4. The current active Relationship participants/roles seed Plan participation/provenance.
+5. Use occurrence execution/evidence as activity history.
+6. Use the Relationship Timeline to see Planner source events beside other Context activity.
+
+Example: Alice creates Riverside selected workdays for Bob on 2026-09-25, 2026-09-27 and 2026-10-02, starting 08:00 for 540 minutes.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Viewing a Plan requires access to its Context.
+
+Managing a Plan belongs to its creator or a user with Context content-management authority. Participating in occurrence execution requires an active PlanParticipant (or Plan manager).
+
+A proposed/terminal Relationship does not silently become writable Planner space. Planner creation requires the Context interaction authority, so active Relationship participation is the normal direct-collaboration path.
+
+Plan evidence must already belong to the same Context. Cross-Context Assets/Evidence References are rejected.
+
+Outsiders cannot open a Relationship Plan through a direct URL.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Later Contract/Commitment/Fulfillment phases should explicitly connect authoritative obligations to Planner Occurrences when the domain requires it. A Contract may define what must happen; Planner may schedule the intended Occurrences; Fulfillment may record/review what actually satisfied the Commitment. Those domains must remain distinct and traceable.
+
+Phase 22 should deliver reminders/notifications from the durable reminder seam without changing Planner truth.
+
+The later Home/Today phase should summarize current Planner activity with other permission-aware life/work facts. Richer calendar ergonomics, rescheduling workflows, delegation and conflict handling can extend the same kernel.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A Plan is not a Contract, job agreement, ownership record, debt, invoice or payment.
+
+An Occurrence marked completed means the activity occurrence was recorded complete by an authorized participant. It does not automatically mean contractual Fulfillment was accepted or money became owed.
+
+A reminder row means a reminder should be deliverable later; Phase 12 does not yet promise push/email/realtime delivery.
+
+Changing a recurring schedule should not rewrite historical rules/occurrences. Cancel/replace preserves provenance.
 TEXT,
                 ],
             ],
