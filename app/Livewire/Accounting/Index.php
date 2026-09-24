@@ -15,7 +15,6 @@ use App\JournalEntryKind;
 use App\Models\Account;
 use App\Models\Actor;
 use App\Models\Context;
-use App\Models\JournalEntry;
 use App\Models\Ledger;
 use App\Models\User;
 use App\Support\AccountingSummary;
