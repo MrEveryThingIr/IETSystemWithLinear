@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Actor;
+use App\Models\ContentPlacement;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
@@ -84,11 +85,11 @@ class SpaceContentPolicy
 
     private function canReadThroughPlacement(User $user, SpaceContent $content): bool
     {
-        $content->loadMissing('placements.context');
-
-        return $content->placements
-            ->where('status', 'active')
-            ->contains(fn ($placement): bool => $this->contexts->view($user, $placement->context));
+        return $content->placements()
+            ->where('status', ContentPlacement::STATUS_ACTIVE)
+            ->with('context')
+            ->get()
+            ->contains(fn (ContentPlacement $placement): bool => $this->contexts->view($user, $placement->context));
     }
 
     private function canReadPrivate(User $user, SpaceContent $content): bool
