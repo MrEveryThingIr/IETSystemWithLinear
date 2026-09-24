@@ -40,13 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 13 is integrated on `integration/ideal-v1` at merge checkpoint `e3bf30dfd344939bd6d3ca939f5149133bff6f7a`.
+Phase 14 is integrated on `integration/ideal-v1` at merge checkpoint `dfdfd33c99db57e36f11591fd9a84a1c32cbb333`.
 
-Phase 14 — Proposal + Negotiation — is runtime-green on `feat/ideal-v1-14-proposal-negotiation` at `a27a2538161ff36d123eef1bd0f9d9c153298987` / CI `36048778108` (477 tests / 2799 assertions), pending documentation closure/integration.
+Phase 15 — Contract, ContractVersion and explicit acceptance — is runtime-green on `feat/ideal-v1-15-contract-version-acceptance` at `df63697b3734bc3a8dfe1b70f58655d4b2c9da72` / CI `36055829092` (487 tests / 2903 assertions), pending documentation closure/integration.
 
-After Phase 14 integration, continue directly with **Phase 15 — Contract, ContractVersion and explicit acceptance** from the integration trunk.
+After Phase 15 integration, continue directly with **Phase 16 — Commitment + Fulfillment** from the integration trunk.
 
-Persistent Phase 14 boundary: Proposal acceptance means every required party accepted the same exact ProposalVersion. It is negotiation truth only and must not create Contract, Commitment, Fulfillment, ownership, Financial Obligation, Accounting posting, Settlement or payment truth. Phase 15 owns Contract authority.
+Persistent Phase 15 boundary: ContractVersion acceptance is authoritative agreement truth for the exact party/role/terms/effective-time snapshot. It must not silently create Commitment, Planner Occurrence, Fulfillment, Financial Obligation, Accounting posting, Settlement/payment, ownership or employment truth. Phase 16 owns Commitment/Fulfillment.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 

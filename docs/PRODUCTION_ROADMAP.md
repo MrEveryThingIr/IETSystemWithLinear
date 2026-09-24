@@ -535,6 +535,8 @@ Proof: Alice proposes Riverside construction collaboration to Bob and Carol.
 
 ## Phase 15 — Contract, ContractVersion and explicit acceptance
 
+**Status: remote runtime implementation complete and green on `feat/ideal-v1-15-contract-version-acceptance` at `df63697b3734bc3a8dfe1b70f58655d4b2c9da72` / GitHub Actions `36055829092` — 487 tests / 2903 assertions.**
+
 Purpose: create exact party-specific authoritative terms.
 
 Deliverables:

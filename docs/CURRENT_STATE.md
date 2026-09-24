@@ -671,14 +671,14 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 14 — Proposal + Negotiation** is remotely runtime-complete on checkpoint `a27a2538161ff36d123eef1bd0f9d9c153298987` / CI `36048778108` (477 tests / 2799 assertions).
+**Phase 15 — Contract, ContractVersion and explicit acceptance** is remotely runtime-complete at `df63697b3734bc3a8dfe1b70f58655d4b2c9da72` / CI `36055829092` (487 tests / 2903 assertions).
 
-It adds Proposal, ProposalParty, immutable exact ProposalVersion terms backed by sealed Content revisions, immutable per-party ProposalDecision, ProposalEvent history, a dedicated Negotiation Context, Conversation/Content/Timeline composition, direct and active-Relationship proposal creation, and Accept / Reject / Request changes / Propose revision / Cancel UX.
+It adds Contract, dedicated Contract Context, immutable ContractVersion, per-version exact party/role snapshots, immutable ContractAcceptance and ContractEvent history, sealed Contract terms Content, direct/Relationship/accepted-Proposal entry paths, exact required-party acceptance, effective-time activation, and future-effective amendment/supersession.
 
-A Proposal becomes accepted only when every required party accepts the same current version. Old-version decisions never carry forward.
+Proposal acceptance is not Contract acceptance. Proposal-sourced ContractVersion 1 reuses the exact sealed Proposal terms as provenance but requires fresh explicit Contract acceptance by every required party.
 
-Accepted Proposal state is deliberately not Contract authority and creates no ContractVersion, Commitment, Fulfillment, ownership, Financial Obligation, Accounting posting or Settlement/payment.
+An Active Contract remains agreement authority only. It does not create Commitment, Planner scheduling, Fulfillment, Financial Obligation, Accounting posting, Settlement/payment, ownership or employment state.
 
-Next after integration: **Phase 15 — Contract, ContractVersion and explicit acceptance**.
+Next after integration: **Phase 16 — Commitment + Fulfillment**.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
