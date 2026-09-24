@@ -35,7 +35,7 @@
                         ]) }}
                     </div>
 
-                    @if ($pendingVersion->accepted_at && $pendingVersion->status === AppContractVersionStatus::Accepted)
+                    @if ($pendingVersion->accepted_at && $pendingVersion->status->value === 'accepted')
                         <flux:callout>
                             {{ __('contracts.show.waiting_effective') }}
                         </flux:callout>
