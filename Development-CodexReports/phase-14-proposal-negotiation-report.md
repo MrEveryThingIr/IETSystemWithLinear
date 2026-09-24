@@ -8,7 +8,8 @@ Phase 14 runtime is remotely complete.
 - Baseline: `e3bf30dfd344939bd6d3ca939f5149133bff6f7a`
 - Kernel: `3a30f21af06e478fc269d7db1e4085ce73500133` / CI `36047890895` — 474 tests / 2771 assertions
 - Runtime/UI: `a27a2538161ff36d123eef1bd0f9d9c153298987` / CI `36048778108` — 477 tests / 2799 assertions
-- Documentation closure: pending closure CI
+- Documentation/manual closure: `f19684c1adad09e1801a666ddfb9e3cb73f53d84` / CI `36050118440` — 477 tests / 2803 assertions
+- The closure gate adds documentation/manual contract assertions without changing Proposal runtime semantics.
 - Local/browser/mobile/RTL/accessibility acceptance: deferred cumulatively
 
 Proposal decisions are immutable and scoped to one exact ProposalVersion. A later version requires fresh decisions. The proposer accepts only the version they publish; every other required party must respond again.
