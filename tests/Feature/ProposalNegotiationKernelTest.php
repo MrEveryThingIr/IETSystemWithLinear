@@ -8,7 +8,6 @@ use App\Actions\Proposals\ProposeTermsVersion;
 use App\Actions\Proposals\RespondToProposal;
 use App\ContextKind;
 use App\Models\Actor;
-use App\Models\Proposal;
 use App\Models\ProposalDecision;
 use App\Models\ProposalEvent;
 use App\Models\ProposalVersion;
