@@ -31,7 +31,7 @@ class PostJournalEntry
 
         $actor = $this->actor($user);
         $date = CarbonImmutable::createFromFormat('!Y-m-d', $occurredOn);
-        abort_unless($date !== false && $date->format('Y-m-d') === $occurredOn, 422, 'Invalid accounting date.');
+        abort_unless($date !== null && $date->format('Y-m-d') === $occurredOn, 422, 'Invalid accounting date.');
         abort_if(count($lines) < 2, 422, 'A Journal Entry requires at least two lines.');
 
         $description = trim((string) $description);
