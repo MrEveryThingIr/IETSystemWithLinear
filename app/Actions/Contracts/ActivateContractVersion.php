@@ -34,7 +34,7 @@ class ActivateContractVersion
 
             $now = CarbonImmutable::now();
 
-            if ($locked->effective_from?->isAfter($now)) {
+            if ($locked->effective_from->isAfter($now)) {
                 return $locked;
             }
 
@@ -78,7 +78,7 @@ class ActivateContractVersion
                     'event_type' => ContractEventType::VersionSuperseded,
                     'payload' => [
                         'superseded_by_version_uuid' => $locked->uuid,
-                        'effective_until' => $locked->effective_from?->toISOString(),
+                        'effective_until' => $locked->effective_from->toISOString(),
                     ],
                 ]);
             }
@@ -92,7 +92,7 @@ class ActivateContractVersion
                 'actor_id' => $actor?->id,
                 'event_type' => ContractEventType::VersionActivated,
                 'payload' => [
-                    'effective_from' => $locked->effective_from?->toISOString(),
+                    'effective_from' => $locked->effective_from->toISOString(),
                     'version' => $locked->version,
                 ],
             ]);

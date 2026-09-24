@@ -111,7 +111,7 @@ class ContractVersion extends Model
             throw new LogicException('Only an accepted ContractVersion may become active.');
         }
 
-        if ($this->effective_from?->isAfter($at)) {
+        if ($this->effective_from->isAfter($at)) {
             throw new LogicException('A ContractVersion cannot activate before its effective time.');
         }
 

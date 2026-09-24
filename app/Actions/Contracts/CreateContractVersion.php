@@ -16,6 +16,8 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use DateTimeZone;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -42,12 +44,14 @@ class CreateContractVersion
         abort_unless($termsRevision->hasVerifiableManifest(), 422, 'Contract terms must be a sealed published Content revision.');
 
         $effectiveTimezone = trim($effectiveTimezone);
-        abort_unless(
-            in_array($effectiveTimezone, timezone_identifiers_list(), true),
-            422,
-            'Contract effective timezone is invalid.',
-        );
 
+        try {
+            $timezone = new DateTimeZone($effectiveTimezone);
+        } catch (Exception) {
+            abort(422, 'Contract effective timezone is invalid.');
+        }
+
+        $effectiveTimezone = $timezone->getName();
         $effectiveAt = CarbonImmutable::instance($effectiveFrom)->utc();
         abort_if(
             $effectiveAt->lt(CarbonImmutable::now()->subMinute()),

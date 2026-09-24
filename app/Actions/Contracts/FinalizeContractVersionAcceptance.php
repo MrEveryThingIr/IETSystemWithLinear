@@ -60,7 +60,7 @@ class FinalizeContractVersionAcceptance
         }, attempts: 3);
 
         if ($accepted->status === ContractVersionStatus::Accepted
-            && ! $accepted->effective_from?->isFuture()) {
+            && ! $accepted->effective_from->isFuture()) {
             return $this->activate->execute($accepted, $actor);
         }
 
