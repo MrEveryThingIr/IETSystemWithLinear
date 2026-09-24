@@ -433,6 +433,8 @@ Exit: Alice can publish an Article/Album in its home Context; an actor who indep
 
 ## Phase 10 — Relationship + Relationship Context
 
+**Status: remote runtime complete and green on feat/ideal-v1-10-relationship-context at 6cb21465489c14efffc589c41070f46160e029c2 / GitHub Actions 36025406749 (439 tests / 2481 assertions).**
+
 Purpose: represent meaningful ongoing Actor-to-Actor / Actor-to-organization participation outside Group Membership.
 
 Deliverables:

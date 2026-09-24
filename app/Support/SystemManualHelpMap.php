@@ -12,6 +12,10 @@ class SystemManualHelpMap
             return 'feedback';
         }
 
+        if (str_starts_with($routeName, 'relationships.')) {
+            return 'relationships';
+        }
+
         if (str_starts_with($routeName, 'profile.')
             || str_starts_with($routeName, 'intents.')) {
             return 'profile-concepts';
