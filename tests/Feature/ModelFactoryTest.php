@@ -8,6 +8,7 @@ use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileDisclosureGrant;
 use App\Models\ActorProfileDisclosureItem;
+use App\Models\Account;
 use App\Models\ActorProfileIntent;
 use App\Models\Admission;
 use App\Models\AdmissionContext;
@@ -33,7 +34,11 @@ use App\Models\GroupSpace;
 use App\Models\GroupSpaceContext;
 use App\Models\GroupSpaceMessage;
 use App\Models\GroupSpaceParticipant;
+use App\Models\JournalEntry;
+use App\Models\JournalLine;
+use App\Models\Ledger;
 use App\Models\MembershipAgreementAcceptance;
+use App\Models\MonetaryUnit;
 use App\Models\PersonalContext;
 use App\Models\Plan;
 use App\Models\PlanEvent;
@@ -76,6 +81,11 @@ class ModelFactoryTest extends TestCase
             ActorProfileDisclosureGrant::factory()->create(),
             ActorProfileDisclosureItem::factory()->create(),
             Context::factory()->create(),
+            MonetaryUnit::factory()->create(),
+            Ledger::factory()->create(),
+            Account::factory()->create(),
+            JournalEntry::factory()->create(),
+            JournalLine::factory()->create(),
             Conversation::factory()->create(),
             ConversationMessage::factory()->create(),
             ContentBlueprint::factory()->create(),
