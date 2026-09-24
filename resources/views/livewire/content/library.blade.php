@@ -20,7 +20,9 @@
     </flux:card>
 
     @if ($placingContentUuid !== '')
-        @php($placingContent = $contents->firstWhere('uuid', $placingContentUuid))
+        @php
+            $placingContent = $contents->firstWhere('uuid', $placingContentUuid);
+        @endphp
         <flux:card class="space-y-4">
             <div>
                 <flux:heading size="lg">{{ __('library.place.title') }}</flux:heading>
@@ -31,7 +33,7 @@
                     <flux:select wire:model="targetContextUuid" :label="__('library.place.target')">
                         <option value="">{{ __('library.place.choose_target') }}</option>
                         @foreach ($targetContexts as $target)
-                            @if (! $placingContent || (int) $target->id !== (int) $placingContent->context_id)
+                            @if (! $placingContent || $target->id !== $placingContent->context_id)
                                 <option value="{{ $target->uuid }}">{{ $targetContextLabels[$target->uuid] }}</option>
                             @endif
                         @endforeach
