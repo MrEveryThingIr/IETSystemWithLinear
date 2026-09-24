@@ -4,7 +4,6 @@ namespace App\Livewire\Contracts;
 
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\ProposeContractAmendment;
-use App\Models\Actor;
 use App\Models\Contract;
 use App\Models\ContractVersion;
 use App\Models\User;
