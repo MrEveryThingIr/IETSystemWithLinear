@@ -12,7 +12,6 @@ use App\Livewire\Contracts\Index as ContractIndex;
 use App\Livewire\Contracts\Show as ContractShow;
 use App\Models\Actor;
 use App\Models\Contract;
-use App\Models\Proposal;
 use App\ProposalDecisionKind;
 use App\ProposalStatus;
 use App\Support\ContextTimeline;
