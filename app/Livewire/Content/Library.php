@@ -99,6 +99,7 @@ class Library extends Component
                 'context.admissionBinding.admission.group',
                 'context.relationshipBinding.relationship.purposeConcept.labels',
                 'context.proposalBinding.proposal',
+                'context.contractBinding.contract',
                 'context.referenceBinding',
                 'author.user',
                 'activeRevision.assets',
@@ -108,6 +109,7 @@ class Library extends Component
                 'placements.context.admissionBinding.admission.group',
                 'placements.context.relationshipBinding.relationship.purposeConcept.labels',
                 'placements.context.proposalBinding.proposal',
+                'placements.context.contractBinding.contract',
                 'placements.context.referenceBinding',
             ])
             ->latest('published_at')
@@ -263,6 +265,7 @@ class Library extends Component
                 'admissionBinding.admission.group',
                 'relationshipBinding.relationship.purposeConcept.labels',
                 'proposalBinding.proposal',
+                'contractBinding.contract',
                 'referenceBinding',
             ])
             ->latest('id')
@@ -286,6 +289,9 @@ class Library extends Component
             ContextKind::Relationship => $this->relationshipContextLabel($context),
             ContextKind::Negotiation => __('library.context.negotiation', [
                 'title' => $context->proposalBinding?->proposal->title ?? '#'.$context->uuid,
+            ]),
+            ContextKind::Contract => __('library.context.contract', [
+                'title' => $context->contractBinding?->contract->title ?? '#'.$context->uuid,
             ]),
             ContextKind::Reference => __('library.context.reference', [
                 'key' => $context->referenceBinding->key ?? $context->uuid,

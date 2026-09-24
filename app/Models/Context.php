@@ -77,6 +77,12 @@ class Context extends Model
         return $this->hasOne(ProposalContext::class);
     }
 
+    /** @return HasOne<ContractContext, $this> */
+    public function contractBinding(): HasOne
+    {
+        return $this->hasOne(ContractContext::class);
+    }
+
     /** @return HasOne<ReferenceContext, $this> */
     public function referenceBinding(): HasOne
     {

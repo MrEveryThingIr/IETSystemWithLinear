@@ -20,6 +20,12 @@ use App\Models\ContentBlueprintVersion;
 use App\Models\ContentEvidenceReference;
 use App\Models\ContentPlacement;
 use App\Models\Context;
+use App\Models\Contract;
+use App\Models\ContractAcceptance;
+use App\Models\ContractContext;
+use App\Models\ContractEvent;
+use App\Models\ContractVersion;
+use App\Models\ContractVersionParty;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\Group;
@@ -87,6 +93,12 @@ class ModelFactoryTest extends TestCase
             ActorProfileDisclosureGrant::factory()->create(),
             ActorProfileDisclosureItem::factory()->create(),
             Context::factory()->create(),
+            Contract::factory()->create(),
+            ContractContext::factory()->create(),
+            ContractVersion::factory()->create(),
+            ContractVersionParty::factory()->create(),
+            ContractAcceptance::factory()->create(),
+            ContractEvent::factory()->create(),
             MonetaryUnit::factory()->create(),
             Ledger::factory()->create(),
             Account::factory()->create(),

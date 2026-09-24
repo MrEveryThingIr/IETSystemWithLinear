@@ -194,6 +194,25 @@ class SystemContentBlueprints
                 $advanced,
             ),
             $this->preset(
+                'contract-terms',
+                'Contract Terms',
+                'Versioned authoritative human-readable Contract terms. Published revisions are sealed and may be bound to exact Contract versions.',
+                'agreements',
+                [
+                    $this->field('summary', 'Summary', 'long_text', false),
+                    $this->field('terms', 'Contract terms', 'long_text', true),
+                    $this->field('notes', 'Notes', 'long_text', false),
+                ],
+                [
+                    $this->fieldBlock('summary'),
+                    $this->fieldBlock('terms'),
+                    $this->fieldBlock('notes'),
+                ],
+                'article',
+                [ContextKind::Contract->value],
+                $advanced,
+            ),
+            $this->preset(
                 'questionnaire-shell',
                 'Questionnaire',
                 'Author the questionnaire document now; structured respondent submissions are added by the Submission engine in Phase 7.',

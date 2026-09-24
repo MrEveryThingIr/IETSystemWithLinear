@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Groups\ManageGroupAgreement;
 use App\Actions\Planner\MaterializePlannerHorizon;
 use Illuminate\Foundation\Inspiring;
@@ -15,6 +16,11 @@ Artisan::command('planner:materialize {--days=120}', function () {
     $created = app(MaterializePlannerHorizon::class)->execute($days);
     $this->info("Materialized {$created} Planner Occurrences.");
 })->purpose('Extend the rolling Planner Occurrence horizon');
+
+Artisan::command('contracts:activate-due', function () {
+    $activated = app(ActivateDueContractVersions::class)->execute();
+    $this->info("Activated {$activated} due Contract versions.");
+})->purpose('Activate accepted Contract versions whose effective time has arrived');
 
 Schedule::call(fn () => app(ManageGroupAgreement::class)->activateDue())
     ->name('agreements:activate-due')
@@ -34,4 +40,9 @@ Schedule::command('queue:prune-batches --hours=168 --unfinished=168 --cancelled=
 Schedule::command('planner:materialize --days=120')
     ->name('planner:materialize')
     ->dailyAt('00:05')
+    ->withoutOverlapping();
+
+Schedule::command('contracts:activate-due')
+    ->name('contracts:activate-due')
+    ->everyMinute()
     ->withoutOverlapping();
