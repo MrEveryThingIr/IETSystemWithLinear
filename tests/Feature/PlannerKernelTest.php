@@ -135,7 +135,7 @@ class PlannerKernelTest extends TestCase
         );
 
         foreach ($selected->occurrences as $occurrence) {
-            $this->assertSame(540, $occurrence->scheduled_start_at->diffInMinutes($occurrence->scheduled_end_at));
+            $this->assertSame(540.0, $occurrence->scheduled_start_at->diffInMinutes($occurrence->scheduled_end_at));
         }
     }
 
