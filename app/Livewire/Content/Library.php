@@ -275,10 +275,10 @@ class Library extends Component
                 $context->groupSpaceBinding?->groupSpace?->name,
             ]))) ?: __('library.context.group_space'),
             ContextKind::Admission => __('library.context.admission', [
-                'group' => $context->admissionBinding?->admission?->group?->name ?? '#'.$context->admissionBinding?->admission_id,
+                'group' => $context->admissionBinding?->admission?->group->name ?? '#'.$context->admissionBinding?->admission_id,
             ]),
             ContextKind::Reference => __('library.context.reference', [
-                'key' => $context->referenceBinding?->key ?? $context->uuid,
+                'key' => $context->referenceBinding->key ?? $context->uuid,
             ]),
         };
     }
