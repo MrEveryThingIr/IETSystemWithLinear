@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @deprecated Compatibility factory for migrated GroupSpaceMessage callers.
+ *
  * @extends Factory<GroupSpaceMessage>
  */
 class GroupSpaceMessageFactory extends Factory
