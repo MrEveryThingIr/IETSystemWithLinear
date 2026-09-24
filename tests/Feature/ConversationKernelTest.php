@@ -12,6 +12,7 @@ use App\Models\Concept;
 use App\Models\Conversation;
 use App\Models\Relationship;
 use App\RelationshipStatus;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -69,8 +70,8 @@ class ConversationKernelTest extends TestCase
             );
 
             $this->fail('A proposed Relationship Context accepted a message.');
-        } catch (HttpException $exception) {
-            $this->assertSame(403, $exception->getStatusCode());
+        } catch (AuthorizationException $exception) {
+            $this->assertSame('This action is unauthorized.', $exception->getMessage());
         }
 
         $this->assertDatabaseCount('conversation_messages', 0);
