@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Groups;
 
+use App\Actions\Conversations\PostContextMessage;
 use App\Actions\Groups\CreateGroup;
 use App\Actions\Groups\GroupRoleProvisioner;
 use App\Actions\Groups\TransitionGroupMembership;
@@ -9,6 +10,7 @@ use App\GroupRoleKey;
 use App\Livewire\Groups\Show;
 use App\Livewire\Groups\SpaceChat;
 use App\Models\Actor;
+use App\Models\Conversation;
 use App\Models\Group;
 use App\Models\GroupMembership;
 use App\Models\GroupSpace;
