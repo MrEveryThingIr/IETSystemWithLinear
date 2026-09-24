@@ -48,6 +48,12 @@ use App\Models\PlanParticipant;
 use App\Models\PlanReminder;
 use App\Models\PlanScheduleRule;
 use App\Models\PlatformAccessGrant;
+use App\Models\Proposal;
+use App\Models\ProposalContext;
+use App\Models\ProposalDecision;
+use App\Models\ProposalEvent;
+use App\Models\ProposalParty;
+use App\Models\ProposalVersion;
 use App\Models\Relationship;
 use App\Models\RelationshipContext;
 use App\Models\RelationshipEvent;
@@ -129,6 +135,12 @@ class ModelFactoryTest extends TestCase
             Story::factory()->create(),
             StoryRole::factory()->create(),
             PlatformAccessGrant::factory()->create(),
+            Proposal::factory()->create(),
+            ProposalParty::factory()->create(),
+            ProposalContext::factory()->create(),
+            ProposalVersion::factory()->create(),
+            ProposalDecision::factory()->create(),
+            ProposalEvent::factory()->create(),
         ];
 
         foreach ($models as $model) {

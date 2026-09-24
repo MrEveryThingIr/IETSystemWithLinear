@@ -175,6 +175,25 @@ class SystemContentBlueprints
                 $advanced,
             ),
             $this->preset(
+                'proposal-terms',
+                'Proposal Terms',
+                'Versioned human-readable terms for a Proposal / Negotiation. Published revisions are sealed and may be bound to exact Proposal versions.',
+                'agreements',
+                [
+                    $this->field('summary', 'Summary', 'long_text', false),
+                    $this->field('terms', 'Proposed terms', 'long_text', true),
+                    $this->field('notes', 'Notes', 'long_text', false),
+                ],
+                [
+                    $this->fieldBlock('summary'),
+                    $this->fieldBlock('terms'),
+                    $this->fieldBlock('notes'),
+                ],
+                'article',
+                [ContextKind::Negotiation->value],
+                $advanced,
+            ),
+            $this->preset(
                 'questionnaire-shell',
                 'Questionnaire',
                 'Author the questionnaire document now; structured respondent submissions are added by the Submission engine in Phase 7.',
