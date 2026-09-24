@@ -11,7 +11,6 @@ use App\Models\ProposalParty;
 use App\Models\ProposalVersion;
 use App\Models\User;
 use App\ProposalDecisionKind;
-use App\ProposalStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
