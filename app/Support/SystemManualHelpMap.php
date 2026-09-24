@@ -20,6 +20,10 @@ class SystemManualHelpMap
             return 'planner';
         }
 
+        if (str_starts_with($routeName, 'accounting.')) {
+            return 'accounting';
+        }
+
         if (str_starts_with($routeName, 'profile.')
             || str_starts_with($routeName, 'intents.')) {
             return 'profile-concepts';
