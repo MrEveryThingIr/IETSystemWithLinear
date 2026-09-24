@@ -285,7 +285,7 @@ class Library extends Component
             ]),
             ContextKind::Relationship => $this->relationshipContextLabel($context),
             ContextKind::Negotiation => __('library.context.negotiation', [
-                'title' => $context->proposalBinding?->proposal?->title ?? '#'.$context->uuid,
+                'title' => $context->proposalBinding?->proposal->title ?? '#'.$context->uuid,
             ]),
             ContextKind::Reference => __('library.context.reference', [
                 'key' => $context->referenceBinding->key ?? $context->uuid,
