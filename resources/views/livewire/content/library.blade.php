@@ -51,7 +51,7 @@
             @php
                 $revision = $content->activeRevision;
                 $blueprintModel = $content->blueprintVersion?->blueprint;
-                $activePlacements = $content->placements->where('status', AppModelsContentPlacement::STATUS_ACTIVE);
+                $activePlacements = $content->placements->where('status', \App\Models\ContentPlacement::STATUS_ACTIVE);
                 $cover = $revision?->assets?->first(fn ($asset) => $asset->mediaKind() === 'image');
             @endphp
             <article class="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -89,9 +89,9 @@
                             @foreach ($activePlacements as $placement)
                                 <div class="flex items-center justify-between gap-2">
                                     <span>{{ $targetContextLabels[$placement->context->uuid] ?? $sourceContextLabels[$placement->context->uuid] ?? __('library.context.unknown') }}</span>
-                                    @can('manageContent', $placement->context)
+                                    @if (auth()->user()?->can('manageContent', $placement->context))
                                         <button type="button" wire:click="removePlacement('{{ $placement->uuid }}')" class="text-xs underline">{{ __('library.remove') }}</button>
-                                    @endcan
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
