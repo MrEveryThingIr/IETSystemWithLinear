@@ -1,0 +1,46 @@
+<?php
+
+return [
+    'conversation' => [
+        'title' => 'Conversation',
+        'help' => 'Context-scoped collaboration messages. Messages are durable evidence, but message text never performs authoritative lifecycle, Contract, ownership, obligation, payment, or approval actions.',
+        'read_only' => 'This Context is currently read-only. Existing messages remain visible, but new messages cannot be posted.',
+        'none' => 'No messages yet',
+        'none_help' => 'Start the conversation when this Context becomes writable.',
+        'message' => 'Message',
+        'message_placeholder' => 'Write a message to this Context…',
+        'reply' => 'Reply',
+        'replying_to' => 'Replying to',
+        'cancel_reply' => 'Cancel reply',
+        'send' => 'Send message',
+        'attachments' => 'Attach existing Context Assets',
+        'attachments_help' => 'Select existing Assets already stored in this Context. No file is duplicated.',
+        'references' => 'Reference exact Content evidence',
+        'references_help' => 'Attach existing immutable Content Evidence References from this Context.',
+        'asset' => 'Asset',
+        'evidence' => 'Evidence reference',
+        'open_evidence' => 'Open exact evidence',
+        'download_asset' => 'Download',
+        'non_authority' => 'Writing “I agree”, “approved”, “paid”, or similar words here records only a message. Authoritative changes require the dedicated domain action.',
+    ],
+    'timeline' => [
+        'title' => 'Timeline',
+        'help' => 'A read-only projection reconstructed from durable source events in this Context. The Timeline stores no independent truth.',
+        'none' => 'No timeline activity yet',
+        'message' => 'Message posted',
+        'content' => ':event · :title',
+        'source' => 'Open source',
+        'kinds' => [
+            'message' => 'Conversation',
+            'content' => 'Content',
+            'relationship' => 'Relationship',
+            'admission' => 'Admission',
+        ],
+        'projection_notice' => 'Timeline entries are projections. Follow “Open source” for the authoritative object or event context.',
+    ],
+    'tabs' => [
+        'conversation' => 'Conversation',
+        'timeline' => 'Timeline',
+        'content' => 'Content',
+    ],
+];
