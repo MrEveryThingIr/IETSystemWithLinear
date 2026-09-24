@@ -34,6 +34,7 @@ return [
         'group_space' => 'Group Space',
         'admission' => 'Admission · :group',
         'relationship' => 'Relationship · :title',
+        'negotiation' => 'Negotiation · :title',
         'reference' => 'Reference · :key',
         'unknown' => 'Context',
     ],
