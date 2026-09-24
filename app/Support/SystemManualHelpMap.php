@@ -36,6 +36,12 @@ class SystemManualHelpMap
             return 'admission';
         }
 
+        if (str_starts_with($routeName, 'contexts.conversation')
+            || str_starts_with($routeName, 'contexts.timeline')
+            || $routeName === 'groups.spaces.show') {
+            return 'conversation-timeline';
+        }
+
         if (str_starts_with($routeName, 'contexts.submissions.')) {
             return 'submissions';
         }

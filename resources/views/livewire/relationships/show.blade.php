@@ -8,8 +8,14 @@
     <x-app.page-header :title="$title" :description="__('relationships.help')">
         <x-slot:actions>
             @if ($context)
+                <flux:button :href="route('contexts.conversation', $context)" variant="ghost">
+                    {{ __('collaboration.tabs.conversation') }}
+                </flux:button>
+                <flux:button :href="route('contexts.timeline', $context)" variant="ghost">
+                    {{ __('collaboration.tabs.timeline') }}
+                </flux:button>
                 <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
-                    {{ __('relationships.show.open_workspace') }}
+                    {{ __('collaboration.tabs.content') }}
                 </flux:button>
             @endif
         </x-slot:actions>
@@ -95,9 +101,17 @@
                         <flux:heading>{{ __('relationships.show.workspace') }}</flux:heading>
                         <flux:text>{{ __('relationships.show.workspace_help') }}</flux:text>
                     </div>
-                    <flux:button :href="route('contexts.contents.index', $context)" variant="primary" class="w-full">
-                        {{ __('relationships.show.open_workspace') }}
-                    </flux:button>
+                    <div class="grid gap-2">
+                        <flux:button :href="route('contexts.conversation', $context)" variant="primary" class="w-full">
+                            {{ __('collaboration.tabs.conversation') }}
+                        </flux:button>
+                        <flux:button :href="route('contexts.timeline', $context)" variant="ghost" class="w-full">
+                            {{ __('collaboration.tabs.timeline') }}
+                        </flux:button>
+                        <flux:button :href="route('contexts.contents.index', $context)" variant="ghost" class="w-full">
+                            {{ __('collaboration.tabs.content') }}
+                        </flux:button>
+                    </div>
                 </flux:card>
             @endif
         </div>

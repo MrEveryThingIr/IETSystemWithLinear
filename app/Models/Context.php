@@ -77,6 +77,12 @@ class Context extends Model
         return $this->hasOne(ReferenceContext::class);
     }
 
+    /** @return HasMany<Conversation, $this> */
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
     /** @return HasMany<SpaceContentDefinition, $this> */
     public function contentDefinitions(): HasMany
     {

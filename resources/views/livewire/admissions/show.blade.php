@@ -1,8 +1,14 @@
 <section class="mx-auto max-w-3xl space-y-6">
     <x-app.page-header :title="__('ui.admission.title')" :description="$admission->group->name.' · '.__('ui.status.'.$admission->status)">
         <x-slot:actions>
+            <flux:button :href="route('admissions.context.conversation', $admission)" variant="ghost" class="w-full sm:w-auto">
+                {{ __('collaboration.tabs.conversation') }}
+            </flux:button>
+            <flux:button :href="route('admissions.context.timeline', $admission)" variant="ghost" class="w-full sm:w-auto">
+                {{ __('collaboration.tabs.timeline') }}
+            </flux:button>
             <flux:button :href="route('admissions.context.contents', $admission)" variant="ghost" icon="document-text" class="w-full sm:w-auto">
-                {{ __('ui.context_content.admission_workspace') }}
+                {{ __('collaboration.tabs.content') }}
             </flux:button>
         </x-slot:actions>
     </x-app.page-header>

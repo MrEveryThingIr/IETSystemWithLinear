@@ -4,11 +4,13 @@ use App\Http\Controllers\AccessInvitationController;
 use App\Http\Controllers\ActorAvatarController;
 use App\Http\Controllers\ActorProfileImageController;
 use App\Http\Controllers\ActorProfileReferenceController;
+use App\Http\Controllers\AdmissionContextCollaborationController;
 use App\Http\Controllers\AdmissionContextContentController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\ContentEvidenceReferenceController;
 use App\Http\Controllers\ContentRevisionController;
+use App\Http\Controllers\ContextConversationAssetController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
@@ -33,6 +35,8 @@ use App\Livewire\Contexts\ContentIndex as ContextContentIndex;
 use App\Livewire\Contexts\ContentOutline as ContextContentOutline;
 use App\Livewire\Contexts\ContentShow as ContextContentShow;
 use App\Livewire\Contexts\ContentStudio as ContextContentStudio;
+use App\Livewire\Contexts\Conversation as ContextConversation;
+use App\Livewire\Contexts\Timeline as ContextTimeline;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
 use App\Livewire\Groups\Create as CreateGroup;
@@ -95,6 +99,14 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
     Route::get('/manual', SystemManualController::class)->name('manual');
     Route::get('/admissions/{admission}/content', AdmissionContextContentController::class)->name('admissions.context.contents');
+    Route::get('/admissions/{admission}/conversation', [AdmissionContextCollaborationController::class, 'conversation'])->name('admissions.context.conversation');
+    Route::get('/admissions/{admission}/timeline', [AdmissionContextCollaborationController::class, 'timeline'])->name('admissions.context.timeline');
+    Route::livewire('/contexts/{context}/conversation', ContextConversation::class)->can('view', 'context')->name('contexts.conversation');
+    Route::livewire('/contexts/{context}/timeline', ContextTimeline::class)->can('view', 'context')->name('contexts.timeline');
+    Route::get('/contexts/{context}/conversation/{message}/assets/{asset}', [ContextConversationAssetController::class, 'show'])
+        ->name('contexts.conversation.assets.show');
+    Route::get('/contexts/{context}/conversation/{message}/assets/{asset}/download', [ContextConversationAssetController::class, 'download'])
+        ->name('contexts.conversation.assets.download');
     Route::livewire('/contexts/{context}/contents', ContextContentIndex::class)->can('view', 'context')->name('contexts.contents.index');
     Route::get('/contexts/{context}/contents/{content}/assets/{asset}', [SpaceContentAssetController::class, 'showContext'])
         ->name('contexts.contents.assets.show');

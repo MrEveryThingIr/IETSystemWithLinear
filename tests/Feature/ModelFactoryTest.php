@@ -19,6 +19,8 @@ use App\Models\ContentBlueprintVersion;
 use App\Models\ContentEvidenceReference;
 use App\Models\ContentPlacement;
 use App\Models\Context;
+use App\Models\Conversation;
+use App\Models\ConversationMessage;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
@@ -67,6 +69,8 @@ class ModelFactoryTest extends TestCase
             ActorProfileDisclosureGrant::factory()->create(),
             ActorProfileDisclosureItem::factory()->create(),
             Context::factory()->create(),
+            Conversation::factory()->create(),
+            ConversationMessage::factory()->create(),
             ContentBlueprint::factory()->create(),
             ContentBlueprintVersion::factory()->create(),
             ContentEvidenceReference::factory()->create(),

@@ -18,6 +18,7 @@ use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceManagement;
 use App\Models\Actor;
 use App\Models\Admission;
+use App\Models\Conversation;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
@@ -97,8 +98,8 @@ class GroupSpaceGovernanceTest extends TestCase
             ->call('send')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('group_space_messages', [
-            'group_space_id' => $general->id,
+        $this->assertDatabaseHas('conversation_messages', [
+            'conversation_id' => $this->mainConversationId($general),
             'author_actor_id' => $member->id,
             'body' => 'Inherited participation works.',
         ]);
@@ -163,8 +164,8 @@ class GroupSpaceGovernanceTest extends TestCase
             ->call('send')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('group_space_messages', [
-            'group_space_id' => $space->id,
+        $this->assertDatabaseHas('conversation_messages', [
+            'conversation_id' => $this->mainConversationId($space),
             'author_actor_id' => $member->id,
         ]);
     }
@@ -279,8 +280,8 @@ class GroupSpaceGovernanceTest extends TestCase
 
         app(PostGroupSpaceMessage::class)->execute($space, $owner->user, 'Private note.');
 
-        $this->assertDatabaseHas('group_space_messages', [
-            'group_space_id' => $space->id,
+        $this->assertDatabaseHas('conversation_messages', [
+            'conversation_id' => $this->mainConversationId($space),
             'author_actor_id' => $owner->id,
             'body' => 'Private note.',
         ]);
@@ -354,7 +355,7 @@ class GroupSpaceGovernanceTest extends TestCase
         $this->assertTrue(Gate::forUser($manager->user)->allows('manage', $general));
         $this->assertFalse(Gate::forUser($manager->user)->allows('view', $general));
         $component->call('send')->assertStatus(403);
-        $this->assertDatabaseMissing('group_space_messages', ['body' => 'Must be blocked after deny.']);
+        $this->assertDatabaseMissing('conversation_messages', ['body' => 'Must be blocked after deny.']);
     }
 
     public function test_cross_group_space_substitution_cannot_mount_or_mutate(): void
@@ -424,7 +425,7 @@ class GroupSpaceGovernanceTest extends TestCase
 
         $this->assertFalse(Gate::forUser($owner->user)->allows('view', $space->fresh()));
         $component->call('send')->assertStatus(403);
-        $this->assertDatabaseMissing('group_space_messages', ['body' => 'Must not survive archive.']);
+        $this->assertDatabaseMissing('conversation_messages', ['body' => 'Must not survive archive.']);
     }
 
     public function test_duplicate_participant_mutations_are_idempotent(): void
@@ -542,6 +543,16 @@ class GroupSpaceGovernanceTest extends TestCase
             'role' => 'participant',
         ]);
         $this->assertTrue(Gate::forUser($member->user)->allows('view', $space));
+    }
+
+    private function mainConversationId(GroupSpace $space): int
+    {
+        $contextId = $space->contextBinding()->value('context_id');
+
+        return (int) Conversation::query()
+            ->where('context_id', $contextId)
+            ->where('key', 'main')
+            ->valueOrFail('id');
     }
 
     /** @return array{Group, Actor, Actor, GroupMembership, GroupSpace} */

@@ -319,3 +319,91 @@ composer audit
 ### Continuity
 
 Reuse the existing Alice, Bob, Carol, Riverside Lot/Home and Maple Housing Office examples. Relationship is now current implemented behavior. Conversation/Timeline is the next milestone; Proposal/Contract/Planner/Fulfillment/Accounting remain future until their own explicit phases.
+
+
+---
+
+## Checkpoint 11 — Conversation + Unified Timeline
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-11-conversation-timeline
+~~~
+
+Remote runtime checkpoint:
+
+~~~text
+SHA: 6dcd43a056290730eaab608b6291a96ce8ff4b62
+CI: 36030315938
+Result: 448 tests / 2533 assertions; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Kernel checkpoint:
+
+~~~text
+SHA: 0a0d0c4b38ee9629413a1db12536e9ffbfbb9b0c
+CI: 36029544109
+Result: 444 tests / 2503 assertions
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_24_020000_create_context_conversations.php
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-11-conversation-timeline
+git pull --ff-only origin feat/ideal-v1-11-conversation-timeline
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/ConversationKernelTest.php \
+  tests/Feature/ConversationTimelineExperienceTest.php \
+  tests/Feature/Groups/GroupSpaceCommunicationTest.php \
+  tests/Feature/Groups/GroupSpaceGovernanceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story
+
+Continue with the same Alice/Bob/Carol/Diego objects.
+
+- [ ] Open Alice ↔ Bob active Relationship → **Conversation**.
+- [ ] Send ordinary messages and a reply; reload and confirm the same order/content remains.
+- [ ] Type **“I agree to everything in this chat.”** and confirm Relationship state does not change.
+- [ ] Attach an existing Asset from the Relationship Context; confirm no duplicate Asset/file is created.
+- [ ] Attach an existing exact Content Evidence Reference; open it and confirm it resolves the pinned historical source.
+- [ ] Attempt to use an Asset/evidence reference from another Context; it must be rejected.
+- [ ] Open **Timeline** and confirm Relationship lifecycle + messages appear chronologically.
+- [ ] Reload Timeline; the same source-derived state reconstructs with no independent Timeline record.
+- [ ] Follow **Open source** from a Relationship event and message; each returns to the authoritative source surface.
+- [ ] From an unrelated Actor, Conversation and Timeline routes are forbidden.
+- [ ] Open a mutable Admission as candidate/reviewer and confirm the same shared Conversation + Timeline surfaces work under Admission authorization.
+- [ ] Confirm Admission messages do not approve/finalize Admission or create Membership.
+- [ ] Open Maple Housing Office General chat after migration; existing Group chat behavior/replies remain intact.
+- [ ] Confirm denied/restricted/archived GroupSpace rules still prevent reading/posting.
+- [ ] Open GroupSpace Timeline and confirm Context activity projects without a Group-specific Timeline table.
+- [ ] End/cancel a Relationship and confirm its Conversation becomes read-only while historical messages/Timeline remain readable to participants.
+- [ ] Mobile/RTL/accessibility/realtime behavior stays in the cumulative later acceptance/polish pass.
+
+### Negative guarantees
+
+- [ ] no `group_space_messages` dual-write store remains;
+- [ ] no Timeline persistence table exists;
+- [ ] message text cannot perform authoritative acceptance/approval/payment;
+- [ ] message references do not copy Assets/Content;
+- [ ] Timeline does not leak Content the viewer cannot read.

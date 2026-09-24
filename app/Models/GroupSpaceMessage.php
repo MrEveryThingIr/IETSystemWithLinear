@@ -2,31 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Database\Factories\GroupSpaceMessageFactory;
 
-#[Fillable(['group_space_id', 'author_actor_id', 'reply_to_message_id', 'body'])]
-class GroupSpaceMessage extends Model
+/**
+ * @deprecated Phase 11 migrated GroupSpace chat into the Context Conversation kernel.
+ *             Use ConversationMessage for new code.
+ */
+class GroupSpaceMessage extends ConversationMessage
 {
-    use HasFactory;
+    protected $table = 'conversation_messages';
 
-    /** @return BelongsTo<GroupSpace, $this> */
-    public function space(): BelongsTo
+    protected static function newFactory(): GroupSpaceMessageFactory
     {
-        return $this->belongsTo(GroupSpace::class, 'group_space_id');
-    }
-
-    /** @return BelongsTo<Actor, $this> */
-    public function author(): BelongsTo
-    {
-        return $this->belongsTo(Actor::class, 'author_actor_id');
-    }
-
-    /** @return BelongsTo<GroupSpaceMessage, $this> */
-    public function replyTo(): BelongsTo
-    {
-        return $this->belongsTo(self::class, 'reply_to_message_id');
+        return GroupSpaceMessageFactory::new();
     }
 }
