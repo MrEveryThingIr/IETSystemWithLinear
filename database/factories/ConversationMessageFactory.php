@@ -4,17 +4,12 @@ namespace Database\Factories;
 
 use App\Models\Actor;
 use App\Models\Conversation;
-use App\Models\GroupSpaceMessage;
+use App\Models\ConversationMessage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @deprecated Compatibility factory for migrated GroupSpaceMessage callers.
- * @extends Factory<GroupSpaceMessage>
- */
-class GroupSpaceMessageFactory extends Factory
+/** @extends Factory<ConversationMessage> */
+class ConversationMessageFactory extends Factory
 {
-    protected $model = GroupSpaceMessage::class;
-
     /** @return array<string, mixed> */
     public function definition(): array
     {

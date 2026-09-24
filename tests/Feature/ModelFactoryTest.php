@@ -67,6 +67,8 @@ class ModelFactoryTest extends TestCase
             ActorProfileDisclosureGrant::factory()->create(),
             ActorProfileDisclosureItem::factory()->create(),
             Context::factory()->create(),
+            Conversation::factory()->create(),
+            ConversationMessage::factory()->create(),
             ContentBlueprint::factory()->create(),
             ContentBlueprintVersion::factory()->create(),
             ContentEvidenceReference::factory()->create(),

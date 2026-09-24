@@ -46,8 +46,13 @@ class GroupSpaceCommunicationTest extends TestCase
             ->call('send')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('group_space_messages', [
-            'group_space_id' => $space->id,
+        $conversation = Conversation::query()
+            ->where('context_id', $space->contextBinding()->value('context_id'))
+            ->where('key', 'main')
+            ->sole();
+
+        $this->assertDatabaseHas('conversation_messages', [
+            'conversation_id' => $conversation->id,
             'author_actor_id' => $member->id,
             'body' => 'Hello from the first group space.',
         ]);
@@ -63,10 +68,12 @@ class GroupSpaceCommunicationTest extends TestCase
     public function test_member_can_reply_only_to_a_message_in_the_same_chat_space(): void
     {
         [$group, $owner, $member, $space] = $this->groupWithMember();
-        $original = $space->messages()->create([
-            'author_actor_id' => $owner->id,
-            'body' => 'Original question',
-        ]);
+        $context = $space->contextBinding()->with('context')->firstOrFail()->context;
+        $original = app(PostContextMessage::class)->execute(
+            $context,
+            $owner->user,
+            'Original question',
+        );
 
         Livewire::actingAs($member->user)
             ->test(SpaceChat::class, ['group' => $group, 'space' => $space])
@@ -78,18 +85,21 @@ class GroupSpaceCommunicationTest extends TestCase
             ->assertHasNoErrors()
             ->assertSet('replyToMessageId', null);
 
-        $this->assertDatabaseHas('group_space_messages', [
-            'group_space_id' => $space->id,
+        $this->assertDatabaseHas('conversation_messages', [
+            'conversation_id' => $original->conversation_id,
             'author_actor_id' => $member->id,
             'reply_to_message_id' => $original->id,
             'body' => 'Here is an answer.',
         ]);
 
         $otherGroup = app(CreateGroup::class)->execute($owner, 'Other chat', null);
-        $foreignMessage = $otherGroup->spaces()->sole()->messages()->create([
-            'author_actor_id' => $owner->id,
-            'body' => 'Not in this chat',
-        ]);
+        $otherSpace = $otherGroup->spaces()->sole();
+        $foreignContext = $otherSpace->contextBinding()->with('context')->firstOrFail()->context;
+        $foreignMessage = app(PostContextMessage::class)->execute(
+            $foreignContext,
+            $owner->user,
+            'Not in this chat',
+        );
 
         Livewire::actingAs($member->user)
             ->test(SpaceChat::class, ['group' => $group, 'space' => $space])
@@ -132,7 +142,7 @@ class GroupSpaceCommunicationTest extends TestCase
 
         $component->call('send')->assertStatus(403);
 
-        $this->assertDatabaseCount('group_space_messages', 0);
+        $this->assertDatabaseCount('conversation_messages', 0);
     }
 
     /** @return array{Group, Actor, Actor, GroupSpace, GroupMembership} */

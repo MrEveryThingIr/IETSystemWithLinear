@@ -46,10 +46,22 @@ class GroupSpace extends Model
         return $this->hasOne(GroupSpaceContext::class);
     }
 
-    /** @return HasMany<GroupSpaceMessage, $this> */
-    public function messages(): HasMany
+    /** @return Builder<ConversationMessage> */
+    public function messages(): Builder
     {
-        return $this->hasMany(GroupSpaceMessage::class);
+        $contextId = $this->contextBinding()->value('context_id');
+
+        return ConversationMessage::query()
+            ->when(
+                $contextId !== null,
+                fn (Builder $query) => $query->whereHas(
+                    'conversation',
+                    fn (Builder $conversation) => $conversation
+                        ->where('context_id', $contextId)
+                        ->where('key', 'main'),
+                ),
+                fn (Builder $query) => $query->whereRaw('1 = 0'),
+            );
     }
 
     /** @return HasMany<GroupSpaceParticipant, $this> */
