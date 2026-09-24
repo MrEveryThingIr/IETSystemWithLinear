@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Groups\ManageGroupAgreement;
+use App\Actions\Planner\MaterializePlannerHorizon;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -29,7 +30,6 @@ Schedule::command('queue:prune-batches --hours=168 --unfinished=168 --cancelled=
     ->name('queue:prune-batches')
     ->dailyAt('02:20')
     ->withoutOverlapping();
-
 
 Schedule::command('planner:materialize --days=120')
     ->name('planner:materialize')

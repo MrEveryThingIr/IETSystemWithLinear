@@ -5,7 +5,6 @@ namespace App\Actions\Planner;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\Models\PlanEvent;
-use App\Models\PlanOccurrence;
 use App\Models\PlanOccurrenceEvent;
 use App\Models\User;
 use App\PlanEventType;
@@ -44,30 +43,28 @@ class TransitionPlan
                     }
                 }
 
-                $occurrenceEvent = $status === PlanStatus::Completed
-                    ? PlanOccurrenceEventType::Cancelled
-                    : PlanOccurrenceEventType::Cancelled;
-
                 foreach ($locked->occurrences as $occurrence) {
-                    if (! in_array($occurrence->status, [
+                    if (in_array($occurrence->status, [
                         PlanOccurrenceStatus::Scheduled,
                         PlanOccurrenceStatus::InProgress,
                     ], true)) {
-                        continue;
+                        // Terminal Occurrences remain untouched.
+                    } else {
                     }
 
-                    $actualEnd = $occurrence->status === PlanOccurrenceStatus::InProgress ? now() : null;
-                    $occurrence->transition(
-                        PlanOccurrenceStatus::Cancelled,
-                        actualStartAt: $occurrence->actual_start_at,
-                        actualEndAt: $actualEnd,
-                    );
-                    PlanOccurrenceEvent::query()->create([
-                        'plan_occurrence_id' => $occurrence->id,
-                        'actor_id' => $actor->id,
-                        'event_type' => $occurrenceEvent,
-                        'payload' => ['reason' => 'plan_'.$status->value],
-                    ]);
+                        $actualEnd = $occurrence->status === PlanOccurrenceStatus::InProgress ? now() : null;
+                        $occurrence->transition(
+                            PlanOccurrenceStatus::Cancelled,
+                            actualStartAt: $occurrence->actual_start_at,
+                            actualEndAt: $actualEnd,
+                        );
+                        PlanOccurrenceEvent::query()->create([
+                            'plan_occurrence_id' => $occurrence->id,
+                            'actor_id' => $actor->id,
+                            'event_type' => PlanOccurrenceEventType::Cancelled,
+                            'payload' => ['reason' => 'plan_'.$status->value],
+                        ]);
+                    }
                 }
             }
 
