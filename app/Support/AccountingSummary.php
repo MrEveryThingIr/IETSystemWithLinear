@@ -34,8 +34,8 @@ class AccountingSummary
         $end = CarbonImmutable::createFromFormat('!Y-m-d', $through);
 
         abort_unless(
-            $start !== false
-            && $end !== false
+            $start !== null
+            && $end !== null
             && $start->format('Y-m-d') === $from
             && $end->format('Y-m-d') === $through
             && $start->lte($end),
