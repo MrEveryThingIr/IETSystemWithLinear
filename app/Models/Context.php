@@ -65,6 +65,12 @@ class Context extends Model
         return $this->hasOne(AdmissionContext::class);
     }
 
+    /** @return HasOne<RelationshipContext, $this> */
+    public function relationshipBinding(): HasOne
+    {
+        return $this->hasOne(RelationshipContext::class);
+    }
+
     /** @return HasOne<ReferenceContext, $this> */
     public function referenceBinding(): HasOne
     {

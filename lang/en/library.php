@@ -33,6 +33,7 @@ return [
         'personal' => 'Personal workspace',
         'group_space' => 'Group Space',
         'admission' => 'Admission · :group',
+        'relationship' => 'Relationship · :title',
         'reference' => 'Reference · :key',
         'unknown' => 'Context',
     ],

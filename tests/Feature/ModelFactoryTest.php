@@ -68,6 +68,10 @@ class ModelFactoryTest extends TestCase
             PersonalContext::factory()->create(),
             GroupSpaceContext::factory()->create(),
             AdmissionContext::factory()->create(),
+            Relationship::factory()->create(),
+            RelationshipParticipant::factory()->create(),
+            RelationshipContext::factory()->create(),
+            RelationshipEvent::factory()->create(),
             Group::factory()->create(),
             GroupMembership::factory()->create(),
             GroupMembershipEvent::factory()->create(),
@@ -123,6 +127,11 @@ class ModelFactoryTest extends TestCase
         $this->assertSame('active', SpaceContentDefinition::factory()->active()->create()->status);
         $this->assertSame('archived', SpaceContent::factory()->archived()->create()->status);
         $this->assertSame('removed', ContentPlacement::factory()->removed()->create()->status);
+        $this->assertSame(RelationshipStatus::Ended, Relationship::factory()->ended()->create()->status);
+        $this->assertSame(
+            RelationshipParticipantStatus::Declined,
+            RelationshipParticipant::factory()->declined()->create()->status,
+        );
         $this->assertNotNull(PlatformAccessGrant::factory()->revoked()->create()->revoked_at);
         $this->assertNotNull(ActorProfileDisclosureGrant::factory()->revoked()->create()->revoked_at);
         $this->assertFalse(ActorProfileDisclosureGrant::factory()->expired()->create()->isActive());

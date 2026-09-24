@@ -97,6 +97,7 @@ class Library extends Component
                 'context.personalBinding.actor.user',
                 'context.groupSpaceBinding.groupSpace.group',
                 'context.admissionBinding.admission.group',
+                'context.relationshipBinding.relationship.purposeConcept.labels',
                 'context.referenceBinding',
                 'author.user',
                 'activeRevision.assets',
@@ -104,6 +105,7 @@ class Library extends Component
                 'placements.context.personalBinding.actor.user',
                 'placements.context.groupSpaceBinding.groupSpace.group',
                 'placements.context.admissionBinding.admission.group',
+                'placements.context.relationshipBinding.relationship.purposeConcept.labels',
                 'placements.context.referenceBinding',
             ])
             ->latest('published_at')
@@ -257,6 +259,7 @@ class Library extends Component
                 'personalBinding.actor.user',
                 'groupSpaceBinding.groupSpace.group',
                 'admissionBinding.admission.group',
+                'relationshipBinding.relationship.purposeConcept.labels',
                 'referenceBinding',
             ])
             ->latest('id')
@@ -277,10 +280,22 @@ class Library extends Component
             ContextKind::Admission => __('library.context.admission', [
                 'group' => $context->admissionBinding?->admission?->group->name ?? '#'.$context->admissionBinding?->admission_id,
             ]),
+            ContextKind::Relationship => $this->relationshipContextLabel($context),
             ContextKind::Reference => __('library.context.reference', [
                 'key' => $context->referenceBinding->key ?? $context->uuid,
             ]),
         };
+    }
+
+    private function relationshipContextLabel(Context $context): string
+    {
+        $relationship = $context->relationshipBinding?->relationship;
+
+        return __('library.context.relationship', [
+            'title' => $relationship?->title
+                ?: $relationship?->purposeConcept?->displayLabel()
+                ?: '#'.$context->uuid,
+        ]);
     }
 
     private function user(): User
