@@ -37,6 +37,8 @@ return [
             'admission' => 'Admission',
             'planner' => 'Planner',
             'accounting' => 'Accounting',
+            'proposal' => 'Proposal',
+            'contract' => 'Contract',
         ],
         'projection_notice' => 'Timeline entries are projections. Follow “Open source” for the authoritative object or event context.',
     ],

@@ -7,7 +7,25 @@
         </x-slot:actions>
     </x-app.page-header>
 
-    <flux:callout>{{ __('proposals.show.no_contract') }}</flux:callout>
+    @if ($proposal->status === AppProposalStatus::Accepted)
+        @php($derivedContract = $currentVersion->derivedContract)
+        <flux:callout>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <span>{{ __('proposals.show.no_contract') }}</span>
+                @if ($derivedContract)
+                    <flux:button :href="route('contracts.show', $derivedContract)" variant="primary">
+                        {{ __('contracts.actions.open_contract') }}
+                    </flux:button>
+                @else
+                    <flux:button :href="route('contracts.create', ['proposal' => $proposal->uuid])" variant="primary">
+                        {{ __('contracts.actions.create_from_proposal') }}
+                    </flux:button>
+                @endif
+            </div>
+        </flux:callout>
+    @else
+        <flux:callout>{{ __('proposals.show.no_contract') }}</flux:callout>
+    @endif
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
