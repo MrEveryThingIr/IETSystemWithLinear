@@ -8,6 +8,8 @@ Phase 11 is remotely complete.
 - Baseline: `1ea4e1d84dedf0f666fcc3818ac75d7b21f5abb9`
 - Kernel checkpoint: `0a0d0c4b38ee9629413a1db12536e9ffbfbb9b0c` / CI `36029544109` — 444 tests / 2503 assertions
 - Runtime checkpoint: `6dcd43a056290730eaab608b6291a96ce8ff4b62` / CI `36030315938` — 448 tests / 2533 assertions
+- Documentation-closure checkpoint: `32526fc881b41caf2542c8667198e62fccb8e340` / CI `36031024238` — 448 tests / 2537 assertions
+- The closure gate adds documentation-contract assertions; runtime architecture remains the validated `6dcd43a` checkpoint.
 - Local/browser acceptance: deferred and recorded cumulatively
 
 ## Architectural result

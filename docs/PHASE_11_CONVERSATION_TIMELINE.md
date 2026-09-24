@@ -16,6 +16,20 @@ npm audit: 0 vulnerabilities
 Composer audit: no advisories
 ~~~
 
+Documentation-closure checkpoint:
+
+~~~text
+SHA: 32526fc881b41caf2542c8667198e62fccb8e340
+GitHub Actions: 36031024238
+448 tests / 2537 assertions
+PHPStan: clean
+Vite/migrations/scheduler/database-queue/backup: green
+npm audit: 0 vulnerabilities
+Composer audit: no advisories
+~~~
+
+The runtime and documentation-closure checkpoints are intentionally recorded separately: the latter adds documentation-contract assertions without changing the Phase 11 runtime architecture.
+
 Kernel checkpoint:
 
 ~~~text
