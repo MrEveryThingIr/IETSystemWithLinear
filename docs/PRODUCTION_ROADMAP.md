@@ -453,6 +453,8 @@ Exit: direct relationships exist without fake Groups and can host independent Co
 
 ## Phase 11 — Conversation + Unified Timeline
 
+**Status: remote implementation complete and green on `feat/ideal-v1-11-conversation-timeline` at `6dcd43a056290730eaab608b6291a96ce8ff4b62` / GitHub Actions `36030315938` — 448 tests / 2533 assertions.**
+
 Purpose: make collaboration understandable while keeping messages non-authoritative.
 
 Deliverables:

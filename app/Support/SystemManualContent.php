@@ -25,6 +25,7 @@ class SystemManualContent
         'agreements' => '13. Group Agreements and Versioned Governance',
         'end-to-end' => '14. End-to-End Guided Example and UI Testing',
         'relationships' => '15. Relationships and Direct Collaboration',
+        'conversation-timeline' => '16. Conversation and Unified Timeline',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -47,7 +48,7 @@ Today the strongest implemented foundations are User/Actor identity, Group gover
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Conversation/Timeline, Planner, Accounting, negotiated Proposal/Contract/Commitment/Fulfillment, Matching, realtime, reputation/discovery, and AI remain later roadmap milestones.
+Planner, Accounting, negotiated Proposal/Contract/Commitment/Fulfillment, Matching, realtime transport, reputation/discovery, and AI remain later roadmap milestones.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -287,7 +288,7 @@ An authorized platform administrator can issue a private standalone Access Invit
 
 Group Invitations are presented for existing verified users. They lead toward Group Admission/Membership under Group authority.
 
-Admission still has formal lifecycle state and can own an Admission Context. Structured applications/evidence can use Phase 7 Submission/Response/Evaluation. Conversation-first Admission remains a later roadmap composition.
+Admission still has formal lifecycle state and can own an Admission Context. Structured applications/evidence can use Phase 7 Submission/Response/Evaluation. Phase 11 now gives mutable Admission Contexts the same shared Conversation and source-linked Timeline used by other collaboration Contexts.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Example A — new person:
@@ -310,7 +311,7 @@ TEXT,
 Candidates may access their Admission Context but not normal GroupSpace Content unless separately authorized. Admission reviewers require the Group's manage_admissions authority; they do not have to be the owner.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Admission v2 should feel conversation-first: candidate/reviewer discussion, structured requirement cards, evidence, system timeline, explicit approval/rejection/agreement actions, clear reviewer attention state, and later realtime delivery.
+Admission should continue toward richer requirement/evidence cards, optional reviewer-internal discussion, explicit attention state, and later realtime delivery on top of the shared Conversation/Timeline kernel.
 
 Messages remain collaboration; authoritative transitions remain explicit.
 TEXT,
@@ -337,7 +338,7 @@ TEXT,
 Submit eligibility is defined by the interaction and Context. GroupSpace review authority currently comes from manage_spaces or explicit Space manager access. Admission review authority comes from manage_admissions. A reviewer cannot evaluate their own Submission.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-These structured cards should appear naturally inside future Conversation and workflow experiences so both sides immediately see what changed, what is waiting, and what action is available without searching unrelated pages.
+These structured cards should increasingly appear naturally beside the current Conversation/Timeline experience so both sides immediately see what changed, what is waiting, and what explicit action is available without searching unrelated pages.
 
 Realtime delivery may notify both sides, but the database Submission/Evaluation remains authoritative.
 TEXT,
@@ -351,7 +352,7 @@ TEXT,
 The long-term proof for IET is not “can it store many object types?” but “can real life flow through one connected system without losing authority or provenance?”
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Identity, governance, Context, Content and structured interaction foundations exist. Conversation-first Admission, realtime collaboration, generic Workflow, Planner, Domain Packs, direct Contract/Commitment/Fulfillment, matching, Accounting, financial laboratory, discovery, pilots, and production release remain later roadmap work.
+Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation and source-linked Timeline foundations exist. Realtime transport, generic Workflow, Planner, Domain Packs, direct Contract/Commitment/Fulfillment, matching, Accounting, financial laboratory, discovery, pilots, and production release remain later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Use today's implemented kernels for what they already guarantee. Do not fake future Contract, Planner, payment, or fulfillment truth by writing prose into Content fields.
@@ -519,9 +520,9 @@ TEXT,
 This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, and Phase 10 direct Relationships with explicit consent and a dedicated Relationship Context.
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, and Phase 11 Context Conversation + source-linked Timeline.
 
-Conversation/Timeline, Planner, Accounting, Proposal/Contract/Commitment/Fulfillment, Matching and AI are roadmap steps and must be labelled as future until their milestone is remotely integrated.
+Planner, Accounting, Proposal/Contract/Commitment/Fulfillment, Matching, realtime transport and AI are roadmap steps and must be labelled as future until their milestone is remotely integrated.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Run the story in this order.
@@ -595,7 +596,15 @@ Run the story in this order.
    - Separately, Alice can start a direct capital/collaboration Relationship with Carol by selecting the purpose Concept and entering Carol's exact username.
    - End a Relationship and confirm its Context remains readable history but becomes read-only.
 
-11. Structured interaction
+11. Conversation / Timeline
+   - In Alice ↔ Bob active Relationship, open Conversation and send a message plus a reply.
+   - Type “I agree to everything in this chat.” and confirm Relationship status/events do not change.
+   - Reference an existing Context Asset and exact Content Evidence Reference without creating copies.
+   - Open Timeline, reload it, and confirm the same source-derived entries reconstruct.
+   - Follow source links back to the Relationship/message/evidence source.
+   - Repeat the shared Conversation/Timeline proof in Admission and GroupSpace under their own authorization.
+
+12. Structured interaction
    - Start a configured interaction.
    - Save draft and confirm reviewer count does not treat it as submitted.
    - Submit explicitly.
@@ -607,12 +616,12 @@ TEXT,
                     'authorization' => <<<'TEXT'
 Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
 
-Future milestones should extend this same story rather than replace it. Relationship is now implemented. When Conversation/Timeline, Planner, Accounting or Contract capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+Future milestones should extend this same story rather than replace it. Relationship and Conversation/Timeline are now implemented. When Planner, Accounting or Contract capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 The final Ideal-v1 browser story continues naturally:
 
-Alice/Bob/Carol Intent/discovery → Relationship Context (current) → Conversation/Timeline → Proposal → exact ContractVersion → Commitments → planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
+Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline (current) → Proposal → exact ContractVersion → Commitments → planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → accounting → Settlement → Home/Today summaries.
 
 The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
 TEXT,
@@ -632,7 +641,7 @@ Phase 10 implements Relationship, RelationshipParticipant, RelationshipContext a
 
 Creating a Relationship produces a proposed request. The creator is an active managing participant; invited Actors remain invited. The Relationship Context exists immediately so participants can inspect the request, but it is read-only until every initial invitee explicitly accepts.
 
-After activation, active participants can create/interact with ordinary Content in that Relationship Context. A participant marked can_manage may manage Content/definitions/review capability. Ending or cancelling preserves participant-readable history but removes write authority.
+After activation, active participants can create/interact with ordinary Content and use the shared Conversation in that Relationship Context. A participant marked can_manage may manage Content/definitions/review capability. Timeline reconstructs Relationship events, messages and authorized Content lifecycle activity. Ending or cancelling preserves participant-readable history while removing write/message authority.
 
 A Relationship may link to the active visible Intent that originated it. That provenance link does not convert the Intent into a Match, Proposal, Contract, obligation or payment.
 TEXT,
@@ -654,7 +663,7 @@ For a direct known-person request:
 4. Alice records both roles, such as project owner / capital collaborator.
 5. Alice sends the request; Carol must accept before collaboration becomes active.
 
-Inside an active Relationship, choose **Open workspace** to use ordinary Context Content. Use Content for human-facing artifacts and evidence; do not write authoritative Contract/payment state into arbitrary Content fields.
+Inside an active Relationship, choose **Conversation** for collaboration messages/replies, **Timeline** for source-linked activity, or **Content** for human-facing artifacts/evidence. Do not write authoritative Contract/payment state into message text or arbitrary Content fields.
 
 To close coordination, an authorized manager chooses **End relationship**. The history remains readable to participants while the workspace becomes read-only.
 TEXT,
@@ -666,7 +675,7 @@ Recorded participants may view the Relationship and Context history. An invited 
 Relationship activation never grants platform authority, Group authority, Group Membership, source authority for unrelated Content, or authority over another Relationship.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Phase 11 composes Conversation and a source-linked Timeline inside Relationship and other Contexts without making messages authoritative.
+Conversation and source-linked Timeline now compose inside Relationship, Admission and GroupSpace Contexts without making messages authoritative. Realtime delivery remains future transport work.
 
 Later phases progressively attach Planner, Proposal/Negotiation, Contract, Commitments, Fulfillment and Accounting when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
 
@@ -675,7 +684,64 @@ TEXT,
                     'misunderstandings' => <<<'TEXT'
 Relationship does not mean friendship, Match, Contract, employment, ownership, investment right, loan/equity, fulfilled work, debt or payment.
 
-A visible Need/Offer can originate a Relationship, but complementary Intents do not automatically Match. A participant accepting the Relationship accepts the coordination boundary only; exact negotiated terms still require later Proposal/Contract actions. Text saying “I agree” inside Content or future Conversation must not silently change authoritative lifecycle.
+A visible Need/Offer can originate a Relationship, but complementary Intents do not automatically Match. A participant accepting the Relationship accepts the coordination boundary only; exact negotiated terms still require later Proposal/Contract actions. Text saying “I agree” inside Content or Conversation does not change authoritative lifecycle.
+TEXT,
+                ],
+                [
+                    'title' => '16. Conversation and Unified Timeline',
+                    'summary' => <<<'TEXT'
+Conversation is Context-scoped collaboration evidence. Timeline is a read-only projection that makes durable source events understandable without becoming a second source of truth.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 11 provides one Conversation kernel for GroupSpace, Admission and Relationship collaboration. A Context gets one default main Conversation when the first message is posted. Messages and replies are immutable evidence.
+
+Existing GroupSpace chat was migrated into this generic store; the former Group-specific message table is not a parallel authoritative datastore.
+
+A message may reference existing Assets from the same Context and exact Content Evidence References from the same Context. Those relationships reuse the original artifact/evidence identities rather than copying files or Content.
+
+Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Relationship:
+1. Open an active Relationship.
+2. Choose **Conversation**.
+3. Send a message or choose **Reply** on an existing message.
+4. When useful, expand the attachment/reference sections and select an existing Context Asset or exact Evidence Reference.
+5. Choose **Timeline** to see messages and lifecycle/source activity together.
+6. Follow **Open source** when you need the authoritative record.
+
+Admission:
+- use the Admission **Conversation** for candidate/reviewer clarification while the Admission Context is writable;
+- use **Timeline** to inspect source-linked Admission/message activity;
+- use the explicit Admission actions—not message wording—to submit, approve, reject or finalize.
+
+GroupSpace:
+- existing Chat continues to work on the same Conversation store;
+- Timeline is available from the Space navigation;
+- GroupSpace access/deny/archive rules still control participation.
+
+Reloading Conversation or Timeline should reconstruct the same durable database-backed state.
+TEXT,
+                    'authorization' => <<<'TEXT'
+A user must be allowed to view the Context to read Conversation/Timeline.
+
+Posting additionally requires the Context's interaction authority. This means proposed Relationship Contexts and terminal Relationship/Admission Contexts can remain readable while refusing new messages.
+
+Replies must target a message from the same Conversation. Message Asset and Evidence Reference links must belong to the same Context. Timeline Content events are filtered through Content view authorization so Context access cannot leak private Content metadata.
+
+Outsiders cannot use a direct URL to cross a Context boundary.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Later realtime delivery should publish committed database/domain events through an outbox/queue/authorized broadcast path. Realtime transport must remain replaceable: reloading from source truth should always reconstruct the same Conversation/Timeline state.
+
+Future domains such as Planner, Proposal, Contract, Fulfillment and Accounting can add their own source events to Timeline without turning Timeline into their authority. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A message is not an authoritative action. Writing “I agree”, “approved”, “paid”, “accepted”, “I own 20%”, or similar text records only what a participant said.
+
+A Timeline entry is not a duplicated transaction. It is a projection linking back to the source event/object.
+
+Attaching an Asset or Evidence Reference to a message does not copy or transfer ownership of that artifact.
 TEXT,
                 ],
             ],

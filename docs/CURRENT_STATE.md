@@ -248,8 +248,8 @@ Current limitations / deliberate future work:
 
 - a pre-membership Admission Context now exists and supports candidate/reviewer Content collaboration;
 - Admission does not yet host a configurable questionnaire, progressive Profile requirements or structured Submission/Response evidence requests;
-- current clarification still uses Admission lifecycle/events/notes rather than a persistent candidate-reviewer Conversation;
-- Phase 8 remains responsible for productizing Admission Context around Profile requirements, Submissions/evidence and shared/internal Conversations;
+- Phase 11 now provides a persistent shared candidate/reviewer Conversation in mutable Admission Contexts; Admission lifecycle/events remain the only authoritative state transitions;
+- later Admission polish may add configurable Profile requirements, richer structured evidence cards and reviewer-internal Conversation audiences without changing the shared Context Conversation kernel;
 - realtime broadcasting and negotiated Contracts remain later roadmap work.
 
 ## Admission collaboration direction
@@ -259,7 +259,7 @@ The first Admission Context dependency now exists while preserving the proven `I
 Recorded direction:
 
 - a pre-membership candidate collaborates through an `Admission` Context, not through ordinary Membership-gated GroupSpace access;
-- the shared candidate/reviewer Conversation, optional reviewer-internal Conversation, and read-only system timeline have explicit audiences;
+- the shared candidate/reviewer Conversation and read-only source-linked Timeline now exist; an optional reviewer-internal Conversation remains future audience work;
 - messages, uploads, reactions, annotations, and human wording are collaborative records, not authoritative approvals or acceptances;
 - structured requirements/evidence use the Submission/Response/Asset capabilities when Phase 7 exists;
 - explicit domain actions remain authoritative for approval, exact Agreement-version acceptance, Contract activation, Membership finalization, and future Commitments;
@@ -465,7 +465,7 @@ Current limitations:
 - search/taxonomy/discovery UX is incomplete;
 - Content audience is inherited from its Context authorization model; finer productized audience semantics remain future work;
 - archive library/recovery UX is incomplete;
-- Reader/chat still need the later dedicated Conversation/realtime event-broadcast architecture; Phase 9 is Content placement/reference semantics, not realtime delivery.
+- Context Conversation now provides the durable collaboration-message substrate; realtime event/outbox/broadcast transport remains later work and must never replace database source truth.
 
 ## English workbook demonstration
 
@@ -671,12 +671,12 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 10 — Relationship + Relationship Context** is remotely complete on runtime checkpoint `6cb21465489c14efffc589c41070f46160e029c2` / CI `36025406749` (439 tests / 2481 assertions).
+**Phase 11 — Conversation + Unified Timeline** is remotely complete on runtime checkpoint `6dcd43a056290730eaab608b6291a96ce8ff4b62` / CI `36030315938` (448 tests / 2533 assertions).
 
-It adds a consent-aware direct Relationship kernel outside Group Membership: explicit participants/roles, semantic purpose Concept, optional originating Intent provenance, immutable lifecycle events, and a dedicated Relationship Context. Creating a Relationship is only a proposal; the shared Context remains read-only until every initial invitee explicitly accepts. Active participants may collaborate through the existing Content kernel, authorized managers can manage that Context, outsiders have no access, and ended/cancelled Relationships remain readable history without write authority.
+It replaces the GroupSpace-only message datastore with one Context-scoped Conversation kernel, preserving legacy Group chat history while composing the same immutable message/reply substrate into Relationship and Admission Contexts. Same-Context Assets and exact Content Evidence References may be reused by messages without copying artifacts.
 
-The normal UI now supports both a visible Intent → **Start relationship** handoff and a direct known-username request. Neither path creates Match, Proposal, Contract, ownership, employment, financing rights, obligations or payment.
+Timeline is read-only projection code, not a table: it reconstructs authorized Conversation, Relationship, Admission and Content-lifecycle activity on reload and links every entry back to source truth. Text such as “I agree” remains message evidence only and cannot perform an authoritative domain transition.
 
-Next after integration: **Phase 11 — Conversation + Unified Timeline**.
+Next after integration: **Phase 12 — Personal Activity / Planner**.
 
-Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+Realtime transport remains future work; the database source records remain authoritative. Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

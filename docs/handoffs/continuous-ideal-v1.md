@@ -40,11 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 9 is integrated on `integration/ideal-v1` at merge checkpoint `71ffb7af0d2bda56af0df5e3aba2a0377fee8afc`.
+Phase 10 is integrated on `integration/ideal-v1` at merge checkpoint `1ea4e1d84dedf0f666fcc3818ac75d7b21f5abb9`.
 
-Phase 10 — Relationship + Relationship Context — is remote-green on `feat/ideal-v1-10-relationship-context` at runtime checkpoint `6cb21465489c14efffc589c41070f46160e029c2` / CI `36025406749` (439 tests / 2481 assertions).
+Phase 11 — Conversation + Unified Timeline — is remote-green on `feat/ideal-v1-11-conversation-timeline` at runtime checkpoint `6dcd43a056290730eaab608b6291a96ce8ff4b62` / CI `36030315938` (448 tests / 2533 assertions).
 
-After Phase 10 integration, continue directly with **Phase 11 — Conversation + Unified Timeline** from the integration trunk.
+After Phase 11 integration, continue directly with **Phase 12 — Personal Activity / Planner** from the integration trunk.
+
+Persistent Phase 11 boundary: Conversation is immutable collaboration evidence; Timeline is a projection; neither may become a substitute for authoritative domain Actions/events.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 
