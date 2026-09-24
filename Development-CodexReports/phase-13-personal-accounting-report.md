@@ -8,6 +8,8 @@ Phase 13 is remotely complete.
 - Baseline: `6769b8632084f33a464145ae7501f2a4e88f5531`
 - Kernel checkpoint: `81f66c6934c39cbaad26d5363deaad9239777a75` / CI `36041431006` — 465 tests / 2669 assertions
 - Final runtime checkpoint: `c5a45f7d4178637e322855e71318709610e835b8` / CI `36042662030` — 469 tests / 2714 assertions
+- Documentation/manual closure checkpoint: `a05210cf5c823fcd3641f6cebab0bd47e57d94bc` / CI `36043321194` — 469 tests / 2718 assertions
+- The closure gate adds System Manual/contextual-help assertions; runtime architecture remains the validated `c5a45f7` checkpoint.
 - Local/browser/mobile/RTL/accessibility acceptance: deferred cumulatively
 
 ## Product result
