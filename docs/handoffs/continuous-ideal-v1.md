@@ -40,15 +40,30 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 17 is integrated on `integration/ideal-v1` at merge checkpoint `ec284490ac1e43b384abfbe9ee7bba1bf15e84f9`.
+Phase 21 is integrated on `integration/ideal-v1` at `0b605a19643f2b37dce7c88332e1baf284a93a33`.
 
-Phase 18 — Journey / Relationship / Domain Blueprints — is remote-green on `feat/ideal-v1-18-domain-blueprints`: kernel `f6f31eac3941e9efef188d07a6ffd9a091cbcb81` / CI `36118370719` (507 tests / 3109 assertions), runtime/UI `e4c9cb4cce39a1e0a37bad6ae72e97b6ab5feb77` / CI `36119387963` (510 tests / 3138 assertions), with documentation/manual closure pending its final feature-branch gate.
+Phase 22 — Realtime + Notifications — is runtime-green on `feat/ideal-v1-22-realtime-notifications`:
 
-After Phase 18 integration, continue directly with **Phase 19 — Need / Offer Matching** from the integration trunk.
+- runtime SHA `cea1cb4d6775b855e94146dfc75029ec1264ac07`;
+- CI `36134998196`;
+- **537 tests / 3297 assertions**;
+- Pint 686 PHP files;
+- PHPStan/Vite/migration rollback-reapply/scheduler/database-queue/backup/security gates green;
+- durable notification outbox/database inbox + private Reverb/Echo transport implemented.
 
-Persistent Phase 18 boundary: Domain/Journey Blueprints are immutable versioned composition recipes. They may configure terminology, recommended capabilities, useful Content templates and guided-entry defaults, but they never grant authorization or create Proposal, Contract, Commitment, Fulfillment, Financial Obligation, Accounting or Settlement authority. Relationship/Plan instances preserve the exact source BlueprintVersion and never silently upgrade.
+Closure docs/report are being synchronized before integration.
 
-Do not reintroduce AI runtime until the dedicated later AI milestone.
+A historical Codex office-alpha audit was revalidated against the Phase 22 head. Do **not** begin Phase 23 immediately after integration without first closing the still-valid cross-roadmap correctness debt:
+
+- Intent Directory authorization currently occurs after a hard 200-row limit and lacks real pagination;
+- reserved-email Access Invitations still allow impossible multi-use semantics;
+- post-create Intent highlight is emitted but not consumed;
+- Profile Intent management has not caught up with subject/arrangement/cash/exchange facets;
+- stale canonical documentation must be reconciled.
+
+After Phase 22 integration, create one focused Ideal-v1 hardening checkpoint from the integration trunk, close/prove those inherited findings, and only then continue with **Phase 23 — Generic Workflow extraction**.
+
+Do not reintroduce AI runtime until the dedicated Phase 26 milestone.
 
 ## Persistent product rules
 
