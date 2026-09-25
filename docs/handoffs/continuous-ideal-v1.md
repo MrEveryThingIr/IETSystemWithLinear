@@ -54,7 +54,7 @@ Closed/active hardening scope:
 
 Do **not** implement AI Copilot for this release. Preserve Phase 26 as an optional future draft/preparation layer over existing validated Actions. Generic Workflow, Reputation and Recommendations are likewise post-v1 unless a concrete release-blocking defect proves otherwise.
 
-Remote completion requires an exact green CI candidate plus synchronized report/current-state/acceptance/operations docs. Browser acceptance remains the owner's final gate and must not be claimed remotely.
+Pre-integration release-gate candidate `38f95175040234593bc927f895954c893a38e9fd` is green on CI run `36143475001` with 543 tests / 3316 assertions and all quality/ops/security gates passing. The remaining remote sequence is canonical-doc exact-head CI → PR into `integration/ideal-v1` → green integration CI → freeze one release-candidate ref/SHA. Browser acceptance remains the owner's final gate and must not be claimed remotely.
 
 ## Persistent product rules
 
