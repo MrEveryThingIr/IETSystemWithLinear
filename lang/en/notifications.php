@@ -34,5 +34,11 @@ return [
         'settlement_rejected_title' => 'Settlement rejected',
         'financial_obligation_title' => 'Financial obligation updated',
         'financial_event_body' => 'Financial event: :event.',
+        'conversation_message_title' => 'New conversation message',
+        'conversation_message_body' => ':author posted a new message.',
+        'submission_submitted_title' => 'Submission ready for review',
+        'submission_submitted_body' => ':author submitted a response for review.',
+        'evaluation_finalized_title' => 'Evaluation finalized',
+        'evaluation_finalized_body' => 'A finalized evaluation is now available in the related Context.',
     ],
 ];
