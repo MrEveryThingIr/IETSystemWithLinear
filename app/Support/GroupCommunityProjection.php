@@ -22,12 +22,11 @@ class GroupCommunityProjection
     public function __construct(
         private readonly ActorProfileIntentPolicy $intentPolicy,
         private readonly GroupRoleProvisioner $roles,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{
-     *   spaces: Collection<int, \App\Models\GroupSpace>,
+     *   spaces: Collection<int, GroupSpace>,
      *   memberships: Collection<int, GroupMembership>,
      *   membershipRoles: Collection<int, string>,
      *   contents: Collection<int, SpaceContent>,
