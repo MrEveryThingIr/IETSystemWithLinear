@@ -291,10 +291,15 @@ class DomainNotificationProjector
         $submission = $evaluation->submission;
         $user = $submission->submitter->user;
 
-        if (! $user instanceof User
-            || $user->status !== 'active'
-            || $user->email_verified_at === null
-            || ! Gate::forUser($user)->allows('view', $submission)) {
+        if ($user instanceof User === false) {
+            return;
+        }
+
+        if ($user->status !== 'active' || $user->email_verified_at === null) {
+            return;
+        }
+
+        if (Gate::forUser($user)->denies('view', $submission)) {
             return;
         }
 
