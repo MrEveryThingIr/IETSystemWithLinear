@@ -193,6 +193,41 @@ class LocalizationParityTest extends TestCase
         );
     }
 
+    public function test_primary_ui_templates_do_not_ship_literal_english_control_text(): void
+    {
+        $literals = [];
+        $roots = [
+            resource_path('views/livewire'),
+            resource_path('views/components/app'),
+            resource_path('views/layouts'),
+        ];
+
+        foreach ($roots as $root) {
+            foreach (File::allFiles($root) as $file) {
+                if (!str_ends_with($file->getFilename(), '.blade.php')) {
+                    continue;
+                }
+
+                foreach (preg_split('/\R/', $file->getContents()) ?: [] as $index => $line) {
+                    if (preg_match('/>[ \t]*[A-Z][A-Za-z][^<{]{2,}[ \t]*</', trim($line), $match) !== 1) {
+                        continue;
+                    }
+
+                    $literals[$file->getRelativePathname()][] = [
+                        'line' => $index + 1,
+                        'text' => trim($match[0]),
+                    ];
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $literals,
+            'Primary UI templates contain literal English control text: '.json_encode($literals, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+        );
+    }
+
     public function test_blade_templates_do_not_ship_hardcoded_english_aria_labels(): void
     {
         $labels = [];
