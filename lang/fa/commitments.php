@@ -74,6 +74,7 @@ return [
     ],
     'planner' => [
         'frequency' => 'الگوی برنامه',
+        'daily' => 'روزانه',
         'once' => 'یک نوبت',
         'selected_dates' => 'تاریخ‌های انتخابی',
         'starts_on' => 'تاریخ شروع',
