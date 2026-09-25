@@ -6,6 +6,7 @@ use App\Actions\Planner\AttachPlanOccurrenceEvidence;
 use App\Actions\Planner\TransitionPlan;
 use App\Actions\Planner\TransitionPlanOccurrence;
 use App\Models\Actor;
+use App\Models\Commitment;
 use App\Models\ContentEvidenceReference;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
@@ -136,6 +137,9 @@ class Show extends Component
         $originRelationship = $plan->origin_type === 'relationship' && $plan->origin_uuid !== null
             ? Relationship::query()->where('uuid', $plan->origin_uuid)->first()
             : null;
+        $originCommitment = $plan->origin_type === 'commitment' && $plan->origin_uuid !== null
+            ? Commitment::query()->where('uuid', $plan->origin_uuid)->first()
+            : null;
 
         return view('livewire.planner.show', [
             'canManage' => $canManage,
@@ -143,6 +147,7 @@ class Show extends Component
             'availableAssets' => $canParticipate ? $plan->context->assets : collect(),
             'availableEvidenceReferences' => $references,
             'originRelationship' => $originRelationship,
+            'originCommitment' => $originCommitment,
         ]);
     }
 

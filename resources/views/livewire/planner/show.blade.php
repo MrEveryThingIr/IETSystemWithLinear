@@ -44,6 +44,15 @@
                         </a>
                     </div>
                 @endif
+
+                @if ($originCommitment)
+                    <div class="rounded-xl border border-zinc-200 p-4 text-sm dark:border-zinc-700">
+                        <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('planner.plan.origin') }}</div>
+                        <a href="{{ route('commitments.show', $originCommitment) }}" class="mt-1 block font-medium hover:underline" dir="auto">
+                            {{ $originCommitment->title }}
+                        </a>
+                    </div>
+                @endif
             </flux:card>
 
             <flux:card class="space-y-4">

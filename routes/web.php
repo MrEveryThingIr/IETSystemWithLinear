@@ -29,6 +29,8 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Commitments\Create as CommitmentCreate;
+use App\Livewire\Commitments\Show as CommitmentShow;
 use App\Livewire\Content\Library as ContentLibrary;
 use App\Livewire\Contexts\ContentAppearance as ContextContentAppearance;
 use App\Livewire\Contexts\ContentBlocks as ContextContentBlocks;
@@ -112,7 +114,9 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/proposals/{proposal}', ProposalShow::class)->can('view', 'proposal')->name('proposals.show');
     Route::livewire('/contracts', ContractIndex::class)->can('viewAny', Contract::class)->name('contracts.index');
     Route::livewire('/contracts/create', ContractCreate::class)->can('create', Contract::class)->name('contracts.create');
+    Route::livewire('/contracts/{contract}/commitments/create', CommitmentCreate::class)->name('commitments.create');
     Route::livewire('/contracts/{contract}', ContractShow::class)->can('view', 'contract')->name('contracts.show');
+    Route::livewire('/commitments/{commitment}', CommitmentShow::class)->can('view', 'commitment')->name('commitments.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/create', PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');

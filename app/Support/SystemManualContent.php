@@ -30,6 +30,7 @@ class SystemManualContent
         'accounting' => '18. Personal Accounting',
         'proposals' => '19. Proposals and Negotiation',
         'contracts' => '20. Contracts and Exact Acceptance',
+        'commitments' => '21. Commitments and Fulfillment',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -52,7 +53,7 @@ Today the strongest implemented foundations are User/Actor identity, Group gover
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Commitment/Fulfillment, shared Financial Obligation/Settlement bridges, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation and Contract/ContractVersion are now implemented.
+Shared Financial Obligation/Settlement bridges, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment and Fulfillment are now implemented.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -356,7 +357,7 @@ TEXT,
 The long-term proof for IET is not “can it store many object types?” but “can real life flow through one connected system without losing authority or provenance?”
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner, Personal Accounting, Proposal/Negotiation and Contract/ContractVersion foundations exist. Realtime transport, generic Workflow, Domain Packs, Commitment/Fulfillment, matching, shared Financial Obligation/Settlement bridges, financial laboratory, discovery, pilots, and production release remain later roadmap work.
+Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner, Personal Accounting, Proposal/Negotiation, Contract/ContractVersion and Commitment/Fulfillment foundations exist. Realtime transport, generic Workflow, Domain Packs, matching, shared Financial Obligation/Settlement bridges, financial laboratory, discovery, pilots, and production release remain later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity and Personal Accounting may record the Actor's own money history, but neither a Plan/Occurrence nor a personal Journal Entry nor prose in Content becomes shared Contract, payment, financial-obligation, Settlement, or Fulfillment-acceptance truth.
@@ -524,9 +525,9 @@ TEXT,
 This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, Phase 12 personal/Relationship Planner activity, and Phase 13 Bob Personal Accounting with opening balance, expense, income, transfer and reversal.
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, Phase 12 personal/Relationship Planner activity, Phase 13 Bob Personal Accounting, Phase 14 Alice/Bob/Carol Proposal negotiation, Phase 15 exact ContractVersion acceptance, and Phase 16 Riverside Commitment → Planner → Fulfillment → explicit review/correction/dispute.
 
-Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement, Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner, Personal Accounting and Proposal/Negotiation are current implemented behavior.
+Shared Financial Obligation/Settlement, Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner, Personal Accounting, Proposal/Negotiation, Contract/ContractVersion and Commitment/Fulfillment are current implemented behavior.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Run the story in this order.
@@ -615,17 +616,38 @@ Run the story in this order.
    - From an authorized reviewer, open Review submissions.
    - Finalize Evaluation through the explicit review action.
 
+13. Proposal / Negotiation
+   - Alice opens the active Riverside Relationship and starts a Proposal with Bob/Carol as appropriate.
+   - Negotiate exact sealed Proposal versions.
+   - Confirm decisions from an older version never count for the next version.
+   - Reach explicit acceptance of one exact ProposalVersion.
+
+14. Contract
+   - Explicitly create a Contract from the Accepted Proposal or create a direct Contract where appropriate.
+   - Confirm Proposal acceptance is not reused as Contract acceptance.
+   - Have every required Contract party explicitly accept the exact ContractVersion.
+   - Confirm future amendments create new versions and preserve prior effective history.
+
+15. Commitment / Planner / Fulfillment
+   - Under the Active Riverside ContractVersion create a concrete Commitment.
+   - Bind a Plan when scheduling is useful.
+   - Bob starts/completes the occurrence; confirm this alone creates no Fulfillment.
+   - Bob explicitly submits Fulfillment with exact quantity/time/evidence.
+   - Alice explicitly accepts, rejects or requests clarification.
+   - Exercise correction and dispute flows; confirm old facts remain immutable.
+   - Confirm accepted Fulfillment creates no financial consequence yet.
+
 At every step verify: what object was created, who can see it, what exact action changed state, and what did *not* happen implicitly.
 TEXT,
                     'authorization' => <<<'TEXT'
 Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
 
-Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline, Planner, Personal Accounting and Proposal/Negotiation are now implemented. When Contract, Fulfillment or shared Financial Obligation/Settlement capability is implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline, Planner, Personal Accounting, Proposal/Negotiation, Contract and Commitment/Fulfillment are now implemented. When shared Financial Obligation/Settlement or later capabilities are implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 The final Ideal-v1 browser story continues naturally:
 
-Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner → Proposal/Negotiation (current), with Personal Accounting independently available today → exact ContractVersion → Commitments linked to planned Occurrences → actual Fulfillment/evidence → review → Financial Obligation → explicit Accounting posting/Settlement bridge → Home/Today summaries.
+Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner → Proposal/Negotiation → exact ContractVersion → Commitment → planned Occurrence → actual Fulfillment/evidence → explicit review/correction/dispute (current through this point), with Personal Accounting independently available today → Financial Obligation → explicit Accounting posting/Settlement bridge → Home/Today summaries.
 
 The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
 TEXT,
@@ -681,7 +703,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Conversation and source-linked Timeline now compose inside Relationship, Admission and GroupSpace Contexts without making messages authoritative. Realtime delivery remains future transport work.
 
-Planner composes inside active Relationship Contexts. Personal Accounting is implemented separately in the Actor's Personal Context. Proposal/Negotiation can now start directly or from an active Relationship while preserving a separate Negotiation Context. Later phases progressively attach Contract, Commitments, Fulfillment and explicit shared Financial Obligation/Settlement-to-Accounting bridges when the relationship's purpose and user actions require them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
+Planner composes inside active Relationship Contexts. Personal Accounting is implemented separately in the Actor's Personal Context. Proposal/Negotiation can start directly or from an active Relationship; Contract then records exact accepted agreement truth; Commitment and Fulfillment now compose from the exact active ContractVersion. Later phases add explicit shared Financial Obligation/Settlement-to-Accounting bridges only when accepted performance or another defined economic event requires them. Capability discovery should be purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
 
 Multi-party creation, participant changes, broader people discovery and richer capability presentation may extend the same kernel without replacing its consent and authorization boundaries.
 TEXT,
@@ -738,7 +760,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Later realtime delivery should publish committed database/domain events through an outbox/queue/authorized broadcast path. Realtime transport must remain replaceable: reloading from source truth should always reconstruct the same Conversation/Timeline state.
 
-Future domains such as Fulfillment and Financial Obligation/Settlement can add their own source events to Timeline without turning Timeline into their authority. Planner contributes Plan/Occurrence events, Personal Accounting contributes Journal Entries, Proposal/Negotiation contributes Proposal Events, and Contract contributes Contract Events this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
+Future domains such as Financial Obligation/Settlement can add their own source events to Timeline without turning Timeline into their authority. Planner contributes Plan/Occurrence events, Personal Accounting contributes Journal Entries, Proposal/Negotiation contributes Proposal Events, Contract contributes Contract Events, and Commitment/Fulfillment contributes Commitment Events this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 A message is not an authoritative action. Writing “I agree”, “approved”, “paid”, “accepted”, “I own 20%”, or similar text records only what a participant said.
@@ -805,7 +827,7 @@ Plan evidence must already belong to the same Context. Cross-Context Assets/Evid
 Outsiders cannot open a Relationship Plan through a direct URL.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Later Contract/Commitment/Fulfillment phases should explicitly connect authoritative obligations to Planner Occurrences when the domain requires it. A Contract may define what must happen; Planner may schedule the intended Occurrences; Fulfillment may record/review what actually satisfied the Commitment. Those domains must remain distinct and traceable.
+Contract/Commitment/Fulfillment now explicitly connect authoritative obligations to Planner Occurrences when scheduling is useful. Contract defines agreed terms; Commitment records what must happen; Planner schedules intended/actual time; Fulfillment records what actually happened and explicit review. Those domains remain distinct and traceable.
 
 Phase 22 should deliver reminders/notifications from the durable reminder seam without changing Planner truth.
 
@@ -1019,11 +1041,11 @@ Generic Content review/manage authority is not granted merely because an Actor p
 An unrelated Actor cannot open the Contract or Contract Context.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Phase 16 should create explicit Commitments from effective Contract terms and bind those Commitments to Planner Occurrences where scheduling is needed.
+Phase 16 now creates explicit Commitments from effective Contract terms and may bind those Commitments to Planner Occurrences where scheduling is needed.
 
-Commitment answers what must happen. Planner answers when it is intended to happen. Fulfillment answers what actually happened and what evidence proves it. These facts must preserve provenance to the exact ContractVersion that governed them.
+Commitment answers what must happen. Planner answers when it is intended to happen. Fulfillment answers what actually happened and what evidence proves it. Explicit review/correction/dispute records determine accepted performance. These facts preserve provenance to the exact ContractVersion that governed them.
 
-Later Financial Obligation/Settlement phases should create explicit economic consequences only from accepted Fulfillment or another specifically defined Contract event. Contract activation alone must not post Accounting.
+Phase 17 should create explicit economic consequences only from accepted Fulfillment or another specifically defined Contract event. Contract activation, Planner completion and Fulfillment submission alone must not post Accounting.
 
 Future Contract work may add explicit party/role changes through amendments, organization/system Actors, richer termination/expiration semantics and purpose-specific UX while preserving exact immutable version/acceptance history.
 TEXT,
@@ -1037,6 +1059,83 @@ An Active Contract is authoritative agreement truth, but it does not prove that 
 Contract activation does not create a Financial Obligation, JournalEntry, Settlement/payment, ownership/equity, or employment record automatically.
 
 An amendment never edits the old effective ContractVersion. It creates a new version for future behavior, while the old version remains historical evidence.
+TEXT,
+                ],
+                [
+                    'title' => '21. Commitments and Fulfillment',
+                    'summary' => <<<'TEXT'
+Commitment and Fulfillment separate the obligation from actual performance. A Commitment states what must happen under one exact ContractVersion; Planner may schedule it; Fulfillment records what actually happened; explicit review/correction/dispute determines accepted performance.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 16 provides Commitment, CommitmentPlanBinding, Fulfillment, FulfillmentReview, FulfillmentDispute and immutable CommitmentEvent history.
+
+Every Commitment permanently references one exact ContractVersion. Later Contract amendments do not silently rebind old Commitments.
+
+A Commitment records responsible Actor, beneficiary/reviewer, kind, required quantity/unit and optional due window. The responsible/reviewer must be exact parties of the governing ContractVersion.
+
+A Commitment may create one Plan. Plan and materialized Occurrences record Commitment provenance. Planner owns scheduled time and actual start/end/completion. Completing an occurrence does not automatically create Fulfillment.
+
+The responsible Actor explicitly submits Fulfillment. Fulfillment may reference a completed bound occurrence and reuse its actual times plus exact same-Context Assets/Evidence References. Quantity is stored/compared as exact decimal text rather than floating-point math.
+
+The beneficiary/reviewer explicitly Accepts, Rejects or Requests clarification. Accepted Fulfillment contributes to derived accepted Commitment progress. Clarification/rejection may be corrected by submitting a new replacement Fulfillment; the original remains immutable.
+
+Either responsible Actor or beneficiary may open one dispute against an accepted/rejected Fulfillment. The party who opened the dispute cannot resolve it themselves; the other authorized side explicitly resolves as Accepted or Rejected. While accepted performance is disputed, its quantity is excluded from accepted progress.
+
+Commitment/Fulfillment events project into the Contract Context Timeline. No Financial Obligation or Accounting JournalEntry is created automatically.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Riverside workday:
+1. Open the Active Riverside Contract.
+2. Choose **New commitment**.
+3. Enter **Riverside construction workday**.
+4. Choose Bob as **Responsible person** and Alice as **Reviewer / beneficiary**.
+5. Set Required quantity = 1 and Unit = day.
+6. Create the Commitment. It now points permanently to the exact active ContractVersion.
+7. Open the Commitment and choose **Create Plan** when scheduling is useful.
+8. Choose one date/selected dates, start time and duration.
+9. Bob opens the Plan/occurrence, starts work and later completes the occurrence.
+10. Add exact evidence when useful.
+11. Return to the Commitment. Planner completion alone has not submitted Fulfillment.
+12. Bob chooses **Submit Fulfillment**, selects the completed occurrence, enters performed quantity and notes, and submits.
+13. Alice reviews the submitted Fulfillment.
+14. Choose **Accept** to count the quantity as accepted progress, **Reject** to reject it, or **Request clarification** to require a correction.
+15. For clarification/rejection, Bob submits a correction/replacement. The old Fulfillment remains readable.
+16. If a reviewed outcome is disputed, either Bob or Alice may open a dispute; the other side resolves it explicitly.
+17. Open the Contract Context Timeline to inspect source-linked Commitment/Fulfillment history.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Only the creator of an Active Contract may currently create Commitments from it.
+
+The Commitment creator manages the Commitment/Planner binding. Only the Commitment's responsible Actor may submit Fulfillment.
+
+Only the beneficiary/reviewer may review a Submitted Fulfillment.
+
+Only the responsible Actor may submit a correction after Clarification requested or Rejected status.
+
+The responsible Actor or beneficiary may open one dispute after an Accepted or Rejected review. An open dispute must be resolved by the other authorized side; the Actor who opened it cannot self-resolve it.
+
+Contract visibility still gates Commitment/Fulfillment visibility. Unrelated Actors cannot open these records, and cross-Context evidence is rejected.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Phase 17 should derive explicit Financial Obligations only from accepted Fulfillment or another specifically defined economic event.
+
+The financial chain should remain:
+accepted ContractVersion → Commitment → accepted Fulfillment → Financial Obligation → explicit Accounting posting → Settlement/Payment → settlement accounting.
+
+Future work may add richer partial-delivery views, multi-step review policies, domain-specific Commitment templates and better operational summaries without collapsing obligation, scheduling, performance and money into one state.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A Contract says what was agreed; it does not prove performance.
+
+A Commitment says what must happen; it does not prove it happened.
+
+A completed Planner Occurrence records execution-time facts; it does not automatically submit or accept Fulfillment.
+
+A submitted Fulfillment is a performance claim; it is not accepted until explicit review.
+
+An accepted Fulfillment is performance truth only. It does not automatically mean money is owed, paid, settled, posted to Accounting, or that employment/ownership exists.
+
+Correction does not edit the original Fulfillment. Dispute does not delete the original review. Both preserve historical provenance.
 TEXT,
                 ],
             ],

@@ -63,6 +63,7 @@ class CreatePlan
                 ContextKind::Personal,
                 ContextKind::GroupSpace,
                 ContextKind::Relationship,
+                ContextKind::Contract,
             ], true), 422, 'Planner is not enabled for this Context kind.');
 
             Gate::forUser($current)->authorize('interactContent', $lockedContext);

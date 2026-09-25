@@ -792,3 +792,124 @@ composer audit
 - [ ] Active Contract creates no Commitment/Planner Occurrence automatically.
 - [ ] Active Contract creates no Fulfillment automatically.
 - [ ] Active Contract creates no Financial Obligation, Accounting posting or Settlement/payment automatically.
+
+
+---
+
+## Checkpoint 16 — Commitment + Fulfillment
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-16-commitment-fulfillment
+~~~
+
+Remote kernel checkpoint:
+
+~~~text
+SHA: 7a7481a271687bd307746d054749ce2599d87c4d
+CI: 36089527651
+Result: 492 tests / 2964 assertions
+~~~
+
+Remote final runtime checkpoint:
+
+~~~text
+SHA: 67b986cce96f7d6e72db811045a9c1a01c581ddb
+CI: 36093668972
+Result: 495 tests / 2989 assertions; Pint/PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_25_000000_create_commitment_fulfillment_kernel.php
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-16-commitment-fulfillment
+git pull --ff-only origin feat/ideal-v1-16-commitment-fulfillment
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/CommitmentFulfillmentKernelTest.php \
+  tests/Feature/CommitmentFulfillmentExperienceTest.php \
+  tests/Feature/ContractExperienceTest.php \
+  tests/Feature/PlannerExperienceTest.php \
+  tests/Feature/ConversationTimelineExperienceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — Riverside construction workday
+
+- [ ] Start from the Active Alice ↔ Bob Riverside ContractVersion.
+- [ ] On Contract detail choose **New commitment**.
+- [ ] Create **Riverside construction workday**.
+- [ ] Set Bob as responsible Actor and Alice as beneficiary/reviewer.
+- [ ] Set required quantity = **1**, unit = **day**.
+- [ ] Confirm the Commitment records the exact active ContractVersion.
+- [ ] Amend/activate the Contract later and confirm this Commitment still points to the original governing ContractVersion.
+
+### Planner binding
+
+- [ ] Open the Commitment.
+- [ ] Create a Commitment Plan for the selected Riverside workday.
+- [ ] Confirm the Plan and Occurrence record Commitment provenance.
+- [ ] As Bob, start the occurrence.
+- [ ] Complete it after actual work.
+- [ ] Attach same-Context evidence if needed.
+- [ ] Confirm Planner completion alone creates no Fulfillment.
+
+### Explicit Fulfillment
+
+- [ ] As Bob, choose the completed occurrence and **Submit Fulfillment**.
+- [ ] Set performed quantity = **1** and add a clear note.
+- [ ] Confirm actual start/end/duration are copied from the occurrence as evidence of what happened.
+- [ ] Confirm exact occurrence Assets/Evidence References are reused rather than copied.
+- [ ] Confirm status = **Submitted** and accepted progress remains 0.
+
+### Explicit review
+
+- [ ] As Alice, review the submitted Fulfillment.
+- [ ] Choose **Accept**.
+- [ ] Confirm accepted quantity becomes 1 and remaining quantity becomes 0.
+- [ ] Confirm the original Fulfillment/review remains immutable.
+
+### Clarification / correction
+
+- [ ] In a separate Fulfillment, choose **Request clarification**.
+- [ ] Confirm the original is not edited.
+- [ ] Submit a correction/replacement Fulfillment.
+- [ ] Confirm correction lineage points back to the prior Fulfillment.
+- [ ] Review the replacement independently.
+
+### Dispute
+
+- [ ] Open a dispute against an accepted Fulfillment.
+- [ ] Confirm accepted Commitment progress temporarily excludes the disputed quantity.
+- [ ] Resolve explicitly as accepted.
+- [ ] Confirm accepted progress returns.
+- [ ] Repeat locally with rejected resolution if useful.
+
+### Timeline and negative guarantees
+
+- [ ] Confirm Commitment/Fulfillment lifecycle events appear in the Contract Context Timeline with source links.
+- [ ] Confirm an unrelated Actor cannot open the Commitment/Fulfillment.
+- [ ] Confirm cross-Context Asset/Evidence attachment is rejected.
+- [ ] Confirm Planner completion does not auto-submit Fulfillment.
+- [ ] Confirm Fulfillment submission does not auto-accept performance.
+- [ ] Confirm accepted Fulfillment creates no Financial Obligation.
+- [ ] Confirm accepted Fulfillment creates no Accounting JournalEntry.
+- [ ] Confirm accepted Fulfillment creates no Settlement/payment truth.

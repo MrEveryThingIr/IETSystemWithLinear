@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -122,6 +123,12 @@ class Plan extends Model
     public function reminders(): HasMany
     {
         return $this->hasMany(PlanReminder::class);
+    }
+
+    /** @return HasOne<CommitmentPlanBinding, $this> */
+    public function commitmentBinding(): HasOne
+    {
+        return $this->hasOne(CommitmentPlanBinding::class);
     }
 
     /** @return HasMany<PlanEvent, $this> */

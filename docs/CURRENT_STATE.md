@@ -671,14 +671,12 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 15 — Contract, ContractVersion and explicit acceptance** is remotely runtime-complete at `df63697b3734bc3a8dfe1b70f58655d4b2c9da72` / CI `36055829092` (487 tests / 2903 assertions).
+**Phase 16 — Commitment + Fulfillment** is remotely runtime-complete at `67b986cce96f7d6e72db811045a9c1a01c581ddb` / CI `36093668972` (495 tests / 2989 assertions).
 
-It adds Contract, dedicated Contract Context, immutable ContractVersion, per-version exact party/role snapshots, immutable ContractAcceptance and ContractEvent history, sealed Contract terms Content, direct/Relationship/accepted-Proposal entry paths, exact required-party acceptance, effective-time activation, and future-effective amendment/supersession.
+It adds exact-ContractVersion Commitments, Planner binding/materialization, Fulfillment with actual quantity/time/evidence, explicit accept/reject/request-clarification review, immutable correction lineage, dispute/resolution, accepted-progress derivation, and Commitment/Fulfillment source events in the Contract Context Timeline.
 
-Proposal acceptance is not Contract acceptance. Proposal-sourced ContractVersion 1 reuses the exact sealed Proposal terms as provenance but requires fresh explicit Contract acceptance by every required party.
+ContractVersion, Commitment, Planner/Occurrence, Fulfillment and review remain separate authoritative facts. Planner completion does not auto-create Fulfillment, and accepted Fulfillment does not auto-create financial consequences.
 
-An Active Contract remains agreement authority only. It does not create Commitment, Planner scheduling, Fulfillment, Financial Obligation, Accounting posting, Settlement/payment, ownership or employment state.
-
-Next after integration: **Phase 16 — Commitment + Fulfillment**.
+Next after integration: **Phase 17 — Financial Obligation + Settlement bridge**.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

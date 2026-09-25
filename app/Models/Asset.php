@@ -143,7 +143,8 @@ class Asset extends Model
                 || $asset->annotations()->exists()
                 || $asset->profileImages()->exists()
                 || $asset->submissionResponses()->exists()
-                || $asset->planOccurrences()->exists()) {
+                || $asset->planOccurrences()->exists()
+                || $asset->fulfillments()->exists()) {
                 throw new LogicException('Referenced Assets are preserved with Content, Profile, and interaction history.');
             }
         });
@@ -230,6 +231,14 @@ class Asset extends Model
     public function planOccurrences(): BelongsToMany
     {
         return $this->belongsToMany(PlanOccurrence::class, 'plan_occurrence_assets')
+            ->withPivot(['uuid', 'added_by_actor_id'])
+            ->withTimestamps();
+    }
+
+    /** @return BelongsToMany<Fulfillment, $this> */
+    public function fulfillments(): BelongsToMany
+    {
+        return $this->belongsToMany(Fulfillment::class, 'fulfillment_assets')
             ->withPivot(['uuid', 'added_by_actor_id'])
             ->withTimestamps();
     }
