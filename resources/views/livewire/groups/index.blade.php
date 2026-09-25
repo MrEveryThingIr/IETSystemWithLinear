@@ -5,9 +5,9 @@
                 <flux:button :href="route('groups.create')" variant="primary" icon="plus">{{ __('ui.groups.create') }}</flux:button>
             @else
                 @if ($myPendingGroupCreationRequest)
-                    <flux:button :href="route('platform.access')" variant="ghost" icon="clock">Access request pending</flux:button>
+                    <flux:button :href="route('platform.access')" variant="ghost" icon="clock">{{ __('ui.groups.access_request_pending') }}</flux:button>
                 @else
-                    <flux:button :href="route('platform.access')" variant="ghost" icon="key">Request create access</flux:button>
+                    <flux:button :href="route('platform.access')" variant="ghost" icon="key">{{ __('ui.groups.request_create_access') }}</flux:button>
                 @endif
             @endcan
         </x-slot:actions>
@@ -20,8 +20,8 @@
     @if ($canManagePlatformAccess && $pendingGroupCreationRequests->isNotEmpty())
         <flux:card class="space-y-4 border-amber-300 dark:border-amber-700">
             <div class="space-y-1">
-                <flux:heading size="lg">Pending group-creation access requests</flux:heading>
-                <flux:text>Review users asking for the platform capability to create groups.</flux:text>
+                <flux:heading size="lg">{{ __('ui.groups.pending_creation_requests') }}</flux:heading>
+                <flux:text>{{ __('ui.groups.pending_creation_help') }}</flux:text>
             </div>
 
             @foreach ($pendingGroupCreationRequests as $accessRequest)
@@ -31,18 +31,18 @@
                             @if ($accessRequest->user->actor)<x-app.actor-identity :actor="$accessRequest->user->actor" />@else<flux:heading>{{ $accessRequest->user->username }}</flux:heading>@endif
                             <flux:text>{{ $accessRequest->user->email }}</flux:text>
                         </div>
-                        <flux:badge>Pending</flux:badge>
+                        <flux:badge>{{ __('ui.platform_access.pending') }}</flux:badge>
                     </div>
 
                     @if ($accessRequest->reason)
                         <flux:text>{{ $accessRequest->reason }}</flux:text>
                     @endif
 
-                    <flux:textarea wire:model="accessReviewNotes.{{ $accessRequest->id }}" label="Reviewer note (optional)" rows="2" />
+                    <flux:textarea wire:model="accessReviewNotes.{{ $accessRequest->id }}" :label="__('ui.platform_access.reviewer_note_optional')" rows="2" />
 
                     <div class="flex gap-2">
-                        <flux:button wire:click="reviewGroupCreationAccess({{ $accessRequest->id }}, true)" variant="primary">Approve</flux:button>
-                        <flux:button wire:click="reviewGroupCreationAccess({{ $accessRequest->id }}, false)" variant="ghost">Reject</flux:button>
+                        <flux:button wire:click="reviewGroupCreationAccess({{ $accessRequest->id }}, true)" variant="primary">{{ __('ui.platform_access.approve') }}</flux:button>
+                        <flux:button wire:click="reviewGroupCreationAccess({{ $accessRequest->id }}, false)" variant="ghost">{{ __('ui.platform_access.reject') }}</flux:button>
                     </div>
                 </div>
             @endforeach
