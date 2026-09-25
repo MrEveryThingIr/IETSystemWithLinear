@@ -32,7 +32,7 @@
 
                     @if ($showUsername)
                         <flux:text size="sm" class="truncate text-zinc-500 dark:text-zinc-400" :title="$accountUser->username">
-                            @@{{ $accountUser->username }}
+                            {{ '@'.$accountUser->username }}
                         </flux:text>
                     @endif
 
