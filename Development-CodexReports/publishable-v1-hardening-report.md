@@ -34,6 +34,13 @@ Pre-integration release-gate candidate `38f95175040234593bc927f895954c893a38e9fd
 
 The subsequent canonical-doc evidence sync is documentation-only and must itself pass exact-head CI before the integration PR is merged. The immutable integrated release-candidate SHA is frozen only after `integration/ideal-v1` is green.
 
+### RC local-bootstrap correction
+
+The first frozen RC exposed a documentation-order defect during owner-local acceptance: the worksheet instructed `php artisan optimize:clear` before restoring the RC's Composer dependencies. With `BROADCAST_CONNECTION=reverb`, a stale pre-RC `vendor/` could therefore fail while resolving `Pusher\\Pusher`, even though `composer.lock` correctly contains `pusher/pusher-php-server` 7.3.0 and CI installs it successfully.
+
+Correction: local acceptance now runs `composer install --no-interaction --prefer-dist` before any Artisan command and verifies the Pusher package before `optimize:clear`. This is a release-handoff/bootstrap correction, not a domain-code change.
+
+
 ## Human acceptance
 
 Browser acceptance is intentionally not fabricated remotely. The final candidate is handed to the owner with `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`; browser findings become regression-tested correction commits before tagging the stable release.
