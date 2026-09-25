@@ -246,7 +246,7 @@ class DomainNotificationProjector
                 [
                     'title_key' => 'notifications.messages.conversation_message_title',
                     'body_key' => 'notifications.messages.conversation_message_body',
-                    'body_params' => ['author' => $message->author->user?->username ?? ''],
+                    'body_params' => ['author' => $message->author->user->username],
                     'url' => route('contexts.conversation', $context).'#message-'.$message->uuid,
                 ],
                 $context,
@@ -277,7 +277,7 @@ class DomainNotificationProjector
                 [
                     'title_key' => 'notifications.messages.submission_submitted_title',
                     'body_key' => 'notifications.messages.submission_submitted_body',
-                    'body_params' => ['author' => $submission->submitter->user?->username ?? ''],
+                    'body_params' => ['author' => $submission->submitter->user->username],
                     'url' => route('contexts.submissions.show', [$submission->context, $submission]),
                 ],
                 $submission->context,
@@ -326,7 +326,9 @@ class DomainNotificationProjector
     }
 
     /**
-     * @param  Collection<int, Actor|null>  $actors
+     * @template TActor of Actor|null
+     *
+     * @param  Collection<int, TActor>  $actors
      * @return Collection<int, User>
      */
     private function usersFromActors(Collection $actors, ?int $excludeActorId): Collection
