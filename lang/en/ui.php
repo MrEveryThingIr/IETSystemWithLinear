@@ -675,6 +675,7 @@ return [
         'type_select' => 'Select',
         'select_options' => 'Select options',
         'select_options_help' => 'One option per line using value|Label, for example on_track|On track.',
+        'select_options_placeholder' => "on_track|On track\ndelayed|Delayed\nblocked|Blocked",
         'remove_field' => 'Remove field',
         'add_field' => 'Add field',
         'update_definition' => 'Update draft definition',
