@@ -12,7 +12,9 @@ Convert the cumulative Ideal-v1 line into a bounded publishable release candidat
 - useful Directory filters persist in the URL;
 - create → Directory `highlight` is consumed with focusable visual emphasis;
 - Profile Intent management now exposes the subject, arrangement, cash range, currency/basis, exchange preference and negotiation notes supported by the guided Intent journey;
-- regression tests cover the >200 hidden-record authorization case, highlight handoff, invitation semantics and complete Profile value-model editing.
+- regression tests cover the >200 hidden-record authorization case, highlight handoff, invitation semantics, consumed reserved-link reuse and complete Profile value-model editing;
+- CI Pint scope now derives from the actual PR base or `integration/ideal-v1` instead of the historical `feat/group-spaces-communication` branch;
+- cumulative release/acceptance documentation explicitly requires `IET_RELEASE_PROFILE=full`; `office_alpha` remains only a historical/focused experience profile.
 
 ## Release boundary
 
