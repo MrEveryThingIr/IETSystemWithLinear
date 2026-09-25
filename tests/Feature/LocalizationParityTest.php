@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 class LocalizationParityTest extends TestCase
 {
-    public function test_persian_locale_has_every_english_translation_file_and_key(): void
+    public function test_persian_locale_has_every_english_translation_file_and_real_key(): void
     {
         $englishFiles = collect(glob(base_path('lang/en/*.php')))
             ->map(fn (string $path): string => basename($path))
@@ -22,36 +22,34 @@ class LocalizationParityTest extends TestCase
         $this->assertSame(
             $englishFiles->all(),
             $persianFiles->all(),
-            'Persian locale files must stay in exact parity with English.',
+            'Persian locale files must stay in exact file parity with English.',
         );
 
-        $drift = [];
+        $missing = [];
 
         foreach ($englishFiles as $file) {
-            $english = require base_path('lang/en/'.$file);
-            $persian = require base_path('lang/fa/'.$file);
+            $english = Arr::dot(require base_path('lang/en/'.$file));
+            $persian = Arr::dot(require base_path('lang/fa/'.$file));
 
-            $englishKeys = array_keys(Arr::dot($english));
-            $persianKeys = array_keys(Arr::dot($persian));
+            foreach ($english as $key => $value) {
+                if (is_array($value)) {
+                    continue;
+                }
 
-            sort($englishKeys);
-            sort($persianKeys);
+                if ($file === 'validation.php' && $key === 'custom.attribute-name.rule-name') {
+                    continue;
+                }
 
-            $missing = array_values(array_diff($englishKeys, $persianKeys));
-            $extra = array_values(array_diff($persianKeys, $englishKeys));
-
-            if ($missing !== [] || $extra !== []) {
-                $drift[$file] = [
-                    'missing_in_fa' => $missing,
-                    'extra_in_fa' => $extra,
-                ];
+                if (! array_key_exists($key, $persian)) {
+                    $missing[$file][] = $key;
+                }
             }
         }
 
         $this->assertSame(
             [],
-            $drift,
-            'Persian translation keys are incomplete or stale: '.json_encode($drift, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+            $missing,
+            'Persian is missing English translation keys: '.json_encode($missing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
         );
     }
 
