@@ -128,6 +128,16 @@ Continuous mode pauses only when:
 
 Normal implementation defects are not stop conditions: fix them, add regression coverage, and continue.
 
+## Current continuous checkpoint
+
+Phase 20 is integrated on `integration/ideal-v1` at merge checkpoint `a02017eca6c784cb6a7de3f24630e53218d7edfe`.
+
+Phase 21 — Home / Today — is runtime-green on `feat/ideal-v1-21-home-today`: runtime `d0834e5a72545d558d074deb495fd7009daa96ff` / CI `36128745672` (**524 tests / 3244 assertions**), with documentation/manual closure pending its final feature-branch gate.
+
+After Phase 21 integration, continue directly with **Phase 22 — Realtime + Notifications** from the integration trunk.
+
+Persistent Phase 21 boundary: Today is a derived operating view only. It creates no domain truth, unread state or cross-currency total. Every action/amount remains sourced from the authoritative kernel and existing policy.
+
 ## Final human gate
 
 After the roadmap is integrated remotely:

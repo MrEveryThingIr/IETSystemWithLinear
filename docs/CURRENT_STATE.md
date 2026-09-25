@@ -544,71 +544,70 @@ See `docs/CONCEPT_KERNEL.md` and `docs/PHASE_03_CONCEPT_KERNEL.md`.
 
 ## Planning
 
-Not implemented as a production domain.
+The timezone-aware Planner is implemented.
 
-Target primitives:
+Current primitives include:
 
 - Plan;
-- ScheduleRule;
-- Occurrence;
-- Participant;
-- Completion;
-- Evidence.
+- PlanParticipant;
+- PlanScheduleRule;
+- PlanOccurrence;
+- PlanReminder;
+- durable Plan/Occurrence lifecycle events;
+- Context-scoped authorization;
+- personal activities;
+- Commitment → Plan binding;
+- Today/list/calendar views.
+
+Planner records remain authoritative for schedule truth. Home/Today only derives from them.
 
 ## Need / Offer / exchange
 
-The **Profile intent layer** is implemented; the full exchange/matching domain is not.
+The Profile Intent and explainable matching layers are implemented.
 
-Current Phase 4 Profile declarations support:
+Current behavior includes:
 
-- Need and Offer kind;
-- canonical Concept reference;
-- title/description;
-- optional importance/urgency percentage (0–100);
+- Need / Offer direction;
+- canonical Concept;
+- subject / arrangement semantics;
 - quantity/unit;
-- location;
-- origin → destination;
-- optional round trip / return offset;
-- one-time, ongoing, daily, weekly and monthly cadence;
-- timezone/date/time-window constraints;
-- inherited/private/authenticated/public item visibility;
-- active / paused / closed lifecycle;
-- coarse Actor Concept summaries for active Needs/Offers without taking over unrelated manual assertions.
+- location/origin/destination;
+- timezone/date/time/recurrence constraints;
+- value/currency/cash-range preferences;
+- item visibility and lifecycle;
+- owner-driven deterministic matching;
+- normal Intent policy before candidate disclosure;
+- human-readable alignment reasons;
+- exact originating + matched Intent provenance when a Relationship is explicitly created.
 
-These declarations describe **current participant intent**. They do not create matches, obligations or materialized schedules.
+Matching is discovery only. It creates no agreement, Proposal, Contract, obligation or Accounting truth.
 
-Future Phase 13 now comes first for the obligation path and remains responsible for:
-
-- direct Proposal;
-- Negotiation;
-- Agreement/Contract;
-- Commitment;
-- Planner/Occurrence binding where commitments are scheduled;
-- Fulfillment and review;
-- financial-obligation handoff.
-
-Future Phase 14 remains responsible for discovery:
-
-- Match;
-- ranking/eligibility logic;
-- proposal handoff into the already-proven Phase 13 path.
-
-A direct relationship never requires Need/Offer/Match, and no matching result itself creates an obligation.
+See `docs/PHASE_19_NEED_OFFER_MATCHING.md`.
 
 ## Accounting
 
-No production ledger exists in the current branch.
+Personal Accounting and the separate Financial Obligation/Settlement bridge are implemented.
 
-Legacy migrations supplied outside the current branch show a prior attempt with:
+Personal Accounting provides:
 
-- currencies;
-- accounts;
-- transactions;
-- ledger entries;
-- idempotency;
-- cached balances.
+- MonetaryUnit;
+- Ledger;
+- balanced immutable JournalEntry / JournalLine truth;
+- income, expense, transfer, opening balance, reversal/correction;
+- per-ledger and per-period summaries;
+- Context authorization.
 
-The target redesign is documented in `docs/FINANCIAL_ARCHITECTURE.md`.
+Economic obligation truth provides:
+
+- accepted Fulfillment;
+- FinancialObligation;
+- pending/confirmed/rejected Settlement;
+- confirmed paid/outstanding derivation;
+- explicit optional posting into Personal Accounting.
+
+The two domains remain intentionally distinct: an obligation/payment claim is not a personal ledger entry until explicitly posted.
+
+See `docs/FINANCIAL_ARCHITECTURE.md`, Phase 12 accounting docs and Phase 17 financial-obligation docs.
 
 ## Real-time infrastructure
 
@@ -671,30 +670,25 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 20 — Groups / Communities social composition** is runtime-green on `feat/ideal-v1-20-group-community-composition`.
+**Phase 21 — Home / Today personal operating view** is runtime-green on `feat/ideal-v1-21-home-today`.
 
 Runtime checkpoint:
 
-- SHA `6782bdaeb2a732ec2f9ae8f72c76dc5f311d6f17`;
-- CI `36126321777`;
-- **520 tests / 3219 assertions**;
-- Pint 651 PHP files;
+- SHA `d0834e5a72545d558d074deb495fd7009daa96ff`;
+- CI `36128745672`;
+- **524 tests / 3244 assertions**;
+- Pint 660 PHP files;
 - PHPStan/Vite green;
 - migration rollback/reapply, scheduler/database queue and backup/restore smoke green;
 - npm audit 0 vulnerabilities;
 - Composer audit no advisories.
 
-Phase 20 adds a member-facing Community projection over already-authoritative GroupSpace Contexts, Content, membership/roles, Needs/Offers, Plans, reviewable Submissions, Relationships/projects and timelines.
+Phase 21 turns Dashboard into a derived Today operating view over Planner, lifecycle decisions, Intents, Relationships, Groups, Personal Accounting, Financial Obligations and authorized ContextTimeline history.
 
-The implementation intentionally introduces no migration and no Group-specific copies of these domains. Every item remains filtered by its own policy. Group membership is not a wildcard permission into private Spaces, Profiles, Intents, Relationships or Submissions.
+Today creates no new domain truth, preserves source policies/release-profile boundaries, does not infer unread notifications, and never combines different currencies.
 
-The existing Group page remains governance/settings; Community becomes the normal member-facing usage surface.
+The System Manual now includes Chapter 26, **Home / Today Operating View**. Final documentation/manual CI and integration PR are the remaining Phase 21 gates.
 
-The System Manual now includes Chapter 25, **Group / Community Composition**. Final documentation/manual CI and integration PR are the remaining Phase 20 gates.
+Next after Phase 21 integration: **Phase 22 — Realtime + Notifications**.
 
-Next after Phase 20 integration: **Phase 21 — Home / Today personal operating view**.
-
-The accepted roadmap continues through Phase 30:
-21 Home/Today → 22 Realtime/Notifications → 23 Generic Workflow extraction → 24 Reputation/history → 25 Discovery/recommendations → 26 AI Copilot → 27 system-wide UX/accessibility/localization polish → 28 production hardening/pilots → 29 integrated release candidate + deferred owner acceptance → 30 stable release/operating loop.
-
-Do not skip those phases merely because Phase 20 completes the first large social composition layer.
+The accepted roadmap continues through Phase 30. Phase 22 must add durable notification/read-state and realtime transport without turning broadcasting into authoritative truth.

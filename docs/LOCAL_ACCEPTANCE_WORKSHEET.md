@@ -1334,3 +1334,124 @@ composer audit
 - [ ] Confirm Chapter 25 is **Group / Community Composition**.
 - [ ] Confirm Help on the Community page opens Chapter 25 at **How to use it**.
 - [ ] Confirm it teaches the difference between Community usage and Group governance/settings.
+
+
+---
+
+## Checkpoint 21 — Home / Today
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-21-home-today
+~~~
+
+Remote runtime checkpoint:
+
+~~~text
+SHA: d0834e5a72545d558d074deb495fd7009daa96ff
+CI: 36128745672
+Result: 524 tests / 3244 assertions; Pint 660 files; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+None. Today is intentionally a derived operating view.
+~~~
+
+### Local sync
+
+After Phase 21 integration:
+
+~~~bash
+git fetch origin
+git switch integration/ideal-v1
+git pull --ff-only origin integration/ideal-v1
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/HomeTodayExperienceTest.php \
+  tests/Feature/LocalizationTest.php \
+  tests/Feature/ReleaseExperienceTest.php \
+  tests/Feature/SystemManualContentTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### What should I do today?
+
+- [ ] Create a personal or Context Plan with an occurrence today.
+- [ ] Open Dashboard/Today.
+- [ ] Confirm the occurrence appears with local start/end time.
+- [ ] Open it and confirm the normal Planner record is authoritative.
+
+### Waiting on me
+
+Exercise whichever flows are available in the cumulative story:
+
+- [ ] proposed Relationship where current user is invited;
+- [ ] negotiating Proposal whose current version needs this user's decision;
+- [ ] proposed ContractVersion requiring this user's acceptance;
+- [ ] submitted Fulfillment where this user is beneficiary/reviewer;
+- [ ] pending Settlement claim where this user may respond;
+- [ ] submitted interaction in a Context this user may review.
+
+Confirm each Today item opens the real source record.
+
+### Waiting on others
+
+- [ ] Create a proposed Relationship initiated by current user and confirm it appears as waiting on the invited party.
+- [ ] After current user decides on a Proposal version, confirm it remains here while another required party is pending.
+- [ ] After current user accepts a Contract version, confirm it remains here while another required party is pending.
+- [ ] Submit a Fulfillment as obligor and confirm it remains here until beneficiary review.
+- [ ] Propose a Settlement and confirm it remains here until counterparty response.
+
+### Money
+
+- [ ] Post income and expense today in Personal Accounting; confirm Today shows the exact ledger-derived values.
+- [ ] Confirm no Contract/FinancialObligation appears as accounting income/expense until explicitly posted.
+- [ ] Create EUR and USD obligations and confirm Today shows separate monetary-unit buckets.
+- [ ] Confirm receivable/payable direction is correct for creditor/debtor.
+- [ ] Confirm confirmed Settlement changes paid/outstanding without rewriting the original obligation.
+
+### Current context
+
+- [ ] Confirm current user's active Needs/Offers appear.
+- [ ] Confirm active Relationships appear.
+- [ ] Confirm active Group memberships link to Group Community.
+- [ ] Confirm private/unrelated records do not leak merely because Today is an aggregate view.
+
+### Recent activity
+
+- [ ] Perform events in personal, GroupSpace and Relationship/Proposal/Contract Contexts.
+- [ ] Confirm authorized recent events appear.
+- [ ] Confirm inaccessible Context activity does not appear.
+- [ ] Confirm the page does not label recent events as unread/read notifications.
+
+### Release/localization edges
+
+- [ ] Switch locale among English, Persian, Arabic and Chinese and confirm Today labels change.
+- [ ] Confirm Persian/Arabic remain RTL.
+- [ ] Under office-alpha, confirm hidden advanced modules are not exposed through Today quick links.
+- [ ] Verify an account lacking a primary Actor receives a safe reduced Today state instead of an exception.
+
+### Negative guarantees
+
+- [ ] Opening Today creates no Plan/Relationship/Proposal/Contract/Fulfillment/Settlement/Submission/JournalEntry/FinancialObligation.
+- [ ] Today does not create an inbox/task table.
+- [ ] Today does not create notification read/unread state.
+- [ ] Today does not combine different currencies.
+
+### System Manual
+
+- [ ] Confirm Chapter 26 is **Home / Today Operating View**.
+- [ ] Confirm contextual Help from Dashboard/Today opens Chapter 26 at **How to use it**.
