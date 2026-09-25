@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'navigation_label' => 'پیمایش ویرایش محتوا',
     'title' => 'ویرایش محتوا',
     'back_to_reader' => 'نمای خواندن',
     'outline' => 'فهرست مطالب',
