@@ -16,6 +16,7 @@ use App\Models\SpaceContentAnnotationDisposition;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SystemManualContent;
+use App\Support\SystemManualHelpMap;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
@@ -119,6 +120,11 @@ class SystemManualContentTest extends TestCase
                 === SystemManualContent::CHAPTER_TITLES['journeys'],
         );
         $this->assertNotNull($journeysChapter);
+        $this->assertSame('journeys', app(SystemManualHelpMap::class)->topicForRoute('journeys.index'));
+        $this->assertSame(
+            SystemManualContent::CHAPTER_TITLES['journeys'],
+            app(SystemManualHelpMap::class)->chapterTitle('journeys'),
+        );
 
         $this->actingAs($reader->user)
             ->get(route('manual', ['topic' => 'submissions']))
