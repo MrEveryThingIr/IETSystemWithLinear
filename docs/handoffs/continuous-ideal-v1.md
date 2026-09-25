@@ -40,21 +40,34 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 22 is integrated on `integration/ideal-v1` at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`.
+The bounded Publishable Ideal-v1 code line is integrated on `integration/ideal-v1`.
 
-The active branch is `feat/ideal-v1-publishable-hardening`. Its purpose is to close inherited cross-roadmap defects and produce the first bounded publishable Ideal-v1 release candidate, not to continue speculative roadmap expansion.
+The latest release hardening is the native-Persian UI localization pass:
 
-Closed/active hardening scope:
+- 11 previously absent Persian locale modules were added;
+- `lang/fa/access.php` and `lang/fa/intents.php` no longer load English;
+- user-facing wording across Access, Needs/Offers, Relationships, Proposals, Contracts, Commitments/Fulfillment, Planner, Finance/Accounting, Collaboration, Content, Reader/Studio, Notifications and shared UI vocabulary was rewritten toward simple native Persian rather than literal translation;
+- repeated implementation jargon such as Actor/Context/Blueprint/Studio is no longer exposed untranslated in Persian UI copy where a clear Persian term exists;
+- `LocalizationParityTest` requires every real English translation leaf to exist in Persian and forbids Persian locale files from loading English passthroughs;
+- Laravel's locale-specific validation aliases remain intentionally allowed in addition to the English validation-key baseline.
 
-- reserved-email Access Invitations are single-use while unreserved links retain bounded multi-use;
-- Intent Directory authorization is query-level before real pagination;
-- Directory filter/query/highlight handoff is coherent;
-- Profile Intent management is reconciled with guided subject/arrangement/cash/exchange facets;
-- publication boundary and first-month learning posture are recorded in `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
+Release evidence:
 
-Do **not** implement AI Copilot for this release. Preserve Phase 26 as an optional future draft/preparation layer over existing validated Actions. Generic Workflow, Reputation and Recommendations are likewise post-v1 unless a concrete release-blocking defect proves otherwise.
+- localization feature head: `1a6fc7831b11588ef494fa8b36b3c2e465223bd5`;
+- feature CI: `36160123238` — green;
+- PR #25 CI: `36160463461` — green;
+- integration merge: `edff668b6e8ad6c4a58a7d6c08bb54a821ce9662`;
+- integration CI: `36160798652` — green;
+- full regression: **545 tests / 3376 assertions**;
+- MySQL 8.4 + SQLite migrations, Pint, PHPStan, Vite, npm audit and Composer audit: green;
+- `release/ideal-v1-rc-4` is the immutable pre-doc-sync localization checkpoint;
+- `release/ideal-v1-rc-5` is the docs-synchronized release candidate to use for owner-local/browser acceptance.
 
-Pre-integration release-gate candidate `38f95175040234593bc927f895954c893a38e9fd` is green on CI run `36143475001` with 543 tests / 3316 assertions and all quality/ops/security gates passing. The remaining remote sequence is canonical-doc exact-head CI → PR into `integration/ideal-v1` → green integration CI → freeze one release-candidate ref/SHA. Browser acceptance remains the owner's final gate and must not be claimed remotely.
+Do **not** mutate old RC refs. Any browser defect must become an automated regression, a correction branch from the current integration line, a complete CI pass, an integration merge, and a newly numbered RC.
+
+Do **not** implement AI Copilot, Generic Workflow, Reputation or Recommendations as part of this release. They remain post-v1 unless a concrete browser/release defect requires otherwise.
+
+Persian UI localization is hardened, but the seeded/System Manual content is still English-canonical. A full native-reviewed Persian Manual is a separate content-translation milestone, not a hidden requirement for this RC.
 
 ## Persistent product rules
 
