@@ -94,6 +94,23 @@
             </p>
         </div>
 
+        <div class="space-y-2">
+            <label for="profile-default-currency" class="text-sm font-medium">{{ __('ui.profile.temporal.default_currency') }}</label>
+            <select
+                id="profile-default-currency"
+                wire:model="defaultMonetaryUnitCode"
+                class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+                @foreach ($monetaryUnits as $code => $meta)
+                    <option value="{{ $code }}">{{ $code }} — {{ $meta['name'] }} ({{ $meta['symbol'] }})</option>
+                @endforeach
+            </select>
+            <p class="text-xs text-zinc-500">{{ __('ui.profile.temporal.default_currency_help') }}</p>
+            @error('defaultMonetaryUnitCode')
+                <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+        </div>
+
         <div class="flex flex-col-reverse gap-2 lg:col-span-2 sm:flex-row sm:justify-end">
             <flux:button type="button" wire:click="cancelEditor" variant="ghost" class="w-full sm:w-auto">{{ __('ui.common.cancel') }}</flux:button>
             <flux:button type="submit" variant="primary" class="w-full sm:w-auto">{{ __('ui.common.save') }}</flux:button>
