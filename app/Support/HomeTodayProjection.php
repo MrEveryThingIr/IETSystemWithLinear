@@ -56,12 +56,17 @@ class HomeTodayProjection
     public function build(User $user): array
     {
         $current = User::query()->with('actor')->find($user->id);
-        abort_unless($current instanceof User && $current->actor instanceof Actor, 403);
+        abort_unless($current instanceof User, 403);
 
-        $actor = $current->actor;
         $timezone = TemporalPreferences::timezoneFor($current);
         $now = CarbonImmutable::now($timezone);
         $today = $now->toDateString();
+
+        if (! $current->actor instanceof Actor) {
+            return $this->emptyProjection($timezone, $today);
+        }
+
+        $actor = $current->actor;
 
         $todayOccurrences = PlanOccurrence::query()
             ->with(['plan.context', 'plan.participants.actor.user'])
@@ -117,6 +122,38 @@ class HomeTodayProjection
             'accountingToday' => $this->accountingToday($current, $actor, $today),
             'obligations' => $this->obligationSummary($current, $actor),
             'recentActivity' => $this->recentActivity($current, $actor),
+        ];
+    }
+
+    /**
+     * @return array{
+     *   timezone: string,
+     *   today: string,
+     *   todayOccurrences: Collection<int, PlanOccurrence>,
+     *   waitingOnMe: Collection<int, HomeActionItem>,
+     *   waitingOnOthers: Collection<int, HomeActionItem>,
+     *   activeIntents: Collection<int, ActorProfileIntent>,
+     *   activeRelationships: Collection<int, Relationship>,
+     *   groupMemberships: Collection<int, GroupMembership>,
+     *   accountingToday: Collection<int, array{code:string, exponent:int, income_minor:int, expense_minor:int, net_minor:int}>,
+     *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>,
+     *   recentActivity: Collection<int, TimelineEntry>
+     * }
+     */
+    private function emptyProjection(string $timezone, string $today): array
+    {
+        return [
+            'timezone' => $timezone,
+            'today' => $today,
+            'todayOccurrences' => collect(),
+            'waitingOnMe' => collect(),
+            'waitingOnOthers' => collect(),
+            'activeIntents' => collect(),
+            'activeRelationships' => collect(),
+            'groupMemberships' => collect(),
+            'accountingToday' => collect(),
+            'obligations' => collect(),
+            'recentActivity' => collect(),
         ];
     }
 
