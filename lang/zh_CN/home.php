@@ -3,6 +3,9 @@
 return [
     'title' => '今天',
     'welcome' => '欢迎，:name。:date · :timezone。这里的内容都来自 IET 中已有的权威记录。',
+    'actor_setup_pending' => '您的账户已完成验证，但系统中的参与身份尚未准备好。账户设置仍可使用，身份建立完成后会显示主要操作工具。',
+    'quick_links' => '快捷入口',
+    'quick_links_help' => '直接打开您已有权限使用的主要工作区。',
     'new_activity' => '新建活动',
     'new_intent' => '新建需求 / 提供',
     'today_actions' => '今天该做什么？',
