@@ -53,7 +53,7 @@
             <p class="text-sm font-medium">{{ __('ui.profile.intents.add_details') }}</p>
             <p class="mt-1 text-xs text-zinc-500">{{ __('ui.profile.intents.add_details_help') }}</p>
             <div class="mt-3 flex flex-wrap gap-2">
-                @foreach (['title', 'description', 'importance', 'quantity', 'location', 'route', 'timing', 'visibility'] as $facet)
+                @foreach (['commercial', 'title', 'description', 'importance', 'quantity', 'location', 'route', 'timing', 'visibility'] as $facet)
                     <button
                         type="button"
                         wire:click="toggleFacet('{{ $facet }}')"
@@ -65,6 +65,45 @@
                 @endforeach
             </div>
         </div>
+
+        @if (in_array('commercial', $activeFacets, true))
+            <div class="space-y-4 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium">{{ __('intents.fields.subject_kind') }}</label>
+                        <select wire:model="subjectKind" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            @foreach ($subjectKinds as $option)<option value="{{ $option->value }}">{{ __('intents.subjects.'.$option->value) }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-medium">{{ __('intents.fields.arrangement') }}</label>
+                        <select wire:model="arrangementKind" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            @foreach ($arrangementKinds as $option)<option value="{{ $option->value }}">{{ __('intents.arrangements.'.$kind.'.'.$option->value) }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-medium">{{ __('intents.fields.exchange_preference') }}</label>
+                        <select wire:model="exchangePreference" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            @foreach ($exchangePreferences as $option)<option value="{{ $option->value }}">{{ __('intents.exchange.'.$option->value.'.title') }}</option>@endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="grid gap-4 md:grid-cols-4">
+                    <flux:input wire:model="cashMin" type="number" min="0" :label="__('intents.fields.cash_min')" />
+                    <flux:input wire:model="cashMax" type="number" min="0" :label="__('intents.fields.cash_max')" />
+                    <flux:input wire:model="currencyCode" maxlength="3" :label="__('intents.fields.currency')" />
+                    <div>
+                        <label class="mb-2 block text-sm font-medium">{{ __('intents.fields.cash_basis') }}</label>
+                        <select wire:model="cashBasis" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            <option value="">—</option>
+                            @foreach (['total','hour','day','week','month','year'] as $basis)<option value="{{ $basis }}">{{ __('intents.cash_basis.'.$basis) }}</option>@endforeach
+                        </select>
+                    </div>
+                </div>
+                <flux:textarea wire:model="exchangeNotes" :label="__('intents.fields.exchange_notes')" rows="2" maxlength="2000" />
+                <p class="text-xs text-zinc-500">{{ __('intents.exchange_nonbinding') }}</p>
+            </div>
+        @endif
 
         @if (in_array('title', $activeFacets, true))
             <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
