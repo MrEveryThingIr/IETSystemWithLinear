@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'navigation_label' => 'التنقل في محرر المحتوى',
     'title' => 'استوديو المحتوى',
     'back_to_reader' => 'عرض القارئ',
     'outline' => 'المخطط',
