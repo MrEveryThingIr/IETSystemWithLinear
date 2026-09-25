@@ -15,6 +15,15 @@ return [
         'actors' => '参与者',
         'account_menu' => '账户菜单',
     ],
+    'ambient' => [
+        'clock_label' => '本地日期与时间',
+        'tips' => [
+            '先规划重要的事，再记录实际发生的事。',
+            '需要长期追溯事实时，请使用精确的证据引用。',
+            '财务历史必须明确记录；对话本身不会自动生成交易。',
+            '小而清晰的改进，更容易让长期运行的系统保持可信。',
+        ],
+    ],
     'appearance' => [
         'label' => '外观',
         'system' => '跟随系统',
@@ -150,6 +159,8 @@ return [
             'next_month' => '下个月',
             'saved' => '日期与时间偏好已保存。',
             'invalid_timezone' => '浏览器返回了不受支持的时区。',
+            'default_currency' => '默认货币',
+            'default_currency_help' => '当你首次使用某种货币创建个人账本时使用。现有财务历史绝不会自动换算。',
         ],
         'semantic_added' => '资料项目已添加。',
         'semantic_removed' => '资料项目已移除。',
