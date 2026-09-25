@@ -73,7 +73,6 @@ use App\Livewire\Relationships\Create as RelationshipCreate;
 use App\Livewire\Relationships\Index as RelationshipIndex;
 use App\Livewire\Relationships\Show as RelationshipShow;
 use App\Models\Actor;
-use App\Models\ActorProfileIntent;
 use App\Models\Contract;
 use App\Models\Group;
 use App\Models\Proposal;
