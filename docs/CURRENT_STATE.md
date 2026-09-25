@@ -2,6 +2,15 @@
 
 ## Snapshot
 
+### Publishable v1 hardening
+
+Phase 22 is integrated at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`. The active release line is now `feat/ideal-v1-publishable-hardening`.
+
+The first publication is intentionally a bounded learning release: deterministic human workflows and durable domain evidence are the product; AI Copilot, Generic Workflow extraction, Reputation and Recommendations are post-v1 work. See `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
+
+The inherited office-alpha audit defects around reserved Access Invitation reuse, Intent Directory authorization/pagination, create-to-directory highlighting, and Profile Intent value-model editing are being closed on this branch before the immutable release candidate is frozen.
+
+
 ### Continuous Ideal-v1 integration
 
 Active integration branch:
