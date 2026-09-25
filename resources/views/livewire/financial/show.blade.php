@@ -18,14 +18,14 @@
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
                         <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('financial.obligation.amount') }}</div>
                         <div class="mt-1 text-2xl font-semibold">
-                            {{ AppSupportMoneyAmount::format($obligation->amount_minor, $obligation->monetaryUnit->exponent) }}
+                            {{ \App\Support\MoneyAmount::format($obligation->amount_minor, $obligation->monetaryUnit->exponent) }}
                             {{ $obligation->monetaryUnit->code }}
                         </div>
                     </div>
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
                         <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('financial.paid') }}</div>
                         <div class="mt-1 text-2xl font-semibold">
-                            {{ AppSupportMoneyAmount::format($obligation->confirmedPaidMinor(), $obligation->monetaryUnit->exponent) }}
+                            {{ \App\Support\MoneyAmount::format($obligation->confirmedPaidMinor(), $obligation->monetaryUnit->exponent) }}
                         </div>
                     </div>
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
@@ -33,7 +33,7 @@
                             {{ $obligation->isDisputed() ? __('financial.disputed') : __('financial.outstanding') }}
                         </div>
                         <div class="mt-1 text-2xl font-semibold">
-                            {{ AppSupportMoneyAmount::format($obligation->outstandingMinor(), $obligation->monetaryUnit->exponent) }}
+                            {{ \App\Support\MoneyAmount::format($obligation->outstandingMinor(), $obligation->monetaryUnit->exponent) }}
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <div class="font-semibold">
-                                        {{ AppSupportMoneyAmount::format($settlement->amount_minor, $obligation->monetaryUnit->exponent) }}
+                                        {{ \App\Support\MoneyAmount::format($settlement->amount_minor, $obligation->monetaryUnit->exponent) }}
                                         {{ $obligation->monetaryUnit->code }}
                                     </div>
                                     <div class="text-xs text-zinc-500">
