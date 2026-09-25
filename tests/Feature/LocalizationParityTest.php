@@ -61,6 +61,48 @@ class LocalizationParityTest extends TestCase
         );
     }
 
+    public function test_supported_locales_preserve_translation_placeholders(): void
+    {
+        $mismatches = [];
+
+        foreach (glob(base_path('lang/en/*.php')) as $englishPath) {
+            $file = basename($englishPath);
+            $english = Arr::dot(require $englishPath);
+
+            foreach (['fa', 'ar', 'zh_CN'] as $locale) {
+                $localePath = base_path("lang/{$locale}/{$file}");
+
+                if (! is_file($localePath)) {
+                    continue;
+                }
+
+                $translated = Arr::dot(require $localePath);
+
+                foreach ($english as $key => $englishValue) {
+                    if (! is_string($englishValue) || ! isset($translated[$key]) || ! is_string($translated[$key])) {
+                        continue;
+                    }
+
+                    $englishPlaceholders = $this->translationPlaceholders($englishValue);
+                    $translatedPlaceholders = $this->translationPlaceholders($translated[$key]);
+
+                    if ($englishPlaceholders !== $translatedPlaceholders) {
+                        $mismatches[$locale][$file][$key] = [
+                            'english' => $englishPlaceholders,
+                            'translated' => $translatedPlaceholders,
+                        ];
+                    }
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $mismatches,
+            'Localized placeholders do not match English: '.json_encode($mismatches, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+        );
+    }
+
     public function test_supported_locales_never_passthrough_to_english_files(): void
     {
         foreach (['fa', 'ar', 'zh_CN'] as $locale) {
@@ -75,5 +117,18 @@ class LocalizationParityTest extends TestCase
                 );
             }
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function translationPlaceholders(string $value): array
+    {
+        preg_match_all('/:[A-Za-z_][A-Za-z0-9_]*/', $value, $matches);
+
+        $placeholders = array_values(array_unique($matches[0] ?? []));
+        sort($placeholders);
+
+        return $placeholders;
     }
 }
