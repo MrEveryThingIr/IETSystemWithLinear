@@ -1342,7 +1342,6 @@ Different local clock windows are not declared compatible across different timez
 Starting a matched Relationship still requires explicit counterparty consent before Proposal/Contract authority can follow.
 TEXT,
                 ],
-                ],
                 [
                     'title' => '25. Group / Community Composition',
                     'summary' => <<<'TEXT'
@@ -1410,6 +1409,8 @@ A Submission is not visible to every Group member. Review authority remains Cont
 
 A restricted Space is not exposed by the Community overview unless the viewer already has Space access.
 TEXT,
-     ];
+                ],
+            ],
+        ];
     }
 }
