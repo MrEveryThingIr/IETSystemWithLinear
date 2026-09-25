@@ -260,7 +260,7 @@
                                                 wire:model="definitionFields.{{ $index }}.options_text"
                                                 :label="__('ui.content.select_options')"
                                                 rows="3"
-                                                placeholder="on_track|On track&#10;delayed|Delayed&#10;blocked|Blocked"
+                                                :placeholder="__('ui.content.select_options_placeholder')"
                                             />
                                             <flux:text class="text-xs text-zinc-500">{{ __('ui.content.select_options_help') }}</flux:text>
                                         </div>
