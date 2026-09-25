@@ -22,7 +22,17 @@ AI Copilot is explicitly deferred. Generic Workflow extraction, Reputation and R
 
 ## Validation
 
-The final exact SHA and CI run are recorded here only after the complete branch gate is green.
+Pre-integration release-gate candidate `38f95175040234593bc927f895954c893a38e9fd` passed GitHub Actions CI run `36143475001`:
+
+- 543 tests / 3316 assertions;
+- changed-file Pint clean against the active integration baseline;
+- PHPStan clean;
+- npm install/audit and Vite production build green;
+- migration rollback/reapply, scheduler, Reverb command and database-queue smoke green;
+- SQLite backup/restore smoke green;
+- Composer security audit clean.
+
+The subsequent canonical-doc evidence sync is documentation-only and must itself pass exact-head CI before the integration PR is merged. The immutable integrated release-candidate SHA is frozen only after `integration/ideal-v1` is green.
 
 ## Human acceptance
 
