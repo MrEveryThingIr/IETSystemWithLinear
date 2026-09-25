@@ -11,6 +11,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class PostJournalEntry
 {
@@ -26,6 +27,9 @@ class PostJournalEntry
         array $lines,
         ?JournalEntry $reverses = null,
         ?JournalEntry $correctionOf = null,
+        ?string $sourceType = null,
+        ?string $sourceUuid = null,
+        ?string $idempotencyKey = null,
     ): JournalEntry {
         Gate::forUser($user)->authorize('manage', $ledger);
 
@@ -36,6 +40,19 @@ class PostJournalEntry
 
         $description = trim((string) $description);
         abort_if(mb_strlen($description) > 500, 422, 'Journal Entry description is too long.');
+
+        $sourceType = $sourceType !== null ? Str::squish($sourceType) : null;
+        $sourceUuid = $sourceUuid !== null ? trim($sourceUuid) : null;
+        $idempotencyKey = $idempotencyKey !== null ? trim($idempotencyKey) : null;
+
+        abort_if($sourceType !== null && ($sourceType === '' || mb_strlen($sourceType) > 80), 422, 'Invalid Journal Entry source type.');
+        abort_unless($sourceUuid === null || Str::isUuid($sourceUuid), 422, 'Invalid Journal Entry source UUID.');
+        abort_if(
+            ($sourceType === null) !== ($sourceUuid === null),
+            422,
+            'Journal Entry source type and UUID must be provided together.',
+        );
+        abort_if($idempotencyKey !== null && ($idempotencyKey === '' || mb_strlen($idempotencyKey) > 190), 422, 'Invalid Journal Entry idempotency key.');
 
         $debits = 0;
         $credits = 0;
@@ -73,6 +90,7 @@ class PostJournalEntry
 
         return DB::transaction(function () use (
             $ledger,
+            $user,
             $actor,
             $kind,
             $occurredOn,
@@ -80,8 +98,22 @@ class PostJournalEntry
             $normalized,
             $reverses,
             $correctionOf,
+            $sourceType,
+            $sourceUuid,
+            $idempotencyKey,
         ): JournalEntry {
             Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
+
+            if ($idempotencyKey !== null) {
+                $existing = JournalEntry::query()
+                    ->where('ledger_id', $ledger->id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->first();
+
+                if ($existing instanceof JournalEntry) {
+                    return $existing->load(['ledger.monetaryUnit', 'lines.account', 'creator.user', 'actingUser']);
+                }
+            }
 
             if ($reverses instanceof JournalEntry) {
                 abort_if(
@@ -96,9 +128,13 @@ class PostJournalEntry
                 'kind' => $kind,
                 'occurred_on' => $occurredOn,
                 'description' => $description !== '' ? $description : null,
+                'source_type' => $sourceType,
+                'source_uuid' => $sourceUuid,
+                'idempotency_key' => $idempotencyKey,
                 'reverses_entry_id' => $reverses?->id,
                 'correction_of_entry_id' => $correctionOf?->id,
                 'created_by_actor_id' => $actor->id,
+                'acting_user_id' => $user->id,
                 'posted_at' => now(),
             ]);
 
@@ -106,7 +142,12 @@ class PostJournalEntry
                 $entry->lines()->create($line);
             }
 
-            return $entry->fresh(['ledger.monetaryUnit', 'lines.account', 'creator.user']);
+            return $entry->fresh([
+                'ledger.monetaryUnit',
+                'lines.account',
+                'creator.user',
+                'actingUser',
+            ]);
         }, attempts: 3);
     }
 

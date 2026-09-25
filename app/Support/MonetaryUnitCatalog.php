@@ -14,6 +14,7 @@ final class MonetaryUnitCatalog
             'JPY' => ['name' => 'Japanese Yen', 'exponent' => 0, 'symbol' => '¥'],
             'CNY' => ['name' => 'Chinese Yuan', 'exponent' => 2, 'symbol' => '¥'],
             'AED' => ['name' => 'UAE Dirham', 'exponent' => 2, 'symbol' => 'د.إ'],
+            'IRR' => ['name' => 'Iranian Rial', 'exponent' => 0, 'symbol' => '﷼'],
         ];
     }
 

@@ -36,6 +36,10 @@ class SystemManualHelpMap
             return 'commitments';
         }
 
+        if (str_starts_with($routeName, 'financial-obligations.')) {
+            return 'financial-obligations';
+        }
+
         if (str_starts_with($routeName, 'profile.')
             || str_starts_with($routeName, 'intents.')) {
             return 'profile-concepts';

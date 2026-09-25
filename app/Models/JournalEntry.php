@@ -18,9 +18,13 @@ use LogicException;
     'kind',
     'occurred_on',
     'description',
+    'source_type',
+    'source_uuid',
+    'idempotency_key',
     'reverses_entry_id',
     'correction_of_entry_id',
     'created_by_actor_id',
+    'acting_user_id',
     'posted_at',
 ])]
 class JournalEntry extends Model
@@ -53,6 +57,12 @@ class JournalEntry extends Model
     public function ledger(): BelongsTo
     {
         return $this->belongsTo(Ledger::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function actingUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'acting_user_id');
     }
 
     /** @return BelongsTo<Actor, $this> */

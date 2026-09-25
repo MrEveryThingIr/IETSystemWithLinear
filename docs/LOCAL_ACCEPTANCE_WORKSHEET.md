@@ -913,3 +913,107 @@ composer audit
 - [ ] Confirm accepted Fulfillment creates no Financial Obligation.
 - [ ] Confirm accepted Fulfillment creates no Accounting JournalEntry.
 - [ ] Confirm accepted Fulfillment creates no Settlement/payment truth.
+
+
+---
+
+## Checkpoint 17 — Financial Obligation + Settlement bridge
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-17-financial-obligation-settlement
+~~~
+
+Remote kernel checkpoint:
+
+~~~text
+SHA: 90e0e0ec0033954bacdaca944fee9a2efe2e9095
+CI: 36114145008
+Result: 500 tests / 3036 assertions
+~~~
+
+Remote final runtime checkpoint:
+
+~~~text
+SHA: 47bae48638345a807623ceb7f1ae44866d09d9e6
+CI: 36115933156
+Result: 502 tests / 3065 assertions; Pint/PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_25_010000_create_financial_obligation_settlement_bridge.php
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-17-financial-obligation-settlement
+git pull --ff-only origin feat/ideal-v1-17-financial-obligation-settlement
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/FinancialObligationSettlementKernelTest.php \
+  tests/Feature/FinancialObligationSettlementExperienceTest.php \
+  tests/Feature/CommitmentFulfillmentExperienceTest.php \
+  tests/Feature/ConversationTimelineExperienceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — Riverside earned / paid / outstanding
+
+- [ ] Use an Active Riverside Contract with Alice as beneficiary/reviewer and Bob as responsible worker.
+- [ ] Create/perform/review three workday Fulfillments and explicitly Accept all three.
+- [ ] On each accepted Fulfillment choose **Recognize financial obligation**.
+- [ ] Enter 1,500,000 IRR for each workday.
+- [ ] Confirm each obligation preserves the exact Fulfillment and ContractVersion.
+- [ ] Confirm Contract financial summary derives earned = 4,500,000 IRR and outstanding = 4,500,000 IRR.
+- [ ] As Alice, explicitly post each Financial Obligation to Alice's Personal Accounting.
+- [ ] As Bob, explicitly post the same source obligations to Bob's own Personal Accounting.
+- [ ] Confirm balanced JournalEntries exist in separate Ledgers and retries do not duplicate them.
+- [ ] Propose a 3,000,000 IRR Settlement claim with payment time/method/reference.
+- [ ] Confirm the proposer cannot self-confirm the Settlement.
+- [ ] As the counterparty, explicitly confirm it.
+- [ ] Confirm Contract summary derives paid = 3,000,000 IRR and outstanding = 1,500,000 IRR.
+- [ ] Explicitly post Settlement Accounting for Alice and Bob.
+- [ ] Confirm each Actor's Ledger gets one idempotent balanced Settlement JournalEntry.
+- [ ] Open Contract Timeline and confirm bilateral financial events link to the Financial Obligation page.
+
+### Dispute behavior
+
+- [ ] With one accepted but unpaid workday obligation, dispute its source Fulfillment.
+- [ ] Confirm Contract summary moves its remaining amount from earned/outstanding into disputed.
+- [ ] Attempt to confirm a pending Settlement for that obligation and confirm it is blocked.
+- [ ] Resolve the Fulfillment dispute back to accepted.
+- [ ] Confirm the immutable Financial Obligation remains the same and its remaining amount returns to outstanding.
+
+### Privacy / multi-party boundary
+
+- [ ] Add Carol as a Contract party who is not debtor/creditor of Bob's work obligation.
+- [ ] Confirm Carol may view the Contract if authorized.
+- [ ] Confirm Carol cannot open the Financial Obligation URL.
+- [ ] Confirm Carol's Contract Timeline excludes that bilateral financial event.
+- [ ] Confirm Carol cannot post Accounting or respond to its Settlement.
+
+### Negative guarantees
+
+- [ ] Fulfillment submission does not create a Financial Obligation.
+- [ ] Fulfillment acceptance alone does not create a Financial Obligation.
+- [ ] Contract activation does not create a Financial Obligation.
+- [ ] Planner completion does not create a Financial Obligation.
+- [ ] Conversation/Content text such as “paid” does not create Settlement or Accounting.
+- [ ] Settlement proposal alone does not count as paid.
+- [ ] Settlement confirmation does not silently post Accounting.
+- [ ] No mutable owed/paid/outstanding balance column is used; values derive from immutable sources.

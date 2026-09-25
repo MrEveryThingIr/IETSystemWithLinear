@@ -31,6 +31,8 @@ use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\FinancialObligation;
+use App\Models\FinancialObligationEvent;
 use App\Models\Fulfillment;
 use App\Models\FulfillmentDispute;
 use App\Models\FulfillmentReview;
@@ -70,6 +72,7 @@ use App\Models\Relationship;
 use App\Models\RelationshipContext;
 use App\Models\RelationshipEvent;
 use App\Models\RelationshipParticipant;
+use App\Models\Settlement;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinition;
 use App\Models\SpaceContentDefinitionVersion;
@@ -111,6 +114,9 @@ class ModelFactoryTest extends TestCase
             Fulfillment::factory()->create(),
             FulfillmentReview::factory()->create(),
             FulfillmentDispute::factory()->create(),
+            FinancialObligation::factory()->create(),
+            FinancialObligationEvent::factory()->create(),
+            Settlement::factory()->create(),
             MonetaryUnit::factory()->create(),
             Ledger::factory()->create(),
             Account::factory()->create(),

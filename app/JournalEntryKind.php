@@ -8,6 +8,8 @@ enum JournalEntryKind: string
     case Expense = 'expense';
     case Income = 'income';
     case Transfer = 'transfer';
+    case ObligationRecognition = 'obligation_recognition';
+    case Settlement = 'settlement';
     case Reversal = 'reversal';
     case Correction = 'correction';
 }
