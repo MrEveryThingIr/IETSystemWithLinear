@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\CommitmentEvent;
-use App\Models\ConversationMessage;
 use App\Models\ContractEvent;
+use App\Models\ConversationMessage;
 use App\Models\Evaluation;
 use App\Models\FinancialObligationEvent;
 use App\Models\ProposalEvent;
