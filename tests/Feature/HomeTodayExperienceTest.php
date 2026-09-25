@@ -27,6 +27,13 @@ class HomeTodayExperienceTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('release.profile', 'full');
+    }
+
     public function test_today_composes_owned_schedule_and_active_intent_without_creating_new_domain_truth(): void
     {
         $actor = Actor::factory()->create();
