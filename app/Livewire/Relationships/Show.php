@@ -58,6 +58,7 @@ class Show extends Component
         $relationship = Relationship::query()
             ->with([
                 'purposeConcept.labels',
+                'domainBlueprintVersion.blueprint',
                 'originatingIntent.profile.actor.user',
                 'participants.actor.user',
                 'events.actor.user',

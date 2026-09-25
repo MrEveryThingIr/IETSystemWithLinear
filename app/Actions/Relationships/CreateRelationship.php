@@ -4,10 +4,12 @@ namespace App\Actions\Relationships;
 
 use App\ConceptStatus;
 use App\ContextKind;
+use App\DomainJourneyKind;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
 use App\Models\Context;
+use App\Models\DomainBlueprintVersion;
 use App\Models\Relationship;
 use App\Models\RelationshipContext;
 use App\Models\RelationshipEvent;
@@ -32,6 +34,7 @@ class CreateRelationship
         array $invitees,
         ?ActorProfileIntent $originatingIntent = null,
         ?string $title = null,
+        ?DomainBlueprintVersion $domainBlueprintVersion = null,
     ): Relationship {
         $current = $this->currentUser($user);
         $creatorRole = $this->normalizeRole($creatorRole);
@@ -44,9 +47,24 @@ class CreateRelationship
             $invitees,
             $originatingIntent,
             $title,
+            $domainBlueprintVersion,
         ): Relationship {
             $creator = Actor::query()->with('user')->lockForUpdate()->findOrFail($current->actor->id);
             $canonicalPurpose = Concept::query()->findOrFail($purpose->id)->canonical();
+
+            $lockedBlueprintVersion = null;
+            if ($domainBlueprintVersion instanceof DomainBlueprintVersion) {
+                $lockedBlueprintVersion = DomainBlueprintVersion::query()
+                    ->lockForUpdate()
+                    ->findOrFail($domainBlueprintVersion->id);
+
+                abort_unless(
+                    $lockedBlueprintVersion->published_at !== null
+                    && $lockedBlueprintVersion->journey_kind === DomainJourneyKind::Relationship,
+                    422,
+                    'Relationship requires a published Relationship Domain Blueprint version.',
+                );
+            }
 
             abort_unless($canonicalPurpose->status === ConceptStatus::Active, 422, 'Relationship purpose must be an active Concept.');
 
@@ -104,6 +122,7 @@ class CreateRelationship
                 'title' => $this->normalizeTitle($title),
                 'purpose_concept_id' => $canonicalPurpose->id,
                 'originating_intent_id' => $lockedIntent?->id,
+                'domain_blueprint_version_id' => $lockedBlueprintVersion?->id,
                 'created_by_actor_id' => $creator->id,
                 'metadata' => [],
             ]);
@@ -148,6 +167,7 @@ class CreateRelationship
                 'payload' => [
                     'purpose_concept_id' => $canonicalPurpose->id,
                     'originating_intent_id' => $lockedIntent?->id,
+                    'domain_blueprint_version_uuid' => $lockedBlueprintVersion?->uuid,
                     'invitee_actor_ids' => collect($participantSpecs)->pluck('actor.id')->values()->all(),
                 ],
             ]);
@@ -155,6 +175,7 @@ class CreateRelationship
             return $relationship->fresh([
                 'purposeConcept.labels',
                 'originatingIntent',
+                'domainBlueprintVersion.blueprint',
                 'participants.actor.user',
                 'contextBinding.context',
                 'events',

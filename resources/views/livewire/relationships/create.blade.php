@@ -1,6 +1,24 @@
 <section class="mx-auto max-w-3xl space-y-6">
     <x-app.page-header :title="__('relationships.create.title')" :description="__('relationships.create.help')" />
 
+    @if ($blueprintVersion)
+        <flux:callout>
+            <div class="space-y-3">
+                <div class="font-medium">
+                    {{ __('journeys.guided_by', [
+                        'name' => $blueprintVersion->blueprint->name,
+                        'version' => $blueprintVersion->version,
+                    ]) }}
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($blueprintVersion->capabilities as $capability)
+                        <flux:badge color="zinc">{{ __('journeys.capabilities.'.$capability) }}</flux:badge>
+                    @endforeach
+                </div>
+            </div>
+        </flux:callout>
+    @endif
+
     @if ($intentUuid !== '')
         <flux:callout>
             <div class="space-y-1">

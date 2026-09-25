@@ -4,12 +4,15 @@ namespace App\Livewire\Relationships;
 
 use App\Actions\Relationships\CreateRelationship;
 use App\ConceptStatus;
+use App\DomainJourneyKind;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
+use App\Models\DomainBlueprintVersion;
 use App\Models\Relationship;
 use App\Models\User;
 use App\ProfileIntentStatus;
+use App\Support\DomainBlueprintCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -25,6 +28,9 @@ class Create extends Component
 {
     #[Url(as: 'intent')]
     public string $intentUuid = '';
+
+    #[Url(as: 'blueprint')]
+    public string $blueprintSlug = '';
 
     public string $title = '';
 
@@ -55,6 +61,15 @@ class Create extends Component
         $queryIntent = trim((string) request()->query('intent', ''));
         if ($queryIntent !== '') {
             $this->intentUuid = $queryIntent;
+        }
+
+        $queryBlueprint = trim((string) request()->query('blueprint', ''));
+        if ($queryBlueprint !== '') {
+            $this->blueprintSlug = $queryBlueprint;
+        }
+
+        if ($this->blueprintSlug !== '') {
+            $this->applyBlueprintDefaults();
         }
 
         if ($this->intentUuid !== '') {
@@ -93,6 +108,7 @@ class Create extends Component
             'participantRole' => ['required', 'string', 'max:80'],
             'purposeConceptId' => ['required', 'integer'],
             'intentUuid' => ['nullable', 'uuid'],
+            'blueprintSlug' => ['nullable', 'string', 'max:120'],
         ]);
 
         $user = $this->user();
@@ -142,6 +158,7 @@ class Create extends Component
             ]],
             $originIntent,
             $data['title'] !== '' ? $data['title'] : null,
+            $this->blueprintVersion(),
         );
 
         return $this->redirectRoute('relationships.show', $relationship);
@@ -153,6 +170,7 @@ class Create extends Component
 
         return view('livewire.relationships.create', [
             'purposeOptions' => $this->purposeOptions(),
+            'blueprintVersion' => $this->blueprintVersion(),
         ]);
     }
 
@@ -179,6 +197,31 @@ class Create extends Component
             ->get()
             ->sortBy(fn (Concept $concept): string => mb_strtolower($concept->displayLabel()))
             ->values();
+    }
+
+    private function applyBlueprintDefaults(): void
+    {
+        $version = $this->blueprintVersion();
+        abort_unless($version instanceof DomainBlueprintVersion, 422);
+
+        $this->creatorRole = (string) ($version->terminology['creator_role'] ?? $this->creatorRole);
+        $this->participantRole = (string) ($version->terminology['participant_role'] ?? $this->participantRole);
+
+        if ($this->purposeSearch === '') {
+            $this->purposeSearch = (string) ($version->guided_entry['purpose_hint'] ?? '');
+        }
+    }
+
+    private function blueprintVersion(): ?DomainBlueprintVersion
+    {
+        if ($this->blueprintSlug === '') {
+            return null;
+        }
+
+        return app(DomainBlueprintCatalog::class)->version(
+            $this->blueprintSlug,
+            DomainJourneyKind::Relationship,
+        );
     }
 
     private function loadOriginIntent(): void

@@ -6,13 +6,16 @@ use App\Actions\Contexts\EnsurePersonalContext;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
 use App\ContextKind;
+use App\DomainJourneyKind;
 use App\Models\Actor;
 use App\Models\Context;
+use App\Models\DomainBlueprintVersion;
 use App\Models\Relationship;
 use App\Models\User;
 use App\PlanScheduleFrequency;
 use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
+use App\Support\DomainBlueprintCatalog;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -28,6 +31,9 @@ class Create extends Component
 {
     #[Url(as: 'context')]
     public string $contextUuid = '';
+
+    #[Url(as: 'blueprint')]
+    public string $blueprintSlug = '';
 
     public string $title = '';
 
@@ -69,6 +75,15 @@ class Create extends Component
         $this->startsOn = $now->format('Y-m-d');
         $this->startTime = $now->addHour()->format('H:00');
         $this->weekdays = [$now->isoWeekday()];
+
+        $queryBlueprint = trim((string) request()->query('blueprint', ''));
+        if ($queryBlueprint !== '') {
+            $this->blueprintSlug = $queryBlueprint;
+        }
+
+        if ($this->blueprintSlug !== '') {
+            $this->applyBlueprintDefaults();
+        }
 
         if ($this->contextUuid === '') {
             $this->contextUuid = $personal->execute($user)->uuid;
@@ -114,6 +129,7 @@ class Create extends Component
             $participants,
             $originType,
             $originUuid,
+            domainBlueprintVersion: $this->blueprintVersion(),
         );
 
         $createRule->execute(
@@ -150,6 +166,7 @@ class Create extends Component
             'context' => $context,
             'contextLabel' => $this->contextLabel($context),
             'weekdayOrder' => TemporalPreferences::weekdayOrder($this->user()->locale),
+            'blueprintVersion' => $this->blueprintVersion(),
         ]);
     }
 
@@ -177,6 +194,34 @@ class Create extends Component
             ->all();
 
         return [$participants, 'relationship', $relationship->uuid];
+    }
+
+    private function applyBlueprintDefaults(): void
+    {
+        $version = $this->blueprintVersion();
+        abort_unless($version instanceof DomainBlueprintVersion, 422);
+
+        $frequency = (string) ($version->guided_entry['frequency'] ?? '');
+        if (in_array($frequency, ['once', 'daily', 'weekly', 'selected_dates'], true)) {
+            $this->frequency = $frequency;
+        }
+
+        $duration = (int) ($version->guided_entry['duration_minutes'] ?? 0);
+        if ($duration >= 1 && $duration <= 10080) {
+            $this->durationMinutes = $duration;
+        }
+    }
+
+    private function blueprintVersion(): ?DomainBlueprintVersion
+    {
+        if ($this->blueprintSlug === '') {
+            return null;
+        }
+
+        return app(DomainBlueprintCatalog::class)->version(
+            $this->blueprintSlug,
+            DomainJourneyKind::PersonalActivity,
+        );
     }
 
     private function context(): Context

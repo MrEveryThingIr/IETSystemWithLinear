@@ -12,6 +12,10 @@ class SystemManualHelpMap
             return 'feedback';
         }
 
+        if (str_starts_with($routeName, 'journeys.')) {
+            return 'journeys';
+        }
+
         if (str_starts_with($routeName, 'relationships.')) {
             return 'relationships';
         }

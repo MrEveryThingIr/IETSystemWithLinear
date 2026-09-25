@@ -671,12 +671,27 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 17 — Financial Obligation + Settlement bridge** is remotely complete: runtime `47bae48638345a807623ceb7f1ae44866d09d9e6` / CI `36115933156` (502 tests / 3065 assertions), documentation/manual `a24c1c3a3a34290c15e8d3d5cb633df22d5bead9` / CI `36116508652` (502 tests / 3069 assertions).
+**Phase 18 — Journey / Relationship / Domain Blueprints** is implemented on `feat/ideal-v1-18-domain-blueprints`.
 
-It adds immutable bilateral Financial Obligations derived only through explicit recognition from accepted Fulfillment, per-Actor idempotent Accounting posting, counterparty-confirmed Settlements, explicit Settlement Accounting, derived scheduled/worked/accepted/earned/paid/outstanding/disputed Contract summaries, bilateral privacy and source-linked financial Timeline events.
+Runtime checkpoint:
 
-The authoritative chain remains explicit: ContractVersion → Commitment → accepted Fulfillment → Financial Obligation → Accounting posting → confirmed Settlement → Settlement Accounting. No magic balance is mutated and no prose/Planner/Contract state silently creates financial truth.
+- SHA `e4c9cb4cce39a1e0a37bad6ae72e97b6ab5feb77`;
+- CI `36119387963`;
+- **510 tests / 3138 assertions**;
+- Pint 638 changed PHP files green;
+- PHPStan/Vite green;
+- migration rollback/reapply, scheduler/database queue and backup/restore smoke green;
+- npm audit 0 vulnerabilities;
+- Composer audit no advisories.
 
-Next after integration: **Phase 18 — Journey / Relationship / Domain Blueprints**.
+Phase 18 adds an immutable versioned Domain Blueprint composition layer plus a **Journeys** experience for six proven compositions: Simple Sale, Rental, Service Job, Employment / Paid Work, Construction Partnership and Personal Activity.
+
+Relationship/Plan creation may be guided by terminology, recommended capabilities, Content template references and safe entry defaults, but every created object preserves the exact Blueprint version used and every authoritative downstream mutation remains owned by its existing policy/Action.
+
+The System Manual now includes Chapter 23, **Journeys and Domain Blueprints**, and Phase 18 manual/closure synchronization is being validated on the same feature branch before integration.
+
+Next after Phase 18 integration: **Phase 19 — Need / Offer Matching**.
+
+Phase 19 must remain discovery-only: explainable, privacy-safe candidate matching over existing Intent/Concept constraints with an explicit handoff into Relationship/Proposal. A Match must not create agreement, obligation, payment, ownership, employment or other authority.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

@@ -31,6 +31,8 @@ use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\DomainBlueprint;
+use App\Models\DomainBlueprintVersion;
 use App\Models\FinancialObligation;
 use App\Models\FinancialObligationEvent;
 use App\Models\Fulfillment;
@@ -106,6 +108,8 @@ class ModelFactoryTest extends TestCase
             ContractContext::factory()->create(),
             ContractVersion::factory()->create(),
             ContractVersionParty::factory()->create(),
+            DomainBlueprint::factory()->create(),
+            DomainBlueprintVersion::factory()->create(),
             ContractAcceptance::factory()->create(),
             ContractEvent::factory()->create(),
             Commitment::factory()->create(),

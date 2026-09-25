@@ -32,6 +32,7 @@ class SystemManualContent
         'contracts' => '20. Contracts and Exact Acceptance',
         'commitments' => '21. Commitments and Fulfillment',
         'financial-obligations' => '22. Financial Obligations and Settlements',
+        'journeys' => '23. Journeys and Domain Blueprints',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -50,11 +51,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, and exact-version Contract acceptance/effective-time history.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, exact-version Contract acceptance/effective-time history, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, and versioned Journeys/Domain Blueprints for proven compositions.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment and the Financial Obligation/Settlement bridge are now implemented.
+Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, and Journeys/Domain Blueprints are now implemented.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -1215,6 +1216,66 @@ A confirmed Settlement still does not silently post Accounting. Each Actor posts
 Typing “paid” in Conversation/Content, completing Planner activity, activating a Contract, or creating an arbitrary JournalEntry does not create/confirm a Settlement.
 
 Paid/outstanding/disputed are derived values. Do not edit a balance field to make them match expectations.
+TEXT,
+                ],
+                [
+                    'title' => '23. Journeys and Domain Blueprints',
+                    'summary' => <<<'TEXT'
+Journeys turn proven combinations of IET kernels into understandable starting points. A Domain Blueprint is a versioned recipe for terminology, recommended capabilities, Content templates, and guided entry defaults. It helps a person begin with a familiar purpose while the existing domain Actions remain authoritative.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 18 provides versioned DomainBlueprint and immutable published DomainBlueprintVersion records.
+
+The built-in Journeys catalog currently offers six proven compositions: Simple Sale, Rental, Service Job, Employment / Paid Work, Construction Partnership, and Personal Activity.
+
+Relationship journeys can guide Relationship creation with purpose hints and participant-role terminology. Personal Activity guides Planner creation with safe defaults such as frequency and duration. The created Relationship or Plan permanently stores the exact DomainBlueprintVersion that guided it, so later Blueprint revisions do not rewrite historical provenance.
+
+A Blueprint may recommend capabilities such as Conversation, Content, Planner, Proposal, Contract, Commitment, Fulfillment, Financial, and Accounting, and may name useful Content Blueprint templates. These recommendations do not create those domain records and do not grant permission to use them.
+
+System Blueprint definitions are normalized, content-hashed, published as immutable versions, and idempotently ensured. If a built-in recipe changes later, a new version is published instead of editing the prior version.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Service Job example:
+1. Open **Journeys** from the application navigation.
+2. Choose **Service Job** and select **Start this journey**.
+3. On the guided Relationship form, review the suggested client/provider roles and purpose hint.
+4. Select the real purpose Concept, choose the participant, edit any user-owned details that should differ, and create the Relationship.
+5. Open the Relationship and confirm the **Journey recipe** shows **Service Job** with its exact version.
+6. Use Conversation or Content when useful. If the work requires Proposal, Contract, Planner, Commitment, Fulfillment, Financial Obligation, or Accounting, enter those capabilities through their own explicit UI/actions. The recipe does not run them automatically.
+
+Personal Activity example:
+1. Open **Journeys**.
+2. Choose **Personal Activity**.
+3. Review the guided Planner defaults, then enter your own title, date/time, recurrence, duration, reminders, participants/evidence where applicable.
+4. Save the Plan.
+5. Open the Plan and confirm the exact Personal Activity recipe version remains visible as provenance.
+
+When a later recipe version exists, old Relationships and Plans continue to identify the version they were actually created from.
+TEXT,
+                    'authorization' => <<<'TEXT'
+A Domain Blueprint never grants access to a Relationship, Plan, Context, Content item, Contract, financial record, or any other domain object.
+
+The normal policy and Action for the target domain still authorizes every protected read and mutation. A Blueprint version is accepted only for the journey kind it was published for; a Personal Activity recipe cannot be applied to Relationship creation, and a Relationship recipe cannot be applied as a Personal Activity Plan recipe.
+
+Blueprint recommendations are configuration and guidance only. Possessing a Blueprint slug, UUID, or URL is not authority.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Domain Blueprints should evolve into the reusable composition layer behind focused Domain Packs and purpose-specific experiences without becoming a universal workflow interpreter.
+
+Later phases may add richer guided handoffs between recommended capabilities, Group/community compositions, reviewed custom Blueprint authoring, and field-specific terminology/presentation. Phase 19 adds explainable Need/Offer matching as discovery that may hand off into the already-proven Relationship/Proposal path.
+
+The architectural rule remains: generic inside, specific outside. Friendly journeys may become simpler while every authoritative fact remains owned by its correct domain kernel.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A Journey is not a separate copy of sale, rental, employment, service, construction, or planning data.
+
+A Domain Blueprint is not a Contract, Workflow, permission bundle, or executable script.
+
+Starting a Service Job does not automatically create a Proposal, Contract, Commitment, Fulfillment, Financial Obligation, Settlement, or Accounting entry.
+
+Recommended capabilities describe a useful composition; they do not imply that every journey must use every capability.
+
+Editing a later Blueprint version does not mutate the exact version already referenced by an existing Relationship or Plan.
 TEXT,
                 ],
             ],
