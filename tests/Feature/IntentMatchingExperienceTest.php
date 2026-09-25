@@ -40,10 +40,10 @@ class IntentMatchingExperienceTest extends TestCase
             ->assertSee('Construction service available')
             ->assertSee('Participant identity remains private at this visibility level.')
             ->assertDontSee($bob->user->username)
-            ->assertSee(route('relationships.create', [
+            ->assertSee(e(route('relationships.create', [
                 'intent' => $source->uuid,
                 'match' => $candidate->uuid,
-            ]), false);
+            ])), false);
     }
 
     public function test_match_handoff_creates_only_a_proposed_relationship_with_both_intent_origins(): void
