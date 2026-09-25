@@ -1411,7 +1411,6 @@ A Submission is not visible to every Group member. Review authority remains Cont
 A restricted Space is not exposed by the Community overview unless the viewer already has Space access.
 TEXT,
                 ],
-                ],
                 [
                     'title' => '26. Home / Today Operating View',
                     'summary' => <<<'TEXT'
@@ -1476,6 +1475,8 @@ Different currencies are not added together.
 
 Opening Today creates no Relationship, Proposal, Contract, Plan, Fulfillment, Settlement, Submission, JournalEntry or financial obligation.
 TEXT,
-     ];
+                ],
+            ],
+        ];
     }
 }
