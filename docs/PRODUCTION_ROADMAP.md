@@ -672,21 +672,28 @@ Exit gate: System Manual Chapter 25, closure docs/checkpoint synchronization, fi
 
 ## Phase 21 — Home / Today personal operating view
 
-Purpose: make the connected system feel like one simple application.
+**Status: runtime complete / remote-green on `feat/ideal-v1-21-home-today`; documentation/manual closure and integration gate in progress.**
 
-Derived view may answer:
+Runtime checkpoint `d0834e5a72545d558d074deb495fd7009daa96ff` / CI `36128745672`: **524 tests / 3244 assertions**, Pint 660 PHP files, PHPStan/Vite/migration/ops/backup/security gates green.
 
-- what should I do today?
-- what changed?
-- who is waiting on me?
-- who am I waiting for?
-- current relationships/groups;
-- active Needs/Offers;
-- today's income/expense/net;
-- earned/paid/outstanding obligations;
-- recent Content/activity.
+Delivered:
 
-Everything links back to authoritative sources.
+- Dashboard route upgraded to the derived **Today** operating view;
+- policy-filtered PlanOccurrences for the current local day;
+- explicit **Waiting on me** actions from Relationship/Proposal/Contract/Fulfillment/Settlement/Submission lifecycle state;
+- **Waiting on others** where the current user already acted and a required counterparty is pending;
+- active Needs/Offers, Relationships and Group memberships;
+- today's actual Personal Accounting income/expense/net grouped by MonetaryUnit;
+- recognized receivable/payable and confirmed-paid/outstanding obligation summaries grouped by MonetaryUnit;
+- recent authorized activity from existing ContextTimeline sources;
+- safe verified-account-without-Actor behavior;
+- preservation of office-alpha release boundaries;
+- localized Today catalogs for English, Persian, Arabic and Chinese;
+- no Home/Today persistence and no inferred unread state.
+
+Detailed contract: `docs/PHASE_21_HOME_TODAY.md`.
+
+Exit gate: System Manual Chapter 26, closure docs/checkpoint synchronization, final feature-branch CI and integration PR must be green before Phase 22.
 
 ## Phase 22 — Realtime + Notifications
 

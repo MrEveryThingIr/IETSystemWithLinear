@@ -86,7 +86,7 @@ class LocalizationTest extends TestCase
             ->withSession(['locale' => 'en'])
             ->get(route('dashboard'))
             ->assertHeader('Content-Language', 'ar')
-            ->assertSee('لوحة التحكم');
+            ->assertSee('اليوم');
     }
 
     public function test_unsupported_locale_is_rejected_without_changing_the_preference(): void

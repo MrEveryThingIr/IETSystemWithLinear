@@ -35,6 +35,7 @@ class SystemManualContent
         'journeys' => '23. Journeys and Domain Blueprints',
         'matching' => '24. Need / Offer Matching',
         'community' => '25. Group / Community Composition',
+        'home-today' => '26. Home / Today Operating View',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -53,11 +54,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, exact-version Contract acceptance/effective-time history, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, versioned Journeys/Domain Blueprints for proven compositions, and explainable privacy-safe Need/Offer matching with explicit Relationship handoff.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, exact-version Contract acceptance/effective-time history, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, versioned Journeys/Domain Blueprints for proven compositions, explainable privacy-safe Need/Offer matching with explicit Relationship handoff, policy-safe Group Community composition, and the derived Home/Today personal operating view.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, Journeys/Domain Blueprints, and Need/Offer matching are now implemented.
+Realtime transport/notification delivery, generic workflow extraction, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, Journeys/Domain Blueprints, and Need/Offer matching are now implemented.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -1408,6 +1409,71 @@ A Relationship between two people is not automatically a Group relationship mere
 A Submission is not visible to every Group member. Review authority remains Context-specific.
 
 A restricted Space is not exposed by the Community overview unless the viewer already has Space access.
+TEXT,
+                ],
+                [
+                    'title' => '26. Home / Today Operating View',
+                    'summary' => <<<'TEXT'
+Today is the personal operating surface that makes the connected kernels feel like one application. It derives today's scheduled work, pending decisions, things waiting on other people, active Needs/Offers, Relationships, Groups, money summaries and recent authorized activity without becoming another source of truth.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 21 replaces the old placeholder Dashboard with a Livewire Today view.
+
+Today's scheduled work comes from PlanOccurrence records and normal Plan participation policy.
+
+"Waiting on me" is deliberately limited to real domain actions that currently require the user: proposed Relationship response, current Proposal decision, proposed ContractVersion acceptance, submitted Fulfillment review, pending Settlement response and reviewable submitted interactions.
+
+"Waiting on others" is the inverse where the current user has already acted and another required participant still has not.
+
+Active Needs/Offers remain the user's ActorProfileIntent records. Active Relationships remain Relationship records. Groups remain active GroupMemberships.
+
+Today's accounting summarizes actual personal-ledger JournalEntry effects through AccountingSummary. Recognized/paid/outstanding financial obligations are summarized separately from accounting truth.
+
+Money is grouped by MonetaryUnit. EUR, USD or any other unit are never silently summed into one total.
+
+Recent activity is composed from authorized ContextTimeline entries across a bounded set of personal, GroupSpace and collaboration Contexts. It is recent history, not an unread-notification store.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Alice's morning example:
+1. Sign in. The Dashboard route opens **Today**.
+2. Under **What should I do today?**, open a scheduled Plan occurrence to work in the authoritative Planner record.
+3. Under **Waiting on me**, Alice may see Bob's proposed Relationship, a Proposal decision, Contract acceptance, Fulfillment review, Settlement confirmation or a submitted interaction. Selecting an item opens that domain's real record and action controls.
+4. Under **Waiting on others**, Alice sees items where she already acted and Bob/Carol/another required party still needs to respond.
+5. Review **My active Needs & Offers**, **Active Relationships**, and **My Groups** for current operating context.
+6. Review **Today's accounting**. Amounts appear only after actual ledger posting.
+7. Review **Financial obligations** for recognized receivable/payable facts and confirmed paid/outstanding values.
+8. Review **Recent activity** to understand what changed across authorized Contexts.
+
+If an account is verified but its primary Actor has not yet been created, Today remains safe and shows the limited account/setup experience rather than querying actor-owned operational domains.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Today does not grant authority.
+
+Each derived section uses the same policy that protects the underlying domain. A user cannot gain access to a Plan, Relationship, Proposal, Contract, Fulfillment, Settlement, Submission, Group, Intent, Ledger or Context merely because Today knows such object types exist.
+
+The office-alpha release profile continues to hide advanced navigation/capabilities. Today respects that release boundary rather than exposing hidden advanced modules through its quick actions.
+
+Recent activity only includes Contexts the user may view, and each ContextTimeline entry continues to apply its own underlying domain checks.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Later phases should make Today more responsive through durable notifications/realtime transport and eventually more useful through workflow, reputation, discovery and AI assistance.
+
+Those layers should enhance the derived operating view rather than turn Today into a competing database.
+
+Unread state, delivery channels, notification preferences and realtime updates belong to Phase 22 rather than being inferred from recent timeline history.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+Today is not a Task table, inbox database, accounting ledger, notification store or workflow engine.
+
+"Waiting on me" is not generated from arbitrary text. It is derived from explicit lifecycle states and policy-authorized actions.
+
+"Recent activity" does not mean unread. Phase 21 does not create notification read/unread state.
+
+Today's accounting is not the same as Financial Obligations. Obligations describe recognized economic facts; accounting describes posted personal ledger truth.
+
+Different currencies are not added together.
+
+Opening Today creates no Relationship, Proposal, Contract, Plan, Fulfillment, Settlement, Submission, JournalEntry or financial obligation.
 TEXT,
                 ],
             ],

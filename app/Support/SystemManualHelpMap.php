@@ -112,7 +112,7 @@ class SystemManualHelpMap
         }
 
         if ($routeName === 'dashboard') {
-            return 'mental-model';
+            return 'home-today';
         }
 
         return 'mental-model';
