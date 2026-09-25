@@ -72,6 +72,7 @@ return [
     ],
     'planner' => [
         'frequency' => '计划模式',
+        'daily' => '每天',
         'once' => '一次',
         'selected_dates' => '指定日期',
         'starts_on' => '开始日期',
