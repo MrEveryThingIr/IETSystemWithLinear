@@ -35,6 +35,7 @@ return [
         'your_requests' => 'طلباتك',
         'reviewer_note' => 'ملاحظة المراجع: :note',
         'pending_requests' => 'طلبات صلاحيات النظام المعلقة',
+        'group_creation_review_help' => 'راجع طلبات المستخدمين الذين يطلبون صلاحية إنشاء المجموعات.',
         'pending' => 'معلق',
         'reviewer_note_optional' => 'ملاحظة المراجع (اختياري)',
         'approve' => 'موافقة',
