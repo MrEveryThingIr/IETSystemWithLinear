@@ -29,11 +29,14 @@ APP_NAME=IET
 IET_RELEASE_PROFILE=full
 ~~~
 
-After environment changes:
+After switching to any checkpoint/RC whose `composer.lock` may differ, restore the exact PHP dependencies **before running any Artisan command**:
 
 ~~~bash
+composer install --no-interaction --prefer-dist
 php artisan optimize:clear
 ~~~
+
+This ordering matters because Artisan boots configured services. For example, a Reverb/Pusher broadcast configuration can legitimately require `pusher/pusher-php-server` from the new lockfile before `optimize:clear` can boot successfully.
 
 ---
 
@@ -1550,6 +1553,10 @@ git switch integration/ideal-v1
 git pull --ff-only origin integration/ideal-v1
 git status --short
 git rev-parse HEAD
+
+# Restore the exact PHP dependency graph from composer.lock before Artisan boots.
+composer install --no-interaction --prefer-dist
+composer show pusher/pusher-php-server
 
 php artisan optimize:clear
 php artisan migrate --force
