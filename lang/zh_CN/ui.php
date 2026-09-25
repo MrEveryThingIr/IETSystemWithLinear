@@ -670,6 +670,7 @@ return [
         'type_select' => '选择',
         'select_options' => '选择项',
         'select_options_help' => '每行一个选项，格式为 value|Label。',
+        'select_options_placeholder' => "on_track|按计划\ndelayed|延迟\nblocked|受阻",
         'remove_field' => '移除字段',
         'add_field' => '添加字段',
         'update_definition' => '更新草稿定义',
