@@ -168,7 +168,8 @@ class IntentMatchFinder
             return false;
         }
 
-        if ((float) $offer->quantity < (float) $need->quantity) {
+        if ($this->scaledInteger((string) $offer->quantity, 4)
+            < $this->scaledInteger((string) $need->quantity, 4)) {
             return false;
         }
 
@@ -335,10 +336,10 @@ class IntentMatchFinder
             return false;
         }
 
-        $needMin = $need->cash_min !== null ? (float) $need->cash_min : 0.0;
-        $needMax = $need->cash_max !== null ? (float) $need->cash_max : INF;
-        $offerMin = $offer->cash_min !== null ? (float) $offer->cash_min : 0.0;
-        $offerMax = $offer->cash_max !== null ? (float) $offer->cash_max : INF;
+        $needMin = $need->cash_min !== null ? $this->scaledInteger((string) $need->cash_min, 2) : 0;
+        $needMax = $need->cash_max !== null ? $this->scaledInteger((string) $need->cash_max, 2) : PHP_INT_MAX;
+        $offerMin = $offer->cash_min !== null ? $this->scaledInteger((string) $offer->cash_min, 2) : 0;
+        $offerMax = $offer->cash_max !== null ? $this->scaledInteger((string) $offer->cash_max, 2) : PHP_INT_MAX;
 
         if ($needMax < $offerMin || $offerMax < $needMin) {
             return false;
@@ -358,5 +359,15 @@ class IntentMatchFinder
     private function normalizedText(?string $value): string
     {
         return Str::of((string) $value)->lower()->squish()->toString();
+    }
+
+    private function scaledInteger(string $value, int $scale): int
+    {
+        $value = trim($value);
+        [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
+        $fraction = substr(str_pad($fraction, $scale, '0'), 0, $scale);
+        $factor = $scale === 2 ? 100 : 10000;
+
+        return ((int) $whole * $factor) + (int) $fraction;
     }
 }
