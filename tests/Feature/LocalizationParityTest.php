@@ -194,6 +194,35 @@ class LocalizationParityTest extends TestCase
         );
     }
 
+
+    public function test_blade_templates_do_not_ship_hardcoded_english_aria_labels(): void
+    {
+        $labels = [];
+
+        foreach (File::allFiles(resource_path('views')) as $file) {
+            if (! str_ends_with($file->getFilename(), '.blade.php')) {
+                continue;
+            }
+
+            $contents = $file->getContents();
+            preg_match_all('/(?<!:)aria-label="([A-Za-z][^"]*)"/', $contents, $matches, PREG_OFFSET_CAPTURE);
+
+            foreach ($matches[1] ?? [] as [$label, $offset]) {
+                $line = substr_count(substr($contents, 0, $offset), "\n") + 1;
+                $labels[$file->getRelativePathname()][] = [
+                    'line' => $line,
+                    'label' => $label,
+                ];
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $labels,
+            'Blade templates contain hardcoded English aria-label text: '.json_encode($labels, JSON_PRETTY_PRINT),
+        );
+    }
+
     /**
      * @return list<string>
      */
