@@ -592,6 +592,8 @@ Exit: the system derives scheduled/worked/accepted/earned/paid/outstanding/dispu
 
 ## Phase 18 — Journey / Relationship / Domain Blueprints
 
+**Status: implementation complete / runtime CI green on `feat/ideal-v1-18-domain-blueprints`; documentation/manual closure and integration gate in progress.** Runtime checkpoint `e4c9cb4cce39a1e0a37bad6ae72e97b6ab5feb77` / CI `36119387963`: **510 tests / 3138 assertions**, Pint 638 changed PHP files, PHPStan/Vite/migrations/operations/backup/security gates green. Detailed contract: `docs/PHASE_18_DOMAIN_BLUEPRINTS.md`.
+
 Purpose: productize proven compositions only after their patterns exist.
 
 Initial compositions:
@@ -603,7 +605,22 @@ Initial compositions:
 - Construction Partnership;
 - Personal activity.
 
-Blueprints configure terminology, recommended capabilities, Content templates and guided entry; they never replace domain authority.
+Delivered:
+
+- versioned `DomainBlueprint` / immutable published `DomainBlueprintVersion`;
+- normalized terminology, recommended capabilities, Content Blueprint references and guided-entry configuration;
+- six idempotent built-in compositions;
+- exact Blueprint-version provenance on created Relationship/Plan records and creation events;
+- journey-kind enforcement so recipes cannot be applied to the wrong domain surface;
+- authenticated **Journeys** catalog;
+- guided Relationship creation for the five collaboration recipes;
+- guided Planner creation for Personal Activity;
+- source-recipe visibility on resulting Relationship/Plan pages;
+- tests proving recipes guide but do not create Contract, Commitment, Financial Obligation or Accounting truth.
+
+Blueprints configure terminology, recommended capabilities, Content templates and guided entry; they never replace domain authority, grant permission, or execute arbitrary code.
+
+Exit gate: final feature-branch CI and integration PR must be green; System Manual Chapter 23, phase report/current-state/worksheet synchronization, and exact checkpoint evidence must be committed before merge.
 
 ## Phase 19 — Need / Offer Matching
 
