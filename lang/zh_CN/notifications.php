@@ -34,5 +34,11 @@ return [
         'settlement_rejected_title' => '结算已拒绝',
         'financial_obligation_title' => '财务义务已更新',
         'financial_event_body' => '财务事件：:event。',
+        'conversation_message_title' => '新的对话消息',
+        'conversation_message_body' => ':author 发布了新消息。',
+        'submission_submitted_title' => '提交内容待审核',
+        'submission_submitted_body' => ':author 提交了一个待审核的响应。',
+        'evaluation_finalized_title' => '评估已完成',
+        'evaluation_finalized_body' => '最终评估现已在相关上下文中可用。',
     ],
 ];
