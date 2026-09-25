@@ -1800,7 +1800,10 @@ Never run that destructive command on the continuing acceptance or production da
 - [ ] Open the year level; choose a month.
 - [ ] In month view, choose a day.
 - [ ] The day view shows all 24 hourly rows and the occurrences assigned to their local hours.
-- [ ] Choose **add to day**; the Plan form opens with that date prefilled.
+- [ ] Open an hour and switch between 60/30/15/5/1-minute precision; confirm slot boundaries are correct.
+- [ ] Choose a minute slot; the Plan form opens with that exact date/time and the selected quantum as its default duration.
+- [ ] Use the Plan description/reminder fields from that exact slot and confirm the saved occurrence returns to the correct minute position.
+- [ ] Choose **add to day**; the Plan form can still open with only the date prefilled.
 - [ ] Navigate previous/next year/month/day and confirm the correct period is shown.
 - [ ] With enough unrelated inaccessible occurrences present, confirm the authorized user's legitimate occurrences are not truncated out of the visible result set.
 - [ ] Confirm Planner activity still creates no Contract, employment, Financial Obligation, accounting posting or payment truth.
