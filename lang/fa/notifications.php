@@ -34,5 +34,11 @@ return [
         'settlement_rejected_title' => 'تسویه رد شد',
         'financial_obligation_title' => 'تعهد مالی به‌روزرسانی شد',
         'financial_event_body' => 'رویداد مالی: :event.',
+        'conversation_message_title' => 'پیام جدید در گفتگو',
+        'conversation_message_body' => ':author پیام جدیدی ارسال کرد.',
+        'submission_submitted_title' => 'ارسال آماده بررسی است',
+        'submission_submitted_body' => ':author پاسخی را برای بررسی ثبت کرد.',
+        'evaluation_finalized_title' => 'ارزیابی نهایی شد',
+        'evaluation_finalized_body' => 'ارزیابی نهایی در زمینه مرتبط در دسترس است.',
     ],
 ];
