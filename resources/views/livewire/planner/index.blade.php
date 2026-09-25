@@ -53,9 +53,15 @@
                             {{ \Carbon\CarbonImmutable::createFromFormat('!Y-m', $month, $timezone)->format('F') }}
                         </flux:button>
                     @endif
-                    @if ($calendarLevel === 'day')
+                    @if (in_array($calendarLevel, ['day', 'hour'], true))
                         <span class="text-zinc-300 dark:text-zinc-700">/</span>
-                        <flux:badge>{{ \Carbon\CarbonImmutable::parse($day, $timezone)->format('j') }}</flux:badge>
+                        <flux:button wire:click="showDay('{{ $day }}')" :variant="$calendarLevel === 'day' ? 'primary' : 'ghost'" size="sm">
+                            {{ \Carbon\CarbonImmutable::parse($day, $timezone)->format('j') }}
+                        </flux:button>
+                    @endif
+                    @if ($calendarLevel === 'hour')
+                        <span class="text-zinc-300 dark:text-zinc-700">/</span>
+                        <flux:badge>{{ str_pad((string) $hour, 2, '0', STR_PAD_LEFT) }}:00</flux:badge>
                     @endif
                 </div>
 
@@ -96,10 +102,14 @@
                         @php
                             $items = $calendarHours->get($hour, collect());
                         @endphp
-                        <div wire:key="calendar-hour-{{ $day }}-{{ $hour }}" class="grid min-h-16 grid-cols-[4rem_1fr] bg-white dark:bg-zinc-950">
-                            <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">
+                        <div wire:key="calendar-hour-{{ $day }}-{{ $hour }}" class="grid min-h-16 grid-cols-[5rem_1fr] bg-white dark:bg-zinc-950">
+                            <button
+                                type="button"
+                                wire:click="showHour('{{ $day }}', {{ $hour }})"
+                                class="border-e border-zinc-200 px-3 py-3 text-start text-xs font-medium tabular-nums text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-900 dark:hover:text-white"
+                            >
                                 {{ str_pad((string) $hour, 2, '0', STR_PAD_LEFT) }}:00
-                            </div>
+                            </button>
                             <div class="space-y-2 p-2">
                                 @foreach ($items as $occurrence)
                                     <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
@@ -110,6 +120,71 @@
                             </div>
                         </div>
                     @endfor
+                </div>
+            @elseif ($calendarLevel === 'hour')
+                <div class="space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900">
+                        <div>
+                            <div class="font-medium">
+                                {{ __('planner.calendar.hour_title', ['time' => str_pad((string) $hour, 2, '0', STR_PAD_LEFT).':00']) }}
+                            </div>
+                            <div class="mt-1 text-xs text-zinc-500">{{ __('planner.calendar.quantum_help') }}</div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-1">
+                            @foreach ([60, 30, 15, 5, 1] as $quantum)
+                                <flux:button
+                                    wire:click="setSlotMinutes({{ $quantum }})"
+                                    :variant="$slotMinutes === $quantum ? 'primary' : 'ghost'"
+                                    size="sm"
+                                >
+                                    {{ __('planner.calendar.quantum_minutes', ['count' => $quantum]) }}
+                                </flux:button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+                        @foreach ($calendarSlots as $slot)
+                            @php
+                                $slotTime = $slot['start']->format('H:i');
+                            @endphp
+                            <div wire:key="calendar-slot-{{ $day }}-{{ $slotTime }}-{{ $slotMinutes }}" class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
+                                <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">
+                                    {{ $slotTime }}
+                                </div>
+
+                                <div class="space-y-2 p-2">
+                                    @foreach ($slot['items'] as $occurrence)
+                                        <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
+                                            <span class="font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
+                                            <span class="ms-2 text-xs text-zinc-500">
+                                                {{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}
+                                                → {{ $occurrence->scheduled_end_at->setTimezone($timezone)->format('H:i') }}
+                                            </span>
+                                        </a>
+                                    @endforeach
+                                </div>
+
+                                <div class="p-2">
+                                    <flux:button
+                                        :href="route('planner.create', array_filter([
+                                            'context' => $context?->uuid,
+                                            'date' => $day,
+                                            'time' => $slotTime,
+                                            'duration' => $slotMinutes,
+                                        ]))"
+                                        size="sm"
+                                        variant="ghost"
+                                        icon="plus"
+                                        :aria-label="__('planner.calendar.add_to_slot', ['time' => $slotTime])"
+                                    >
+                                        {{ __('planner.calendar.add') }}
+                                    </flux:button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             @else
                 <div class="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700">
