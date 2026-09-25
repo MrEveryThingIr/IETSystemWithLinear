@@ -611,19 +611,29 @@ See `docs/FINANCIAL_ARCHITECTURE.md`, Phase 12 accounting docs and Phase 17 fina
 
 ## Real-time infrastructure
 
-Current collaborative UX is not yet built around a single authoritative domain-event/outbox/broadcasting architecture.
-
-Target:
+Phase 22 implements the first authoritative notification/realtime transport seam:
 
 ~~~text
 transactional domain action
-→ committed domain event / outbox
-→ queued dispatch
-→ authorized broadcast
-→ client update
+→ transactional recipient notification outbox
+→ post-commit queued delivery
+→ durable database notification/read state
+→ authorized private broadcast
+→ client refresh
 ~~~
 
-The database remains authoritative; broadcasting is transport only.
+Implemented:
+
+- idempotent notification outbox;
+- database-backed user inbox and read state;
+- Planner reminder emission;
+- lifecycle projection for the principal coordination/review/financial flows;
+- private per-user broadcast authorization;
+- Laravel Reverb server configuration;
+- Echo/Pusher browser subscription;
+- live inbox/navigation unread refresh.
+
+The database and existing domain kernels remain authoritative. Broadcasting is transport only and may be disabled without losing durable notification state.
 
 ## Production operations
 
@@ -670,25 +680,34 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 21 — Home / Today personal operating view** is runtime-green on `feat/ideal-v1-21-home-today`.
+**Phase 22 — Realtime + Notifications** is runtime-green on `feat/ideal-v1-22-realtime-notifications`.
 
 Runtime checkpoint:
 
-- SHA `d0834e5a72545d558d074deb495fd7009daa96ff`;
-- CI `36128745672`;
-- **524 tests / 3244 assertions**;
-- Pint 660 PHP files;
-- PHPStan/Vite green;
-- migration rollback/reapply, scheduler/database queue and backup/restore smoke green;
-- npm audit 0 vulnerabilities;
-- Composer audit no advisories.
+- SHA `cea1cb4d6775b855e94146dfc75029ec1264ac07`;
+- CI `36134998196`;
+- **537 tests / 3297 assertions**;
+- Pint 686 PHP files;
+- PHPStan/Vite/migration rollback-reapply/scheduler/database-queue/backup/security gates green;
+- Composer audit has no security advisories.
 
-Phase 21 turns Dashboard into a derived Today operating view over Planner, lifecycle decisions, Intents, Relationships, Groups, Personal Accounting, Financial Obligations and authorized ContextTimeline history.
+Phase 22 adds durable recipient attention/read state and optional Reverb/Echo realtime refresh while preserving existing domain tables/actions as authoritative truth.
 
-Today creates no new domain truth, preserves source policies/release-profile boundaries, does not infer unread notifications, and never combines different currencies.
+A historical Codex office-alpha audit was rechecked against this current branch. Several findings remain valid despite later roadmap progress: Intent Directory authorization/pagination correctness, reserved-email Access Invitation single-use semantics, post-create Intent highlighting, and complete management of the newer Intent facets. These are now an explicit **post-Phase-22 hardening gate**.
 
-The System Manual now includes Chapter 26, **Home / Today Operating View**. Final documentation/manual CI and integration PR are the remaining Phase 21 gates.
+Next sequence:
 
-Next after Phase 21 integration: **Phase 22 — Realtime + Notifications**.
+~~~text
+Phase 22 closure/integration
+→ focused inherited-debt hardening checkpoint
+→ Phase 23 Generic Workflow extraction
+→ Phase 24 Reputation / verified history
+→ Phase 25 Discovery / recommendations
+→ Phase 26 AI Copilot
+→ Phase 27 UX / accessibility / localization
+→ Phase 28 production hardening + real-domain pilots
+→ Phase 29 integrated release candidate + 0→100 acceptance
+→ Phase 30 stable release / operating loop
+~~~
 
-The accepted roadmap continues through Phase 30. Phase 22 must add durable notification/read-state and realtime transport without turning broadcasting into authoritative truth.
+Do not skip the hardening checkpoint merely because the full CI suite is green: the Codex findings expose behavior not sufficiently protected by the existing tests.
