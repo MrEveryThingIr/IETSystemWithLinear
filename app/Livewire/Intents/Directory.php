@@ -4,18 +4,21 @@ namespace App\Livewire\Intents;
 
 use App\Models\ActorProfileIntent;
 use App\Models\User;
-use App\Policies\ActorProfileIntentPolicy;
+use App\ProfileVisibility;
 use App\ProfileIntentStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 #[Title('Needs, offers & services')]
 class Directory extends Component
 {
+    use WithPagination;
+
     public string $quick = 'all';
 
     public string $kind = 'all';
@@ -30,6 +33,26 @@ class Directory extends Component
 
     public string $location = '';
 
+    public ?string $highlight = null;
+
+    protected array $queryString = [
+        'quick' => ['except' => 'all'],
+        'kind' => ['except' => 'all'],
+        'subject' => ['except' => 'all'],
+        'arrangement' => ['except' => 'all'],
+        'exchange' => ['except' => 'all'],
+        'search' => ['except' => ''],
+        'location' => ['except' => ''],
+        'highlight' => ['except' => null],
+    ];
+
+    public function updated(string $property): void
+    {
+        if (in_array($property, ['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location'], true)) {
+            $this->resetPage();
+        }
+    }
+
     public function clearFilters(): void
     {
         $this->reset(['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location']);
@@ -38,6 +61,7 @@ class Directory extends Component
         $this->subject = 'all';
         $this->arrangement = 'all';
         $this->exchange = 'all';
+        $this->resetPage();
     }
 
     public function render(): View
@@ -82,13 +106,45 @@ class Directory extends Component
             });
         }
 
-        $policy = app(ActorProfileIntentPolicy::class);
+        $actorId = $user->actor?->id;
+        $isActiveVerified = $user->status === 'active' && $user->email_verified_at !== null;
+
+        $query->where(function (Builder $visibility) use ($actorId, $isActiveVerified): void {
+            if ($actorId !== null) {
+                $visibility->whereHas('profile', fn (Builder $profile) => $profile->where('actor_id', $actorId));
+            } else {
+                $visibility->whereRaw('0 = 1');
+            }
+
+            $visibility->orWhere(function (Builder $discoverable) use ($isActiveVerified): void {
+                $discoverable
+                    ->whereHas('profile.actor', fn (Builder $actor) => $actor->where('status', 'active'))
+                    ->where(function (Builder $intentVisibility) use ($isActiveVerified): void {
+                        $intentVisibility->where('visibility', 'public');
+
+                        if ($isActiveVerified) {
+                            $intentVisibility->orWhere('visibility', 'authenticated');
+                        }
+
+                        $intentVisibility->orWhere(function (Builder $inherited) use ($isActiveVerified): void {
+                            $inherited
+                                ->where('visibility', 'inherited')
+                                ->whereHas('profile', function (Builder $profile) use ($isActiveVerified): void {
+                                    $profile->where('visibility', ProfileVisibility::Public->value);
+
+                                    if ($isActiveVerified) {
+                                        $profile->orWhere('visibility', ProfileVisibility::Authenticated->value);
+                                    }
+                                });
+                        });
+                    });
+            });
+        });
+
         $intents = $query
             ->latest('updated_at')
-            ->limit(200)
-            ->get()
-            ->filter(fn (ActorProfileIntent $intent): bool => $policy->view($user, $intent))
-            ->values();
+            ->latest('id')
+            ->paginate(24);
 
         return view('livewire.intents.directory', compact('intents'));
     }
