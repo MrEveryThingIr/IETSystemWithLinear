@@ -26,8 +26,8 @@ class LocalizationParityTest extends TestCase
         );
 
         foreach ($englishFiles as $file) {
-            $english = require base_path("lang/en/{$file}");
-            $persian = require base_path("lang/fa/{$file}");
+            $english = require base_path('lang/en/'.$file);
+            $persian = require base_path('lang/fa/'.$file);
 
             $englishKeys = array_keys(Arr::dot($english));
             $persianKeys = array_keys(Arr::dot($persian));
@@ -38,7 +38,7 @@ class LocalizationParityTest extends TestCase
             $this->assertSame(
                 $englishKeys,
                 $persianKeys,
-                "Persian translation keys are incomplete or stale in {$file}.",
+                'Persian translation keys are incomplete or stale in '.$file.'.',
             );
         }
     }
@@ -50,7 +50,7 @@ class LocalizationParityTest extends TestCase
 
             $this->assertIsString($contents);
             $this->assertStringNotContainsString(
-                "../en/",
+                '../en/',
                 $contents,
                 basename($path).' must contain real Persian copy instead of loading English translations.',
             );
