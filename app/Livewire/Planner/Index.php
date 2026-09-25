@@ -33,6 +33,12 @@ class Index extends Component
     #[Url]
     public string $day = '';
 
+    #[Url]
+    public int $hour = 0;
+
+    #[Url(as: 'quantum')]
+    public int $slotMinutes = 15;
+
     #[Url(as: 'context')]
     public string $contextUuid = '';
 
@@ -49,7 +55,7 @@ class Index extends Component
             $this->month = $now->format('Y-m');
         }
 
-        if (! in_array($this->calendarLevel, ['year', 'month', 'day'], true)) {
+        if (! in_array($this->calendarLevel, ['year', 'month', 'day', 'hour'], true)) {
             $this->calendarLevel = 'month';
         }
 
@@ -59,6 +65,12 @@ class Index extends Component
 
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->day)) {
             $this->day = $now->toDateString();
+        }
+
+        $this->hour = min(23, max(0, $this->hour));
+
+        if (! in_array($this->slotMinutes, [60, 30, 15, 5, 1], true)) {
+            $this->slotMinutes = 15;
         }
     }
 
@@ -88,6 +100,15 @@ class Index extends Component
             return;
         }
 
+        if ($this->calendarLevel === 'hour') {
+            $date = CarbonImmutable::parse($this->day, $timezone)
+                ->setTime($this->hour, 0)
+                ->subHour();
+            $this->showHour($date->toDateString(), $date->hour);
+
+            return;
+        }
+
         if ($this->calendarLevel === 'day') {
             $this->showDay(CarbonImmutable::parse($this->day, $timezone)->subDay()->toDateString());
 
@@ -104,6 +125,15 @@ class Index extends Component
 
         if ($this->calendarLevel === 'year') {
             $this->year = (string) ((int) $this->year + 1);
+
+            return;
+        }
+
+        if ($this->calendarLevel === 'hour') {
+            $date = CarbonImmutable::parse($this->day, $timezone)
+                ->setTime($this->hour, 0)
+                ->addHour();
+            $this->showHour($date->toDateString(), $date->hour);
 
             return;
         }
@@ -146,6 +176,25 @@ class Index extends Component
         $this->calendarLevel = 'day';
     }
 
+    public function showHour(string $day, int $hour): void
+    {
+        abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1, 422);
+        abort_unless($hour >= 0 && $hour <= 23, 422);
+
+        $this->day = $day;
+        $this->month = substr($day, 0, 7);
+        $this->year = substr($day, 0, 4);
+        $this->hour = $hour;
+        $this->calendarLevel = 'hour';
+    }
+
+    public function setSlotMinutes(int $minutes): void
+    {
+        abort_unless(in_array($minutes, [60, 30, 15, 5, 1], true), 422);
+
+        $this->slotMinutes = $minutes;
+    }
+
     public function render(): View
     {
         $user = $this->user();
@@ -186,6 +235,7 @@ class Index extends Component
         $calendarOccurrences = collect();
         $calendarMonths = collect();
         $calendarHours = collect();
+        $calendarSlots = collect();
 
         if ($this->view === 'calendar') {
             if ($this->calendarLevel === 'year') {
@@ -197,6 +247,23 @@ class Index extends Component
                         'count' => $occurrences->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at
                             ->setTimezone($timezone)
                             ->format('Y-m') === $month->format('Y-m'))->count(),
+                    ]);
+                }
+            } elseif ($this->calendarLevel === 'hour') {
+                $hourStart = CarbonImmutable::parse($this->day, $timezone)->setTime($this->hour, 0);
+
+                for ($minute = 0; $minute < 60; $minute += $this->slotMinutes) {
+                    $slotStart = $hourStart->setTime($this->hour, $minute);
+                    $slotEnd = $slotStart->addMinutes($this->slotMinutes);
+
+                    $calendarSlots->push([
+                        'start' => $slotStart,
+                        'end' => $slotEnd,
+                        'items' => $occurrences->filter(function (PlanOccurrence $occurrence) use ($slotStart, $slotEnd, $timezone): bool {
+                            $start = $occurrence->scheduled_start_at->setTimezone($timezone);
+
+                            return $start->gte($slotStart) && $start->lt($slotEnd);
+                        })->values(),
                     ]);
                 }
             } elseif ($this->calendarLevel === 'day') {
@@ -231,6 +298,7 @@ class Index extends Component
             'calendarOccurrences' => $calendarOccurrences,
             'calendarMonths' => $calendarMonths,
             'calendarHours' => $calendarHours,
+            'calendarSlots' => $calendarSlots,
             'timezone' => $timezone,
             'context' => $context,
         ])->title(__('planner.title'));
@@ -253,6 +321,12 @@ class Index extends Component
             $year = CarbonImmutable::create((int) $this->year, 1, 1, 0, 0, 0, $timezone);
 
             return [$year->startOfYear(), $year->endOfYear()];
+        }
+
+        if ($this->calendarLevel === 'hour') {
+            $hour = CarbonImmutable::parse($this->day, $timezone)->setTime($this->hour, 0);
+
+            return [$hour->startOfHour(), $hour->endOfHour()];
         }
 
         if ($this->calendarLevel === 'day') {
