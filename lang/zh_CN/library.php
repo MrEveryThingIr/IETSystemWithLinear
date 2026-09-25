@@ -1,0 +1,42 @@
+<?php
+
+return [
+    'title' => '内容库',
+    'help' => '查找您有权阅读的已发布内容，并在其他空间展示同一内容，而不是复制它。',
+    'open' => '打开',
+    'none' => '没有符合当前筛选条件的已发布内容',
+    'none_help' => '调整筛选条件，或在您有权限的空间发布内容。',
+    'presented_in' => '展示于',
+    'remove' => '从此空间移除',
+    'placed' => '内容已展示到所选空间。',
+    'removed' => '该空间中的内容展示已移除。',
+    'boundary' => '内容库不显示草稿。跨空间展示仍使用同一个内容身份，并跟随当前已发布版本；精确证据引用仍固定指向特定历史版本。',
+    'filters' => [
+        'search' => '搜索已发布内容',
+        'search_placeholder' => '标题、内容类型、分类…',
+        'type' => '内容类型 / 模板',
+        'all_types' => '全部类型',
+        'concept' => '主题 / 概念',
+        'concept_placeholder' => '例如：Laravel、住房、安全…',
+        'clear' => '清除筛选',
+    ],
+    'place' => [
+        'title' => '在其他空间展示此内容',
+        'help' => '选择“:title”要展示到哪个空间。',
+        'target' => '目标空间',
+        'choose_target' => '选择您管理的空间',
+        'action' => '展示内容',
+        'short' => '展示到其他空间',
+        'boundary' => '在目标空间展示只授予其受众阅读已发布内容的权限。不会转移所有权、授予编辑权限或复制内容。若要再次转发到第三个空间，操作人仍需要来源空间的读取权限。',
+    ],
+    'context' => [
+        'personal' => '个人空间',
+        'group_space' => '群组空间',
+        'admission' => '成员申请 · :group',
+        'relationship' => '关系 · :title',
+        'negotiation' => '协商 · :title',
+        'contract' => '合同 · :title',
+        'reference' => '参考 · :key',
+        'unknown' => '空间',
+    ],
+];

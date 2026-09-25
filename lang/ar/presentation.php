@@ -45,7 +45,7 @@ return [
     'media_card' => 'بطاقة',
     'media_edge' => 'من الحافة إلى الحافة',
     'field_styles' => 'تنسيق الحقول',
-    'field_styles_help' => 'ميّز حقولاً منظمة محددة دون تخزين CSS عشوائي.',
+    'field_styles_help' => 'ميّز حقولاً منظمة محددة دون الحاجة إلى كتابة تنسيقات مخصصة.',
     'emphasis' => 'التأكيد',
     'emphasis_normal' => 'عادي',
     'emphasis_muted' => 'هادئ',
