@@ -251,7 +251,8 @@ class IntentMatchFinder
         int &$aligned,
     ): bool {
         if ($need->time_window_start === null || $need->time_window_end === null
-            || $offer->time_window_start === null || $offer->time_window_end === null) {
+            || $offer->time_window_start === null || $offer->time_window_end === null
+            || $need->timezone !== $offer->timezone) {
             return true;
         }
 
@@ -279,7 +280,7 @@ class IntentMatchFinder
         array &$reasons,
         int &$aligned,
     ): bool {
-        if ($need->schedule_kind !== $offer->schedule_kind) {
+        if ($need->schedule_kind !== $offer->schedule_kind || $need->timezone !== $offer->timezone) {
             return true;
         }
 
