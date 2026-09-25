@@ -3,8 +3,8 @@
 namespace App\Actions\Relationships;
 
 use App\ConceptStatus;
-use App\DomainJourneyKind;
 use App\ContextKind;
+use App\DomainJourneyKind;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
