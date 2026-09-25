@@ -46,6 +46,7 @@ use App\Livewire\Contracts\Show as ContractShow;
 use App\Livewire\Financial\Show as FinancialObligationShow;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
+use App\Livewire\Groups\Community as GroupCommunity;
 use App\Livewire\Groups\Create as CreateGroup;
 use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
