@@ -27,7 +27,6 @@ class ContextNotificationRecipients
         };
 
         return $actors
-            ->filter(fn ($actor): bool => $actor instanceof Actor)
             ->reject(fn (Actor $actor): bool => $excludeActorId !== null && (int) $actor->id === $excludeActorId)
             ->map(fn (Actor $actor): ?User => $actor->user)
             ->filter(fn ($user): bool => $user instanceof User
