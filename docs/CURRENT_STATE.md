@@ -4,11 +4,11 @@
 
 ### Publishable v1 hardening
 
-Phase 22 is integrated at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`. The active release line is now `feat/ideal-v1-publishable-hardening`.
+Phase 22 and the publishable-v1 hardening line are integrated on `integration/ideal-v1`. The first publication remains intentionally bounded: deterministic human workflows and durable domain evidence are the product; AI Copilot, Generic Workflow extraction, Reputation and Recommendations are post-v1 work. See `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
 
-The first publication is intentionally a bounded learning release: deterministic human workflows and durable domain evidence are the product; AI Copilot, Generic Workflow extraction, Reputation and Recommendations are post-v1 work. See `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
+Native-Persian UI localization hardening is also integrated. PR #25 merged at `edff668b6e8ad6c4a58a7d6c08bb54a821ce9662`; independent post-merge CI run `36160798652` passed. The localization pass added the 11 Persian locale modules that were previously absent, replaced the Access/Intent English passthroughs with real Persian copy, rewrote literal/technical wording into simpler native Persian, normalized repeated product terminology, and added automated English→Persian locale coverage plus a guard against future English passthroughs.
 
-The inherited office-alpha audit defects around reserved Access Invitation reuse, Intent Directory authorization/pagination, create-to-directory highlighting, and Profile Intent value-model editing are now closed on this branch. Pre-integration candidate `38f95175040234593bc927f895954c893a38e9fd` passed CI run `36143475001` with 543 tests / 3316 assertions plus Pint, PHPStan, Vite, migration/ops, backup/restore and security gates green. Canonical release docs are being synchronized before the integration PR.
+The exact localization integration gate passed **545 tests / 3376 assertions** together with MySQL 8.4 and SQLite migration gates, Pint, PHPStan, Vite, npm audit and Composer audit. `release/ideal-v1-rc-4` is the immutable code/localization checkpoint at that SHA. This documentation synchronization produces the final docs-synchronized candidate on `release/ideal-v1-rc-5`; earlier RC refs remain immutable. Browser acceptance remains the owner-local release gate.
 
 
 ### Continuous Ideal-v1 integration
@@ -189,7 +189,7 @@ Implemented on the Phase 7 branch as a cross-cutting delivery capability:
 - incorporated feedback is linked to the exact later sealed official revision;
 - normal seed/bootstrap preserves authorized maintainer edits; explicit source sync is required to publish repository-source changes.
 
-Translation boundary: English is currently the canonical manual content. Persian is next and must use a separately reviewable translation lifecycle; Arabic and Simplified Chinese follow. Localized navigation/feedback controls already exist, but generated translation must not be presented as native-reviewed documentation.
+Translation boundary: the application UI now has a native-Persian hardening pass with automated locale coverage. English remains the canonical **System Manual content** for this release. A full Persian Manual translation is still a separate, reviewable content lifecycle; Arabic and Simplified Chinese follow. UI localization must not be confused with a native-reviewed translation of every seeded/manual document.
 
 
 ## Group governance kernel
