@@ -25,6 +25,8 @@ class LocalizationParityTest extends TestCase
             'Persian locale files must stay in exact parity with English.',
         );
 
+        $drift = [];
+
         foreach ($englishFiles as $file) {
             $english = require base_path('lang/en/'.$file);
             $persian = require base_path('lang/fa/'.$file);
@@ -35,12 +37,22 @@ class LocalizationParityTest extends TestCase
             sort($englishKeys);
             sort($persianKeys);
 
-            $this->assertSame(
-                $englishKeys,
-                $persianKeys,
-                'Persian translation keys are incomplete or stale in '.$file.'.',
-            );
+            $missing = array_values(array_diff($englishKeys, $persianKeys));
+            $extra = array_values(array_diff($persianKeys, $englishKeys));
+
+            if ($missing !== [] || $extra !== []) {
+                $drift[$file] = [
+                    'missing_in_fa' => $missing,
+                    'extra_in_fa' => $extra,
+                ];
+            }
         }
+
+        $this->assertSame(
+            [],
+            $drift,
+            'Persian translation keys are incomplete or stale: '.json_encode($drift, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+        );
     }
 
     public function test_persian_locale_never_passthroughs_to_english_files(): void
