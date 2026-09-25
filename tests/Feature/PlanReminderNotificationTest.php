@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Relationships\CreateRelationship;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
@@ -22,7 +23,17 @@ class PlanReminderNotificationTest extends TestCase
         Bus::fake();
         $owner = Actor::factory()->create();
         $participant = Actor::factory()->create();
+        $relationship = app(CreateRelationship::class)->execute(
+            $owner->user,
+            \App\Models\Concept::factory()->create(),
+            'coordinator',
+            [['actor' => $participant, 'role' => 'inspector']],
+            title: 'Riverside inspection collaboration',
+        );
+        $context = $relationship->contextBinding()->with('context')->firstOrFail()->context;
+
         $plan = Plan::factory()->create([
+            'context_id' => $context->id,
             'created_by_actor_id' => $owner->id,
             'title' => 'Riverside inspection',
             'timezone' => 'UTC',
