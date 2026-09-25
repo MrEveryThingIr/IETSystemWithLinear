@@ -5,13 +5,10 @@ namespace Database\Seeders;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     public function run(): void
     {
         if (! app()->environment(['local', 'testing'])) {
