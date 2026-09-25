@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\AdmissionEvent;
 use App\Models\Context;
+use App\Models\ContractEvent;
 use App\Models\ConversationMessage;
 use App\Models\JournalEntry;
 use App\Models\PlanEvent;
@@ -138,6 +139,7 @@ class ContextTimeline
 
         $context->loadMissing([
             'proposalBinding.proposal',
+            'contractBinding.contract',
             'relationshipBinding.relationship',
             'admissionBinding.admission',
         ]);
@@ -159,6 +161,27 @@ class ContextTimeline
                         occurredAt: $event->created_at ?? now(),
                         actor: $event->actor,
                         url: route('proposals.show', $proposal),
+                    ));
+                });
+        }
+
+        $contract = $context->contractBinding?->contract;
+        if ($contract !== null) {
+            ContractEvent::query()
+                ->with('actor.user')
+                ->where('contract_id', $contract->id)
+                ->latest('id')
+                ->limit($limit)
+                ->get()
+                ->each(function (ContractEvent $event) use ($contract, $entries): void {
+                    $entries->push(new TimelineEntry(
+                        key: 'contract-event:'.$event->uuid,
+                        kind: 'contract',
+                        title: (string) __('contracts.events.'.$event->event_type->value),
+                        summary: $contract->title,
+                        occurredAt: $event->created_at ?? now(),
+                        actor: $event->actor,
+                        url: route('contracts.show', $contract),
                     ));
                 });
         }

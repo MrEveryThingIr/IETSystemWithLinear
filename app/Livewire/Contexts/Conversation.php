@@ -151,6 +151,7 @@ class Conversation extends Component
             ContextKind::Admission,
             ContextKind::Relationship,
             ContextKind::Negotiation,
+            ContextKind::Contract,
         ], true)
             && Gate::forUser($this->user())->allows('interactContent', $this->context);
     }

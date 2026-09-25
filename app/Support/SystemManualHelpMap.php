@@ -28,6 +28,10 @@ class SystemManualHelpMap
             return 'proposals';
         }
 
+        if (str_starts_with($routeName, 'contracts.')) {
+            return 'contracts';
+        }
+
         if (str_starts_with($routeName, 'profile.')
             || str_starts_with($routeName, 'intents.')) {
             return 'profile-concepts';

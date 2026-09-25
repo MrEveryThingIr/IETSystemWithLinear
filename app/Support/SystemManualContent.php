@@ -29,6 +29,7 @@ class SystemManualContent
         'planner' => '17. Personal Activity and Planner',
         'accounting' => '18. Personal Accounting',
         'proposals' => '19. Proposals and Negotiation',
+        'contracts' => '20. Contracts and Exact Acceptance',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -47,11 +48,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, and exact-version Proposal negotiation.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, and exact-version Contract acceptance/effective-time history.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Contract/Commitment/Fulfillment, shared Financial Obligation/Settlement bridges, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal + Negotiation is now implemented.
+Commitment/Fulfillment, shared Financial Obligation/Settlement bridges, Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation and Contract/ContractVersion are now implemented.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -355,7 +356,7 @@ TEXT,
 The long-term proof for IET is not “can it store many object types?” but “can real life flow through one connected system without losing authority or provenance?”
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner, Personal Accounting and Proposal/Negotiation foundations exist. Realtime transport, generic Workflow, Domain Packs, direct Contract/Commitment/Fulfillment, matching, shared Financial Obligation/Settlement bridges, financial laboratory, discovery, pilots, and production release remain later roadmap work.
+Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner, Personal Accounting, Proposal/Negotiation and Contract/ContractVersion foundations exist. Realtime transport, generic Workflow, Domain Packs, Commitment/Fulfillment, matching, shared Financial Obligation/Settlement bridges, financial laboratory, discovery, pilots, and production release remain later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity and Personal Accounting may record the Actor's own money history, but neither a Plan/Occurrence nor a personal Journal Entry nor prose in Content becomes shared Contract, payment, financial-obligation, Settlement, or Fulfillment-acceptance truth.
@@ -702,7 +703,7 @@ Existing GroupSpace chat was migrated into this generic store; the former Group-
 
 A message may reference existing Assets from the same Context and exact Content Evidence References from the same Context. Those relationships reuse the original artifact/evidence identities rather than copying files or Content.
 
-Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, Personal Accounting Journal Entries, Proposal negotiation events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
+Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, Personal Accounting Journal Entries, Proposal negotiation events, Contract lifecycle/acceptance events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Relationship:
@@ -737,7 +738,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Later realtime delivery should publish committed database/domain events through an outbox/queue/authorized broadcast path. Realtime transport must remain replaceable: reloading from source truth should always reconstruct the same Conversation/Timeline state.
 
-Future domains such as Contract, Fulfillment and Financial Obligation/Settlement can add their own source events to Timeline without turning Timeline into their authority. Planner contributes Plan/Occurrence events, Personal Accounting contributes Journal Entries, and Proposal/Negotiation contributes Proposal Events this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
+Future domains such as Fulfillment and Financial Obligation/Settlement can add their own source events to Timeline without turning Timeline into their authority. Planner contributes Plan/Occurrence events, Personal Accounting contributes Journal Entries, Proposal/Negotiation contributes Proposal Events, and Contract contributes Contract Events this way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 A message is not an authoritative action. Writing “I agree”, “approved”, “paid”, “accepted”, “I own 20%”, or similar text records only what a participant said.
@@ -952,6 +953,90 @@ Accepting version 1 does not accept version 2. Every required party must decide 
 Request changes does not edit existing terms. The next terms must be published as a new ProposalVersion.
 
 Proposal acceptance does not create Commitment, Fulfillment, employment, ownership, Financial Obligation, Accounting posting, Settlement or payment.
+TEXT,
+                ],
+                [
+                    'title' => '20. Contracts and Exact Acceptance',
+                    'summary' => <<<'TEXT'
+A Contract is IET's authoritative party-specific agreement layer. It records exact sealed terms, exact party/role snapshots, explicit acceptance of one immutable ContractVersion, and when that version becomes effective.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 15 provides Contract, a dedicated Contract Context, immutable ContractVersion, immutable ContractVersionParty snapshots, immutable ContractAcceptance and immutable ContractEvent history.
+
+A Contract may be created directly, from an active Relationship, or explicitly from an Accepted ProposalVersion.
+
+Direct Contract terms are authored as sealed published Contract Terms Content inside the Contract Context. When created from an Accepted ProposalVersion, ContractVersion 1 references the same exact sealed terms revision and snapshots the Proposal parties/roles.
+
+ProposalDecision rows are not ContractAcceptance rows. Every required Contract party must explicitly accept the ContractVersion again. The proposing party accepts the exact version they create; other required parties remain Pending until they use Accept ContractVersion.
+
+When all required parties accept the same version it becomes Accepted. If its effective time has arrived it activates immediately; otherwise it remains Accepted until that instant.
+
+An Active Contract can receive one future amendment at a time. The amendment creates a new sealed ContractVersion, copies the active party/role snapshot, requires fresh acceptance and leaves the old version authoritative until the future effective time. The scheduled contracts:activate-due task supersedes the prior version and activates the new one when due.
+
+Contract Context composes Conversation, Content and Timeline. Conversation wording is discussion/evidence only. Contract Events project into Timeline; Timeline is not Contract authority.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Direct Alice/Bob paid-work flow:
+1. Open **Contracts**.
+2. Choose **New contract**.
+3. Enter **Workshop paid work**.
+4. Set your role, for example **employer**.
+5. Add Bob on a new line as bob | worker.
+6. Enter readable exact terms.
+7. Choose the intended effective time in your timezone.
+8. Choose **Create ContractVersion**.
+9. Review sealed terms, party roles and Pending/Accepted state.
+10. Bob may discuss in Contract Conversation, but text such as “I accept” does not accept the Contract.
+11. Bob explicitly chooses **Accept ContractVersion**.
+12. When every required party accepted and the effective time is due, version 1 becomes Effective.
+
+Accepted Proposal → Contract:
+1. Finish Proposal acceptance.
+2. Open the Accepted Proposal.
+3. Choose **Create Contract from Proposal**.
+4. Review the same exact sealed terms and snapshotted roles.
+5. Create the ContractVersion with the intended effective time.
+6. Every required Contract party explicitly accepts again.
+7. Use the Contract page as agreement authority.
+
+Future amendment:
+1. Open an Active Contract.
+2. Choose **Propose future terms**.
+3. Enter revised terms and a future effective time.
+4. Every required party explicitly accepts the new version.
+5. Until the effective instant, the old version remains Effective.
+6. At/after the effective instant, the scheduler supersedes the old version and activates the new version. Both versions remain readable.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Only active verified user-backed Actors may currently be Contract parties.
+
+Contract visibility is limited to its creator and Actors represented in its ContractVersion party history. Only a party to the relevant current Contract state may interact through the Contract Context.
+
+Only a party without an existing ContractAcceptance for the pending exact version may accept it. Only a party to the Active ContractVersion may propose an amendment, and only when no other amendment is pending.
+
+Generic Content review/manage authority is not granted merely because an Actor participates in a Contract Context. Contract acceptance always uses ContractPolicy and explicit Contract Actions.
+
+An unrelated Actor cannot open the Contract or Contract Context.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Phase 16 should create explicit Commitments from effective Contract terms and bind those Commitments to Planner Occurrences where scheduling is needed.
+
+Commitment answers what must happen. Planner answers when it is intended to happen. Fulfillment answers what actually happened and what evidence proves it. These facts must preserve provenance to the exact ContractVersion that governed them.
+
+Later Financial Obligation/Settlement phases should create explicit economic consequences only from accepted Fulfillment or another specifically defined Contract event. Contract activation alone must not post Accounting.
+
+Future Contract work may add explicit party/role changes through amendments, organization/system Actors, richer termination/expiration semantics and purpose-specific UX while preserving exact immutable version/acceptance history.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+An Accepted Proposal is not an Active Contract. Contract creation and Contract acceptance are separate explicit actions.
+
+Typing “I accept” in Conversation or Content is not ContractAcceptance.
+
+An Active Contract is authoritative agreement truth, but it does not prove that work was scheduled, performed or accepted.
+
+Contract activation does not create a Financial Obligation, JournalEntry, Settlement/payment, ownership/equity, or employment record automatically.
+
+An amendment never edits the old effective ContractVersion. It creates a new version for future behavior, while the old version remains historical evidence.
 TEXT,
                 ],
             ],

@@ -685,3 +685,110 @@ composer audit
 - [ ] Accepted Proposal creates no Contract/ContractVersion.
 - [ ] Accepted Proposal creates no Commitment/Fulfillment.
 - [ ] Accepted Proposal creates no Financial Obligation, Accounting posting or Settlement/payment.
+
+
+---
+
+## Checkpoint 15 — Contract, ContractVersion and explicit acceptance
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-15-contract-version-acceptance
+~~~
+
+Remote kernel checkpoint:
+
+~~~text
+SHA: cd39e8861844b598e3e9fe81f659b93648e7c4b5
+CI: 36054184003
+Result: 483 tests / 2869 assertions
+~~~
+
+Remote final runtime checkpoint:
+
+~~~text
+SHA: df63697b3734bc3a8dfe1b70f58655d4b2c9da72
+CI: 36055829092
+Result: 487 tests / 2903 assertions; Pint/PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_24_060000_create_contract_version_kernel.php
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch feat/ideal-v1-15-contract-version-acceptance
+git pull --ff-only origin feat/ideal-v1-15-contract-version-acceptance
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/ContractKernelTest.php \
+  tests/Feature/ContractExperienceTest.php \
+  tests/Feature/ProposalExperienceTest.php \
+  tests/Feature/ConversationTimelineExperienceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — direct Alice/Bob paid work
+
+- [ ] Sign in as Alice and open **Contracts → New contract**.
+- [ ] Create **Workshop paid work**.
+- [ ] Set Alice role = **employer**, Bob role = **worker**.
+- [ ] Enter readable exact terms and the intended effective time.
+- [ ] Confirm one sealed Contract terms Content revision is created.
+- [ ] Confirm Alice is Accepted as the proposing party and Bob is Pending.
+- [ ] In Contract Conversation, Bob types **I accept these terms**.
+- [ ] Confirm this text does **not** create ContractAcceptance.
+- [ ] Bob uses **Accept ContractVersion**.
+- [ ] Confirm version 1 becomes Active when its effective time is due.
+- [ ] Confirm Contract Timeline shows source-linked Contract events.
+- [ ] Confirm an unrelated Actor cannot open the Contract or Contract Context.
+
+### Browser story — Riverside Proposal → Contract
+
+- [ ] Complete Phase-14 Riverside Proposal acceptance first.
+- [ ] Open the Accepted Proposal and choose **Create Contract from Proposal**.
+- [ ] Confirm the Contract references the source ProposalVersion.
+- [ ] Confirm ContractVersion 1 uses the same exact sealed terms revision rather than copied/editable terms.
+- [ ] Confirm project-owner / builder / site-coordinator roles are snapshotted.
+- [ ] Confirm Proposal decisions did not become Contract acceptances.
+- [ ] Each remaining required party explicitly accepts ContractVersion 1.
+- [ ] Confirm the Contract activates only after all required Contract parties accepted the exact version.
+
+### Future amendment
+
+- [ ] On an Active Contract choose **Propose future terms**.
+- [ ] Enter revised terms and an effective time in the future.
+- [ ] Confirm this creates ContractVersion 2; version 1 stays unchanged/Active.
+- [ ] Have every required party explicitly accept version 2.
+- [ ] Confirm version 2 becomes **Accepted · awaiting effective time**, while version 1 remains Active.
+- [ ] Run `php artisan contracts:activate-due` after the effective instant.
+- [ ] Confirm version 1 becomes Superseded with exact `effective_until`.
+- [ ] Confirm version 2 becomes Active.
+- [ ] Confirm both sealed terms revisions remain readable and unchanged.
+
+### Negative guarantees
+
+- [ ] Proposal acceptance does not count as Contract acceptance.
+- [ ] Relationship participation does not count as Contract acceptance.
+- [ ] Conversation/Content wording does not count as Contract acceptance.
+- [ ] Accepted/effective ContractVersion and ContractAcceptance rows cannot be edited/deleted in place.
+- [ ] One accepted ProposalVersion cannot create duplicate Contract authority.
+- [ ] Active Contract creates no Commitment/Planner Occurrence automatically.
+- [ ] Active Contract creates no Fulfillment automatically.
+- [ ] Active Contract creates no Financial Obligation, Accounting posting or Settlement/payment automatically.

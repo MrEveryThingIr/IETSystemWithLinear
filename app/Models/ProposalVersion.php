@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -67,6 +68,12 @@ class ProposalVersion extends Model
     public function decisions(): HasMany
     {
         return $this->hasMany(ProposalDecision::class);
+    }
+
+    /** @return HasOne<Contract, $this> */
+    public function derivedContract(): HasOne
+    {
+        return $this->hasOne(Contract::class, 'source_proposal_version_id');
     }
 
     protected function casts(): array

@@ -9,5 +9,6 @@ enum ContextKind: string
     case Admission = 'admission';
     case Relationship = 'relationship';
     case Negotiation = 'negotiation';
+    case Contract = 'contract';
     case Reference = 'reference';
 }

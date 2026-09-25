@@ -35,6 +35,7 @@ return [
         'admission' => 'Admission · :group',
         'relationship' => 'Relationship · :title',
         'negotiation' => 'Negotiation · :title',
+        'contract' => 'Contract · :title',
         'reference' => 'Reference · :key',
         'unknown' => 'Context',
     ],
