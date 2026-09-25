@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\ConceptStatus;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
@@ -154,7 +155,7 @@ class IntentMatchingKernelTest extends TestCase
         $canonical = Concept::factory()->create();
         $merged = Concept::factory()->create();
         $merged->applyLifecycle([
-            'status' => \App\ConceptStatus::Merged->value,
+            'status' => ConceptStatus::Merged->value,
             'merged_into_concept_id' => $canonical->id,
         ]);
 
