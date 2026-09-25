@@ -4,6 +4,7 @@ namespace App\Livewire\Contracts;
 
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\ProposeContractAmendment;
+use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\ContractVersion;
 use App\Models\User;
@@ -100,6 +101,18 @@ class Show extends Component
             && Gate::forUser($user)->allows('accept', [$this->contract, $pendingVersion]);
 
         $canAmend = Gate::forUser($user)->allows('amend', $this->contract);
+        $canCreateCommitment = Gate::forUser($user)->allows('create', [Commitment::class, $this->contract]);
+        $commitments = Commitment::query()
+            ->whereHas('contractVersion', fn ($query) => $query->where('contract_id', $this->contract->id))
+            ->with([
+                'contractVersion',
+                'obligor.user',
+                'beneficiary.user',
+                'planBinding.plan',
+                'fulfillments',
+            ])
+            ->orderBy('id')
+            ->get();
         $context = $this->contract->contextBinding?->context;
 
         if ($canAmend && $this->amendmentTerms === '' && $activeVersion instanceof ContractVersion) {
@@ -114,6 +127,8 @@ class Show extends Component
             'activeVersion',
             'canAccept',
             'canAmend',
+            'canCreateCommitment',
+            'commitments',
             'context',
         ));
     }

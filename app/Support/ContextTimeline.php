@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\AdmissionEvent;
 use App\Models\Context;
+use App\Models\CommitmentEvent;
 use App\Models\ContractEvent;
 use App\Models\ConversationMessage;
 use App\Models\JournalEntry;
@@ -182,6 +183,24 @@ class ContextTimeline
                         occurredAt: $event->created_at ?? now(),
                         actor: $event->actor,
                         url: route('contracts.show', $contract),
+                    ));
+                });
+
+            CommitmentEvent::query()
+                ->with(['actor.user', 'commitment'])
+                ->whereHas('commitment.contractVersion', fn ($query) => $query->where('contract_id', $contract->id))
+                ->latest('id')
+                ->limit($limit)
+                ->get()
+                ->each(function (CommitmentEvent $event) use ($entries): void {
+                    $entries->push(new TimelineEntry(
+                        key: 'commitment-event:'.$event->uuid,
+                        kind: 'commitment',
+                        title: (string) __('commitments.events.'.$event->event_type->value),
+                        summary: $event->commitment->title,
+                        occurredAt: $event->created_at ?? now(),
+                        actor: $event->actor,
+                        url: route('commitments.show', $event->commitment),
                     ));
                 });
         }

@@ -101,6 +101,40 @@
             @endif
 
             <flux:card class="space-y-4">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <flux:heading size="lg">{{ __('commitments.contract_section') }}</flux:heading>
+                        <flux:text>{{ __('commitments.contract_help') }}</flux:text>
+                    </div>
+                    @if ($canCreateCommitment)
+                        <flux:button :href="route('commitments.create', $contract)" variant="primary">
+                            {{ __('commitments.new') }}
+                        </flux:button>
+                    @endif
+                </div>
+
+                @forelse ($commitments as $commitment)
+                    <a href="{{ route('commitments.show', $commitment) }}" class="block rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <div class="font-semibold" dir="auto">{{ $commitment->title }}</div>
+                                <div class="mt-1 text-sm text-zinc-500">
+                                    {{ $commitment->quantity }} {{ $commitment->unit }}
+                                    · {{ $commitment->obligor->user?->username }}
+                                    → {{ $commitment->beneficiary->user?->username }}
+                                </div>
+                            </div>
+                            <flux:badge color="zinc">
+                                {{ __('commitments.kind.'.$commitment->kind->value) }}
+                            </flux:badge>
+                        </div>
+                    </a>
+                @empty
+                    <x-app.empty-state :title="__('commitments.empty')" />
+                @endforelse
+            </flux:card>
+
+            <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('contracts.show.version_history') }}</flux:heading>
 
                 @foreach ($contract->versions->sortByDesc('version') as $version)
