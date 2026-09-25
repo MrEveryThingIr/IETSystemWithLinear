@@ -82,7 +82,7 @@ class LocalizationParityTest extends TestCase
                 $translated = Arr::dot(require $localePath);
 
                 foreach ($english as $key => $englishValue) {
-                    if (!is_string($englishValue) || ! isset($translated[$key]) || ! is_string($translated[$key])) {
+                    if (!is_string($englishValue) || !isset($translated[$key]) || !is_string($translated[$key])) {
                         continue;
                     }
 
