@@ -48,7 +48,7 @@
 
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <flux:button :href="route('proposals.index')" variant="ghost">
-                    {{ __('ui.actions.cancel') }}
+                    {{ __('ui.common.cancel') }}
                 </flux:button>
                 <flux:button type="submit" variant="primary">
                     {{ __('proposals.create.submit') }}
