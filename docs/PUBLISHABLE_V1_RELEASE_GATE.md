@@ -27,6 +27,10 @@ The release candidate must preserve the cumulative automated and manual proof fo
 Before the immutable candidate is handed to the owner:
 
 - no known authorization-before-pagination defect;
+- a newly verified User with an active Actor receives an idempotent personal accounting foundation (ledger + standard accounts) without any fabricated JournalEntry or balance;
+- the User can change the default monetary unit for future personal ledger creation without silently converting existing accounting history;
+- Planner calendar supports practical year → month → day/hour inspection and can prefill a Plan from the selected date;
+- the authenticated layout exposes localized live date/time and bounded local guidance without third-party tracking;
 - reserved-email Access Invitations are single-use;
 - Intent create → highlight → manage is coherent;
 - the Profile editor can manage the same subject/arrangement/value facets created by the guided Intent journey;
