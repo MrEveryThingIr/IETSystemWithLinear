@@ -648,20 +648,27 @@ Exit gate: System Manual Chapter 24, phase report/current-state/worksheet synchr
 
 ## Phase 20 — Groups / Communities social composition
 
-Purpose: make Groups feel like focused social/application environments composed from independent kernels.
+**Status: runtime complete / remote-green on `feat/ideal-v1-20-group-community-composition`; documentation/manual closure and integration gate in progress.**
 
-GroupSpace may present, as authorized:
+Runtime checkpoint `6782bdaeb2a732ec2f9ae8f72c76dc5f311d6f17` / CI `36126321777`: **520 tests / 3219 assertions**, Pint 651 PHP files, PHPStan/Vite/migration/ops/backup/security gates green.
 
-- Posts/Articles/Books/Albums;
-- Conversation;
-- people/roles;
-- Needs/Offers;
-- Plans/activities;
-- Submissions;
-- Relationships/projects;
-- timelines.
+Delivered:
 
-Do not duplicate module storage inside Groups.
+- a dedicated member-facing Group Community route/surface;
+- existing Group Show retained as governance/settings;
+- visible GroupSpace cards linking the same Conversation, Content, Planner, Timeline and Submission-review kernels;
+- active people/role composition from existing Group Membership/role authority;
+- policy-filtered member Need/Offer composition;
+- policy-filtered published Content composition;
+- Context-scoped Plan composition;
+- review-authorized Submission composition;
+- viewer-participated shared Relationship/project composition;
+- no Group-specific copies of those domain records;
+- explicit privacy tests proving Group membership is not a cross-domain permission bypass.
+
+Detailed contract: `docs/PHASE_20_GROUP_COMMUNITY_COMPOSITION.md`.
+
+Exit gate: System Manual Chapter 25, closure docs/checkpoint synchronization, final feature-branch CI and integration PR must be green before Phase 21.
 
 ## Phase 21 — Home / Today personal operating view
 

@@ -95,6 +95,10 @@ class SystemManualHelpMap
             return 'content';
         }
 
+        if ($routeName === 'groups.community') {
+            return 'community';
+        }
+
         if (str_contains($routeName, 'agreement')) {
             return 'agreements';
         }

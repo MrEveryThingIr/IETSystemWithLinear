@@ -1229,3 +1229,108 @@ composer audit
 - [ ] Confirm Chapter 24 is **Need / Offer Matching**.
 - [ ] Confirm contextual Help on the Match page routes to Chapter 24.
 - [ ] Confirm the chapter explains the Match → Relationship consent → optional Proposal chain and privacy boundary.
+
+
+---
+
+## Checkpoint 20 — Group / Community Composition
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-20-group-community-composition
+~~~
+
+Remote runtime checkpoint:
+
+~~~text
+SHA: 6782bdaeb2a732ec2f9ae8f72c76dc5f311d6f17
+CI: 36126321777
+Result: 520 tests / 3219 assertions; Pint 651 files; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+None. Phase 20 is intentionally a composition/read/UI layer over existing domain storage.
+~~~
+
+### Local sync
+
+After Phase 20 integration:
+
+~~~bash
+git fetch origin
+git switch integration/ideal-v1
+git pull --ff-only origin integration/ideal-v1
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/Groups/GroupCommunityCompositionTest.php \
+  tests/Feature/Groups/GroupSpaceCommunicationTest.php \
+  tests/Feature/Groups/GroupSpaceGovernanceTest.php \
+  tests/Feature/SystemManualContentTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Maple Housing Office community
+
+- [ ] Sign in as an active Maple Housing Office member.
+- [ ] Open **Groups** and confirm **Open** goes to the Group **Community** page.
+- [ ] Confirm Community and **Governance & settings** are visibly distinct purposes.
+- [ ] Confirm **General** appears and links to Conversation, Content, Plans & activities and Timeline.
+- [ ] Confirm restricted Spaces appear only for users who already have Space view permission.
+
+### Content composition
+
+- [ ] Publish an article/report in General Content.
+- [ ] Confirm it appears in **Recent Content** without creating a second Group-post/article record.
+- [ ] Open it and confirm it is the same Content UUID/Context record used by the normal Reader/Studio.
+
+### People, Needs & Offers
+
+- [ ] Confirm active Group participants and their Group roles appear.
+- [ ] Give Bob an authenticated-visible Service Offer and confirm it appears.
+- [ ] Make Bob's Profile private while keeping the explicit Intent visible; confirm the Intent can remain visible without leaking the private Profile identity.
+- [ ] Mark an Intent private and confirm it disappears.
+
+### Plans / activity
+
+- [ ] Create a Plan in General's Context.
+- [ ] Confirm it appears in Community and opens the normal Planner record.
+- [ ] Create a Plan in a restricted Space inaccessible to an ordinary member; confirm it does not appear for that member.
+
+### Relationships / projects
+
+- [ ] Create a Relationship involving Alice and Bob where the current viewer participates and Bob is an active Group member; confirm it appears.
+- [ ] Create an unrelated Relationship between other actors; confirm Group membership alone does not expose it.
+
+### Submissions
+
+- [ ] Configure a Space Context interaction/review flow.
+- [ ] Submit a record.
+- [ ] Confirm the review card appears only for a viewer with Context review authority.
+- [ ] Confirm an ordinary Group member without review authority sees no Submission data.
+
+### Negative guarantees
+
+- [ ] Confirm Community creates no new Group-specific Content/Plan/Intent/Relationship/Submission tables or rows.
+- [ ] Confirm Group membership does not reveal restricted Space data.
+- [ ] Confirm Group membership does not reveal private Profile or Intent data.
+- [ ] Confirm Group membership does not reveal unrelated Relationships.
+- [ ] Confirm Group membership does not reveal non-reviewable Submissions.
+
+### System Manual
+
+- [ ] Confirm Chapter 25 is **Group / Community Composition**.
+- [ ] Confirm Help on the Community page opens Chapter 25 at **How to use it**.
+- [ ] Confirm it teaches the difference between Community usage and Group governance/settings.
