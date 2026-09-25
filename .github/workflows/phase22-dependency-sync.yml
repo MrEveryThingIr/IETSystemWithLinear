@@ -31,7 +31,7 @@ jobs:
           package-manager-cache: false
 
       - name: Generate Composer lock
-        run: composer require laravel/reverb:^1.12 --no-interaction --no-progress
+        run: composer require laravel/reverb:^1.12 --with-all-dependencies --no-interaction --no-progress
 
       - name: Generate NPM lock
         run: npm install --save-dev laravel-echo pusher-js --ignore-scripts
