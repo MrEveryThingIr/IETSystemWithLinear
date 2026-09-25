@@ -9,9 +9,12 @@ use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
 use App\Models\ConceptLabel;
 use App\Models\User;
+use App\ProfileIntentArrangementKind;
+use App\ProfileIntentExchangePreference;
 use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
+use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use App\Support\Localization;
 use App\Support\TemporalPreferences;
@@ -36,6 +39,22 @@ class Intents extends Component
     public string $kind = ProfileIntentKind::Need->value;
 
     public string $conceptLabel = '';
+
+    public string $subjectKind = ProfileIntentSubjectKind::Other->value;
+
+    public string $arrangementKind = ProfileIntentArrangementKind::Other->value;
+
+    public string $exchangePreference = ProfileIntentExchangePreference::DiscussLater->value;
+
+    public ?string $cashMin = null;
+
+    public ?string $cashMax = null;
+
+    public string $currencyCode = '';
+
+    public ?string $cashBasis = null;
+
+    public ?string $exchangeNotes = null;
 
     public ?string $title = null;
 
@@ -100,7 +119,7 @@ class Intents extends Component
 
     public function toggleFacet(string $facet): void
     {
-        $allowed = ['title', 'description', 'importance', 'quantity', 'location', 'route', 'timing', 'visibility'];
+        $allowed = ['commercial', 'title', 'description', 'importance', 'quantity', 'location', 'route', 'timing', 'visibility'];
         abort_unless(in_array($facet, $allowed, true), 422);
 
         if (in_array($facet, $this->activeFacets, true)) {
@@ -129,6 +148,25 @@ class Intents extends Component
     private function clearFacet(string $facet): void
     {
         match ($facet) {
+            'commercial' => [
+                $this->subjectKind,
+                $this->arrangementKind,
+                $this->exchangePreference,
+                $this->cashMin,
+                $this->cashMax,
+                $this->currencyCode,
+                $this->cashBasis,
+                $this->exchangeNotes,
+            ] = [
+                ProfileIntentSubjectKind::Other->value,
+                ProfileIntentArrangementKind::Other->value,
+                ProfileIntentExchangePreference::DiscussLater->value,
+                null,
+                null,
+                '',
+                null,
+                null,
+            ],
             'title' => $this->title = null,
             'description' => $this->description = null,
             'importance' => $this->importancePercent = null,
@@ -193,6 +231,14 @@ class Intents extends Component
 
         $data = $this->validate($this->rules());
         $payload = [
+            'subject_kind' => $data['subjectKind'],
+            'arrangement_kind' => $data['arrangementKind'],
+            'exchange_preference' => $data['exchangePreference'],
+            'cash_min' => $data['cashMin'],
+            'cash_max' => $data['cashMax'],
+            'currency_code' => $data['currencyCode'],
+            'cash_basis' => $data['cashBasis'],
+            'exchange_notes' => $data['exchangeNotes'],
             'title' => $data['title'],
             'description' => $data['description'],
             'importance_percent' => $data['importancePercent'],
@@ -241,6 +287,14 @@ class Intents extends Component
         $this->editingIntentId = $intent->id;
         $this->kind = $intent->kind->value;
         $this->conceptLabel = $intent->concept->displayLabel();
+        $this->subjectKind = $intent->subject_kind->value;
+        $this->arrangementKind = $intent->arrangement_kind->value;
+        $this->exchangePreference = $intent->exchange_preference->value;
+        $this->cashMin = $intent->cash_min;
+        $this->cashMax = $intent->cash_max;
+        $this->currencyCode = $intent->currency_code ?? '';
+        $this->cashBasis = $intent->cash_basis;
+        $this->exchangeNotes = $intent->exchange_notes;
         $this->title = $intent->title;
         $this->description = $intent->description;
         $this->importancePercent = $intent->importance_percent === null
@@ -269,6 +323,11 @@ class Intents extends Component
         $this->itemVisibility = $intent->visibility->value;
 
         $this->activeFacets = array_values(array_filter([
+            $intent->subject_kind !== ProfileIntentSubjectKind::Other
+                || $intent->arrangement_kind !== ProfileIntentArrangementKind::Other
+                || $intent->exchange_preference !== ProfileIntentExchangePreference::DiscussLater
+                || $intent->cash_min !== null || $intent->cash_max !== null || $intent->exchange_notes !== null
+                ? 'commercial' : null,
             $intent->title !== null ? 'title' : null,
             $intent->description !== null ? 'description' : null,
             $intent->importance_percent !== null ? 'importance' : null,
@@ -329,6 +388,9 @@ class Intents extends Component
                 ->latest('updated_at')
                 ->get(),
             'scheduleKinds' => ProfileIntentScheduleKind::cases(),
+            'subjectKinds' => ProfileIntentSubjectKind::cases(),
+            'arrangementKinds' => ProfileIntentArrangementKind::cases(),
+            'exchangePreferences' => ProfileIntentExchangePreference::cases(),
             'visibilityOptions' => ProfileItemVisibility::cases(),
             'calendar' => TemporalPreferences::calendarFor(request()->user())->value,
             'intlLocale' => Localization::intlLocale(),
@@ -348,6 +410,14 @@ class Intents extends Component
                 'string',
                 'max:120',
             ],
+            'subjectKind' => ['required', Rule::enum(ProfileIntentSubjectKind::class)],
+            'arrangementKind' => ['required', Rule::enum(ProfileIntentArrangementKind::class)],
+            'exchangePreference' => ['required', Rule::enum(ProfileIntentExchangePreference::class)],
+            'cashMin' => ['nullable', 'numeric', 'min:0'],
+            'cashMax' => ['nullable', 'numeric', 'min:0', 'gte:cashMin'],
+            'currencyCode' => [Rule::requiredIf(fn (): bool => filled($this->cashMin) || filled($this->cashMax)), 'nullable', 'string', 'size:3', 'regex:/^[A-Za-z]{3}$/'],
+            'cashBasis' => ['nullable', Rule::in(['total', 'hour', 'day', 'week', 'month', 'year'])],
+            'exchangeNotes' => ['nullable', 'string', 'max:2000'],
             'title' => ['nullable', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:3000'],
             'importancePercent' => ['nullable', 'integer', 'between:0,100'],
@@ -380,6 +450,14 @@ class Intents extends Component
         $this->editingIntentId = null;
         $this->kind = ProfileIntentKind::Need->value;
         $this->conceptLabel = '';
+        $this->subjectKind = ProfileIntentSubjectKind::Other->value;
+        $this->arrangementKind = ProfileIntentArrangementKind::Other->value;
+        $this->exchangePreference = ProfileIntentExchangePreference::DiscussLater->value;
+        $this->cashMin = null;
+        $this->cashMax = null;
+        $this->currencyCode = '';
+        $this->cashBasis = null;
+        $this->exchangeNotes = null;
         $this->title = null;
         $this->description = null;
         $this->importancePercent = null;

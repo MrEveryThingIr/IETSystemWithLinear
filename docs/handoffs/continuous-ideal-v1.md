@@ -40,30 +40,21 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 21 is integrated on `integration/ideal-v1` at `0b605a19643f2b37dce7c88332e1baf284a93a33`.
+Phase 22 is integrated on `integration/ideal-v1` at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`.
 
-Phase 22 — Realtime + Notifications — is runtime-green on `feat/ideal-v1-22-realtime-notifications`:
+The active branch is `feat/ideal-v1-publishable-hardening`. Its purpose is to close inherited cross-roadmap defects and produce the first bounded publishable Ideal-v1 release candidate, not to continue speculative roadmap expansion.
 
-- runtime SHA `cea1cb4d6775b855e94146dfc75029ec1264ac07`;
-- CI `36134998196`;
-- **537 tests / 3297 assertions**;
-- Pint 686 PHP files;
-- PHPStan/Vite/migration rollback-reapply/scheduler/database-queue/backup/security gates green;
-- durable notification outbox/database inbox + private Reverb/Echo transport implemented.
+Closed/active hardening scope:
 
-Closure docs/report are being synchronized before integration.
+- reserved-email Access Invitations are single-use while unreserved links retain bounded multi-use;
+- Intent Directory authorization is query-level before real pagination;
+- Directory filter/query/highlight handoff is coherent;
+- Profile Intent management is reconciled with guided subject/arrangement/cash/exchange facets;
+- publication boundary and first-month learning posture are recorded in `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
 
-A historical Codex office-alpha audit was revalidated against the Phase 22 head. Do **not** begin Phase 23 immediately after integration without first closing the still-valid cross-roadmap correctness debt:
+Do **not** implement AI Copilot for this release. Preserve Phase 26 as an optional future draft/preparation layer over existing validated Actions. Generic Workflow, Reputation and Recommendations are likewise post-v1 unless a concrete release-blocking defect proves otherwise.
 
-- Intent Directory authorization currently occurs after a hard 200-row limit and lacks real pagination;
-- reserved-email Access Invitations still allow impossible multi-use semantics;
-- post-create Intent highlight is emitted but not consumed;
-- Profile Intent management has not caught up with subject/arrangement/cash/exchange facets;
-- stale canonical documentation must be reconciled.
-
-After Phase 22 integration, create one focused Ideal-v1 hardening checkpoint from the integration trunk, close/prove those inherited findings, and only then continue with **Phase 23 — Generic Workflow extraction**.
-
-Do not reintroduce AI runtime until the dedicated Phase 26 milestone.
+Pre-integration release-gate candidate `38f95175040234593bc927f895954c893a38e9fd` is green on CI run `36143475001` with 543 tests / 3316 assertions and all quality/ops/security gates passing. The remaining remote sequence is canonical-doc exact-head CI → PR into `integration/ideal-v1` → green integration CI → freeze one release-candidate ref/SHA. Browser acceptance remains the owner's final gate and must not be claimed remotely.
 
 ## Persistent product rules
 

@@ -272,6 +272,7 @@ return [
             'add_details_help' => 'Start with the simplest statement, then add only the details that matter for this need or offer.',
             'custom_concept_hint' => 'No exact suggestion? Keep typing and this will become your own reusable concept.',
             'facets' => [
+                'commercial' => 'Value & arrangement',
                 'title' => 'Title',
                 'description' => 'Description',
                 'importance' => 'Importance',

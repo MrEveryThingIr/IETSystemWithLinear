@@ -17,11 +17,16 @@ git fetch origin
 
 If local tracked changes exist, preserve them before switching. Do not reset/discard them casually.
 
-Environment for the focused first release experience:
+Environment selection matters:
+
+- historical office-alpha checkpoints may use `IET_RELEASE_PROFILE=office_alpha`;
+- the cumulative publishable Ideal-v1 acceptance must use `IET_RELEASE_PROFILE=full` so Groups, Contexts, Relationships, Planner, Content, finance and the later integrated modules are actually visible and testable.
+
+For the final cumulative release-candidate pass:
 
 ~~~text
 APP_NAME=IET
-IET_RELEASE_PROFILE=office_alpha
+IET_RELEASE_PROFILE=full
 ~~~
 
 After environment changes:
@@ -1520,3 +1525,194 @@ npm run dev
 ```
 
 Set `BROADCAST_CONNECTION=reverb` and the documented REVERB/VITE_REVERB variables for this realtime check.
+
+
+---
+
+## Final Publishable Ideal-v1 — Cumulative 0→100 Release Acceptance
+
+This is the authoritative owner browser pass for the first publishable Ideal-v1. Run it only after the hardening branch is integrated into `integration/ideal-v1` and the exact integration SHA is green. Record that immutable SHA and CI run here before testing.
+
+~~~text
+Release-candidate SHA: <record after integration>
+CI run: <record after integration>
+Release profile: full
+~~~
+
+### A. Exact local candidate
+
+~~~bash
+cd /c/laragon/www/EveryThing
+
+git status --short
+git fetch origin
+git switch integration/ideal-v1
+git pull --ff-only origin integration/ideal-v1
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+npm ci
+npm run build
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+composer audit --locked --no-interaction
+npm audit --audit-level=high
+~~~
+
+Set `IET_RELEASE_PROFILE=full` for this pass. Never use `migrate:fresh` against the continuing acceptance database.
+
+### B. Runtime processes
+
+For the realtime portion, use the configured Reverb environment and run:
+
+~~~bash
+# terminal 1
+php artisan serve
+
+# terminal 2
+php artisan queue:work database --queue=notifications,default --tries=3 --timeout=180
+
+# terminal 3
+php artisan schedule:work
+
+# terminal 4, when BROADCAST_CONNECTION=reverb
+php artisan reverb:start
+
+# terminal 5, for local frontend development when not using the production build
+npm run dev
+~~~
+
+The database remains authoritative if Reverb is stopped; reload must reconstruct notification state.
+
+### C. Canonical personas and continuity
+
+Use the same story world throughout instead of creating unrelated throwaway examples:
+
+- Diego — platform administrator / inviter;
+- Alice — owner/client with a Riverside property/construction need;
+- Bob — electrician/service provider;
+- Carol — collaborator/capital participant/reviewer where appropriate;
+- Maple Housing Office — reusable Group/community example.
+
+Reuse the same Concepts, Intents, Relationships, Content and financial story as they move downstream.
+
+### D. Access → identity → Profile → Intent
+
+- [ ] Diego creates a reserved-email standalone Access Invitation for Alice and confirms it is constrained to one use.
+- [ ] Alice opens the private welcome link, registers with the reserved email, verifies email and reaches Get Started.
+- [ ] The consumed reserved link cannot register another account.
+- [ ] An unreserved bounded invitation can still support its configured multi-use behavior.
+- [ ] Alice creates/edits her Profile without exposing account email as a public Profile field.
+- [ ] Alice records a Construction/Electrical Need using the guided Intent journey, including subject, arrangement, location, timing and optional value/exchange preferences.
+- [ ] Saving returns to the Directory and visibly highlights the created Intent.
+- [ ] Editing from Profile preserves the same guided subject/arrangement/value facets.
+- [ ] A private Intent is absent for unrelated viewers; an explicitly authenticated-visible Intent remains discoverable even when Profile identity is private.
+- [ ] Pagination/filtering still finds an authorized Intent beyond a large set of hidden records.
+
+### E. Discovery → Relationship → Conversation
+
+- [ ] Bob records the matching Service Offer.
+- [ ] Alice opens Find matches and sees only policy-authorized compatible candidates with explainable alignment reasons.
+- [ ] Matching creates no Relationship, Proposal, Contract, Commitment or money truth by itself.
+- [ ] Alice starts a Relationship from Bob's candidate; exact originating/matched Intent provenance is retained.
+- [ ] Bob must explicitly accept before the Relationship becomes active/writable.
+- [ ] Alice/Bob can use the Relationship Context conversation after activation.
+- [ ] Carol, when unrelated, cannot open the Relationship or its private Context.
+- [ ] Ending the Relationship preserves history and makes terminal collaboration read-only where specified.
+
+### F. Proposal → Contract → Commitment → Planner
+
+- [ ] Alice/Bob negotiate a Proposal through explicit versions/decisions.
+- [ ] The Proposal alone creates no active Contract.
+- [ ] Create a Contract from the agreed proposal and require explicit party acceptance of the exact Contract version.
+- [ ] Accepted/effective Contract activation is visible and historically versioned.
+- [ ] Create a Commitment from the Contract without duplicating Contract authority.
+- [ ] Bind the Commitment to a Plan and materialize occurrences.
+- [ ] Today shows the authoritative Planner occurrence and waiting-on-me/others states rather than creating a parallel task record.
+
+### G. Fulfillment → financial obligation → settlement → accounting
+
+- [ ] Bob submits Fulfillment evidence for a committed work occurrence.
+- [ ] Alice accepts/reviews the Fulfillment.
+- [ ] Confirm the accepted economic event creates/permits the intended immutable Financial Obligation through the explicit bridge, not from casual text or Planner completion.
+- [ ] Bob/Alice propose and confirm a Settlement; pending claims do not count as paid.
+- [ ] Confirm paid/outstanding amounts derive from immutable obligation + confirmed settlement evidence.
+- [ ] Post the confirmed economic event into Personal Accounting only through the explicit accounting action.
+- [ ] Confirm balanced JournalEntry/JournalLine truth and no silent accounting entry from Contract/Fulfillment/Settlement alone.
+- [ ] Exercise dispute behavior and confirm disputed amounts/status derive correctly without rewriting historical source evidence.
+- [ ] A Contract party who is not debtor/creditor cannot access bilateral financial details merely because they can view the Contract.
+
+### H. Group → Admission → Agreement → Membership → Community
+
+- [ ] Diego/authorized Group manager creates a Group invitation for an existing verified account.
+- [ ] The candidate follows Invitation → Admission → exact Agreement-version acceptance → submission/review/clarification if configured → approval → Membership.
+- [ ] Admission alone grants no ordinary Group/Space access.
+- [ ] Finalized Membership grants only the authorized Group/Space capabilities.
+- [ ] Ownership/role operations preserve the existing race/integrity protections.
+- [ ] Open Maple Housing Office Community and confirm Content, people, Plans, visible Needs/Offers and authorized Relationships compose existing kernels rather than duplicate Group-specific truth.
+- [ ] Restricted Spaces remain hidden from unauthorized members.
+
+### I. Content → publication → evidence → placement
+
+- [ ] In an authorized Context create Content from a Blueprint and edit structured fields/blocks/assets/presentation.
+- [ ] Publish an immutable revision and open its Reader.
+- [ ] Create an exact evidence reference to a revision/field/block/asset target.
+- [ ] Publish a newer revision and confirm the historical evidence reference still resolves the original sealed target.
+- [ ] Present published Content into another authorized Context using ContentPlacement.
+- [ ] Target-only readers gain the intended published read access but no source Context/Studio/transitive resharing authority.
+- [ ] Remove and re-add placement; provenance remains coherent rather than duplicating identities.
+- [ ] Private Assets remain application-authorized and are never converted to public storage for convenience.
+
+### J. Structured interaction → Submission → Evaluation
+
+- [ ] Configure/use an InteractionDefinition in an authorized Context.
+- [ ] Bob submits structured responses/evidence.
+- [ ] Only authorized reviewers see the review queue and response details.
+- [ ] Carol, when assigned/authorized as reviewer, records an Evaluation.
+- [ ] The submitter sees the resulting state/notification but never gains reviewer-only mutation controls.
+- [ ] Annotation/conversation text remains collaboration evidence and does not silently become Evaluation or authoritative approval.
+
+### K. Notifications → realtime → reconstruction
+
+- [ ] Trigger Relationship/Proposal/Contract/Fulfillment/Settlement/Submission events and confirm intended recipients receive one durable notification.
+- [ ] Mark individual/all notifications read and confirm the state survives reload.
+- [ ] Trigger a due Planner reminder more than once and confirm logical idempotency.
+- [ ] With Reverb running, an open inbox/navigation updates without a full reload.
+- [ ] Stop Reverb, create another notification, reload and confirm durable database state still reconstructs it.
+- [ ] An unrelated user cannot subscribe to another user's private channel or open the notification target.
+- [ ] A rolled-back authoritative transaction leaves no ghost durable notification.
+
+### L. Cross-cutting release edges
+
+- [ ] Dashboard/Today, Directory, Groups, Content, Relationships, Planner, finance and Notifications expose no unauthorized records when IDs/UUIDs are tampered with.
+- [ ] English/Persian/Arabic/Chinese navigation still renders; Persian/Arabic remain RTL.
+- [ ] Mobile/responsive smoke covers onboarding, Directory, Profile, Community, Reader, Planner/Today and Notifications.
+- [ ] Keyboard/focus smoke covers primary forms, dialogs, pagination and highlighted Intent handoff.
+- [ ] `/up` responds successfully.
+- [ ] `php artisan schedule:list` contains Agreement activation, Contract activation, Planner horizon, notification outbox/reminders and queue pruning.
+- [ ] `php artisan queue:failed` shows no unexplained release-test failures.
+- [ ] No plaintext invitation/reset tokens, credentials or private uploaded content appear in logs.
+- [ ] Every browser defect found here is reproduced by an automated regression before correction.
+
+### M. Acceptance decision
+
+Record:
+
+~~~text
+Candidate SHA:
+CI run:
+Local full test result:
+Browser acceptance date:
+Browser tester:
+Defects found:
+Correction SHAs:
+Final accepted SHA:
+Production-infrastructure evidence pending/complete:
+~~~
+
+The stable release may be tagged only from the exact accepted SHA after all release-blocking browser findings are regression-tested and closed. Infrastructure-specific production evidence (real mail, supervised processes, backups/restore and monitoring) must be recorded honestly when that infrastructure exists; it cannot be inferred from repository CI.

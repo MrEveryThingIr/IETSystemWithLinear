@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This is the executable provider-neutral operating baseline for Phase 2. It describes how to build, deploy, run, diagnose, back up, restore, and update the current Laravel application without relying on developer memory.
+This is the executable provider-neutral operating baseline for the publishable Ideal-v1 release line. It describes how to build, deploy, run, diagnose, back up, restore, and update the current Laravel application without relying on developer memory.
 
 It does not select a paid hosting, email, object-storage, or monitoring provider. Provider selection with meaningful cost, privacy, or compliance implications requires owner approval.
 
@@ -16,7 +16,7 @@ It does not select a paid hosting, email, object-storage, or monitoring provider
 - Scheduler: Laravel scheduler, one system trigger invoking `schedule:run` every minute.
 - Local mail: `log`.
 - Local/private files: Laravel `local` disk rooted at `storage/app/private`.
-- Production database/storage/mail target: must be selected and recorded before Phase 2 closure.
+- Production database/storage/mail target: must be selected and recorded before an actual production deployment.
 
 ## Environment and secrets
 
@@ -33,7 +33,8 @@ Required production values include at minimum:
 - session/cache/queue configuration
 - mail transport/from identity for enabled transactional mail
 - private filesystem/object-storage credentials when not using local private storage
-- for the first invitation-only alpha, `AI_ASSISTANCE_ENABLED=false` unless the owner deliberately enables/configures the provider-backed assistant
+- `IET_RELEASE_PROFILE=full` for cumulative publishable Ideal-v1; `office_alpha` is only a reduced historical/focused experience profile
+- when realtime delivery is enabled, configure `BROADCAST_CONNECTION=reverb` plus matching Reverb/Vite variables and supervise the Reverb server
 
 Production logging should normally use `daily` files on a single host or `stderr` under a platform/container that centralizes logs. Use `LOG_LEVEL=info` or stricter unless a temporary diagnostic window is approved.
 
@@ -55,8 +56,8 @@ A release should be built from an immutable commit.
 10. Exit maintenance mode.
 11. Verify `/up` and login.
 12. Verify the release smoke path with a fresh private Access Invitation: welcome/inspect → register → verify email → Get Started → create one authenticated Need/Offer → confirm it appears in the directory with the expected Need/Offer/Service filter.
-13. Verify a Group Invitation can be issued to an existing verified account and does not advertise new-account registration.
-14. Confirm private invitation responses are non-cacheable/no-referrer/noindex, disabled AI is not exposed, logs show the expected `app_version`, and requests return `X-Request-Id`.
+13. Run the cumulative release-candidate smoke from `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` with `IET_RELEASE_PROFILE=full`, including Groups/Admissions, Content/Submission/Evaluation, Relationships/Contracts/Planner/Fulfillment, financial settlement/accounting, Today and Notifications.
+14. Confirm private invitation responses are non-cacheable/no-referrer/noindex, logs show the expected `app_version`, and requests return `X-Request-Id`.
 
 Do not run destructive schema resets in production.
 
@@ -76,8 +77,10 @@ The current default is the database queue.
 Example worker command:
 
 ~~~text
-php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=60 --max-time=3600
+php artisan queue:work database --queue=notifications,default --sleep=3 --tries=3 --timeout=180 --max-time=3600
 ~~~
+
+The current notification and asset-processing jobs use the configured default queue unless a deployment deliberately routes them otherwise. If separate queues are introduced, every configured queue must have a supervised consumer.
 
 Use a process supervisor (systemd, Supervisor, container platform, or equivalent). Never depend on an interactive terminal remaining open.
 
@@ -105,6 +108,10 @@ The scheduler prunes failed jobs and batches older than seven days. Retention ma
 The application currently schedules:
 
 - due Group Agreement activation every minute;
+- due accepted Contract-version activation every minute;
+- notification outbox redispatch every minute;
+- due Planner reminder notification emission every minute;
+- Planner horizon materialization daily;
 - failed-job pruning daily;
 - queue-batch pruning daily.
 
@@ -265,4 +272,4 @@ Repository implementation alone cannot prove:
 - automated production backup retention;
 - a real restore drill.
 
-Record those results only after they actually happen. They are mandatory before production release, but they do not block Phase 3 while no production deployment target has been selected.
+Record those results only after they actually happen. They are mandatory before declaring a real production deployment healthy; repository CI can establish a release candidate, but it cannot fabricate infrastructure-specific operational evidence.

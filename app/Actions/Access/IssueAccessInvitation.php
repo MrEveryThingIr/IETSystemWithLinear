@@ -23,6 +23,7 @@ class IssueAccessInvitation
         $email = $email === '' ? null : $email;
 
         abort_unless($maxUses >= 1 && $maxUses <= 1000, 422, __('access.invalid_use_limit'));
+        abort_unless($email === null || $maxUses === 1, 422, __('access.reserved_single_use'));
         abort_unless($expiresInDays >= 1 && $expiresInDays <= 90, 422, __('access.invalid_expiry'));
 
         if ($email !== null) {

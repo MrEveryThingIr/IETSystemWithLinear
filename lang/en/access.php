@@ -7,6 +7,7 @@ return [
         'open' => 'Open system',
         'registration_by_invitation' => 'Registration requires an Access Invitation',
     ],
+    'reserved_single_use' => 'An invitation reserved for one email address must be single-use.',
     'invalid_use_limit' => 'Choose a valid invitation use limit.',
     'invalid_expiry' => 'Choose an expiry between 1 and 90 days.',
     'already_registered' => 'That email already belongs to an account. Use a Group invitation when inviting an existing user to a Group.',

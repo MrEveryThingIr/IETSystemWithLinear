@@ -2,6 +2,15 @@
 
 ## Snapshot
 
+### Publishable v1 hardening
+
+Phase 22 is integrated at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`. The active release line is now `feat/ideal-v1-publishable-hardening`.
+
+The first publication is intentionally a bounded learning release: deterministic human workflows and durable domain evidence are the product; AI Copilot, Generic Workflow extraction, Reputation and Recommendations are post-v1 work. See `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
+
+The inherited office-alpha audit defects around reserved Access Invitation reuse, Intent Directory authorization/pagination, create-to-directory highlighting, and Profile Intent value-model editing are now closed on this branch. Pre-integration candidate `38f95175040234593bc927f895954c893a38e9fd` passed CI run `36143475001` with 543 tests / 3316 assertions plus Pint, PHPStan, Vite, migration/ops, backup/restore and security gates green. Canonical release docs are being synchronized before the integration PR.
+
+
 ### Continuous Ideal-v1 integration
 
 Active integration branch:
@@ -680,34 +689,33 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 22 — Realtime + Notifications** is runtime-green on `feat/ideal-v1-22-realtime-notifications`.
+**Publishable Ideal-v1 hardening** is the active release checkpoint on `feat/ideal-v1-publishable-hardening`.
 
-Runtime checkpoint:
+Phase 22 is already integrated into `integration/ideal-v1` at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`. The immediate objective is not Phase 23 expansion; it is to close inherited release defects, synchronize the canonical documentation, obtain a completely green exact candidate, integrate that candidate, and freeze one immutable release-candidate SHA for owner acceptance.
 
-- SHA `cea1cb4d6775b855e94146dfc75029ec1264ac07`;
-- CI `36134998196`;
-- **537 tests / 3297 assertions**;
-- Pint 686 PHP files;
-- PHPStan/Vite/migration rollback-reapply/scheduler/database-queue/backup/security gates green;
-- Composer audit has no security advisories.
+Closed hardening scope currently includes:
 
-Phase 22 adds durable recipient attention/read state and optional Reverb/Echo realtime refresh while preserving existing domain tables/actions as authoritative truth.
+- reserved-email Access Invitations are constrained to one use, with registration availability re-checked under a row lock;
+- Intent Directory authorization happens in SQL before pagination;
+- Directory filters use real pagination and preserve useful query state;
+- create → Directory highlighting is consumed coherently;
+- Profile Intent editing exposes the guided subject/arrangement/value facets;
+- regression coverage includes the >200 hidden-record authorization defect and consumed reserved-invitation reuse;
+- the publication boundary and first-month learning posture are defined in `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
 
-A historical Codex office-alpha audit was rechecked against this current branch. Several findings remain valid despite later roadmap progress: Intent Directory authorization/pagination correctness, reserved-email Access Invitation single-use semantics, post-create Intent highlighting, and complete management of the newer Intent facets. These are now an explicit **post-Phase-22 hardening gate**.
-
-Next sequence:
+Release sequence:
 
 ~~~text
-Phase 22 closure/integration
-→ focused inherited-debt hardening checkpoint
-→ Phase 23 Generic Workflow extraction
-→ Phase 24 Reputation / verified history
-→ Phase 25 Discovery / recommendations
-→ Phase 26 AI Copilot
-→ Phase 27 UX / accessibility / localization
-→ Phase 28 production hardening + real-domain pilots
-→ Phase 29 integrated release candidate + 0→100 acceptance
-→ Phase 30 stable release / operating loop
+hardening branch completely green
+→ final eagle-view release review
+→ canonical docs synchronized
+→ PR / integration into integration/ideal-v1
+→ integration CI completely green
+→ freeze immutable release-candidate SHA
+→ owner local setup + cumulative 0→100 browser acceptance
+→ regression-tested fixes for any browser findings
+→ first stable publishable release
 ~~~
 
-Do not skip the hardening checkpoint merely because the full CI suite is green: the Codex findings expose behavior not sufficiently protected by the existing tests.
+AI Copilot, Generic Workflow extraction, Reputation and Recommendations remain post-v1 work unless a concrete defect proves that one is necessary for an already-supported v1 journey. Do not resume speculative roadmap expansion before the publishable candidate and browser acceptance are closed.
+

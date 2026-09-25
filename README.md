@@ -12,7 +12,9 @@ Continuous remote Ideal-v1 integration:
 integration/ideal-v1
 ~~~
 
-The line is rooted at the accepted pre-AI baseline and intentionally excludes the currently unused AI-assistance / Development-Origin runtime.
+The cumulative Phase 1–22 capability set is implemented. The current release checkpoint is the bounded **Publishable Ideal-v1** hardening/integration pass: correctness, release operations, synchronized documentation and cumulative 0→100 acceptance take priority over new kernels. Generic Workflow extraction, Reputation, Recommendations and AI Copilot are post-v1 work unless a concrete existing-flow defect requires otherwise.
+
+The line is rooted at the accepted pre-AI baseline and intentionally excludes the unused AI-assistance / Development-Origin runtime.
 
 The first reconstructed foundation retains:
 
@@ -28,7 +30,7 @@ The first reconstructed foundation retains:
 - guided Need/Offer capture;
 - permission-aware Intent Directory.
 
-AI is deferred to its later roadmap phase.
+AI Copilot is explicitly deferred until after the first publishable Ideal-v1 release.
 
 ## Canonical reading order
 

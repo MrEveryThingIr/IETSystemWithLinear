@@ -697,29 +697,48 @@ Exit gate: System Manual Chapter 26, closure docs/checkpoint synchronization, fi
 
 ## Phase 22 — Realtime + Notifications
 
-Add outbox/post-commit delivery, queue-backed broadcasting, authorized channels, notifications and reconnect correctness **after** non-realtime Conversation/Timeline semantics are proven.
+**Status: complete and integrated into `integration/ideal-v1` at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`.**
 
-Database/domain Actions remain authoritative.
+Implemented: transactional notification outbox, post-commit queued delivery, durable database inbox/read state, authorized private broadcasting, Reverb/Echo refresh, Planner reminder emission and lifecycle notification projection. Realtime remains transport only; database/domain Actions remain authoritative.
 
-## Phase 23 — Generic Workflow extraction
+## Publishable Ideal-v1 checkpoint — inserted before Phase 23
+
+**Status: active on `feat/ideal-v1-publishable-hardening`.**
+
+The first public Ideal-v1 is intentionally bounded at the cumulative Phase 1–22 capability set plus release hardening. Before any speculative kernel expansion:
+
+1. close inherited authorization/privacy/UX correctness defects;
+2. pass complete CI on the exact hardening candidate;
+3. synchronize release gate, operations, current-state and cumulative acceptance documentation;
+4. integrate the exact green candidate into `integration/ideal-v1`;
+5. require green integration CI and freeze one immutable release-candidate SHA;
+6. run the owner-local cumulative Alice/Bob/Carol/Diego 0→100 browser acceptance;
+7. regression-test and close every release-blocking browser defect;
+8. tag the accepted stable release.
+
+Generic Workflow extraction, Reputation, Recommendations, AI Copilot and broad system-wide polish do **not** delay this first release unless a concrete defect in an already-supported journey proves one is necessary.
+
+See `docs/PUBLISHABLE_V1_RELEASE_GATE.md` and the final section of `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+
+## Phase 23 — Generic Workflow extraction — post-v1
 
 Extract WorkflowDefinition/State/Transition/Requirement only after Admission plus at least one unrelated proven domain demonstrate the same reusable pattern.
 
 Do not make Workflow a universal interpreter.
 
-## Phase 24 — Reputation / verified history
+## Phase 24 — Reputation / verified history — post-v1
 
 Derive context-sensitive trust/history from real evidence such as accepted Fulfillment, Evaluations, verified skills and completed relationships.
 
 No universal opaque score.
 
-## Phase 25 — Discovery / recommendations
+## Phase 25 — Discovery / recommendations — post-v1
 
 Recommend people, Groups, Content, projects and opportunities from explicit authorized data with human-readable reasons and user control.
 
 Avoid addictive opaque-feed optimization.
 
-## Phase 26 — AI Copilot
+## Phase 26 — AI Copilot — post-v1
 
 Reintroduce AI only after deterministic UX/domain Actions are excellent.
 
@@ -735,7 +754,7 @@ AI may not silently submit, approve, accept, publish, finalize, pay or post acco
 
 Provider output remains untrusted and must pass the same server-side validation/policy/Action as human UI.
 
-## Phase 27 — System-wide UX / accessibility / localization polish
+## Phase 27 — System-wide UX / accessibility / localization polish — post-v1 continuation
 
 Unify:
 

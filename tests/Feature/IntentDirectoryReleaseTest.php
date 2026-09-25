@@ -6,6 +6,7 @@ use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
 use App\Livewire\Intents\Create;
 use App\Livewire\Intents\Directory;
+use App\Livewire\Profile\Intents as ProfileIntents;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\ProfileIntentArrangementKind;
@@ -167,5 +168,107 @@ class IntentDirectoryReleaseTest extends TestCase
             ->assertDontSee('Apartment to rent')
             ->set('quick', 'offers')
             ->assertSee('Masonry service');
+    }
+
+    public function test_authorized_record_beyond_two_hundred_hidden_records_remains_discoverable(): void
+    {
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+
+        app(CreateActorProfileIntent::class)->execute(
+            $owner->user,
+            $profile,
+            ProfileIntentKind::Offer,
+            'Visible service',
+            [
+                'subject_kind' => ProfileIntentSubjectKind::Service->value,
+                'arrangement_kind' => ProfileIntentArrangementKind::Service->value,
+                'exchange_preference' => ProfileIntentExchangePreference::DiscussLater->value,
+                'title' => 'Authorized older result',
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'UTC',
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Authenticated->value,
+            ],
+        );
+
+        ActorProfileIntent::factory()->count(205)->create([
+            'visibility' => ProfileItemVisibility::Private,
+        ]);
+
+        $viewer = Actor::factory()->create();
+
+        Livewire::actingAs($viewer->user)
+            ->test(Directory::class)
+            ->assertSee('Authorized older result');
+    }
+
+    public function test_directory_consumes_post_create_highlight_query_parameter(): void
+    {
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+        $intent = app(CreateActorProfileIntent::class)->execute(
+            $owner->user,
+            $profile,
+            ProfileIntentKind::Need,
+            'Highlighted need',
+            [
+                'title' => 'Highlighted record',
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'UTC',
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Authenticated->value,
+            ],
+        );
+
+        Livewire::withQueryParams(['highlight' => $intent->uuid])
+            ->actingAs($owner->user)
+            ->test(Directory::class)
+            ->assertSet('highlight', $intent->uuid)
+            ->assertSee('Highlighted record')
+            ->assertSee('ring-amber-300/60', false);
+    }
+
+    public function test_profile_editor_can_update_the_complete_guided_intent_value_model(): void
+    {
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+        $intent = app(CreateActorProfileIntent::class)->execute(
+            $owner->user,
+            $profile,
+            ProfileIntentKind::Need,
+            'Workshop',
+            [
+                'subject_kind' => ProfileIntentSubjectKind::Property->value,
+                'arrangement_kind' => ProfileIntentArrangementKind::TemporaryUse->value,
+                'exchange_preference' => ProfileIntentExchangePreference::DiscussLater->value,
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'UTC',
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Authenticated->value,
+            ],
+        );
+
+        Livewire::actingAs($owner->user)
+            ->test(ProfileIntents::class, ['profile' => $profile])
+            ->call('edit', $intent->id)
+            ->set('subjectKind', ProfileIntentSubjectKind::Property->value)
+            ->set('arrangementKind', ProfileIntentArrangementKind::OwnershipTransfer->value)
+            ->set('exchangePreference', ProfileIntentExchangePreference::CashPreferredOpenHybrid->value)
+            ->set('cashMin', '1000')
+            ->set('cashMax', '1500')
+            ->set('currencyCode', 'eur')
+            ->set('cashBasis', 'total')
+            ->set('exchangeNotes', 'Open to a clearly valued service component.')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $intent->refresh();
+        $this->assertSame(ProfileIntentArrangementKind::OwnershipTransfer, $intent->arrangement_kind);
+        $this->assertSame(ProfileIntentExchangePreference::CashPreferredOpenHybrid, $intent->exchange_preference);
+        $this->assertSame('1000.00', $intent->cash_min);
+        $this->assertSame('1500.00', $intent->cash_max);
+        $this->assertSame('EUR', $intent->currency_code);
+        $this->assertSame('Open to a clearly valued service component.', $intent->exchange_notes);
     }
 }

@@ -24,8 +24,8 @@
             <flux:text>{{ __('access.admin.create_help') }}</flux:text>
         </div>
         <form wire:submit="create" class="grid gap-4 md:grid-cols-[1fr_9rem_9rem_auto] md:items-end">
-            <flux:input wire:model="email" type="email" :label="__('access.admin.email')" />
-            <flux:input wire:model="maxUses" type="number" min="1" max="1000" :label="__('access.admin.max_uses')" />
+            <flux:input wire:model.live="email" type="email" :label="__('access.admin.email')" />
+            <flux:input wire:model="maxUses" type="number" min="1" max="1000" :disabled="filled($email)" :label="__('access.admin.max_uses')" />
             <flux:input wire:model="expiresInDays" type="number" min="1" max="90" :label="__('access.admin.expires')" />
             <flux:button type="submit" variant="primary">{{ __('access.admin.create_button') }}</flux:button>
         </form>

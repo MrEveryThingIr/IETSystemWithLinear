@@ -267,6 +267,7 @@ return [
             'add_details_help' => '先创建最简单的声明，再只添加这项需求或提供真正需要的细节。',
             'custom_concept_hint' => '没有完全匹配的建议？继续输入，它会成为你自己的可复用概念。',
             'facets' => [
+                'commercial' => 'Value & arrangement',
                 'title' => '标题',
                 'description' => '描述',
                 'importance' => '重要度',

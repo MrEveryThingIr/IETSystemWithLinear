@@ -267,6 +267,7 @@ return [
             'add_details_help' => 'ابدأ بأبسط تصريح، ثم أضف فقط التفاصيل المهمة لهذه الحاجة أو العرض.',
             'custom_concept_hint' => 'لا يوجد اقتراح مطابق؟ واصل الكتابة وسيصبح هذا مفهومًا قابلًا لإعادة الاستخدام خاصًا بك.',
             'facets' => [
+                'commercial' => 'Value & arrangement',
                 'title' => 'العنوان',
                 'description' => 'الوصف',
                 'importance' => 'الأهمية',
