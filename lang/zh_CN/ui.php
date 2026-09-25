@@ -3,6 +3,13 @@
 return [
     'language' => '语言',
     'account' => '账户',
+    'ambient' => [
+        'messages' => [
+            'plan' => '规划下一项有用行动，并让原始记录保持权威。',
+            'record' => '记录真实发生的事情，而不是系统仅仅推断的内容。',
+            'review' => '今天的小复核，可以避免明天的历史含糊。',
+        ],
+    ],
     'navigation' => [
         'main' => '主导航',
         'open' => '打开导航',
@@ -150,6 +157,8 @@ return [
             'next_month' => '下个月',
             'saved' => '日期与时间偏好已保存。',
             'invalid_timezone' => '浏览器返回了不受支持的时区。',
+            'default_currency' => '默认货币',
+            'default_currency_help' => '新的个人财务记录默认使用此货币。现有账本和历史不会被转换或删除。',
         ],
         'semantic_added' => '资料项目已添加。',
         'semantic_removed' => '资料项目已移除。',

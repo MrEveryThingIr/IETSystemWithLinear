@@ -369,6 +369,57 @@ if (!customElements.get('iet-date-picker')) {
     customElements.define('iet-date-picker', IetDatePicker);
 }
 
+class IetAmbientStatus extends HTMLElement {
+    connectedCallback() {
+        if (this.initialized) {
+            return;
+        }
+
+        this.initialized = true;
+        this.messageIndex = 0;
+        this.clock = this.querySelector('[data-ambient-clock]');
+        this.message = this.querySelector('[data-ambient-message]');
+        this.messages = [...this.querySelectorAll('[data-ambient-source]')]
+            .map((element) => element.textContent?.trim())
+            .filter(Boolean);
+        this.renderClock();
+        this.renderMessage();
+        this.clockTimer = window.setInterval(() => this.renderClock(), 1000);
+        this.messageTimer = window.setInterval(() => {
+            this.messageIndex = (this.messageIndex + 1) % Math.max(this.messages.length, 1);
+            this.renderMessage();
+        }, 12000);
+    }
+
+    disconnectedCallback() {
+        window.clearInterval(this.clockTimer);
+        window.clearInterval(this.messageTimer);
+    }
+
+    renderClock() {
+        if (!this.clock) {
+            return;
+        }
+
+        this.clock.textContent = new Intl.DateTimeFormat(this.dataset.locale || 'en', {
+            calendar: calendarOrFallback(this.dataset.calendar || 'gregory'),
+            timeZone: this.dataset.timezone || 'UTC',
+            dateStyle: 'medium',
+            timeStyle: 'medium',
+        }).format(new Date());
+    }
+
+    renderMessage() {
+        if (this.message) {
+            this.message.textContent = this.messages[this.messageIndex] || '';
+        }
+    }
+}
+
+if (!customElements.get('iet-ambient-status')) {
+    customElements.define('iet-ambient-status', IetAmbientStatus);
+}
+
 function localizeTemporal(root = document) {
     root.querySelectorAll?.('[data-localized-date]').forEach((element) => {
         const value = element.dataset.localizedDate;

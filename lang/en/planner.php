@@ -92,8 +92,10 @@ return [
         'timeline' => 'Context timeline',
     ],
     'calendar' => [
-        'previous' => 'Previous month',
-        'next' => 'Next month',
+        'previous' => 'Previous',
+        'next' => 'Next',
+        'add_to_day' => 'Add to this day',
+        'item_count' => '{0} No scheduled items|{1} :count scheduled item|[2,*] :count scheduled items',
     ],
     'weekdays' => [
         1 => 'Monday',

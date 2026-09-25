@@ -3,6 +3,13 @@
 return [
     'language' => 'Language',
     'account' => 'Account',
+    'ambient' => [
+        'messages' => [
+            'plan' => 'Plan the next useful step; keep the source record authoritative.',
+            'record' => 'Record what happened, not what the system merely inferred.',
+            'review' => 'Small reviews today prevent unclear histories tomorrow.',
+        ],
+    ],
     'navigation' => [
         'main' => 'Main navigation',
         'open' => 'Open navigation',
@@ -155,6 +162,8 @@ return [
             'next_month' => 'Next month',
             'saved' => 'Date & time preferences saved.',
             'invalid_timezone' => 'The browser returned an unsupported timezone.',
+            'default_currency' => 'Default currency',
+            'default_currency_help' => 'New personal financial records use this currency by default. Existing ledgers and history are never converted or deleted.',
         ],
         'semantic_added' => 'Profile item added.',
         'semantic_removed' => 'Profile item removed.',

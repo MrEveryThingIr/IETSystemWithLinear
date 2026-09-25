@@ -12,12 +12,10 @@ use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Planner')]
 class Index extends Component
 {
     #[Url]
@@ -25,6 +23,15 @@ class Index extends Component
 
     #[Url]
     public string $month = '';
+
+    #[Url(as: 'level')]
+    public string $calendarLevel = 'month';
+
+    #[Url]
+    public string $year = '';
+
+    #[Url]
+    public string $day = '';
 
     #[Url(as: 'context')]
     public string $contextUuid = '';
@@ -40,6 +47,18 @@ class Index extends Component
 
         if (! preg_match('/^\d{4}-\d{2}$/', $this->month)) {
             $this->month = $now->format('Y-m');
+        }
+
+        if (! in_array($this->calendarLevel, ['year', 'month', 'day'], true)) {
+            $this->calendarLevel = 'month';
+        }
+
+        if (! preg_match('/^\d{4}$/', $this->year)) {
+            $this->year = substr($this->month, 0, 4);
+        }
+
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->day)) {
+            $this->day = $now->toDateString();
         }
     }
 
@@ -59,6 +78,74 @@ class Index extends Component
             ->format('Y-m');
     }
 
+    public function previousPeriod(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+
+        if ($this->calendarLevel === 'year') {
+            $this->year = (string) ((int) $this->year - 1);
+
+            return;
+        }
+
+        if ($this->calendarLevel === 'day') {
+            $this->showDay(CarbonImmutable::parse($this->day, $timezone)->subDay()->toDateString());
+
+            return;
+        }
+
+        $this->previousMonth();
+        $this->year = substr($this->month, 0, 4);
+    }
+
+    public function nextPeriod(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+
+        if ($this->calendarLevel === 'year') {
+            $this->year = (string) ((int) $this->year + 1);
+
+            return;
+        }
+
+        if ($this->calendarLevel === 'day') {
+            $this->showDay(CarbonImmutable::parse($this->day, $timezone)->addDay()->toDateString());
+
+            return;
+        }
+
+        $this->nextMonth();
+        $this->year = substr($this->month, 0, 4);
+    }
+
+    public function showYear(?string $year = null): void
+    {
+        $candidate = $year ?? substr($this->month, 0, 4);
+        abort_unless(preg_match('/^\d{4}$/', $candidate) === 1, 422);
+
+        $this->year = $candidate;
+        $this->calendarLevel = 'year';
+    }
+
+    public function showMonth(string $month): void
+    {
+        abort_unless(preg_match('/^\d{4}-\d{2}$/', $month) === 1, 422);
+
+        $this->month = $month;
+        $this->year = substr($month, 0, 4);
+        $this->calendarLevel = 'month';
+    }
+
+    public function showDay(string $day): void
+    {
+        abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1, 422);
+
+        $this->day = $day;
+        $this->month = substr($day, 0, 7);
+        $this->year = substr($day, 0, 4);
+        $this->calendarLevel = 'day';
+    }
+
     public function render(): View
     {
         $user = $this->user();
@@ -72,44 +159,69 @@ class Index extends Component
                 'plan.context',
                 'plan.participants.actor.user',
             ])
+            ->when($context instanceof Context, fn ($query) => $query->whereHas(
+                'plan',
+                fn ($plans) => $plans->where('context_id', $context->id),
+            ))
             ->whereBetween('scheduled_start_at', [$from->utc(), $through->utc()])
             ->orderBy('scheduled_start_at')
-            ->limit(500)
             ->get()
             ->filter(function (PlanOccurrence $occurrence) use ($user, $context): bool {
                 return ($context === null || (int) $occurrence->plan->context_id === (int) $context->id)
                     && Gate::forUser($user)->allows('view', $occurrence->plan);
             })
+            ->take(500)
             ->values();
 
         $plans = Plan::query()
             ->with(['context', 'participants.actor.user'])
             ->when($context instanceof Context, fn ($query) => $query->where('context_id', $context->id))
             ->latest('updated_at')
-            ->limit(150)
             ->get()
             ->filter(fn (Plan $plan): bool => Gate::forUser($user)->allows('view', $plan))
+            ->take(150)
             ->values();
 
         $calendarDays = collect();
         $calendarOccurrences = collect();
+        $calendarMonths = collect();
+        $calendarHours = collect();
 
         if ($this->view === 'calendar') {
-            $firstDay = TemporalPreferences::weekdayOrder($user->locale)[0] ?? 1;
-            $carbonFirstDay = $firstDay === 7 ? CarbonInterface::SUNDAY : $firstDay;
-            $month = CarbonImmutable::parse($this->month.'-01', $timezone);
-            $gridStart = $month->startOfMonth()->startOfWeek($carbonFirstDay);
-            $gridEnd = $month->endOfMonth()->endOfWeek($carbonFirstDay);
+            if ($this->calendarLevel === 'year') {
+                for ($monthNumber = 1; $monthNumber <= 12; $monthNumber++) {
+                    $month = CarbonImmutable::create((int) $this->year, $monthNumber, 1, 0, 0, 0, $timezone);
+                    $calendarMonths->push([
+                        'date' => $month,
+                        'key' => $month->format('Y-m'),
+                        'count' => $occurrences->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at
+                            ->setTimezone($timezone)
+                            ->format('Y-m') === $month->format('Y-m'))->count(),
+                    ]);
+                }
+            } elseif ($this->calendarLevel === 'day') {
+                $calendarHours = $occurrences->groupBy(
+                    fn (PlanOccurrence $occurrence): int => (int) $occurrence->scheduled_start_at
+                        ->setTimezone($timezone)
+                        ->format('G'),
+                );
+            } else {
+                $firstDay = TemporalPreferences::weekdayOrder($user->locale)[0] ?? 1;
+                $carbonFirstDay = $firstDay === 7 ? CarbonInterface::SUNDAY : $firstDay;
+                $month = CarbonImmutable::parse($this->month.'-01', $timezone);
+                $gridStart = $month->startOfMonth()->startOfWeek($carbonFirstDay);
+                $gridEnd = $month->endOfMonth()->endOfWeek($carbonFirstDay);
 
-            for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
-                $calendarDays->push($date);
+                for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
+                    $calendarDays->push($date);
+                }
+
+                $calendarOccurrences = $occurrences->groupBy(
+                    fn (PlanOccurrence $occurrence): string => $occurrence->scheduled_start_at
+                        ->setTimezone($timezone)
+                        ->format('Y-m-d'),
+                );
             }
-
-            $calendarOccurrences = $occurrences->groupBy(
-                fn (PlanOccurrence $occurrence): string => $occurrence->scheduled_start_at
-                    ->setTimezone($timezone)
-                    ->format('Y-m-d'),
-            );
         }
 
         return view('livewire.planner.index', [
@@ -117,9 +229,11 @@ class Index extends Component
             'occurrences' => $occurrences,
             'calendarDays' => $calendarDays,
             'calendarOccurrences' => $calendarOccurrences,
+            'calendarMonths' => $calendarMonths,
+            'calendarHours' => $calendarHours,
             'timezone' => $timezone,
             'context' => $context,
-        ]);
+        ])->title(__('planner.title'));
     }
 
     /** @return array{CarbonImmutable, CarbonImmutable} */
@@ -133,6 +247,18 @@ class Index extends Component
 
         if ($this->view === 'list') {
             return [$now->startOfDay(), $now->addDays(30)->endOfDay()];
+        }
+
+        if ($this->calendarLevel === 'year') {
+            $year = CarbonImmutable::create((int) $this->year, 1, 1, 0, 0, 0, $timezone);
+
+            return [$year->startOfYear(), $year->endOfYear()];
+        }
+
+        if ($this->calendarLevel === 'day') {
+            $day = CarbonImmutable::parse($this->day, $timezone);
+
+            return [$day->startOfDay(), $day->endOfDay()];
         }
 
         $firstDay = TemporalPreferences::weekdayOrder($this->user()->locale)[0] ?? 1;

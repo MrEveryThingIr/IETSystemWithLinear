@@ -2,17 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Auth\ProvisionVerifiedUserDefaults;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    public function run(): void
+    public function run(ProvisionVerifiedUserDefaults $provision): void
     {
         if (! app()->environment(['local', 'testing'])) {
             return;
@@ -25,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ]);
 
         $user->actor()->firstOrCreate([]);
+        $provision->execute($user->refresh());
 
         if (! $user->platformAccessGrants()->active()->where('role', PlatformRole::Superadmin->value)->exists()) {
             PlatformAccessGrant::factory()->for($user)->create([
