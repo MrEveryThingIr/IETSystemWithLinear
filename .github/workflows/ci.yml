@@ -85,6 +85,7 @@ jobs:
           php artisan migrate --force
           php artisan migrate:status
           php artisan schedule:list
+          php artisan reverb:start --help
           php artisan schedule:run
           php artisan queue:work database --stop-when-empty --tries=1 --timeout=30
           php artisan queue:failed

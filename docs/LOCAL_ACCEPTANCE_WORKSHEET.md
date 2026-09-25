@@ -1455,3 +1455,68 @@ Confirm each Today item opens the real source record.
 
 - [ ] Confirm Chapter 26 is **Home / Today Operating View**.
 - [ ] Confirm contextual Help from Dashboard/Today opens Chapter 26 at **How to use it**.
+
+
+---
+
+## Checkpoint 22 — Realtime + Notifications
+
+Remote branch:
+
+```text
+feat/ideal-v1-22-realtime-notifications
+```
+
+Apply the notification migration on the continuing database; do not use `migrate:fresh`.
+
+### Local sync and focused gate
+
+```bash
+git fetch origin
+git switch feat/ideal-v1-22-realtime-notifications
+git pull --ff-only origin feat/ideal-v1-22-realtime-notifications
+
+php artisan optimize:clear
+php artisan migrate --force
+
+php artisan test --compact \
+  tests/Feature/NotificationKernelTest.php \
+  tests/Feature/NotificationExperienceTest.php \
+  tests/Feature/DomainNotificationProjectionTest.php \
+  tests/Feature/PlanReminderNotificationTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+```
+
+### Browser/realtime story
+
+- [ ] Alice opens Notifications and sees durable unread/all state.
+- [ ] Bob sends a message in an authorized Alice/Bob Context; Alice receives one durable notification.
+- [ ] With Reverb + queue worker running, Alice's open Notifications page refreshes without a full browser reload.
+- [ ] Stop Reverb, produce another notification, reload Alice's page and confirm the notification is still present.
+- [ ] Mark one notification read; reload and confirm read state persists.
+- [ ] Mark all read; unread count becomes zero and stays zero after reload.
+- [ ] An unrelated Carol session cannot subscribe to Alice's private user channel or open Alice-only targets.
+- [ ] Create a due Planner reminder; repeated emitter runs do not duplicate the same logical reminder.
+- [ ] Trigger a Relationship/Proposal/Contract/Fulfillment/Settlement lifecycle event and confirm only intended counterparties receive attention.
+- [ ] Submit a structured interaction; only authorized reviewers receive the review notification.
+- [ ] Finalize an Evaluation; the submitter receives durable attention without gaining reviewer-only controls.
+- [ ] Force/observe a rolled-back authoritative transaction in automated proof; no ghost notification survives.
+
+### Realtime local processes
+
+```bash
+# terminal 1
+php artisan reverb:start
+
+# terminal 2
+php artisan queue:work --queue=notifications,default
+
+# terminal 3
+npm run dev
+```
+
+Set `BROADCAST_CONNECTION=reverb` and the documented REVERB/VITE_REVERB variables for this realtime check.

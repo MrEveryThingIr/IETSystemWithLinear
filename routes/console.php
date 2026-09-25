@@ -3,6 +3,8 @@
 use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Groups\ManageGroupAgreement;
 use App\Actions\Planner\MaterializePlannerHorizon;
+use App\Support\DuePlanReminderEmitter;
+use App\Support\NotificationOutboxDispatcher;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -21,6 +23,16 @@ Artisan::command('contracts:activate-due', function () {
     $activated = app(ActivateDueContractVersions::class)->execute();
     $this->info("Activated {$activated} due Contract versions.");
 })->purpose('Activate accepted Contract versions whose effective time has arrived');
+
+Artisan::command('notifications:dispatch-outbox {--limit=200}', function () {
+    $count = app(NotificationOutboxDispatcher::class)->dispatchPending((int) $this->option('limit'));
+    $this->info("Queued {$count} pending notification outbox records.");
+})->purpose('Requeue undelivered durable notification outbox records');
+
+Artisan::command('notifications:emit-due-reminders {--limit=250}', function () {
+    $count = app(DuePlanReminderEmitter::class)->emit((int) $this->option('limit'));
+    $this->info("Requested {$count} due Planner reminder notifications.");
+})->purpose('Request due app notifications for Planner reminders');
 
 Schedule::call(fn () => app(ManageGroupAgreement::class)->activateDue())
     ->name('agreements:activate-due')
@@ -44,5 +56,15 @@ Schedule::command('planner:materialize --days=120')
 
 Schedule::command('contracts:activate-due')
     ->name('contracts:activate-due')
+    ->everyMinute()
+    ->withoutOverlapping();
+
+Schedule::command('notifications:dispatch-outbox --limit=500')
+    ->name('notifications:dispatch-outbox')
+    ->everyMinute()
+    ->withoutOverlapping();
+
+Schedule::command('notifications:emit-due-reminders --limit=500')
+    ->name('notifications:emit-due-reminders')
     ->everyMinute()
     ->withoutOverlapping();

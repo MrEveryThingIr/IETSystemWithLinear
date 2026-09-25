@@ -16,6 +16,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        @auth
+            <meta name="authenticated-user-id" content="{{ auth()->id() }}">
+        @endauth
         <title>{{ $pageTitle }} &mdash; {{ config('app.name') }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
