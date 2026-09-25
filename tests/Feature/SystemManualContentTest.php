@@ -36,7 +36,7 @@ class SystemManualContentTest extends TestCase
         $first = app(EnsureSystemManualContent::class)->execute($user);
 
         $this->assertSame(ContextKind::Reference, $first['context']->kind);
-        $this->assertCount(22, $first['chapters']);
+        $this->assertCount(23, $first['chapters']);
         $this->assertTrue(Gate::forUser($reader->user)->allows('view', $first['context']));
         $this->assertTrue(Gate::forUser($reader->user)->allows('interactContent', $first['context']));
         $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $first['context']));
@@ -113,6 +113,12 @@ class SystemManualContentTest extends TestCase
                 === SystemManualContent::CHAPTER_TITLES['financial-obligations'],
         );
         $this->assertNotNull($financialChapter);
+
+        $journeysChapter = $first['chapters']->first(
+            static fn ($content): bool => $content->activeRevisionRecord()?->title
+                === SystemManualContent::CHAPTER_TITLES['journeys'],
+        );
+        $this->assertNotNull($journeysChapter);
 
         $this->actingAs($reader->user)
             ->get(route('manual', ['topic' => 'submissions']))
@@ -204,12 +210,22 @@ class SystemManualContentTest extends TestCase
                 ]).'#field-how_to_use',
             );
 
+        $this->actingAs($reader->user)
+            ->get(route('manual', ['topic' => 'journeys']))
+            ->assertRedirect(
+                route('contexts.contents.show', [
+                    $first['context'],
+                    $journeysChapter,
+                    'manual' => 1,
+                ]).'#field-how_to_use',
+            );
+
         $this->assertSame('published', $first['root']->status);
 
         $rootRevision = $first['root']->activeRevisionRecord();
         $this->assertInstanceOf(SpaceContentRevision::class, $rootRevision);
         $this->assertTrue($rootRevision->hasVerifiableManifest());
-        $this->assertCount(22, $rootRevision->relationships()->get());
+        $this->assertCount(23, $rootRevision->relationships()->get());
 
         $chapter = $first['chapters']->first();
         $this->assertNotNull($chapter);
