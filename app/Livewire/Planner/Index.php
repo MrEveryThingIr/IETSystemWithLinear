@@ -74,21 +74,21 @@ class Index extends Component
             ])
             ->whereBetween('scheduled_start_at', [$from->utc(), $through->utc()])
             ->orderBy('scheduled_start_at')
-            ->limit(500)
             ->get()
             ->filter(function (PlanOccurrence $occurrence) use ($user, $context): bool {
                 return ($context === null || (int) $occurrence->plan->context_id === (int) $context->id)
                     && Gate::forUser($user)->allows('view', $occurrence->plan);
             })
+            ->take(500)
             ->values();
 
         $plans = Plan::query()
             ->with(['context', 'participants.actor.user'])
             ->when($context instanceof Context, fn ($query) => $query->where('context_id', $context->id))
             ->latest('updated_at')
-            ->limit(150)
             ->get()
             ->filter(fn (Plan $plan): bool => Gate::forUser($user)->allows('view', $plan))
+            ->take(150)
             ->values();
 
         $calendarDays = collect();
