@@ -671,7 +671,7 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 17 — Financial Obligation + Settlement bridge** is remotely runtime-complete at `47bae48638345a807623ceb7f1ae44866d09d9e6` / CI `36115933156` (502 tests / 3065 assertions).
+**Phase 17 — Financial Obligation + Settlement bridge** is remotely complete: runtime `47bae48638345a807623ceb7f1ae44866d09d9e6` / CI `36115933156` (502 tests / 3065 assertions), documentation/manual `a24c1c3a3a34290c15e8d3d5cb633df22d5bead9` / CI `36116508652` (502 tests / 3069 assertions).
 
 It adds immutable bilateral Financial Obligations derived only through explicit recognition from accepted Fulfillment, per-Actor idempotent Accounting posting, counterparty-confirmed Settlements, explicit Settlement Accounting, derived scheduled/worked/accepted/earned/paid/outstanding/disputed Contract summaries, bilateral privacy and source-linked financial Timeline events.
 
