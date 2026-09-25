@@ -7,8 +7,8 @@ use App\ContractEventType;
 use App\FinancialObligationEventType;
 use App\Models\Actor;
 use App\Models\CommitmentEvent;
-use App\Models\ConversationMessage;
 use App\Models\ContractEvent;
+use App\Models\ConversationMessage;
 use App\Models\Evaluation;
 use App\Models\FinancialObligationEvent;
 use App\Models\ProposalEvent;
@@ -326,7 +326,7 @@ class DomainNotificationProjector
     }
 
     /**
-     * @param Collection<int, Actor|null> $actors
+     * @param  Collection<int, Actor|null>  $actors
      * @return Collection<int, User>
      */
     private function usersFromActors(Collection $actors, ?int $excludeActorId): Collection
