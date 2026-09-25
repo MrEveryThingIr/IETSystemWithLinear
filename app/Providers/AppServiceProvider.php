@@ -3,6 +3,12 @@
 namespace App\Providers;
 
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\CommitmentEvent;
+use App\Models\ContractEvent;
+use App\Models\FinancialObligationEvent;
+use App\Models\ProposalEvent;
+use App\Models\RelationshipEvent;
+use App\Support\DomainNotificationProjector;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -36,5 +42,21 @@ class AppServiceProvider extends ServiceProvider
             EnsureEmailIsVerified::class,
             EnsureAccountIsActive::class,
         ]);
+
+        RelationshipEvent::created(
+            fn (RelationshipEvent $event) => app(DomainNotificationProjector::class)->relationship($event),
+        );
+        ProposalEvent::created(
+            fn (ProposalEvent $event) => app(DomainNotificationProjector::class)->proposal($event),
+        );
+        ContractEvent::created(
+            fn (ContractEvent $event) => app(DomainNotificationProjector::class)->contract($event),
+        );
+        CommitmentEvent::created(
+            fn (CommitmentEvent $event) => app(DomainNotificationProjector::class)->commitment($event),
+        );
+        FinancialObligationEvent::created(
+            fn (FinancialObligationEvent $event) => app(DomainNotificationProjector::class)->financial($event),
+        );
     }
 }
