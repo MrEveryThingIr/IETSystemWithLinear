@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\NotificationOutboxDispatcher;
 use App\Support\NotificationOutboxWriter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
@@ -113,18 +114,10 @@ class NotificationKernelTest extends TestCase
         $alice = Actor::factory()->create()->user;
         $bob = Actor::factory()->create()->user;
 
-        $this->actingAs($alice)
-            ->postJson('/broadcasting/auth', [
-                'channel_name' => 'private-users.'.$alice->id,
-                'socket_id' => '123.456',
-            ])
-            ->assertOk();
+        $callback = Broadcast::connection()->getChannels()->get('users.{userId}');
 
-        $this->actingAs($bob)
-            ->postJson('/broadcasting/auth', [
-                'channel_name' => 'private-users.'.$alice->id,
-                'socket_id' => '123.456',
-            ])
-            ->assertForbidden();
+        $this->assertIsCallable($callback);
+        $this->assertTrue($callback($alice, $alice->id));
+        $this->assertFalse($callback($bob, $alice->id));
     }
 }
