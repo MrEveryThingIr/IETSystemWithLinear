@@ -6,7 +6,7 @@
     </flux:sidebar.header>
     <flux:sidebar.nav :aria-label="__('ui.navigation.main')">
         <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" icon="home">
-            {{ __('ui.navigation.dashboard') }}
+            {{ __('home.title') }}
         </flux:sidebar.item>
         <flux:sidebar.item :href="route('intents.index')" :current="request()->routeIs('intents.*')" icon="magnifying-glass">
             {{ __('intents.directory.title') }}
