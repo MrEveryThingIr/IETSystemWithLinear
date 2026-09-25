@@ -1277,7 +1277,7 @@ Recommended capabilities describe a useful composition; they do not imply that e
 
 Editing a later Blueprint version does not mutate the exact version already referenced by an existing Relationship or Plan.
 TEXT,
-
+                ],
             ],
         ];
     }
