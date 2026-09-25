@@ -3,7 +3,7 @@ import Pusher from 'pusher-js';
 
 const key = import.meta.env.VITE_REVERB_APP_KEY;
 const host = import.meta.env.VITE_REVERB_HOST;
-const userId = document.querySelector('meta[name="iet-user-id"]')?.content;
+const userId = document.querySelector('meta[name="authenticated-user-id"]')?.content;
 
 if (key && host && userId) {
     window.Pusher = Pusher;
@@ -21,14 +21,6 @@ if (key && host && userId) {
     window.Echo
         .private(`users.${userId}`)
         .listen('.inbox.changed', () => {
-            const refresh = () => window.Livewire?.dispatch('notification-inbox-changed');
-
-            if (window.Livewire) {
-                refresh();
-
-                return;
-            }
-
-            document.addEventListener('livewire:init', refresh, { once: true });
+            window.dispatchEvent(new CustomEvent('iet:inbox-changed'));
         });
 }
