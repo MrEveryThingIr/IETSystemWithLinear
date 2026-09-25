@@ -224,7 +224,6 @@ class DomainNotificationProjector
         }
     }
 
-
     public function conversation(ConversationMessage $message): void
     {
         $message->loadMissing('conversation.context', 'author.user');
