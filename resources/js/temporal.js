@@ -413,8 +413,53 @@ function localizeTemporal(root = document) {
     root.querySelectorAll?.('iet-date-picker').forEach((picker) => picker.refreshFromInput?.());
 }
 
-document.addEventListener('DOMContentLoaded', () => localizeTemporal());
-document.addEventListener('livewire:navigated', () => localizeTemporal());
+
+function updateAmbientStatus(root = document) {
+    root.querySelectorAll?.('[data-ambient-status]').forEach((element) => {
+        const locale = element.dataset.locale || document.documentElement.lang || 'en';
+        const calendar = calendarOrFallback(element.dataset.calendar || 'gregory');
+        const timezone = element.dataset.timezone || 'UTC';
+        const clock = element.querySelector('[data-ambient-clock]');
+        const tip = element.querySelector('[data-ambient-tip]');
+
+        if (clock) {
+            clock.textContent = new Intl.DateTimeFormat(locale, {
+                calendar,
+                timeZone: timezone,
+                dateStyle: 'medium',
+                timeStyle: 'medium',
+            }).format(new Date());
+        }
+
+        if (tip) {
+            let tips = [];
+
+            try {
+                tips = JSON.parse(element.dataset.tips || '[]');
+            } catch {
+                tips = [];
+            }
+
+            if (Array.isArray(tips) && tips.length > 0) {
+                const slot = Math.floor(Date.now() / 12000) % tips.length;
+                tip.textContent = tips[slot] ?? '';
+            }
+        }
+    });
+}
+
+function ensureAmbientTicker() {
+    updateAmbientStatus();
+
+    if (window.__ietAmbientTimer) {
+        return;
+    }
+
+    window.__ietAmbientTimer = window.setInterval(() => updateAmbientStatus(), 1000);
+}
+
+document.addEventListener('DOMContentLoaded', () => { localizeTemporal(); ensureAmbientTicker(); });
+document.addEventListener('livewire:navigated', () => { localizeTemporal(); ensureAmbientTicker(); });
 document.addEventListener('livewire:init', () => {
     window.Livewire?.hook('morph.updated', ({el}) => requestAnimationFrame(() => localizeTemporal(el)));
 });
