@@ -15,6 +15,7 @@ use LogicException;
 #[Fillable([
     'uuid',
     'context_id',
+    'domain_blueprint_version_id',
     'created_by_actor_id',
     'title',
     'description',
@@ -44,6 +45,7 @@ class Plan extends Model
             if ($plan->isDirty([
                 'uuid',
                 'context_id',
+                'domain_blueprint_version_id',
                 'created_by_actor_id',
                 'origin_type',
                 'origin_uuid',
@@ -93,6 +95,12 @@ class Plan extends Model
     public function context(): BelongsTo
     {
         return $this->belongsTo(Context::class);
+    }
+
+    /** @return BelongsTo<DomainBlueprintVersion, $this> */
+    public function domainBlueprintVersion(): BelongsTo
+    {
+        return $this->belongsTo(DomainBlueprintVersion::class);
     }
 
     /** @return BelongsTo<Actor, $this> */

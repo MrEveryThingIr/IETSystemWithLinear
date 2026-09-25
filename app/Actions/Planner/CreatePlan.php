@@ -3,8 +3,10 @@
 namespace App\Actions\Planner;
 
 use App\ContextKind;
+use App\DomainJourneyKind;
 use App\Models\Actor;
 use App\Models\Context;
+use App\Models\DomainBlueprintVersion;
 use App\Models\Plan;
 use App\Models\PlanEvent;
 use App\Models\PlanParticipant;
@@ -31,6 +33,7 @@ class CreatePlan
         ?string $originType = null,
         ?string $originUuid = null,
         array $metadata = [],
+        ?DomainBlueprintVersion $domainBlueprintVersion = null,
     ): Plan {
         $current = $this->currentUser($user);
         $title = Str::squish($title);
@@ -56,8 +59,23 @@ class CreatePlan
             $originType,
             $originUuid,
             $metadata,
+            $domainBlueprintVersion,
         ): Plan {
             $lockedContext = Context::query()->lockForUpdate()->findOrFail($context->id);
+
+            $lockedBlueprintVersion = null;
+            if ($domainBlueprintVersion instanceof DomainBlueprintVersion) {
+                $lockedBlueprintVersion = DomainBlueprintVersion::query()
+                    ->lockForUpdate()
+                    ->findOrFail($domainBlueprintVersion->id);
+
+                abort_unless(
+                    $lockedBlueprintVersion->published_at !== null
+                    && $lockedBlueprintVersion->journey_kind === DomainJourneyKind::PersonalActivity,
+                    422,
+                    'Personal Plan requires a published Personal Activity Domain Blueprint version.',
+                );
+            }
 
             abort_unless(in_array($lockedContext->kind, [
                 ContextKind::Personal,
@@ -96,6 +114,7 @@ class CreatePlan
 
             $plan = Plan::query()->create([
                 'context_id' => $lockedContext->id,
+                'domain_blueprint_version_id' => $lockedBlueprintVersion?->id,
                 'created_by_actor_id' => $creator->id,
                 'title' => $title,
                 'description' => $description,
@@ -131,11 +150,13 @@ class CreatePlan
                     'participant_actor_ids' => collect($participantSpecs)->pluck('actor.id')->values()->all(),
                     'origin_type' => $originType,
                     'origin_uuid' => $originUuid,
+                    'domain_blueprint_version_uuid' => $lockedBlueprintVersion?->uuid,
                 ],
             ]);
 
             return $plan->fresh([
                 'context',
+                'domainBlueprintVersion.blueprint',
                 'creator.user',
                 'participants.actor.user',
                 'events',

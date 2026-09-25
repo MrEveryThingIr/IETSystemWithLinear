@@ -17,6 +17,7 @@ use LogicException;
     'title',
     'purpose_concept_id',
     'originating_intent_id',
+    'domain_blueprint_version_id',
     'created_by_actor_id',
     'metadata',
 ])]
@@ -42,6 +43,7 @@ class Relationship extends Model
                 'uuid',
                 'purpose_concept_id',
                 'originating_intent_id',
+                'domain_blueprint_version_id',
                 'created_by_actor_id',
             ])) {
                 throw new LogicException('Relationship identity, purpose, origin, and creator cannot be reassigned.');
@@ -73,6 +75,12 @@ class Relationship extends Model
     public function originatingIntent(): BelongsTo
     {
         return $this->belongsTo(ActorProfileIntent::class, 'originating_intent_id');
+    }
+
+    /** @return BelongsTo<DomainBlueprintVersion, $this> */
+    public function domainBlueprintVersion(): BelongsTo
+    {
+        return $this->belongsTo(DomainBlueprintVersion::class);
     }
 
     /** @return BelongsTo<Actor, $this> */
