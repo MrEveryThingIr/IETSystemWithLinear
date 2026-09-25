@@ -323,7 +323,7 @@ class Create extends Component
 
         if (Gate::forUser($user)->allows('view', $intent->profile)) {
             return $intent->profile->display_name
-                ?: ($intent->profile->actor->user?->username ?? __('intents.matches.participant'));
+                ?: ($intent->profile->actor->user->username ?? __('intents.matches.participant'));
         }
 
         return __('intents.matches.private_participant');
