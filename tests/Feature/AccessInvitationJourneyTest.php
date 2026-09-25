@@ -138,6 +138,38 @@ class AccessInvitationJourneyTest extends TestCase
         $this->assertTrue($user->refresh()->hasVerifiedEmail());
     }
 
+    public function test_consumed_reserved_access_invitation_cannot_register_a_second_account(): void
+    {
+        Notification::fake();
+
+        $administrator = Actor::factory()->create();
+        PlatformAccessGrant::factory()->for($administrator->user)->create([
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        $invitation = app(IssueAccessInvitation::class)->execute(
+            $administrator->user,
+            'single.use@example.com',
+        );
+        $token = $invitation->plainTextToken();
+        $this->assertNotNull($token);
+
+        Livewire::test(AccessRegister::class, ['token' => $token])
+            ->set('username', 'single_use_owner')
+            ->set('email', 'single.use@example.com')
+            ->set('password', 'secure-password')
+            ->set('password_confirmation', 'secure-password')
+            ->call('register')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, $invitation->refresh()->uses_count);
+
+        $this->get(route('access-invitations.show', $token))->assertNotFound();
+
+        $this->expectException(HttpException::class);
+        Livewire::test(AccessRegister::class, ['token' => $token]);
+    }
+
     public function test_reserved_access_invitation_rejects_wrong_email_without_partial_registration(): void
     {
         Notification::fake();
