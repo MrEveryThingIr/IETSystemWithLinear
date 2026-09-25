@@ -13,6 +13,7 @@ use App\Models\Relationship;
 use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Support\DomainBlueprintCatalog;
+use App\Support\IntentMatchFinder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -31,6 +32,9 @@ class Create extends Component
 
     #[Url(as: 'blueprint')]
     public string $blueprintSlug = '';
+
+    #[Url(as: 'match')]
+    public string $matchIntentUuid = '';
 
     public string $title = '';
 
@@ -75,6 +79,10 @@ class Create extends Component
         if ($this->intentUuid !== '') {
             $this->loadOriginIntent();
         }
+
+        if ($this->matchIntentUuid !== '') {
+            $this->loadMatchedIntent();
+        }
     }
 
     public function selectPurpose(int $conceptId): void
@@ -103,11 +111,12 @@ class Create extends Component
 
         $data = $this->validate([
             'title' => ['nullable', 'string', 'max:180'],
-            'participantUsername' => ['required', 'string', 'max:120'],
+            'participantUsername' => ['nullable', 'string', 'max:120'],
             'creatorRole' => ['required', 'string', 'max:80'],
             'participantRole' => ['required', 'string', 'max:80'],
             'purposeConceptId' => ['required', 'integer'],
             'intentUuid' => ['nullable', 'uuid'],
+            'matchIntentUuid' => ['nullable', 'uuid'],
             'blueprintSlug' => ['nullable', 'string', 'max:120'],
         ]);
 
@@ -115,27 +124,6 @@ class Create extends Component
         $purpose = Concept::query()
             ->where('status', ConceptStatus::Active->value)
             ->findOrFail((int) $data['purposeConceptId']);
-
-        $participant = Actor::query()
-            ->where('status', 'active')
-            ->whereHas('user', fn (Builder $query) => $query
-                ->where('status', 'active')
-                ->whereNotNull('email_verified_at')
-                ->where('username', $data['participantUsername']))
-            ->with('user')
-            ->first();
-
-        $this->addErrorIf(
-            ! $participant instanceof Actor,
-            'participantUsername',
-            __('relationships.create.participant_not_found'),
-        );
-
-        if (! $participant instanceof Actor) {
-            return null;
-        }
-
-        abort_if((int) $participant->id === (int) $user->actor?->id, 422, 'A Relationship requires another Actor.');
 
         $originIntent = null;
         if ($data['intentUuid'] !== '') {
@@ -148,6 +136,55 @@ class Create extends Component
             abort_unless($originIntent->status === ProfileIntentStatus::Active, 422);
         }
 
+        $matchedIntent = null;
+        $participant = null;
+
+        if ($data['matchIntentUuid'] !== '') {
+            abort_unless($originIntent instanceof ActorProfileIntent, 422, 'A matched Intent requires an originating Intent.');
+            Gate::forUser($user)->authorize('update', $originIntent);
+
+            $matchedIntent = ActorProfileIntent::query()
+                ->with(['profile.actor.user', 'concept'])
+                ->where('uuid', $data['matchIntentUuid'])
+                ->firstOrFail();
+
+            abort_unless(
+                app(IntentMatchFinder::class)->match($user, $originIntent, $matchedIntent) !== null,
+                422,
+                'The selected match is no longer compatible.',
+            );
+
+            $participant = $matchedIntent->profile->actor;
+        } elseif ($originIntent instanceof ActorProfileIntent
+            && (int) $originIntent->profile->actor_id !== (int) $user->actor?->id) {
+            $participant = $originIntent->profile->actor;
+        } else {
+            $participantUsername = trim((string) $data['participantUsername']);
+
+            if ($participantUsername !== '') {
+                $participant = Actor::query()
+                    ->where('status', 'active')
+                    ->whereHas('user', fn (Builder $query) => $query
+                        ->where('status', 'active')
+                        ->whereNotNull('email_verified_at')
+                        ->where('username', $participantUsername))
+                    ->with('user')
+                    ->first();
+            }
+
+            $this->addErrorIf(
+                ! $participant instanceof Actor,
+                'participantUsername',
+                __('relationships.create.participant_not_found'),
+            );
+
+            if (! $participant instanceof Actor) {
+                return null;
+            }
+        }
+
+        abort_if((int) $participant->id === (int) $user->actor?->id, 422, 'A Relationship requires another Actor.');
+
         $relationship = $create->execute(
             $user,
             $purpose,
@@ -159,6 +196,7 @@ class Create extends Component
             $originIntent,
             $data['title'] !== '' ? $data['title'] : null,
             $this->blueprintVersion(),
+            matchedIntent: $matchedIntent,
         );
 
         return $this->redirectRoute('relationships.show', $relationship);
@@ -246,12 +284,49 @@ class Create extends Component
 
         $owner = $intent->profile->actor;
         if ((int) $owner->id !== (int) $user->actor?->id) {
-            abort_unless($owner->user instanceof User, 422);
-
-            $this->participantUsername = $owner->user->username;
-            $this->originParticipantLabel = $owner->user->username;
+            $this->originParticipantLabel = $this->participantLabel($intent);
             $this->participantLocked = true;
         }
+    }
+
+    private function loadMatchedIntent(): void
+    {
+        abort_unless($this->intentUuid !== '', 422, 'A match requires a source Intent.');
+
+        $user = $this->user();
+        $source = ActorProfileIntent::query()
+            ->with(['profile.actor.user', 'concept'])
+            ->where('uuid', $this->intentUuid)
+            ->firstOrFail();
+
+        Gate::forUser($user)->authorize('update', $source);
+        abort_unless($source->status === ProfileIntentStatus::Active, 422);
+
+        $candidate = ActorProfileIntent::query()
+            ->with(['profile.actor.user', 'concept'])
+            ->where('uuid', $this->matchIntentUuid)
+            ->firstOrFail();
+
+        abort_unless(
+            app(IntentMatchFinder::class)->match($user, $source, $candidate) !== null,
+            422,
+            'The selected match is no longer compatible.',
+        );
+
+        $this->originParticipantLabel = $this->participantLabel($candidate);
+        $this->participantLocked = true;
+    }
+
+    private function participantLabel(ActorProfileIntent $intent): string
+    {
+        $user = $this->user();
+
+        if (Gate::forUser($user)->allows('view', $intent->profile)) {
+            return $intent->profile->display_name
+                ?: ($intent->profile->actor->user?->username ?? __('intents.matches.participant'));
+        }
+
+        return __('intents.matches.private_participant');
     }
 
     private function addErrorIf(bool $condition, string $key, string $message): void
