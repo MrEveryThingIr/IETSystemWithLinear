@@ -6,6 +6,7 @@ use App\Actions\Groups\GroupRoleProvisioner;
 use App\Models\ActorProfileIntent;
 use App\Models\Group;
 use App\Models\GroupMembership;
+use App\Models\GroupSpace;
 use App\Models\Plan;
 use App\Models\Relationship;
 use App\Models\SpaceContent;
@@ -21,7 +22,8 @@ class GroupCommunityProjection
     public function __construct(
         private readonly ActorProfileIntentPolicy $intentPolicy,
         private readonly GroupRoleProvisioner $roles,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array{
