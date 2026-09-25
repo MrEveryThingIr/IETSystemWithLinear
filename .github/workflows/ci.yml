@@ -80,6 +80,18 @@ jobs:
           php artisan migrate:status
           php artisan config:clear
 
+      - name: MySQL migration portability smoke
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: iet_ci
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: |
+          php artisan migrate --force --no-interaction
+          php artisan migrate:status
+
       - name: Install JavaScript dependencies
         run: npm ci
 
