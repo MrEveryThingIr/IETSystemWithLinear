@@ -72,7 +72,6 @@ use App\Livewire\Relationships\Index as RelationshipIndex;
 use App\Livewire\Relationships\Show as RelationshipShow;
 use App\Models\Actor;
 use App\Models\Contract;
-use App\Models\FinancialObligation;
 use App\Models\Group;
 use App\Models\Proposal;
 use App\Models\Relationship;
