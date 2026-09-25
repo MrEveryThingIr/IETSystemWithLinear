@@ -138,7 +138,7 @@
                                 </div>
                             @endcan
 
-                            @if ($settlement->status === AppSettlementStatus::Confirmed)
+                            @if ($settlement->status === \App\SettlementStatus::Confirmed)
                                 @if ($settlementAccounting->has($settlement->uuid))
                                     <flux:badge color="zinc">{{ __('financial.settlement.accounting_posted') }}</flux:badge>
                                 @else
