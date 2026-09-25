@@ -10,6 +10,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $this->recoverEmptyPartialAttempt();
+
         Schema::create('conversations', function (Blueprint $table): void {
             $table->id();
             $table->uuid('uuid')->unique();
@@ -49,8 +51,16 @@ return new class extends Migration
         Schema::create('conversation_message_evidence_references', function (Blueprint $table): void {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->foreignId('conversation_message_id')->constrained('conversation_messages')->restrictOnDelete();
-            $table->foreignId('content_evidence_reference_id')->constrained('content_evidence_references')->restrictOnDelete();
+            $table->foreignId('conversation_message_id');
+            $table->foreignId('content_evidence_reference_id');
+            $table->foreign(
+                'conversation_message_id',
+                'conv_msg_evidence_message_fk',
+            )->references('id')->on('conversation_messages')->restrictOnDelete();
+            $table->foreign(
+                'content_evidence_reference_id',
+                'conv_msg_evidence_reference_fk',
+            )->references('id')->on('content_evidence_references')->restrictOnDelete();
             $table->timestamps();
 
             $table->unique(
@@ -111,6 +121,37 @@ return new class extends Migration
             });
 
         Schema::dropIfExists('group_space_messages');
+    }
+
+    private function recoverEmptyPartialAttempt(): void
+    {
+        $tables = [
+            'conversation_message_evidence_references',
+            'conversation_message_assets',
+            'conversation_messages',
+            'conversations',
+        ];
+
+        $existing = array_values(array_filter(
+            $tables,
+            static fn (string $table): bool => Schema::hasTable($table),
+        ));
+
+        if ($existing === []) {
+            return;
+        }
+
+        foreach ($existing as $table) {
+            if (DB::table($table)->exists()) {
+                throw new RuntimeException(
+                    "Cannot automatically recover the incomplete context-conversation migration because {$table} contains data.",
+                );
+            }
+        }
+
+        foreach ($tables as $table) {
+            Schema::dropIfExists($table);
+        }
     }
 
     public function down(): void
