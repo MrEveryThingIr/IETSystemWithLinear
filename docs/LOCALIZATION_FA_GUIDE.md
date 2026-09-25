@@ -85,14 +85,17 @@ Natural Persian must not blur authoritative boundaries:
 
 ## Engineering contract
 
-Persian UI localization is protected by `Tests\Feature\LocalizationParityTest`:
+`Tests\Feature\LocalizationParityTest` protects every supported non-English UI locale (`fa`, `ar`, `zh_CN`):
 
-- every Persian locale file must exist for every English locale file;
-- every real English translation leaf must exist in Persian;
-- Persian locale files must not load English locale files as passthroughs;
-- Persian-specific validation aliases/custom messages are allowed in addition to the English baseline.
+- every supported locale must contain every English locale module;
+- every real English translation leaf must exist in each supported locale;
+- localized files must not load English locale files as passthroughs;
+- translated strings must preserve the same runtime placeholders such as `:name`, `:count`, `:version` and `:time`;
+- locale-specific validation aliases/custom messages may exist in addition to the English baseline.
 
-When adding a new English UI key, add the Persian translation in the **same change**. Do not rely on fallback English for a user-facing release.
+When adding a new English UI key, add Persian, Arabic and Simplified Chinese translations in the **same change**. Do not rely on fallback English for a user-facing release.
+
+Persian has received the dedicated native-style review described by this guide. Arabic and Simplified Chinese have complete real UI coverage and terminology cleanup, but should still receive native-speaker editorial review before being described as native-reviewed.
 
 ## Review workflow
 
