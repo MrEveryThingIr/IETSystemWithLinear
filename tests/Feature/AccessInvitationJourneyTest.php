@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Access\IssueAccessInvitation;
+use App\Actions\Auth\RegisterAccessInvitedUser;
 use App\Actions\Groups\CreateGroup;
 use App\Livewire\Auth\AccessRegister;
 use App\Livewire\Groups\Invitations as GroupInvitations;
@@ -167,7 +168,7 @@ class AccessInvitationJourneyTest extends TestCase
         $this->get(route('access-invitations.show', $token))->assertOk();
 
         $this->expectException(HttpException::class);
-        app(\App\Actions\Auth\RegisterAccessInvitedUser::class)->preview($token);
+        app(RegisterAccessInvitedUser::class)->preview($token);
     }
 
     public function test_reserved_access_invitation_rejects_wrong_email_without_partial_registration(): void
