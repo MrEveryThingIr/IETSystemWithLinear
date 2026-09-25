@@ -59,7 +59,7 @@ class FirstPublicationExperienceTest extends TestCase
         $this->assertDatabaseCount('journal_entries', 0);
     }
 
-    public function test_calendar_drills_from_year_to_month_to_day_and_prefills_new_plan_date(): void
+    public function test_calendar_drills_from_year_to_month_to_day_to_minute_slots_and_prefills_exact_plan_time(): void
     {
         $user = User::factory()->create(['timezone' => 'Asia/Tehran']);
         $user->actor()->create();
@@ -75,12 +75,28 @@ class FirstPublicationExperienceTest extends TestCase
             ->call('showDay', '2026-09-26')
             ->assertSet('calendarLevel', 'day')
             ->assertSee('00:00')
-            ->assertSee(__('planner.calendar.add_to_day'));
+            ->assertSee(__('planner.calendar.add_to_day'))
+            ->call('showHour', '2026-09-26', 14)
+            ->assertSet('calendarLevel', 'hour')
+            ->assertSet('hour', 14)
+            ->assertSee('14:00')
+            ->call('setSlotMinutes', 5)
+            ->assertSet('slotMinutes', 5)
+            ->assertSee('14:05')
+            ->call('setSlotMinutes', 1)
+            ->assertSet('slotMinutes', 1)
+            ->assertSee('14:01');
 
         Livewire::actingAs($user)
-            ->withQueryParams(['date' => '2026-09-26'])
+            ->withQueryParams([
+                'date' => '2026-09-26',
+                'time' => '14:37',
+                'duration' => 5,
+            ])
             ->test(PlannerCreate::class)
-            ->assertSet('startsOn', '2026-09-26');
+            ->assertSet('startsOn', '2026-09-26')
+            ->assertSet('startTime', '14:37')
+            ->assertSet('durationMinutes', 5);
     }
 
     public function test_localized_header_contains_live_temporal_status_and_no_raw_quick_link_keys(): void
