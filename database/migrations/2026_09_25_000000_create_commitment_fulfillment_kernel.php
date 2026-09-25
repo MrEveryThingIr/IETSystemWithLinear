@@ -105,8 +105,11 @@ return new class extends Migration
             $table->uuid('uuid')->unique();
             $table->foreignId('fulfillment_id')
                 ->constrained('fulfillments')->restrictOnDelete();
-            $table->foreignId('content_evidence_reference_id')
-                ->constrained('content_evidence_references')->restrictOnDelete();
+            $table->foreignId('content_evidence_reference_id');
+            $table->foreign(
+                'content_evidence_reference_id',
+                'fulfillment_evidence_reference_fk',
+            )->references('id')->on('content_evidence_references')->restrictOnDelete();
             $table->foreignId('added_by_actor_id')
                 ->constrained('actors')->restrictOnDelete();
             $table->timestamps();

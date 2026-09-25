@@ -153,7 +153,11 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignId('plan_occurrence_id')->constrained('plan_occurrences')->restrictOnDelete();
-            $table->foreignId('content_evidence_reference_id')->constrained('content_evidence_references')->restrictOnDelete();
+            $table->foreignId('content_evidence_reference_id');
+            $table->foreign(
+                'content_evidence_reference_id',
+                'plan_occ_evidence_reference_fk',
+            )->references('id')->on('content_evidence_references')->restrictOnDelete();
             $table->foreignId('added_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->timestamps();
 

@@ -1573,6 +1573,9 @@ npm audit --audit-level=high
 
 Set `IET_RELEASE_PROFILE=full` for this pass. Never use `migrate:fresh` against the continuing acceptance database.
 
+If an earlier RC already failed locally in `2026_09_24_020000_create_context_conversations` with MySQL error 1059 (identifier too long), **do not manually drop tables and do not run `migrate:fresh`**. Switch to the corrected RC and rerun `php artisan migrate --force`. The corrected migration recognizes this exact unrecorded partial-DDL attempt and recreates the incomplete conversation tables only when they are empty. If it reports that one contains data, stop and inspect that state before any cleanup.
+
+
 ### B. Runtime processes
 
 For the realtime portion, use the configured Reverb environment and run:
