@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Actor;
+use App\Models\ActorProfile;
 use App\Models\PlatformAccessGrant;
 use App\PlatformRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,6 +28,34 @@ class ReleaseExperienceTest extends TestCase
             ->assertDontSee(route('groups.index'), false)
             ->assertDontSee(route('contexts.personal'), false)
             ->assertDontSee(route('actors.index'), false);
+    }
+
+
+    public function test_account_menu_renders_profile_identity_without_template_leaks(): void
+    {
+        config()->set('release.profile', 'full');
+
+        $actor = Actor::factory()->create();
+        ActorProfile::factory()->create([
+            'actor_id' => $actor->id,
+            'display_name' => 'Safdar Developer',
+        ]);
+
+        $user = $actor->user;
+        $user->forceFill(['locale' => 'fa'])->save();
+
+        $appearanceLabel = (require lang_path('fa/ui.php'))['appearance']['label'];
+
+        $this->withoutVite()
+            ->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Safdar Developer')
+            ->assertSee('@'.$user->username)
+            ->assertSee($user->email)
+            ->assertSee($appearanceLabel)
+            ->assertDontSee('{{ $accountUser->username }}', false)
+            ->assertDontSee('ui.actions.cancel');
     }
 
     public function test_office_alpha_still_exposes_access_invitation_management_to_authorized_admins(): void
