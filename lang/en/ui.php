@@ -35,6 +35,7 @@ return [
         'your_requests' => 'Your requests',
         'reviewer_note' => 'Reviewer note: :note',
         'pending_requests' => 'Pending platform-access requests',
+        'group_creation_review_help' => 'Review users requesting permission to create groups.',
         'pending' => 'Pending',
         'reviewer_note_optional' => 'Reviewer note (optional)',
         'approve' => 'Approve',
