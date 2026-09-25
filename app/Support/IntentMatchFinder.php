@@ -33,7 +33,8 @@ class IntentMatchFinder
         return ActorProfileIntent::query()
             ->where('status', ProfileIntentStatus::Active->value)
             ->where('kind', $opposite->value)
-            ->where('actor_profile_id', '!=', $source->actor_profile_id)
+            ->whereHas('profile', fn ($query) => $query
+                ->where('actor_id', '!=', $source->profile->actor_id))
             ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset'])
             ->latest('updated_at')
             ->limit(500)
@@ -57,8 +58,20 @@ class IntentMatchFinder
 
     public function match(User $user, ActorProfileIntent $source, ActorProfileIntent $candidate): ?IntentMatchResult
     {
-        return $this->find($user, $source, 200)
-            ->first(fn (IntentMatchResult $result): bool => $result->intent->is($candidate));
+        Gate::forUser($user)->authorize('update', $source);
+
+        $source->loadMissing(['concept', 'profile.actor']);
+        $candidate->loadMissing(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset']);
+
+        if ($source->status !== ProfileIntentStatus::Active
+            || $candidate->status !== ProfileIntentStatus::Active
+            || $source->kind === $candidate->kind
+            || (int) $source->profile->actor_id === (int) $candidate->profile->actor_id
+            || ! $this->policy->view($user, $candidate)) {
+            return null;
+        }
+
+        return $this->compare($source, $candidate);
     }
 
     private function compare(ActorProfileIntent $source, ActorProfileIntent $candidate): ?IntentMatchResult
