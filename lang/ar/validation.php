@@ -94,8 +94,8 @@ return [
         'string' => 'يجب أن لا يتجاوز طول نّص حقل :attribute :max حروفٍ/حرفًا.',
     ],
     'max_digits' => 'يجب ألا يحتوي الحقل :attribute على أكثر من :max رقم/أرقام.',
-    'mimes' => 'يجب أن يكون ملفًا من نوع : :values.',
-    'mimetypes' => 'يجب أن يكون ملفًا من نوع : :values.',
+    'mimes' => 'يجب أن يكون حقل :attribute ملفًا من أحد الأنواع التالية: :values.',
+    'mimetypes' => 'يجب أن يكون حقل :attribute ملفًا من أحد الأنواع التالية: :values.',
     'min' => [
         'array' => 'يجب أن يحتوي حقل :attribute على الأقل على :min عُنصرًا/عناصر.',
         'file' => 'يجب أن يكون حجم ملف حقل :attribute على الأقل :min كيلوبايت.',
@@ -151,6 +151,13 @@ return [
     'uppercase' => 'يجب أن يحتوي الحقل :attribute على حروف كبيرة.',
     'url' => 'صيغة رابط حقل :attribute غير صحيحة.',
     'uuid' => 'حقل :attribute يجب أن يكون بصيغة UUID سليمة.',
+    'password' => [
+        'letters' => 'يجب أن يحتوي حقل :attribute على حرف واحد على الأقل.',
+        'mixed' => 'يجب أن يحتوي حقل :attribute على حرف كبير وحرف صغير على الأقل.',
+        'numbers' => 'يجب أن يحتوي حقل :attribute على رقم واحد على الأقل.',
+        'symbols' => 'يجب أن يحتوي حقل :attribute على رمز واحد على الأقل.',
+        'uncompromised' => 'ظهرت قيمة :attribute في تسريب بيانات. يرجى اختيار قيمة مختلفة.',
+    ],
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'رسالة مخصصة',
