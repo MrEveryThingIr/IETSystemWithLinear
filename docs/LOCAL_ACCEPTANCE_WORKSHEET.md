@@ -1017,3 +1017,105 @@ composer audit
 - [ ] Settlement proposal alone does not count as paid.
 - [ ] Settlement confirmation does not silently post Accounting.
 - [ ] No mutable owed/paid/outstanding balance column is used; values derive from immutable sources.
+
+
+---
+
+## Checkpoint 18 — Journey / Relationship / Domain Blueprints
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-18-domain-blueprints
+~~~
+
+Remote runtime checkpoint:
+
+~~~text
+SHA: e4c9cb4cce39a1e0a37bad6ae72e97b6ab5feb77
+CI: 36119387963
+Result: 510 tests / 3138 assertions; Pint 638 files; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_25_020000_create_domain_blueprints.php
+~~~
+
+### Local sync
+
+After Phase 18 is integrated, prefer validating the cumulative integration line rather than checking out this historical feature branch:
+
+~~~bash
+git fetch origin
+git switch integration/ideal-v1
+git pull --ff-only origin integration/ideal-v1
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/DomainBlueprintKernelTest.php \
+  tests/Feature/DomainBlueprintExperienceTest.php \
+  tests/Feature/SystemManualContentTest.php \
+  tests/Feature/RelationshipExperienceTest.php \
+  tests/Feature/PlannerExperienceTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Browser story — Journeys catalog
+
+- [ ] Sign in as an active verified user.
+- [ ] Open **Journeys** from the application navigation.
+- [ ] Confirm six recipes are visible: Simple Sale, Rental, Service Job, Employment / Paid Work, Construction Partnership and Personal Activity.
+- [ ] Confirm each card shows its recipe version, recommended capabilities and useful Content templates.
+- [ ] Confirm the boundary copy makes clear that a recipe does not itself create agreement, performance, money, ownership or other authority.
+
+### Service Job journey
+
+- [ ] Open **Service Job**.
+- [ ] Confirm Relationship creation is guided with client / service-provider terminology and a service purpose hint.
+- [ ] Change any editable values that should differ; guidance must not lock user-owned details.
+- [ ] Select a real purpose Concept and Bob as participant.
+- [ ] Create the Relationship.
+- [ ] Confirm the Relationship page shows **Service Job** and the exact recipe version as source provenance.
+- [ ] Confirm the normal Relationship invitation/participation lifecycle still applies.
+- [ ] Confirm recommended Proposal/Contract/Planner/etc. capabilities are not auto-created.
+
+### Personal Activity journey
+
+- [ ] Open **Personal Activity**.
+- [ ] Confirm Planner creation receives safe defaults such as one-time frequency and 60-minute duration.
+- [ ] Enter a real activity, date/time and reminders.
+- [ ] Save the Plan.
+- [ ] Confirm the Plan page shows **Personal Activity** and the exact recipe version.
+- [ ] Confirm no Contract, Commitment, Financial Obligation, Settlement or JournalEntry was created merely from the recipe.
+
+### Version provenance
+
+- [ ] Inspect an existing Relationship/Plan created from a Blueprint version.
+- [ ] After a later system Blueprint revision is introduced in a future checkpoint, confirm the existing object still names its original exact version.
+- [ ] Confirm published Blueprint versions are never edited/deleted in place.
+
+### Authorization / negative guarantees
+
+- [ ] Confirm knowing a Blueprint slug/URL does not grant access to another user's Relationship or Plan.
+- [ ] Confirm a Personal Activity Blueprint cannot be submitted through Relationship creation.
+- [ ] Confirm a Relationship Blueprint cannot be submitted as a Personal Activity Plan recipe.
+- [ ] Confirm a Blueprint does not grant Content/Contract/financial/accounting permissions.
+- [ ] Confirm no recipe executes arbitrary PHP, Blade, JavaScript, SQL or CSS from stored configuration.
+
+### System Manual
+
+- [ ] Open the IET System Manual.
+- [ ] Confirm Chapter 23 is **Journeys and Domain Blueprints**.
+- [ ] Confirm Help/topic routing for `journeys` opens Chapter 23 at **How to use it**.
+- [ ] Confirm the chapter teaches both Service Job and Personal Activity examples and clearly states the authority boundaries.
