@@ -14,6 +14,7 @@ use App\Models\MonetaryUnit;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\PlanScheduleRule;
+use App\Models\Relationship;
 use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
@@ -58,7 +59,7 @@ class HomeTodayExperienceTest extends TestCase
             'title' => 'Need construction inspection support',
         ]);
 
-        $beforeRelationships = \App\Models\Relationship::query()->count();
+        $beforeRelationships = Relationship::query()->count();
         $beforeObligations = FinancialObligation::query()->count();
 
         Livewire::actingAs($actor->user)
@@ -67,7 +68,7 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('Need construction inspection support')
             ->assertSee('What should I do today?');
 
-        $this->assertSame($beforeRelationships, \App\Models\Relationship::query()->count());
+        $this->assertSame($beforeRelationships, Relationship::query()->count());
         $this->assertSame($beforeObligations, FinancialObligation::query()->count());
     }
 
