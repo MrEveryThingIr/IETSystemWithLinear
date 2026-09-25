@@ -60,6 +60,7 @@ use App\Livewire\Intents\Matches as IntentMatches;
 use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Journeys\Index as JourneyIndex;
+use App\Livewire\Notifications\Index as NotificationIndex;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Planner\Show as PlannerShow;
@@ -109,6 +110,7 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
+    Route::livewire('/notifications', NotificationIndex::class)->name('notifications.index');
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');

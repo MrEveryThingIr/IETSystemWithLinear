@@ -8,6 +8,12 @@
         <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" icon="home">
             {{ __('home.title') }}
         </flux:sidebar.item>
+        <flux:sidebar.item :href="route('notifications.index')" :current="request()->routeIs('notifications.*')" icon="bell">
+            <span>{{ __('notifications.title') }}</span>
+            @if (($notificationUnreadCount = request()->user()?->unreadNotifications()->count() ?? 0) > 0)
+                <flux:badge size="sm">{{ $notificationUnreadCount }}</flux:badge>
+            @endif
+        </flux:sidebar.item>
         <flux:sidebar.item :href="route('intents.index')" :current="request()->routeIs('intents.*')" icon="magnifying-glass">
             {{ __('intents.directory.title') }}
         </flux:sidebar.item>
