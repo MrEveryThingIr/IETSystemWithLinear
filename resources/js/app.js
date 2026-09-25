@@ -26,3 +26,4 @@ if (reverbKey) {
         });
     }
 }
+import './realtime';
