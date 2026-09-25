@@ -91,6 +91,11 @@ return [
         'previous' => '上一段',
         'next' => '下一段',
         'add_to_day' => '添加到这一天',
+        'hour_title' => '小时 · :time',
+        'quantum_help' => '选择这一小时的时间粒度。每个时间段都可以按精确开始时间和时长创建计划。',
+        'quantum_minutes' => ':count 分钟',
+        'add_to_slot' => '在 :time 添加计划',
+        'add' => '添加',
         'item_count' => '{0} 没有计划事项|[1,*] :count 项计划事项',
     ],
     'weekdays' => [
