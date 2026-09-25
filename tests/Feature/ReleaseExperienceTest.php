@@ -30,7 +30,6 @@ class ReleaseExperienceTest extends TestCase
             ->assertDontSee(route('actors.index'), false);
     }
 
-
     public function test_account_menu_renders_profile_identity_without_template_leaks(): void
     {
         config()->set('release.profile', 'full');
@@ -57,7 +56,6 @@ class ReleaseExperienceTest extends TestCase
             ->assertDontSee('{{ $accountUser->username }}', false)
             ->assertDontSee('ui.actions.cancel');
     }
-
 
     public function test_persian_publish_surfaces_render_without_raw_translation_keys(): void
     {
