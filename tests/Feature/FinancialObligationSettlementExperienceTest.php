@@ -16,7 +16,6 @@ use App\Models\Actor;
 use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\FinancialObligation;
-use App\Models\Fulfillment;
 use App\Models\JournalEntry;
 use App\Models\Settlement;
 use App\SettlementStatus;
