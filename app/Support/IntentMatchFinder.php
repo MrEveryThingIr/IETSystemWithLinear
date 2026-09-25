@@ -81,16 +81,16 @@ class IntentMatchFinder
             ? [$source, $candidate]
             : [$candidate, $source];
 
-        $reasons = ['Same subject concept'];
+        $reasons = ['concept'];
         $aligned = 1;
 
         if ($source->subject_kind === $candidate->subject_kind && $source->subject_kind->value !== 'other') {
-            $reasons[] = 'Same subject type';
+            $reasons[] = 'subject';
             $aligned++;
         }
 
         if ($source->arrangement_kind === $candidate->arrangement_kind && $source->arrangement_kind->value !== 'other') {
-            $reasons[] = 'Same arrangement';
+            $reasons[] = 'arrangement';
             $aligned++;
         }
 
@@ -127,7 +127,7 @@ class IntentMatchFinder
         }
 
         if ($need->exchange_preference === $offer->exchange_preference) {
-            $reasons[] = 'Same value-exchange preference';
+            $reasons[] = 'exchange-preference';
             $aligned++;
         }
 
@@ -158,7 +158,7 @@ class IntentMatchFinder
             return false;
         }
 
-        $reasons[] = 'Quantity can cover the need';
+        $reasons[] = 'quantity';
         $aligned++;
 
         return true;
@@ -185,7 +185,7 @@ class IntentMatchFinder
             return false;
         }
 
-        $reasons[] = $label.' overlaps';
+        $reasons[] = Str::snake($label).'-overlap';
         $aligned++;
 
         return true;
@@ -221,7 +221,7 @@ class IntentMatchFinder
             return false;
         }
 
-        $reasons[] = 'Date availability overlaps';
+        $reasons[] = 'date-overlap';
         $aligned++;
 
         return true;
@@ -250,7 +250,7 @@ class IntentMatchFinder
             return false;
         }
 
-        $reasons[] = 'Time windows overlap';
+        $reasons[] = 'time-overlap';
         $aligned++;
 
         return true;
@@ -276,7 +276,7 @@ class IntentMatchFinder
                 return false;
             }
 
-            $reasons[] = 'Weekly availability overlaps';
+            $reasons[] = 'weekly-overlap';
             $aligned++;
         }
 
@@ -287,7 +287,7 @@ class IntentMatchFinder
                 return false;
             }
 
-            $reasons[] = 'Monthly timing aligns';
+            $reasons[] = 'monthly-aligns';
             $aligned++;
         }
 
@@ -329,7 +329,7 @@ class IntentMatchFinder
             return false;
         }
 
-        $reasons[] = 'Cash ranges overlap';
+        $reasons[] = 'cash-overlap';
         $aligned++;
 
         return true;
