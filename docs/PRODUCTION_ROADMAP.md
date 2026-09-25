@@ -571,6 +571,8 @@ Proof: Bob performs and submits one construction workday; Alice reviews it.
 
 ## Phase 17 — Financial Obligation + Settlement bridge
 
+**Status: remote runtime implementation complete and green on `feat/ideal-v1-17-financial-obligation-settlement` at `47bae48638345a807623ceb7f1ae44866d09d9e6` / GitHub Actions `36115933156` — 502 tests / 3065 assertions.**
+
 Purpose: let authoritative relationship events create financial consequences safely.
 
 Chain:

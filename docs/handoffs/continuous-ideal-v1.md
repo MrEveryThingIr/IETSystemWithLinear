@@ -40,13 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 15 is integrated on `integration/ideal-v1` at merge checkpoint `09c1c792baa5116645f7795887d59fecafe3fc3f`.
+Phase 16 is integrated on `integration/ideal-v1` at merge checkpoint `d4289f46d4726d5fc5a581abb43ce6a1efc6dfc8`.
 
-Phase 16 — Commitment + Fulfillment — is runtime-green on `feat/ideal-v1-16-commitment-fulfillment` at `67b986cce96f7d6e72db811045a9c1a01c581ddb` / CI `36093668972` (495 tests / 2989 assertions), pending documentation closure/integration.
+Phase 17 — Financial Obligation + Settlement bridge — is runtime-green on `feat/ideal-v1-17-financial-obligation-settlement` at `47bae48638345a807623ceb7f1ae44866d09d9e6` / CI `36115933156` (502 tests / 3065 assertions), pending documentation closure/integration.
 
-After Phase 16 integration, continue directly with **Phase 17 — Financial Obligation + Settlement bridge** from the integration trunk.
+After Phase 17 integration, continue directly with **Phase 18 — Journey / Relationship / Domain Blueprints** from the integration trunk.
 
-Persistent Phase 16 boundary: ContractVersion is agreement truth; Commitment is obligation truth; Planner/Occurrence is schedule/execution-time truth; Fulfillment/review is actual-performance truth. Accepted Fulfillment must not silently create Financial Obligation, Accounting posting, Settlement, payment, ownership or employment truth. Phase 17 owns explicit financial consequences.
+Persistent Phase 17 boundary: accepted Fulfillment is performance truth, Financial Obligation is explicit shared economic-source truth, Personal Accounting posting is actor-owned ledger truth, Settlement is counterparty-confirmed payment-record truth, and Settlement Accounting is another explicit per-Actor posting. Never mutate a magic balance or infer payment/obligation from Conversation, Content, Planner completion or Contract activation.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 
