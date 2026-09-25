@@ -93,6 +93,12 @@ class ContractVersion extends Model
         return $this->hasMany(ContractVersionParty::class);
     }
 
+    /** @return HasMany<Commitment, $this> */
+    public function commitments(): HasMany
+    {
+        return $this->hasMany(Commitment::class);
+    }
+
     public function markAccepted(CarbonInterface $at): void
     {
         if ($this->status !== ContractVersionStatus::Proposed) {

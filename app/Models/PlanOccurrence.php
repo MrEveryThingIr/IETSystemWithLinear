@@ -162,6 +162,12 @@ class PlanOccurrence extends Model
             ->withTimestamps();
     }
 
+    /** @return HasMany<Fulfillment, $this> */
+    public function fulfillments(): HasMany
+    {
+        return $this->hasMany(Fulfillment::class);
+    }
+
     /** @return BelongsToMany<ContentEvidenceReference, $this> */
     public function evidenceReferences(): BelongsToMany
     {

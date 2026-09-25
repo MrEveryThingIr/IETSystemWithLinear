@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -71,6 +72,17 @@ class ContentEvidenceReference extends Model
     public function revision(): BelongsTo
     {
         return $this->belongsTo(SpaceContentRevision::class, 'space_content_revision_id');
+    }
+
+    /** @return BelongsToMany<Fulfillment, $this> */
+    public function fulfillments(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Fulfillment::class,
+            'fulfillment_evidence_references',
+        )
+            ->withPivot(['uuid', 'added_by_actor_id'])
+            ->withTimestamps();
     }
 
     /** @return BelongsTo<Actor, $this> */

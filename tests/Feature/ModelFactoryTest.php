@@ -20,6 +20,9 @@ use App\Models\ContentBlueprintVersion;
 use App\Models\ContentEvidenceReference;
 use App\Models\ContentPlacement;
 use App\Models\Context;
+use App\Models\Commitment;
+use App\Models\CommitmentEvent;
+use App\Models\CommitmentPlanBinding;
 use App\Models\Contract;
 use App\Models\ContractAcceptance;
 use App\Models\ContractContext;
@@ -28,6 +31,9 @@ use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\Fulfillment;
+use App\Models\FulfillmentDispute;
+use App\Models\FulfillmentReview;
 use App\Models\Group;
 use App\Models\GroupAgreement;
 use App\Models\GroupAgreementVersion;
@@ -99,6 +105,12 @@ class ModelFactoryTest extends TestCase
             ContractVersionParty::factory()->create(),
             ContractAcceptance::factory()->create(),
             ContractEvent::factory()->create(),
+            Commitment::factory()->create(),
+            CommitmentPlanBinding::factory()->create(),
+            CommitmentEvent::factory()->create(),
+            Fulfillment::factory()->create(),
+            FulfillmentReview::factory()->create(),
+            FulfillmentDispute::factory()->create(),
             MonetaryUnit::factory()->create(),
             Ledger::factory()->create(),
             Account::factory()->create(),
