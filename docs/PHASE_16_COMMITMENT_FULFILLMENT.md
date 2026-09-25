@@ -28,6 +28,17 @@ npm audit: 0 vulnerabilities
 Composer audit: no advisories
 ~~~
 
+Documentation/manual closure checkpoint:
+
+~~~text
+SHA: 8282b0664d6239c479e9d6086014ca8336fc7127
+GitHub Actions: 36094212418
+495 tests / 2993 assertions
+System Manual: 21 chapters
+Contextual Help: Commitment routes mapped
+All automated gates: green
+~~~
+
 Baseline: Phase 15 integration merge `09c1c792baa5116645f7795887d59fecafe3fc3f`.
 
 ## Purpose
