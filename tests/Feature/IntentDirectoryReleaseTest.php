@@ -168,4 +168,64 @@ class IntentDirectoryReleaseTest extends TestCase
             ->set('quick', 'offers')
             ->assertSee('Masonry service');
     }
+
+    public function test_authorized_record_beyond_two_hundred_hidden_records_remains_discoverable(): void
+    {
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+
+        app(CreateActorProfileIntent::class)->execute(
+            $owner->user,
+            $profile,
+            ProfileIntentKind::Offer,
+            'Visible service',
+            [
+                'subject_kind' => ProfileIntentSubjectKind::Service->value,
+                'arrangement_kind' => ProfileIntentArrangementKind::Service->value,
+                'exchange_preference' => ProfileIntentExchangePreference::DiscussLater->value,
+                'title' => 'Authorized older result',
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'UTC',
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Authenticated->value,
+            ],
+        );
+
+        ActorProfileIntent::factory()->count(205)->create([
+            'visibility' => ProfileItemVisibility::Private,
+        ]);
+
+        $viewer = Actor::factory()->create();
+
+        Livewire::actingAs($viewer->user)
+            ->test(Directory::class)
+            ->assertSee('Authorized older result');
+    }
+
+    public function test_directory_consumes_post_create_highlight_query_parameter(): void
+    {
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+        $intent = app(CreateActorProfileIntent::class)->execute(
+            $owner->user,
+            $profile,
+            ProfileIntentKind::Need,
+            'Highlighted need',
+            [
+                'title' => 'Highlighted record',
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'UTC',
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Authenticated->value,
+            ],
+        );
+
+        Livewire::withQueryParams(['highlight' => $intent->uuid])
+            ->actingAs($owner->user)
+            ->test(Directory::class)
+            ->assertSet('highlight', $intent->uuid)
+            ->assertSee('Highlighted record')
+            ->assertSee('ring-amber-300/60', false);
+    }
+
 }
