@@ -671,27 +671,30 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 19 — Need / Offer Matching** is runtime-green on `feat/ideal-v1-19-need-offer-matching`.
+**Phase 20 — Groups / Communities social composition** is runtime-green on `feat/ideal-v1-20-group-community-composition`.
 
 Runtime checkpoint:
 
-- SHA `532901b4e11d78cb5d848ca4bb6039632c62f3a6`;
-- CI `36124849892`;
-- **517 tests / 3192 assertions**;
-- Pint 645 changed PHP files green;
+- SHA `6782bdaeb2a732ec2f9ae8f72c76dc5f311d6f17`;
+- CI `36126321777`;
+- **520 tests / 3219 assertions**;
+- Pint 651 PHP files;
 - PHPStan/Vite green;
 - migration rollback/reapply, scheduler/database queue and backup/restore smoke green;
 - npm audit 0 vulnerabilities;
 - Composer audit no advisories.
 
-Phase 19 adds derived owner-driven matching over existing Need/Offer Intents. Matching is opposite-direction, canonical-Concept-based, deterministic, constraint-aware, policy-filtered and explainable. There is no Match authority table.
+Phase 20 adds a member-facing Community projection over already-authoritative GroupSpace Contexts, Content, membership/roles, Needs/Offers, Plans, reviewable Submissions, Relationships/projects and timelines.
 
-A matched Relationship explicitly preserves both source Intents and revalidates the selected candidate transactionally. Discovery creates no obligation; the chain remains Match → Proposed Relationship → explicit participant acceptance → optional Proposal.
+The implementation intentionally introduces no migration and no Group-specific copies of these domains. Every item remains filtered by its own policy. Group membership is not a wildcard permission into private Spaces, Profiles, Intents, Relationships or Submissions.
 
-The System Manual now includes Chapter 24, **Need / Offer Matching**. Final documentation/manual CI and integration PR are the remaining Phase 19 gates.
+The existing Group page remains governance/settings; Community becomes the normal member-facing usage surface.
 
-Next after Phase 19 integration: **Phase 20 — Groups / Communities social composition**.
+The System Manual now includes Chapter 25, **Group / Community Composition**. Final documentation/manual CI and integration PR are the remaining Phase 20 gates.
 
-Phase 20 must compose the existing Context/Content/Conversation/Planner/Intent/Relationship/Submission/Timeline kernels into Group/GroupSpace experiences without copying their storage or weakening their policies.
+Next after Phase 20 integration: **Phase 21 — Home / Today personal operating view**.
 
-Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+The accepted roadmap continues through Phase 30:
+21 Home/Today → 22 Realtime/Notifications → 23 Generic Workflow extraction → 24 Reputation/history → 25 Discovery/recommendations → 26 AI Copilot → 27 system-wide UX/accessibility/localization polish → 28 production hardening/pilots → 29 integrated release candidate + deferred owner acceptance → 30 stable release/operating loop.
+
+Do not skip those phases merely because Phase 20 completes the first large social composition layer.

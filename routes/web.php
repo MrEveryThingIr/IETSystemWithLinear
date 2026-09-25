@@ -46,6 +46,7 @@ use App\Livewire\Contracts\Show as ContractShow;
 use App\Livewire\Financial\Show as FinancialObligationShow;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
+use App\Livewire\Groups\Community as GroupCommunity;
 use App\Livewire\Groups\Create as CreateGroup;
 use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
@@ -168,6 +169,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');
     Route::livewire('/groups', GroupIndex::class)->name('groups.index');
     Route::livewire('/groups/create', CreateGroup::class)->can('create', Group::class)->name('groups.create');
+    Route::livewire('/groups/{group}/community', GroupCommunity::class)->can('view', 'group')->name('groups.community');
     Route::livewire('/groups/{group}/accept-agreements', AcceptAgreements::class)->name('groups.accept-agreements');
     Route::livewire('/groups/{group}/spaces/manage', SpaceManagement::class)->name('groups.spaces.manage');
     Route::get('/groups/{group}/spaces/{space}/contents', [LegacyGroupContentRedirectController::class, 'index'])->name('groups.spaces.contents.index');

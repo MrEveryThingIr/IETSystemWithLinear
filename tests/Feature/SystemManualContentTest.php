@@ -37,7 +37,7 @@ class SystemManualContentTest extends TestCase
         $first = app(EnsureSystemManualContent::class)->execute($user);
 
         $this->assertSame(ContextKind::Reference, $first['context']->kind);
-        $this->assertCount(24, $first['chapters']);
+        $this->assertCount(25, $first['chapters']);
         $this->assertTrue(Gate::forUser($reader->user)->allows('view', $first['context']));
         $this->assertTrue(Gate::forUser($reader->user)->allows('interactContent', $first['context']));
         $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $first['context']));
@@ -135,6 +135,17 @@ class SystemManualContentTest extends TestCase
         $this->assertSame(
             SystemManualContent::CHAPTER_TITLES['matching'],
             app(SystemManualHelpMap::class)->chapterTitle('matching'),
+        );
+
+        $communityChapter = $first['chapters']->first(
+            static fn ($content): bool => $content->activeRevisionRecord()?->title
+                === SystemManualContent::CHAPTER_TITLES['community'],
+        );
+        $this->assertNotNull($communityChapter);
+        $this->assertSame('community', app(SystemManualHelpMap::class)->topicForRoute('groups.community'));
+        $this->assertSame(
+            SystemManualContent::CHAPTER_TITLES['community'],
+            app(SystemManualHelpMap::class)->chapterTitle('community'),
         );
 
         $this->actingAs($reader->user)
@@ -247,12 +258,22 @@ class SystemManualContentTest extends TestCase
                 ]).'#field-how_to_use',
             );
 
+        $this->actingAs($reader->user)
+            ->get(route('manual', ['topic' => 'community']))
+            ->assertRedirect(
+                route('contexts.contents.show', [
+                    $first['context'],
+                    $communityChapter,
+                    'manual' => 1,
+                ]).'#field-how_to_use',
+            );
+
         $this->assertSame('published', $first['root']->status);
 
         $rootRevision = $first['root']->activeRevisionRecord();
         $this->assertInstanceOf(SpaceContentRevision::class, $rootRevision);
         $this->assertTrue($rootRevision->hasVerifiableManifest());
-        $this->assertCount(24, $rootRevision->relationships()->get());
+        $this->assertCount(25, $rootRevision->relationships()->get());
 
         $chapter = $first['chapters']->first();
         $this->assertNotNull($chapter);

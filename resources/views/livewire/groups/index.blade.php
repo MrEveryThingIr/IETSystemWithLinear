@@ -81,7 +81,7 @@
                             <flux:callout variant="warning">{{ __('ui.groups.new_agreement_pending') }}</flux:callout>
                             <flux:button :href="route('groups.accept-agreements', $membership->group)" class="w-full sm:w-auto" size="sm" variant="primary">{{ __('ui.groups.review_agreements') }}</flux:button>
                         @else
-                            <flux:button :href="route('groups.show', $membership->group)" class="w-full sm:w-auto" size="sm" variant="primary">{{ __('ui.groups.open') }}</flux:button>
+                            <flux:button :href="route('groups.community', $membership->group)" class="w-full sm:w-auto" size="sm" variant="primary">{{ __('ui.groups.open') }}</flux:button>
                         @endif
                     </flux:card>
                 @endforeach

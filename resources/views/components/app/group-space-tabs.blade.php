@@ -1,4 +1,4 @@
-@props(['group', 'currentSpace' => null, 'managing' => false])
+@props(['group', 'currentSpace' => null, 'managing' => false, 'community' => false])
 
 @php
     $viewer = auth()->user();
@@ -24,9 +24,16 @@
         <flux:button
             :href="route('groups.show', $group)"
             size="sm"
-            :variant="$currentSpace === null && ! $managing ? 'primary' : 'ghost'"
+            :variant="$currentSpace === null && ! $managing && ! $community ? 'primary' : 'ghost'"
         >
             {{ __('ui.spaces.overview') }}
+        </flux:button>
+        <flux:button
+            :href="route('groups.community', $group)"
+            size="sm"
+            :variant="$community ? 'primary' : 'ghost'"
+        >
+            {{ __('community.community') }}
         </flux:button>
     @endif
 

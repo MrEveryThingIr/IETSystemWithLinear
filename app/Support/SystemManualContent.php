@@ -34,6 +34,7 @@ class SystemManualContent
         'financial-obligations' => '22. Financial Obligations and Settlements',
         'journeys' => '23. Journeys and Domain Blueprints',
         'matching' => '24. Need / Offer Matching',
+        'community' => '25. Group / Community Composition',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -1339,6 +1340,74 @@ Missing optional constraints are treated as unknown/open; they are not invented 
 Different local clock windows are not declared compatible across different timezones merely because their displayed HH:MM strings look similar.
 
 Starting a matched Relationship still requires explicit counterparty consent before Proposal/Contract authority can follow.
+TEXT,
+                ],
+                [
+                    'title' => '25. Group / Community Composition',
+                    'summary' => <<<'TEXT'
+A Group can now feel like a focused community/application environment without becoming a second copy of the system. Its Community view composes already-authoritative Spaces, Content, people/roles, Needs/Offers, Plans, Submissions, Relationships/projects and timelines through their existing policies.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 20 adds a member-facing Community page for each Group.
+
+The Community page does not own new domain records. It reads existing GroupSpace Contexts and the independent kernels already attached to those Contexts or participants.
+
+Visible Spaces come from GroupSpace policy. Published Content comes from the normal Content/Context policies. Member Needs/Offers remain ActorProfileIntent records and are filtered by Intent visibility. Plans remain Planner records. Submission cards appear only where the viewer already has review authority. Relationship/project cards are limited to Relationships the viewer already participates in and that also involve another active Group member.
+
+The normal Group page remains the governance/settings surface for roles, members, invitations, agreements and Space management. The Community page is the application/social surface.
+
+No migration or duplicate Group-specific Content/Plan/Intent/Relationship/Submission storage is introduced by this phase.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Maple Housing Office example:
+1. Open **Groups** and choose **Maple Housing Office**. The member-facing action opens **Community**.
+2. Review the visible Spaces. Open **Conversation**, **Content**, **Plans & activities**, **Timeline**, or **Review submissions** from a Space card when your existing permissions allow that capability.
+3. Review **People & roles** to understand current Group participation. This is Group participation, not a replacement for personal Profile privacy.
+4. Review **Member Needs & Offers**. Only Intent records whose own visibility rules already allow you to see them appear.
+5. Review recent published Content. An article, report, album, lesson or other document remains normal Content inside the Space Context.
+6. Review visible Plans and shared Relationships/projects. These remain the same Planner and Relationship records used outside Groups.
+7. Choose **Governance & settings** when you need membership, role, invitation, agreement or Space administration.
+
+Riverside example:
+- Diego can use Maple Housing Office as the organizing community.
+- Bob may be a Group member and publish a visible Service Offer.
+- Alice may collaborate through a direct Relationship without becoming a Group member.
+- A private Finance Space remains invisible to ordinary members even though they can open the Group Community page.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Group membership is never a permission shortcut into another kernel.
+
+Opening Community requires normal Group participation authority. Inside Community:
+- each Space is independently filtered by GroupSpacePolicy;
+- Content is filtered by SpaceContentPolicy/ContextPolicy;
+- Needs/Offers are filtered by ActorProfileIntentPolicy;
+- Plans are filtered by PlanPolicy;
+- Submissions require both Context review authority and Submission visibility;
+- Relationships require RelationshipPolicy and current viewer participation.
+
+A visible Intent whose owning Profile is private may be represented without revealing that private Profile identity.
+
+Restricted Spaces, private Intents, private Profiles, unrelated Relationships and non-reviewable Submissions stay hidden.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Later phases should make Community increasingly useful through Home/Today summaries, realtime/notifications, generic workflow composition, reputation/history, discovery and AI assistance.
+
+Those later layers should consume the same authoritative kernels rather than creating Group-specific forks of their data.
+
+Domain/Journey Blueprints may eventually help configure focused community experiences, terminology and recommended capabilities, but authorization must continue to come from the underlying Group/Space/Context/domain policies.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A Group is not a database namespace that owns copies of Content, Planner, Intent, Relationship, Submission or Accounting records.
+
+Group membership does not make every member Profile or Intent visible.
+
+A Community card is a projection/link to existing truth, not a new authoritative record.
+
+A Relationship between two people is not automatically a Group relationship merely because both happen to be members.
+
+A Submission is not visible to every Group member. Review authority remains Context-specific.
+
+A restricted Space is not exposed by the Community overview unless the viewer already has Space access.
 TEXT,
                 ],
             ],
