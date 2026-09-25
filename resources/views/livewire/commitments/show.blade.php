@@ -69,7 +69,7 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <flux:select wire:model="planFrequency" :label="__('commitments.planner.frequency')">
                                 <flux:select.option value="once">{{ __('commitments.planner.once') }}</flux:select.option>
-                                <flux:select.option value="daily">Daily</flux:select.option>
+                                <flux:select.option value="daily">{{ __('commitments.planner.daily') }}</flux:select.option>
                                 <flux:select.option value="selected_dates">{{ __('commitments.planner.selected_dates') }}</flux:select.option>
                             </flux:select>
                             <flux:input wire:model="planStartsOn" type="date" :label="__('commitments.planner.starts_on')" />
