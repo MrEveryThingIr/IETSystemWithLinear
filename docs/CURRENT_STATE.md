@@ -671,27 +671,27 @@ Specific defects should be added when observed rather than guessed or implemente
 
 ## Current highest-priority next milestone
 
-**Phase 18 — Journey / Relationship / Domain Blueprints** is implemented on `feat/ideal-v1-18-domain-blueprints`.
+**Phase 19 — Need / Offer Matching** is runtime-green on `feat/ideal-v1-19-need-offer-matching`.
 
 Runtime checkpoint:
 
-- SHA `e4c9cb4cce39a1e0a37bad6ae72e97b6ab5feb77`;
-- CI `36119387963`;
-- **510 tests / 3138 assertions**;
-- Pint 638 changed PHP files green;
+- SHA `532901b4e11d78cb5d848ca4bb6039632c62f3a6`;
+- CI `36124849892`;
+- **517 tests / 3192 assertions**;
+- Pint 645 changed PHP files green;
 - PHPStan/Vite green;
 - migration rollback/reapply, scheduler/database queue and backup/restore smoke green;
 - npm audit 0 vulnerabilities;
 - Composer audit no advisories.
 
-Phase 18 adds an immutable versioned Domain Blueprint composition layer plus a **Journeys** experience for six proven compositions: Simple Sale, Rental, Service Job, Employment / Paid Work, Construction Partnership and Personal Activity.
+Phase 19 adds derived owner-driven matching over existing Need/Offer Intents. Matching is opposite-direction, canonical-Concept-based, deterministic, constraint-aware, policy-filtered and explainable. There is no Match authority table.
 
-Relationship/Plan creation may be guided by terminology, recommended capabilities, Content template references and safe entry defaults, but every created object preserves the exact Blueprint version used and every authoritative downstream mutation remains owned by its existing policy/Action.
+A matched Relationship explicitly preserves both source Intents and revalidates the selected candidate transactionally. Discovery creates no obligation; the chain remains Match → Proposed Relationship → explicit participant acceptance → optional Proposal.
 
-The System Manual now includes Chapter 23, **Journeys and Domain Blueprints**, and Phase 18 manual/closure synchronization is being validated on the same feature branch before integration.
+The System Manual now includes Chapter 24, **Need / Offer Matching**. Final documentation/manual CI and integration PR are the remaining Phase 19 gates.
 
-Next after Phase 18 integration: **Phase 19 — Need / Offer Matching**.
+Next after Phase 19 integration: **Phase 20 — Groups / Communities social composition**.
 
-Phase 19 must remain discovery-only: explainable, privacy-safe candidate matching over existing Intent/Concept constraints with an explicit handoff into Relationship/Proposal. A Match must not create agreement, obligation, payment, ownership, employment or other authority.
+Phase 20 must compose the existing Context/Content/Conversation/Planner/Intent/Relationship/Submission/Timeline kernels into Group/GroupSpace experiences without copying their storage or weakening their policies.
 
 Do not reintroduce AI runtime. Do not skip remote automated gates. Local/browser checks remain deferred and cumulative in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.

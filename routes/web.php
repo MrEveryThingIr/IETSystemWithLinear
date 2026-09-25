@@ -54,6 +54,7 @@ use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceManagement;
 use App\Livewire\Intents\Create as IntentCreate;
 use App\Livewire\Intents\Directory as IntentDirectory;
+use App\Livewire\Intents\Matches as IntentMatches;
 use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Journeys\Index as JourneyIndex;
@@ -108,6 +109,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
+    Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');
     Route::livewire('/journeys', JourneyIndex::class)->name('journeys.index');
     Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
     Route::livewire('/relationships/create', RelationshipCreate::class)->can('create', Relationship::class)->name('relationships.create');

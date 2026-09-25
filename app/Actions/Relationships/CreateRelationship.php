@@ -18,6 +18,7 @@ use App\Models\User;
 use App\ProfileIntentStatus;
 use App\RelationshipEventType;
 use App\RelationshipParticipantStatus;
+use App\Support\IntentMatchFinder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -35,6 +36,7 @@ class CreateRelationship
         ?ActorProfileIntent $originatingIntent = null,
         ?string $title = null,
         ?DomainBlueprintVersion $domainBlueprintVersion = null,
+        ?ActorProfileIntent $matchedIntent = null,
     ): Relationship {
         $current = $this->currentUser($user);
         $creatorRole = $this->normalizeRole($creatorRole);
@@ -48,6 +50,7 @@ class CreateRelationship
             $originatingIntent,
             $title,
             $domainBlueprintVersion,
+            $matchedIntent,
         ): Relationship {
             $creator = Actor::query()->with('user')->lockForUpdate()->findOrFail($current->actor->id);
             $canonicalPurpose = Concept::query()->findOrFail($purpose->id)->canonical();
@@ -118,10 +121,54 @@ class CreateRelationship
                 );
             }
 
+            $lockedMatchedIntent = null;
+
+            if ($matchedIntent instanceof ActorProfileIntent) {
+                abort_unless($lockedIntent instanceof ActorProfileIntent, 422, 'A matched Intent requires an originating Intent.');
+
+                $lockedMatchedIntent = ActorProfileIntent::query()
+                    ->with(['profile.actor', 'concept'])
+                    ->lockForUpdate()
+                    ->findOrFail($matchedIntent->id);
+
+                abort_if($lockedMatchedIntent->is($lockedIntent), 422, 'An Intent cannot be matched with itself.');
+                Gate::forUser($current)->authorize('view', $lockedMatchedIntent);
+                abort_unless($lockedMatchedIntent->status === ProfileIntentStatus::Active, 422, 'Only an active Intent can be matched.');
+
+                $matchedConcept = $lockedMatchedIntent->concept->canonical();
+                abort_unless(
+                    (int) $matchedConcept->id === (int) $canonicalPurpose->id,
+                    422,
+                    'Matched Intent Concept must match the Relationship purpose.',
+                );
+                abort_unless(
+                    isset($seen[$lockedMatchedIntent->profile->actor_id]),
+                    422,
+                    'The matched Intent owner must be a Relationship participant.',
+                );
+                abort_if(
+                    (int) $lockedMatchedIntent->profile->actor_id === (int) $lockedIntent->profile->actor_id,
+                    422,
+                    'Matching requires Intents from different Actors.',
+                );
+                abort_if(
+                    $lockedMatchedIntent->kind === $lockedIntent->kind,
+                    422,
+                    'Matching requires opposite Need and Offer directions.',
+                );
+
+                abort_unless(
+                    app(IntentMatchFinder::class)->match($current, $lockedIntent, $lockedMatchedIntent) !== null,
+                    422,
+                    'The selected counterpart no longer satisfies the originating Intent constraints.',
+                );
+            }
+
             $relationship = Relationship::query()->create([
                 'title' => $this->normalizeTitle($title),
                 'purpose_concept_id' => $canonicalPurpose->id,
                 'originating_intent_id' => $lockedIntent?->id,
+                'matched_intent_id' => $lockedMatchedIntent?->id,
                 'domain_blueprint_version_id' => $lockedBlueprintVersion?->id,
                 'created_by_actor_id' => $creator->id,
                 'metadata' => [],
@@ -167,6 +214,7 @@ class CreateRelationship
                 'payload' => [
                     'purpose_concept_id' => $canonicalPurpose->id,
                     'originating_intent_id' => $lockedIntent?->id,
+                    'matched_intent_id' => $lockedMatchedIntent?->id,
                     'domain_blueprint_version_uuid' => $lockedBlueprintVersion?->uuid,
                     'invitee_actor_ids' => collect($participantSpecs)->pluck('actor.id')->values()->all(),
                 ],
@@ -175,6 +223,7 @@ class CreateRelationship
             return $relationship->fresh([
                 'purposeConcept.labels',
                 'originatingIntent',
+                'matchedIntent',
                 'domainBlueprintVersion.blueprint',
                 'participants.actor.user',
                 'contextBinding.context',

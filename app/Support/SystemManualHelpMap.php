@@ -44,6 +44,10 @@ class SystemManualHelpMap
             return 'financial-obligations';
         }
 
+        if ($routeName === 'intents.matches') {
+            return 'matching';
+        }
+
         if (str_starts_with($routeName, 'profile.')
             || str_starts_with($routeName, 'intents.')) {
             return 'profile-concepts';

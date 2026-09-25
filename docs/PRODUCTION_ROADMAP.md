@@ -624,17 +624,27 @@ Exit gate: final feature-branch CI and integration PR must be green; System Manu
 
 ## Phase 19 — Need / Offer Matching
 
-Purpose: add explainable discovery after the downstream Relationship/Proposal/Contract path is proven.
+**Status: runtime complete / remote-green on `feat/ideal-v1-19-need-offer-matching`; documentation/manual closure and integration gate in progress.** Runtime checkpoint `532901b4e11d78cb5d848ca4bb6039632c62f3a6` / CI `36124849892`: **517 tests / 3192 assertions**, Pint 645 changed PHP files, PHPStan/Vite/migrations/ops/backup/security gates green. Detailed contract: `docs/PHASE_19_NEED_OFFER_MATCHING.md`.
 
-Deliverables:
+Delivered:
 
-- candidate matching over Concept/quantity/location/time/value constraints;
-- explanation;
-- privacy-safe discovery;
-- explicit handoff to Relationship/Proposal;
-- no obligation from Match itself.
+- derived candidate matching over existing Active ActorProfileIntent records;
+- opposite Need/Offer direction and different-Actor enforcement;
+- canonical Concept identity matching without silently assuming hierarchy substitutability;
+- subject/arrangement compatibility;
+- quantity/unit, location/origin/destination, date/time/recurrence and value-range constraints when explicitly available;
+- deterministic human-readable explanation dimensions;
+- normal Intent visibility policy before candidate disclosure;
+- private-Profile identity protection;
+- owner-only **Find matches** experience;
+- direct selected-candidate revalidation at handoff time;
+- exact `originating_intent_id` + `matched_intent_id` Relationship provenance;
+- explicit handoff to a **Proposed Relationship**, preserving counterparty consent before Proposal;
+- no Match table and no obligation/authority from discovery itself.
 
-Proof: Alice's construction Need finds Bob's Service Offer; Alice's Capital Need finds Carol's Capital Offer.
+Proof: Alice's construction Need finds Bob's compatible Service Offer; Alice's Capital Need finds Carol's compatible Capital Offer. Incompatible/private candidates are excluded, and discovery creates no downstream authority.
+
+Exit gate: System Manual Chapter 24, phase report/current-state/worksheet synchronization, final feature-branch CI and integration PR must be green before Phase 20.
 
 ## Phase 20 — Groups / Communities social composition
 
