@@ -4,8 +4,8 @@ namespace App\Livewire\Intents;
 
 use App\Models\ActorProfileIntent;
 use App\Models\User;
-use App\ProfileVisibility;
 use App\ProfileIntentStatus;
+use App\ProfileVisibility;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
