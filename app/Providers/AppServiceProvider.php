@@ -4,10 +4,13 @@ namespace App\Providers;
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\CommitmentEvent;
+use App\Models\ConversationMessage;
 use App\Models\ContractEvent;
+use App\Models\Evaluation;
 use App\Models\FinancialObligationEvent;
 use App\Models\ProposalEvent;
 use App\Models\RelationshipEvent;
+use App\Models\Submission;
 use App\Support\DomainNotificationProjector;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
@@ -58,5 +61,18 @@ class AppServiceProvider extends ServiceProvider
         FinancialObligationEvent::created(
             fn (FinancialObligationEvent $event) => app(DomainNotificationProjector::class)->financial($event),
         );
+        ConversationMessage::created(
+            fn (ConversationMessage $message) => app(DomainNotificationProjector::class)->conversation($message),
+        );
+        Submission::updated(function (Submission $submission): void {
+            if ($submission->wasChanged('status') && $submission->status === Submission::STATUS_SUBMITTED) {
+                app(DomainNotificationProjector::class)->submission($submission);
+            }
+        });
+        Evaluation::updated(function (Evaluation $evaluation): void {
+            if ($evaluation->wasChanged('status') && $evaluation->status === Evaluation::STATUS_FINALIZED) {
+                app(DomainNotificationProjector::class)->evaluation($evaluation);
+            }
+        });
     }
 }
