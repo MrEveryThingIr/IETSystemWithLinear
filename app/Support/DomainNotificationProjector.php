@@ -23,10 +23,17 @@ use Illuminate\Support\Facades\Gate;
 
 class DomainNotificationProjector
 {
+    private readonly NotificationOutboxWriter $outbox;
+
+    private readonly ContextNotificationRecipients $recipients;
+
     public function __construct(
-        private readonly NotificationOutboxWriter $outbox,
-        private readonly ContextNotificationRecipients $recipients,
-    ) {}
+        NotificationOutboxWriter $outbox,
+        ContextNotificationRecipients $recipients,
+    ) {
+        $this->outbox = $outbox;
+        $this->recipients = $recipients;
+    }
 
     public function relationship(RelationshipEvent $event): void
     {
