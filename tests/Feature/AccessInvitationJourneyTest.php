@@ -18,6 +18,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class AccessInvitationJourneyTest extends TestCase
@@ -66,7 +67,7 @@ class AccessInvitationJourneyTest extends TestCase
             'role' => PlatformRole::Superadmin,
         ]);
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(HttpException::class);
         app(IssueAccessInvitation::class)->execute(
             $administrator->user,
             'reserved@example.com',
