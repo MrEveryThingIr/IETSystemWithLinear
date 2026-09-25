@@ -1119,3 +1119,113 @@ composer audit
 - [ ] Confirm Chapter 23 is **Journeys and Domain Blueprints**.
 - [ ] Confirm Help/topic routing for `journeys` opens Chapter 23 at **How to use it**.
 - [ ] Confirm the chapter teaches both Service Job and Personal Activity examples and clearly states the authority boundaries.
+
+
+---
+
+## Checkpoint 19 — Need / Offer Matching
+
+Remote branch:
+
+~~~text
+feat/ideal-v1-19-need-offer-matching
+~~~
+
+Remote runtime checkpoint:
+
+~~~text
+SHA: 532901b4e11d78cb5d848ca4bb6039632c62f3a6
+CI: 36124849892
+Result: 517 tests / 3192 assertions; Pint 645 files; PHPStan/Vite/migrations/ops/backup/npm/Composer green
+~~~
+
+Migration:
+
+~~~text
+database/migrations/2026_09_25_030000_add_matching_provenance_to_relationships.php
+~~~
+
+### Local sync
+
+After Phase 19 integration, validate the cumulative integration line:
+
+~~~bash
+git fetch origin
+git switch integration/ideal-v1
+git pull --ff-only origin integration/ideal-v1
+git status --short
+git rev-parse HEAD
+
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact \
+  tests/Feature/IntentMatchingKernelTest.php \
+  tests/Feature/IntentMatchingExperienceTest.php \
+  tests/Feature/RelationshipExperienceTest.php \
+  tests/Feature/SystemManualContentTest.php
+
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm run build
+composer audit
+~~~
+
+### Alice construction Need → Bob Service Offer
+
+- [ ] As Alice, record an Active authenticated-visible Service Need for the construction Concept.
+- [ ] Add meaningful explicit constraints such as quantity/unit, Riverside location, dates/time, currency/cash range.
+- [ ] As Bob, record the opposite Service Offer for the same canonical Concept with compatible constraints.
+- [ ] Return as Alice and open **Needs, offers & services**.
+- [ ] On Alice's own Need choose **Find matches**.
+- [ ] Confirm Bob's Offer appears.
+- [ ] Confirm **Why this candidate appears** lists only real aligned dimensions.
+- [ ] Confirm a wrong-location or incompatible cash-range Offer does not appear.
+
+### Alice Capital Need → Carol Capital Offer
+
+- [ ] Record Alice's Capital Need with explicit currency/range.
+- [ ] Record Carol's opposite Capital Offer with overlapping currency/range.
+- [ ] Confirm Carol appears as a candidate.
+- [ ] Record a same-Concept Offer with a different currency and confirm it is excluded when both sides specify currency.
+
+### Privacy
+
+- [ ] Keep Bob's Profile private while Bob's Offer is explicitly authenticated-visible.
+- [ ] Confirm Alice can discover the Offer.
+- [ ] Confirm the Match page does not reveal Bob's private username/Profile identity.
+- [ ] Confirm a private Intent does not appear at all.
+- [ ] Confirm an unrelated user cannot open Alice's owner-only Match page.
+
+### Relationship handoff
+
+- [ ] From Bob's candidate choose **Start relationship**.
+- [ ] Confirm the purpose is sourced from the Intent Concept.
+- [ ] Confirm the counterparty is resolved server-side rather than typed/leaked into the form.
+- [ ] Submit the Relationship.
+- [ ] Confirm status is **Proposed**.
+- [ ] Confirm the Relationship stores both the originating Intent and matched counterpart Intent.
+- [ ] Confirm Bob must explicitly accept before the Relationship becomes Active.
+- [ ] Confirm Proposal creation remains downstream of an Active Relationship.
+
+### Tamper / stale-candidate behavior
+
+- [ ] Open a stored Match handoff URL after pausing/closing the counterpart Intent; confirm Relationship creation is rejected.
+- [ ] Replace the candidate UUID with an incompatible Intent; confirm rejection.
+- [ ] Confirm Concept hierarchy alone does not make a different Concept substitutable.
+
+### Negative guarantees
+
+- [ ] Opening Find matches creates no Match row, Relationship, Proposal or Contract.
+- [ ] Starting a matched Relationship creates no Proposal/Contract automatically.
+- [ ] Matching creates no Commitment/Fulfillment.
+- [ ] Matching creates no Financial Obligation/Settlement.
+- [ ] Matching creates no JournalEntry or payment truth.
+- [ ] The aligned-dimensions count is presented as explanation/order, not a universal quality/trust score.
+
+### System Manual
+
+- [ ] Confirm Chapter 24 is **Need / Offer Matching**.
+- [ ] Confirm contextual Help on the Match page routes to Chapter 24.
+- [ ] Confirm the chapter explains the Match → Relationship consent → optional Proposal chain and privacy boundary.

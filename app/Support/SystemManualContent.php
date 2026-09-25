@@ -33,6 +33,7 @@ class SystemManualContent
         'commitments' => '21. Commitments and Fulfillment',
         'financial-obligations' => '22. Financial Obligations and Settlements',
         'journeys' => '23. Journeys and Domain Blueprints',
+        'matching' => '24. Need / Offer Matching',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -51,11 +52,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, exact-version Contract acceptance/effective-time history, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, and versioned Journeys/Domain Blueprints for proven compositions.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, exact-version Contract acceptance/effective-time history, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, versioned Journeys/Domain Blueprints for proven compositions, and explainable privacy-safe Need/Offer matching with explicit Relationship handoff.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Matching, realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, and Journeys/Domain Blueprints are now implemented.
+Realtime transport/notification delivery, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, Journeys/Domain Blueprints, and Need/Offer matching are now implemented.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -1278,6 +1279,68 @@ Recommended capabilities describe a useful composition; they do not imply that e
 Editing a later Blueprint version does not mutate the exact version already referenced by an existing Relationship or Plan.
 TEXT,
                 ],
+                [
+                    'title' => '24. Need / Offer Matching',
+                    'summary' => <<<'TEXT'
+Matching helps the owner of an active Need or Offer discover compatible opposite-direction Intent records without creating a new authoritative business object. Results are derived from existing Intent facts, filtered by current visibility policy, and accompanied by human-readable reasons.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+Phase 19 provides deterministic matching over existing ActorProfileIntent records.
+
+The source Intent must belong to the current user and remain Active. Candidates must be Active, belong to a different Actor, have the opposite Need/Offer direction, and already be visible to the viewer under the normal Intent policy.
+
+The matcher currently requires canonical Concept identity and compatible subject/arrangement semantics. When both sides specify them, it can also enforce quantity/unit, location/origin/destination, date, same-timezone time window, recurrence, currency/cash-basis/range, and value-exchange preference alignment.
+
+Match results are derived at read time; there is no mutable Match table and no opaque score. The UI explains aligned dimensions such as Concept, arrangement, quantity, location, schedule and cash-range overlap.
+
+A selected candidate is revalidated directly at handoff time. Starting a Relationship stores both the owner's originating Intent and the selected counterpart Intent as immutable Relationship provenance.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+Construction-service example:
+1. Open **Needs, offers & services**.
+2. Locate your own Active Need, for example **Riverside construction worker needed**.
+3. Choose **Find matches**.
+4. Review the candidate cards and the **Why this candidate appears** reasons.
+5. Select Bob's compatible Service Offer and choose **Start relationship**.
+6. Review the Relationship form. Purpose and matched counterparty come from the two Intents and are revalidated server-side.
+7. Choose participant roles/title and submit.
+8. The result is only a **Proposed Relationship**. Bob must explicitly accept before the Relationship becomes Active.
+9. After activation, create a Proposal only if negotiation is actually required.
+
+Capital example:
+1. Alice records a Capital Need with an explicit Concept, currency and range.
+2. Carol records a visible opposite Capital Offer for the same canonical Concept.
+3. Alice opens **Find matches** and sees Carol's record only when all explicitly supplied hard constraints are compatible.
+4. Starting the Relationship preserves both Intent origins; it does not itself create financing, ownership, repayment, Contract or Accounting truth.
+TEXT,
+                    'authorization' => <<<'TEXT'
+Only the owner of an Intent may open its Match page.
+
+Candidate discovery never widens visibility. A private Intent is excluded. A visible Intent whose owning Profile remains private may still be discoverable, but the Match/Relationship UI does not reveal the private Profile username merely because the Intent is visible.
+
+Compatibility is rechecked at Relationship creation so a stale or tampered URL cannot bypass current Intent status, visibility or constraints.
+
+A Match grants no permission to another Actor's Profile, Relationship, Proposal, Contract, Content, financial record or Accounting data.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Matching can later become richer through explicitly governed semantic substitutability, geographic distance, availability normalization, unit conversion, reviewed preference weighting, and user-controlled discovery settings.
+
+Do not assume every Concept hierarchy edge means substitutability. Broader/narrower or related Concepts may only participate when a future explicit matching rule says they do.
+
+Future recommendation/discovery work may reuse the same explainability/privacy rules, but should not replace them with an opaque engagement score.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+A Match is not an agreement, recommendation verdict, Contract, employment decision, ownership allocation, debt, invoice, payment or Accounting entry.
+
+The number of aligned dimensions is descriptive, not an authoritative quality score.
+
+Missing optional constraints are treated as unknown/open; they are not invented by the matcher.
+
+Different local clock windows are not declared compatible across different timezones merely because their displayed HH:MM strings look similar.
+
+Starting a matched Relationship still requires explicit counterparty consent before Proposal/Contract authority can follow.
+TEXT,
+
             ],
         ];
     }
