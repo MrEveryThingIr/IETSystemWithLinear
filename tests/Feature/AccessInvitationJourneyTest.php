@@ -167,7 +167,7 @@ class AccessInvitationJourneyTest extends TestCase
         $this->get(route('access-invitations.show', $token))->assertOk();
 
         $this->expectException(HttpException::class);
-        Livewire::test(AccessRegister::class, ['token' => $token]);
+        app(\App\Actions\Auth\RegisterAccessInvitedUser::class)->preview($token);
     }
 
     public function test_reserved_access_invitation_rejects_wrong_email_without_partial_registration(): void
