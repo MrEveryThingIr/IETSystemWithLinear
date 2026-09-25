@@ -40,6 +40,19 @@ The first frozen RC exposed a documentation-order defect during owner-local acce
 
 Correction: local acceptance now runs `composer install --no-interaction --prefer-dist` before any Artisan command and verifies the Pusher package before `optimize:clear`. This is a release-handoff/bootstrap correction, not a domain-code change.
 
+### RC MySQL migration portability correction
+
+Owner-local RC-2 acceptance exposed a MySQL-specific migration defect that SQLite CI could not detect: MySQL limits identifiers to 64 characters, while Laravel's generated foreign-key name for `conversation_message_evidence_references.conversation_message_id` was 72 characters. The same audit found two additional not-yet-reached generated names that would also exceed MySQL's limit in Planner and Fulfillment evidence-reference tables.
+
+Corrections:
+
+- explicit short foreign-key names for all three affected evidence-reference constraints;
+- the context-conversation migration safely detects an unrecorded partial attempt: it removes only the four incomplete conversation tables when all are empty, and refuses automatic recovery if any contain data;
+- CI now boots MySQL 8.4 and runs the **entire migration chain** with `migrate:fresh` in addition to the existing SQLite gate.
+
+Feature-branch CI run `36149684185` passed the new MySQL 8.4 migration portability smoke plus all existing quality/runtime/security gates. This closes the exact failure observed on the owner's continuing MySQL database without requiring a destructive database reset.
+
+
 
 ## Human acceptance
 
