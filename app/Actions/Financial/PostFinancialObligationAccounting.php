@@ -46,7 +46,7 @@ class PostFinancialObligationAccounting
             ],
             sourceType: 'financial_obligation',
             sourceUuid: $obligation->uuid,
-            idempotencyKey: 'financial-obligation:'.$obligation->uuid.':actor:'.$actor->uuid,
+            idempotencyKey: 'financial-obligation:'.$obligation->uuid.':actor:'.$actor->id,
         );
 
         FinancialObligationEvent::query()->firstOrCreate(

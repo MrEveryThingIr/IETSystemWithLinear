@@ -78,7 +78,7 @@ class ProposeSettlement
                 'event_type' => FinancialObligationEventType::SettlementProposed,
                 'payload' => [
                     'amount_minor' => $amountMinor,
-                    'paid_at' => $settlement->paid_at?->toISOString(),
+                    'paid_at' => $settlement->paid_at->toISOString(),
                     'reference' => $settlement->reference,
                 ],
             ]);

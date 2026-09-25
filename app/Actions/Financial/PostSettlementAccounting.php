@@ -58,7 +58,7 @@ class PostSettlementAccounting
             ],
             sourceType: 'settlement',
             sourceUuid: $settlement->uuid,
-            idempotencyKey: 'settlement:'.$settlement->uuid.':actor:'.$actor->uuid,
+            idempotencyKey: 'settlement:'.$settlement->uuid.':actor:'.$actor->id,
         );
 
         FinancialObligationEvent::query()->firstOrCreate(

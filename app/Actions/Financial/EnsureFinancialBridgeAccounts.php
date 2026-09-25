@@ -53,7 +53,7 @@ class EnsureFinancialBridgeAccounts
 
         if ($isDebtor) {
             $counterparty = $obligation->creditor;
-            $label = $counterparty->user?->username ?? $counterparty->uuid;
+            $label = $counterparty->user->username ?? 'actor-'.$counterparty->id;
 
             $expense = $this->accounts->execute(
                 $ledger,
@@ -81,7 +81,7 @@ class EnsureFinancialBridgeAccounts
         }
 
         $counterparty = $obligation->debtor;
-        $label = $counterparty->user?->username ?? $counterparty->uuid;
+        $label = $counterparty->user->username ?? 'actor-'.$counterparty->id;
 
         $receivable = $this->accounts->execute(
             $ledger,
