@@ -227,5 +227,4 @@ class IntentDirectoryReleaseTest extends TestCase
             ->assertSee('Highlighted record')
             ->assertSee('ring-amber-300/60', false);
     }
-
 }
