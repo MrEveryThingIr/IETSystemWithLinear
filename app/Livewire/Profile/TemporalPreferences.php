@@ -5,6 +5,7 @@ namespace App\Livewire\Profile;
 use App\CalendarSystem;
 use App\Models\User;
 use App\Support\Localization;
+use App\Support\MonetaryUnitCatalog;
 use App\Support\TemporalPreferences as TemporalPreferenceResolver;
 use App\TimezoneMode;
 use Illuminate\Contracts\View\View;
@@ -18,6 +19,8 @@ class TemporalPreferences extends Component
     public string $calendar = 'auto';
 
     public string $timezoneMode = TimezoneMode::Auto->value;
+
+    public string $defaultMonetaryUnitCode = 'USD';
 
     public bool $editorOpen = false;
 
@@ -81,6 +84,7 @@ class TemporalPreferences extends Component
         $data = $this->validate([
             'timezone' => ['required', 'timezone'],
             'timezoneMode' => ['required', Rule::enum(TimezoneMode::class)],
+            'defaultMonetaryUnitCode' => ['required', Rule::in(array_keys(MonetaryUnitCatalog::all()))],
             'calendar' => [
                 'required',
                 Rule::in([
@@ -93,6 +97,7 @@ class TemporalPreferences extends Component
         ]);
 
         $user->timezone = $data['timezone'];
+        $user->default_monetary_unit_code = $data['defaultMonetaryUnitCode'];
         $user->timezone_mode = TimezoneMode::from($data['timezoneMode']);
         $user->calendar = $data['calendar'] === 'auto'
             ? null
@@ -108,6 +113,7 @@ class TemporalPreferences extends Component
     {
         $this->timezone = TemporalPreferenceResolver::timezoneFor($user);
         $this->timezoneMode = $user->timezone_mode->value;
+        $this->defaultMonetaryUnitCode = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
         $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
     }
 
@@ -122,6 +128,7 @@ class TemporalPreferences extends Component
             'intlLocale' => Localization::intlLocale(),
             'localeName' => Localization::supported()[app()->getLocale()]['native_name'] ?? app()->getLocale(),
             'calendarOptions' => CalendarSystem::cases(),
+            'monetaryUnits' => MonetaryUnitCatalog::all(),
             'timezones' => timezone_identifiers_list(),
         ]);
     }
