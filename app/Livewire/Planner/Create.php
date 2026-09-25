@@ -76,6 +76,20 @@ class Create extends Component
         $this->startTime = $now->addHour()->format('H:00');
         $this->weekdays = [$now->isoWeekday()];
 
+        $queryDate = trim((string) request()->query('date', ''));
+        if (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $queryDate)) {
+            $date = CarbonImmutable::createFromFormat('!Y-m-d', $queryDate, $this->timezone);
+            if ($date !== false && $date->format('Y-m-d') === $queryDate) {
+                $this->startsOn = $queryDate;
+                $this->weekdays = [$date->isoWeekday()];
+            }
+        }
+
+        $queryTime = trim((string) request()->query('time', ''));
+        if (preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $queryTime)) {
+            $this->startTime = $queryTime;
+        }
+
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
         if ($queryBlueprint !== '') {
             $this->blueprintSlug = $queryBlueprint;
