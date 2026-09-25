@@ -17,6 +17,7 @@ use LogicException;
     'title',
     'purpose_concept_id',
     'originating_intent_id',
+    'matched_intent_id',
     'domain_blueprint_version_id',
     'created_by_actor_id',
     'metadata',
@@ -43,6 +44,7 @@ class Relationship extends Model
                 'uuid',
                 'purpose_concept_id',
                 'originating_intent_id',
+                'matched_intent_id',
                 'domain_blueprint_version_id',
                 'created_by_actor_id',
             ])) {
@@ -75,6 +77,12 @@ class Relationship extends Model
     public function originatingIntent(): BelongsTo
     {
         return $this->belongsTo(ActorProfileIntent::class, 'originating_intent_id');
+    }
+
+    /** @return BelongsTo<ActorProfileIntent, $this> */
+    public function matchedIntent(): BelongsTo
+    {
+        return $this->belongsTo(ActorProfileIntent::class, 'matched_intent_id');
     }
 
     /** @return BelongsTo<DomainBlueprintVersion, $this> */
