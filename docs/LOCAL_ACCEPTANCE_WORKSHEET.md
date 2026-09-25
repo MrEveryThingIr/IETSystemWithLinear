@@ -17,11 +17,16 @@ git fetch origin
 
 If local tracked changes exist, preserve them before switching. Do not reset/discard them casually.
 
-Environment for the focused first release experience:
+Environment selection matters:
+
+- historical office-alpha checkpoints may use `IET_RELEASE_PROFILE=office_alpha`;
+- the cumulative publishable Ideal-v1 acceptance must use `IET_RELEASE_PROFILE=full` so Groups, Contexts, Relationships, Planner, Content, finance and the later integrated modules are actually visible and testable.
+
+For the final cumulative release-candidate pass:
 
 ~~~text
 APP_NAME=IET
-IET_RELEASE_PROFILE=office_alpha
+IET_RELEASE_PROFILE=full
 ~~~
 
 After environment changes:
