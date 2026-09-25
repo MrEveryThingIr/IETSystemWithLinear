@@ -6,6 +6,7 @@ use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
 use App\Livewire\Intents\Create;
 use App\Livewire\Intents\Directory;
+use App\Livewire\Profile\Intents as ProfileIntents;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\ProfileIntentArrangementKind;
@@ -227,4 +228,48 @@ class IntentDirectoryReleaseTest extends TestCase
             ->assertSee('Highlighted record')
             ->assertSee('ring-amber-300/60', false);
     }
+
+    public function test_profile_editor_can_update_the_complete_guided_intent_value_model(): void
+    {
+        $owner = Actor::factory()->create();
+        $profile = app(EnsureActorProfile::class)->execute($owner->user);
+        $intent = app(CreateActorProfileIntent::class)->execute(
+            $owner->user,
+            $profile,
+            ProfileIntentKind::Need,
+            'Workshop',
+            [
+                'subject_kind' => ProfileIntentSubjectKind::Property->value,
+                'arrangement_kind' => ProfileIntentArrangementKind::TemporaryUse->value,
+                'exchange_preference' => ProfileIntentExchangePreference::DiscussLater->value,
+                'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
+                'timezone' => 'UTC',
+                'round_trip' => false,
+                'visibility' => ProfileItemVisibility::Authenticated->value,
+            ],
+        );
+
+        Livewire::actingAs($owner->user)
+            ->test(ProfileIntents::class, ['profile' => $profile])
+            ->call('edit', $intent->id)
+            ->set('subjectKind', ProfileIntentSubjectKind::Property->value)
+            ->set('arrangementKind', ProfileIntentArrangementKind::OwnershipTransfer->value)
+            ->set('exchangePreference', ProfileIntentExchangePreference::CashPreferredOpenHybrid->value)
+            ->set('cashMin', '1000')
+            ->set('cashMax', '1500')
+            ->set('currencyCode', 'eur')
+            ->set('cashBasis', 'total')
+            ->set('exchangeNotes', 'Open to a clearly valued service component.')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $intent->refresh();
+        $this->assertSame(ProfileIntentArrangementKind::OwnershipTransfer, $intent->arrangement_kind);
+        $this->assertSame(ProfileIntentExchangePreference::CashPreferredOpenHybrid, $intent->exchange_preference);
+        $this->assertSame('1000.00', $intent->cash_min);
+        $this->assertSame('1500.00', $intent->cash_max);
+        $this->assertSame('EUR', $intent->currency_code);
+        $this->assertSame('Open to a clearly valued service component.', $intent->exchange_notes);
+    }
+
 }
