@@ -326,14 +326,12 @@ class DomainNotificationProjector
     }
 
     /**
-     * @template TActor of Actor|null
-     *
-     * @param  Collection<int, TActor>  $actors
+     * @param  iterable<Actor|null>  $actors
      * @return Collection<int, User>
      */
-    private function usersFromActors(Collection $actors, ?int $excludeActorId): Collection
+    private function usersFromActors(iterable $actors, ?int $excludeActorId): Collection
     {
-        return $actors
+        return collect($actors)
             ->filter(fn ($actor): bool => $actor instanceof Actor)
             ->reject(fn (Actor $actor): bool => $excludeActorId !== null && (int) $actor->id === $excludeActorId)
             ->map(fn (Actor $actor): ?User => $actor->user)
