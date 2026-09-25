@@ -34,5 +34,11 @@ return [
         'settlement_rejected_title' => 'تم رفض التسوية',
         'financial_obligation_title' => 'تم تحديث الالتزام المالي',
         'financial_event_body' => 'حدث مالي: :event.',
+        'conversation_message_title' => 'رسالة محادثة جديدة',
+        'conversation_message_body' => 'نشر :author رسالة جديدة.',
+        'submission_submitted_title' => 'الإرسال جاهز للمراجعة',
+        'submission_submitted_body' => 'قدّم :author استجابة للمراجعة.',
+        'evaluation_finalized_title' => 'تم إنهاء التقييم',
+        'evaluation_finalized_body' => 'أصبح التقييم النهائي متاحًا في السياق المرتبط.',
     ],
 ];
