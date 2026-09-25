@@ -48,7 +48,8 @@ class IntentMatchFinder
                     return $byAlignment;
                 }
 
-                return $right->intent->updated_at <=> $left->intent->updated_at;
+                return ($right->intent->updated_at?->getTimestamp() ?? 0)
+                    <=> ($left->intent->updated_at?->getTimestamp() ?? 0);
             })
             ->take(max(1, min($limit, 200)))
             ->values();
