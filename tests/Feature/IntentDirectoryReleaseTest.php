@@ -271,5 +271,4 @@ class IntentDirectoryReleaseTest extends TestCase
         $this->assertSame('EUR', $intent->currency_code);
         $this->assertSame('Open to a clearly valued service component.', $intent->exchange_notes);
     }
-
 }
