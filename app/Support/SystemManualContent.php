@@ -1340,7 +1340,7 @@ Different local clock windows are not declared compatible across different timez
 
 Starting a matched Relationship still requires explicit counterparty consent before Proposal/Contract authority can follow.
 TEXT,
-
+                ],
             ],
         ];
     }
