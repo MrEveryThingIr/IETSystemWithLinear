@@ -153,7 +153,10 @@ class IntentMatchingKernelTest extends TestCase
 
         $canonical = Concept::factory()->create();
         $merged = Concept::factory()->create();
-        $merged->applyLifecycle(status: \App\ConceptStatus::Merged, mergedInto: $canonical);
+        $merged->applyLifecycle([
+            'status' => \App\ConceptStatus::Merged->value,
+            'merged_into_concept_id' => $canonical->id,
+        ]);
 
         $other = Concept::factory()->create();
 
