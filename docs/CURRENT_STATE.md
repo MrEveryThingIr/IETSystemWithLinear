@@ -6,7 +6,7 @@
 
 Phase 22 and the publishable-v1 hardening line are integrated on `integration/ideal-v1`. The first publication remains intentionally bounded: deterministic human workflows and durable domain evidence are the product; AI Copilot, Generic Workflow extraction, Reputation and Recommendations are post-v1 work. See `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
 
-Native-Persian UI localization hardening is also integrated. PR #25 merged at `edff668b6e8ad6c4a58a7d6c08bb54a821ce9662`; independent post-merge CI run `36160798652` passed. The localization pass added the 11 Persian locale modules that were previously absent, replaced the Access/Intent English passthroughs with real Persian copy, rewrote literal/technical wording into simpler native Persian, normalized repeated product terminology, and added automated English→Persian locale coverage plus a guard against future English passthroughs.
+Native-Persian UI localization hardening is integrated. PR #25 merged at `edff668b6e8ad6c4a58a7d6c08bb54a821ce9662`; independent post-merge CI run `36160798652` passed. A subsequent multilingual completion pass extends the same coverage contract to Arabic and Simplified Chinese: all supported UI locales now mirror the English locale-module set, Access/Intent no longer fall back to English, the 11 later workflow modules are localized, recurring untranslated implementation jargon is removed from audited surfaces, and CI validates keys plus runtime placeholders.
 
 The exact localization integration gate passed **545 tests / 3376 assertions** together with MySQL 8.4 and SQLite migration gates, Pint, PHPStan, Vite, npm audit and Composer audit. `release/ideal-v1-rc-4` is the immutable code/localization checkpoint at that SHA. This documentation synchronization produces the final docs-synchronized candidate on `release/ideal-v1-rc-5`; earlier RC refs remain immutable. Browser acceptance remains the owner-local release gate.
 
@@ -189,7 +189,7 @@ Implemented on the Phase 7 branch as a cross-cutting delivery capability:
 - incorporated feedback is linked to the exact later sealed official revision;
 - normal seed/bootstrap preserves authorized maintainer edits; explicit source sync is required to publish repository-source changes.
 
-Translation boundary: the application UI now has a native-Persian hardening pass with automated locale coverage. English remains the canonical **System Manual content** for this release. A full Persian Manual translation is still a separate, reviewable content lifecycle; Arabic and Simplified Chinese follow. UI localization must not be confused with a native-reviewed translation of every seeded/manual document.
+Translation boundary: the application UI now has complete structural coverage for English, Persian, Arabic and Simplified Chinese. Persian has received a native-style hardening pass. Arabic and Simplified Chinese now have real localized copy for every English UI locale module and no English passthrough files; they remain candidates for later native-speaker editorial polishing rather than being falsely labeled native-reviewed. CI enforces locale-file/key coverage, placeholder parity and the absence of English passthroughs. English remains the canonical **System Manual content** for this release; document/manual translation is a separate versioned-content lifecycle.
 
 
 ## Group governance kernel
