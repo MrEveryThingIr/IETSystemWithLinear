@@ -34,7 +34,7 @@ class LocalizationParityTest extends TestCase
             foreach ($englishFiles as $file) {
                 $localePath = base_path("lang/{$locale}/{$file}");
 
-                if (! is_file($localePath)) {
+                if (!is_file($localePath)) {
                     continue;
                 }
 
@@ -50,7 +50,7 @@ class LocalizationParityTest extends TestCase
                         continue;
                     }
 
-                    if (! array_key_exists($key, $translated)) {
+                    if (!array_key_exists($key, $translated)) {
                         $missing[$locale][$file][] = $key;
                     }
                 }
@@ -75,14 +75,14 @@ class LocalizationParityTest extends TestCase
             foreach (['fa', 'ar', 'zh_CN'] as $locale) {
                 $localePath = base_path("lang/{$locale}/{$file}");
 
-                if (! is_file($localePath)) {
+                if (!is_file($localePath)) {
                     continue;
                 }
 
                 $translated = Arr::dot(require $localePath);
 
                 foreach ($english as $key => $englishValue) {
-                    if (! is_string($englishValue) || ! isset($translated[$key]) || ! is_string($translated[$key])) {
+                    if (!is_string($englishValue) || ! isset($translated[$key]) || ! is_string($translated[$key])) {
                         continue;
                     }
 
@@ -122,7 +122,6 @@ class LocalizationParityTest extends TestCase
         }
     }
 
-
     public function test_static_ui_translation_keys_resolve_in_every_supported_locale(): void
     {
         $missing = [];
@@ -133,12 +132,12 @@ class LocalizationParityTest extends TestCase
         ];
 
         foreach ($roots as $root) {
-            if (! is_dir($root)) {
+            if (!is_dir($root)) {
                 continue;
             }
 
             foreach (File::allFiles($root) as $file) {
-                if (! in_array($file->getExtension(), ['php'], true)) {
+                if (!in_array($file->getExtension(), ['php'], true)) {
                     continue;
                 }
 
@@ -151,7 +150,7 @@ class LocalizationParityTest extends TestCase
 
                 foreach (array_unique($matches[1] ?? []) as $key) {
                     foreach (Localization::codes() as $locale) {
-                        if (! Lang::has($key, $locale, false)) {
+                        if (!Lang::has($key, $locale, false)) {
                             $missing[$locale][$file->getRelativePathname()][] = $key;
                         }
                     }
@@ -171,7 +170,7 @@ class LocalizationParityTest extends TestCase
         $leaks = [];
 
         foreach (File::allFiles(resource_path('views')) as $file) {
-            if (! str_ends_with($file->getFilename(), '.blade.php')) {
+            if (!str_ends_with($file->getFilename(), '.blade.php')) {
                 continue;
             }
 
@@ -194,13 +193,12 @@ class LocalizationParityTest extends TestCase
         );
     }
 
-
     public function test_blade_templates_do_not_ship_hardcoded_english_aria_labels(): void
     {
         $labels = [];
 
         foreach (File::allFiles(resource_path('views')) as $file) {
-            if (! str_ends_with($file->getFilename(), '.blade.php')) {
+            if (!str_ends_with($file->getFilename(), '.blade.php')) {
                 continue;
             }
 
