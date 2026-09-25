@@ -134,6 +134,70 @@
                 @endforelse
             </flux:card>
 
+            @if ($financialSummaries->isNotEmpty())
+                <flux:card class="space-y-5">
+                    <div>
+                        <flux:heading size="lg">{{ __('financial.summary.title') }}</flux:heading>
+                        <flux:text>{{ __('financial.summary.help') }}</flux:text>
+                    </div>
+
+                    @foreach ($financialSummaries as $financial)
+                        @php($summary = $financial['summary'])
+                        @php($unit = $financial['unit'])
+                        <div wire:key="financial-summary-{{ $unit->uuid }}" class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="font-semibold">{{ $unit->code }}</div>
+                                <flux:badge color="zinc">{{ $summary['obligation_count'] }} {{ __('financial.obligations') }}</flux:badge>
+                            </div>
+                            <div class="grid gap-3 sm:grid-cols-4">
+                                <div>
+                                    <div class="text-xs text-zinc-500">{{ __('financial.earned') }}</div>
+                                    <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['earned_minor'], $unit->exponent) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-zinc-500">{{ __('financial.paid') }}</div>
+                                    <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['paid_minor'], $unit->exponent) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-zinc-500">{{ __('financial.outstanding') }}</div>
+                                    <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['outstanding_minor'], $unit->exponent) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-zinc-500">{{ __('financial.disputed') }}</div>
+                                    <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['disputed_minor'], $unit->exponent) }}</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 text-xs text-zinc-500">
+                                <span>{{ __('financial.scheduled') }}: {{ $summary['scheduled_count'] }}</span>
+                                <span>·</span>
+                                <span>{{ __('financial.worked') }}: {{ $summary['worked_count'] }}</span>
+                                <span>·</span>
+                                <span>{{ __('financial.accepted') }}: {{ $summary['accepted_count'] }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <div class="space-y-2">
+                        @foreach ($financialObligations as $obligation)
+                            <a
+                                href="{{ route('financial-obligations.show', $obligation) }}"
+                                class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 p-3 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                            >
+                                <span class="text-sm">
+                                    {{ $obligation->fulfillment->commitment->title }}
+                                    · {{ $obligation->creditor->user?->username }}
+                                    ← {{ $obligation->debtor->user?->username }}
+                                </span>
+                                <span class="font-medium">
+                                    {{ \App\Support\MoneyAmount::format($obligation->amount_minor, $obligation->monetaryUnit->exponent) }}
+                                    {{ $obligation->monetaryUnit->code }}
+                                </span>
+                            </a>
+                        @endforeach
+                    </div>
+                </flux:card>
+            @endif
+
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('contracts.show.version_history') }}</flux:heading>
 

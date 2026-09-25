@@ -7,6 +7,7 @@ use App\Models\CommitmentEvent;
 use App\Models\Context;
 use App\Models\ContractEvent;
 use App\Models\ConversationMessage;
+use App\Models\FinancialObligationEvent;
 use App\Models\JournalEntry;
 use App\Models\PlanEvent;
 use App\Models\PlanOccurrenceEvent;
@@ -201,6 +202,31 @@ class ContextTimeline
                         occurredAt: $event->created_at ?? now(),
                         actor: $event->actor,
                         url: route('commitments.show', $event->commitment),
+                    ));
+                });
+
+            FinancialObligationEvent::query()
+                ->with(['actor.user', 'obligation'])
+                ->whereHas(
+                    'obligation.contractVersion',
+                    fn ($query) => $query->where('contract_id', $contract->id),
+                )
+                ->latest('id')
+                ->limit($limit)
+                ->get()
+                ->each(function (FinancialObligationEvent $event) use ($entries, $user): void {
+                    if (! Gate::forUser($user)->allows('view', $event->obligation)) {
+                        return;
+                    }
+
+                    $entries->push(new TimelineEntry(
+                        key: 'financial-obligation-event:'.$event->uuid,
+                        kind: 'financial',
+                        title: (string) __('financial.events.'.$event->event_type->value),
+                        summary: $event->obligation->description,
+                        occurredAt: $event->created_at ?? now(),
+                        actor: $event->actor,
+                        url: route('financial-obligations.show', $event->obligation),
                     ));
                 });
         }

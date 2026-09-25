@@ -188,6 +188,54 @@
                             </div>
                         @endcan
 
+                        @if ($fulfillment->financialObligation)
+                            <div class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                                <div>
+                                    <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('financial.obligation.title') }}</div>
+                                    <div class="mt-1 font-semibold">
+                                        {{ \App\Support\MoneyAmount::format(
+                                            $fulfillment->financialObligation->amount_minor,
+                                            $fulfillment->financialObligation->monetaryUnit->exponent,
+                                        ) }}
+                                        {{ $fulfillment->financialObligation->monetaryUnit->code }}
+                                    </div>
+                                </div>
+                                <flux:button :href="route('financial-obligations.show', $fulfillment->financialObligation)" size="sm" variant="ghost">
+                                    {{ __('financial.obligation.title') }}
+                                </flux:button>
+                            </div>
+                        @elseif ($fulfillment->status === \App\FulfillmentStatus::Accepted && $canRecognizeFinancial)
+                            <div class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                                <div>
+                                    <flux:heading size="sm">{{ __('financial.obligation.title') }}</flux:heading>
+                                    <flux:text>{{ __('financial.recognize_help') }}</flux:text>
+                                </div>
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <flux:input
+                                        wire:model="financialAmounts.{{ $fulfillment->id }}"
+                                        :label="__('financial.obligation.amount')"
+                                    />
+                                    <flux:select
+                                        wire:model="financialUnits.{{ $fulfillment->id }}"
+                                        :label="__('accounting.monetary_unit')"
+                                    >
+                                        @foreach ($monetaryUnits as $code => $unit)
+                                            <flux:select.option :value="$code">
+                                                {{ $code }} · {{ $unit['name'] }}
+                                            </flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                </div>
+                                <flux:button
+                                    wire:click="recognizeFinancialObligation({{ $fulfillment->id }})"
+                                    size="sm"
+                                    variant="primary"
+                                >
+                                    {{ __('financial.recognize') }}
+                                </flux:button>
+                            </div>
+                        @endif
+
                         @can('correct', $fulfillment)
                             <div class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
                                 <flux:heading size="sm">{{ __('commitments.show.correction') }}</flux:heading>

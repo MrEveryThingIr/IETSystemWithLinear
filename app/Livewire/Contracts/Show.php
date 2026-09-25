@@ -4,10 +4,13 @@ namespace App\Livewire\Contracts;
 
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\ProposeContractAmendment;
+use App\Models\Actor;
 use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\ContractVersion;
+use App\Models\FinancialObligation;
 use App\Models\User;
+use App\Support\ContractFinancialSummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -114,6 +117,37 @@ class Show extends Component
             ->orderBy('id')
             ->get();
         $context = $this->contract->contextBinding?->context;
+        $actor = $user->actor;
+        abort_unless($actor instanceof Actor, 403);
+
+        $financialObligations = FinancialObligation::query()
+            ->whereHas(
+                'contractVersion',
+                fn ($query) => $query->where('contract_id', $this->contract->id),
+            )
+            ->where(function ($query) use ($actor): void {
+                $query->where('debtor_actor_id', $actor->id)
+                    ->orWhere('creditor_actor_id', $actor->id);
+            })
+            ->with([
+                'fulfillment.commitment',
+                'debtor.user',
+                'creditor.user',
+                'monetaryUnit',
+                'settlements',
+            ])
+            ->orderBy('id')
+            ->get();
+
+        $financialSummaries = $financialObligations
+            ->pluck('monetaryUnit')
+            ->unique('id')
+            ->values()
+            ->map(fn ($unit): array => [
+                'unit' => $unit,
+                'summary' => app(ContractFinancialSummary::class)
+                    ->forContractUnit($this->contract, $unit, $actor),
+            ]);
 
         if ($canAmend && $this->amendmentTerms === '' && $activeVersion instanceof ContractVersion) {
             $this->amendmentTitle = $activeVersion->termsRevision->title;
@@ -130,6 +164,8 @@ class Show extends Component
             'canCreateCommitment',
             'commitments',
             'context',
+            'financialObligations',
+            'financialSummaries',
         ));
     }
 

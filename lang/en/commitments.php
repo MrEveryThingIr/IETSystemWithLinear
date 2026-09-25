@@ -70,7 +70,7 @@ return [
         'resolve_accept' => 'Resolve as accepted',
         'resolve_reject' => 'Resolve as rejected',
         'resolution_note' => 'Resolution note',
-        'financial_boundary' => 'Accepted Fulfillment is performance truth only. Phase 17 will explicitly derive Financial Obligations and Settlement; this page never posts Accounting automatically.',
+        'financial_boundary' => 'Accepted Fulfillment is performance truth. A separate explicit Financial Obligation may now be recognized from it; Accounting and Settlement still require their own actions and never happen automatically.',
     ],
     'planner' => [
         'frequency' => 'Schedule pattern',

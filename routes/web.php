@@ -43,6 +43,7 @@ use App\Livewire\Contexts\Timeline as ContextTimeline;
 use App\Livewire\Contracts\Create as ContractCreate;
 use App\Livewire\Contracts\Index as ContractIndex;
 use App\Livewire\Contracts\Show as ContractShow;
+use App\Livewire\Financial\Show as FinancialObligationShow;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
 use App\Livewire\Groups\Create as CreateGroup;
@@ -71,6 +72,7 @@ use App\Livewire\Relationships\Index as RelationshipIndex;
 use App\Livewire\Relationships\Show as RelationshipShow;
 use App\Models\Actor;
 use App\Models\Contract;
+use App\Models\FinancialObligation;
 use App\Models\Group;
 use App\Models\Proposal;
 use App\Models\Relationship;
@@ -117,6 +119,9 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/contracts/{contract}/commitments/create', CommitmentCreate::class)->name('commitments.create');
     Route::livewire('/contracts/{contract}', ContractShow::class)->can('view', 'contract')->name('contracts.show');
     Route::livewire('/commitments/{commitment}', CommitmentShow::class)->can('view', 'commitment')->name('commitments.show');
+    Route::livewire('/financial-obligations/{obligation}', FinancialObligationShow::class)
+        ->can('view', 'obligation')
+        ->name('financial-obligations.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/create', PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');

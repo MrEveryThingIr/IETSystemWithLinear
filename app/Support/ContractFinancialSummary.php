@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\FulfillmentStatus;
+use App\Models\Actor;
 use App\Models\Contract;
 use App\Models\FinancialObligation;
 use App\Models\Fulfillment;
@@ -27,20 +28,47 @@ final class ContractFinancialSummary
      *   confirmed_settlement_count: int
      * }
      */
-    public function forContractUnit(Contract $contract, MonetaryUnit $unit): array
-    {
+    public function forContractUnit(
+        Contract $contract,
+        MonetaryUnit $unit,
+        ?Actor $actor = null,
+    ): array {
         $scheduledCount = PlanOccurrence::query()
             ->whereHas(
-                'plan.commitmentBinding.commitment.contractVersion',
-                fn ($query) => $query->where('contract_id', $contract->id),
+                'plan.commitmentBinding.commitment',
+                function ($query) use ($contract, $actor): void {
+                    $query->whereHas(
+                        'contractVersion',
+                        fn ($query) => $query->where('contract_id', $contract->id),
+                    );
+
+                    if ($actor instanceof Actor) {
+                        $query->where(function ($query) use ($actor): void {
+                            $query->where('obligor_actor_id', $actor->id)
+                                ->orWhere('beneficiary_actor_id', $actor->id);
+                        });
+                    }
+                },
             )
             ->where('status', '!=', PlanOccurrenceStatus::Cancelled->value)
             ->count();
 
         $fulfillmentQuery = Fulfillment::query()
             ->whereHas(
-                'commitment.contractVersion',
-                fn ($query) => $query->where('contract_id', $contract->id),
+                'commitment',
+                function ($query) use ($contract, $actor): void {
+                    $query->whereHas(
+                        'contractVersion',
+                        fn ($query) => $query->where('contract_id', $contract->id),
+                    );
+
+                    if ($actor instanceof Actor) {
+                        $query->where(function ($query) use ($actor): void {
+                            $query->where('obligor_actor_id', $actor->id)
+                                ->orWhere('beneficiary_actor_id', $actor->id);
+                        });
+                    }
+                },
             );
 
         $workedCount = (clone $fulfillmentQuery)
@@ -55,12 +83,21 @@ final class ContractFinancialSummary
             ->where('status', FulfillmentStatus::Disputed->value)
             ->count();
 
-        $obligations = FinancialObligation::query()
+        $obligationQuery = FinancialObligation::query()
             ->where('monetary_unit_id', $unit->id)
             ->whereHas(
                 'contractVersion',
                 fn ($query) => $query->where('contract_id', $contract->id),
-            )
+            );
+
+        if ($actor instanceof Actor) {
+            $obligationQuery->where(function ($query) use ($actor): void {
+                $query->where('debtor_actor_id', $actor->id)
+                    ->orWhere('creditor_actor_id', $actor->id);
+            });
+        }
+
+        $obligations = $obligationQuery
             ->with(['fulfillment', 'settlements'])
             ->get();
 
@@ -71,11 +108,10 @@ final class ContractFinancialSummary
         $confirmedSettlementCount = 0;
 
         foreach ($obligations as $obligation) {
-            $confirmed = $obligation->settlements
+            $confirmed = (int) $obligation->settlements
                 ->where('status', SettlementStatus::Confirmed)
                 ->sum('amount_minor');
 
-            $confirmed = (int) $confirmed;
             $paid += $confirmed;
             $confirmedSettlementCount += $obligation->settlements
                 ->where('status', SettlementStatus::Confirmed)

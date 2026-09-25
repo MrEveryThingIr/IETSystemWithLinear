@@ -3,6 +3,7 @@
 namespace App\Livewire\Commitments;
 
 use App\Actions\Commitments\CreateCommitmentPlan;
+use App\Actions\Financial\RecognizeFulfillmentFinancialObligation;
 use App\Actions\Fulfillments\OpenFulfillmentDispute;
 use App\Actions\Fulfillments\ResolveFulfillmentDispute;
 use App\Actions\Fulfillments\ReviewFulfillment;
@@ -18,10 +19,13 @@ use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\Support\CommitmentProgress;
+use App\Support\MonetaryUnitCatalog;
+use App\Support\MoneyAmount;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use InvalidArgumentException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -66,6 +70,12 @@ class Show extends Component
 
     /** @var array<int, string> */
     public array $resolutionNotes = [];
+
+    /** @var array<int, string> */
+    public array $financialAmounts = [];
+
+    /** @var array<int, string> */
+    public array $financialUnits = [];
 
     public function mount(Commitment $commitment): void
     {
@@ -218,6 +228,48 @@ class Show extends Component
         session()->flash('status', __('commitments.messages.resolved'));
     }
 
+    public function recognizeFinancialObligation(
+        int $fulfillmentId,
+        RecognizeFulfillmentFinancialObligation $recognize,
+    ): void {
+        $fulfillment = Fulfillment::query()
+            ->with(['commitment', 'financialObligation'])
+            ->findOrFail($fulfillmentId);
+
+        abort_unless((int) $fulfillment->commitment_id === (int) $this->commitment->id, 404);
+        abort_if($fulfillment->financialObligation !== null, 422, 'This Fulfillment already has a Financial Obligation.');
+
+        $unitCode = $this->financialUnits[$fulfillmentId] ?? 'IRR';
+        $meta = MonetaryUnitCatalog::get($unitCode);
+        $amountText = trim($this->financialAmounts[$fulfillmentId] ?? '');
+
+        try {
+            $amountMinor = MoneyAmount::parse($amountText, $meta['exponent']);
+        } catch (InvalidArgumentException) {
+            $this->addError('financialAmounts.'.$fulfillmentId, __('financial.validation.amount'));
+
+            return;
+        }
+
+        abort_if($amountMinor <= 0, 422, 'Financial Obligation amount must be positive.');
+
+        $recognize->execute(
+            $fulfillment,
+            $this->user(),
+            $unitCode,
+            $amountMinor,
+            description: 'Accepted Fulfillment for '.$this->commitment->title,
+        );
+
+        unset(
+            $this->financialAmounts[$fulfillmentId],
+            $this->financialUnits[$fulfillmentId],
+        );
+
+        $this->refreshCommitment();
+        session()->flash('status', __('financial.messages.recognized'));
+    }
+
     public function render(): View
     {
         $this->refreshCommitment();
@@ -237,6 +289,8 @@ class Show extends Component
             'isSatisfied' => $progress->isSatisfied($this->commitment),
             'canManage' => Gate::forUser($user)->allows('manage', $this->commitment),
             'canSubmit' => Gate::forUser($user)->allows('submit', $this->commitment),
+            'canRecognizeFinancial' => (int) $user->actor?->id === (int) $this->commitment->beneficiary_actor_id,
+            'monetaryUnits' => MonetaryUnitCatalog::all(),
             'plan' => $plan,
             'completedOccurrences' => $completedOccurrences,
             'timezone' => TemporalPreferences::timezoneFor($user),
@@ -262,12 +316,21 @@ class Show extends Component
                 'fulfillments.correction',
                 'fulfillments.dispute.openedBy.user',
                 'fulfillments.dispute.resolvedBy.user',
+                'fulfillments.financialObligation.monetaryUnit',
+                'fulfillments.financialObligation.settlements',
                 'events.actor.user',
             ])
             ->findOrFail($this->commitment->id);
 
         Gate::forUser($this->user())->authorize('view', $commitment);
         $this->commitment = $commitment;
+
+        foreach ($commitment->fulfillments as $fulfillment) {
+            if ($fulfillment->status === FulfillmentStatus::Accepted
+                && $fulfillment->financialObligation === null) {
+                $this->financialUnits[$fulfillment->id] ??= 'IRR';
+            }
+        }
     }
 
     /** @return list<string> */
