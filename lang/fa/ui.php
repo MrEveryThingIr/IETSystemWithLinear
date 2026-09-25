@@ -670,6 +670,7 @@ return [
         'type_select' => 'انتخاب',
         'select_options' => 'گزینه‌های انتخاب',
         'select_options_help' => 'هر گزینه را در یک خط با قالب «value|Label» بنویسید؛ مثلاً active|فعال.',
+        'select_options_placeholder' => "on_track|طبق برنامه\ndelayed|با تأخیر\nblocked|متوقف",
         'remove_field' => 'حذف فیلد',
         'add_field' => 'افزودن فیلد',
         'update_definition' => 'به‌روزرسانی تعریف پیش‌نویس',
