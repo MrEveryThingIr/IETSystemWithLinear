@@ -44,6 +44,10 @@ class SubmitFulfillment
         $current = $this->currentUser($user);
 
         if ($corrects instanceof Fulfillment) {
+            $corrects = Fulfillment::query()
+                ->with('commitment')
+                ->findOrFail($corrects->id);
+
             Gate::forUser($current)->authorize('correct', $corrects);
         } else {
             Gate::forUser($current)->authorize('submit', $commitment);
