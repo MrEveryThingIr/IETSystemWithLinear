@@ -91,8 +91,8 @@ class SystemDomainBlueprints
     }
 
     /**
-     * @param list<string> $capabilities
-     * @param list<string> $contentBlueprintSlugs
+     * @param  list<string>  $capabilities
+     * @param  list<string>  $contentBlueprintSlugs
      * @return array<string, mixed>
      */
     private function relationship(
