@@ -59,6 +59,38 @@ class AccessInvitationJourneyTest extends TestCase
             ->assertSee(route('access-invitations.register', $token), false);
     }
 
+    public function test_reserved_access_invitation_must_be_single_use_while_unreserved_link_may_be_multi_use(): void
+    {
+        $administrator = Actor::factory()->create();
+        PlatformAccessGrant::factory()->for($administrator->user)->create([
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        app(IssueAccessInvitation::class)->execute(
+            $administrator->user,
+            'reserved@example.com',
+            2,
+        );
+    }
+
+    public function test_unreserved_access_invitation_may_be_multi_use(): void
+    {
+        $administrator = Actor::factory()->create();
+        PlatformAccessGrant::factory()->for($administrator->user)->create([
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        $invitation = app(IssueAccessInvitation::class)->execute(
+            $administrator->user,
+            null,
+            3,
+        );
+
+        $this->assertNull($invitation->email);
+        $this->assertSame(3, $invitation->max_uses);
+    }
+
     public function test_access_invited_registration_creates_identity_and_returns_to_getting_started_after_verification(): void
     {
         Notification::fake();
