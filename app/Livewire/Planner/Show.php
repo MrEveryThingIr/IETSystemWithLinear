@@ -108,6 +108,7 @@ class Show extends Component
         $plan = Plan::query()
             ->with([
                 'context.assets',
+                'domainBlueprintVersion.blueprint',
                 'creator.user',
                 'participants.actor.user',
                 'scheduleRules.reminders',

@@ -1,6 +1,24 @@
 <section class="mx-auto max-w-4xl space-y-6">
     <x-app.page-header :title="__('planner.create.title')" :description="__('planner.create.help')" />
 
+    @if ($blueprintVersion)
+        <flux:callout>
+            <div class="space-y-3">
+                <div class="font-medium">
+                    {{ __('journeys.guided_by', [
+                        'name' => $blueprintVersion->blueprint->name,
+                        'version' => $blueprintVersion->version,
+                    ]) }}
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($blueprintVersion->capabilities as $capability)
+                        <flux:badge color="zinc">{{ __('journeys.capabilities.'.$capability) }}</flux:badge>
+                    @endforeach
+                </div>
+            </div>
+        </flux:callout>
+    @endif
+
     <flux:callout>
         <div class="font-medium">{{ __('planner.create.context') }}</div>
         <div class="mt-1" dir="auto">{{ $contextLabel }}</div>

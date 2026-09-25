@@ -15,6 +15,9 @@
             {{ __('ui.navigation.profile') }}
         </flux:sidebar.item>
         @unless ($officeAlpha)
+            <flux:sidebar.item :href="route('journeys.index')" :current="request()->routeIs('journeys.*')" icon="map">
+                {{ __('journeys.title') }}
+            </flux:sidebar.item>
             <flux:sidebar.item :href="route('relationships.index')" :current="request()->routeIs('relationships.*')" icon="link">
                 {{ __('relationships.title') }}
             </flux:sidebar.item>

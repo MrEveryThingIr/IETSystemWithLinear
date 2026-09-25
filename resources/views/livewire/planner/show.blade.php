@@ -12,6 +12,27 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    @if ($plan->domainBlueprintVersion)
+        <flux:callout>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('journeys.source') }}</div>
+                    <div class="mt-1 font-medium">
+                        {{ __('journeys.source_version', [
+                            'name' => $plan->domainBlueprintVersion->blueprint->name,
+                            'version' => $plan->domainBlueprintVersion->version,
+                        ]) }}
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($plan->domainBlueprintVersion->capabilities as $capability)
+                        <flux:badge color="zinc">{{ __('journeys.capabilities.'.$capability) }}</flux:badge>
+                    @endforeach
+                </div>
+            </div>
+        </flux:callout>
+    @endif
+
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
             <flux:card class="space-y-4">

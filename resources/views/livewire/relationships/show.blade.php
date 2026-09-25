@@ -26,6 +26,27 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    @if ($relationship->domainBlueprintVersion)
+        <flux:callout>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('journeys.source') }}</div>
+                    <div class="mt-1 font-medium">
+                        {{ __('journeys.source_version', [
+                            'name' => $relationship->domainBlueprintVersion->blueprint->name,
+                            'version' => $relationship->domainBlueprintVersion->version,
+                        ]) }}
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($relationship->domainBlueprintVersion->capabilities as $capability)
+                        <flux:badge color="zinc">{{ __('journeys.capabilities.'.$capability) }}</flux:badge>
+                    @endforeach
+                </div>
+            </div>
+        </flux:callout>
+    @endif
+
     @if ($canRespond)
         <flux:callout variant="warning">{{ __('relationships.show.pending_for_you') }}</flux:callout>
     @elseif ($relationship->status === \App\RelationshipStatus::Proposed)

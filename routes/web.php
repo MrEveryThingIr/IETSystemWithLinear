@@ -50,6 +50,7 @@ use App\Livewire\Groups\Create as CreateGroup;
 use App\Livewire\Groups\Index as GroupIndex;
 use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
+use App\Livewire\Journeys\Index as JourneyIndex;
 use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceManagement;
 use App\Livewire\Intents\Create as IntentCreate;
@@ -107,6 +108,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
+    Route::livewire('/journeys', JourneyIndex::class)->name('journeys.index');
     Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
     Route::livewire('/relationships/create', RelationshipCreate::class)->can('create', Relationship::class)->name('relationships.create');
     Route::livewire('/relationships/{relationship}', RelationshipShow::class)->can('view', 'relationship')->name('relationships.show');
