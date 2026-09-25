@@ -61,7 +61,7 @@
                     </div>
                     <div class="mt-2 flex flex-wrap gap-2">
                         @foreach ($match->reasons as $reason)
-                            <flux:badge color="zinc">{{ $reason }}</flux:badge>
+                            <flux:badge color="zinc">{{ __('intents.matches.reasons.'.$reason) }}</flux:badge>
                         @endforeach
                     </div>
                 </div>
