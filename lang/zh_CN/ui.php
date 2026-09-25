@@ -35,6 +35,7 @@ return [
         'your_requests' => '我的申请',
         'reviewer_note' => '审核备注：:note',
         'pending_requests' => '待审核的平台级权限申请',
+        'group_creation_review_help' => '审核用户提出的创建群组权限申请。',
         'pending' => '待审核',
         'reviewer_note_optional' => '审核备注（可选）',
         'approve' => '批准',
