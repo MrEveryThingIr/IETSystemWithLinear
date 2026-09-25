@@ -40,13 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 16 is integrated on `integration/ideal-v1` at merge checkpoint `d4289f46d4726d5fc5a581abb43ce6a1efc6dfc8`.
+Phase 17 is integrated on `integration/ideal-v1` at merge checkpoint `ec284490ac1e43b384abfbe9ee7bba1bf15e84f9`.
 
-Phase 17 — Financial Obligation + Settlement bridge — is remote-green on `feat/ideal-v1-17-financial-obligation-settlement`: runtime `47bae48638345a807623ceb7f1ae44866d09d9e6` / CI `36115933156` (502 tests / 3065 assertions), documentation/manual `a24c1c3a3a34290c15e8d3d5cb633df22d5bead9` / CI `36116508652` (502 tests / 3069 assertions), pending integration.
+Phase 18 — Journey / Relationship / Domain Blueprints — is remote-green on `feat/ideal-v1-18-domain-blueprints`: kernel `f6f31eac3941e9efef188d07a6ffd9a091cbcb81` / CI `36118370719` (507 tests / 3109 assertions), runtime/UI `e4c9cb4cce39a1e0a37bad6ae72e97b6ab5feb77` / CI `36119387963` (510 tests / 3138 assertions), with documentation/manual closure pending its final feature-branch gate.
 
-After Phase 17 integration, continue directly with **Phase 18 — Journey / Relationship / Domain Blueprints** from the integration trunk.
+After Phase 18 integration, continue directly with **Phase 19 — Need / Offer Matching** from the integration trunk.
 
-Persistent Phase 17 boundary: accepted Fulfillment is performance truth, Financial Obligation is explicit shared economic-source truth, Personal Accounting posting is actor-owned ledger truth, Settlement is counterparty-confirmed payment-record truth, and Settlement Accounting is another explicit per-Actor posting. Never mutate a magic balance or infer payment/obligation from Conversation, Content, Planner completion or Contract activation.
+Persistent Phase 18 boundary: Domain/Journey Blueprints are immutable versioned composition recipes. They may configure terminology, recommended capabilities, useful Content templates and guided-entry defaults, but they never grant authorization or create Proposal, Contract, Commitment, Fulfillment, Financial Obligation, Accounting or Settlement authority. Relationship/Plan instances preserve the exact source BlueprintVersion and never silently upgrade.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 
