@@ -32,7 +32,7 @@ Before the immutable candidate is handed to the owner:
 - the Profile editor can manage the same subject/arrangement/value facets created by the guided Intent journey;
 - full CI is green on the exact candidate;
 - canonical docs describe the candidate rather than an old phase;
-- production configuration uses `APP_ENV=production`, `APP_DEBUG=false`, a real `APP_KEY`, HTTPS `APP_URL`, real database/mail/private-storage configuration, supervised queue workers and scheduler;
+- production configuration uses `APP_ENV=production`, `APP_DEBUG=false`, `IET_RELEASE_PROFILE=full`, a real `APP_KEY`, HTTPS `APP_URL`, real database/mail/private-storage configuration, supervised queue workers and scheduler;
 - backups are automated and an isolated restore drill is performed on the selected production infrastructure;
 - logs/failed jobs/health are observable without exposing secrets/private content.
 
