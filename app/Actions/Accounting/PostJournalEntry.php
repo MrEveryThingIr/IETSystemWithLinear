@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 class PostJournalEntry
 {
     /**
-     * @param list<array{account: Account, debit_minor?: int, credit_minor?: int, memo?: ?string}> $lines
+     * @param  list<array{account: Account, debit_minor?: int, credit_minor?: int, memo?: ?string}>  $lines
      */
     public function execute(
         Ledger $ledger,
@@ -46,7 +46,7 @@ class PostJournalEntry
         $idempotencyKey = $idempotencyKey !== null ? trim($idempotencyKey) : null;
 
         abort_if($sourceType !== null && ($sourceType === '' || mb_strlen($sourceType) > 80), 422, 'Invalid Journal Entry source type.');
-        abort_if($sourceUuid !== null && ! Str::isUuid($sourceUuid), 422, 'Invalid Journal Entry source UUID.');
+        abort_unless($sourceUuid === null || Str::isUuid($sourceUuid), 422, 'Invalid Journal Entry source UUID.');
         abort_if(
             ($sourceType === null) !== ($sourceUuid === null),
             422,

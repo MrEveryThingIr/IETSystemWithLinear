@@ -24,7 +24,6 @@ use App\Models\Contract;
 use App\Models\FinancialObligation;
 use App\Models\Fulfillment;
 use App\Models\JournalEntry;
-use App\Models\Settlement;
 use App\SettlementStatus;
 use App\Support\ContractFinancialSummary;
 use Carbon\CarbonImmutable;

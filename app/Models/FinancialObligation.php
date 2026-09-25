@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\FulfillmentStatus;
+use App\SettlementStatus;
 use Database\Factories\FinancialObligationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -101,7 +102,7 @@ class FinancialObligation extends Model
     public function confirmedPaidMinor(): int
     {
         return (int) $this->settlements()
-            ->where('status', \App\SettlementStatus::Confirmed->value)
+            ->where('status', SettlementStatus::Confirmed->value)
             ->sum('amount_minor');
     }
 
