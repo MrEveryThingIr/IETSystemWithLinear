@@ -15,6 +15,15 @@ return [
         'actors' => 'Actors',
         'account_menu' => 'Account menu',
     ],
+    'ambient' => [
+        'clock_label' => 'Local date and time',
+        'tips' => [
+            'Plan what matters, then record what actually happened.',
+            'Use exact evidence links when a fact must stay traceable.',
+            'Keep money history explicit: records are never implied by conversation.',
+            'Small, clear updates make long-lived systems easier to trust.',
+        ],
+    ],
     'appearance' => [
         'label' => 'Appearance',
         'system' => 'System',
@@ -155,6 +164,8 @@ return [
             'next_month' => 'Next month',
             'saved' => 'Date & time preferences saved.',
             'invalid_timezone' => 'The browser returned an unsupported timezone.',
+            'default_currency' => 'Default currency',
+            'default_currency_help' => 'Used when creating your personal ledger for a currency you have not used before. Existing accounting history is never converted automatically.',
         ],
         'semantic_added' => 'Profile item added.',
         'semantic_removed' => 'Profile item removed.',
