@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Relationships\CreateRelationship;
 use App\Models\Actor;
 use App\Models\Concept;
+use App\Models\NotificationOutbox;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\PlanParticipant;
@@ -67,8 +68,11 @@ class PlanReminderNotificationTest extends TestCase
         $this->assertSame(2, $emitter->emit());
         $this->assertSame(2, $emitter->emit());
 
-        $this->assertDatabaseCount('notification_outbox', 2);
-        $this->assertDatabaseHas('notification_outbox', ['recipient_user_id' => $owner->user->id, 'subject_uuid' => $occurrence->uuid]);
-        $this->assertDatabaseHas('notification_outbox', ['recipient_user_id' => $participant->user->id, 'subject_uuid' => $occurrence->uuid]);
+        $this->assertSame(
+            2,
+            NotificationOutbox::query()->where('kind', 'planner.reminder')->count(),
+        );
+        $this->assertDatabaseHas('notification_outbox', ['recipient_user_id' => $owner->user->id, 'subject_uuid' => $occurrence->uuid, 'kind' => 'planner.reminder']);
+        $this->assertDatabaseHas('notification_outbox', ['recipient_user_id' => $participant->user->id, 'subject_uuid' => $occurrence->uuid, 'kind' => 'planner.reminder']);
     }
 }
