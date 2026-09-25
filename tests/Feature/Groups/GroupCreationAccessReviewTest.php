@@ -31,7 +31,7 @@ class GroupCreationAccessReviewTest extends TestCase
 
         Livewire::actingAs($administrator)
             ->test(Index::class)
-            ->assertSee('Pending group-creation access requests')
+            ->assertSee(__('ui.groups.pending_creation_requests'))
             ->assertSee($requester->username)
             ->assertSee('I need to create a project group.')
             ->call('reviewGroupCreationAccess', $request->id, true)
@@ -50,7 +50,7 @@ class GroupCreationAccessReviewTest extends TestCase
 
         Livewire::actingAs($requester)
             ->test(Index::class)
-            ->assertSee('Access request pending')
-            ->assertDontSee('Pending group-creation access requests');
+            ->assertSee(__('ui.groups.access_request_pending'))
+            ->assertDontSee(__('ui.groups.pending_creation_requests'));
     }
 }
