@@ -58,6 +58,34 @@ class ReleaseExperienceTest extends TestCase
             ->assertDontSee('ui.actions.cancel');
     }
 
+
+    public function test_persian_publish_surfaces_render_without_raw_translation_keys(): void
+    {
+        config()->set('release.profile', 'full');
+
+        $actor = Actor::factory()->create();
+        $user = $actor->user;
+        $user->forceFill(['locale' => 'fa'])->save();
+
+        $faUi = require lang_path('fa/ui.php');
+
+        $this->withoutVite()
+            ->actingAs($user)
+            ->get(route('proposals.create'))
+            ->assertOk()
+            ->assertSee($faUi['common']['cancel'])
+            ->assertDontSee('ui.actions.cancel');
+
+        $this->withoutVite()
+            ->actingAs($user)
+            ->get(route('platform.access'))
+            ->assertOk()
+            ->assertSee($faUi['platform_access']['title'])
+            ->assertSee($faUi['platform_access']['create_groups'])
+            ->assertDontSee('Platform access')
+            ->assertDontSee('Request group-creation access');
+    }
+
     public function test_office_alpha_still_exposes_access_invitation_management_to_authorized_admins(): void
     {
         config()->set('release.profile', 'office_alpha');
