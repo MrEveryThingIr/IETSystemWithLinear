@@ -670,6 +670,7 @@ return [
         'type_select' => 'اختيار',
         'select_options' => 'خيارات الاختيار',
         'select_options_help' => 'خيار واحد في كل سطر بصيغة value|Label.',
+        'select_options_placeholder' => "on_track|وفق الخطة\ndelayed|متأخر\nblocked|متوقف",
         'remove_field' => 'إزالة الحقل',
         'add_field' => 'إضافة حقل',
         'update_definition' => 'تحديث تعريف المسودة',
