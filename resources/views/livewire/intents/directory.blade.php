@@ -1,4 +1,4 @@
-<section class="mx-auto max-w-7xl space-y-6">
+<section class="mx-auto max-w-7xl space-y-6" @if($highlight) x-data x-init="requestAnimationFrame(() => document.getElementById('intent-{{ $highlight }}')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))" @endif>
     <x-app.page-header :title="__('intents.directory.title')" :description="__('intents.directory.help')">
         <x-slot:actions>
             <flux:button :href="route('intents.create')" variant="primary" icon="plus">{{ __('intents.directory.add') }}</flux:button>
@@ -9,7 +9,7 @@
 
     <div class="flex flex-wrap gap-2">
         @foreach (['all','needs','offers','services','property','capital','collaboration'] as $option)
-            <button type="button" wire:click="$set('quick', '{{ $option }}')" class="rounded-full border px-3 py-1.5 text-sm {{ $quick === $option ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900' : 'border-zinc-300 dark:border-zinc-700' }}">
+            <button type="button" wire:click="$set('quick', '{{ $option }}')" aria-pressed="{{ $quick === $option ? 'true' : 'false' }}" class="rounded-full border px-3 py-1.5 text-sm {{ $quick === $option ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900' : 'border-zinc-300 dark:border-zinc-700' }}">
                 {{ __('intents.quick.'.$option) }}
             </button>
         @endforeach
@@ -42,7 +42,7 @@
 
     <div class="grid gap-4 lg:grid-cols-2">
         @forelse ($intents as $intent)
-            <article id="intent-{{ $intent->uuid }}" class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <article id="intent-{{ $intent->uuid }}" tabindex="-1" class="rounded-2xl border bg-white p-5 shadow-sm transition dark:bg-zinc-900 {{ $highlight === $intent->uuid ? 'border-amber-500 ring-2 ring-amber-300/60 dark:border-amber-400' : 'border-zinc-200 dark:border-zinc-800' }}">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="min-w-0">
                         <div class="flex flex-wrap gap-2">
@@ -113,5 +113,5 @@
         @endforelse
     </div>
 
-    <flux:text class="text-xs text-zinc-500">{{ __('intents.directory.limit_note') }}</flux:text>
+    <div>{{ $intents->links() }}</div>
 </section>
