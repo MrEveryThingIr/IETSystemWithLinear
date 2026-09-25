@@ -35,6 +35,7 @@ return [
         'your_requests' => 'درخواست‌های من',
         'reviewer_note' => 'یادداشت بررسی‌کننده: :note',
         'pending_requests' => 'درخواست‌های سراسری در انتظار بررسی',
+        'group_creation_review_help' => 'درخواست‌های کاربرانی را بررسی کنید که اجازه ساخت گروه می‌خواهند.',
         'pending' => 'در انتظار',
         'reviewer_note_optional' => 'یادداشت بررسی‌کننده (اختیاری)',
         'approve' => 'تأیید',
