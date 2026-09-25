@@ -346,6 +346,11 @@ return [
         'title' => '群组',
         'overview' => '您的成员身份、收到的邀请以及邀请活动，尽在一处。',
         'create' => '创建群组',
+        'access_request_pending' => '权限申请正在等待审核',
+        'request_create_access' => '申请创建群组权限',
+        'pending_creation_requests' => '待审核的群组创建权限申请',
+        'pending_creation_help' => '审核希望获得群组创建权限的用户申请。',
+
         'your_groups' => '您的群组',
         'no_memberships' => '暂无有效成员身份',
         'no_memberships_help' => '打开一个群组邀请以开始加入申请。',
