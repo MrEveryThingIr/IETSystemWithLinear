@@ -2,6 +2,8 @@
     @php
         $homeUser = request()->user();
         $homeName = $homeUser?->actor?->profile?->display_name ?: $homeUser?->username;
+        $hasActor = $homeUser?->actor !== null;
+        $officeAlpha = config('release.profile') === 'office_alpha';
     @endphp
 
     <x-app.page-header
@@ -10,16 +12,49 @@
     >
         <x-slot:actions>
             <div class="flex flex-wrap gap-2">
-                <flux:button :href="route('planner.create')" variant="primary" icon="plus">
-                    {{ __('home.new_activity') }}
-                </flux:button>
-                <flux:button :href="route('intents.create')" variant="ghost">
-                    {{ __('home.new_intent') }}
+                @if ($hasActor && ! $officeAlpha)
+                    <flux:button :href="route('planner.create')" variant="primary" icon="plus">
+                        {{ __('home.new_activity') }}
+                    </flux:button>
+                @endif
+                @if ($hasActor)
+                    <flux:button :href="route('intents.create')" :variant="$officeAlpha ? 'primary' : 'ghost'">
+                        {{ __('home.new_intent') }}
+                    </flux:button>
+                @endif
+                <flux:button :href="route('profile.edit')" variant="ghost">
+                    {{ __('ui.navigation.profile') }}
                 </flux:button>
             </div>
         </x-slot:actions>
     </x-app.page-header>
 
+    <flux:callout variant="success">{{ __('ui.dashboard.verified') }}</flux:callout>
+
+    @if (! $hasActor)
+        <flux:callout>{{ __('home.actor_setup_pending') }}</flux:callout>
+    @endif
+
+    @unless ($officeAlpha)
+        <flux:card class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <flux:heading size="lg">{{ __('home.quick_links') }}</flux:heading>
+                    <flux:text>{{ __('home.quick_links_help') }}</flux:text>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <flux:button :href="route('contexts.personal')" size="sm" variant="ghost">{{ __('ui.context_content.my_content') }}</flux:button>
+                    <flux:button :href="route('manual')" size="sm" variant="ghost">{{ __('ui.navigation.manual') }}</flux:button>
+                    <flux:button :href="route('groups.index')" size="sm" variant="ghost">{{ __('ui.navigation.groups') }}</flux:button>
+                    @can('viewAny', App\Models\Actor::class)
+                        <flux:button :href="route('actors.index')" size="sm" variant="ghost">{{ __('ui.navigation.actors') }}</flux:button>
+                    @endcan
+                </div>
+            </div>
+        </flux:card>
+    @endunless
+
+    @unless ($officeAlpha)
     <div class="grid gap-6 xl:grid-cols-2">
         <flux:card class="space-y-4">
             <div>
@@ -109,7 +144,9 @@
         </div>
     </flux:card>
 
-    <div class="grid gap-6 xl:grid-cols-3">
+    @endunless
+
+    <div class="{{ $officeAlpha ? 'grid gap-6' : 'grid gap-6 xl:grid-cols-3' }}">
         <flux:card class="space-y-4">
             <div class="flex items-center justify-between gap-3">
                 <flux:heading size="lg">{{ __('home.needs_offers') }}</flux:heading>
@@ -131,6 +168,7 @@
             </div>
         </flux:card>
 
+        @unless ($officeAlpha)
         <flux:card class="space-y-4">
             <div class="flex items-center justify-between gap-3">
                 <flux:heading size="lg">{{ __('home.relationships') }}</flux:heading>
@@ -162,8 +200,10 @@
                 @endforelse
             </div>
         </flux:card>
+        @endunless
     </div>
 
+    @unless ($officeAlpha)
     <div class="grid gap-6 xl:grid-cols-2">
         <flux:card class="space-y-4">
             <div class="flex items-center justify-between gap-3">
@@ -181,15 +221,15 @@
                         <div class="grid grid-cols-3 gap-3 text-sm">
                             <div>
                                 <div class="text-zinc-500">{{ __('home.income') }}</div>
-                                <div class="font-semibold">{{ AppSupportMoneyAmount::format($summary['income_minor'], $summary['exponent']) }}</div>
+                                <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['income_minor'], $summary['exponent']) }}</div>
                             </div>
                             <div>
                                 <div class="text-zinc-500">{{ __('home.expense') }}</div>
-                                <div class="font-semibold">{{ AppSupportMoneyAmount::format($summary['expense_minor'], $summary['exponent']) }}</div>
+                                <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['expense_minor'], $summary['exponent']) }}</div>
                             </div>
                             <div>
                                 <div class="text-zinc-500">{{ __('home.net') }}</div>
-                                <div class="font-semibold">{{ AppSupportMoneyAmount::format($summary['net_minor'], $summary['exponent']) }}</div>
+                                <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['net_minor'], $summary['exponent']) }}</div>
                             </div>
                         </div>
                     </div>
@@ -212,15 +252,15 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('home.receivable') }}</div>
-                                <div class="mt-2 text-sm">{{ __('home.total') }}: {{ AppSupportMoneyAmount::format($summary['receivable_total_minor'], $summary['exponent']) }}</div>
-                                <div class="text-sm">{{ __('home.paid') }}: {{ AppSupportMoneyAmount::format($summary['receivable_paid_minor'], $summary['exponent']) }}</div>
-                                <div class="font-semibold">{{ __('home.outstanding') }}: {{ AppSupportMoneyAmount::format($summary['receivable_outstanding_minor'], $summary['exponent']) }}</div>
+                                <div class="mt-2 text-sm">{{ __('home.total') }}: {{ \App\Support\MoneyAmount::format($summary['receivable_total_minor'], $summary['exponent']) }}</div>
+                                <div class="text-sm">{{ __('home.paid') }}: {{ \App\Support\MoneyAmount::format($summary['receivable_paid_minor'], $summary['exponent']) }}</div>
+                                <div class="font-semibold">{{ __('home.outstanding') }}: {{ \App\Support\MoneyAmount::format($summary['receivable_outstanding_minor'], $summary['exponent']) }}</div>
                             </div>
                             <div>
                                 <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('home.payable') }}</div>
-                                <div class="mt-2 text-sm">{{ __('home.total') }}: {{ AppSupportMoneyAmount::format($summary['payable_total_minor'], $summary['exponent']) }}</div>
-                                <div class="text-sm">{{ __('home.paid') }}: {{ AppSupportMoneyAmount::format($summary['payable_paid_minor'], $summary['exponent']) }}</div>
-                                <div class="font-semibold">{{ __('home.outstanding') }}: {{ AppSupportMoneyAmount::format($summary['payable_outstanding_minor'], $summary['exponent']) }}</div>
+                                <div class="mt-2 text-sm">{{ __('home.total') }}: {{ \App\Support\MoneyAmount::format($summary['payable_total_minor'], $summary['exponent']) }}</div>
+                                <div class="text-sm">{{ __('home.paid') }}: {{ \App\Support\MoneyAmount::format($summary['payable_paid_minor'], $summary['exponent']) }}</div>
+                                <div class="font-semibold">{{ __('home.outstanding') }}: {{ \App\Support\MoneyAmount::format($summary['payable_outstanding_minor'], $summary['exponent']) }}</div>
                             </div>
                         </div>
                     </div>
@@ -262,4 +302,5 @@
     </flux:card>
 
     <flux:callout>{{ __('home.boundary') }}</flux:callout>
+    @endunless
 </section>
