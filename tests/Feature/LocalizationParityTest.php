@@ -132,7 +132,7 @@ class LocalizationParityTest extends TestCase
         ];
 
         foreach ($roots as $root) {
-            if (!is_dir($root)) {
+            if (! is_dir($root)) {
                 continue;
             }
 
