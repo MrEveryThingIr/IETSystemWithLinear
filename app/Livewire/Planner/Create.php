@@ -91,6 +91,16 @@ class Create extends Component
             $this->applyBlueprintDefaults();
         }
 
+        $requestedTime = trim((string) request()->query('time', ''));
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $requestedTime) === 1) {
+            $this->startTime = $requestedTime;
+        }
+
+        $requestedDuration = (int) request()->query('duration', 0);
+        if ($requestedDuration >= 1 && $requestedDuration <= 10080) {
+            $this->durationMinutes = $requestedDuration;
+        }
+
         if ($this->contextUuid === '') {
             $this->contextUuid = $personal->execute($user)->uuid;
         }
