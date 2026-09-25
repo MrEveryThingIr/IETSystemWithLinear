@@ -7,6 +7,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -17,6 +18,12 @@ class Index extends Component
 {
     #[Url]
     public string $filter = 'unread';
+
+    #[On('notification-inbox-changed')]
+    public function refreshInbox(): void
+    {
+        // Rendering this Livewire request reconciles the durable database inbox.
+    }
 
     public function markRead(string $id): void
     {
