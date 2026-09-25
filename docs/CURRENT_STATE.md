@@ -8,7 +8,7 @@ Phase 22 is integrated at `25a24e0fd0853347d73ec7b262ac274f76f40c6a`. The active
 
 The first publication is intentionally a bounded learning release: deterministic human workflows and durable domain evidence are the product; AI Copilot, Generic Workflow extraction, Reputation and Recommendations are post-v1 work. See `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.
 
-The inherited office-alpha audit defects around reserved Access Invitation reuse, Intent Directory authorization/pagination, create-to-directory highlighting, and Profile Intent value-model editing are being closed on this branch before the immutable release candidate is frozen.
+The inherited office-alpha audit defects around reserved Access Invitation reuse, Intent Directory authorization/pagination, create-to-directory highlighting, and Profile Intent value-model editing are now closed on this branch. Pre-integration candidate `38f95175040234593bc927f895954c893a38e9fd` passed CI run `36143475001` with 543 tests / 3316 assertions plus Pint, PHPStan, Vite, migration/ops, backup/restore and security gates green. Canonical release docs are being synchronized before the integration PR.
 
 
 ### Continuous Ideal-v1 integration
