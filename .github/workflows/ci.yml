@@ -63,8 +63,13 @@ jobs:
       - name: Verify formatting for changed PHP files
         shell: bash
         run: |
-          git fetch origin feat/group-spaces-communication
-          BASE_SHA="$(git merge-base HEAD origin/feat/group-spaces-communication)"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            git fetch origin integration/ideal-v1
+            BASE_SHA="$(git merge-base HEAD origin/integration/ideal-v1)"
+          fi
+
           mapfile -t PHP_FILES < <(git diff --name-only --diff-filter=ACMRT "$BASE_SHA"...HEAD -- '*.php')
 
           if (( ${#PHP_FILES[@]} == 0 )); then
