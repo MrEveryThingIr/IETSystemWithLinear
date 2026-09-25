@@ -553,6 +553,8 @@ Proof: Alice/Bob paid-work terms and Alice/Bob/Carol Riverside multi-party terms
 
 ## Phase 16 — Commitment + Fulfillment
 
+**Status: remote runtime implementation complete and green on `feat/ideal-v1-16-commitment-fulfillment` at `67b986cce96f7d6e72db811045a9c1a01c581ddb` / GitHub Actions `36093668972` — 495 tests / 2989 assertions.**
+
 Purpose: distinguish what must happen from what actually happened.
 
 Deliverables:

@@ -40,13 +40,13 @@ This reconstruction intentionally removes the unused AI assistance / Development
 
 ## Current objective
 
-Phase 14 is integrated on `integration/ideal-v1` at merge checkpoint `dfdfd33c99db57e36f11591fd9a84a1c32cbb333`.
+Phase 15 is integrated on `integration/ideal-v1` at merge checkpoint `09c1c792baa5116645f7795887d59fecafe3fc3f`.
 
-Phase 15 — Contract, ContractVersion and explicit acceptance — is closure-green on `feat/ideal-v1-15-contract-version-acceptance` at `188e55f494d728b4e3cb7867385ce1320567f831` / CI `36056881847` (487 tests / 2907 assertions), pending integration.
+Phase 16 — Commitment + Fulfillment — is runtime-green on `feat/ideal-v1-16-commitment-fulfillment` at `67b986cce96f7d6e72db811045a9c1a01c581ddb` / CI `36093668972` (495 tests / 2989 assertions), pending documentation closure/integration.
 
-After Phase 15 integration, continue directly with **Phase 16 — Commitment + Fulfillment** from the integration trunk.
+After Phase 16 integration, continue directly with **Phase 17 — Financial Obligation + Settlement bridge** from the integration trunk.
 
-Persistent Phase 15 boundary: ContractVersion acceptance is authoritative agreement truth for the exact party/role/terms/effective-time snapshot. It must not silently create Commitment, Planner Occurrence, Fulfillment, Financial Obligation, Accounting posting, Settlement/payment, ownership or employment truth. Phase 16 owns Commitment/Fulfillment.
+Persistent Phase 16 boundary: ContractVersion is agreement truth; Commitment is obligation truth; Planner/Occurrence is schedule/execution-time truth; Fulfillment/review is actual-performance truth. Accepted Fulfillment must not silently create Financial Obligation, Accounting posting, Settlement, payment, ownership or employment truth. Phase 17 owns explicit financial consequences.
 
 Do not reintroduce AI runtime until the dedicated later AI milestone.
 
