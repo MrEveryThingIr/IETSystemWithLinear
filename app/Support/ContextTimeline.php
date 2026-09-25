@@ -3,8 +3,8 @@
 namespace App\Support;
 
 use App\Models\AdmissionEvent;
-use App\Models\Context;
 use App\Models\CommitmentEvent;
+use App\Models\Context;
 use App\Models\ContractEvent;
 use App\Models\ConversationMessage;
 use App\Models\JournalEntry;
@@ -53,7 +53,7 @@ class ContextTimeline
             ->limit($limit)
             ->get()
             ->each(function (JournalEntry $entry) use ($entries, $user): void {
-                if (!Gate::forUser($user)->allows('view', $entry->ledger)) {
+                if (! Gate::forUser($user)->allows('view', $entry->ledger)) {
                     return;
                 }
 
@@ -117,7 +117,7 @@ class ContextTimeline
             ->limit($limit)
             ->get()
             ->each(function (SpaceContentLifecycleEvent $event) use ($context, $entries, $user): void {
-                if (!Gate::forUser($user)->allows('view', $event->content)) {
+                if (! Gate::forUser($user)->allows('view', $event->content)) {
                     return;
                 }
 
