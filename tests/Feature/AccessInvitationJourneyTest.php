@@ -164,7 +164,7 @@ class AccessInvitationJourneyTest extends TestCase
 
         $this->assertSame(1, $invitation->refresh()->uses_count);
 
-        $this->get(route('access-invitations.show', $token))->assertNotFound();
+        $this->get(route('access-invitations.show', $token))->assertOk();
 
         $this->expectException(HttpException::class);
         Livewire::test(AccessRegister::class, ['token' => $token]);
