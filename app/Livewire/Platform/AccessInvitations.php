@@ -32,6 +32,13 @@ class AccessInvitations extends Component
         $this->authorizeUser();
     }
 
+    public function updatedEmail(): void
+    {
+        if (filled($this->email)) {
+            $this->maxUses = 1;
+        }
+    }
+
     public function create(IssueAccessInvitation $issue): void
     {
         $user = $this->authorizeUser();
