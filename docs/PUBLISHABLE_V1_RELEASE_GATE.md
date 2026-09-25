@@ -29,7 +29,7 @@ Before the immutable candidate is handed to the owner:
 - no known authorization-before-pagination defect;
 - a newly verified User with an active Actor receives an idempotent personal accounting foundation (ledger + standard accounts) without any fabricated JournalEntry or balance;
 - the User can change the default monetary unit for future personal ledger creation without silently converting existing accounting history;
-- Planner calendar supports practical year → month → day/hour inspection and can prefill a Plan from the selected date;
+- Planner calendar supports practical year → month → day → hour → 60/30/15/5/1-minute inspection and can prefill a Plan from an exact selected slot;
 - the authenticated layout exposes localized live date/time and bounded local guidance without third-party tracking;
 - reserved-email Access Invitations are single-use;
 - Intent create → highlight → manage is coherent;
