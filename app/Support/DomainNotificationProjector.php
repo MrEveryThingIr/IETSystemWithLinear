@@ -7,19 +7,26 @@ use App\ContractEventType;
 use App\FinancialObligationEventType;
 use App\Models\Actor;
 use App\Models\CommitmentEvent;
+use App\Models\ConversationMessage;
 use App\Models\ContractEvent;
+use App\Models\Evaluation;
 use App\Models\FinancialObligationEvent;
 use App\Models\ProposalEvent;
 use App\Models\RelationshipEvent;
+use App\Models\Submission;
 use App\Models\User;
 use App\ProposalEventType;
 use App\RelationshipEventType;
 use App\RelationshipParticipantStatus;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 
 class DomainNotificationProjector
 {
-    public function __construct(private readonly NotificationOutboxWriter $outbox) {}
+    public function __construct(
+        private readonly NotificationOutboxWriter $outbox,
+        private readonly ContextNotificationRecipients $recipients,
+    ) {}
 
     public function relationship(RelationshipEvent $event): void
     {
@@ -215,6 +222,96 @@ class DomainNotificationProjector
                 $obligation->uuid,
             );
         }
+    }
+
+
+    public function conversation(ConversationMessage $message): void
+    {
+        $message->loadMissing('conversation.context', 'author.user');
+
+        $context = $message->conversation->context;
+        $users = $this->recipients->viewers($context, $message->author_actor_id);
+
+        foreach ($users as $user) {
+            $this->outbox->request(
+                $user,
+                "conversation-message:{$message->id}:{$user->id}",
+                'conversation.message',
+                [
+                    'title_key' => 'notifications.messages.conversation_message_title',
+                    'body_key' => 'notifications.messages.conversation_message_body',
+                    'body_params' => ['author' => $message->author->user?->username ?? ''],
+                    'url' => route('contexts.conversation', $context).'#message-'.$message->uuid,
+                ],
+                $context,
+                'conversation_message',
+                $message->uuid,
+            );
+        }
+    }
+
+    public function submission(Submission $submission): void
+    {
+        $submission->loadMissing('context', 'submitter.user');
+
+        if ($submission->status !== Submission::STATUS_SUBMITTED) {
+            return;
+        }
+
+        $users = $this->recipients->viewers($submission->context, $submission->submitted_by_actor_id)
+            ->filter(fn (User $user): bool => Gate::forUser($user)->allows('reviewInteractions', $submission->context)
+                && Gate::forUser($user)->allows('view', $submission))
+            ->values();
+
+        foreach ($users as $user) {
+            $this->outbox->request(
+                $user,
+                "submission-submitted:{$submission->uuid}:{$user->id}",
+                'submission.submitted',
+                [
+                    'title_key' => 'notifications.messages.submission_submitted_title',
+                    'body_key' => 'notifications.messages.submission_submitted_body',
+                    'body_params' => ['author' => $submission->submitter->user?->username ?? ''],
+                    'url' => route('contexts.submissions.show', [$submission->context, $submission]),
+                ],
+                $submission->context,
+                'submission',
+                $submission->uuid,
+            );
+        }
+    }
+
+    public function evaluation(Evaluation $evaluation): void
+    {
+        if ($evaluation->status !== Evaluation::STATUS_FINALIZED) {
+            return;
+        }
+
+        $evaluation->loadMissing('submission.context', 'submission.submitter.user');
+
+        $submission = $evaluation->submission;
+        $user = $submission->submitter->user;
+
+        if (! $user instanceof User
+            || $user->status !== 'active'
+            || $user->email_verified_at === null
+            || ! Gate::forUser($user)->allows('view', $submission)) {
+            return;
+        }
+
+        $this->outbox->request(
+            $user,
+            "evaluation-finalized:{$evaluation->uuid}:{$user->id}",
+            'evaluation.finalized',
+            [
+                'title_key' => 'notifications.messages.evaluation_finalized_title',
+                'body_key' => 'notifications.messages.evaluation_finalized_body',
+                'url' => route('contexts.contents.index', $submission->context),
+            ],
+            $submission->context,
+            'evaluation',
+            $evaluation->uuid,
+        );
     }
 
     /**
