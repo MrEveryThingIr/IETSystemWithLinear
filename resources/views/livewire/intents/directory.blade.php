@@ -88,7 +88,15 @@
                     </div>
 
                     @unless (config('release.profile') === 'office_alpha')
-                        @if ((int) $intent->profile->actor_id !== (int) request()->user()?->actor?->id)
+                        @if ((int) $intent->profile->actor_id === (int) request()->user()?->actor?->id)
+                            <flux:button
+                                :href="route('intents.matches', $intent)"
+                                size="sm"
+                                variant="ghost"
+                            >
+                                {{ __('intents.matches.find') }}
+                            </flux:button>
+                        @else
                             <flux:button
                                 :href="route('relationships.create', ['intent' => $intent->uuid])"
                                 size="sm"
