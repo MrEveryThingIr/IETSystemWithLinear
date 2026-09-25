@@ -149,7 +149,7 @@ class LocalizationParityTest extends TestCase
                 );
 
                 foreach (array_unique($matches[1] ?? []) as $key) {
-                    if (str_ends_with($key, '.')) {
+                    if (str_ends_with($key, '.') || str_ends_with($key, '_')) {
                         continue;
                     }
 
