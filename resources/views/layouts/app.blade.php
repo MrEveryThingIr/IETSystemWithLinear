@@ -27,7 +27,7 @@
     <body class="min-h-dvh bg-white text-zinc-900 antialiased dark:bg-zinc-900 dark:text-zinc-100">
         <x-app.shell :title="$pageTitle">
             @if ($contentStudioRoute)
-                <nav class="mb-5 flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-950/50" aria-label="Content Studio">
+                <nav class="mb-5 flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-950/50" :aria-label="__('studio.navigation_label')">
                     <flux:button :href="route('groups.spaces.contents.studio', $contentStudioParams)" size="sm" :variant="request()->routeIs('groups.spaces.contents.studio') ? 'primary' : 'ghost'">
                         {{ __('studio.document') }}
                     </flux:button>
