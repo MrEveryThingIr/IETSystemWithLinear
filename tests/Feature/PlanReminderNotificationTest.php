@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\Relationships\CreateRelationship;
 use App\Models\Actor;
+use App\Models\Concept;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\PlanParticipant;
@@ -25,7 +26,7 @@ class PlanReminderNotificationTest extends TestCase
         $participant = Actor::factory()->create();
         $relationship = app(CreateRelationship::class)->execute(
             $owner->user,
-            \App\Models\Concept::factory()->create(),
+            Concept::factory()->create(),
             'coordinator',
             [['actor' => $participant, 'role' => 'inspector']],
             title: 'Riverside inspection collaboration',
