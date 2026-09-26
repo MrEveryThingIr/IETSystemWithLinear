@@ -2,7 +2,9 @@
 
 ## Mission
 
-Complete the first publishable Ideal-v1 through **selective assembly**: preserve the accepted integrated foundation, admit later improvements only as independently reviewed/reversible modules, keep remote automated gates strict, and defer owner-local/browser acceptance to the cumulative worksheet.
+Complete the first publishable Ideal-v1 through **browser-gated selective assembly**.
+
+The project is not rebuilt from scratch. Existing accepted code and later candidate branches are source libraries. One module is inspected, selectively improved, remotely validated, browser-accepted, corrected if necessary, and only then merged into the cumulative assembly.
 
 ## Read first
 
@@ -11,20 +13,13 @@ Complete the first publishable Ideal-v1 through **selective assembly**: preserve
 3. `docs/PROJECT_COMPASS.md`
 4. `docs/CURRENT_STATE.md`
 5. `docs/TARGET_ARCHITECTURE.md`
-6. `docs/PRODUCTION_ROADMAP.md`
-7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
-8. `docs/EXAMPLE_STORY_WORLD.md`
-9. `docs/handoffs/S0-selective-assembly-baseline.md`
-10. the active selective-module report/handoff
+6. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`
+7. `docs/PRODUCTION_ROADMAP.md`
+8. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
+9. `docs/EXAMPLE_STORY_WORLD.md`
+10. active module report/handoff
 
 ## Current Git line
-
-Accepted pre-selective integration foundation:
-
-~~~text
-integration/ideal-v1
-891b333c49f166e61b9fa466e30742b3d70996c0
-~~~
 
 Selective assembly:
 
@@ -32,99 +27,141 @@ Selective assembly:
 codex/ideal-v1-selective-assembly
 ~~~
 
-At creation, the assembly was exactly identical to `integration/ideal-v1` at `891b333`. Later planner/temporal/calendar/publication branches are **source libraries**, not merge units.
+Initial accepted pre-selective foundation:
 
-Certified S0 checkpoint:
+~~~text
+891b333c49f166e61b9fa466e30742b3d70996c0
+~~~
+
+S0 certified runtime checkpoint:
 
 ~~~text
 PR #30 merged
-assembly runtime/checkpoint: 2b89e301ef7f167083445cd305847f83dbf3e048
+runtime/checkpoint: 2b89e301ef7f167083445cd305847f83dbf3e048
 post-merge CI: 36236888120
-result: 552 tests / 3511 assertions; Pint 923 files; PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer green
+result: 552 tests / 3511 assertions
+Pint: 923 files
+PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer: green
 ~~~
 
-## Current objective — S1
+The assembly later received S0 documentation-only closure at `707eaa621e267c31beaf3d9c71dde3c92178429e` with CI `36237332774` green.
 
-S0 is remotely certified. Begin **S1 — registration, wallet, and default monetary unit** from the current selective assembly head.
+Current process-revision branch:
 
-S1 source material comes from `codex/release-first-publication-hardening`, primarily the provisioning/accounting changes around `2fda50e` and user-preference coverage around `fd79c7a`, but that branch must remain a source library rather than a merge unit.
+~~~text
+codex/selective-assembly-browser-gates
+~~~
 
-Review S1 as four independently reversible submodules:
+## Current objective — M0/S0 browser baseline
 
-1. verified-user provisioning action;
-2. real personal accounting foundation;
-3. changeable default monetary unit;
-4. safe, repeatable seed behavior.
+Remote S0 is complete, but the owner has now required browser acceptance **before each module is finally assembled**.
 
-For each submodule, prove existing behavior, intended behavior, authority boundaries, dependencies, persistence/migration effects, authorization/privacy, locale/temporal impact, focused/full tests, deferred browser acceptance, and rollback method before admission.
+Because that rule was adopted after S0 had already merged, M1 implementation is blocked until the owner browser-smokes the current assembly baseline.
 
-Owner-local/browser acceptance remains deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` under the standing continuous-remote authorization.
+Use the S0 section of `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
 
-## Selective admission order
+If a defect is found:
 
-After S0 closes, proceed one independently reversible module at a time:
+~~~text
+assembly head
+→ dedicated correction branch
+→ automated reproduction where practical
+→ correction
+→ remote CI
+→ repeat affected browser checks
+→ PR merge
+→ post-merge CI
+→ update S0 browser evidence
+~~~
 
-1. S1 — registration, wallet, default monetary unit.
-2. S2 — shared temporal kernel.
-3. S3 — permanent top status bar.
-4. S4 — Planner lifecycle and evidence.
-5. S5 — fractal calendar, split into read-only navigation, authorized projection, minute slots, creation prefill, then domain projections.
-6. S6 — cross-system temporal consistency.
-7. S7 — general UI/localization review.
-8. S8 — flexible fields/form extensions only after v1-critical behavior is accepted.
-9. S9 — release operations/publication.
+Only after explicit S0 browser acceptance begin M1.
 
-Within each module: security/data-loss/authority correctness outranks convenience; lower-coupling and smaller independently testable changes go first.
+## Active module order
 
-## Admission contract
+The authoritative dependency-aware order is in `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`.
 
-Every module records:
+Summary:
 
-- source branch/commit and selected commits/files/hunks;
-- behavior before and after;
-- owned authority and authority it must not acquire;
-- dependencies/consumers;
-- persistence, authorization/privacy, locale/timezone/calendar/RTL/accessibility impact;
-- focused and full validation;
-- deferred browser acceptance;
-- explicit deferrals and rollback method.
+1. M0 — certified foundation/browser baseline.
+2. M1 — access, identity, registration provisioning, wallet/default monetary unit.
+3. M2 — shared temporal/localization presentation kernel.
+4. M3 — Context, Content, Assets, immutable Evidence.
+5. M4 — Groups, Membership, Admissions, Group Agreements.
+6. M5 — Planner + fractal calendar.
+7. M6 — Personal Accounting.
+8. M7 — Profile Intent, Need/Offer, matching.
+9. M8 — Relationship, Conversation, Timeline.
+10. M9 — Proposal, negotiation, Contract/ContractVersion.
+11. M10 — Commitment + Fulfillment.
+12. M11 — Financial Obligation + Settlement + Accounting bridge.
+13. M12 — Structured Interaction, Submission, Evaluation.
+14. M13 — Notifications/realtime + Home/Today.
+15. M14 — Domain/Business Blueprints and composed journeys.
+16. M15 — cross-system consistency, flexible extensions, polish, operations, release.
 
-Unknown admission fields block that module, not unrelated modules.
+Historical S-plan mapping is preserved in the roadmap; it is not discarded.
+
+## Module admission contract
+
+Each module remains on its review branch until explicit browser acceptance.
+
+Every living module report records:
+
+- objective and current behavior;
+- source branches/commits/files/hunks;
+- authority/dependency/consumer maps;
+- wiring contract;
+- persistence/migration/authorization/privacy/temporal/money/locale/accessibility risks;
+- required/recommended/deferred improvements;
+- rollback;
+- remote tests;
+- browser script;
+- defects/fixes;
+- exact accepted head;
+- merge/post-merge CI;
+- next-module wiring notes.
+
+Preserve the original pre-plan. Append actual decisions rather than replacing history with a hindsight-only summary.
 
 ## Git discipline
 
 - Never develop directly on `main`, an RC, or `codex/ideal-v1-selective-assembly`.
-- Create each review branch from the current assembly SHA.
-- Fetch first; use fast-forward-only pulls locally.
-- Do not merge aggregate candidate branches wholesale.
-- One PR per independently reversible module.
-- No force-push of shared history.
-- Shared migrations stay append-only.
-- Keep rejected candidate branches until stable release.
-- Record source SHA, resulting assembly SHA, CI, browser evidence status, and rejected alternatives.
+- Branch each module from the current accepted assembly head.
+- Candidate branches are source libraries, not merge units.
+- One independently reversible PR per module or intentionally separated submodule.
+- Keep the PR open/draft through browser review.
+- Merge only the exact browser-accepted head.
+- No force-push of accepted shared history.
+- Shared migrations remain append-only.
+- Never use `migrate:fresh` on the owner's continuing acceptance database.
+- Keep rejected candidates until stable release.
 
-Current governance gap: the repository ruleset protects `main` only; the selective assembly branch is not yet server-side protected. Until repository settings are extended, preserve it by process and PR-only discipline.
+Current governance gap: GitHub server-side rules protect `main`, not the assembly branch. PR-only discipline therefore remains mandatory.
 
 ## Persistent product rules
 
-- Content is one independent versioned system; GroupSpace is one Context kind.
-- Content has a home/origin Context for authoring/authorization but may be presented/referenced elsewhere.
-- Normal presentation may follow current publication; evidence pins exact immutable revision/targets.
-- Contexts compose modules; they do not duplicate Content, Planner, Accounting, Submission, or other kernels.
-- Need/Offer is intent, not Match/Contract/obligation.
-- Relationship is coordination, not Group Membership, Contract, ownership, employment, financing right, or payment.
-- Conversation is collaboration evidence, not authoritative acceptance.
-- Contract, Commitment, Fulfillment, obligation/settlement, and Accounting remain distinct authorities.
-- Finance flows through explicit actions; balances are derived.
-- User-facing UX stays plain while specialized kernels retain authority.
-- Alice/Bob/Carol/Diego examples remain canonical across docs/tests.
+- User authentication and Actor participation are distinct.
+- Platform authority, Group Membership and Context access are distinct.
+- Content is one independent versioned system with home Context + authorized placement/reference.
+- Evidence pins exact immutable publication targets.
+- Need/Offer is intent; matching creates no obligation.
+- Relationship coordinates people but is not Contract/ownership/employment/financing authority.
+- Conversation text is collaboration evidence, not acceptance.
+- Group Agreement and party-specific negotiated Contract are distinct.
+- Contract, Commitment, Fulfillment, Financial Obligation/Settlement and Accounting remain separate authorities.
+- Financial truth flows through explicit Actions; balances are derived.
+- Planner schedule/completion never silently becomes Contract or financial truth.
+- Realtime is transport, not authority.
+- Alice/Bob/Carol/Diego examples remain canonical.
 
 ## Interruption recovery
 
 If interrupted:
 
-1. inspect `codex/ideal-v1-selective-assembly` current SHA and CI;
-2. inspect the active `codex/review-*` branch and its PR;
-3. read the active S-module handoff/report;
-4. never restart from chat memory or merge a candidate branch wholesale;
-5. continue the current module until its remote gate is green or a genuine stop condition appears.
+1. inspect current assembly SHA and CI;
+2. inspect current review branch/PR;
+3. read `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`;
+4. read the active living module report;
+5. inspect latest browser-acceptance status in the worksheet/report;
+6. do not start the next module unless the current browser gate is accepted;
+7. never resume from chat memory or merge an aggregate candidate wholesale.
