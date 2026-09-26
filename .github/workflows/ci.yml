@@ -93,8 +93,11 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "push" && ( "${{ github.ref_name }}" == "codex/ideal-v1-selective-assembly" || "${{ github.ref_name }}" == codex/review-s0-* || "${{ github.ref_name }}" == release/* ) ]]; then
-            echo "Running repository-wide Pint certification for an assembly, S0, or release checkpoint."
-            vendor/bin/pint --test
+            echo "Running repository-wide Pint diagnostic for an assembly, S0, or release checkpoint."
+            vendor/bin/pint --format agent
+            echo "Pint diagnostic diff:"
+            git diff --patch -- '*.php'
+            git diff --exit-code -- '*.php'
             exit 0
           fi
 
