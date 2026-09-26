@@ -377,6 +377,7 @@ return [
         'no_admissions' => 'در حال حاضر پذیرشی نیازمند توجه بازبین نیست.',
         'admissions_help' => 'درخواست‌های ارسال‌شده، درخواست‌های شفاف‌سازی و درخواست‌های تأییدشده در انتظار نهایی‌سازی در اینجا نمایش داده می‌شوند.',
         'unknown_applicant' => 'متقاضی ناشناس',
+        'submitted_label' => 'ارسال‌شده در',
         'submitted_ago' => 'ارسال :time',
         'settings' => 'تنظیمات گروه',
         'save_details' => 'ذخیره جزئیات',
@@ -514,6 +515,7 @@ return [
         'uses' => ':used/:maximum استفاده',
         'expires' => 'انقضا',
 
+        'created' => 'ایجاد',
         'created_expires' => 'ایجاد :created · انقضا :expires',
         'never' => 'هرگز',
         'revoke' => 'لغو',
