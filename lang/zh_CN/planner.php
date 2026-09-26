@@ -103,7 +103,7 @@ return [
         'timeline' => '空间时间线',
     ],
     'calendar' => [
-        'previous' => '上个月', 'next' => '下个月'
+        'previous' => '上个月', 'next' => '下个月',
         'previous_year' => '上一年',
         'next_year' => '下一年',
         'month_internal_note' => '选择一天以继续查看小时和已附加内容。',
