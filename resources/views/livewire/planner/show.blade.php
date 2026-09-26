@@ -81,11 +81,19 @@
 
                 <div class="space-y-3">
                     @forelse ($plan->occurrences->sortBy('scheduled_start_at') as $occurrence)
+                        @php
+                            $occurrencePhase = $occurrence->temporalPhase();
+                            $canStartOccurrence = $occurrence->canStartAt();
+                        @endphp
                         <article id="occurrence-{{ $occurrence->uuid }}" wire:key="plan-occurrence-{{ $occurrence->uuid }}" class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
                             <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                                        @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                            <flux:badge>{{ __('planner.occurrence_phase.'.$occurrencePhase) }}</flux:badge>
+                                        @else
+                                            <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                                        @endif
                                         <span class="text-xs text-zinc-500">{{ $occurrence->local_date->format('Y-m-d') }}</span>
                                     </div>
                                     <div class="mt-2 text-sm">
@@ -94,6 +102,15 @@
                                         →
                                         {{ $occurrence->scheduled_end_at->setTimezone($plan->timezone)->format('H:i') }}
                                     </div>
+
+                                    @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                        <div class="mt-1 text-xs text-zinc-500">
+                                            <span class="font-medium">{{ __('planner.plan.execution_window') }}:</span>
+                                            {{ $occurrence->window_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
+                                            →
+                                            {{ $occurrence->window_end_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
+                                        </div>
+                                    @endif
 
                                     @if ($occurrence->actual_start_at || $occurrence->actual_end_at)
                                         <div class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
@@ -107,12 +124,19 @@
 
                                 @if ($canParticipate && $plan->status === \App\PlanStatus::Active)
                                     <div class="flex flex-wrap gap-2">
-                                        @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
-                                            <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
-                                            <flux:button wire:click="completeOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.finish') }}</flux:button>
+                                        @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                            @if ($canStartOccurrence)
+                                                <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
+                                            @elseif ($occurrencePhase === 'future')
+                                                <flux:button size="sm" variant="ghost" disabled>
+                                                    {{ __('planner.plan.ready_at', ['time' => $occurrence->window_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i')]) }}
+                                                </flux:button>
+                                            @elseif ($occurrencePhase === 'missed')
+                                                <flux:button size="sm" variant="ghost" disabled>{{ __('planner.plan.start_window_closed') }}</flux:button>
+                                            @endif
                                             <flux:button wire:click="skipOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.skip') }}</flux:button>
                                             <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
-                                        @elseif ($occurrence->status === \App\PlanOccurrenceStatus::InProgress)
+                                        @elseif ($occurrence->status === AppPlanOccurrenceStatus::InProgress)
                                             <flux:button wire:click="completeOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.finish') }}</flux:button>
                                             <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
                                         @endif
