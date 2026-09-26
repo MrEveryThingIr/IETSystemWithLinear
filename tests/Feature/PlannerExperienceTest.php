@@ -26,6 +26,8 @@ use App\RelationshipStatus;
 use App\Support\ContextTimeline;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -208,6 +210,82 @@ class PlannerExperienceTest extends TestCase
         } finally {
             CarbonImmutable::setTestNow();
         }
+    }
+
+    public function test_calendar_can_seed_an_exact_future_date_and_minute_without_materializing_a_fake_start(): void
+    {
+        $bob = Actor::factory()->create();
+        $bob->user->forceFill([
+            'timezone' => 'Europe/Berlin',
+            'locale' => 'fa',
+        ])->save();
+
+        Livewire::actingAs($bob->user)
+            ->withQueryParams([
+                'view' => 'calendar',
+                'date' => '2037-05-17',
+            ])
+            ->test(PlannerIndex::class)
+            ->assertSet('view', 'calendar')
+            ->assertSet('selectedDate', '2037-05-17')
+            ->assertSet('month', '2037-05');
+
+        Livewire::actingAs($bob->user)
+            ->withQueryParams([
+                'date' => '2037-05-17',
+                'time' => '22:17',
+            ])
+            ->test(PlannerCreate::class)
+            ->assertSet('startsOn', '2037-05-17')
+            ->assertSet('startTime', '22:17')
+            ->set('title', 'Long-horizon life plan')
+            ->set('frequency', 'once')
+            ->set('durationMinutes', 60)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $occurrence = Plan::query()->with('occurrences')->sole()->occurrences->sole();
+
+        $this->assertSame('2037-05-17', $occurrence->local_date->format('Y-m-d'));
+        $this->assertSame(PlanOccurrenceStatus::Scheduled, $occurrence->status);
+        $this->assertNull($occurrence->actual_start_at);
+        $this->assertNull($occurrence->actual_end_at);
+    }
+
+    public function test_planner_can_upload_and_attach_new_evidence_from_occurrence_page(): void
+    {
+        Storage::fake('local');
+
+        $bob = Actor::factory()->create();
+        $context = app(EnsurePersonalContext::class)->execute($bob->user);
+        $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Evidence-ready plan', timezone: 'UTC');
+        $rule = app(CreatePlanScheduleRule::class)->execute(
+            $plan,
+            $bob->user,
+            PlanScheduleFrequency::Once,
+            '2026-09-25',
+            '08:00',
+            60,
+        );
+        $occurrence = $rule->occurrences()->sole();
+        $upload = UploadedFile::fake()->create('proof.txt', 1, 'text/plain');
+
+        Livewire::actingAs($bob->user)
+            ->test(PlannerShow::class, ['plan' => $plan])
+            ->call('chooseEvidenceOccurrence', $occurrence->id)
+            ->set('evidenceUpload', $upload)
+            ->set('evidenceUploadRightsStatus', 'owned')
+            ->call('attachEvidence')
+            ->assertHasNoErrors()
+            ->assertSee('proof.txt');
+
+        $asset = Asset::query()->where('context_id', $context->id)->where('original_filename', 'proof.txt')->sole();
+
+        $this->assertDatabaseHas('plan_occurrence_assets', [
+            'plan_occurrence_id' => $occurrence->id,
+            'asset_id' => $asset->id,
+            'added_by_actor_id' => $bob->id,
+        ]);
     }
 
     public function test_outsider_cannot_open_relationship_plan(): void
