@@ -158,6 +158,13 @@ return [
         'display_image_updated' => '当前头像已更新。',
         'display_image_cleared' => '当前头像已清除。',
         'image_removed' => '头像已删除。',
+        'account_preferences' => [
+            'title' => '账户偏好设置',
+            'help' => '选择个人账户和财务流程的默认设置。更改这些设置不会改写已有财务历史。',
+            'default_monetary_unit' => '默认货币',
+            'default_monetary_unit_help' => '新建个人财务记录默认使用此货币。现有账本和记录保留原有货币单位。',
+            'saved' => '账户偏好设置已保存。',
+        ],
         'temporal' => [
             'title' => '日期与时间偏好',
             'help' => '语言决定界面文字和格式，时区决定本地时钟，日历则是独立的显示偏好。日期以标准形式存储，因此切换这些偏好不会改变底层日期。',
