@@ -3,6 +3,13 @@
 return [
     'language' => '语言',
     'account' => '账户',
+    'ambient' => [
+        'messages' => [
+            'plan' => '规划下一项有用行动，并让原始记录保持权威。',
+            'record' => '记录真实发生的事情，而不是系统仅仅推断的内容。',
+            'review' => '今天的小复核，可以避免明天的历史含糊。',
+        ],
+    ],
     'navigation' => [
         'main' => '主导航',
         'open' => '打开导航',
@@ -122,6 +129,7 @@ return [
         'edit_yours' => '我的个人资料',
         'edit_help' => '专业地展示你的身份，同时让私人信息保持在你的控制之下。',
         'preview' => '预览个人资料',
+            'gregorian_equivalent' => '公历对应时间',
         'identity' => '专业身份',
         'identity_help' => '设置显示名称、职业标题、简介、位置和网站。',
         'display_name' => '显示名称',
@@ -470,6 +478,7 @@ return [
         'workflow' => '草稿 → 提议 → 已批准 → 生效。激活新版本将取代当前生效的版本，同时保留其历史记录。',
         'initial_help' => '初始文本将保存为第 1 版。在您批准并激活之前，它不会影响申请人。',
         'applicants_accept' => '申请人须在成为成员前接受当前生效的版本',
+        'effective_label' => '生效时间',
         'effective' => '自 :date 起生效',
         'revision_rationale' => '修订原因：',
         'decision_note' => '决定备注：',
@@ -503,7 +512,8 @@ return [
         'link_copied' => '链接已复制。',
         'exhausted' => '已用尽',
         'secret_not_recoverable' => '出于安全考虑，私密链接创建后将被隐藏。',
-        'uses' => '已使用 :used/:maximum 次',
+        'uses' => '已使用 :used/:maximum 次',        'expires' => '过期于',
+
         'created_expires' => '创建于 :created · 过期于 :expires',
         'never' => '永不过期',
         'revoke' => '撤销',
@@ -794,7 +804,8 @@ return [
         'empty' => '请先添加资料、语义信息或有效的需求/提供项，再创建选择性共享。',
         'shared_title' => '与你共享的资料信息',
         'shared_help' => '此视图只包含资料所有者明确共享给您的信息。',
-        'profile_owner' => '资料所有者',
+        'profile_owner' => '资料所有者',        'expires_label' => '访问权限过期时间',
+
         'expires_at' => '访问将在 :date 过期',
         'no_expiry' => '除非被撤销，否则访问不会过期。',
         'semantic' => '共享的语义陈述',
