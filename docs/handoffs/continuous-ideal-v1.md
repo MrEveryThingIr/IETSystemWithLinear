@@ -13,11 +13,12 @@ The project is not rebuilt from scratch. Existing accepted code and later candid
 3. `docs/PROJECT_COMPASS.md`
 4. `docs/CURRENT_STATE.md`
 5. `docs/TARGET_ARCHITECTURE.md`
-6. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`
-7. `docs/PRODUCTION_ROADMAP.md`
-8. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
-9. `docs/EXAMPLE_STORY_WORLD.md`
-10. active module report/handoff
+6. `docs/CAPABILITY_MESH_ARCHITECTURE.md`
+7. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`
+8. `docs/PRODUCTION_ROADMAP.md`
+9. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
+10. `docs/EXAMPLE_STORY_WORLD.md`
+11. active module report/handoff
 
 ## Current Git line
 
@@ -55,54 +56,56 @@ post-merge CI: 36238246665 — success
 runtime changes: none (governance/docs only)
 ~~~
 
-## Current objective — M0/S0 browser baseline
+## Current objective — F1 Shared Temporal Fabric
 
-Remote S0 is complete, but the owner has now required browser acceptance **before each module is finally assembled**.
+M00 proved the assembly is technically healthy. Owner browser inspection then confirmed that it is the older baseline and lacks several already-tested later improvements.
 
-Because that rule was adopted after S0 had already merged, M1 implementation is blocked until the owner browser-smokes the current assembly baseline.
+The current product gate is therefore **not M01 registration**.
 
-Use the S0 section of `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+Recover and second-review:
 
-If a defect is found:
+1. F1A — profile-aware Temporal Kernel across the application;
+2. F1B — permanent Ambient Capability Rail;
+3. F1C — shared Fractal Calendar Fabric;
+4. F1D — Capability Launcher / composition contract.
+
+Primary source libraries:
 
 ~~~text
-assembly head
-→ dedicated correction branch
-→ automated reproduction where practical
-→ correction
-→ remote CI
-→ repeat affected browser checks
-→ PR merge
-→ post-merge CI
-→ update S0 browser evidence
+codex/release-first-publication-hardening
+integration/ideal-v1-planner-temporal-candidate
+integration/ideal-v1-temporal-calendar-reconcile
+fix/planner-execution-window-calendar-evidence
+fix/planner-temporal-evidence-calendar-hardening
 ~~~
 
-Only after explicit S0 browser acceptance begin M1.
+Do not merge those branches wholesale. Compare/select/refactor the strongest coherent implementation.
 
-## Active module order
+## Active review model
 
-The authoritative dependency-aware order is in `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`.
+The old strict M0→M15 pipeline is superseded by docs/SELECTIVE_ASSEMBLY_ROADMAP.md.
 
-Summary:
+Review model:
 
-1. M0 — certified foundation/browser baseline.
-2. M1 — access, identity, registration provisioning, wallet/default monetary unit.
-3. M2 — shared temporal/localization presentation kernel.
-4. M3 — Context, Content, Assets, immutable Evidence.
-5. M4 — Groups, Membership, Admissions, Group Agreements.
-6. M5 — Planner + fractal calendar.
-7. M6 — Personal Accounting.
-8. M7 — Profile Intent, Need/Offer, matching.
-9. M8 — Relationship, Conversation, Timeline.
-10. M9 — Proposal, negotiation, Contract/ContractVersion.
-11. M10 — Commitment + Fulfillment.
-12. M11 — Financial Obligation + Settlement + Accounting bridge.
-13. M12 — Structured Interaction, Submission, Evaluation.
-14. M13 — Notifications/realtime + Home/Today.
-15. M14 — Domain/Business Blueprints and composed journeys.
-16. M15 — cross-system consistency, flexible extensions, polish, operations, release.
+~~~text
+shared foundation recovery
+→ independently accept capability nodes
+→ independently accept explicit seams
+→ test human-centered compositions that may stop at any level
+~~~
 
-Historical S-plan mapping is preserved in the roadmap; it is not discarded.
+Priority node pool after F1:
+
+1. Planner;
+2. Personal Accounting / Finance;
+3. Agreement / Contract authority;
+4. Need / Offer / Relationship;
+5. Group / Invitation / Admission / Membership;
+6. Content / Assets / Evidence;
+7. Submission / Evaluation;
+8. Notifications / Realtime / Home-Today.
+
+The review order is a priority order, not a claim that every earlier node is a runtime prerequisite.
 
 ## Module admission contract
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Remote gate complete. Owner browser gate pending.**
+**Remote gate complete. Owner browser observation completed; product acceptance remains open because the baseline intentionally predates previously tested cross-cutting improvements.**
 
 ## Module objective
 
@@ -210,10 +210,28 @@ finding
 → update this report
 ~~~
 
-## Next module
+## Owner browser observation
 
-Only after explicit owner acceptance:
+The owner ran the supplied assembly commands and inspected the system.
 
-**M01 — Access, identity, registration provisioning, personal wallet/default monetary unit.**
+Observed result:
 
-M01 pre-planning will inspect the accepted assembly and relevant source commits from publication hardening without wholesale merging that branch.
+- the application behaved like the known older accepted baseline;
+- no new baseline crash was reported;
+- however, previously tested later milestone behavior was absent, especially the profile-aware temporal layer, permanent live ambient header and fractal calendar work;
+- therefore this baseline is technically valid but is **not accepted as the intended product checkpoint**.
+
+This is classified as a roadmap/source-selection correction rather than a failure of the S0 CI proof.
+
+## Next work
+
+M01 registration is paused.
+
+The next recovery/review milestone is **F1 — Shared Temporal Fabric**:
+
+1. F1A Shared Temporal Kernel;
+2. F1B Ambient Capability Rail;
+3. F1C Fractal Calendar Fabric;
+4. F1D Capability Launcher/composition contract.
+
+See docs/SELECTIVE_ASSEMBLY_ROADMAP.md and docs/CAPABILITY_MESH_ARCHITECTURE.md.

@@ -11,12 +11,13 @@ This handbook is a map, not permission to override the canonical architecture. W
 3. `docs/PROJECT_COMPASS.md`;
 4. `docs/CURRENT_STATE.md`;
 5. `docs/TARGET_ARCHITECTURE.md`;
-6. `docs/PRODUCTION_ROADMAP.md`;
-7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`;
-8. `docs/EXAMPLE_STORY_WORLD.md`;
-9. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`, which supersedes the older deferred-browser process for the active assembly;
-10. the active milestone contract and report;
-11. relevant ADRs, especially `docs/ADR-001-identity-authority-and-simulation-boundaries.md`.
+6. `docs/CAPABILITY_MESH_ARCHITECTURE.md`;
+7. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`, which controls active recovery/review;
+8. `docs/PRODUCTION_ROADMAP.md`;
+9. `docs/CONTINUOUS_REMOTE_EXECUTION.md`;
+10. `docs/EXAMPLE_STORY_WORLD.md`;
+11. the active milestone contract and report;
+12. relevant ADRs, especially `docs/ADR-001-identity-authority-and-simulation-boundaries.md`.
 
 If this handbook conflicts with those sources, the canonical sources and accepted ADRs win. A chat, issue, branch name, old migration, or generated proposal is not architecture authority.
 
@@ -31,7 +32,7 @@ M00 governance merge: 24cddb2b5eaa199e90df88ccf779760c9cd24590
 handbook addition: cf6023330fdade51b1847b6743be04ea39c70724
 ~~~
 
-The runtime foundation is the accepted integration baseline after Phase 1–22 and publish-UI localization/rendering hardening. Subsequent S0/M00 work strengthens CI and records browser-gated assembly governance. M00 adds no product capability. Its remote gate is complete, but owner browser acceptance is pending; M01 implementation must not begin before that explicit acceptance.
+The runtime foundation is the accepted integration baseline after Phase 1–22 and publish-UI localization/rendering hardening. Subsequent S0/M00 work strengthened CI and recorded browser-gated assembly governance. Owner browser inspection confirmed that the foundation is technically healthy but predates several already-tested later improvements. M00 is therefore a valid technical baseline, not the final intended product checkpoint. The active next work is F1 Shared Temporal Fabric recovery, not M01 registration.
 
 M00 evidence is recorded in `Development-CodexReports/M00-certified-foundation-browser-baseline-report.md`. The certified process checkpoint reports 552 tests / 3511 assertions, repository-wide Pint across 923 files, PHPStan, Blade compilation, MySQL/SQLite/operations, Vite, npm audit and Composer audit green. These are remote gates, not browser proof.
 
@@ -704,24 +705,40 @@ new release candidate
 
 ## Prioritized pre-publication review
 
-Use this deterministic order:
+The active review model is no longer one mandatory M00→M15 pipeline.
 
-1. Complete and explicitly accept the current M00 certified-foundation browser smoke. Remote CI is green; browser acceptance remains pending.
-2. Security, authorization, privacy, immutable-history and data-loss defects.
-3. Verified-user provisioning, standard real personal accounts, default Monetary Unit and safe seeding.
-4. Minimal shared temporal kernel: locale, calendar, timezone, date-only versus instant.
-5. Permanent localized live date/time and ambient guidance bar.
-6. Planner occurrence execution windows and evidence.
-7. Fractal calendar admitted separately as period navigation, authorized projection, hour/minute slots and safe create-prefill.
-8. Cross-system temporal presentation one domain at a time.
-9. Rendered UI/localization/mobile/RTL/accessibility cohesion.
-10. Deployment, backup/restore, queues, scheduler, mail, monitoring and incident readiness.
-11. Immutable RC, owner browser acceptance and nine-day private experimental operation.
-12. Stable tag only after every release-blocking observation has a tested correction.
+Use this structure:
 
-Configurable form extensions, Generic Workflow, Reputation, Recommendations and AI Copilot are post-v1 unless a concrete current journey cannot be released safely without them.
+1. **F1 Shared Temporal Fabric recovery**
+   - profile-aware Temporal Kernel;
+   - permanent Ambient Capability Rail;
+   - shared Fractal Calendar Fabric;
+   - Capability Launcher/composition contract.
+2. **Independent capability-node reviews**, prioritized by current user value:
+   - Planner;
+   - Personal Accounting / Finance;
+   - Agreement / Contract authority;
+   - Need / Offer / Relationship;
+   - Group / Invitation / Admission / Membership;
+   - Content / Assets / Evidence;
+   - Submission / Evaluation;
+   - Notifications / Realtime / Home-Today.
+3. **Explicit seam reviews** after both endpoint nodes are accepted:
+   - Planner ↔ Finance;
+   - Planner ↔ Contract/Commitment;
+   - Contract/Fulfillment ↔ Financial Obligation;
+   - Settlement ↔ Accounting;
+   - each temporal node ↔ Calendar;
+   - each useful node ↔ Ambient header;
+   - relevant views ↔ Capability Launcher.
+4. **Human-centered composition review**, proving a flow may stop at a simple level or extend only when needed.
+5. **System-wide polish and release operations**.
 
-The active execution order is M00 through M15 in `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`. Existing functionality already present in the foundation is re-reviewed and selectively improved; module numbering does not mean the capability is absent. Every module uses a dedicated review branch, living report, remote gate, owner browser acceptance before merge, post-merge CI and recorded checkpoint. M00 is the one historical exception because its browser gate was adopted after remote integration.
+The review order is a priority order, not a claim that every earlier node is a runtime prerequisite.
+
+Configurable form extensions, Generic Workflow, Reputation, Recommendations and AI Copilot remain post-v1 unless a concrete current journey cannot be released safely without them.
+
+Every node/seam uses a dedicated review branch, living report, remote gate, owner browser acceptance before merge, post-merge CI and recorded checkpoint. The architecture contract is in `docs/CAPABILITY_MESH_ARCHITECTURE.md`; active recovery details are in `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`.
 
 At this snapshot, GitHub protection covers `main` but not necessarily the selective-assembly branch. Until repository rules are extended, PR-only and no-force-push discipline on the assembly branch is procedural and must be followed deliberately.
 

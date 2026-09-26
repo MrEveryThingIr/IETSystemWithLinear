@@ -4,6 +4,19 @@
 
 ### Selective assembly release reconciliation
 
+**Roadmap revised to capability-mesh reassembly.** Owner browser inspection confirmed the current assembly is a healthy old baseline but not the intended product checkpoint because later already-tested cross-cutting work is absent. M01 registration is paused.
+
+Immediate priority is **F1 — Shared Temporal Fabric recovery and second review**:
+
+1. profile-aware Temporal Kernel across the whole system;
+2. permanent Ambient Capability Rail in the app shell;
+3. shared Fractal Calendar Fabric decoupled conceptually from Planner;
+4. Capability Launcher / explicit composition contract.
+
+Relevant source libraries: codex/release-first-publication-hardening, integration/ideal-v1-planner-temporal-candidate, integration/ideal-v1-temporal-calendar-reconcile, fix/planner-execution-window-calendar-evidence and fix/planner-temporal-evidence-calendar-hardening.
+
+The architectural rule is now: independent capability nodes + explicit optional seams + shared projections. See docs/CAPABILITY_MESH_ARCHITECTURE.md and docs/SELECTIVE_ASSEMBLY_ROADMAP.md.
+
 **Current active gate: M00/S0 browser baseline.** The browser-gated assembly process is merged at `30dc939754c3fec7009250a61437db2633aabea7`; post-merge CI `36238246665` passed with 552 tests / 3511 assertions, repository-wide Pint 923 files, PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer green. The living browser plan is `Development-CodexReports/M00-certified-foundation-browser-baseline-report.md`.
 
 M01 implementation remains blocked until the owner explicitly accepts the M00 browser gate.
