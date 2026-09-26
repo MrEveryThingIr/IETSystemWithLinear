@@ -2,7 +2,7 @@
 
 ## Mission
 
-Implement the full accepted Ideal-v1 roadmap continuously on GitHub with remote automated gates at every milestone and deferred owner-local/browser acceptance.
+Complete the first publishable Ideal-v1 through **selective assembly**: preserve the accepted integrated foundation, admit later improvements only as independently reviewed/reversible modules, keep remote automated gates strict, and defer owner-local/browser acceptance to the cumulative worksheet.
 
 ## Read first
 
@@ -14,81 +14,108 @@ Implement the full accepted Ideal-v1 roadmap continuously on GitHub with remote 
 6. `docs/PRODUCTION_ROADMAP.md`
 7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
 8. `docs/EXAMPLE_STORY_WORLD.md`
-9. active milestone contract/report
+9. `docs/handoffs/S0-selective-assembly-baseline.md`
+10. the active selective-module report/handoff
 
-## Git line
+## Current Git line
 
-Integration trunk:
+Accepted pre-selective integration foundation:
 
 ~~~text
 integration/ideal-v1
+891b333c49f166e61b9fa466e30742b3d70996c0
 ~~~
 
-Root baseline:
+Selective assembly:
 
 ~~~text
-2c7a5c35a31fe86d761a1cafd189560bec220784
+codex/ideal-v1-selective-assembly
 ~~~
 
-First reconstructed office-foundation commit:
+At creation, the assembly was exactly identical to `integration/ideal-v1` at `891b333`. Later planner/temporal/calendar/publication branches are **source libraries**, not merge units.
+
+Active S0 review:
 
 ~~~text
-79367e717a74b877fbbb81c4ea9c9ab79fcbf773
+codex/review-s0-baseline
+PR #30 → codex/ideal-v1-selective-assembly
 ~~~
 
-This reconstruction intentionally removes the unused AI assistance / Development Origin runtime while retaining the new Access Invitation + Intent Registry product work.
+## Current objective — S0 only
 
-## Current objective
+Re-establish a certified baseline before admitting any feature.
 
-The bounded Publishable Ideal-v1 code line is integrated on `integration/ideal-v1`.
+S0 has already found one real baseline defect class: the original assembly CI was green but skipped repository-wide Pint because no PHP files differed from integration. The strengthened S0 gate scanned 923 PHP files and found 15 pre-existing style issues. Those were normalized by Pint in formatter-only commit `e57b29d2de68f97568187a19de60c9bbabf103ca`.
 
-The latest release hardening is the native-Persian UI localization pass:
+S0 also adds explicit Blade compilation to CI. Final branch/PR certification and post-merge assembly CI remain required before S1 may begin.
 
-- 11 previously absent Persian locale modules were added;
-- `lang/fa/access.php` and `lang/fa/intents.php` no longer load English;
-- user-facing wording across Access, Needs/Offers, Relationships, Proposals, Contracts, Commitments/Fulfillment, Planner, Finance/Accounting, Collaboration, Content, Reader/Studio, Notifications and shared UI vocabulary was rewritten toward simple native Persian rather than literal translation;
-- repeated implementation jargon such as Actor/Context/Blueprint/Studio is no longer exposed untranslated in Persian UI copy where a clear Persian term exists;
-- `LocalizationParityTest` requires every real English translation leaf to exist in Persian and forbids Persian locale files from loading English passthroughs;
-- Laravel's locale-specific validation aliases remain intentionally allowed in addition to the English validation-key baseline.
+Owner-local/browser acceptance remains deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` under the standing continuous-remote authorization.
 
-Release evidence:
+## Selective admission order
 
-- localization feature head: `1a6fc7831b11588ef494fa8b36b3c2e465223bd5`;
-- feature CI: `36160123238` — green;
-- PR #25 CI: `36160463461` — green;
-- integration merge: `edff668b6e8ad6c4a58a7d6c08bb54a821ce9662`;
-- integration CI: `36160798652` — green;
-- full regression: **545 tests / 3376 assertions**;
-- MySQL 8.4 + SQLite migrations, Pint, PHPStan, Vite, npm audit and Composer audit: green;
-- `release/ideal-v1-rc-4` is the immutable pre-doc-sync localization checkpoint;
-- `release/ideal-v1-rc-5` is the docs-synchronized release candidate to use for owner-local/browser acceptance.
+After S0 closes, proceed one independently reversible module at a time:
 
-Do **not** mutate old RC refs. Any browser defect must become an automated regression, a correction branch from the current integration line, a complete CI pass, an integration merge, and a newly numbered RC.
+1. S1 — registration, wallet, default monetary unit.
+2. S2 — shared temporal kernel.
+3. S3 — permanent top status bar.
+4. S4 — Planner lifecycle and evidence.
+5. S5 — fractal calendar, split into read-only navigation, authorized projection, minute slots, creation prefill, then domain projections.
+6. S6 — cross-system temporal consistency.
+7. S7 — general UI/localization review.
+8. S8 — flexible fields/form extensions only after v1-critical behavior is accepted.
+9. S9 — release operations/publication.
 
-Do **not** implement AI Copilot, Generic Workflow, Reputation or Recommendations as part of this release. They remain post-v1 unless a concrete browser/release defect requires otherwise.
+Within each module: security/data-loss/authority correctness outranks convenience; lower-coupling and smaller independently testable changes go first.
 
-Persian UI localization is hardened, but the seeded/System Manual content is still English-canonical. A full native-reviewed Persian Manual is a separate content-translation milestone, not a hidden requirement for this RC.
+## Admission contract
+
+Every module records:
+
+- source branch/commit and selected commits/files/hunks;
+- behavior before and after;
+- owned authority and authority it must not acquire;
+- dependencies/consumers;
+- persistence, authorization/privacy, locale/timezone/calendar/RTL/accessibility impact;
+- focused and full validation;
+- deferred browser acceptance;
+- explicit deferrals and rollback method.
+
+Unknown admission fields block that module, not unrelated modules.
+
+## Git discipline
+
+- Never develop directly on `main`, an RC, or `codex/ideal-v1-selective-assembly`.
+- Create each review branch from the current assembly SHA.
+- Fetch first; use fast-forward-only pulls locally.
+- Do not merge aggregate candidate branches wholesale.
+- One PR per independently reversible module.
+- No force-push of shared history.
+- Shared migrations stay append-only.
+- Keep rejected candidate branches until stable release.
+- Record source SHA, resulting assembly SHA, CI, browser evidence status, and rejected alternatives.
+
+Current governance gap: the repository ruleset protects `main` only; the selective assembly branch is not yet server-side protected. Until repository settings are extended, preserve it by process and PR-only discipline.
 
 ## Persistent product rules
 
-- Content is one independent versioned system; GroupSpace is only one Context kind.
+- Content is one independent versioned system; GroupSpace is one Context kind.
 - Content has a home/origin Context for authoring/authorization but may be presented/referenced elsewhere.
-- normal presentation may follow the current published revision; evidence must pin an exact published revision/target.
-- Contexts compose modules; they do not require duplicate module tables.
-- user journeys progressively activate capabilities rather than selecting a giant universal type.
+- Normal presentation may follow current publication; evidence pins exact immutable revision/targets.
+- Contexts compose modules; they do not duplicate Content, Planner, Accounting, Submission, or other kernels.
 - Need/Offer is intent, not Match/Contract/obligation.
-- Relationship is an explicit direct coordination boundary, not Group Membership, Contract, ownership, employment, financing rights or payment.
-- Relationship Context is writable only after explicit participant consent and becomes read-only when terminal.
+- Relationship is coordination, not Group Membership, Contract, ownership, employment, financing right, or payment.
 - Conversation is collaboration evidence, not authoritative acceptance.
-- finance uses explicit domain-event → obligation → accounting actions; balances are derived.
-- user-facing UX uses plain actions while specialized kernels retain authority.
-- Alice/Bob/Carol/Diego examples are canonical across docs/tests.
+- Contract, Commitment, Fulfillment, obligation/settlement, and Accounting remain distinct authorities.
+- Finance flows through explicit actions; balances are derived.
+- User-facing UX stays plain while specialized kernels retain authority.
+- Alice/Bob/Carol/Diego examples remain canonical across docs/tests.
 
 ## Interruption recovery
 
 If interrupted:
 
-1. inspect latest `integration/ideal-v1` SHA and CI;
-2. inspect active feature branch/report if one exists;
-3. never restart from chat memory;
-4. update this handoff after each remotely integrated milestone.
+1. inspect `codex/ideal-v1-selective-assembly` current SHA and CI;
+2. inspect the active `codex/review-*` branch and its PR;
+3. read the active S-module handoff/report;
+4. never restart from chat memory or merge a candidate branch wholesale;
+5. continue the current module until its remote gate is green or a genuine stop condition appears.
