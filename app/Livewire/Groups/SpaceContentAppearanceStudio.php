@@ -14,7 +14,6 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\SpaceContentPresentation;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -25,8 +24,11 @@ use Livewire\Component;
 class SpaceContentAppearanceStudio extends Component
 {
     public Group $group;
+
     public GroupSpace $space;
+
     public SpaceContent $content;
+
     public string $templateSource = 'builtin:article';
 
     /** @var array<string, mixed> */

@@ -6,6 +6,7 @@ use App\Actions\Groups\CreateGroup;
 use App\Actions\Groups\CreateGroupSpace;
 use App\Actions\Groups\SetGroupSpaceParticipant;
 use App\Models\Actor;
+use App\Models\GroupSpace;
 use App\Models\GroupSpaceParticipant;
 use App\Models\User;
 use Illuminate\Database\QueryException;
@@ -96,7 +97,7 @@ class GroupSpaceParticipantConcurrencyTest extends TestCase
 
             try {
                 app(SetGroupSpaceParticipant::class)->execute(
-                    \App\Models\GroupSpace::query()->findOrFail($spaceId),
+                    GroupSpace::query()->findOrFail($spaceId),
                     Actor::query()->findOrFail($targetId),
                     User::query()->findOrFail($ownerUserId),
                     'allow',
