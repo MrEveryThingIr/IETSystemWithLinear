@@ -12,9 +12,9 @@ The assembly was created exactly at accepted integration SHA `891b333c49f166e61b
 
 S0 strengthened CI so assembly/S0/release pushes run repository-wide Pint and explicitly compile Blade views. That stronger gate exposed 15 pre-existing formatter issues across 923 PHP files; they were normalized by Pint in formatter-only commit `e57b29d2de68f97568187a19de60c9bbabf103ca`. Final S0 proof is **923 Pint files passed, PHPStan 0 errors, Blade compile passed, MySQL/SQLite/ops passed, 552 tests / 3511 assertions, Vite passed, npm audit 0 vulnerabilities, Composer audit clean**.
 
-The next selective module is **S1 — registration, wallet, and default monetary unit**. S1 must be reviewed as independently reversible submodules; the publication-hardening branch remains source material, not a wholesale merge target.
+The selective assembly process is now governed by `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`. Existing modules are reviewed and selectively improved one at a time; candidate branches remain source libraries rather than wholesale merge targets.
 
-Owner-local multilingual/browser acceptance remains deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`; remote automation does not claim that visual acceptance has occurred.
+The owner has changed the gate from end-deferred browser acceptance to **module-by-module browser acceptance before final assembly**. Therefore the current gate is **M0/S0 baseline browser smoke**. M1 — access, identity, registration provisioning, wallet/default monetary unit — does not begin until that baseline browser check is explicitly accepted.
 
 A governance gap is also recorded: the current GitHub ruleset protects `main`, not the selective assembly branch. PR-only/no-force-push discipline is therefore procedural until repository settings are extended.
 
