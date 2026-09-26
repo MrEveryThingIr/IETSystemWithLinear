@@ -92,6 +92,40 @@ class TemporalCalendar
         return self::format($date, $user, $timezone, 'd');
     }
 
+    public static function dateLabel(
+        DateTimeInterface $date,
+        ?User $user,
+        ?string $timezone = null,
+        ?CalendarSystem $calendar = null,
+    ): string {
+        $timezone ??= TemporalPreferences::timezoneFor($user);
+
+        return self::format($date, $user, $timezone, 'd MMMM y', calendar: $calendar);
+    }
+
+    public static function dateTimeLabel(
+        DateTimeInterface $date,
+        ?User $user,
+        ?string $timezone = null,
+        bool $seconds = false,
+        ?CalendarSystem $calendar = null,
+    ): string {
+        $timezone ??= TemporalPreferences::timezoneFor($user);
+        $pattern = $seconds ? 'd MMMM y, HH:mm:ss z' : 'd MMMM y, HH:mm z';
+
+        return self::format($date, $user, $timezone, $pattern, calendar: $calendar);
+    }
+
+    public static function timeLabel(
+        DateTimeInterface $date,
+        ?User $user,
+        ?string $timezone = null,
+    ): string {
+        $timezone ??= TemporalPreferences::timezoneFor($user);
+
+        return self::format($date, $user, $timezone, 'HH:mm');
+    }
+
     public static function format(
         DateTimeInterface $date,
         ?User $user,
@@ -127,8 +161,17 @@ class TemporalCalendar
             if (is_string($formatted) && $formatted !== '') {
                 return $formatted;
             }
-        } catch (Throwable) {
-            // Fall through to canonical Gregorian output.
+
+            if ($calendar !== CalendarSystem::Gregorian) {
+                throw new LogicException('ICU could not format the selected non-Gregorian calendar.');
+            }
+        } catch (Throwable $exception) {
+            if ($calendar !== CalendarSystem::Gregorian) {
+                throw new LogicException(
+                    'The selected profile calendar could not be rendered by PHP intl.',
+                    previous: $exception,
+                );
+            }
         }
 
         return CarbonImmutable::instance($date)->setTimezone($timezone)->format(match ($pattern) {
