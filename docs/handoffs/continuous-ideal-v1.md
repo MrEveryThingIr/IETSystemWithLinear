@@ -34,20 +34,29 @@ codex/ideal-v1-selective-assembly
 
 At creation, the assembly was exactly identical to `integration/ideal-v1` at `891b333`. Later planner/temporal/calendar/publication branches are **source libraries**, not merge units.
 
-Active S0 review:
+Certified S0 checkpoint:
 
 ~~~text
-codex/review-s0-baseline
-PR #30 → codex/ideal-v1-selective-assembly
+PR #30 merged
+assembly runtime/checkpoint: 2b89e301ef7f167083445cd305847f83dbf3e048
+post-merge CI: 36236888120
+result: 552 tests / 3511 assertions; Pint 923 files; PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer green
 ~~~
 
-## Current objective — S0 only
+## Current objective — S1
 
-Re-establish a certified baseline before admitting any feature.
+S0 is remotely certified. Begin **S1 — registration, wallet, and default monetary unit** from the current selective assembly head.
 
-S0 has already found one real baseline defect class: the original assembly CI was green but skipped repository-wide Pint because no PHP files differed from integration. The strengthened S0 gate scanned 923 PHP files and found 15 pre-existing style issues. Those were normalized by Pint in formatter-only commit `e57b29d2de68f97568187a19de60c9bbabf103ca`.
+S1 source material comes from `codex/release-first-publication-hardening`, primarily the provisioning/accounting changes around `2fda50e` and user-preference coverage around `fd79c7a`, but that branch must remain a source library rather than a merge unit.
 
-S0 also adds explicit Blade compilation to CI. Final branch/PR certification and post-merge assembly CI remain required before S1 may begin.
+Review S1 as four independently reversible submodules:
+
+1. verified-user provisioning action;
+2. real personal accounting foundation;
+3. changeable default monetary unit;
+4. safe, repeatable seed behavior.
+
+For each submodule, prove existing behavior, intended behavior, authority boundaries, dependencies, persistence/migration effects, authorization/privacy, locale/temporal impact, focused/full tests, deferred browser acceptance, and rollback method before admission.
 
 Owner-local/browser acceptance remains deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` under the standing continuous-remote authorization.
 
