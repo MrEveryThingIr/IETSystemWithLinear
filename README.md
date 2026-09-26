@@ -46,6 +46,8 @@ AI Copilot is explicitly deferred until after the first publishable Ideal-v1 rel
 
 Historical phase contracts/reports remain under `docs/` and `Development-CodexReports/`.
 
+A [post-v1 form and field extension design proposal](docs/FORM_FIELD_EXTENSION_ARCHITECTURE.md) records the Plan pilot, governance and candidate backlog; it is not implemented scope or an accepted release milestone.
+
 ## Product direction
 
 Content is independent of Groups. A Content item has a home Context for authoring/authorization, but published Content or exact blocks/revisions may be presented/referenced anywhere the viewer is authorized. Evidence pins exact historical revisions.

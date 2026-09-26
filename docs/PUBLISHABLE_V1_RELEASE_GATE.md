@@ -6,6 +6,8 @@ The first public IET release is a deliberately bounded learning release. It must
 
 The release does **not** require speculative Phase 23–27 abstractions. Generic Workflow, Reputation, Recommendations and AI remain future work. Their extension seams must remain compatible with the authoritative Actions/Context/Content/domain-event architecture.
 
+A [post-v1 form and field extension design proposal](FORM_FIELD_EXTENSION_ARCHITECTURE.md) covers configurable Plan and other domain forms. It is a candidate backlog, **not implemented functionality or a requirement for this release**; the proposal does not change the current release-candidate or owner-acceptance gate.
+
 ## Required product journeys
 
 The release candidate must preserve the cumulative automated and manual proof for:
