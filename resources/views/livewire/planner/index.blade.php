@@ -42,7 +42,14 @@
                 <flux:button wire:click="previousMonth" variant="ghost" size="sm">
                     ← {{ __('planner.calendar.previous') }}
                 </flux:button>
-                <flux:heading size="lg">{{ \Carbon\CarbonImmutable::createFromFormat('!Y-m', $month, $timezone)->format('F Y') }}</flux:heading>
+                <flux:heading
+                    size="lg"
+                    data-localized-calendar-month="{{ $month }}-01"
+                    data-locale="{{ \App\Support\Localization::intlLocale() }}"
+                    data-calendar="{{ \App\Support\TemporalPreferences::calendarFor(request()->user())->value }}"
+                >
+                    {{ \Carbon\CarbonImmutable::createFromFormat('!Y-m', $month, $timezone)->format('F Y') }}
+                </flux:heading>
                 <flux:button wire:click="nextMonth" variant="ghost" size="sm">
                     {{ __('planner.calendar.next') }} →
                 </flux:button>
@@ -65,7 +72,29 @@
                         wire:key="calendar-day-{{ $dateKey }}"
                         class="min-h-32 bg-white p-2 dark:bg-zinc-950 {{ $inMonth ? '' : 'opacity-50' }}"
                     >
-                        <div class="text-xs font-semibold text-zinc-500">{{ $date->format('j') }}</div>
+                        <div class="flex items-center justify-between gap-2">
+                            <button
+                                type="button"
+                                wire:click="selectDate('{{ $dateKey }}')"
+                                class="rounded-md px-1.5 py-1 text-xs font-semibold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-white {{ $selectedDate === $dateKey ? 'ring-1 ring-zinc-400' : '' }}"
+                                aria-label="{{ __('planner.calendar.open_day', ['date' => $dateKey]) }}"
+                            >
+                                <span
+                                    data-localized-calendar-day="{{ $dateKey }}"
+                                    data-locale="{{ \App\Support\Localization::intlLocale() }}"
+                                    data-calendar="{{ \App\Support\TemporalPreferences::calendarFor(request()->user())->value }}"
+                                >{{ $date->format('j') }}</span>
+                            </button>
+                            <a
+                                href="{{ route('planner.create', array_filter([
+                                    'context' => $context?->uuid,
+                                    'date' => $dateKey,
+                                    'time' => '09:00',
+                                ])) }}"
+                                class="rounded-md px-1.5 py-1 text-xs text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-white"
+                                aria-label="{{ __('planner.calendar.create_on_day', ['date' => $dateKey]) }}"
+                            >+</a>
+                        </div>
                         <div class="mt-2 space-y-1">
                             @foreach ($items as $occurrence)
                                 <a
@@ -82,6 +111,60 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+
+            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+                <div class="space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('planner.calendar.selected_day') }}</div>
+                            <div
+                                class="mt-1 font-semibold"
+                                data-localized-date="{{ $selectedDate }}"
+                                data-locale="{{ \App\Support\Localization::intlLocale() }}"
+                                data-calendar="{{ \App\Support\TemporalPreferences::calendarFor(request()->user())->value }}"
+                            >{{ $selectedDate }}</div>
+                            @if (\App\Support\TemporalPreferences::calendarFor(request()->user()) !== \App\CalendarSystem::Gregorian)
+                                <div class="text-xs text-zinc-500">{{ __('planner.calendar.gregorian_equivalent', ['date' => $selectedDate]) }}</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        @forelse ($selectedOccurrences as $occurrence)
+                            <a
+                                href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}"
+                                class="block rounded-xl border border-zinc-200 p-3 transition hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                            >
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div class="font-medium" dir="auto">{{ $occurrence->plan->title }}</div>
+                                    <flux:badge size="sm">{{ __('planner.occurrence_phase.'.$occurrence->executionPhase()) }}</flux:badge>
+                                </div>
+                                <div class="mt-1 text-xs text-zinc-500">
+                                    {{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}
+                                    →
+                                    {{ $occurrence->scheduled_end_at->setTimezone($timezone)->format('H:i') }}
+                                    @if ($occurrence->assets->isNotEmpty() || $occurrence->evidenceReferences->isNotEmpty())
+                                        · {{ __('planner.calendar.accessory_count', ['count' => $occurrence->assets->count() + $occurrence->evidenceReferences->count()]) }}
+                                    @endif
+                                </div>
+                            </a>
+                        @empty
+                            <x-app.empty-state :title="__('planner.calendar.no_items_on_day')" />
+                        @endforelse
+                    </div>
+                </div>
+
+                <flux:card class="space-y-3">
+                    <div>
+                        <flux:heading>{{ __('planner.calendar.plan_this_day') }}</flux:heading>
+                        <flux:text>{{ __('planner.calendar.plan_this_day_help') }}</flux:text>
+                    </div>
+                    <flux:input wire:model="selectedTime" type="time" step="60" :label="__('planner.create.start_time')" />
+                    <flux:button wire:click="createAtSelectedTime" variant="primary" class="w-full">
+                        {{ __('planner.calendar.create_at_time') }}
+                    </flux:button>
+                </flux:card>
             </div>
         </flux:card>
     @else
