@@ -3,6 +3,9 @@
 return [
     'title' => 'Today',
     'welcome' => 'Welcome, :name. :date · :timezone. Everything here is derived from authoritative records elsewhere in IET.',
+    'actor_setup_pending' => 'Your account is verified, but your participant identity is not ready yet. Account settings remain available; operating tools appear after identity setup is complete.',
+    'quick_links' => 'Quick links',
+    'quick_links_help' => 'Open the main workspaces you already have permission to use.',
     'new_activity' => 'New activity',
     'new_intent' => 'New Need / Offer',
     'today_actions' => 'What should I do today?',

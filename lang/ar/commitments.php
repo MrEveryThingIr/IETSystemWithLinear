@@ -72,6 +72,7 @@ return [
     ],
     'planner' => [
         'frequency' => 'نمط الجدول',
+        'daily' => 'يوميًا',
         'once' => 'مرة واحدة',
         'selected_dates' => 'تواريخ محددة',
         'starts_on' => 'تاريخ البدء',

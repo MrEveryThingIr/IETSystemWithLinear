@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'navigation_label' => '内容编辑导航',
     'title' => '内容工作室',
     'back_to_reader' => '阅读视图',
     'outline' => '大纲',

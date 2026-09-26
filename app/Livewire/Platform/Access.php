@@ -10,11 +10,9 @@ use App\PlatformCapability;
 use App\PlatformRole;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Platform access')]
 class Access extends Component
 {
     public string $requestReason = '';
@@ -38,7 +36,7 @@ class Access extends Component
         );
 
         $this->reset('requestReason');
-        session()->flash('status', 'Your group-creation access request was submitted.');
+        session()->flash('status', __('ui.platform_access.messages.submitted'));
     }
 
     public function review(int $requestId, bool $approved, ReviewPlatformAccessRequest $reviewAccess): void
@@ -54,7 +52,9 @@ class Access extends Component
         $reviewAccess->execute($accessRequest, $user, $approved, $data['reviewNotes'][$requestId] ?? null);
 
         unset($this->reviewNotes[$requestId]);
-        session()->flash('status', $approved ? 'Platform access approved.' : 'Platform access request rejected.');
+        session()->flash('status', $approved
+            ? __('ui.platform_access.messages.approved')
+            : __('ui.platform_access.messages.rejected'));
     }
 
     public function render(): View
@@ -84,6 +84,6 @@ class Access extends Component
             'canManagePlatformAccess',
             'myRequests',
             'pendingRequests',
-        ));
+        ))->title(__('ui.platform_access.title'));
     }
 }

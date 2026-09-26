@@ -4,6 +4,7 @@ return [
     'title' => 'Planner',
     'help' => 'Plan personal and collaborative activity with timezone-safe schedules, actual execution time, evidence and reminders. Planner records activity truth; it does not create Contract, employment, ownership, payment or obligation authority.',
     'new' => 'New plan',
+    'minutes_short' => 'min',
     'views' => [
         'today' => 'Today',
         'list' => 'List',

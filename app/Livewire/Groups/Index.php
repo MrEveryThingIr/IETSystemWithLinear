@@ -16,11 +16,9 @@ use App\PlatformRole;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Groups')]
 class Index extends Component
 {
     /** @var array<int, string> */
@@ -56,7 +54,9 @@ class Index extends Component
         );
 
         unset($this->accessReviewNotes[$requestId]);
-        session()->flash('status', $approved ? 'Group-creation access approved.' : 'Group-creation access request rejected.');
+        session()->flash('status', $approved
+            ? __('ui.platform_access.messages.approved')
+            : __('ui.platform_access.messages.rejected'));
     }
 
     public function render(GroupRoleProvisioner $groupRoles): View
@@ -118,6 +118,6 @@ class Index extends Component
             'myPendingGroupCreationRequest',
             'canManagePlatformAccess',
             'pendingGroupCreationRequests',
-        ));
+        ))->title(__('ui.groups.title'));
     }
 }

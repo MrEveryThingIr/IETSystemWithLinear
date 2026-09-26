@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'navigation_label' => 'Content Studio navigation',
     'title' => 'Content Studio',
     'back_to_reader' => 'Reader view',
     'outline' => 'Outline',

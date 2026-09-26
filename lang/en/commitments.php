@@ -74,6 +74,7 @@ return [
     ],
     'planner' => [
         'frequency' => 'Schedule pattern',
+        'daily' => 'Daily',
         'once' => 'One occurrence',
         'selected_dates' => 'Selected dates',
         'starts_on' => 'Start date',
