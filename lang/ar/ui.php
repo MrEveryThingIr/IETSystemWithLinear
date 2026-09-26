@@ -378,6 +378,7 @@ return [
         'no_admissions' => 'لا توجد طلبات انضمام تحتاج إلى مراجعة حاليًا.',
         'admissions_help' => 'تظهر هنا الطلبات المرسلة وطلبات التوضيح والطلبات المعتمدة التي تنتظر تفعيل العضوية.',
         'unknown_applicant' => 'مقدم طلب غير معروف',
+        'submitted_label' => 'تم الإرسال في',
         'submitted_ago' => 'أُرسل :time',
         'settings' => 'إعدادات المجموعة',
         'save_details' => 'حفظ التفاصيل',
@@ -515,6 +516,7 @@ return [
         'uses' => ':used/:maximum استخدام',
         'expires' => 'تنتهي',
 
+        'created' => 'أُنشئت',
         'created_expires' => 'أُنشئت :created · تنتهي :expires',
         'never' => 'أبدًا',
         'revoke' => 'إلغاء',
