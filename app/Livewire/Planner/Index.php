@@ -6,6 +6,7 @@ use App\Models\Context;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\User;
+use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -21,15 +22,24 @@ class Index extends Component
     #[Url]
     public string $view = 'today';
 
+    /**
+     * Canonical Gregorian date identifying the first day of the selected
+     * profile-calendar month.
+     */
     #[Url]
     public string $month = '';
 
     #[Url(as: 'level')]
     public string $calendarLevel = 'month';
 
+    /**
+     * Canonical Gregorian date identifying the first day of the selected
+     * profile-calendar year.
+     */
     #[Url]
     public string $year = '';
 
+    /** Canonical Gregorian local date for the selected civil day. */
     #[Url]
     public string $day = '';
 
@@ -48,20 +58,20 @@ class Index extends Component
             $this->view = 'today';
         }
 
-        $timezone = TemporalPreferences::timezoneFor($this->user());
-        $now = CarbonImmutable::now($timezone);
-
-        if (! preg_match('/^\d{4}-\d{2}$/', $this->month)) {
-            $this->month = $now->format('Y-m');
-        }
-
         if (! in_array($this->calendarLevel, ['year', 'month', 'day', 'hour'], true)) {
             $this->calendarLevel = 'month';
         }
 
-        if (! preg_match('/^\d{4}$/', $this->year)) {
-            $this->year = substr($this->month, 0, 4);
-        }
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $now = CarbonImmutable::now($timezone);
+
+        $monthAnchor = $this->parseDateAnchor($this->month, $timezone) ?? $now;
+        $monthStart = TemporalCalendar::monthStart($monthAnchor, $user, $timezone);
+        $this->month = $monthStart->toDateString();
+
+        $yearAnchor = $this->parseDateAnchor($this->year, $timezone) ?? $monthStart;
+        $this->year = TemporalCalendar::yearStart($yearAnchor, $user, $timezone)->toDateString();
 
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->day)) {
             $this->day = $now->toDateString();
@@ -76,26 +86,45 @@ class Index extends Component
 
     public function previousMonth(): void
     {
-        $timezone = TemporalPreferences::timezoneFor($this->user());
-        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
-            ->subMonth()
-            ->format('Y-m');
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $start = TemporalCalendar::previousMonthStart(
+            CarbonImmutable::parse($this->month, $timezone),
+            $user,
+            $timezone,
+        );
+
+        $this->month = $start->toDateString();
+        $this->year = TemporalCalendar::yearStart($start, $user, $timezone)->toDateString();
     }
 
     public function nextMonth(): void
     {
-        $timezone = TemporalPreferences::timezoneFor($this->user());
-        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
-            ->addMonth()
-            ->format('Y-m');
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $start = TemporalCalendar::nextMonthStart(
+            CarbonImmutable::parse($this->month, $timezone),
+            $user,
+            $timezone,
+        );
+
+        $this->month = $start->toDateString();
+        $this->year = TemporalCalendar::yearStart($start, $user, $timezone)->toDateString();
     }
 
     public function previousPeriod(): void
     {
-        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
 
         if ($this->calendarLevel === 'year') {
-            $this->year = (string) ((int) $this->year - 1);
+            $start = TemporalCalendar::previousYearStart(
+                CarbonImmutable::parse($this->year, $timezone),
+                $user,
+                $timezone,
+            );
+            $this->year = $start->toDateString();
+            $this->month = $start->toDateString();
 
             return;
         }
@@ -116,15 +145,21 @@ class Index extends Component
         }
 
         $this->previousMonth();
-        $this->year = substr($this->month, 0, 4);
     }
 
     public function nextPeriod(): void
     {
-        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
 
         if ($this->calendarLevel === 'year') {
-            $this->year = (string) ((int) $this->year + 1);
+            $start = TemporalCalendar::nextYearStart(
+                CarbonImmutable::parse($this->year, $timezone),
+                $user,
+                $timezone,
+            );
+            $this->year = $start->toDateString();
+            $this->month = $start->toDateString();
 
             return;
         }
@@ -145,24 +180,31 @@ class Index extends Component
         }
 
         $this->nextMonth();
-        $this->year = substr($this->month, 0, 4);
     }
 
-    public function showYear(?string $year = null): void
+    public function showYear(?string $anchor = null): void
     {
-        $candidate = $year ?? substr($this->month, 0, 4);
-        abort_unless(preg_match('/^\d{4}$/', $candidate) === 1, 422);
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $date = $this->parseDateAnchor($anchor ?? $this->month, $timezone)
+            ?? CarbonImmutable::now($timezone);
 
-        $this->year = $candidate;
+        $start = TemporalCalendar::yearStart($date, $user, $timezone);
+        $this->year = $start->toDateString();
+        $this->month = $start->toDateString();
         $this->calendarLevel = 'year';
     }
 
-    public function showMonth(string $month): void
+    public function showMonth(string $anchor): void
     {
-        abort_unless(preg_match('/^\d{4}-\d{2}$/', $month) === 1, 422);
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $date = $this->parseDateAnchor($anchor, $timezone);
+        abort_unless($date instanceof CarbonImmutable, 422);
 
-        $this->month = $month;
-        $this->year = substr($month, 0, 4);
+        $start = TemporalCalendar::monthStart($date, $user, $timezone);
+        $this->month = $start->toDateString();
+        $this->year = TemporalCalendar::yearStart($start, $user, $timezone)->toDateString();
         $this->calendarLevel = 'month';
     }
 
@@ -170,9 +212,13 @@ class Index extends Component
     {
         abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1, 422);
 
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $date = CarbonImmutable::parse($day, $timezone);
+
         $this->day = $day;
-        $this->month = substr($day, 0, 7);
-        $this->year = substr($day, 0, 4);
+        $this->month = TemporalCalendar::monthStart($date, $user, $timezone)->toDateString();
+        $this->year = TemporalCalendar::yearStart($date, $user, $timezone)->toDateString();
         $this->calendarLevel = 'day';
     }
 
@@ -181,9 +227,13 @@ class Index extends Component
         abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1, 422);
         abort_unless($hour >= 0 && $hour <= 23, 422);
 
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $date = CarbonImmutable::parse($day, $timezone);
+
         $this->day = $day;
-        $this->month = substr($day, 0, 7);
-        $this->year = substr($day, 0, 4);
+        $this->month = TemporalCalendar::monthStart($date, $user, $timezone)->toDateString();
+        $this->year = TemporalCalendar::yearStart($date, $user, $timezone)->toDateString();
         $this->hour = $hour;
         $this->calendarLevel = 'hour';
     }
@@ -237,17 +287,26 @@ class Index extends Component
         $calendarHours = collect();
         $calendarSlots = collect();
 
+        $monthStart = CarbonImmutable::parse($this->month, $timezone);
+        $yearStart = CarbonImmutable::parse($this->year, $timezone);
+        $selectedMonthKey = TemporalCalendar::monthKey($monthStart, $user, $timezone);
+
         if ($this->view === 'calendar') {
             if ($this->calendarLevel === 'year') {
-                for ($monthNumber = 1; $monthNumber <= 12; $monthNumber++) {
-                    $month = CarbonImmutable::create((int) $this->year, $monthNumber, 1, 0, 0, 0, $timezone);
+                $cursor = $yearStart;
+                for ($index = 0; $index < 12; $index++) {
+                    $next = TemporalCalendar::nextMonthStart($cursor, $user, $timezone);
                     $calendarMonths->push([
-                        'date' => $month,
-                        'key' => $month->format('Y-m'),
-                        'count' => $occurrences->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at
-                            ->setTimezone($timezone)
-                            ->format('Y-m') === $month->format('Y-m'))->count(),
+                        'date' => $cursor,
+                        'key' => $cursor->toDateString(),
+                        'label' => TemporalCalendar::monthLabel($cursor, $user, $timezone),
+                        'count' => $occurrences->filter(function (PlanOccurrence $occurrence) use ($cursor, $next, $timezone): bool {
+                            $start = $occurrence->scheduled_start_at->setTimezone($timezone);
+
+                            return $start->gte($cursor) && $start->lt($next);
+                        })->count(),
                     ]);
+                    $cursor = $next;
                 }
             } elseif ($this->calendarLevel === 'hour') {
                 $hourStart = CarbonImmutable::parse($this->day, $timezone)->setTime($this->hour, 0);
@@ -275,12 +334,17 @@ class Index extends Component
             } else {
                 $firstDay = TemporalPreferences::weekdayOrder($user->locale)[0] ?? 1;
                 $carbonFirstDay = $firstDay === 7 ? CarbonInterface::SUNDAY : $firstDay;
-                $month = CarbonImmutable::parse($this->month.'-01', $timezone);
-                $gridStart = $month->startOfMonth()->startOfWeek($carbonFirstDay);
-                $gridEnd = $month->endOfMonth()->endOfWeek($carbonFirstDay);
+                $monthEnd = TemporalCalendar::nextMonthStart($monthStart, $user, $timezone)->subDay();
+                $gridStart = $monthStart->startOfWeek($carbonFirstDay);
+                $gridEnd = $monthEnd->endOfWeek($carbonFirstDay);
 
                 for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
-                    $calendarDays->push($date);
+                    $calendarDays->push([
+                        'date' => $date,
+                        'key' => $date->toDateString(),
+                        'label' => TemporalCalendar::dayLabel($date, $user, $timezone),
+                        'in_month' => TemporalCalendar::monthKey($date, $user, $timezone) === $selectedMonthKey,
+                    ]);
                 }
 
                 $calendarOccurrences = $occurrences->groupBy(
@@ -299,6 +363,8 @@ class Index extends Component
             'calendarMonths' => $calendarMonths,
             'calendarHours' => $calendarHours,
             'calendarSlots' => $calendarSlots,
+            'calendarYearLabel' => TemporalCalendar::yearLabel($yearStart, $user, $timezone),
+            'calendarMonthLabel' => TemporalCalendar::monthLabel($monthStart, $user, $timezone),
             'timezone' => $timezone,
             'context' => $context,
         ])->title(__('planner.title'));
@@ -307,6 +373,7 @@ class Index extends Component
     /** @return array{CarbonImmutable, CarbonImmutable} */
     private function window(string $timezone): array
     {
+        $user = $this->user();
         $now = CarbonImmutable::now($timezone);
 
         if ($this->view === 'today') {
@@ -318,9 +385,10 @@ class Index extends Component
         }
 
         if ($this->calendarLevel === 'year') {
-            $year = CarbonImmutable::create((int) $this->year, 1, 1, 0, 0, 0, $timezone);
+            $start = CarbonImmutable::parse($this->year, $timezone);
+            $next = TemporalCalendar::nextYearStart($start, $user, $timezone);
 
-            return [$year->startOfYear(), $year->endOfYear()];
+            return [$start, $next->subMicrosecond()];
         }
 
         if ($this->calendarLevel === 'hour') {
@@ -335,14 +403,36 @@ class Index extends Component
             return [$day->startOfDay(), $day->endOfDay()];
         }
 
-        $firstDay = TemporalPreferences::weekdayOrder($this->user()->locale)[0] ?? 1;
+        $firstDay = TemporalPreferences::weekdayOrder($user->locale)[0] ?? 1;
         $carbonFirstDay = $firstDay === 7 ? CarbonInterface::SUNDAY : $firstDay;
-        $month = CarbonImmutable::parse($this->month.'-01', $timezone);
+        $month = CarbonImmutable::parse($this->month, $timezone);
+        $monthEnd = TemporalCalendar::nextMonthStart($month, $user, $timezone)->subDay();
 
         return [
-            $month->startOfMonth()->startOfWeek($carbonFirstDay),
-            $month->endOfMonth()->endOfWeek($carbonFirstDay),
+            $month->startOfWeek($carbonFirstDay),
+            $monthEnd->endOfWeek($carbonFirstDay),
         ];
+    }
+
+    private function parseDateAnchor(?string $value, string $timezone): ?CarbonImmutable
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}$/', $value) === 1) {
+            return CarbonImmutable::create((int) $value, 1, 1, 0, 0, 0, $timezone);
+        }
+
+        if (preg_match('/^\d{4}-\d{2}$/', $value) === 1) {
+            return CarbonImmutable::parse($value.'-01', $timezone);
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1) {
+            return CarbonImmutable::parse($value, $timezone);
+        }
+
+        return null;
     }
 
     private function context(User $user): ?Context
