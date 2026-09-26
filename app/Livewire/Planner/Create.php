@@ -76,13 +76,32 @@ class Create extends Component
         $this->startTime = $now->addHour()->format('H:00');
         $this->weekdays = [$now->isoWeekday()];
 
-        $queryBlueprint = trim((string) request()->query('blueprint', ''));
-        if ($queryBlueprint !== '') {
-            $this->blueprintSlug = $queryBlueprint;
+        $requestedDate = request()->query('date');
+        if (is_string($requestedDate)
+            && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $requestedDate, $parts) === 1
+            && checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1])) {
+            $this->startsOn = $requestedDate;
+            $this->weekdays = [CarbonImmutable::parse($requestedDate, $this->timezone)->isoWeekday()];
+        }
+
+        $queryBlueprint = request()->query('blueprint', '');
+        if (is_string($queryBlueprint) && trim($queryBlueprint) !== '') {
+            $this->blueprintSlug = trim($queryBlueprint);
         }
 
         if ($this->blueprintSlug !== '') {
             $this->applyBlueprintDefaults();
+        }
+
+        $requestedTime = request()->query('time');
+        if (is_string($requestedTime) && preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $requestedTime) === 1) {
+            $this->startTime = $requestedTime;
+        }
+
+        $requestedDuration = request()->query('duration');
+        if (is_string($requestedDuration) && preg_match('/^\d{1,5}$/', $requestedDuration) === 1
+            && (int) $requestedDuration >= 1 && (int) $requestedDuration <= 10080) {
+            $this->durationMinutes = (int) $requestedDuration;
         }
 
         if ($this->contextUuid === '') {
