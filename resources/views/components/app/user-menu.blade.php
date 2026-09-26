@@ -19,7 +19,7 @@
                 @endif
                 <div class="min-w-0">
                     <flux:text class="truncate font-medium text-zinc-900 dark:text-white">{{ $displayName }}</flux:text>
-                    <flux:text size="sm" class="truncate">@{{ $accountUser->username }}</flux:text>
+                    <flux:text size="sm" class="truncate">{{ $accountUser->username }}</flux:text>
                     <flux:text size="sm" class="break-all">{{ $accountUser->email }}</flux:text>
                 </div>
             </div>

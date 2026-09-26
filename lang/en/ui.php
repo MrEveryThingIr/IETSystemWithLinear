@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'actions' => [
+        'cancel' => 'Cancel',
+    ],
     'language' => 'Language',
     'account' => 'Account',
     'ambient' => [
