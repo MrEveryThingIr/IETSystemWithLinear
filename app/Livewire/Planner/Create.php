@@ -35,6 +35,12 @@ class Create extends Component
     #[Url(as: 'blueprint')]
     public string $blueprintSlug = '';
 
+    #[Url(as: 'date')]
+    public string $seedDate = '';
+
+    #[Url(as: 'time')]
+    public string $seedTime = '';
+
     public string $title = '';
 
     public string $description = '';
@@ -75,6 +81,17 @@ class Create extends Component
         $this->startsOn = $now->format('Y-m-d');
         $this->startTime = $now->addHour()->format('H:00');
         $this->weekdays = [$now->isoWeekday()];
+
+        if ($this->validSeedDate($this->seedDate)) {
+            $this->startsOn = $this->seedDate;
+            $this->weekdays = [
+                CarbonImmutable::createFromFormat('!Y-m-d', $this->seedDate, $this->timezone)->isoWeekday(),
+            ];
+        }
+
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $this->seedTime) === 1) {
+            $this->startTime = $this->seedTime;
+        }
 
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
         if ($queryBlueprint !== '') {
@@ -248,6 +265,21 @@ class Create extends Component
             ]),
             default => $context->kind->value,
         };
+    }
+
+    private function validSeedDate(string $date): bool
+    {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+            return false;
+        }
+
+        try {
+            $parsed = CarbonImmutable::createFromFormat('!Y-m-d', $date, $this->timezone);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $parsed instanceof CarbonImmutable && $parsed->format('Y-m-d') === $date;
     }
 
     /** @return list<string> */
