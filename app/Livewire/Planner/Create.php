@@ -43,9 +43,11 @@ class Create extends Component
 
     public string $frequency = 'once';
 
+    #[Url(as: 'date')]
     public string $startsOn = '';
 
-    public string $startTime = '09:00';
+    #[Url(as: 'time')]
+    public string $startTime = '';
 
     public int $durationMinutes = 60;
 
@@ -60,9 +62,9 @@ class Create extends Component
 
     public string $occurrenceLimit = '';
 
-    public int $windowBeforeMinutes = 0;
+    public int $windowBeforeMinutes = 15;
 
-    public int $windowAfterMinutes = 0;
+    public int $windowAfterMinutes = 15;
 
     public string $reminderOffsets = '15';
 
@@ -72,8 +74,14 @@ class Create extends Component
         $this->timezone = TemporalPreferences::timezoneFor($user);
         $now = CarbonImmutable::now($this->timezone);
 
-        $this->startsOn = $now->format('Y-m-d');
-        $this->startTime = $now->addHour()->format('H:00');
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->startsOn) !== 1) {
+            $this->startsOn = $now->format('Y-m-d');
+        }
+
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $this->startTime) !== 1) {
+            $this->startTime = $now->addHour()->startOfHour()->format('H:i');
+        }
+
         $this->weekdays = [$now->isoWeekday()];
 
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
