@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Access\IssueAccessInvitation;
+use App\Actions\Access\RevokeAccessInvitation;
 use App\Actions\Auth\RegisterAccessInvitedUser;
 use App\Actions\Groups\CreateGroup;
 use App\Livewire\Auth\AccessRegister;
@@ -13,6 +14,7 @@ use App\Models\Actor;
 use App\Models\GroupInvitation;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
+use App\PlatformCapability;
 use App\PlatformRole;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -59,6 +61,29 @@ class AccessInvitationJourneyTest extends TestCase
             ->assertSee('Welcome to IET')
             ->assertSee('n•••••••••@example.com')
             ->assertSee(route('access-invitations.register', $token), false);
+    }
+
+    public function test_active_verified_superadmin_can_issue_and_revoke_access_invitation(): void
+    {
+        $administrator = Actor::factory()->create();
+        PlatformAccessGrant::factory()->for($administrator->user)->create([
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        $this->assertSame('active', $administrator->user->status);
+        $this->assertTrue($administrator->user->hasVerifiedEmail());
+        $this->assertTrue(PlatformRole::Superadmin->grants(PlatformCapability::ManageAccessInvitations));
+        $this->assertTrue($administrator->user->hasPlatformCapability(PlatformCapability::ManageAccessInvitations));
+
+        $invitation = app(IssueAccessInvitation::class)->execute(
+            $administrator->user,
+            'revoke.me@example.com',
+        );
+
+        $revoked = app(RevokeAccessInvitation::class)->execute($administrator->user, $invitation);
+
+        $this->assertNotNull($revoked->revoked_at);
+        $this->assertNotNull($invitation->refresh()->revoked_at);
     }
 
     public function test_reserved_access_invitation_must_be_single_use_while_unreserved_link_may_be_multi_use(): void
@@ -198,11 +223,85 @@ class AccessInvitationJourneyTest extends TestCase
         Notification::assertNothingSent();
     }
 
-    public function test_access_invitation_manager_requires_platform_user_management_authority(): void
+    public function test_ordinary_user_cannot_issue_or_revoke_access_invitation_or_open_manager(): void
     {
+        $administrator = Actor::factory()->create();
+        PlatformAccessGrant::factory()->for($administrator->user)->create([
+            'role' => PlatformRole::Superadmin,
+        ]);
+        $invitation = app(IssueAccessInvitation::class)->execute(
+            $administrator->user,
+            'protected@example.com',
+        );
+
         $ordinary = Actor::factory()->create();
 
+        try {
+            app(IssueAccessInvitation::class)->execute($ordinary->user, 'blocked@example.com');
+            $this->fail('Ordinary user unexpectedly issued an Access Invitation.');
+        } catch (HttpException $exception) {
+            $this->assertSame(403, $exception->getStatusCode());
+        }
+
+        try {
+            app(RevokeAccessInvitation::class)->execute($ordinary->user, $invitation);
+            $this->fail('Ordinary user unexpectedly revoked an Access Invitation.');
+        } catch (HttpException $exception) {
+            $this->assertSame(403, $exception->getStatusCode());
+        }
+
         Livewire::actingAs($ordinary->user)
+            ->test(AccessInvitations::class)
+            ->assertForbidden();
+
+        $this->assertNull($invitation->refresh()->revoked_at);
+    }
+
+    public function test_group_creator_platform_grant_does_not_confer_access_invitation_authority(): void
+    {
+        $groupCreator = Actor::factory()->create();
+        PlatformAccessGrant::factory()->for($groupCreator->user)->create([
+            'role' => PlatformRole::GroupCreator,
+        ]);
+
+        $this->assertFalse(
+            $groupCreator->user->hasPlatformCapability(PlatformCapability::ManageAccessInvitations),
+        );
+
+        try {
+            app(IssueAccessInvitation::class)->execute($groupCreator->user, 'blocked.creator@example.com');
+            $this->fail('GroupCreator unexpectedly issued an Access Invitation.');
+        } catch (HttpException $exception) {
+            $this->assertSame(403, $exception->getStatusCode());
+        }
+
+        Livewire::actingAs($groupCreator->user)
+            ->test(AccessInvitations::class)
+            ->assertForbidden();
+    }
+
+    public function test_group_roles_and_permissions_do_not_confer_access_invitation_authority(): void
+    {
+        $groupOwner = Actor::factory()->create();
+
+        app(CreateGroup::class)->execute(
+            $groupOwner,
+            'Platform capability isolation',
+            null,
+        );
+
+        $this->assertFalse(
+            $groupOwner->user->hasPlatformCapability(PlatformCapability::ManageAccessInvitations),
+        );
+
+        try {
+            app(IssueAccessInvitation::class)->execute($groupOwner->user, 'blocked.owner@example.com');
+            $this->fail('Group role unexpectedly conferred Access Invitation authority.');
+        } catch (HttpException $exception) {
+            $this->assertSame(403, $exception->getStatusCode());
+        }
+
+        Livewire::actingAs($groupOwner->user)
             ->test(AccessInvitations::class)
             ->assertForbidden();
     }

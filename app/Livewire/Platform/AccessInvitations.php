@@ -94,7 +94,7 @@ class AccessInvitations extends Component
         $user = request()->user();
 
         abort_unless(
-            $user instanceof User && $user->hasPlatformCapability(PlatformCapability::ManageUsers),
+            $user instanceof User && $user->hasPlatformCapability(PlatformCapability::ManageAccessInvitations),
             403,
         );
 

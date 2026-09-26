@@ -11,7 +11,7 @@ class RevokeAccessInvitation
 {
     public function execute(User $user, AccessInvitation $invitation): AccessInvitation
     {
-        abort_unless($user->hasPlatformCapability(PlatformCapability::ManageUsers), 403);
+        abort_unless($user->hasPlatformCapability(PlatformCapability::ManageAccessInvitations), 403);
 
         return DB::transaction(function () use ($invitation): AccessInvitation {
             $locked = AccessInvitation::query()->lockForUpdate()->findOrFail($invitation->id);
