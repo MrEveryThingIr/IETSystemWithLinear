@@ -71,6 +71,7 @@ class Index extends Component
 
         $this->date = $today;
         $this->periodDate = $today;
+        $this->unitCode = strtoupper((string) $user->default_monetary_unit_code);
 
         $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
 
