@@ -5,17 +5,20 @@
 
 @php
     $user = request()->user();
-    $date = $value instanceof \DateTimeInterface ? $value->format('Y-m-d') : (string) $value;
     $calendarSystem = \App\Support\TemporalPreferences::calendarFor($user);
     $calendar = $calendarSystem->value;
     $locale = \App\Support\Localization::intlLocale($user?->locale);
+    $displayTimezone = $value instanceof \DateTimeInterface
+        ? \App\Support\TemporalPreferences::timezoneFor($user)
+        : 'UTC';
     $dateValue = $value instanceof \DateTimeInterface
-        ? \Carbon\CarbonImmutable::instance($value)
-        : \Carbon\CarbonImmutable::parse($date, 'UTC');
-    $primaryLabel = \App\Support\TemporalCalendar::dateLabel($dateValue, $user, 'UTC', $calendarSystem);
+        ? \Carbon\CarbonImmutable::instance($value)->setTimezone($displayTimezone)
+        : \Carbon\CarbonImmutable::parse((string) $value, 'UTC');
+    $date = $dateValue->toDateString();
+    $primaryLabel = \App\Support\TemporalCalendar::dateLabel($dateValue, $user, $displayTimezone, $calendarSystem);
     $equivalentLabel = $calendarSystem === \App\CalendarSystem::Gregorian
         ? ''
-        : \App\Support\TemporalCalendar::dateLabel($dateValue, $user, 'UTC', \App\CalendarSystem::Gregorian);
+        : \App\Support\TemporalCalendar::dateLabel($dateValue, $user, $displayTimezone, \App\CalendarSystem::Gregorian);
 @endphp
 
 <span
