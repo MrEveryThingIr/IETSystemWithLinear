@@ -135,7 +135,7 @@ class Show extends Component
             'evidenceUploadRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
         ]);
 
-        if ($this->assetIds === [] && $this->evidenceReferenceIds === [] && ! $this->evidenceUpload instanceof UploadedFile) {
+        if ($this->assetIds === [] && $this->evidenceReferenceIds === [] && ! ($this->evidenceUpload instanceof UploadedFile)) {
             $this->addError('evidence', __('planner.validation.evidence_required'));
 
             return;
