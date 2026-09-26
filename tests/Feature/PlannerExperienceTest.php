@@ -76,7 +76,6 @@ class PlannerExperienceTest extends TestCase
         }
     }
 
-
     public function test_calendar_selection_prefills_exact_date_time_and_supports_year_navigation(): void
     {
         CarbonImmutable::setTestNow('2026-09-25 06:00:00 UTC');
