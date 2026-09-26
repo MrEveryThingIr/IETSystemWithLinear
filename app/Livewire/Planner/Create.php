@@ -60,9 +60,9 @@ class Create extends Component
 
     public string $occurrenceLimit = '';
 
-    public int $windowBeforeMinutes = 0;
+    public int $windowBeforeMinutes = 15;
 
-    public int $windowAfterMinutes = 0;
+    public int $windowAfterMinutes = 15;
 
     public string $reminderOffsets = '15';
 
@@ -83,6 +83,30 @@ class Create extends Component
 
         if ($this->blueprintSlug !== '') {
             $this->applyBlueprintDefaults();
+        }
+
+        $queryDate = trim((string) request()->query('date', ''));
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $queryDate) === 1) {
+            try {
+                $selectedDate = CarbonImmutable::createFromFormat('!Y-m-d', $queryDate, $this->timezone);
+            } catch (\Throwable) {
+                $selectedDate = null;
+            }
+
+            if ($selectedDate instanceof CarbonImmutable && $selectedDate->format('Y-m-d') === $queryDate) {
+                $this->startsOn = $queryDate;
+                $this->weekdays = [$selectedDate->isoWeekday()];
+            }
+        }
+
+        $queryTime = trim((string) request()->query('time', ''));
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $queryTime) === 1) {
+            $this->startTime = $queryTime;
+        }
+
+        $queryDuration = (int) request()->query('duration', 0);
+        if ($queryDuration >= 1 && $queryDuration <= 10080) {
+            $this->durationMinutes = $queryDuration;
         }
 
         if ($this->contextUuid === '') {
