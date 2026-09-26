@@ -3,6 +3,13 @@
 return [
     'language' => 'Language',
     'account' => 'Account',
+    'ambient' => [
+        'messages' => [
+            'plan' => 'Plan the next useful step; keep the source record authoritative.',
+            'record' => 'Record what happened, not what the system merely inferred.',
+            'review' => 'Small reviews today prevent unclear histories tomorrow.',
+        ],
+    ],
     'navigation' => [
         'main' => 'Main navigation',
         'open' => 'Open navigation',
@@ -122,6 +129,7 @@ return [
         'edit_yours' => 'My profile',
         'edit_help' => 'Shape the identity other people can see while keeping private information under your control.',
         'preview' => 'Preview profile',
+            'gregorian_equivalent' => 'Gregorian equivalent',
         'identity' => 'Professional identity',
         'identity_help' => 'Use a display name, headline, biography, location, and website that represent you appropriately.',
         'display_name' => 'Display name',
@@ -474,6 +482,7 @@ return [
         'workflow' => 'Draft → proposed → approved → active. Activating a version supersedes the currently active version while preserving its history.',
         'initial_help' => 'The initial text is saved as version 1. It does not affect applicants until you approve and activate it.',
         'applicants_accept' => 'Applicants must accept the active version before membership',
+        'effective_label' => 'Effective from',
         'effective' => 'Effective :date',
         'revision_rationale' => 'Revision rationale:',
         'decision_note' => 'Decision note:',
@@ -507,7 +516,8 @@ return [
         'link_copied' => 'Link copied.',
         'exhausted' => 'Exhausted',
         'secret_not_recoverable' => 'Private link hidden after creation for security.',
-        'uses' => ':used/:maximum uses',
+        'uses' => ':used/:maximum uses',        'expires' => 'Expires',
+
         'created_expires' => 'Created :created · expires :expires',
         'never' => 'never',
         'revoke' => 'Revoke',
@@ -798,7 +808,8 @@ return [
         'empty' => 'Add profile information, semantics, or active needs/offers before creating a selective share.',
         'shared_title' => 'Profile information shared with you',
         'shared_help' => 'This view contains only the information the profile owner explicitly shared with your actor.',
-        'profile_owner' => 'Profile owner',
+        'profile_owner' => 'Profile owner',        'expires_label' => 'Access expires',
+
         'expires_at' => 'Access expires :date',
         'no_expiry' => 'Access does not expire unless revoked.',
         'semantic' => 'Shared semantic statements',
