@@ -41,13 +41,23 @@
             <flux:text>{{ __('planner.calendar.help') }}</flux:text>
 
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <flux:button wire:click="previousMonth" variant="ghost" size="sm">
-                    ← {{ __('planner.calendar.previous') }}
-                </flux:button>
+                <div class="flex flex-wrap gap-1">
+                    <flux:button wire:click="previousYear" variant="ghost" size="sm">
+                        « {{ __('planner.calendar.previous_year') }}
+                    </flux:button>
+                    <flux:button wire:click="previousMonth" variant="ghost" size="sm">
+                        ← {{ __('planner.calendar.previous') }}
+                    </flux:button>
+                </div>
                 <flux:heading size="lg">{{ \Carbon\CarbonImmutable::createFromFormat('!Y-m', $month, $timezone)->format('F Y') }}</flux:heading>
-                <flux:button wire:click="nextMonth" variant="ghost" size="sm">
-                    {{ __('planner.calendar.next') }} →
-                </flux:button>
+                <div class="flex flex-wrap gap-1">
+                    <flux:button wire:click="nextMonth" variant="ghost" size="sm">
+                        {{ __('planner.calendar.next') }} →
+                    </flux:button>
+                    <flux:button wire:click="nextYear" variant="ghost" size="sm">
+                        {{ __('planner.calendar.next_year') }} »
+                    </flux:button>
+                </div>
             </div>
 
             <div class="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700">
@@ -91,7 +101,7 @@
                                     <div class="text-zinc-500">
                                         {{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}
                                         ·
-                                        @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                        @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
                                             {{ __('planner.occurrence_phase.'.$occurrence->temporalPhase()) }}
                                         @else
                                             {{ __('planner.occurrence_status.'.$occurrence->status->value) }}
@@ -114,7 +124,7 @@
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
-                                @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
                                     <flux:badge>{{ __('planner.occurrence_phase.'.$occurrence->temporalPhase()) }}</flux:badge>
                                 @else
                                     <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
