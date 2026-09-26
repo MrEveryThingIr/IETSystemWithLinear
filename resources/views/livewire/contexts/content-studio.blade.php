@@ -201,7 +201,7 @@
                             <div class="mt-3 space-y-2 text-sm">
                                 <div class="flex flex-wrap items-center gap-2 text-zinc-500">
                                     <x-app.actor-identity :actor="$revision->createdBy" size="xs" />
-                                    <span>· {{ $revision->created_at->format('Y-m-d H:i') }}</span>
+                                    <span>· <x-app.local-datetime :value="$revision->created_at" /></span>
                                 </div>
                                 <div class="break-all font-mono text-[11px] text-zinc-500">content: {{ $revision->content_hash }}</div>
                                 @if ($revision->manifest_hash)
