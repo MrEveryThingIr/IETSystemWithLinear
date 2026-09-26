@@ -6,16 +6,18 @@
 
 ## 2. Current workflow status
 
-In progress — baseline defects have been classified and repaired on the dedicated S0 review branch. Final branch/PR certification and post-merge assembly certification remain.
+**Remotely certified.** The accepted baseline defect was repaired, PR #30 merged into the selective assembly, and the exact post-merge assembly CI is green. Owner-local/browser acceptance remains intentionally deferred.
 
 ## 3. Responsible arm or decision gate, and next step
 
 - Responsible arm: ChatGPT/GitHub remote execution.
-- Decision gate: S0 baseline certification.
+- Decision gate: S0 baseline certification — **passed remotely**.
 - Review branch: `codex/review-s0-baseline`.
-- Pull request: **#30 — S0: certify selective assembly baseline** (draft while final gates run).
-- Next step: obtain green full push + PR-context CI on the final branch head, merge PR #30 into `codex/ideal-v1-selective-assembly`, then require a green post-merge assembly CI.
-- Owner-local/browser acceptance is intentionally deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` under the current continuous-remote-development authorization.
+- Pull request: **#30 — S0: certify selective assembly baseline** — merged.
+- Certified assembly runtime/checkpoint SHA: `2b89e301ef7f167083445cd305847f83dbf3e048`.
+- Post-merge assembly CI: `36236888120` — success.
+- Next module: **S1 — registration, wallet, and default monetary unit**, from the current selective assembly head after this documentation closure.
+- Owner-local/browser acceptance remains intentionally deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` under the current continuous-remote-development authorization.
 
 ## 4. Objective
 
@@ -129,9 +131,20 @@ PR-context CI run `36236060430` on the same head succeeded, including the new ex
 
 ### Final certification
 
-- Final S0 branch push CI: Pending on the final documentation head.
-- Final PR-context CI: Pending on the final documentation head.
-- Post-merge assembly CI: Pending until PR #30 merges.
+Final review head: `d94270bf572b2ecdf63c77793bc32582664c308c`.
+
+- Final review-branch push CI `36236673618`: **success**.
+  - repository-wide Pint: **923 files passed**;
+  - PHPStan: **0 errors**;
+  - explicit Blade compile/clear: passed;
+  - MySQL 8.4 + SQLite migration/ops/backup gates: passed;
+  - Vite production build: passed;
+  - PHPUnit: **552 passed / 3511 assertions**;
+  - npm audit: **0 vulnerabilities**;
+  - Composer audit: **no security vulnerability advisories found**.
+- Final PR-context CI `36236676180`: **success**.
+- PR #30 merged into `codex/ideal-v1-selective-assembly` as `2b89e301ef7f167083445cd305847f83dbf3e048`.
+- Post-merge assembly CI `36236888120`: **success** with the same full S0 gate, including repository-wide Pint **923 files**, PHPStan **0 errors**, Blade compilation, MySQL/SQLite/ops, **552 tests / 3511 assertions**, Vite, npm audit, and Composer audit.
 
 ### Deferred owner-local/browser acceptance
 
@@ -139,7 +152,7 @@ English, Persian, Arabic, Simplified Chinese, RTL, mobile, keyboard/focus, and r
 
 ## 11. Risks and unresolved questions
 
-- S0 is not remotely certified until the final branch/PR gates and post-merge assembly gate are green.
+- S0 remote certification is complete. Remaining acceptance is owner-local/browser and release-infrastructure evidence, both tracked separately and not prerequisites for starting S1 under the authorized continuous-remote mode.
 - Automated tests cannot substitute for owner-local rendered-browser/RTL acceptance.
 - The Vite build emits the existing optional Fontaine optimized-fallback warning; it is non-fatal.
 - Repository ruleset `Protect main` protects `main` only. The selective assembly branch is currently not covered by an equivalent GitHub ruleset. Until repository settings are updated, process discipline—not server-side protection—prevents direct/force/deletion mistakes on the assembly branch.
@@ -153,7 +166,12 @@ English, Persian, Arabic, Simplified Chinese, RTL, mobile, keyboard/focus, and r
 - Temporary repair workflow commit: `dd211437ebf510fd4f7fd4a2bac0767ddfa29ccf`.
 - Formatter-only repair commit: `e57b29d2de68f97568187a19de60c9bbabf103ca`.
 - Temporary workflow removal commit: `eeebe5aa099cbe875096851d4a1a9b980c9eef20`.
-- Pull request: **#30**.
+- Pull request: **#30** — merged.
+- Final review head: `d94270bf572b2ecdf63c77793bc32582664c308c`.
+- Assembly merge SHA: `2b89e301ef7f167083445cd305847f83dbf3e048`.
+- Final review push CI: `36236673618`.
+- Final PR-context CI: `36236676180`.
+- Post-merge assembly CI: `36236888120`.
 - Linear issue: Not created / not available in this execution context.
 
 ## 13. Review findings
@@ -164,17 +182,12 @@ The new explicit Blade compile gate passed in PR context. The repository also la
 
 ## 14. Final outcome
 
-**Pending final remote certification.**
+**S0 is remotely certified and closed.**
 
-S0 becomes remotely certified only after:
+The accepted foundation was strengthened without admitting any later feature candidate. The exact certified runtime checkpoint is assembly merge SHA `2b89e301ef7f167083445cd305847f83dbf3e048`, proven by post-merge CI `36236888120`.
 
-1. final review-branch push CI is green with repository-wide Pint;
-2. final PR-context CI is green;
-3. PR #30 is merged through GitHub into the selective assembly;
-4. post-merge assembly CI is green.
-
-Owner-local/browser acceptance remains deferred and separately recorded; it is not silently treated as complete.
+Owner-local/browser acceptance remains deferred and separately recorded; it is not silently treated as complete. The selective assembly branch still lacks an equivalent server-side GitHub ruleset to `main`, so PR-only/no-force-push discipline remains mandatory until repository settings are extended.
 
 ## 15. Prompt for next step
 
-Finish the final S0 branch/PR gates, merge PR #30 if green, verify post-merge assembly CI, and record the exact assembly SHA/run. Only then begin S1 — registration, wallet, and default monetary unit — from the new assembly head.
+Begin **S1 — registration, wallet, and default monetary unit** from the current `codex/ideal-v1-selective-assembly` head. Review the S1 source material selectively; do not merge `codex/release-first-publication-hardening` wholesale. Split S1 into provisioning, personal-accounting foundation, default monetary unit, and safe seed behavior, and require the full admission contract for each reversible submodule.

@@ -8,9 +8,11 @@ The release line is now being reconciled through `codex/ideal-v1-selective-assem
 
 The assembly was created exactly at accepted integration SHA `891b333c49f166e61b9fa466e30742b3d70996c0`. Later planner/temporal/calendar/publication branches are treated as implementation/evidence sources whose changes must be admitted independently.
 
-Active checkpoint: **S0 — baseline certification**, on `codex/review-s0-baseline` through PR #30.
+**S0 — baseline certification is remotely closed.** PR #30 merged the reviewed S0 changes into `codex/ideal-v1-selective-assembly` at `2b89e301ef7f167083445cd305847f83dbf3e048`; post-merge CI `36236888120` passed.
 
-S0 strengthened CI so assembly/S0/release pushes run repository-wide Pint and explicitly compile Blade views. That stronger gate exposed 15 pre-existing formatter issues across 923 PHP files; they were normalized by Pint in formatter-only commit `e57b29d2de68f97568187a19de60c9bbabf103ca`. Final branch/PR and post-merge assembly CI remain required before S1 begins.
+S0 strengthened CI so assembly/S0/release pushes run repository-wide Pint and explicitly compile Blade views. That stronger gate exposed 15 pre-existing formatter issues across 923 PHP files; they were normalized by Pint in formatter-only commit `e57b29d2de68f97568187a19de60c9bbabf103ca`. Final S0 proof is **923 Pint files passed, PHPStan 0 errors, Blade compile passed, MySQL/SQLite/ops passed, 552 tests / 3511 assertions, Vite passed, npm audit 0 vulnerabilities, Composer audit clean**.
+
+The next selective module is **S1 — registration, wallet, and default monetary unit**. S1 must be reviewed as independently reversible submodules; the publication-hardening branch remains source material, not a wholesale merge target.
 
 Owner-local multilingual/browser acceptance remains deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`; remote automation does not claim that visual acceptance has occurred.
 
