@@ -122,6 +122,18 @@
         </flux:card>
 
         @if ($selectedDate !== '')
+            @php
+                $selectedDayCreateParams = [
+                    'date' => $selectedDate,
+                    'time' => '09:00',
+                ];
+
+                if ($context) {
+                    $selectedDayCreateParams['context'] = $context->uuid;
+                }
+
+                $selectedDayCreateUrl = route('planner.create', $selectedDayCreateParams);
+            @endphp
             <flux:card class="space-y-5">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
@@ -141,11 +153,7 @@
                     </div>
 
                     <flux:button
-                        :href="route('planner.create', array_filter([
-                            'context' => $context?->uuid,
-                            'date' => $selectedDate,
-                            'time' => '09:00',
-                        ]))"
+                        :href="$selectedDayCreateUrl"
                         variant="primary"
                         icon="plus"
                     >
