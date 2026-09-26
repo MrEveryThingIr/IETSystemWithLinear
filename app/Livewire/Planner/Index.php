@@ -51,6 +51,23 @@ class Index extends Component
             ->format('Y-m');
     }
 
+
+    public function previousYear(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
+            ->subYear()
+            ->format('Y-m');
+    }
+
+    public function nextYear(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
+            ->addYear()
+            ->format('Y-m');
+    }
+
     public function nextMonth(): void
     {
         $timezone = TemporalPreferences::timezoneFor($this->user());
