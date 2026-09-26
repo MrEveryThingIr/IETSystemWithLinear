@@ -2,9 +2,9 @@
     'model',
     'label',
     'calendar' => \App\Support\TemporalPreferences::calendarFor(auth()->user())->value,
-    'locale' => \App\Support\Localization::intlLocale(),
+    'locale' => \App\Support\Localization::intlLocale(auth()->user()?->locale),
     'timezone' => \App\Support\TemporalPreferences::timezoneFor(auth()->user()),
-    'firstDay' => \App\Support\Localization::firstDayOfWeek(),
+    'firstDay' => \App\Support\Localization::firstDayOfWeek(auth()->user()?->locale),
 ])
 
 <div class="space-y-2">
