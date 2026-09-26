@@ -76,6 +76,24 @@ class Create extends Component
         $this->startTime = $now->addHour()->format('H:00');
         $this->weekdays = [$now->isoWeekday()];
 
+        $calendarDate = trim((string) request()->query('date', ''));
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $calendarDate) === 1) {
+            try {
+                $parsedDate = CarbonImmutable::createFromFormat('!Y-m-d', $calendarDate, $this->timezone);
+                if ($parsedDate instanceof CarbonImmutable && $parsedDate->format('Y-m-d') === $calendarDate) {
+                    $this->startsOn = $calendarDate;
+                    $this->weekdays = [$parsedDate->isoWeekday()];
+                }
+            } catch (\Throwable) {
+                // Ignore invalid calendar deep-link input and keep safe defaults.
+            }
+        }
+
+        $calendarTime = trim((string) request()->query('time', ''));
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $calendarTime) === 1) {
+            $this->startTime = $calendarTime;
+        }
+
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
         if ($queryBlueprint !== '') {
             $this->blueprintSlug = $queryBlueprint;
