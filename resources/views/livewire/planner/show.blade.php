@@ -81,11 +81,12 @@
 
                 <div class="space-y-3">
                     @forelse ($plan->occurrences->sortBy('scheduled_start_at') as $occurrence)
+                        @php($windowState = $occurrence->windowState())
                         <article id="occurrence-{{ $occurrence->uuid }}" wire:key="plan-occurrence-{{ $occurrence->uuid }}" class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
                             <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                                        <flux:badge>{{ __('planner.window_state.'.$windowState->value) }}</flux:badge>
                                         <span class="text-xs text-zinc-500">{{ $occurrence->local_date->format('Y-m-d') }}</span>
                                     </div>
                                     <div class="mt-2 text-sm">
@@ -95,6 +96,15 @@
                                         {{ $occurrence->scheduled_end_at->setTimezone($plan->timezone)->format('H:i') }}
                                     </div>
 
+                                    @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
+                                        <div class="mt-1 text-xs text-zinc-500">
+                                            {{ __('planner.plan.execution_window') }}:
+                                            {{ $occurrence->window_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
+                                            →
+                                            {{ $occurrence->window_end_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
+                                        </div>
+                                    @endif
+
                                     @if ($occurrence->actual_start_at || $occurrence->actual_end_at)
                                         <div class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
                                             <span class="font-medium">{{ __('planner.plan.actual') }}:</span>
@@ -103,19 +113,32 @@
                                             {{ $occurrence->actual_end_at?->setTimezone($plan->timezone)->format('H:i') ?? '…' }}
                                         </div>
                                     @endif
+
+                                    @error('execution.'.$occurrence->id)
+                                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
-                                @if ($canParticipate && $plan->status === \App\PlanStatus::Active)
+                                @if ($canParticipate)
                                     <div class="flex flex-wrap gap-2">
-                                        @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
-                                            <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
-                                            <flux:button wire:click="completeOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.finish') }}</flux:button>
-                                            <flux:button wire:click="skipOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.skip') }}</flux:button>
-                                            <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
-                                        @elseif ($occurrence->status === \App\PlanOccurrenceStatus::InProgress)
-                                            <flux:button wire:click="completeOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.finish') }}</flux:button>
-                                            <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
+                                        @if ($plan->status === \App\PlanStatus::Active)
+                                            @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
+                                                @if ($occurrence->canStart())
+                                                    <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
+                                                @elseif ($windowState === \App\PlanOccurrenceWindowState::Upcoming)
+                                                    <flux:button size="sm" variant="ghost" disabled>{{ __('planner.plan.wait_until_ready') }}</flux:button>
+                                                @elseif ($windowState === \App\PlanOccurrenceWindowState::Missed)
+                                                    <flux:badge color="amber">{{ __('planner.plan.start_window_closed') }}</flux:badge>
+                                                @endif
+
+                                                <flux:button wire:click="skipOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.skip') }}</flux:button>
+                                                <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
+                                            @elseif ($occurrence->status === \App\PlanOccurrenceStatus::InProgress)
+                                                <flux:button wire:click="completeOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.finish') }}</flux:button>
+                                                <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
+                                            @endif
                                         @endif
+
                                         <flux:button wire:click="chooseEvidenceOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.attach_evidence') }}</flux:button>
                                     </div>
                                 @endif
@@ -143,33 +166,72 @@
             </flux:card>
 
             @if ($evidenceOccurrenceId !== null)
-                <flux:card class="space-y-4">
-                    <flux:heading size="lg">{{ __('planner.plan.select_evidence') }}</flux:heading>
+                <flux:card class="space-y-5">
+                    <div>
+                        <flux:heading size="lg">{{ __('planner.plan.select_evidence') }}</flux:heading>
+                        <flux:text>{{ __('planner.plan.select_evidence_help') }}</flux:text>
+                    </div>
 
                     @if ($availableAssets->isNotEmpty())
-                        <div class="grid gap-2 sm:grid-cols-2">
-                            @foreach ($availableAssets as $asset)
-                                <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                    <input type="checkbox" wire:model="assetIds" value="{{ $asset->id }}" class="mt-1">
-                                    <span class="break-all">{{ $asset->original_filename }}</span>
-                                </label>
-                            @endforeach
+                        <div class="space-y-2">
+                            <div class="text-sm font-medium">{{ __('planner.plan.existing_files') }}</div>
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                @foreach ($availableAssets as $asset)
+                                    <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                        <input type="checkbox" wire:model="assetIds" value="{{ $asset->id }}" class="mt-1">
+                                        <span class="break-all">{{ $asset->original_filename }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
 
                     @if ($availableEvidenceReferences->isNotEmpty())
-                        <div class="grid gap-2 sm:grid-cols-2">
-                            @foreach ($availableEvidenceReferences as $reference)
-                                <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                    <input type="checkbox" wire:model="evidenceReferenceIds" value="{{ $reference->id }}" class="mt-1">
-                                    <span dir="auto">{{ $reference->revision?->title ?: $reference->content?->activeRevision?->title ?: __('ui.content.untitled') }}</span>
-                                </label>
-                            @endforeach
+                        <div class="space-y-2">
+                            <div class="text-sm font-medium">{{ __('planner.plan.existing_content_evidence') }}</div>
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                @foreach ($availableEvidenceReferences as $reference)
+                                    <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                        <input type="checkbox" wire:model="evidenceReferenceIds" value="{{ $reference->id }}" class="mt-1">
+                                        <span dir="auto">{{ $reference->revision?->title ?: $reference->content?->activeRevision?->title ?: __('ui.content.untitled') }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
 
+                    @if ($canUploadEvidence)
+                        <div class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                            <div>
+                                <div class="text-sm font-medium">{{ __('planner.plan.upload_evidence') }}</div>
+                                <div class="mt-1 text-xs text-zinc-500">{{ __('planner.plan.upload_evidence_help') }}</div>
+                            </div>
+                            <input type="file" wire:model="evidenceUpload" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
+                            @error('evidenceUpload')<div class="text-sm text-red-600 dark:text-red-400">{{ $message }}</div>@enderror
+
+                            <flux:select wire:model="evidenceUploadRightsStatus" :label="__('media.rights_status')">
+                                @foreach ($assetRightsStatuses as $status)
+                                    <option value="{{ $status }}">{{ __('media.rights.'.$status) }}</option>
+                                @endforeach
+                            </flux:select>
+                        </div>
+                    @endif
+
+                    @if ($availableAssets->isEmpty() && $availableEvidenceReferences->isEmpty() && ! $canUploadEvidence)
+                        <x-app.empty-state
+                            :title="__('planner.plan.no_evidence_available')"
+                            :description="__('planner.plan.no_evidence_available_help')"
+                        />
+                    @endif
+
+                    @error('evidence')
+                        <div class="text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
+                    @enderror
+
                     <div class="flex justify-end">
-                        <flux:button wire:click="attachEvidence" variant="primary">{{ __('planner.plan.attach_evidence') }}</flux:button>
+                        <flux:button wire:click="attachEvidence" wire:loading.attr="disabled" wire:target="evidenceUpload,attachEvidence" variant="primary">
+                            {{ __('planner.plan.attach_evidence') }}
+                        </flux:button>
                     </div>
                 </flux:card>
             @endif
