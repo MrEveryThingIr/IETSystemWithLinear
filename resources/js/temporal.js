@@ -126,6 +126,60 @@ function localizedDate(value, locale, calendar) {
     }).format(date);
 }
 
+function localizedDateTime(value, locale, calendar, timezone, seconds = false) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value ?? '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        calendar,
+        timeZone: timezone || 'UTC',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: seconds ? '2-digit' : undefined,
+        timeZoneName: 'short',
+    }).format(date);
+}
+
+function localizedInstantTime(value, locale, timezone) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value ?? '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        timeZone: timezone || 'UTC',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(date);
+}
+
+function gregorianEquivalentDate(value, locale) {
+    const date = isoToDate(value);
+
+    if (!date) {
+        return value ?? '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        calendar: 'gregory',
+        timeZone: 'UTC',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    }).format(date);
+}
+
+function gregorianEquivalentDateTime(value, locale, timezone, seconds = false) {
+    return localizedDateTime(value, locale, 'gregory', timezone, seconds);
+}
+
 function localizedTime(value, locale) {
     const match = /^(\d{2}):(\d{2})/.exec(value ?? '');
 
@@ -420,7 +474,57 @@ if (!customElements.get('iet-ambient-status')) {
     customElements.define('iet-ambient-status', IetAmbientStatus);
 }
 
+function renderProfileTemporal(root = document) {
+    root.querySelectorAll?.('[data-profile-date]').forEach((element) => {
+        const value = element.dataset.profileDate;
+        const locale = element.dataset.locale || document.documentElement.lang || 'en';
+        const calendar = calendarOrFallback(element.dataset.calendar || 'gregory');
+        const primary = element.querySelector('[data-temporal-primary]');
+        const equivalent = element.querySelector('[data-temporal-equivalent]');
+
+        if (primary) {
+            primary.textContent = localizedDate(value, locale, calendar);
+        }
+
+        if (equivalent) {
+            const show = element.dataset.showEquivalent === 'true' && calendar !== 'gregory';
+            equivalent.hidden = !show;
+            equivalent.textContent = show ? gregorianEquivalentDate(value, locale) : '';
+        }
+    });
+
+    root.querySelectorAll?.('[data-profile-datetime]').forEach((element) => {
+        const value = element.dataset.profileDatetime;
+        const locale = element.dataset.locale || document.documentElement.lang || 'en';
+        const calendar = calendarOrFallback(element.dataset.calendar || 'gregory');
+        const timezone = element.dataset.timezone || 'UTC';
+        const seconds = element.dataset.seconds === 'true';
+        const primary = element.querySelector('[data-temporal-primary]');
+        const equivalent = element.querySelector('[data-temporal-equivalent]');
+
+        if (primary) {
+            primary.textContent = localizedDateTime(value, locale, calendar, timezone, seconds);
+        }
+
+        if (equivalent) {
+            const show = element.dataset.showEquivalent === 'true' && calendar !== 'gregory';
+            equivalent.hidden = !show;
+            equivalent.textContent = show ? gregorianEquivalentDateTime(value, locale, timezone, seconds) : '';
+        }
+    });
+
+    root.querySelectorAll?.('[data-profile-time]').forEach((element) => {
+        element.textContent = localizedInstantTime(
+            element.dataset.profileTime,
+            element.dataset.locale || document.documentElement.lang || 'en',
+            element.dataset.timezone || 'UTC',
+        );
+    });
+}
+
 function localizeTemporal(root = document) {
+    renderProfileTemporal(root);
+
     root.querySelectorAll?.('[data-localized-date]').forEach((element) => {
         const value = element.dataset.localizedDate;
 
