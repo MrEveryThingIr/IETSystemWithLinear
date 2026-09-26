@@ -29,6 +29,11 @@ class Index extends Component
     #[Url(as: 'context')]
     public string $contextUuid = '';
 
+    #[Url(as: 'date')]
+    public string $selectedDate = '';
+
+    public string $calendarTime = '09:00';
+
     public function mount(): void
     {
         if (! in_array($this->view, ['today', 'list', 'calendar'], true)) {
@@ -40,6 +45,21 @@ class Index extends Component
 
         if (! preg_match('/^\d{4}-\d{2}$/', $this->month)) {
             $this->month = $now->format('Y-m');
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->selectedDate) === 1) {
+            try {
+                $selected = CarbonImmutable::createFromFormat('!Y-m-d', $this->selectedDate, $timezone);
+                if ($selected instanceof CarbonImmutable && $selected->format('Y-m-d') === $this->selectedDate) {
+                    $this->month = $selected->format('Y-m');
+                } else {
+                    $this->selectedDate = '';
+                }
+            } catch (\Throwable) {
+                $this->selectedDate = '';
+            }
+        } else {
+            $this->selectedDate = '';
         }
     }
 
@@ -57,6 +77,49 @@ class Index extends Component
         $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
             ->addMonth()
             ->format('Y-m');
+        $this->selectedDate = '';
+    }
+
+    public function previousYear(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
+            ->subYear()
+            ->format('Y-m');
+        $this->selectedDate = '';
+    }
+
+    public function nextYear(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
+            ->addYear()
+            ->format('Y-m');
+        $this->selectedDate = '';
+    }
+
+    public function goToToday(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $today = CarbonImmutable::now($timezone);
+        $this->month = $today->format('Y-m');
+        $this->selectedDate = $today->format('Y-m-d');
+    }
+
+    public function selectCalendarDay(string $date): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+
+        try {
+            $selected = CarbonImmutable::createFromFormat('!Y-m-d', $date, $timezone);
+        } catch (\Throwable) {
+            abort(422);
+        }
+
+        abort_unless($selected instanceof CarbonImmutable && $selected->format('Y-m-d') === $date, 422);
+
+        $this->selectedDate = $date;
+        $this->month = $selected->format('Y-m');
     }
 
     public function render(): View
@@ -71,6 +134,9 @@ class Index extends Component
             ->with([
                 'plan.context',
                 'plan.participants.actor.user',
+                'assets',
+                'evidenceReferences.content.activeRevision',
+                'evidenceReferences.revision',
             ])
             ->whereBetween('scheduled_start_at', [$from->utc(), $through->utc()])
             ->orderBy('scheduled_start_at')
@@ -112,13 +178,19 @@ class Index extends Component
             );
         }
 
+        $selectedDayOccurrences = $this->selectedDate !== ''
+            ? $calendarOccurrences->get($this->selectedDate, collect())
+            : collect();
+
         return view('livewire.planner.index', [
             'plans' => $plans,
             'occurrences' => $occurrences,
             'calendarDays' => $calendarDays,
             'calendarOccurrences' => $calendarOccurrences,
+            'selectedDayOccurrences' => $selectedDayOccurrences,
             'timezone' => $timezone,
             'context' => $context,
+            'contextLabel' => $context instanceof Context ? $this->contextLabel($context) : null,
         ]);
     }
 
@@ -143,6 +215,28 @@ class Index extends Component
             $month->startOfMonth()->startOfWeek($carbonFirstDay),
             $month->endOfMonth()->endOfWeek($carbonFirstDay),
         ];
+    }
+
+
+    private function contextLabel(Context $context): string
+    {
+        $context->loadMissing([
+            'relationshipBinding.relationship.purposeConcept.labels',
+            'groupSpaceBinding.groupSpace.group',
+        ]);
+
+        return match ($context->kind->value) {
+            'personal' => (string) __('planner.context.personal'),
+            'relationship' => (string) __('planner.context.relationship', [
+                'title' => $context->relationshipBinding?->relationship?->title
+                    ?: $context->relationshipBinding?->relationship?->purposeConcept?->displayLabel()
+                    ?: $context->uuid,
+            ]),
+            'group_space' => (string) __('planner.context.group_space', [
+                'space' => $context->groupSpaceBinding?->groupSpace?->name ?: $context->uuid,
+            ]),
+            default => $context->kind->value,
+        };
     }
 
     private function context(User $user): ?Context
