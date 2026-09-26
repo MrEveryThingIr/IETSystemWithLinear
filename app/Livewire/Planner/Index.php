@@ -12,12 +12,10 @@ use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Planner')]
 class Index extends Component
 {
     #[Url]
@@ -193,7 +191,7 @@ class Index extends Component
             'selectedTemporalState' => $selectedTemporalState,
             'timezone' => $timezone,
             'context' => $context,
-        ]);
+        ])->title(__('planner.title'));
     }
 
     /** @return array{CarbonImmutable, CarbonImmutable} */
