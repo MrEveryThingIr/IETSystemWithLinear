@@ -2,6 +2,20 @@
 
 ## Snapshot
 
+### Selective assembly release reconciliation
+
+The release line is now being reconciled through `codex/ideal-v1-selective-assembly` rather than by wholesale merging later aggregate candidate branches.
+
+The assembly was created exactly at accepted integration SHA `891b333c49f166e61b9fa466e30742b3d70996c0`. Later planner/temporal/calendar/publication branches are treated as implementation/evidence sources whose changes must be admitted independently.
+
+Active checkpoint: **S0 — baseline certification**, on `codex/review-s0-baseline` through PR #30.
+
+S0 strengthened CI so assembly/S0/release pushes run repository-wide Pint and explicitly compile Blade views. That stronger gate exposed 15 pre-existing formatter issues across 923 PHP files; they were normalized by Pint in formatter-only commit `e57b29d2de68f97568187a19de60c9bbabf103ca`. Final branch/PR and post-merge assembly CI remain required before S1 begins.
+
+Owner-local multilingual/browser acceptance remains deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`; remote automation does not claim that visual acceptance has occurred.
+
+A governance gap is also recorded: the current GitHub ruleset protects `main`, not the selective assembly branch. PR-only/no-force-push discipline is therefore procedural until repository settings are extended.
+
 ### Publishable v1 hardening
 
 Phase 22 and the publishable-v1 hardening line are integrated on `integration/ideal-v1`. The first publication remains intentionally bounded: deterministic human workflows and durable domain evidence are the product; AI Copilot, Generic Workflow extraction, Reputation and Recommendations are post-v1 work. See `docs/PUBLISHABLE_V1_RELEASE_GATE.md`.

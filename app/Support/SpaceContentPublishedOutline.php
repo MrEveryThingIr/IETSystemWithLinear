@@ -26,7 +26,7 @@ class SpaceContentPublishedOutline
     }
 
     /**
-     * @param array<int, true> $visitedRevisionIds
+     * @param  array<int, true>  $visitedRevisionIds
      * @return list<array{
      *   relationship_uuid: string,
      *   content_uuid: string,

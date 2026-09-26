@@ -12,6 +12,7 @@ use App\Actions\Groups\PublishSpaceContent;
 use App\Actions\Groups\SetGroupSpaceParticipant;
 use App\Models\Actor;
 use App\Models\Asset;
+use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -97,7 +98,7 @@ class SpaceContentPublicationEvidenceTest extends TestCase
         $this->assertNull($content->draftRevisionRecord()?->manifest_hash);
     }
 
-    /** @return array{Actor, Actor, \App\Models\GroupSpace, SpaceContent} */
+    /** @return array{Actor, Actor, GroupSpace, SpaceContent} */
     private function fixture(): array
     {
         $owner = Actor::factory()->create();

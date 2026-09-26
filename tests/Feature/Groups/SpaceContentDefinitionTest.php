@@ -24,7 +24,6 @@ use App\Models\Group;
 use App\Models\GroupInvitation;
 use App\Models\GroupMembership;
 use App\Models\GroupSpace;
-use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinition;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;

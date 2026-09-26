@@ -22,15 +22,25 @@ use LogicException;
 class SpaceContentBlock extends Model
 {
     public const TYPE_PARAGRAPH = 'paragraph';
+
     public const TYPE_HEADING = 'heading';
+
     public const TYPE_QUOTE = 'quote';
+
     public const TYPE_LIST = 'list';
+
     public const TYPE_CALLOUT = 'callout';
+
     public const TYPE_DIVIDER = 'divider';
+
     public const TYPE_FIELD = 'field';
+
     public const TYPE_IMAGE = 'image';
+
     public const TYPE_AUDIO = 'audio';
+
     public const TYPE_VIDEO = 'video';
+
     public const TYPE_FILE = 'file';
 
     /** @var list<string> */

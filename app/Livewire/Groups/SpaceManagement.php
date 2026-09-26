@@ -469,7 +469,7 @@ class SpaceManagement extends Component
     }
 
     /**
-     * @param array<int, array<string, mixed>> $builderFields
+     * @param  array<int, array<string, mixed>>  $builderFields
      * @return array<int, array<string, mixed>>
      */
     private function definitionPayload(array $builderFields): array
