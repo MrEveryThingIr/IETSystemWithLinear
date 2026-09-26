@@ -98,7 +98,6 @@ class PlanOccurrence extends Model
         $allowed = match ($current) {
             PlanOccurrenceStatus::Scheduled => [
                 PlanOccurrenceStatus::InProgress,
-                PlanOccurrenceStatus::Completed,
                 PlanOccurrenceStatus::Skipped,
                 PlanOccurrenceStatus::Cancelled,
             ],
