@@ -26,6 +26,8 @@ use App\RelationshipStatus;
 use App\Support\ContextTimeline;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -69,6 +71,81 @@ class PlannerExperienceTest extends TestCase
                 ->get(route('planner.show', $plan))
                 ->assertOk()
                 ->assertSee('Dentist appointment');
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+
+    public function test_calendar_selection_prefills_exact_date_time_and_supports_year_navigation(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-25 06:00:00 UTC');
+
+        try {
+            $bob = Actor::factory()->create();
+            $bob->user->forceFill(['timezone' => 'UTC'])->save();
+
+            Livewire::actingAs($bob->user)
+                ->withQueryParams([
+                    'date' => '2033-05-17',
+                    'time' => '22:07',
+                    'duration' => 15,
+                ])
+                ->test(PlannerCreate::class)
+                ->assertSet('startsOn', '2033-05-17')
+                ->assertSet('startTime', '22:07')
+                ->assertSet('durationMinutes', 15)
+                ->assertSet('windowBeforeMinutes', 15)
+                ->assertSet('windowAfterMinutes', 15);
+
+            Livewire::actingAs($bob->user)
+                ->withQueryParams(['view' => 'calendar', 'month' => '2026-09'])
+                ->test(PlannerIndex::class)
+                ->call('nextYear')
+                ->assertSet('month', '2027-09')
+                ->call('previousYear')
+                ->assertSet('month', '2026-09');
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_plan_page_can_upload_and_attach_new_occurrence_evidence_directly(): void
+    {
+        Storage::fake('local');
+        CarbonImmutable::setTestNow('2026-09-25 21:50:00 UTC');
+
+        try {
+            $bob = Actor::factory()->create();
+            $context = app(EnsurePersonalContext::class)->execute($bob->user);
+            $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Night study', timezone: 'UTC');
+            $rule = app(CreatePlanScheduleRule::class)->execute(
+                $plan,
+                $bob->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-25',
+                '22:00',
+                60,
+                windowBeforeMinutes: 15,
+                windowAfterMinutes: 15,
+            );
+            $occurrence = $rule->occurrences()->sole();
+
+            Livewire::actingAs($bob->user)
+                ->test(PlannerShow::class, ['plan' => $plan])
+                ->call('chooseEvidenceOccurrence', $occurrence->id)
+                ->set('evidenceUploads', [UploadedFile::fake()->image('night-study-proof.jpg')])
+                ->call('attachEvidence')
+                ->assertHasNoErrors()
+                ->assertSee('night-study-proof.jpg');
+
+            $asset = Asset::query()->where('context_id', $context->id)->where('original_filename', 'night-study-proof.jpg')->sole();
+
+            $this->assertDatabaseHas('plan_occurrence_assets', [
+                'plan_occurrence_id' => $occurrence->id,
+                'asset_id' => $asset->id,
+                'added_by_actor_id' => $bob->id,
+            ]);
         } finally {
             CarbonImmutable::setTestNow();
         }
