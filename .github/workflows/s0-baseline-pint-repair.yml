@@ -1,0 +1,51 @@
+name: S0 Baseline Pint Repair
+
+on:
+  push:
+    branches:
+      - codex/review-s0-baseline
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Normalize repository PHP formatting
+        run: vendor/bin/pint --format agent
+
+      - name: Verify whitespace
+        run: git diff --check
+
+      - name: Commit formatter-only baseline repair
+        shell: bash
+        run: |
+          if git diff --quiet -- '*.php'; then
+            echo "No PHP formatting changes required."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.php'
+          git commit -m "style: normalize S0 baseline with Pint"
+          git push origin HEAD:codex/review-s0-baseline
