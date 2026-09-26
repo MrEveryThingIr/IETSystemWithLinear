@@ -29,10 +29,7 @@
                     </div>
 
                     <div class="text-sm text-zinc-500">
-                        {{ __('contracts.show.effective', [
-                            'time' => $pendingVersion->effective_from->timezone($pendingVersion->effective_timezone)->format('Y-m-d H:i'),
-                            'timezone' => $pendingVersion->effective_timezone,
-                        ]) }}
+                        {{ __('contracts.show.effective_label') }} <x-app.local-datetime :value="$pendingVersion->effective_from" />
                     </div>
 
                     @if ($pendingVersion->accepted_at && $pendingVersion->status->value === 'accepted')
@@ -68,10 +65,7 @@
                     </div>
 
                     <div class="text-sm text-zinc-500">
-                        {{ __('contracts.show.effective', [
-                            'time' => $activeVersion->effective_from->timezone($activeVersion->effective_timezone)->format('Y-m-d H:i'),
-                            'timezone' => $activeVersion->effective_timezone,
-                        ]) }}
+                        {{ __('contracts.show.effective_label') }} <x-app.local-datetime :value="$activeVersion->effective_from" />
                     </div>
                 </flux:card>
             @endif
@@ -209,10 +203,7 @@
                         </div>
 
                         <div class="text-sm text-zinc-500">
-                            {{ __('contracts.show.effective', [
-                                'time' => $version->effective_from->timezone($version->effective_timezone)->format('Y-m-d H:i'),
-                                'timezone' => $version->effective_timezone,
-                            ]) }}
+                            {{ __('contracts.show.effective_label') }} <x-app.local-datetime :value="$version->effective_from" />
                             @if ($version->effective_until)
                                 · {{ __('contracts.show.effective_until_label') }} <x-app.local-datetime :value="$version->effective_until" />
                             @endif
