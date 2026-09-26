@@ -88,7 +88,7 @@ class MaterializePlanOccurrences
                     'local_date' => $date->format('Y-m-d'),
                     'scheduled_end_at' => $localEnd->utc(),
                     'window_start_at' => $localStart->subMinutes($current->window_before_minutes)->utc(),
-                    'window_end_at' => $localEnd->addMinutes($current->window_after_minutes)->utc(),
+                    'window_end_at' => $localStart->addMinutes($current->window_after_minutes)->utc(),
                     'timezone' => $timezone,
                     'origin_type' => $current->plan->origin_type,
                     'origin_uuid' => $current->plan->origin_uuid,
