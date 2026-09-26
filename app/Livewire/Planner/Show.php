@@ -167,8 +167,32 @@ class Show extends Component
             'originRelationship' => $originRelationship,
             'originCommitment' => $originCommitment,
             'contextContentCount' => $contextContentCount,
+            'contextLabel' => $this->contextLabel($plan),
             'now' => now(),
         ]);
+    }
+
+
+    private function contextLabel(Plan $plan): string
+    {
+        $context = $plan->context;
+        $context->loadMissing([
+            'relationshipBinding.relationship.purposeConcept.labels',
+            'groupSpaceBinding.groupSpace.group',
+        ]);
+
+        return match ($context->kind->value) {
+            'personal' => (string) __('planner.context.personal'),
+            'relationship' => (string) __('planner.context.relationship', [
+                'title' => $context->relationshipBinding?->relationship?->title
+                    ?: $context->relationshipBinding?->relationship?->purposeConcept?->displayLabel()
+                    ?: $context->uuid,
+            ]),
+            'group_space' => (string) __('planner.context.group_space', [
+                'space' => $context->groupSpaceBinding?->groupSpace?->name ?: $context->uuid,
+            ]),
+            default => $context->kind->value,
+        };
     }
 
     private function occurrence(int $occurrenceId): PlanOccurrence
