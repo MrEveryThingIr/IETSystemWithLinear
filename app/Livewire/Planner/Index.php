@@ -49,7 +49,6 @@ class Index extends Component
             ->format('Y-m');
     }
 
-
     public function previousYear(): void
     {
         $timezone = TemporalPreferences::timezoneFor($this->user());
