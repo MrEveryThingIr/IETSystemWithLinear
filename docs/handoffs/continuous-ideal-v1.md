@@ -46,10 +46,13 @@ PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer: green
 
 The assembly later received S0 documentation-only closure at `707eaa621e267c31beaf3d9c71dde3c92178429e` with CI `36237332774` green.
 
-Current process-revision branch:
+Browser-gated process checkpoint:
 
 ~~~text
-codex/selective-assembly-browser-gates
+PR #32 merged
+assembly SHA: 30dc939754c3fec7009250a61437db2633aabea7
+post-merge CI: 36238246665 — success
+runtime changes: none (governance/docs only)
 ~~~
 
 ## Current objective — M0/S0 browser baseline
