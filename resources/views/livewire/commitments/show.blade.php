@@ -122,8 +122,13 @@
                                 <flux:select.option value="">{{ __('commitments.show.no_occurrence') }}</flux:select.option>
                                 @foreach ($completedOccurrences as $occurrence)
                                     <flux:select.option :value="$occurrence->uuid">
-                                        @if ($occurrence->actual_start_at)<x-app.local-datetime :value="$occurrence->actual_start_at" />@endif
-                                        → @if ($occurrence->actual_end_at)<x-app.local-time :value="$occurrence->actual_end_at" />@endif
+                                        {{ $occurrence->actual_start_at
+                                            ? \App\Support\TemporalCalendar::dateTimeLabelWithEquivalent($occurrence->actual_start_at, request()->user())
+                                            : '—' }}
+                                        →
+                                        {{ $occurrence->actual_end_at
+                                            ? \App\Support\TemporalCalendar::timeLabel($occurrence->actual_end_at, request()->user())
+                                            : '…' }}
                                     </flux:select.option>
                                 @endforeach
                             </flux:select>
