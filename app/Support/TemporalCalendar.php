@@ -7,6 +7,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use IntlDateFormatter;
+use LogicException;
 use Throwable;
 
 class TemporalCalendar
@@ -99,9 +100,18 @@ class TemporalCalendar
         ?string $locale = null,
         ?CalendarSystem $calendar = null,
     ): string {
+        if (! class_exists(IntlDateFormatter::class)) {
+            throw new LogicException('The PHP intl extension is required for profile-aware calendar rendering.');
+        }
+
         $calendar ??= TemporalPreferences::calendarFor($user);
         $locale ??= Localization::intlLocale($user?->locale);
-        $icuLocale = str_replace('-', '_', $locale).'@calendar='.$calendar->value;
+        $icuCalendar = match ($calendar) {
+            CalendarSystem::Gregorian => 'gregorian',
+            CalendarSystem::Persian => 'persian',
+            CalendarSystem::IslamicUmmAlQura => 'islamic-umalqura',
+        };
+        $icuLocale = str_replace('-', '_', $locale).'@calendar='.$icuCalendar;
 
         try {
             $formatter = new IntlDateFormatter(
