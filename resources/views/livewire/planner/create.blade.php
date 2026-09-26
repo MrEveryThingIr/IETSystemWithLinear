@@ -75,9 +75,12 @@
                 </div>
             @endif
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" />
-                <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" />
+            <div class="space-y-2">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" />
+                    <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" />
+                </div>
+                <p class="text-xs text-zinc-500">{{ __('planner.create.window_help') }}</p>
             </div>
 
             <div>
