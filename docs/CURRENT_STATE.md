@@ -39,7 +39,7 @@ Root baseline:
 
 `2c7a5c35a31fe86d761a1cafd189560bec220784`
 
-The owner has authorized continuous remote development with local/browser acceptance deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+Historical Phase 1–22 integration used continuous remote development with browser acceptance deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`. **That process is no longer the active selective-assembly gate**; current modules follow `docs/SELECTIVE_ASSEMBLY_ROADMAP.md` and require owner browser acceptance before merge/progression.
 
 The active line intentionally excludes the experimental/unused AI-assistance and Development-Origin runtime. AI returns only at the later dedicated roadmap phase.
 
