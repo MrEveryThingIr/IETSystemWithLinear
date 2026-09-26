@@ -16,6 +16,7 @@
     data-locale="{{ $locale }}"
     data-calendar="{{ $calendar }}"
     data-show-equivalent="{{ $showEquivalent ? 'true' : 'false' }}"
+    data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
 >
     <span data-temporal-primary>{{ $date }}</span>
     @if ($showEquivalent)
