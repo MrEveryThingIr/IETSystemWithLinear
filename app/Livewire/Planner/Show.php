@@ -19,12 +19,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
-#[Title('Plan')]
 class Show extends Component
 {
     use WithFileUploads;
@@ -209,7 +207,7 @@ class Show extends Component
             'availableEvidenceReferences' => $references,
             'originRelationship' => $originRelationship,
             'originCommitment' => $originCommitment,
-        ]);
+        ])->title($plan->title);
     }
 
     private function occurrence(int $occurrenceId): PlanOccurrence
