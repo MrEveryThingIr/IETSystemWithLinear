@@ -210,6 +210,7 @@ class IetDatePicker extends HTMLElement {
         this.input = this.querySelector('[data-date-value]');
         this.trigger = this.querySelector('[data-date-trigger]');
         this.display = this.querySelector('[data-date-display]');
+        this.equivalentDisplay = this.querySelector('[data-date-equivalent]');
         this.popoverElement = this.querySelector('[data-date-popover]');
         this.titleElement = this.querySelector('[data-date-title]');
         this.weekdays = this.querySelector('[data-date-weekdays]');
@@ -345,6 +346,14 @@ class IetDatePicker extends HTMLElement {
         this.display.textContent = value
             ? localizedDate(value, this.locale, this.calendar)
             : (this.dataset.emptyLabel || '');
+
+        if (this.equivalentDisplay) {
+            const showEquivalent = Boolean(value) && this.calendar !== 'gregory';
+            this.equivalentDisplay.hidden = !showEquivalent;
+            this.equivalentDisplay.textContent = showEquivalent
+                ? gregorianEquivalentDate(value, this.locale)
+                : '';
+        }
     }
 
     renderWeekdays() {
@@ -494,6 +503,7 @@ class IetAmbientStatus extends HTMLElement {
         this.initialized = true;
         this.messageIndex = 0;
         this.clock = this.querySelector('[data-ambient-clock]');
+        this.equivalent = this.querySelector('[data-ambient-equivalent]');
         this.message = this.querySelector('[data-ambient-message]');
         this.messages = [...this.querySelectorAll('[data-ambient-source]')]
             .map((element) => element.textContent?.trim())
@@ -517,12 +527,30 @@ class IetAmbientStatus extends HTMLElement {
             return;
         }
 
-        this.clock.textContent = new Intl.DateTimeFormat(this.dataset.locale || 'en', {
-            calendar: calendarOrFallback(this.dataset.calendar || 'gregory'),
-            timeZone: this.dataset.timezone || 'UTC',
+        const locale = this.dataset.locale || 'en';
+        const calendar = calendarOrFallback(this.dataset.calendar || 'gregory');
+        const timezone = this.dataset.timezone || 'UTC';
+        const now = new Date();
+
+        this.clock.textContent = new Intl.DateTimeFormat(locale, {
+            calendar,
+            timeZone: timezone,
             dateStyle: 'medium',
             timeStyle: 'medium',
-        }).format(new Date());
+        }).format(now);
+
+        if (this.equivalent) {
+            const showEquivalent = calendar !== 'gregory';
+            this.equivalent.hidden = !showEquivalent;
+            this.equivalent.textContent = showEquivalent
+                ? new Intl.DateTimeFormat(locale, {
+                    calendar: 'gregory',
+                    timeZone: timezone,
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                }).format(now)
+                : '';
+        }
     }
 
     renderMessage() {
@@ -619,12 +647,26 @@ function localizeTemporal(root = document) {
         const calendar = calendarOrFallback(element.dataset.calendar || 'gregory');
         const timezone = element.dataset.timezone || 'UTC';
 
+        const now = new Date();
         target.textContent = new Intl.DateTimeFormat(locale, {
             calendar,
             timeZone: timezone,
             dateStyle: 'full',
             timeStyle: 'short',
-        }).format(new Date());
+        }).format(now);
+
+        const equivalent = element.querySelector('[data-temporal-preview-equivalent]');
+        if (equivalent) {
+            equivalent.hidden = calendar === 'gregory';
+            equivalent.textContent = calendar === 'gregory'
+                ? ''
+                : new Intl.DateTimeFormat(locale, {
+                    calendar: 'gregory',
+                    timeZone: timezone,
+                    dateStyle: 'full',
+                    timeStyle: 'short',
+                }).format(now);
+        }
     });
 
     root.querySelectorAll?.('iet-date-picker').forEach((picker) => picker.refreshFromInput?.());
