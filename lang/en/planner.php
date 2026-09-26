@@ -4,7 +4,6 @@ return [
     'title' => 'Planner',
     'help' => 'Plan personal and collaborative activity with timezone-safe schedules, actual execution time, evidence and reminders. Planner records activity truth; it does not create Contract, employment, ownership, payment or obligation authority.',
     'new' => 'New plan',
-    'minutes_short' => 'min',
     'views' => [
         'today' => 'Today',
         'list' => 'List',
@@ -93,8 +92,15 @@ return [
         'timeline' => 'Context timeline',
     ],
     'calendar' => [
-        'previous' => 'Previous month',
-        'next' => 'Next month',
+        'previous' => 'Previous',
+        'next' => 'Next',
+        'add_to_day' => 'Add to this day',
+        'hour_title' => 'Hour · :time',
+        'quantum_help' => 'Choose how finely this hour is divided. Every slot can open a Plan with its exact start time and duration.',
+        'quantum_minutes' => ':count min',
+        'add_to_slot' => 'Add a plan at :time',
+        'add' => 'Add',
+        'item_count' => '{0} No scheduled items|{1} :count scheduled item|[2,*] :count scheduled items',
     ],
     'weekdays' => [
         1 => 'Monday',

@@ -19,6 +19,7 @@ return [
         'source' => '来源履行',
         'debtor' => '付款方 / 债务方',
         'creditor' => '收款方 / 债权方',
+        'recognized_label' => '确认时间',
         'recognized' => '确认于 :time',
         'accounting' => '我的记账',
         'accounting_help' => '只把您自己这一侧记录到个人账本。重复执行不会产生重复记录；另一方独立记录自己的那一侧。',
