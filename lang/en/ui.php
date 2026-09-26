@@ -158,6 +158,13 @@ return [
         'display_image_updated' => 'Displayed profile image updated.',
         'display_image_cleared' => 'Displayed profile image cleared.',
         'image_removed' => 'Profile image removed.',
+        'account_preferences' => [
+            'title' => 'Account preferences',
+            'help' => 'Choose defaults for personal account and financial workflows. Changing these settings never rewrites existing financial history.',
+            'default_monetary_unit' => 'Default currency',
+            'default_monetary_unit_help' => 'New personal financial records use this currency by default. Existing ledgers and entries keep their original monetary unit.',
+            'saved' => 'Account preferences saved.',
+        ],
         'temporal' => [
             'title' => 'Date & time preferences',
             'help' => 'Language controls labels and formatting, timezone controls your local clock, and calendar is a separate presentation preference. Dates are stored canonically so changing these preferences never changes the underlying date.',
