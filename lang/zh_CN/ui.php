@@ -133,6 +133,7 @@ return [
             'title' => '日期与时间偏好',
             'help' => '语言决定界面文字和格式，时区决定本地时钟，日历则是独立的显示偏好。日期以标准形式存储，因此切换这些偏好不会改变底层日期。',
             'preview' => '你的本地日期与时间',
+            'gregorian_equivalent' => '公历对应时间',
             'preview_loading' => '正在加载本地日期和时间…',
             'timezone' => '时区',
             'timezone_help' => '使用 IANA 时区，例如 Asia/Shanghai 或 America/Toronto。设备可以自动建议当前时区。',
