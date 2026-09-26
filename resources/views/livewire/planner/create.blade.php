@@ -20,8 +20,21 @@
     @endif
 
     <flux:callout>
-        <div class="font-medium">{{ __('planner.create.context') }}</div>
-        <div class="mt-1" dir="auto">{{ $contextLabel }}</div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <div class="font-medium">{{ __('planner.create.context') }}</div>
+                <div class="mt-1" dir="auto">{{ $contextLabel }}</div>
+                <div class="mt-1 text-sm text-zinc-500">{{ __('planner.context.help') }}</div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <flux:button :href="route('contexts.contents.index', $context)" size="sm" variant="ghost">
+                    {{ __('planner.context.content') }}
+                </flux:button>
+                <flux:button :href="route('planner.index', ['view' => 'calendar', 'context' => $context->uuid, 'date' => $startsOn])" size="sm" variant="ghost">
+                    {{ __('planner.create.back_to_calendar') }}
+                </flux:button>
+            </div>
+        </div>
     </flux:callout>
 
     <form wire:submit="save" class="space-y-6">
@@ -76,9 +89,17 @@
             @endif
 
             <div class="grid gap-4 sm:grid-cols-2">
-                <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" />
-                <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" />
+                <div>
+                    <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" />
+                    <p class="mt-1 text-xs text-zinc-500">{{ __('planner.create.early_window_help') }}</p>
+                </div>
+                <div>
+                    <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" />
+                    <p class="mt-1 text-xs text-zinc-500">{{ __('planner.create.late_window_help') }}</p>
+                </div>
             </div>
+
+            <flux:callout>{{ __('planner.create.execution_help') }}</flux:callout>
 
             <div>
                 <flux:input wire:model="reminderOffsets" :label="__('planner.create.reminders')" />
