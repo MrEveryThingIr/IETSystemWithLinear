@@ -1530,6 +1530,91 @@ npm run dev
 Set `BROADCAST_CONNECTION=reverb` and the documented REVERB/VITE_REVERB variables for this realtime check.
 
 
+
+---
+
+## Checkpoint S0 — Selective assembly baseline certification
+
+This checkpoint establishes the trustworthy starting point for selective first-publication reconciliation. It does not add product features.
+
+Remote branches:
+
+~~~text
+assembly: codex/ideal-v1-selective-assembly
+review:   codex/review-s0-baseline
+~~~
+
+Original accepted baseline:
+
+~~~text
+SHA: 891b333c49f166e61b9fa466e30742b3d70996c0
+Original CI: 36235097202
+Result: 552 tests / 3511 assertions; PHPStan/MySQL/SQLite/Vite/npm/Composer green
+Known S0 gap discovered later: repository-wide Pint had been skipped and Blade compilation was not explicit.
+~~~
+
+S0 correction evidence:
+
+~~~text
+PR: #30
+Formatter-only repair: e57b29d2de68f97568187a19de60c9bbabf103ca
+15 pre-existing PHP style issues normalized by Pint
+No migration or dependency change
+Final merged assembly SHA: <record after PR #30 merge>
+Post-merge assembly CI: <record after PR #30 merge>
+~~~
+
+### Local sync after S0 merge
+
+~~~bash
+cd /c/laragon/www/EveryThing
+
+git status --short
+git fetch origin
+git switch codex/ideal-v1-selective-assembly
+git pull --ff-only origin codex/ideal-v1-selective-assembly
+git status --short
+git rev-parse HEAD
+
+composer install --no-interaction --prefer-dist
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+npm ci
+npm run build
+
+vendor/bin/pint --test
+vendor/bin/phpstan analyse --no-progress
+php artisan test --compact
+composer audit --locked --no-interaction
+npm audit --audit-level=high
+
+php artisan view:cache
+php artisan view:clear
+~~~
+
+Do not use `migrate:fresh` against the continuing database.
+
+### Deferred S0 browser smoke
+
+Use `IET_RELEASE_PROFILE=full` and reuse the established story data where available.
+
+- [ ] English navigation/dashboard/login/profile representative pages render without raw keys or template source.
+- [ ] Persian representative pages use the selected calendar/timezone presentation and RTL layout correctly.
+- [ ] Arabic representative pages remain RTL and usable.
+- [ ] Simplified Chinese representative pages render localized controls without raw keys.
+- [ ] Account/menu/header surfaces render evaluated identity values rather than Blade expressions.
+- [ ] Representative forms compile/render without missing components or translated-label failures.
+- [ ] Mobile navigation remains usable in LTR and RTL.
+- [ ] Keyboard focus order and primary actions remain reachable.
+- [ ] No S0 formatter-only repair changes observable domain behavior.
+
+### Continuity
+
+S0 is the baseline certification checkpoint only. S1 and later selective modules must start from the exact merged S0 assembly head and must not attribute a pre-existing baseline defect to a newly admitted module.
+
+
 ---
 
 ## Final Publishable Ideal-v1 — Cumulative 0→100 Release Acceptance
