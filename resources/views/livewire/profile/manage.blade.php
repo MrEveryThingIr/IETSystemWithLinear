@@ -260,6 +260,80 @@
         </div>
     </div>
 
+
+    <section class="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
+                <h2 class="text-lg font-semibold">{{ __('ui.profile.account_preferences.title') }}</h2>
+                <p class="mt-1 max-w-3xl text-sm text-zinc-500">{{ __('ui.profile.account_preferences.help') }}</p>
+            </div>
+
+            @unless ($accountPreferencesEditorOpen)
+                <flux:button
+                    wire:click="openAccountPreferencesEditor"
+                    size="sm"
+                    variant="ghost"
+                    icon="plus"
+                    class="w-full shrink-0 sm:w-auto"
+                >
+                    {{ __('ui.common.edit') }}
+                </flux:button>
+            @endunless
+        </div>
+
+        @if ($accountPreferencesEditorOpen)
+            <form wire:submit="saveAccountPreferences" class="mt-5 space-y-4">
+                <div class="space-y-2">
+                    <label for="profile-default-monetary-unit" class="text-sm font-medium">
+                        {{ __('ui.profile.account_preferences.default_monetary_unit') }}
+                    </label>
+                    <select
+                        id="profile-default-monetary-unit"
+                        wire:model="defaultMonetaryUnitCode"
+                        class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    >
+                        @foreach ($monetaryUnits as $code => $unit)
+                            <option value="{{ $code }}">{{ $code }} · {{ $unit['name'] }}</option>
+                        @endforeach
+                    </select>
+                    @error('defaultMonetaryUnitCode')
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    <p class="text-xs text-zinc-500">{{ __('ui.profile.account_preferences.default_monetary_unit_help') }}</p>
+                </div>
+
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <flux:button
+                        type="button"
+                        wire:click="cancelAccountPreferencesEditor"
+                        variant="ghost"
+                        class="w-full sm:w-auto"
+                    >
+                        {{ __('ui.common.cancel') }}
+                    </flux:button>
+                    <flux:button type="submit" variant="primary" class="w-full sm:w-auto">
+                        {{ __('ui.common.save') }}
+                    </flux:button>
+                </div>
+            </form>
+        @else
+            @php($defaultUnit = $monetaryUnits[$defaultMonetaryUnitCode] ?? null)
+            <dl class="mt-5 text-sm">
+                <div>
+                    <dt class="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        {{ __('ui.profile.account_preferences.default_monetary_unit') }}
+                    </dt>
+                    <dd class="mt-1 font-medium">
+                        {{ $defaultMonetaryUnitCode }}
+                        @if ($defaultUnit)
+                            · {{ $defaultUnit['name'] }}
+                        @endif
+                    </dd>
+                </div>
+            </dl>
+        @endif
+    </section>
+
     <livewire:profile.temporal-preferences />
     <livewire:profile.sharing :profile="$profile" />
     <livewire:profile.semantics :profile="$profile" />
