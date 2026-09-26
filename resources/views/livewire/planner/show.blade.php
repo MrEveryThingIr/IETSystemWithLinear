@@ -86,21 +86,21 @@
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
-                                        <span class="text-xs text-zinc-500">{{ $occurrence->local_date->format('Y-m-d') }}</span>
+                                        <span class="text-xs text-zinc-500"><x-app.local-date :value="$occurrence->local_date" /></span>
                                     </div>
                                     <div class="mt-2 text-sm">
                                         <span class="font-medium">{{ __('planner.plan.scheduled') }}:</span>
-                                        {{ $occurrence->scheduled_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
+                                        <x-app.local-datetime :value="$occurrence->scheduled_start_at" />
                                         →
-                                        {{ $occurrence->scheduled_end_at->setTimezone($plan->timezone)->format('H:i') }}
+                                        <x-app.local-time :value="$occurrence->scheduled_end_at" />
                                     </div>
 
                                     @if ($occurrence->actual_start_at || $occurrence->actual_end_at)
                                         <div class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
                                             <span class="font-medium">{{ __('planner.plan.actual') }}:</span>
-                                            {{ $occurrence->actual_start_at?->setTimezone($plan->timezone)->format('Y-m-d H:i') ?? '—' }}
+                                            @if ($occurrence->actual_start_at)<x-app.local-datetime :value="$occurrence->actual_start_at" />@else — @endif
                                             →
-                                            {{ $occurrence->actual_end_at?->setTimezone($plan->timezone)->format('H:i') ?? '…' }}
+                                            @if ($occurrence->actual_end_at)<x-app.local-time :value="$occurrence->actual_end_at" />@else … @endif
                                         </div>
                                     @endif
                                 </div>
@@ -195,7 +195,7 @@
                             <flux:badge size="sm">{{ $rule->status->value }}</flux:badge>
                         </div>
                         <div class="mt-2 text-zinc-500">
-                            {{ $rule->starts_on->format('Y-m-d') }} · {{ substr($rule->start_time, 0, 5) }} · {{ $rule->duration_minutes }} min
+                            <x-app.local-date :value="$rule->starts_on" /> · {{ substr($rule->start_time, 0, 5) }} · {{ $rule->duration_minutes }} min
                         </div>
                         @if ($rule->reminders->isNotEmpty())
                             <div class="mt-2 text-xs text-zinc-500">
