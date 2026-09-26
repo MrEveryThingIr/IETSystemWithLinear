@@ -27,7 +27,10 @@
             aria-haspopup="dialog"
             aria-expanded="false"
         >
-            <span data-date-display class="min-w-0 truncate">{{ __('ui.profile.temporal.choose_date') }}</span>
+            <span class="min-w-0">
+                <span data-date-display class="block truncate">{{ __('ui.profile.temporal.choose_date') }}</span>
+                <span data-date-equivalent class="block truncate text-[0.72rem] text-zinc-500" hidden></span>
+            </span>
             <span aria-hidden="true" class="text-zinc-400">▾</span>
         </button>
 
