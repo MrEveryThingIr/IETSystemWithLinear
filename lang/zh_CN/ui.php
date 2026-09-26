@@ -378,6 +378,7 @@ return [
         'no_admissions' => '当前没有需要审核人处理的加入申请。',
         'admissions_help' => '已提交的申请、澄清请求以及等待最终确认的已批准申请将显示在这里。',
         'unknown_applicant' => '未知申请人',
+        'submitted_label' => '提交时间',
         'submitted_ago' => '提交于 :time',
         'settings' => '群组设置',
         'save_details' => '保存详情',
@@ -515,6 +516,7 @@ return [
         'uses' => '已使用 :used/:maximum 次',
         'expires' => '过期于',
 
+        'created' => '创建于',
         'created_expires' => '创建于 :created · 过期于 :expires',
         'never' => '永不过期',
         'revoke' => '撤销',
