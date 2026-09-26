@@ -12,6 +12,24 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    <flux:callout>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('planner.create.context') }}</div>
+                <div class="mt-1 font-medium" dir="auto">{{ $contextLabel }}</div>
+                <div class="mt-1 text-sm text-zinc-500">{{ __('planner.context.help') }}</div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <flux:button :href="route('contexts.contents.index', $plan->context)" size="sm" variant="ghost">
+                    {{ __('planner.context.content') }}
+                </flux:button>
+                <flux:button :href="route('contexts.timeline', $plan->context)" size="sm" variant="ghost">
+                    {{ __('planner.plan.timeline') }}
+                </flux:button>
+            </div>
+        </div>
+    </flux:callout>
+
     @if ($plan->domainBlueprintVersion)
         <flux:callout>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -94,6 +112,24 @@
                                         →
                                         {{ $occurrence->scheduled_end_at->setTimezone($plan->timezone)->format('H:i') }}
                                     </div>
+                                    <div class="mt-1 text-xs text-zinc-500">
+                                        {{ __('planner.plan.execution_window') }}:
+                                        {{ $occurrence->window_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
+                                        →
+                                        {{ $occurrence->window_end_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
+                                    </div>
+
+                                    @if ($occurrence->startWindowIsFutureAt($now))
+                                        <div class="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                                            {{ __('planner.plan.start_available_at', [
+                                                'time' => $occurrence->window_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i'),
+                                            ]) }}
+                                        </div>
+                                    @elseif ($occurrence->startWindowHasPassedAt($now))
+                                        <div class="mt-2 text-xs text-red-700 dark:text-red-300">
+                                            {{ __('planner.plan.start_window_passed') }}
+                                        </div>
+                                    @endif
 
                                     @if ($occurrence->actual_start_at || $occurrence->actual_end_at)
                                         <div class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
@@ -146,6 +182,27 @@
                 <flux:card class="space-y-4">
                     <flux:heading size="lg">{{ __('planner.plan.select_evidence') }}</flux:heading>
 
+                    @error('evidence')
+                        <flux:callout variant="danger">{{ $message }}</flux:callout>
+                    @enderror
+
+                    @if ($availableAssets->isEmpty() && $availableEvidenceReferences->isEmpty())
+                        <x-app.empty-state
+                            :title="__('planner.plan.no_context_evidence')"
+                            :description="__('planner.plan.no_context_evidence_help')"
+                        >
+                            <x-slot:actions>
+                                <flux:button :href="route('contexts.contents.index', $plan->context)" variant="primary" size="sm">
+                                    {{ __('planner.plan.create_context_evidence') }}
+                                </flux:button>
+                            </x-slot:actions>
+                        </x-app.empty-state>
+                    @else
+                        <flux:callout>
+                            {{ __('planner.plan.evidence_same_context', ['context' => $contextLabel]) }}
+                        </flux:callout>
+                    @endif
+
                     @if ($availableAssets->isNotEmpty())
                         <div class="grid gap-2 sm:grid-cols-2">
                             @foreach ($availableAssets as $asset)
@@ -168,9 +225,11 @@
                         </div>
                     @endif
 
-                    <div class="flex justify-end">
-                        <flux:button wire:click="attachEvidence" variant="primary">{{ __('planner.plan.attach_evidence') }}</flux:button>
-                    </div>
+                    @if ($availableAssets->isNotEmpty() || $availableEvidenceReferences->isNotEmpty())
+                        <div class="flex justify-end">
+                            <flux:button wire:click="attachEvidence" variant="primary">{{ __('planner.plan.attach_evidence') }}</flux:button>
+                        </div>
+                    @endif
                 </flux:card>
             @endif
         </div>
