@@ -77,6 +77,16 @@
                         $items = $calendarOccurrences->get($dateKey, collect());
                         $inMonth = $date->format('Y-m') === $month;
                         $selected = $selectedDate === $dateKey;
+                        $dayCreateParams = [
+                            'date' => $dateKey,
+                            'time' => '09:00',
+                        ];
+
+                        if ($context) {
+                            $dayCreateParams['context'] = $context->uuid;
+                        }
+
+                        $dayCreateUrl = route('planner.create', $dayCreateParams);
                     @endphp
                     <div
                         wire:key="calendar-day-{{ $dateKey }}"
@@ -91,11 +101,7 @@
                                 {{ $date->format('j') }}
                             </button>
                             <a
-                                href="{{ route('planner.create', array_filter([
-                                    'context' => $context?->uuid,
-                                    'date' => $dateKey,
-                                    'time' => '09:00',
-                                ])) }}"
+                                href="{{ $dayCreateUrl }}"
                                 class="rounded-md px-1.5 py-1 text-xs text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white"
                                 aria-label="{{ __('planner.calendar.add_on_date', ['date' => $dateKey]) }}"
                             >+</a>
@@ -103,7 +109,9 @@
 
                         <div class="mt-2 space-y-1">
                             @foreach ($items as $occurrence)
-                                @php($windowState = $occurrence->windowState())
+                                @php
+                                    $windowState = $occurrence->windowState();
+                                @endphp
                                 <a
                                     href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}"
                                     class="block rounded-lg border border-zinc-200 px-2 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
@@ -168,6 +176,16 @@
                             $hourItems = $selectedDayOccurrences->filter(
                                 fn ($occurrence) => (int) $occurrence->scheduled_start_at->setTimezone($timezone)->format('G') === $hour
                             );
+                            $hourCreateParams = [
+                                'date' => $selectedDate,
+                                'time' => $hourValue,
+                            ];
+
+                            if ($context) {
+                                $hourCreateParams['context'] = $context->uuid;
+                            }
+
+                            $hourCreateUrl = route('planner.create', $hourCreateParams);
                         @endphp
                         <div class="grid min-h-16 grid-cols-[4.5rem_minmax(0,1fr)] border-b border-zinc-100 last:border-b-0 dark:border-zinc-800">
                             <div class="border-e border-zinc-100 px-3 py-3 text-xs font-medium text-zinc-500 dark:border-zinc-800">
@@ -175,7 +193,9 @@
                             </div>
                             <div class="space-y-2 p-2">
                                 @forelse ($hourItems as $occurrence)
-                                    @php($windowState = $occurrence->windowState())
+                                    @php
+                                        $windowState = $occurrence->windowState();
+                                    @endphp
                                     <details class="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-950">
                                         <summary class="cursor-pointer list-none">
                                             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -223,11 +243,7 @@
                                     </details>
                                 @empty
                                     <a
-                                        href="{{ route('planner.create', array_filter([
-                                            'context' => $context?->uuid,
-                                            'date' => $selectedDate,
-                                            'time' => $hourValue,
-                                        ])) }}"
+                                        href="{{ $hourCreateUrl }}"
                                         class="inline-flex rounded-md px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white"
                                     >
                                         + {{ __('planner.calendar.plan_this_hour') }}
