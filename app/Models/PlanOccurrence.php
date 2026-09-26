@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\PlanOccurrenceStatus;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -96,7 +97,6 @@ class PlanOccurrence extends Model
         $allowed = match ($current) {
             PlanOccurrenceStatus::Scheduled => [
                 PlanOccurrenceStatus::InProgress,
-                PlanOccurrenceStatus::Completed,
                 PlanOccurrenceStatus::Skipped,
                 PlanOccurrenceStatus::Cancelled,
             ],
@@ -134,6 +134,33 @@ class PlanOccurrence extends Model
         } finally {
             $this->applyingLifecycle = false;
         }
+    }
+
+    public function executionPhase(?CarbonInterface $at = null): string
+    {
+        if ($this->status !== PlanOccurrenceStatus::Scheduled) {
+            return $this->status->value;
+        }
+
+        $moment = $at === null
+            ? CarbonImmutable::now('UTC')
+            : CarbonImmutable::parse($at->toIso8601String())->utc();
+
+        if ($moment->lt($this->window_start_at->utc())) {
+            return 'upcoming';
+        }
+
+        if ($moment->lte($this->window_end_at->utc())) {
+            return 'ready';
+        }
+
+        return 'passed';
+    }
+
+    public function canStartAt(CarbonInterface $at): bool
+    {
+        return $this->status === PlanOccurrenceStatus::Scheduled
+            && $this->executionPhase($at) === 'ready';
     }
 
     /** @return BelongsTo<Plan, $this> */
