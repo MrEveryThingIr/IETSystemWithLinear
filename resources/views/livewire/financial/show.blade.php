@@ -85,7 +85,7 @@
                     <form wire:submit="proposeSettlement" class="space-y-4">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <flux:input wire:model="settlementAmount" :label="__('financial.settlement.amount')" />
-                            <flux:input wire:model="settlementPaidAt" type="datetime-local" :label="__('financial.settlement.paid_at')" />
+                            <x-app.calendar-datetime-input model="settlementPaidAt" :label="__('financial.settlement.paid_at')" />
                             <flux:input wire:model="settlementMethod" :label="__('financial.settlement.method')" maxlength="80" />
                             <flux:input wire:model="settlementReference" :label="__('financial.settlement.reference')" maxlength="255" />
                         </div>
@@ -104,7 +104,7 @@
                                         {{ $obligation->monetaryUnit->code }}
                                     </div>
                                     <div class="text-xs text-zinc-500">
-                                        {{ $settlement->paid_at->setTimezone($timezone)->format('Y-m-d H:i') }}
+                                        <x-app.local-datetime :value="$settlement->paid_at" />
                                         · {{ $settlement->proposedBy->user?->username }}
                                     </div>
                                 </div>
