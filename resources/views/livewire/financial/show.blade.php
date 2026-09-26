@@ -54,9 +54,7 @@
                 </div>
 
                 <div class="text-sm text-zinc-500">
-                    {{ __('financial.obligation.recognized', [
-                        'time' => $obligation->recognized_at->setTimezone($timezone)->format('Y-m-d H:i'),
-                    ]) }}
+                    {{ __('financial.obligation.recognized_label') }} <x-app.local-datetime :value="$obligation->recognized_at" />
                 </div>
             </flux:card>
 
