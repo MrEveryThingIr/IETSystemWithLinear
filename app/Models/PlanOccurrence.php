@@ -137,7 +137,6 @@ class PlanOccurrence extends Model
         }
     }
 
-
     public function temporalPhase(?CarbonInterface $at = null): string
     {
         if ($this->status !== PlanOccurrenceStatus::Scheduled) {
