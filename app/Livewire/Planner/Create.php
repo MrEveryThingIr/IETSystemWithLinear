@@ -76,6 +76,12 @@ class Create extends Component
         $this->startTime = $now->addHour()->format('H:00');
         $this->weekdays = [$now->isoWeekday()];
 
+        $requestedDate = trim((string) request()->query('date', ''));
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate) === 1) {
+            $this->startsOn = $requestedDate;
+            $this->weekdays = [CarbonImmutable::parse($requestedDate, $this->timezone)->isoWeekday()];
+        }
+
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
         if ($queryBlueprint !== '') {
             $this->blueprintSlug = $queryBlueprint;
@@ -83,6 +89,16 @@ class Create extends Component
 
         if ($this->blueprintSlug !== '') {
             $this->applyBlueprintDefaults();
+        }
+
+        $requestedTime = trim((string) request()->query('time', ''));
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $requestedTime) === 1) {
+            $this->startTime = $requestedTime;
+        }
+
+        $requestedDuration = (int) request()->query('duration', 0);
+        if ($requestedDuration >= 1 && $requestedDuration <= 10080) {
+            $this->durationMinutes = $requestedDuration;
         }
 
         if ($this->contextUuid === '') {

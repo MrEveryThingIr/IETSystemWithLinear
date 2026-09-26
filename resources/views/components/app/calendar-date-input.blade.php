@@ -2,9 +2,9 @@
     'model',
     'label',
     'calendar' => \App\Support\TemporalPreferences::calendarFor(auth()->user())->value,
-    'locale' => \App\Support\Localization::intlLocale(),
+    'locale' => \App\Support\Localization::intlLocale(auth()->user()?->locale),
     'timezone' => \App\Support\TemporalPreferences::timezoneFor(auth()->user()),
-    'firstDay' => \App\Support\Localization::firstDayOfWeek(),
+    'firstDay' => \App\Support\Localization::firstDayOfWeek(auth()->user()?->locale),
 ])
 
 <div class="space-y-2">
@@ -17,6 +17,7 @@
         data-timezone="{{ $timezone }}"
         data-first-day="{{ $firstDay }}"
         data-empty-label="{{ __('ui.profile.temporal.choose_date') }}"
+        data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
     >
         <input type="hidden" wire:model="{{ $model }}" data-date-value>
 
@@ -27,7 +28,10 @@
             aria-haspopup="dialog"
             aria-expanded="false"
         >
-            <span data-date-display class="min-w-0 truncate">{{ __('ui.profile.temporal.choose_date') }}</span>
+            <span class="min-w-0">
+                <span data-date-display class="block truncate">{{ __('ui.profile.temporal.choose_date') }}</span>
+                <span data-date-equivalent class="block truncate text-[0.72rem] text-zinc-500" hidden></span>
+            </span>
             <span aria-hidden="true" class="text-zinc-400">▾</span>
         </button>
 

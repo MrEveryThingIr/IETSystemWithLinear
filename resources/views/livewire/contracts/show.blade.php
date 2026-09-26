@@ -29,10 +29,7 @@
                     </div>
 
                     <div class="text-sm text-zinc-500">
-                        {{ __('contracts.show.effective', [
-                            'time' => $pendingVersion->effective_from->timezone($pendingVersion->effective_timezone)->format('Y-m-d H:i'),
-                            'timezone' => $pendingVersion->effective_timezone,
-                        ]) }}
+                        {{ __('contracts.show.effective_label') }} <x-app.local-datetime :value="$pendingVersion->effective_from" />
                     </div>
 
                     @if ($pendingVersion->accepted_at && $pendingVersion->status->value === 'accepted')
@@ -68,10 +65,7 @@
                     </div>
 
                     <div class="text-sm text-zinc-500">
-                        {{ __('contracts.show.effective', [
-                            'time' => $activeVersion->effective_from->timezone($activeVersion->effective_timezone)->format('Y-m-d H:i'),
-                            'timezone' => $activeVersion->effective_timezone,
-                        ]) }}
+                        {{ __('contracts.show.effective_label') }} <x-app.local-datetime :value="$activeVersion->effective_from" />
                     </div>
                 </flux:card>
             @endif
@@ -90,7 +84,7 @@
                         <flux:textarea wire:model="amendmentNotes" :label="__('contracts.create.notes')" rows="4" />
                         <flux:input wire:model="versionNote" :label="__('contracts.amendment.version_note')" maxlength="1000" />
                         <div class="grid gap-4 md:grid-cols-2">
-                            <flux:input wire:model="effectiveAt" type="datetime-local" :label="__('contracts.create.effective_at')" />
+                            <x-app.calendar-datetime-input model="effectiveAt" :label="__('contracts.create.effective_at')" :timezone="$timezone" />
                             <flux:input wire:model="timezone" :label="__('contracts.create.timezone')" maxlength="64" />
                         </div>
                         <div class="flex justify-end">
@@ -209,12 +203,9 @@
                         </div>
 
                         <div class="text-sm text-zinc-500">
-                            {{ __('contracts.show.effective', [
-                                'time' => $version->effective_from->timezone($version->effective_timezone)->format('Y-m-d H:i'),
-                                'timezone' => $version->effective_timezone,
-                            ]) }}
+                            {{ __('contracts.show.effective_label') }} <x-app.local-datetime :value="$version->effective_from" />
                             @if ($version->effective_until)
-                                · {{ __('contracts.show.effective_until', ['time' => $version->effective_until->timezone($version->effective_timezone)->format('Y-m-d H:i')]) }}
+                                · {{ __('contracts.show.effective_until_label') }} <x-app.local-datetime :value="$version->effective_until" />
                             @endif
                         </div>
 

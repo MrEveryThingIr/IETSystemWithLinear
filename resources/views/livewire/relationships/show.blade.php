@@ -166,7 +166,7 @@
                             @if ($event->actor)
                                 {{ $event->actor->user?->username ?? __('relationships.unknown_actor') }} ·
                             @endif
-                            {{ $event->created_at?->format('Y-m-d H:i') }}
+                            @if ($event->created_at)<x-app.local-datetime :value="$event->created_at" />@endif
                         </div>
                     </div>
                 </li>

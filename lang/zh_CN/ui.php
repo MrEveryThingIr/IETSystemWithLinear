@@ -3,6 +3,13 @@
 return [
     'language' => '语言',
     'account' => '账户',
+    'ambient' => [
+        'messages' => [
+            'plan' => '规划下一项有用行动，并让原始记录保持权威。',
+            'record' => '记录真实发生的事情，而不是系统仅仅推断的内容。',
+            'review' => '今天的小复核，可以避免明天的历史含糊。',
+        ],
+    ],
     'navigation' => [
         'main' => '主导航',
         'open' => '打开导航',
@@ -162,6 +169,7 @@ return [
             'title' => '日期与时间偏好',
             'help' => '语言决定界面文字和格式，时区决定本地时钟，日历则是独立的显示偏好。日期以标准形式存储，因此切换这些偏好不会改变底层日期。',
             'preview' => '你的本地日期与时间',
+            'gregorian_equivalent' => '公历对应时间',
             'preview_loading' => '正在加载本地日期和时间…',
             'timezone' => '时区',
             'timezone_help' => '使用 IANA 时区，例如 Asia/Shanghai 或 America/Toronto。设备可以自动建议当前时区。',
@@ -370,6 +378,7 @@ return [
         'no_admissions' => '当前没有需要审核人处理的加入申请。',
         'admissions_help' => '已提交的申请、澄清请求以及等待最终确认的已批准申请将显示在这里。',
         'unknown_applicant' => '未知申请人',
+        'submitted_label' => '提交时间',
         'submitted_ago' => '提交于 :time',
         'settings' => '群组设置',
         'save_details' => '保存详情',
@@ -470,6 +479,7 @@ return [
         'workflow' => '草稿 → 提议 → 已批准 → 生效。激活新版本将取代当前生效的版本，同时保留其历史记录。',
         'initial_help' => '初始文本将保存为第 1 版。在您批准并激活之前，它不会影响申请人。',
         'applicants_accept' => '申请人须在成为成员前接受当前生效的版本',
+        'effective_label' => '生效时间',
         'effective' => '自 :date 起生效',
         'revision_rationale' => '修订原因：',
         'decision_note' => '决定备注：',
@@ -504,6 +514,9 @@ return [
         'exhausted' => '已用尽',
         'secret_not_recoverable' => '出于安全考虑，私密链接创建后将被隐藏。',
         'uses' => '已使用 :used/:maximum 次',
+        'expires' => '过期于',
+
+        'created' => '创建于',
         'created_expires' => '创建于 :created · 过期于 :expires',
         'never' => '永不过期',
         'revoke' => '撤销',
@@ -795,6 +808,8 @@ return [
         'shared_title' => '与你共享的资料信息',
         'shared_help' => '此视图只包含资料所有者明确共享给您的信息。',
         'profile_owner' => '资料所有者',
+        'expires_label' => '访问权限过期时间',
+
         'expires_at' => '访问将在 :date 过期',
         'no_expiry' => '除非被撤销，否则访问不会过期。',
         'semantic' => '共享的语义陈述',

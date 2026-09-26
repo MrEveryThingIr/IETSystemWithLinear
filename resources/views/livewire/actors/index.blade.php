@@ -27,7 +27,7 @@
                         <flux:table.cell>
                             <flux:badge :color="$actor->status === 'active' ? 'green' : 'zinc'">{{ __('ui.actors.statuses.'.$actor->status) }}</flux:badge>
                         </flux:table.cell>
-                        <flux:table.cell>{{ $actor->created_at?->translatedFormat('Y-m-d H:i') }}</flux:table.cell>
+                        <flux:table.cell>@if ($actor->created_at)<x-app.local-datetime :value="$actor->created_at" />@endif</flux:table.cell>
                         <flux:table.cell><flux:button :href="route('actors.show', $actor)" size="sm" variant="ghost">{{ __('ui.actors.view') }}</flux:button></flux:table.cell>
                     </flux:table.row>
                 @endforeach
