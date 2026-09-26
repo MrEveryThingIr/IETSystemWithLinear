@@ -8,7 +8,7 @@
 
     <x-app.page-header
         :title="__('home.title')"
-        :description="__('home.welcome', ['name' => $homeName, 'date' => $today, 'timezone' => $timezone])"
+        :description="__('home.welcome', ['name' => $homeName, 'date' => $todayDisplay, 'timezone' => $timezone])"
     >
         <x-slot:actions>
             <div class="flex flex-wrap gap-2">
