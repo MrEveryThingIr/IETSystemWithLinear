@@ -44,8 +44,8 @@
                 </flux:button>
 
                 <div class="flex flex-wrap items-center justify-center gap-1">
-                    <flux:button wire:click="showYear('{{ $calendarYearLabel }}')" :variant="$calendarLevel === 'year' ? 'primary' : 'ghost'" size="sm">
-                        {{ $year }}
+                    <flux:button wire:click="showYear('{{ $year }}')" :variant="$calendarLevel === 'year' ? 'primary' : 'ghost'" size="sm">
+                        {{ $calendarYearLabel }}
                     </flux:button>
                     @if ($calendarLevel !== 'year')
                         <span class="text-zinc-300 dark:text-zinc-700">/</span>
@@ -86,12 +86,7 @@
                 </div>
             @elseif ($calendarLevel === 'day')
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900">
-                    <span
-                        class="font-medium"
-                        data-localized-date="{{ $day }}"
-                        data-locale="{{ \App\Support\Localization::intlLocale() }}"
-                        data-calendar="{{ \App\Support\TemporalPreferences::calendarFor(request()->user())->value }}"
-                    >{{ $day }}</span>
+                    <span class="font-medium"><x-app.local-date :value="$day" /></span>
                     <flux:button :href="route('planner.create', array_filter(['context' => $context?->uuid, 'date' => $day]))" size="sm" icon="plus">
                         {{ __('planner.calendar.add_to_day') }}
                     </flux:button>
@@ -159,7 +154,7 @@
                                         <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
                                             <span class="font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
                                             <span class="ms-2 text-xs text-zinc-500">
-                                                {{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}
+                                                <x-app.local-time :value="$occurrence->scheduled_start_at" />
                                                 → <x-app.local-time :value="$occurrence->scheduled_end_at" />
                                             </span>
                                         </a>
@@ -208,7 +203,7 @@
                                 @foreach ($items as $occurrence)
                                     <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-2 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
                                         <div class="font-medium" dir="auto">{{ $occurrence->plan->title }}</div>
-                                        <div class="text-zinc-500">{{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }} · {{ __('planner.occurrence_status.'.$occurrence->status->value) }}</div>
+                                        <div class="text-zinc-500"><x-app.local-time :value="$occurrence->scheduled_start_at" /> · {{ __('planner.occurrence_status.'.$occurrence->status->value) }}</div>
                                     </a>
                                 @endforeach
                             </div>
@@ -240,7 +235,7 @@
 
                         <div class="shrink-0 text-sm sm:text-end">
                             <div class="font-medium"><x-app.local-datetime :value="$occurrence->scheduled_start_at" /></div>
-                            <div class="text-zinc-500">→ {{ $occurrence->scheduled_end_at->setTimezone($timezone)->format('H:i') }}</div>
+                            <div class="text-zinc-500">→ <x-app.local-time :value="$occurrence->scheduled_end_at" /></div>
                         </div>
                     </div>
                 </article>
