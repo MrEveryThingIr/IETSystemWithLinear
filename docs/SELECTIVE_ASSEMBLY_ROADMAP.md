@@ -1,454 +1,415 @@
-# Selective Assembly Roadmap
+# Selective Assembly Roadmap — Capability Mesh Revision
 
-## Purpose
+## Mission
 
-This is the active execution roadmap for rebuilding the first publishable Ideal-v1 from the already-developed IET modules.
+Re-create the first publishable Ideal-v1 by selectively re-admitting and revising already-developed capability nodes.
 
-The work is **not a rewrite from scratch**. Existing integrated code and later candidate branches are source material. Each domain is independently inspected, revised where justified, proven remotely, inspected by the owner in the browser, corrected if needed, and only then frozen into the selective assembly.
+This is not a rebuild from scratch and it is no longer a linear feature pipeline.
 
-The assembly branch is:
+The target product is a capability mesh:
+
+- each module/layer is independently useful as far as its meaning allows;
+- a user may keep a flow simple;
+- additional capabilities can be invoked later from relevant views;
+- wiring is explicit, authorized and reversible;
+- shared surfaces such as Calendar, Home/Today and the permanent header project information from many nodes but do not own their truth.
+
+See docs/CAPABILITY_MESH_ARCHITECTURE.md.
+
+## Browser finding that triggered this revision
+
+The owner tested codex/ideal-v1-selective-assembly after M00 remote certification and found that it correctly resembled the older accepted baseline, but several already-implemented and previously browser-tested improvements were absent because they live on later candidate branches.
+
+Important missing candidate capabilities include:
+
+1. profile-aware date/time/calendar presentation throughout the application;
+2. Gregorian equivalence when Persian/Hijri is selected;
+3. live date/time in a permanent app-shell header/status bar;
+4. rotating ambient header text;
+5. profile-aware date/datetime inputs;
+6. fractal calendar drill-down to minute partitions;
+7. calendar projections and creation prefill;
+8. Planner execution-window/evidence hardening.
+
+Relevant source branches include:
 
 ~~~text
-codex/ideal-v1-selective-assembly
+codex/release-first-publication-hardening
+integration/ideal-v1-planner-temporal-candidate
+integration/ideal-v1-temporal-calendar-reconcile
+fix/planner-execution-window-calendar-evidence
+fix/planner-temporal-evidence-calendar-hardening
 ~~~
 
-The initial accepted foundation was `891b333c49f166e61b9fa466e30742b3d70996c0`. S0 strengthened and certified that foundation. The current S0 closure checkpoint is documented in `docs/handoffs/S0-selective-assembly-baseline.md`.
+These branches remain source libraries, not wholesale merge units.
 
-## Authority
+## M00 result
 
-This roadmap controls **execution order and admission gates** for the selective reassembly.
+M00 proved that the selected foundation is remotely healthy.
 
-It does not replace:
+It did not prove that this old baseline is the desired product experience.
 
-- `docs/PROJECT_COMPASS.md` for product purpose and invariants;
-- `docs/TARGET_ARCHITECTURE.md` for intended technical boundaries;
-- `docs/PRODUCTION_ROADMAP.md` for the broader historical/product roadmap;
-- ADRs and domain reports for settled domain decisions.
-
-When an older process document says browser acceptance may be deferred until the end, this roadmap supersedes that process for the selective assembly.
-
-## Core rule
-
-A module is not accepted merely because its tests are green.
-
-The sequence is:
+Owner browser result:
 
 ~~~text
-accepted assembly checkpoint
-→ dedicated review branch
-→ inspect current behavior
-→ inspect candidate/source branches
-→ write/update module pre-plan
-→ implement only selected improvements
-→ focused tests
-→ full remote CI
-→ owner local/browser acceptance on the review branch
-→ regression-test and fix every accepted defect
-→ repeat CI + browser checks until accepted
-→ merge the exact accepted review head into assembly
-→ post-merge CI
-→ freeze checkpoint evidence
-→ plan the next module and its wiring
+technical baseline: healthy
+runtime appearance: as expected for old baseline
+product acceptance: NOT CLOSED
+reason: previously tested cross-cutting capabilities are absent from this baseline
 ~~~
 
-**Do not begin implementation of the next module before the current module's browser gate is accepted.**
+Therefore the next work is not M01 registration.
 
-S0 is the one historical exception because the browser-gated policy was adopted after S0 was remotely merged. Therefore the next action before M1 implementation is an S0 baseline browser smoke on the assembly branch.
+The next work is Foundation Recovery F1.
 
-## Why branch reassembly instead of a new repository
+## Reassembly method
 
-The current repository preserves migration history, tests, reports, ADRs, provenance, and candidate branches. The selective assembly branch gives the same clean admission discipline without discarding that evidence.
+For every node or shared capability:
 
-A new repository is not required unless a later release decision explicitly chooses history separation.
+~~~text
+inventory accepted behavior
+→ inventory later candidate implementations
+→ preserve living pre-plan
+→ choose the strongest coherent behavior
+→ refactor boundaries where needed
+→ implement/recover selectively
+→ focused + full remote validation
+→ owner browser review
+→ correction loop
+→ accept node
+→ then review optional seams to other accepted nodes
+~~~
 
-## Module admission record
+A node can be accepted independently even if many optional integrations are not yet wired.
 
-Before implementation, every module report must contain:
+A seam is reviewed separately from the nodes it connects.
 
-1. **Module objective** — what human problem this layer solves.
-2. **Current behavior snapshot** — what the accepted assembly does now.
-3. **Candidate inventory** — source branches/commits/files and why each is relevant.
-4. **Authority map** — truth owned here and truth explicitly owned elsewhere.
-5. **Dependency map** — accepted modules this layer consumes.
-6. **Consumer map** — later modules expected to consume it.
-7. **Wiring contract** — allowed data/action/event seams between modules.
-8. **Risk review** — authorization, privacy, data loss, concurrency, temporal, money, locale/RTL, accessibility, migration and operations.
-9. **Proposed improvements** — ranked as required / recommended / deferred.
-10. **Rollback plan** — how the candidate can be removed without rewriting accepted history.
-11. **Remote validation plan**.
-12. **Browser acceptance script**.
-13. **Open questions and explicit deferrals**.
+## Two kinds of work
 
-During implementation, update the same report with decisions actually taken. Do not replace the original pre-plan with a hindsight-only summary.
+### Node review
 
-After acceptance, append exact commit, PR, CI, browser evidence, defects found, correction commits, final assembly SHA, and next-module wiring notes.
+Prove the capability itself is good.
 
-## Browser gate
+Examples: Planner, Personal Accounting, Content, Group Admission, Contract, Need/Offer.
 
-The owner inspects the **review branch before merge**.
+### Seam review
 
-For each module:
+Prove two nodes cooperate correctly.
 
-- sync the exact review head;
-- migrate forward only on the continuing local database;
-- run the focused local test commands recorded for the module;
-- inspect desktop and representative mobile behavior;
-- inspect English plus relevant Persian/Arabic/Chinese/RTL surfaces when the module presents localized UI;
-- exercise normal, empty, invalid, unauthorized, terminal and recovery states that matter to the module;
-- verify durable results after reload;
-- verify actions do not silently create authority belonging to another domain;
-- record defects in the module report/worksheet;
-- reproduce release-blocking defects with automated regression coverage before correction.
+Examples: Contract → Commitment, Commitment → Planner, Fulfillment → Financial Obligation, Settlement → Accounting, any temporal domain → Fractal Calendar, any relevant view → Capability Launcher.
 
-A module is **browser accepted** only when the owner explicitly reports acceptance of the tested head. Silence is not acceptance.
+Do not hide seam behavior inside either node.
 
-## Assembly branch discipline
+## Cross-cutting foundation recovery — first priority
 
-The assembly branch contains only accepted checkpoints.
+### F1A — Shared Temporal Kernel
 
-- Never develop directly on `codex/ideal-v1-selective-assembly`.
-- Open one review branch from the current assembly head.
-- Candidate branches are source libraries, never wholesale merge units.
-- Keep the PR draft/open while the module is under remote or browser review.
-- Merge only the exact browser-accepted head.
-- Require post-merge assembly CI.
-- Never force-push accepted history.
-- Shared migrations are append-only.
-- Never use `migrate:fresh` on the owner's continuing acceptance database.
-- Keep rejected source branches until stable release.
+Recover/review the later profile-aware temporal implementation before reviewing time-bearing nodes.
 
-## Dependency-aware assembly order
+Target:
 
-The labels below are the current module-review order. Existing functionality may already be present in the accepted foundation; the purpose is to **re-review and selectively improve it**, not to imply it is absent.
+- profile timezone throughout;
+- profile calendar system throughout;
+- Gregorian / Persian (Jalali) / supported Hijri presentation;
+- Gregorian equivalent below/alongside non-Gregorian primary rendering;
+- date/datetime input consistency;
+- local-time formatting across Planner, Contracts, Agreements, Finance, Content, Admissions, Notifications, Today and other views;
+- DST/boundary correctness;
+- tests preventing raw Gregorian/profile mismatches.
 
-### M0 — Certified foundation and browser baseline
+Primary candidate source:
 
-Status: remote S0 certification complete.
+~~~text
+codex/release-first-publication-hardening
+~~~
 
-Scope:
+Known candidate artifacts include App/Support/TemporalCalendar.php, resources/js/temporal.js, local date/time components, profile-aware datetime input and TemporalPresentationConsistencyTest.
 
-- CI truth;
-- migrations/operations baseline;
-- Blade compilation;
-- representative navigation/localization rendering;
-- verify formatter-only S0 repair changed no product behavior.
+### F1B — Ambient App-Shell Capability Rail
 
-Exit: owner browser smoke of the certified assembly is accepted.
+Recover/review the already-tested permanent header status component.
 
-Historical mapping: S0.
+Initial accepted scope:
 
-### M1 — Access, identity, registration provisioning, personal wallet defaults
+- live profile-aware date/time;
+- Gregorian equivalent for non-Gregorian primary calendar;
+- timezone-aware display;
+- rotating ambient text;
+- permanently available in the shared app shell.
 
-Review together because registration establishes the user's first durable personal capabilities.
+Second-review target:
 
-Scope:
+make it a customizable ambient capability rail where later accepted modules may contribute optional projections such as current/next Plan, reminders, waiting-on-me, notifications and financial due indicators.
 
-- invitations/registration/verification handoff;
-- User ↔ Actor boundary;
-- verified-user provisioning action;
-- personal Context/accounting foundation where appropriate;
-- default MonetaryUnit preference;
-- changeability/idempotency;
-- safe repeatable seed/bootstrap behavior.
+The rail remains projection-first and never owns domain truth.
 
-Do not make registration silently create contracts, group membership, financial obligations, or business relationships.
+Primary candidate artifact:
 
-Historical mapping: S1.
+~~~text
+resources/views/components/app/ambient-status.blade.php
+~~~
 
-### M2 — Shared temporal/localization presentation kernel
+### F1C — Shared Fractal Calendar Fabric
 
-This must stabilize before time-bearing business modules are re-reviewed.
+Recover/review the fractal calendar early, but remove conceptual ownership from Planner.
 
-Scope:
+The Calendar becomes a shared temporal projection/navigation surface.
 
-- timezone preference;
-- locale/calendar preference;
-- canonical UTC persistence vs local presentation;
-- Jalali/Gregorian/Hijri presentation rules as supported;
-- equalized secondary date/time presentation where required;
-- parsing/formatting helpers;
-- permanent status/shell presentation if retained;
-- DST and boundary behavior;
-- cross-locale RTL implications.
+Target drill-down:
 
-Historical mapping: S2 + S3 + temporal part of S6.
+~~~text
+years
+→ year
+→ month
+→ day
+→ hour
+→ 60 / 30 / 15 / 5 / 1 minute partitions
+~~~
 
-### M3 — Context, Content, Assets and immutable Evidence
+Initial candidate already demonstrates year/month/day/hour navigation, selectable minute quantum, Planner occurrence projection, create-plan prefill and profile-aware calendar navigation.
 
-Review the shared human-facing artifact/evidence substrate before Planner, Contracts and Submissions consume it.
+Second-review target:
 
-Scope:
+define provider adapters so later nodes can optionally project authorized items such as Plans, reminders, Contract dates, Group Agreement dates, financial due/settlement events, scheduled accounting automation, Admission/review deadlines, Content publication/review dates, Submission/Evaluation due items and intentional temporal notes/annotations.
 
-- Context authorization;
-- Content identity/revisions/publication;
-- Blocks/fields/presentation;
-- private Assets;
-- exact Evidence References;
-- cross-Context placement/reference without authority leakage;
-- Reader/Studio separation;
-- provenance and historical pinning.
+The Calendar stores no duplicate authoritative copy.
 
-Exit: later modules can reference exact evidence without copying or mutating it.
+### F1D — Capability Launcher / Composition Contract
 
-### M4 — Groups, membership, admissions and Group Agreements
+Before wiring domain nodes together, establish the UI/architecture contract for:
 
-Review governance before business compositions depend on organizations/groups.
+~~~text
+Add / Connect / Use
+~~~
 
-Scope:
+A relevant view discovers only authorized, applicable capabilities.
 
-- Group lifecycle;
-- Membership/roles/permissions;
-- invitation → Admission → Membership;
-- required Agreement versions and immutable acceptance;
-- ownership transfer/integrity;
-- GroupSpace access;
-- Agreement vs negotiated Contract boundary.
+This does not require one universal database table. It requires a stable application contract/registry for capability providers and explicit domain Actions.
 
-No Group role may imply platform-wide authority.
+## Capability-node review pool
 
-### M5 — Planner and fractal calendar
+After F1 is accepted, nodes are reviewed primarily by priority and user value, not because every earlier item is a runtime prerequisite.
 
-Planner is inspected only after temporal and evidence foundations are accepted.
+### N1 — Planner
 
-Scope:
+Standalone target:
 
-- Plan/ScheduleRule/Occurrence/Participant;
-- early-start/waiting/running/completion lifecycle;
+- simple Plan first;
+- one-time/recurring;
+- execution windows;
+- waiting/running/completed/cancelled/skipped;
 - actual start/end;
-- evidence attachment/reference;
-- recurrence materialization;
 - reminders;
-- list/Today/calendar;
-- drill-down calendar from broad periods to minute slots;
-- creation prefill from selected slots;
-- authorized projections from other domains.
+- participants optional;
+- evidence optional;
+- independent list/today/calendar projections.
 
-Historical mapping: S4 + S5.
+No finance/Contract/Group is required.
 
-### M6 — Personal Accounting and monetary reporting
+### N2 — Personal Accounting / Finance
 
-Review personal money tracking independently from obligations/contracts.
-
-Scope:
+Standalone target:
 
 - MonetaryUnit;
-- Ledger/Account;
-- balanced immutable JournalEntry/JournalLine;
-- opening balance, expense, income, transfer;
-- reversal/correction;
-- per-unit summaries;
-- default monetary unit UX;
-- no cross-currency magic total.
+- default monetary unit preference;
+- opening balance;
+- expense;
+- income;
+- transfer;
+- correction/reversal;
+- per-unit summaries.
 
-Personal Accounting is not automatically authoritative for Contract obligations or Settlement claims.
+Optional seams are reviewed later.
 
-### M7 — Profile Intent, Need/Offer and matching
+### N3 — Agreement / Contract authority
 
-Review human intent/discovery before relationship/business obligation layers.
+Review separately inside the authority family:
 
-Scope:
+- Group Agreement;
+- Proposal/negotiation;
+- negotiated Contract;
+- immutable versions;
+- explicit acceptance/effective timing.
 
-- Profile intent semantics;
-- Need vs Offer;
-- Concept/subject/arrangement/quantity/location/time/value constraints;
-- visibility/privacy;
-- deterministic explainable matching;
-- selected-candidate revalidation;
-- exact provenance when handing off to a Relationship.
+No Planner or Accounting requirement for basic validity.
 
-Matching creates no obligation.
+### N4 — Need / Offer / Relationship
 
-### M8 — Relationship, Conversation and Timeline
+Standalone discovery/coordination:
 
-Review coordination independently from contractual authority.
+- Need/Offer;
+- matching;
+- direct Relationship;
+- Conversation/Timeline.
 
-Scope:
+Matching remains optional. Known parties can start direct coordination where authorized.
 
-- Relationship participants/roles/lifecycle;
-- Relationship Context authorization;
-- Conversation/messages/replies/attachments;
-- Timeline reconstruction from source events;
-- read-only behavior after terminal states;
-- direct request vs Need/Offer origin.
+### N5 — Group / Invitation / Admission / Membership
 
-Conversation wording never equals formal acceptance.
+Standalone organization/governance node.
 
-### M9 — Proposal, negotiation, Contract and ContractVersion
+Optional GroupSpace capabilities are attached rather than copied.
 
-Review negotiated business authority after relationships are accepted.
+### N6 — Content / Assets / Evidence
 
-Scope:
+Standalone artifact and evidence node.
 
-- Proposal lifecycle;
-- negotiation Context;
-- immutable proposed terms;
-- Contract identity;
-- immutable ContractVersion;
-- exact parties/roles;
-- required-party acceptance;
-- activation/effective/supersession/amendment;
-- Group Agreement vs party-specific Contract distinction.
+Other nodes reference exact artifacts/revisions/blocks/assets.
 
-No Contract becomes active from chat text alone.
+### N7 — Submission / Evaluation
 
-### M10 — Commitment and Fulfillment
+Standalone structured response/review node.
 
-Review obligation-to-act and evidence-of-what-happened as distinct truth.
+### N8 — Notifications / Realtime / Home-Today
 
-Scope:
+Projection/attention node over accepted capabilities.
 
-- Commitments created from explicit authority;
-- Planner binding/materialization;
-- Fulfillment actuals;
-- duration/quantity/status;
-- exact Content/Asset evidence;
-- review/clarification/rejection/acceptance;
-- dispute/correction semantics.
+## Seam review pool
 
-Planner completion alone must not manufacture financial truth.
+Seams begin only after both endpoint nodes are independently accepted and are reviewed in small reversible units.
 
-### M11 — Financial Obligation, Settlement and accounting bridge
+### S-PF — Planner ↔ Finance
 
-Only after Contract/Commitment/Fulfillment and Personal Accounting are independently accepted.
+- attach expected budget/cost without posting;
+- post actual expense/income explicitly;
+- financial summary projection on Plan;
+- no Plan completion → automatic ledger write.
 
-Scope:
+### S-PC — Planner ↔ Contract/Commitment
 
-- economic-event → FinancialObligation rules;
-- debtor/creditor/privacy;
-- pending/confirmed/rejected Settlement;
-- paid/outstanding/disputed derivation;
-- explicit posting into Personal Accounting;
-- idempotency and reversal/correction seams.
+- schedule a Commitment;
+- materialize occurrences;
+- preserve ContractVersion provenance;
+- schedule change does not rewrite Contract terms.
 
-No mutable magic balance.
-
-### M12 — Structured Interaction, Submission and Evaluation
-
-Review generic structured response/review separately from chat annotations.
-
-Scope:
-
-- InteractionDefinition;
-- Submission/Response;
-- evidence;
-- reviewer authorization;
-- Evaluation;
-- status transitions;
-- applicant/reviewer UX;
-- no hidden equivalence between annotation and evaluation.
-
-### M13 — Notifications, realtime and Home/Today
-
-Review derived attention surfaces only after source domains are stable.
-
-Scope:
-
-- transactional outbox;
-- durable notification inbox/read state;
-- authorized realtime transport;
-- idempotent reminders;
-- Today/waiting-on-me/waiting-on-others;
-- source links;
-- no duplicate domain truth;
-- reconstruction when realtime transport is absent.
-
-### M14 — Domain/Business Blueprints and composed journeys
-
-Now re-review the higher-level human flows built from accepted kernels.
-
-Initial proof journeys:
-
-- personal activity;
-- simple sale;
-- rental;
-- service job;
-- employment/paid work;
-- construction partnership;
-- Group/community collaboration.
-
-Blueprints guide composition and terminology. They never bypass domain Actions or grant authority.
-
-This is the phase for revised **wiring ideas between nodes**: which accepted modules appear together, what starts the next capability, and what remains optional.
-
-### M15 — Cross-system consistency, flexible extensions, polish and release
-
-Scope:
-
-- cross-system temporal consistency;
-- localization/RTL/accessibility;
-- responsive UX;
-- consistent navigation/action menus/state feedback;
-- flexible fields/form extensions only where proven necessary;
-- operations/security/privacy/performance;
-- cumulative end-to-end browser story;
-- release candidate freeze and stable publication.
-
-Historical mapping: remaining S6 + S7 + S8 + S9.
-
-## Wiring review rule
-
-Before connecting two accepted modules, document the seam explicitly:
-
-~~~text
-source authority
-→ explicit Action/event/reference
-→ target capability
-→ durable result
-→ authorization check
-→ idempotency/concurrency rule
-→ what is NOT implied
-~~~
-
-Examples:
+### S-CE — Contract/Fulfillment ↔ Economic Obligation
 
 ~~~text
 accepted ContractVersion
-→ explicit Commitment creation Action
 → Commitment
-→ optional Planner binding
-→ PlanOccurrence
-→ actual Fulfillment
-→ accepted economic event
-→ FinancialObligation
+→ Fulfillment
+→ explicit review
+→ Financial Obligation
+~~~
+
+### S-EA — Obligation/Settlement ↔ Accounting
+
+~~~text
+recognized economic event
 → explicit Accounting posting Action
 → JournalEntry
 ~~~
 
-and:
+### S-T* — Any temporal node ↔ Calendar
+
+Each node gets a projection provider, source link and policy.
+
+### S-H* — Any node ↔ Ambient header
+
+Optional compact projection/widget.
+
+### S-C* — Any relevant view ↔ Capability Launcher
+
+Expose explicit available actions without hidden coupling.
+
+## Composition review — human-centered flows
+
+After key nodes and seams are accepted, test compositions that can stop at any level.
+
+### Personal activity
 
 ~~~text
-Need/Offer match
-→ explicit Relationship proposal
-→ counterparty acceptance
-→ Relationship Context
-→ optional Proposal
-→ explicit Contract creation/acceptance
+Plan
 ~~~
 
-Do not connect modules by database side effects hidden in views, observers, or casual Content/Conversation wording when an explicit domain Action is required.
+Optional:
 
-## Milestone files
+~~~text
+Plan
++ reminder
++ note/evidence
++ expense tracking
+~~~
 
-For every M-module, maintain:
+### Paid work
 
-- `Development-CodexReports/Mxx-<module>-report.md` — living pre-plan + implementation + review record;
-- `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` — exact local commands and browser checklist;
-- `docs/handoffs/continuous-ideal-v1.md` — short restart state;
-- `docs/CURRENT_STATE.md` — accepted checkpoint and current next step.
+Possible progression:
 
-Update `App\Support\SystemManualContent` when user-facing behavior changes.
+~~~text
+Plan only
+~~~
 
-## Current gate
+or:
 
-M0/S0 remote certification is complete. Because the browser-gated assembly policy was adopted afterward, **M1 implementation must not begin until the owner completes and accepts the S0 baseline browser smoke on the current assembly branch**.
+~~~text
+Relationship
+→ Contract
+→ Commitment
+→ Planner
+~~~
 
-If S0 browser inspection finds a defect:
+then optionally:
 
-1. create a dedicated correction branch from the assembly head;
-2. reproduce the defect with automated coverage where practical;
-3. fix only that baseline defect;
-4. rerun remote CI;
-5. repeat the affected browser checks;
-6. merge the correction through PR;
-7. record the corrected assembly checkpoint;
-8. then begin M1.
+~~~text
+→ Fulfillment
+→ Financial Obligation
+→ Settlement
+→ Accounting
+~~~
+
+### Business transaction
+
+A user may begin from Need/Offer, known Relationship, direct Proposal, direct Contract or simple finance record depending on what is genuinely known/required.
+
+Do not force discovery or negotiation layers when unnecessary.
+
+## Automation review
+
+Automation is reviewed only after the relevant manual Action works correctly.
+
+Every automation must have explicit definition, visible trigger, explicit activation, scoped authority, idempotency, audit/result history, pause/deactivate and safe retry behavior.
+
+Potential future seams include recurring Planner materialization, reminders, scheduled financial obligations and prepared/scheduled transactions where permitted.
+
+Automation must not silently accept Contracts, approve reviews or move external money.
+
+## Browser acceptance model
+
+For a node:
+
+1. prove standalone use;
+2. browser-test it independently;
+3. accept the node;
+4. later review each optional seam separately;
+5. browser-test compositions without losing the simple standalone path.
+
+A later seam defect does not invalidate the standalone node unless it exposes a real node defect.
+
+## Source-selection rule
+
+Never choose a source branch by age alone.
+
+For each capability, compare accepted assembly, all later candidate branches touching the same concern, tests, migrations, browser evidence, authority/privacy behavior and coupling.
+
+Select or refactor the strongest coherent version.
+
+## Current execution gate
+
+The current assembly is a valid technical foundation but not yet the intended product checkpoint.
+
+M01 registration work is paused.
+
+Next implementation branch after this roadmap revision:
+
+~~~text
+codex/review-f1-shared-temporal-fabric
+~~~
+
+F1 review order:
+
+1. F1A Temporal Kernel;
+2. F1B Ambient Capability Rail;
+3. F1C Fractal Calendar Fabric;
+4. F1D Capability Launcher contract.
+
+The first three already have substantial candidate implementations and previous owner browser familiarity, so the task is recovery + second review + decoupling, not greenfield implementation.
