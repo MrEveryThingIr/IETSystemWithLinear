@@ -423,6 +423,68 @@ if (!customElements.get('iet-date-picker')) {
     customElements.define('iet-date-picker', IetDatePicker);
 }
 
+class IetDateTimePicker extends HTMLElement {
+    connectedCallback() {
+        if (this.initialized) {
+            return;
+        }
+
+        this.initialized = true;
+        this.valueInput = this.querySelector('[data-datetime-value]');
+        this.dateInput = this.querySelector('[data-datetime-date]');
+        this.timeInput = this.querySelector('[data-datetime-time]');
+
+        if (!this.valueInput || !this.dateInput || !this.timeInput) {
+            return;
+        }
+
+        this.onPartChange = () => this.syncToValue();
+        this.dateInput.addEventListener('input', this.onPartChange);
+        this.dateInput.addEventListener('change', this.onPartChange);
+        this.timeInput.addEventListener('input', this.onPartChange);
+        this.timeInput.addEventListener('change', this.onPartChange);
+        this.valueInput.addEventListener('change', () => this.syncFromValue());
+
+        this.syncFromValue();
+    }
+
+    disconnectedCallback() {
+        if (!this.onPartChange) {
+            return;
+        }
+
+        this.dateInput?.removeEventListener('input', this.onPartChange);
+        this.dateInput?.removeEventListener('change', this.onPartChange);
+        this.timeInput?.removeEventListener('input', this.onPartChange);
+        this.timeInput?.removeEventListener('change', this.onPartChange);
+    }
+
+    syncFromValue() {
+        const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(this.valueInput?.value ?? '');
+
+        if (!match) {
+            return;
+        }
+
+        this.dateInput.value = match[1];
+        this.timeInput.value = match[2];
+        this.dateInput.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+
+    syncToValue() {
+        const date = this.dateInput?.value ?? '';
+        const time = this.timeInput?.value ?? '';
+
+        this.valueInput.value = date && time ? `${date}T${time}` : '';
+        this.valueInput.dispatchEvent(new Event('input', {bubbles: true}));
+        this.valueInput.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+}
+
+if (!customElements.get('iet-datetime-picker')) {
+    customElements.define('iet-datetime-picker', IetDateTimePicker);
+}
+
 class IetAmbientStatus extends HTMLElement {
     connectedCallback() {
         if (this.initialized) {
