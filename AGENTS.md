@@ -5,45 +5,52 @@ Before nontrivial implementation, read in this order:
 1. `docs/PROJECT_COMPASS.md`
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
-4. `docs/PRODUCTION_ROADMAP.md`
-5. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
-6. `docs/EXAMPLE_STORY_WORLD.md`
-7. the active milestone contract/report
-8. relevant ADRs
-9. `.ai/rules/index.md` and every matching path rule
+4. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`
+5. `docs/PRODUCTION_ROADMAP.md`
+6. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
+7. `docs/EXAMPLE_STORY_WORLD.md`
+8. the active module contract/report
+9. relevant ADRs
+10. `.ai/rules/index.md` and every matching path rule
 
 The repository is the durable source of truth. Chat history is discussion evidence only.
 
 ## Active development mode
 
-The human owner has authorized **continuous remote Ideal-v1 development**.
+The human owner has authorized **browser-gated selective Ideal-v1 assembly**.
 
-Integration trunk:
+Assembly branch:
 
-`integration/ideal-v1`
+`codex/ideal-v1-selective-assembly`
 
-Remote milestones still run full automated quality gates, but owner-local/browser acceptance is deferred to the cumulative worksheet in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+The project is not being rebuilt from scratch. Existing integrated code and later candidate branches are source material. Each module is reviewed on a dedicated branch, improved selectively, remotely validated, inspected by the owner in the browser, corrected if needed, and only then merged into the assembly.
 
-Do not stop merely because a milestone reached its old human-local gate. When remote CI is green, docs/report/checkpoint are complete, and no stop condition exists, integrate the milestone and continue to the next roadmap phase.
+**Do not begin implementation of the next module until the current module's browser gate is explicitly accepted.**
+
+The exact module order and admission contract live in `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`.
 
 ## Current foundation
 
-The clean Ideal-v1 line is rooted at the last accepted pre-AI baseline:
+The selective assembly was created from accepted integration SHA:
 
-`2c7a5c35a31fe86d761a1cafd189560bec220784`
+`891b333c49f166e61b9fa466e30742b3d70996c0`
 
-The office Access Invitation + Intent Registry work is being rebuilt on that line. The unused AI-assistance and Development-Origin runtime is intentionally absent. AI returns only at its dedicated later roadmap milestone.
+S0 remotely certified and strengthened that baseline. Its exact evidence is recorded in `docs/handoffs/S0-selective-assembly-baseline.md`.
+
+Because the browser-gated process was adopted after S0 remote merge, the current gate is the S0 assembly browser smoke. M1 implementation begins only after that smoke is accepted.
 
 ## Phase discipline
 
-- Work on one **remote milestone** at a time.
-- A milestone may consume earlier domains but must not silently redefine their authority.
+- Work on one **selective assembly module** at a time.
+- Preserve the module's pre-implementation plan and append actual decisions/evidence as implementation proceeds.
+- A module may consume earlier accepted domains but must not silently redefine their authority.
+- Keep the module on its review branch through owner browser acceptance; merge only the exact accepted head.
 - Do not implement later milestones inside an earlier branch merely because target architecture describes them.
 - Prefer the smallest new authoritative layer needed; reuse existing Context, Content, Concept, Asset, Profile, Submission, Group and policy/action systems.
 - Never replace specialized domain truth with generic JSON merely for convenience.
 - Record meaningful milestone results under `Development-CodexReports/`.
-- Append exact deferred local/browser checks to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
-- Update `docs/handoffs/continuous-ideal-v1.md` after each integration checkpoint.
+- Record exact local/browser commands and acceptance checks in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+- Update `docs/handoffs/continuous-ideal-v1.md` after every review/acceptance/merge checkpoint.
 
 ## Content / Context rule
 
@@ -87,8 +94,8 @@ English is the canonical editorial source. Other language catalogs may remain dr
 ## Git discipline
 
 - never develop directly on `main`;
-- integrate completed remote milestones into `integration/ideal-v1`;
-- use coherent feature branches for new milestones;
+- merge browser-accepted modules into `codex/ideal-v1-selective-assembly` through PR;
+- use coherent review branches for each module;
 - never force-push shared history;
 - never rewrite an already recorded checkpoint to hide a later correction;
 - use PR/integration boundaries where supported;
