@@ -133,6 +133,7 @@ return [
             'title' => 'Date & time preferences',
             'help' => 'Language controls labels and formatting, timezone controls your local clock, and calendar is a separate presentation preference. Dates are stored canonically so changing these preferences never changes the underlying date.',
             'preview' => 'Your local date & time',
+            'gregorian_equivalent' => 'Gregorian equivalent',
             'preview_loading' => 'Loading local date and time…',
             'timezone' => 'Timezone',
             'timezone_help' => 'Use an IANA timezone such as America/Toronto or Asia/Tehran. Your device can suggest this automatically.',
