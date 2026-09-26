@@ -25,6 +25,7 @@
             data-timezone="{{ $timezone }}"
             data-first-day="{{ $firstDay }}"
             data-empty-label="{{ __('ui.profile.temporal.choose_date') }}"
+            data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
         >
             <input type="hidden" data-date-value data-datetime-date>
 
