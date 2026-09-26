@@ -29,6 +29,9 @@ class Index extends Component
     #[Url(as: 'context')]
     public string $contextUuid = '';
 
+    #[Url(as: 'date')]
+    public string $selectedDate = '';
+
     public function mount(): void
     {
         if (! in_array($this->view, ['today', 'list', 'calendar'], true)) {
@@ -40,6 +43,14 @@ class Index extends Component
 
         if (! preg_match('/^\d{4}-\d{2}$/', $this->month)) {
             $this->month = $now->format('Y-m');
+        }
+
+        if ($this->view === 'calendar') {
+            if (! $this->validDate($this->selectedDate, $timezone)) {
+                $this->selectedDate = $now->format('Y-m-d');
+            } else {
+                $this->month = substr($this->selectedDate, 0, 7);
+            }
         }
     }
 
@@ -59,6 +70,45 @@ class Index extends Component
             ->format('Y-m');
     }
 
+    public function previousYear(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
+            ->subYear()
+            ->format('Y-m');
+    }
+
+    public function nextYear(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
+            ->addYear()
+            ->format('Y-m');
+    }
+
+    public function selectDate(string $date): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        abort_unless($this->validDate($date, $timezone), 422);
+
+        $this->selectedDate = $date;
+        $this->month = substr($date, 0, 7);
+    }
+
+    public function focusSelectedDate(): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+
+        if (! $this->validDate($this->selectedDate, $timezone)) {
+            $this->addError('selectedDate', __('planner.validation.calendar_date_invalid'));
+
+            return;
+        }
+
+        $this->resetErrorBag('selectedDate');
+        $this->month = substr($this->selectedDate, 0, 7);
+    }
+
     public function render(): View
     {
         $user = $this->user();
@@ -67,11 +117,22 @@ class Index extends Component
 
         [$from, $through] = $this->window($timezone);
 
+        $occurrenceRelations = [
+            'plan.context',
+            'plan.participants.actor.user',
+        ];
+
+        if ($this->view === 'calendar') {
+            $occurrenceRelations = [
+                ...$occurrenceRelations,
+                'assets',
+                'evidenceReferences.content.activeRevision',
+                'evidenceReferences.revision',
+            ];
+        }
+
         $occurrences = PlanOccurrence::query()
-            ->with([
-                'plan.context',
-                'plan.participants.actor.user',
-            ])
+            ->with($occurrenceRelations)
             ->whereBetween('scheduled_start_at', [$from->utc(), $through->utc()])
             ->orderBy('scheduled_start_at')
             ->limit(500)
@@ -112,11 +173,24 @@ class Index extends Component
             );
         }
 
+        $selectedDayOccurrences = $this->view === 'calendar' && $this->validDate($this->selectedDate, $timezone)
+            ? $calendarOccurrences->get($this->selectedDate, collect())
+            : collect();
+
+        $today = CarbonImmutable::now($timezone)->format('Y-m-d');
+        $selectedTemporalState = $this->selectedDate === ''
+            ? null
+            : ($this->selectedDate === $today
+                ? 'today'
+                : ($this->selectedDate < $today ? 'past' : 'future'));
+
         return view('livewire.planner.index', [
             'plans' => $plans,
             'occurrences' => $occurrences,
             'calendarDays' => $calendarDays,
             'calendarOccurrences' => $calendarOccurrences,
+            'selectedDayOccurrences' => $selectedDayOccurrences,
+            'selectedTemporalState' => $selectedTemporalState,
             'timezone' => $timezone,
             'context' => $context,
         ]);
@@ -143,6 +217,21 @@ class Index extends Component
             $month->startOfMonth()->startOfWeek($carbonFirstDay),
             $month->endOfMonth()->endOfWeek($carbonFirstDay),
         ];
+    }
+
+    private function validDate(string $date, string $timezone): bool
+    {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+            return false;
+        }
+
+        try {
+            $parsed = CarbonImmutable::createFromFormat('!Y-m-d', $date, $timezone);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $parsed instanceof CarbonImmutable && $parsed->format('Y-m-d') === $date;
     }
 
     private function context(User $user): ?Context
