@@ -22,6 +22,7 @@
     data-calendar="{{ $calendar }}"
     data-timezone="{{ $timezone }}"
     data-show-equivalent="{{ $showEquivalent ? 'true' : 'false' }}"
+    data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
     data-seconds="{{ $seconds ? 'true' : 'false' }}"
 >
     <span data-temporal-primary>{{ $instant }}</span>
