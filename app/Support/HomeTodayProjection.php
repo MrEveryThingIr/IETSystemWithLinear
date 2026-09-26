@@ -63,16 +63,7 @@ class HomeTodayProjection
         $timezone = TemporalPreferences::timezoneFor($current);
         $now = CarbonImmutable::now($timezone);
         $today = $now->toDateString();
-        $todayDisplay = TemporalCalendar::format($now, $current, $timezone, 'EEEE, d MMMM y');
-        if (TemporalPreferences::calendarFor($current) !== CalendarSystem::Gregorian) {
-            $todayDisplay .= ' · '.TemporalCalendar::format(
-                $now,
-                $current,
-                $timezone,
-                'd MMMM y',
-                calendar: CalendarSystem::Gregorian,
-            );
-        }
+        $todayDisplay = TemporalCalendar::dateLabelWithEquivalent($now, $current, $timezone);
 
         if (! $current->actor instanceof Actor) {
             return $this->emptyProjection($timezone, $today, $todayDisplay);
