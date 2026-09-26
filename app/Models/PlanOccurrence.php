@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\PlanOccurrenceStatus;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -134,6 +135,60 @@ class PlanOccurrence extends Model
         } finally {
             $this->applyingLifecycle = false;
         }
+    }
+
+
+    public function temporalPhase(?CarbonInterface $at = null): string
+    {
+        if ($this->status !== PlanOccurrenceStatus::Scheduled) {
+            return $this->status->value;
+        }
+
+        $now = $at instanceof CarbonInterface
+            ? CarbonImmutable::parse($at->toIso8601String())
+            : CarbonImmutable::now('UTC');
+
+        if ($now->lt($this->window_start_at)) {
+            return 'future';
+        }
+
+        if ($now->lt($this->scheduled_start_at)) {
+            return 'ready';
+        }
+
+        if ($now->lte($this->scheduled_end_at)) {
+            return 'due';
+        }
+
+        if ($now->lte($this->window_end_at)) {
+            return 'late';
+        }
+
+        return 'missed';
+    }
+
+    public function canStartAt(?CarbonInterface $at = null): bool
+    {
+        if ($this->status !== PlanOccurrenceStatus::Scheduled) {
+            return false;
+        }
+
+        $now = $at instanceof CarbonInterface
+            ? CarbonImmutable::parse($at->toIso8601String())
+            : CarbonImmutable::now('UTC');
+
+        return $now->gte($this->window_start_at)
+            && $now->lte($this->window_end_at);
+    }
+
+    public function canFinishAt(?CarbonInterface $at = null): bool
+    {
+        return $this->status === PlanOccurrenceStatus::InProgress;
+    }
+
+    public function isMissedAt(?CarbonInterface $at = null): bool
+    {
+        return $this->temporalPhase($at) === 'missed';
     }
 
     /** @return BelongsTo<Plan, $this> */
