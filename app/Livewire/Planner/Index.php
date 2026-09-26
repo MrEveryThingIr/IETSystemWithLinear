@@ -29,6 +29,11 @@ class Index extends Component
     #[Url(as: 'context')]
     public string $contextUuid = '';
 
+    #[Url(as: 'date')]
+    public string $selectedDate = '';
+
+    public string $selectedTime = '09:00';
+
     public function mount(): void
     {
         if (! in_array($this->view, ['today', 'list', 'calendar'], true)) {
@@ -41,22 +46,56 @@ class Index extends Component
         if (! preg_match('/^\d{4}-\d{2}$/', $this->month)) {
             $this->month = $now->format('Y-m');
         }
+
+        if (! $this->validDate($this->selectedDate, $timezone)) {
+            $this->selectedDate = $now->format('Y-m-d');
+        }
     }
 
     public function previousMonth(): void
     {
         $timezone = TemporalPreferences::timezoneFor($this->user());
-        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
-            ->subMonth()
-            ->format('Y-m');
+        $month = CarbonImmutable::parse($this->month.'-01', $timezone)->subMonth();
+
+        $this->month = $month->format('Y-m');
+        $this->selectedDate = $month->startOfMonth()->format('Y-m-d');
     }
 
     public function nextMonth(): void
     {
         $timezone = TemporalPreferences::timezoneFor($this->user());
-        $this->month = CarbonImmutable::parse($this->month.'-01', $timezone)
-            ->addMonth()
-            ->format('Y-m');
+        $month = CarbonImmutable::parse($this->month.'-01', $timezone)->addMonth();
+
+        $this->month = $month->format('Y-m');
+        $this->selectedDate = $month->startOfMonth()->format('Y-m-d');
+    }
+
+    public function selectDate(string $date): void
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+        abort_unless($this->validDate($date, $timezone), 422);
+
+        $this->selectedDate = $date;
+        $this->month = substr($date, 0, 7);
+    }
+
+    public function createAtSelectedTime(): mixed
+    {
+        $timezone = TemporalPreferences::timezoneFor($this->user());
+
+        abort_unless($this->validDate($this->selectedDate, $timezone), 422);
+        abort_unless(preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $this->selectedTime) === 1, 422);
+
+        $parameters = [
+            'date' => $this->selectedDate,
+            'time' => $this->selectedTime,
+        ];
+
+        if ($this->contextUuid !== '') {
+            $parameters['context'] = $this->contextUuid;
+        }
+
+        return $this->redirectRoute('planner.create', $parameters);
     }
 
     public function render(): View
@@ -69,6 +108,8 @@ class Index extends Component
 
         $occurrences = PlanOccurrence::query()
             ->with([
+                'assets',
+                'evidenceReferences',
                 'plan.context',
                 'plan.participants.actor.user',
             ])
@@ -112,11 +153,18 @@ class Index extends Component
             );
         }
 
+        $selectedOccurrences = $occurrences
+            ->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at
+                ->setTimezone($timezone)
+                ->format('Y-m-d') === $this->selectedDate)
+            ->values();
+
         return view('livewire.planner.index', [
             'plans' => $plans,
             'occurrences' => $occurrences,
             'calendarDays' => $calendarDays,
             'calendarOccurrences' => $calendarOccurrences,
+            'selectedOccurrences' => $selectedOccurrences,
             'timezone' => $timezone,
             'context' => $context,
         ]);
@@ -143,6 +191,21 @@ class Index extends Component
             $month->startOfMonth()->startOfWeek($carbonFirstDay),
             $month->endOfMonth()->endOfWeek($carbonFirstDay),
         ];
+    }
+
+    private function validDate(string $value, string $timezone): bool
+    {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return false;
+        }
+
+        try {
+            $date = CarbonImmutable::createFromFormat('!Y-m-d', $value, $timezone);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $date instanceof CarbonImmutable && $date->format('Y-m-d') === $value;
     }
 
     private function context(User $user): ?Context
