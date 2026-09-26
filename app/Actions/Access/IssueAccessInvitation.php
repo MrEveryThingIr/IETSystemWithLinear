@@ -17,7 +17,7 @@ class IssueAccessInvitation
         int $maxUses = 1,
         int $expiresInDays = 14,
     ): AccessInvitation {
-        abort_unless($issuer->hasPlatformCapability(PlatformCapability::ManageUsers), 403);
+        abort_unless($issuer->hasPlatformCapability(PlatformCapability::ManageAccessInvitations), 403);
 
         $email = $email !== null ? Str::lower(trim($email)) : null;
         $email = $email === '' ? null : $email;

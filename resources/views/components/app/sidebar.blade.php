@@ -44,7 +44,7 @@
                 {{ __('ui.navigation.manual') }}
             </flux:sidebar.item>
         @endunless
-        @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ManageUsers))
+        @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ManageAccessInvitations))
             <flux:sidebar.item :href="route('platform.access-invitations')" :current="request()->routeIs('platform.access-invitations')" icon="user-plus">
                 {{ __('access.admin.title') }}
             </flux:sidebar.item>
