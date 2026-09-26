@@ -167,33 +167,67 @@
             </flux:card>
 
             @if ($evidenceOccurrenceId !== null)
-                <flux:card class="space-y-4">
-                    <flux:heading size="lg">{{ __('planner.plan.select_evidence') }}</flux:heading>
+                <flux:card class="space-y-5">
+                    <div>
+                        <flux:heading size="lg">{{ __('planner.plan.select_evidence') }}</flux:heading>
+                        <flux:text class="mt-1">{{ __('planner.plan.upload_evidence_help') }}</flux:text>
+                    </div>
+
+                    @if ($canUploadEvidence)
+                        <div class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+                            <flux:heading size="sm">{{ __('planner.plan.upload_evidence') }}</flux:heading>
+                            <flux:input wire:model="evidenceUploads" type="file" multiple :label="__('media.choose_file')" />
+                            <flux:select wire:model="evidenceRightsStatus" :label="__('media.rights_status')">
+                                @foreach (AppModelsAsset::RIGHTS_STATUSES as $rightsStatus)
+                                    <option value="{{ $rightsStatus }}">{{ __('media.rights.'.$rightsStatus) }}</option>
+                                @endforeach
+                            </flux:select>
+                        </div>
+                    @endif
 
                     @if ($availableAssets->isNotEmpty())
-                        <div class="grid gap-2 sm:grid-cols-2">
-                            @foreach ($availableAssets as $asset)
-                                <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                    <input type="checkbox" wire:model="assetIds" value="{{ $asset->id }}" class="mt-1">
-                                    <span class="break-all">{{ $asset->original_filename }}</span>
-                                </label>
-                            @endforeach
+                        <div>
+                            <div class="mb-2 text-sm font-medium">{{ __('planner.plan.existing_assets') }}</div>
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                @foreach ($availableAssets as $asset)
+                                    <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                        <input type="checkbox" wire:model="assetIds" value="{{ $asset->id }}" class="mt-1">
+                                        <span class="break-all">{{ $asset->original_filename }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
 
                     @if ($availableEvidenceReferences->isNotEmpty())
-                        <div class="grid gap-2 sm:grid-cols-2">
-                            @foreach ($availableEvidenceReferences as $reference)
-                                <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                    <input type="checkbox" wire:model="evidenceReferenceIds" value="{{ $reference->id }}" class="mt-1">
-                                    <span dir="auto">{{ $reference->revision?->title ?: $reference->content?->activeRevision?->title ?: __('ui.content.untitled') }}</span>
-                                </label>
-                            @endforeach
+                        <div>
+                            <div class="mb-2 text-sm font-medium">{{ __('planner.plan.existing_references') }}</div>
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                @foreach ($availableEvidenceReferences as $reference)
+                                    <label class="flex items-start gap-2 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                        <input type="checkbox" wire:model="evidenceReferenceIds" value="{{ $reference->id }}" class="mt-1">
+                                        <span dir="auto">{{ $reference->revision?->title ?: $reference->content?->activeRevision?->title ?: __('ui.content.untitled') }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
 
+                    @if (! $canUploadEvidence && $availableAssets->isEmpty() && $availableEvidenceReferences->isEmpty())
+                        <x-app.empty-state :title="__('planner.plan.no_available_evidence')" />
+                    @endif
+
+                    <flux:error name="evidence" />
+
                     <div class="flex justify-end">
-                        <flux:button wire:click="attachEvidence" variant="primary">{{ __('planner.plan.attach_evidence') }}</flux:button>
+                        <flux:button
+                            wire:click="attachEvidence"
+                            wire:loading.attr="disabled"
+                            wire:target="attachEvidence,evidenceUploads"
+                            variant="primary"
+                        >
+                            {{ __('planner.plan.attach_evidence') }}
+                        </flux:button>
                     </div>
                 </flux:card>
             @endif
