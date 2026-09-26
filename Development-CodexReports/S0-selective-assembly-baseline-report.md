@@ -2,7 +2,7 @@
 
 ## Status
 
-**In progress: final branch/PR certification and post-merge assembly certification pending.**
+**Remotely certified and closed.**
 
 ## Purpose
 
@@ -70,9 +70,13 @@ The temporary workflow is not intended to survive into the assembly branch.
 - PR #30: `S0: certify selective assembly baseline`
 - base: `codex/ideal-v1-selective-assembly`
 - head: `codex/review-s0-baseline`
-- kept draft while final gates are incomplete.
+- final review head: `d94270bf572b2ecdf63c77793bc32582664c308c`
+- final review push CI: `36236673618` — success
+- final PR-context CI: `36236676180` — success
+- merged assembly SHA: `2b89e301ef7f167083445cd305847f83dbf3e048`
+- post-merge assembly CI: `36236888120` — success
 
-Earlier PR-context run `36236060430` passed and proved the explicit Blade compilation step. Final PR-context proof must still run on the complete S0 head.
+The final push gate proved repository-wide Pint across **923 files**, PHPStan **0 errors**, Blade compilation, MySQL/SQLite migration and operational smoke, Vite, **552 tests / 3511 assertions**, npm audit with **0 vulnerabilities**, and a clean Composer audit.
 
 ## Governance finding
 
@@ -86,14 +90,15 @@ The owner has authorized continuous remote development. Therefore S0 records, bu
 
 The cumulative worksheet contains the S0 local commands and representative English/Persian/Arabic/Simplified-Chinese, RTL, mobile, and keyboard/focus checks.
 
-## Remaining closure gate
+## Closure result
 
-S0 closes only when:
+All remote S0 closure conditions passed.
 
-1. final branch push CI is green, including repository-wide Pint;
-2. final PR-context CI is green;
-3. PR #30 merges into the assembly;
-4. post-merge assembly CI is green;
-5. exact resulting assembly SHA/run are recorded.
+- final branch push CI: green;
+- final PR-context CI: green;
+- PR #30: merged;
+- post-merge assembly CI: green;
+- certified assembly runtime/checkpoint: `2b89e301ef7f167083445cd305847f83dbf3e048`;
+- post-merge CI: `36236888120`.
 
-No S1 feature admission begins before those remote conditions are met.
+Owner-local/browser acceptance remains deferred to the cumulative worksheet. S1 may now begin from the selective assembly line.
