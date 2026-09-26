@@ -20,9 +20,11 @@
             data-locale="{{ $intlLocale }}"
             data-calendar="{{ $resolvedCalendar }}"
             data-timezone="{{ $timezone }}"
+            data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
             >
                 <span class="block text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('ui.profile.temporal.preview') }}</span>
                 <span class="mt-1 block break-words font-medium" data-temporal-preview-value>{{ __('ui.profile.temporal.preview_loading') }}</span>
+                <span class="mt-1 block break-words text-xs text-zinc-500" data-temporal-preview-equivalent hidden></span>
             </div>
         </div>
     </div>
