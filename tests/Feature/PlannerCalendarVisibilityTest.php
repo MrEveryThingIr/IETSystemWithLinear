@@ -55,7 +55,7 @@ class PlannerCalendarVisibilityTest extends TestCase
             'plan_id' => $visiblePlan->id,
             'created_by_actor_id' => $visitor->id,
         ]);
-        PlanOccurrence::factory()->create([
+        $visibleOccurrence = PlanOccurrence::factory()->create([
             'plan_id' => $visiblePlan->id,
             'schedule_rule_id' => $visibleRule->id,
             'local_date' => '2026-09-27',
@@ -68,8 +68,8 @@ class PlannerCalendarVisibilityTest extends TestCase
 
         Livewire::actingAs($visitor->user)->test(PlannerIndex::class)
             ->set('view', 'calendar')
-            ->call('showDay', '2026-09-27')
-            ->assertSee('Visible appointment')
+            ->call('showMonth', '2026-09-27')
+            ->assertSee('#occurrence-'.$visibleOccurrence->uuid)
             ->assertDontSee('Owner-only activity');
     }
 }
