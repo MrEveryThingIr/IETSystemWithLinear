@@ -44,19 +44,19 @@
                 </flux:button>
 
                 <div class="flex flex-wrap items-center justify-center gap-1">
-                    <flux:button wire:click="showYear('{{ $year }}')" :variant="$calendarLevel === 'year' ? 'primary' : 'ghost'" size="sm">
+                    <flux:button wire:click="showYear('{{ $calendarYearLabel }}')" :variant="$calendarLevel === 'year' ? 'primary' : 'ghost'" size="sm">
                         {{ $year }}
                     </flux:button>
                     @if ($calendarLevel !== 'year')
                         <span class="text-zinc-300 dark:text-zinc-700">/</span>
                         <flux:button wire:click="showMonth('{{ $month }}')" :variant="$calendarLevel === 'month' ? 'primary' : 'ghost'" size="sm">
-                            {{ \Carbon\CarbonImmutable::createFromFormat('!Y-m', $month, $timezone)->format('F') }}
+                            {{ $calendarMonthLabel }}
                         </flux:button>
                     @endif
                     @if (in_array($calendarLevel, ['day', 'hour'], true))
                         <span class="text-zinc-300 dark:text-zinc-700">/</span>
                         <flux:button wire:click="showDay('{{ $day }}')" :variant="$calendarLevel === 'day' ? 'primary' : 'ghost'" size="sm">
-                            {{ \Carbon\CarbonImmutable::parse($day, $timezone)->format('j') }}
+                            <x-app.local-date :value="$day" :show-equivalent="false" />
                         </flux:button>
                     @endif
                     @if ($calendarLevel === 'hour')
@@ -79,7 +79,7 @@
                             wire:click="showMonth('{{ $calendarMonth['key'] }}')"
                             class="rounded-xl border border-zinc-200 p-4 text-start transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:border-zinc-500 dark:hover:bg-zinc-900"
                         >
-                            <span class="block font-semibold">{{ $calendarMonth['date']->format('F') }}</span>
+                            <span class="block font-semibold">{{ $calendarMonth['label'] }}</span>
                             <span class="mt-1 block text-sm text-zinc-500">{{ trans_choice('planner.calendar.item_count', $calendarMonth['count'], ['count' => $calendarMonth['count']]) }}</span>
                         </button>
                     @endforeach
@@ -114,7 +114,7 @@
                                 @foreach ($items as $occurrence)
                                     <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
                                         <span class="font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
-                                        <span class="ms-2 text-xs text-zinc-500">{{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}</span>
+                                        <span class="ms-2 text-xs text-zinc-500"><x-app.local-time :value="$occurrence->scheduled_start_at" /></span>
                                     </a>
                                 @endforeach
                             </div>
@@ -160,7 +160,7 @@
                                             <span class="font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
                                             <span class="ms-2 text-xs text-zinc-500">
                                                 {{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}
-                                                → {{ $occurrence->scheduled_end_at->setTimezone($timezone)->format('H:i') }}
+                                                → <x-app.local-time :value="$occurrence->scheduled_end_at" />
                                             </span>
                                         </a>
                                     @endforeach
@@ -194,15 +194,15 @@
                         </div>
                     @endforeach
 
-                    @foreach ($calendarDays as $date)
+                    @foreach ($calendarDays as $calendarDay)
                         @php
-                            $dateKey = $date->format('Y-m-d');
+                            $dateKey = $calendarDay['key'];
                             $items = $calendarOccurrences->get($dateKey, collect());
-                            $inMonth = $date->format('Y-m') === $month;
+                            $inMonth = $calendarDay['in_month'];
                         @endphp
                         <div wire:key="calendar-day-{{ $dateKey }}" class="min-h-32 bg-white p-2 dark:bg-zinc-950 {{ $inMonth ? '' : 'opacity-50' }}">
                             <button type="button" wire:click="showDay('{{ $dateKey }}')" class="rounded px-1 text-xs font-semibold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white">
-                                {{ $date->format('j') }}
+                                {{ $calendarDay['label'] }}
                             </button>
                             <div class="mt-2 space-y-1">
                                 @foreach ($items as $occurrence)
@@ -239,7 +239,7 @@
                         </div>
 
                         <div class="shrink-0 text-sm sm:text-end">
-                            <div class="font-medium">{{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('Y-m-d H:i') }}</div>
+                            <div class="font-medium"><x-app.local-datetime :value="$occurrence->scheduled_start_at" /></div>
                             <div class="text-zinc-500">→ {{ $occurrence->scheduled_end_at->setTimezone($timezone)->format('H:i') }}</div>
                         </div>
                     </div>
