@@ -4,6 +4,12 @@
 
 ### Selective assembly release reconciliation
 
+**Current active gate: M00/S0 browser baseline.** The browser-gated assembly process is merged at `30dc939754c3fec7009250a61437db2633aabea7`; post-merge CI `36238246665` passed with 552 tests / 3511 assertions, repository-wide Pint 923 files, PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer green. The living browser plan is `Development-CodexReports/M00-certified-foundation-browser-baseline-report.md`.
+
+M01 implementation remains blocked until the owner explicitly accepts the M00 browser gate.
+
+
+
 The release line is now being reconciled through `codex/ideal-v1-selective-assembly` rather than by wholesale merging later aggregate candidate branches.
 
 The assembly was created exactly at accepted integration SHA `891b333c49f166e61b9fa466e30742b3d70996c0`. Later planner/temporal/calendar/publication branches are treated as implementation/evidence sources whose changes must be admitted independently.
