@@ -126,6 +126,37 @@ function localizedDate(value, locale, calendar) {
     }).format(date);
 }
 
+
+function localizedCalendarMonth(value, locale, calendar) {
+    const date = isoToDate(value);
+
+    if (!date) {
+        return '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        calendar,
+        timeZone: 'UTC',
+        year: 'numeric',
+        month: 'long',
+    }).format(date);
+}
+
+function localizedCalendarDay(value, locale, calendar) {
+    const date = isoToDate(value);
+
+    if (!date) {
+        return '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        calendar,
+        numberingSystem: 'latn',
+        timeZone: 'UTC',
+        day: 'numeric',
+    }).format(date);
+}
+
 function localizedTime(value, locale) {
     const match = /^(\d{2}):(\d{2})/.exec(value ?? '');
 
@@ -379,6 +410,22 @@ function localizeTemporal(root = document) {
 
         element.textContent = localizedDate(
             value,
+            element.dataset.locale || document.documentElement.lang || 'en',
+            calendarOrFallback(element.dataset.calendar || 'gregory'),
+        );
+    });
+
+    root.querySelectorAll?.('[data-localized-calendar-month]').forEach((element) => {
+        element.textContent = localizedCalendarMonth(
+            element.dataset.localizedCalendarMonth,
+            element.dataset.locale || document.documentElement.lang || 'en',
+            calendarOrFallback(element.dataset.calendar || 'gregory'),
+        );
+    });
+
+    root.querySelectorAll?.('[data-localized-calendar-day]').forEach((element) => {
+        element.textContent = localizedCalendarDay(
+            element.dataset.localizedCalendarDay,
             element.dataset.locale || document.documentElement.lang || 'en',
             calendarOrFallback(element.dataset.calendar || 'gregory'),
         );
