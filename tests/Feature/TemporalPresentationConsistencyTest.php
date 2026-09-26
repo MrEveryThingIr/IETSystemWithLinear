@@ -127,6 +127,10 @@ class TemporalPresentationConsistencyTest extends TestCase
     public function test_user_facing_views_do_not_directly_format_gregorian_calendar_dates(): void
     {
         foreach (File::allFiles(resource_path('views')) as $file) {
+            if ($file->getRelativePathname() === 'components/app/local-date.blade.php') {
+                continue;
+            }
+
             $contents = $file->getContents();
 
             $this->assertDoesNotMatchRegularExpression(

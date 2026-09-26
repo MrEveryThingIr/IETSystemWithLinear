@@ -109,7 +109,7 @@ class FirstPublicationExperienceTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('iet-ambient-status', false)
-            ->assertSee(__('home.quick_links'))
-            ->assertDontSee('home.quick_links', false);
+            ->assertSee(__('home.title'))
+            ->assertDontSee('home.title', false);
     }
 }
