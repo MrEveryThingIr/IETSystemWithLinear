@@ -91,6 +91,12 @@ class Show extends Component
     {
         abort_unless($this->evidenceOccurrenceId !== null, 422);
 
+        if ($this->assetIds === [] && $this->evidenceReferenceIds === []) {
+            $this->addError('evidence', __('planner.plan.evidence_required'));
+
+            return;
+        }
+
         $attach->execute(
             $this->occurrence($this->evidenceOccurrenceId),
             $this->user(),
@@ -99,6 +105,7 @@ class Show extends Component
         );
 
         $this->reset(['evidenceOccurrenceId', 'assetIds', 'evidenceReferenceIds']);
+        $this->resetErrorBag('evidence');
     }
 
     public function render(): View
@@ -133,7 +140,17 @@ class Show extends Component
                 ->latest('id')
                 ->limit(50)
                 ->get()
+                ->filter(fn (ContentEvidenceReference $reference): bool => Gate::forUser($user)->allows('view', $reference->content))
+                ->values()
             : collect();
+
+        $contextContentCount = $canParticipate
+            ? SpaceContent::query()
+                ->where('context_id', $plan->context_id)
+                ->get()
+                ->filter(fn (SpaceContent $content): bool => Gate::forUser($user)->allows('view', $content))
+                ->count()
+            : 0;
 
         $originRelationship = $plan->origin_type === 'relationship' && $plan->origin_uuid !== null
             ? Relationship::query()->where('uuid', $plan->origin_uuid)->first()
@@ -149,6 +166,8 @@ class Show extends Component
             'availableEvidenceReferences' => $references,
             'originRelationship' => $originRelationship,
             'originCommitment' => $originCommitment,
+            'contextContentCount' => $contextContentCount,
+            'now' => now(),
         ]);
     }
 
