@@ -382,6 +382,7 @@ return [
         'no_admissions' => 'No admissions currently need reviewer attention.',
         'admissions_help' => 'Submitted applications, clarification requests, and approved applications awaiting finalization appear here.',
         'unknown_applicant' => 'Unknown applicant',
+        'submitted_label' => 'Submitted',
         'submitted_ago' => 'Submitted :time',
         'settings' => 'Group settings',
         'save_details' => 'Save details',
@@ -519,6 +520,7 @@ return [
         'uses' => ':used/:maximum uses',
         'expires' => 'Expires',
 
+        'created' => 'Created',
         'created_expires' => 'Created :created · expires :expires',
         'never' => 'never',
         'revoke' => 'Revoke',
