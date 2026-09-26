@@ -77,14 +77,25 @@ class TransitionPlanOccurrence
             $completedAt = null;
 
             if ($status === PlanOccurrenceStatus::InProgress) {
-                abort_unless($locked->status === PlanOccurrenceStatus::Scheduled, 422, 'Only a scheduled Occurrence can be started.');
+                abort_unless(
+                    $locked->status === PlanOccurrenceStatus::Scheduled,
+                    422,
+                    (string) __('planner.validation.start_scheduled_only'),
+                );
+                abort_unless(
+                    $locked->canStart($now),
+                    422,
+                    $now->lt($locked->window_start_at)
+                        ? (string) __('planner.validation.start_too_early')
+                        : (string) __('planner.validation.start_window_passed'),
+                );
                 $actualStart = $now;
             } elseif ($status === PlanOccurrenceStatus::Completed) {
-                abort_unless(in_array($locked->status, [
-                    PlanOccurrenceStatus::Scheduled,
-                    PlanOccurrenceStatus::InProgress,
-                ], true), 422, 'Only scheduled or in-progress Occurrences can be completed.');
-                $actualStart ??= $now;
+                abort_unless(
+                    $locked->status === PlanOccurrenceStatus::InProgress,
+                    422,
+                    (string) __('planner.validation.complete_requires_start'),
+                );
                 $actualEnd = $now;
                 $completedAt = $now;
             } elseif ($status === PlanOccurrenceStatus::Skipped) {
