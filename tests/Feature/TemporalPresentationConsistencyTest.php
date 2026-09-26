@@ -127,7 +127,9 @@ class TemporalPresentationConsistencyTest extends TestCase
     public function test_user_facing_views_do_not_directly_format_gregorian_calendar_dates(): void
     {
         foreach (File::allFiles(resource_path('views')) as $file) {
-            if ($file->getRelativePathname() === 'components/app/local-date.blade.php') {
+            $relativePath = str_replace('\\', '/', $file->getRelativePathname());
+
+            if ($relativePath === 'components/app/local-date.blade.php') {
                 continue;
             }
 
@@ -136,7 +138,7 @@ class TemporalPresentationConsistencyTest extends TestCase
             $this->assertDoesNotMatchRegularExpression(
                 '/->(?:translatedFormat|format)\(\s*["\'][^"\']*(?:Y-m-d|Y\/m\/d|M j|j M|Y-m)[^"\']*["\']/',
                 $contents,
-                'Direct Gregorian calendar formatting remains in '.$file->getRelativePathname(),
+                'Direct Gregorian calendar formatting remains in '.$relativePath,
             );
             $this->assertStringNotContainsString(
                 '->toDayDateTimeString(',
