@@ -8,13 +8,13 @@
     $calendarSystem = \App\Support\TemporalPreferences::calendarFor($user);
     $calendar = $calendarSystem->value;
     $locale = \App\Support\Localization::intlLocale($user?->locale);
-    $displayTimezone = $value instanceof \DateTimeInterface
-        ? \App\Support\TemporalPreferences::timezoneFor($user)
-        : 'UTC';
-    $dateValue = $value instanceof \DateTimeInterface
-        ? \Carbon\CarbonImmutable::instance($value)->setTimezone($displayTimezone)
-        : \Carbon\CarbonImmutable::parse((string) $value, 'UTC');
-    $date = $dateValue->toDateString();
+    // This component represents a civil date, not an instant. Preserve the
+    // supplied Y-m-d exactly so changing timezone can never move it a day.
+    $displayTimezone = 'UTC';
+    $date = $value instanceof \DateTimeInterface
+        ? $value->format('Y-m-d')
+        : (string) $value;
+    $dateValue = \Carbon\CarbonImmutable::parse($date, 'UTC');
     $primaryLabel = \App\Support\TemporalCalendar::dateLabel($dateValue, $user, $displayTimezone, $calendarSystem);
     $equivalentLabel = $calendarSystem === \App\CalendarSystem::Gregorian
         ? ''

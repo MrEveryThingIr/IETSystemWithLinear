@@ -12,8 +12,7 @@ class VerifyEmailController extends Controller
     public function __invoke(
         EmailVerificationRequest $request,
         ProvisionVerifiedUserDefaults $provision,
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $request->fulfill();
         $provision->execute($request->user());
 

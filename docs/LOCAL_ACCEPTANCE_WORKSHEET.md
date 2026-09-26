@@ -1794,6 +1794,19 @@ Never run that destructive command on the continuing acceptance or production da
 - [ ] Confirm the small guidance message rotates locally and no external news/tracking request is made.
 - [ ] Switch English ↔ Persian ↔ Arabic ↔ Simplified Chinese and confirm text direction/layout remain usable.
 
+### Browser story — profile temporal consistency
+
+- [ ] Confirm PHP has the `intl` extension: `php -m | grep -i intl`.
+- [ ] Set Profile → Date & time to Persian/Jalali + Asia/Tehran. Navigate Dashboard, Planner, Accounting, Content, Groups, Relationships, Proposals, Contracts, Commitments, Finance, Notifications and Profile surfaces; visible dates/timestamps use the selected calendar/timezone.
+- [ ] With Persian/Jalali selected, confirm a clearly labelled **Gregorian equivalent** appears as secondary reference text instead of replacing the primary Persian date.
+- [ ] Switch the calendar to Gregorian; confirm the redundant Gregorian-equivalent line disappears.
+- [ ] Switch timezone between Asia/Tehran and America/Toronto. The same timestamp instant changes its displayed local clock time without changing the stored event.
+- [ ] Confirm civil date-only values (intent ranges, accounting dates, schedule dates, structured date answers) remain the same civil day when timezone changes.
+- [ ] Open date/date-time inputs in Accounting, Contracts, Commitments, Financial Settlement, Content fields and structured interactions; confirm they use the selected profile calendar rather than the browser's native Gregorian date picker.
+- [ ] Change temporal settings and save; confirm the authenticated shell refreshes so header clock and already-open surfaces reflect the new preferences together.
+- [ ] Repeat a smoke pass with Umm al-Qura selected and confirm it renders as the primary calendar with Gregorian equivalent underneath.
+- [ ] Switch UI language independently from calendar and confirm language, calendar and timezone remain separate preferences.
+
 ### Browser story — fractal Planner
 
 - [ ] Open Planner → Calendar.

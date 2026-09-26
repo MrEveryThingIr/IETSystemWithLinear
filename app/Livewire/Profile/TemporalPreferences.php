@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Profile;
 
+use App\Actions\Auth\ProvisionVerifiedUserDefaults;
 use App\CalendarSystem;
 use App\Models\User;
 use App\Support\Localization;
@@ -76,7 +77,7 @@ class TemporalPreferences extends Component
         }
     }
 
-    public function save(\App\Actions\Auth\ProvisionVerifiedUserDefaults $provision): void
+    public function save(ProvisionVerifiedUserDefaults $provision): void
     {
         $user = request()->user();
         abort_unless($user instanceof User, 403);

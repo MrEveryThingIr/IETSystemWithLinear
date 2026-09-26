@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\TemporalCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -77,6 +78,37 @@ class TemporalPresentationConsistencyTest extends TestCase
             ->assertSee('data-calendar="persian"', false)
             ->assertSee('data-timezone="Asia/Tehran"', false)
             ->assertSee('data-ambient-equivalent', false);
+    }
+
+    public function test_date_only_values_never_shift_when_profile_timezone_changes(): void
+    {
+        $user = User::factory()->create([
+            'locale' => 'en',
+            'timezone' => 'America/Toronto',
+            'calendar' => CalendarSystem::Gregorian,
+        ]);
+        $this->actingAs($user);
+
+        $civilDate = CarbonImmutable::parse('2026-09-26 00:00:00', 'UTC');
+        $html = Blade::render('<x-app.local-date :value="$value" />', ['value' => $civilDate]);
+
+        $this->assertStringContainsString('data-profile-date="2026-09-26"', $html);
+    }
+
+    public function test_true_instants_are_rendered_in_profile_timezone(): void
+    {
+        $user = User::factory()->create([
+            'locale' => 'en',
+            'timezone' => 'America/Toronto',
+            'calendar' => CalendarSystem::Gregorian,
+        ]);
+
+        $instant = CarbonImmutable::parse('2026-09-26T00:00:00Z');
+
+        $this->assertStringContainsString(
+            '20:00',
+            TemporalCalendar::dateTimeLabel($instant, $user, 'America/Toronto'),
+        );
     }
 
     public function test_user_facing_views_do_not_bypass_profile_calendar_with_native_date_controls(): void
