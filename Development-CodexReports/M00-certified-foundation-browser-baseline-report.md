@@ -18,13 +18,24 @@ Current assembly line:
 codex/ideal-v1-selective-assembly
 ~~~
 
-Process-adoption checkpoint:
+Browser-gated process runtime checkpoint:
 
 ~~~text
 SHA: 30dc939754c3fec7009250a61437db2633aabea7
 CI:  36238246665
 Result: success
 ~~~
+
+Process-evidence documentation was then closed on the assembly at:
+
+~~~text
+SHA: dfdd6f46de6b8fd1ee06cdf0a9d5c5b1bee34763
+CI:  36238610537
+Result: success
+Runtime/product behavior changed: none
+~~~
+
+This M00 review branch is based on that exact `dfdd6f46...` assembly head.
 
 Remote proof:
 
@@ -45,7 +56,9 @@ Remote proof:
 - S0 post-merge CI: `36236888120`;
 - S0 documentation closure: `707eaa621e267c31beaf3d9c71dde3c92178429e`;
 - browser-gated process merge: `30dc939754c3fec7009250a61437db2633aabea7`;
-- process post-merge CI: `36238246665`.
+- process post-merge CI: `36238246665`;
+- process-evidence documentation head: `dfdd6f46de6b8fd1ee06cdf0a9d5c5b1bee34763`;
+- documentation-head CI: `36238610537`.
 
 ## Authority map
 
