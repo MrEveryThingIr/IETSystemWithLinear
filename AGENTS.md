@@ -5,13 +5,14 @@ Before nontrivial implementation, read in this order:
 1. `docs/PROJECT_COMPASS.md`
 2. `docs/CURRENT_STATE.md`
 3. `docs/TARGET_ARCHITECTURE.md`
-4. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`
-5. `docs/PRODUCTION_ROADMAP.md`
-6. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
-7. `docs/EXAMPLE_STORY_WORLD.md`
-8. the active module contract/report
-9. relevant ADRs
-10. `.ai/rules/index.md` and every matching path rule
+4. `docs/CAPABILITY_MESH_ARCHITECTURE.md`
+5. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`
+6. `docs/PRODUCTION_ROADMAP.md`
+7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
+8. `docs/EXAMPLE_STORY_WORLD.md`
+9. the active module contract/report
+10. relevant ADRs
+11. `.ai/rules/index.md` and every matching path rule
 
 The repository is the durable source of truth. Chat history is discussion evidence only.
 
