@@ -10,6 +10,7 @@ use App\Actions\Profile\UploadActorProfileImage;
 use App\Models\ActorProfile;
 use App\Models\User;
 use App\ProfileVisibility;
+use App\Support\MonetaryUnitCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
@@ -47,6 +48,10 @@ class Manage extends Component
 
     public bool $mediaEditorOpen = false;
 
+    public string $defaultMonetaryUnitCode = 'EUR';
+
+    public bool $accountPreferencesEditorOpen = false;
+
     public function mount(EnsureActorProfile $ensureProfile): void
     {
         $user = request()->user();
@@ -54,6 +59,7 @@ class Manage extends Component
 
         $this->profile = $ensureProfile->execute($user);
         $this->syncForm();
+        $this->syncAccountPreferences($user);
     }
 
     public function openIdentityEditor(): void
@@ -106,6 +112,43 @@ class Manage extends Component
         $this->syncForm();
         $this->identityEditorOpen = false;
         session()->flash('status', __('ui.profile.saved'));
+    }
+
+    public function openAccountPreferencesEditor(): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+
+        $this->syncAccountPreferences($user);
+        $this->resetValidation('defaultMonetaryUnitCode');
+        $this->accountPreferencesEditorOpen = true;
+    }
+
+    public function cancelAccountPreferencesEditor(): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+
+        $this->syncAccountPreferences($user);
+        $this->resetValidation('defaultMonetaryUnitCode');
+        $this->accountPreferencesEditorOpen = false;
+    }
+
+    public function saveAccountPreferences(): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+
+        $data = $this->validate([
+            'defaultMonetaryUnitCode' => ['required', Rule::in(array_keys(MonetaryUnitCatalog::all()))],
+        ]);
+
+        $user->default_monetary_unit_code = strtoupper((string) $data['defaultMonetaryUnitCode']);
+        $user->save();
+
+        $this->syncAccountPreferences($user->refresh());
+        $this->accountPreferencesEditorOpen = false;
+        session()->flash('status', __('ui.profile.account_preferences.saved'));
     }
 
     public function uploadImage(UploadActorProfileImage $uploadProfileImage): void
@@ -177,6 +220,7 @@ class Manage extends Component
                 'displayImage.asset',
             ]),
             'visibilityOptions' => ProfileVisibility::cases(),
+            'monetaryUnits' => MonetaryUnitCatalog::all(),
         ]);
     }
 
@@ -188,6 +232,11 @@ class Manage extends Component
         $this->locationText = $this->profile->location_text;
         $this->websiteUrl = $this->profile->website_url;
         $this->visibility = $this->profile->visibility->value;
+    }
+
+    private function syncAccountPreferences(User $user): void
+    {
+        $this->defaultMonetaryUnitCode = strtoupper((string) $user->default_monetary_unit_code);
     }
 
     private function refreshProfile(): void
