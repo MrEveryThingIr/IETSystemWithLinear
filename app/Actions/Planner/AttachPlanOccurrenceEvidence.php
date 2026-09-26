@@ -26,6 +26,7 @@ class AttachPlanOccurrenceEvidence
         array $evidenceReferenceIds = [],
     ): PlanOccurrence {
         abort_if(count($assetIds) > 20 || count($evidenceReferenceIds) > 20, 422, 'An Occurrence may attach at most twenty Assets and twenty evidence references at once.');
+        abort_if($assetIds === [] && $evidenceReferenceIds === [], 422, 'Occurrence evidence requires at least one Asset or evidence reference.');
         $current = $this->currentUser($user);
 
         return DB::transaction(function () use ($occurrence, $current, $assetIds, $evidenceReferenceIds): PlanOccurrence {
