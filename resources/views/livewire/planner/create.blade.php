@@ -43,13 +43,13 @@
                     @endforeach
                 </flux:select>
 
-                <flux:input wire:model="startsOn" type="date" :label="__('planner.create.starts_on')" />
+                <x-app.calendar-date-input model="startsOn" :label="__('planner.create.starts_on')" />
                 <flux:input wire:model="startTime" type="time" :label="__('planner.create.start_time')" />
                 <flux:input wire:model="durationMinutes" type="number" min="1" max="10080" :label="__('planner.create.duration')" />
                 <flux:input wire:model="interval" type="number" min="1" max="365" :label="__('planner.create.interval')" />
 
                 @if (in_array($frequency, ['daily', 'weekly'], true))
-                    <flux:input wire:model="endsOn" type="date" :label="__('planner.create.ends_on')" />
+                    <x-app.calendar-date-input model="endsOn" :label="__('planner.create.ends_on')" />
                     <flux:input wire:model="occurrenceLimit" type="number" min="1" max="10000" :label="__('planner.create.occurrence_limit')" />
                 @endif
             </div>
@@ -75,9 +75,12 @@
                 </div>
             @endif
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" />
-                <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" />
+            <div class="space-y-2">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" />
+                    <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" />
+                </div>
+                <p class="text-xs text-zinc-500">{{ __('planner.create.execution_window_help') }}</p>
             </div>
 
             <div>
@@ -86,7 +89,11 @@
             </div>
         </flux:card>
 
-        <flux:callout variant="warning">{{ __('planner.create.non_authority') }}</flux:callout>
+        <flux:callout variant="warning">
+            <div class="font-medium">{{ __('planner.create.manual_execution_title') }}</div>
+            <div class="mt-1">{{ __('planner.create.manual_execution_help') }}</div>
+            <div class="mt-2">{{ __('planner.create.non_authority') }}</div>
+        </flux:callout>
 
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <flux:button :href="route('planner.index')" variant="ghost" class="w-full sm:w-auto">
