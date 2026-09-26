@@ -38,7 +38,9 @@
 
     @if ($view === 'calendar')
         <flux:card class="space-y-4">
-            <div class="flex items-center justify-between gap-3">
+            <flux:text>{{ __('planner.calendar.help') }}</flux:text>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <flux:button wire:click="previousMonth" variant="ghost" size="sm">
                     ← {{ __('planner.calendar.previous') }}
                 </flux:button>
@@ -65,7 +67,20 @@
                         wire:key="calendar-day-{{ $dateKey }}"
                         class="min-h-32 bg-white p-2 dark:bg-zinc-950 {{ $inMonth ? '' : 'opacity-50' }}"
                     >
-                        <div class="text-xs font-semibold text-zinc-500">{{ $date->format('j') }}</div>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="text-xs font-semibold text-zinc-500">{{ $date->format('j') }}</div>
+                            <a
+                                href="{{ route('planner.create', array_filter([
+                                    'context' => $context?->uuid,
+                                    'date' => $dateKey,
+                                ])) }}"
+                                class="rounded-md px-1.5 py-0.5 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                                title="{{ __('planner.calendar.create_on', ['date' => $dateKey]) }}"
+                                aria-label="{{ __('planner.calendar.create_on', ['date' => $dateKey]) }}"
+                            >
+                                +
+                            </a>
+                        </div>
                         <div class="mt-2 space-y-1">
                             @foreach ($items as $occurrence)
                                 <a
@@ -75,7 +90,12 @@
                                     <div class="font-medium" dir="auto">{{ $occurrence->plan->title }}</div>
                                     <div class="text-zinc-500">
                                         {{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}
-                                        · {{ __('planner.occurrence_status.'.$occurrence->status->value) }}
+                                        ·
+                                        @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                            {{ __('planner.occurrence_phase.'.$occurrence->temporalPhase()) }}
+                                        @else
+                                            {{ __('planner.occurrence_status.'.$occurrence->status->value) }}
+                                        @endif
                                     </div>
                                 </a>
                             @endforeach
@@ -94,7 +114,11 @@
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
-                                <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                                @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                    <flux:badge>{{ __('planner.occurrence_phase.'.$occurrence->temporalPhase()) }}</flux:badge>
+                                @else
+                                    <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                                @endif
                                 <span class="text-xs text-zinc-500">{{ $occurrence->plan->timezone }}</span>
                             </div>
                             <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="mt-2 block text-lg font-semibold hover:underline" dir="auto">
