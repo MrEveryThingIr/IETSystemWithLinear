@@ -20,13 +20,11 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Layout('layouts.app')]
-#[Title('Plan')]
 class Show extends Component
 {
     use WithFileUploads;
@@ -224,7 +222,7 @@ class Show extends Component
             'assetRightsStatuses' => Asset::RIGHTS_STATUSES,
             'originRelationship' => $originRelationship,
             'originCommitment' => $originCommitment,
-        ]);
+        ])->title($plan->title);
     }
 
     private function occurrence(int $occurrenceId): PlanOccurrence
