@@ -17,6 +17,7 @@ use App\Models\Concept;
 use App\Models\PlanOccurrence;
 use App\Models\Relationship;
 use App\PlanOccurrenceStatus;
+use App\PlanOccurrenceWindowState;
 use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanStatus;
@@ -184,6 +185,90 @@ class PlannerKernelTest extends TestCase
             'actor_id' => $bob->id,
         ]);
         $this->assertSame(2, $plan->participants()->count());
+    }
+
+    public function test_occurrence_cannot_start_before_ready_window_or_complete_without_start(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-25 05:30:00 UTC');
+
+        try {
+            $bob = Actor::factory()->create();
+            $context = app(EnsurePersonalContext::class)->execute($bob->user);
+            $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Night study', timezone: 'Europe/Berlin');
+            $rule = app(CreatePlanScheduleRule::class)->execute(
+                $plan,
+                $bob->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-25',
+                '08:00',
+                60,
+                windowBeforeMinutes: 15,
+                windowAfterMinutes: 10,
+            );
+            $occurrence = $rule->occurrences()->sole();
+
+            $this->assertSame(PlanOccurrenceWindowState::Upcoming, $occurrence->windowState());
+
+            try {
+                app(TransitionPlanOccurrence::class)->start($occurrence, $bob->user);
+                $this->fail('Occurrence started before its ready window.');
+            } catch (HttpException $exception) {
+                $this->assertSame(422, $exception->getStatusCode());
+            }
+
+            CarbonImmutable::setTestNow('2026-09-25 05:50:00 UTC');
+            $occurrence = $occurrence->fresh();
+            $this->assertSame(PlanOccurrenceWindowState::Ready, $occurrence->windowState());
+
+            try {
+                app(TransitionPlanOccurrence::class)->complete($occurrence, $bob->user);
+                $this->fail('Scheduled occurrence completed without an explicit start.');
+            } catch (HttpException $exception) {
+                $this->assertSame(422, $exception->getStatusCode());
+            }
+
+            $occurrence = app(TransitionPlanOccurrence::class)->start($occurrence, $bob->user);
+            $this->assertSame(PlanOccurrenceStatus::InProgress, $occurrence->status);
+            $this->assertSame('2026-09-25 05:50:00', $occurrence->actual_start_at?->utc()->format('Y-m-d H:i:s'));
+
+            CarbonImmutable::setTestNow('2026-09-25 07:11:00 UTC');
+            $this->assertSame(PlanOccurrenceWindowState::InProgress, $occurrence->fresh()->windowState());
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_unstarted_occurrence_becomes_missed_after_late_window_and_cannot_start(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-25 07:11:00 UTC');
+
+        try {
+            $bob = Actor::factory()->create();
+            $context = app(EnsurePersonalContext::class)->execute($bob->user);
+            $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Night study', timezone: 'Europe/Berlin');
+            $rule = app(CreatePlanScheduleRule::class)->execute(
+                $plan,
+                $bob->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-25',
+                '08:00',
+                60,
+                windowBeforeMinutes: 15,
+                windowAfterMinutes: 10,
+            );
+            $occurrence = $rule->occurrences()->sole();
+
+            $this->assertSame(PlanOccurrenceWindowState::Missed, $occurrence->windowState());
+
+            try {
+                app(TransitionPlanOccurrence::class)->start($occurrence, $bob->user);
+                $this->fail('Occurrence started after its execution window closed.');
+            } catch (HttpException $exception) {
+                $this->assertSame(422, $exception->getStatusCode());
+            }
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
     }
 
     public function test_occurrence_lifecycle_records_actual_time_and_same_context_evidence(): void
