@@ -680,4 +680,5 @@ document.addEventListener('DOMContentLoaded', () => localizeTemporal());
 document.addEventListener('livewire:navigated', () => localizeTemporal());
 document.addEventListener('livewire:init', () => {
     window.Livewire?.hook('morph.updated', ({el}) => requestAnimationFrame(() => localizeTemporal(el)));
+    window.Livewire?.on('temporal-preferences-updated', () => window.location.reload());
 });
