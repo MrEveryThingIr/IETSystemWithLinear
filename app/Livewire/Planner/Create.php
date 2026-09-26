@@ -21,12 +21,10 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('New plan')]
 class Create extends Component
 {
     #[Url(as: 'context')]
@@ -184,7 +182,7 @@ class Create extends Component
             'contextLabel' => $this->contextLabel($context),
             'weekdayOrder' => TemporalPreferences::weekdayOrder($this->user()->locale),
             'blueprintVersion' => $this->blueprintVersion(),
-        ]);
+        ])->title(__('planner.create.title'));
     }
 
     /** @return array{list<array{actor: Actor, role: string}>, ?string, ?string} */
