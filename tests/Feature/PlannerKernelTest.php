@@ -295,6 +295,13 @@ class PlannerKernelTest extends TestCase
             $this->assertSame('2026-09-25 07:05:00', $occurrence->actual_end_at?->utc()->format('Y-m-d H:i:s'));
             $this->assertNotNull($occurrence->completed_at);
 
+            try {
+                app(AttachPlanOccurrenceEvidence::class)->execute($occurrence, $bob->user);
+                $this->fail('Empty Planner evidence attachment was accepted.');
+            } catch (HttpException $exception) {
+                $this->assertSame(422, $exception->getStatusCode());
+            }
+
             $asset = Asset::factory()->create([
                 'context_id' => $context->id,
                 'group_space_id' => null,
