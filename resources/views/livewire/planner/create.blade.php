@@ -43,13 +43,13 @@
                     @endforeach
                 </flux:select>
 
-                <flux:input wire:model="startsOn" type="date" :label="__('planner.create.starts_on')" />
+                <x-app.calendar-date-input model="startsOn" :label="__('planner.create.starts_on')" :timezone="$timezone" />
                 <flux:input wire:model="startTime" type="time" :label="__('planner.create.start_time')" />
                 <flux:input wire:model="durationMinutes" type="number" min="1" max="10080" :label="__('planner.create.duration')" />
                 <flux:input wire:model="interval" type="number" min="1" max="365" :label="__('planner.create.interval')" />
 
                 @if (in_array($frequency, ['daily', 'weekly'], true))
-                    <flux:input wire:model="endsOn" type="date" :label="__('planner.create.ends_on')" />
+                    <x-app.calendar-date-input model="endsOn" :label="__('planner.create.ends_on')" :timezone="$timezone" />
                     <flux:input wire:model="occurrenceLimit" type="number" min="1" max="10000" :label="__('planner.create.occurrence_limit')" />
                 @endif
             </div>

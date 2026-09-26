@@ -27,6 +27,15 @@ The release candidate must preserve the cumulative automated and manual proof fo
 Before the immutable candidate is handed to the owner:
 
 - no known authorization-before-pagination defect;
+- every audited user-facing temporal surface follows the profile-selected timezone + calendar, with Gregorian shown only as a labelled equivalent when a non-Gregorian calendar is selected;
+- civil date-only values remain invariant across timezone changes, while timestamp instants convert to the profile timezone;
+- Planner year/month boundaries and navigation follow the selected calendar itself, not Gregorian boundaries with translated labels;
+- native Gregorian `date` / `datetime-local` controls are absent from audited user-facing views; shared calendar-aware controls are used instead;
+- PHP `intl` is available in runtime/CI so Persian and Umm al-Qura rendering cannot silently fall back to Gregorian;
+- a newly verified User with an active Actor receives an idempotent personal accounting foundation (ledger + standard accounts) without any fabricated JournalEntry or balance;
+- the User can change the default monetary unit for future personal ledger creation without silently converting existing accounting history;
+- Planner calendar supports practical year → month → day → hour → 60/30/15/5/1-minute inspection and can prefill a Plan from an exact selected slot;
+- the authenticated layout exposes localized live date/time and bounded local guidance without third-party tracking;
 - reserved-email Access Invitations are single-use;
 - Intent create → highlight → manage is coherent;
 - the Profile editor can manage the same subject/arrangement/value facets created by the guided Intent journey;

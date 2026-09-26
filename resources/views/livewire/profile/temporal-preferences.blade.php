@@ -20,9 +20,11 @@
             data-locale="{{ $intlLocale }}"
             data-calendar="{{ $resolvedCalendar }}"
             data-timezone="{{ $timezone }}"
+            data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
             >
                 <span class="block text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('ui.profile.temporal.preview') }}</span>
                 <span class="mt-1 block break-words font-medium" data-temporal-preview-value>{{ __('ui.profile.temporal.preview_loading') }}</span>
+                <span class="mt-1 block break-words text-xs text-zinc-500" data-temporal-preview-equivalent hidden></span>
             </div>
         </div>
     </div>
@@ -92,6 +94,20 @@
             <p class="text-xs text-zinc-500">
                 {{ __('ui.profile.temporal.calendar_help', ['language' => $localeName]) }}
             </p>
+        </div>
+
+        <div class="space-y-2">
+            <label for="profile-default-currency" class="text-sm font-medium">{{ __('ui.profile.temporal.default_currency') }}</label>
+            <select
+                id="profile-default-currency"
+                wire:model="defaultMonetaryUnitCode"
+                class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+                @foreach ($monetaryUnits as $code => $unit)
+                    <option value="{{ $code }}">{{ $code }} · {{ $unit['name'] }}</option>
+                @endforeach
+            </select>
+            <p class="text-xs text-zinc-500">{{ __('ui.profile.temporal.default_currency_help') }}</p>
         </div>
 
         <div class="flex flex-col-reverse gap-2 lg:col-span-2 sm:flex-row sm:justify-end">

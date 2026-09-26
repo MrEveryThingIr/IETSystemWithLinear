@@ -1,8 +1,18 @@
 <?php
 
 return [
+    'actions' => [
+        'cancel' => 'Cancel',
+    ],
     'language' => 'Language',
     'account' => 'Account',
+    'ambient' => [
+        'messages' => [
+            'plan' => 'Plan the next useful step; keep the source record authoritative.',
+            'record' => 'Record what happened, not what the system merely inferred.',
+            'review' => 'Small reviews today prevent unclear histories tomorrow.',
+        ],
+    ],
     'navigation' => [
         'main' => 'Main navigation',
         'open' => 'Open navigation',
@@ -126,6 +136,7 @@ return [
             'title' => 'Date & time preferences',
             'help' => 'Language controls labels and formatting, timezone controls your local clock, and calendar is a separate presentation preference. Dates are stored canonically so changing these preferences never changes the underlying date.',
             'preview' => 'Your local date & time',
+            'gregorian_equivalent' => 'Gregorian equivalent',
             'preview_loading' => 'Loading local date and time…',
             'timezone' => 'Timezone',
             'timezone_help' => 'Use an IANA timezone such as America/Toronto or Asia/Tehran. Your device can suggest this automatically.',
@@ -155,6 +166,8 @@ return [
             'next_month' => 'Next month',
             'saved' => 'Date & time preferences saved.',
             'invalid_timezone' => 'The browser returned an unsupported timezone.',
+            'default_currency' => 'Default currency',
+            'default_currency_help' => 'New personal financial records use this currency by default. Existing ledgers and history are never converted or deleted.',
         ],
         'semantic_added' => 'Profile item added.',
         'semantic_removed' => 'Profile item removed.',
@@ -334,6 +347,7 @@ return [
         'no_admissions' => 'No admissions currently need reviewer attention.',
         'admissions_help' => 'Submitted applications, clarification requests, and approved applications awaiting finalization appear here.',
         'unknown_applicant' => 'Unknown applicant',
+        'submitted_label' => 'Submitted',
         'submitted_ago' => 'Submitted :time',
         'settings' => 'Group settings',
         'save_details' => 'Save details',
@@ -434,6 +448,7 @@ return [
         'workflow' => 'Draft → proposed → approved → active. Activating a version supersedes the currently active version while preserving its history.',
         'initial_help' => 'The initial text is saved as version 1. It does not affect applicants until you approve and activate it.',
         'applicants_accept' => 'Applicants must accept the active version before membership',
+        'effective_label' => 'Effective from',
         'effective' => 'Effective :date',
         'revision_rationale' => 'Revision rationale:',
         'decision_note' => 'Decision note:',
@@ -468,6 +483,8 @@ return [
         'exhausted' => 'Exhausted',
         'secret_not_recoverable' => 'Private link hidden after creation for security.',
         'uses' => ':used/:maximum uses',
+        'created' => 'Created',
+        'expires' => 'Expires',
         'created_expires' => 'Created :created · expires :expires',
         'never' => 'never',
         'revoke' => 'Revoke',
@@ -758,6 +775,7 @@ return [
         'shared_title' => 'Profile information shared with you',
         'shared_help' => 'This view contains only the information the profile owner explicitly shared with your actor.',
         'profile_owner' => 'Profile owner',
+        'expires_label' => 'Access expires',
         'expires_at' => 'Access expires :date',
         'no_expiry' => 'Access does not expire unless revoked.',
         'semantic' => 'Shared semantic statements',

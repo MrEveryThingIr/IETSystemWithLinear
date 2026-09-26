@@ -33,7 +33,7 @@
                         </div>
 
                         <div class="shrink-0 text-xs text-zinc-500">
-                            {{ $entry->occurredAt->format('Y-m-d H:i:s') }}
+                            <x-app.local-datetime :value="$entry->occurredAt" :seconds="true" />
                         </div>
                     </div>
 

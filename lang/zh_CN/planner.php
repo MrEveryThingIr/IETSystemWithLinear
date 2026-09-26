@@ -87,7 +87,17 @@ return [
         'open' => '打开计划',
         'timeline' => '空间时间线',
     ],
-    'calendar' => ['previous' => '上个月', 'next' => '下个月'],
+    'calendar' => [
+        'previous' => '上一段',
+        'next' => '下一段',
+        'add_to_day' => '添加到这一天',
+        'hour_title' => '小时 · :time',
+        'quantum_help' => '选择这一小时的时间粒度。每个时间段都可以按精确开始时间和时长创建计划。',
+        'quantum_minutes' => ':count 分钟',
+        'add_to_slot' => '在 :time 添加计划',
+        'add' => '添加',
+        'item_count' => '{0} 没有计划事项|[1,*] :count 项计划事项',
+    ],
     'weekdays' => [
         1 => '星期一', 2 => '星期二', 3 => '星期三', 4 => '星期四',
         5 => '星期五', 6 => '星期六', 7 => '星期日',

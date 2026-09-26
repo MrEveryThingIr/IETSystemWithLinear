@@ -72,7 +72,7 @@
                                 <flux:select.option value="daily">Daily</flux:select.option>
                                 <flux:select.option value="selected_dates">{{ __('commitments.planner.selected_dates') }}</flux:select.option>
                             </flux:select>
-                            <flux:input wire:model="planStartsOn" type="date" :label="__('commitments.planner.starts_on')" />
+                            <x-app.calendar-date-input model="planStartsOn" :label="__('commitments.planner.starts_on')" />
                             <flux:input wire:model="planStartTime" type="time" :label="__('commitments.planner.start_time')" />
                             <flux:input wire:model="planDurationMinutes" type="number" min="1" :label="__('commitments.planner.duration')" />
                             @if ($planFrequency === 'daily')
@@ -99,8 +99,8 @@
                         @foreach ($plan->occurrences->sortBy('scheduled_start_at') as $occurrence)
                             <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-700">
                                 <span>
-                                    {{ $occurrence->scheduled_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
-                                    → {{ $occurrence->scheduled_end_at->setTimezone($plan->timezone)->format('H:i') }}
+                                    <x-app.local-datetime :value="$occurrence->scheduled_start_at" />
+                                    → <x-app.local-time :value="$occurrence->scheduled_end_at" />
                                 </span>
                                 <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
                             </div>
@@ -122,8 +122,13 @@
                                 <flux:select.option value="">{{ __('commitments.show.no_occurrence') }}</flux:select.option>
                                 @foreach ($completedOccurrences as $occurrence)
                                     <flux:select.option :value="$occurrence->uuid">
-                                        {{ $occurrence->actual_start_at?->setTimezone($timezone)->format('Y-m-d H:i') }}
-                                        → {{ $occurrence->actual_end_at?->setTimezone($timezone)->format('H:i') }}
+                                        {{ $occurrence->actual_start_at
+                                            ? \App\Support\TemporalCalendar::dateTimeLabelWithEquivalent($occurrence->actual_start_at, request()->user())
+                                            : '—' }}
+                                        →
+                                        {{ $occurrence->actual_end_at
+                                            ? \App\Support\TemporalCalendar::timeLabel($occurrence->actual_end_at, request()->user())
+                                            : '…' }}
                                     </flux:select.option>
                                 @endforeach
                             </flux:select>
@@ -145,7 +150,7 @@
                             <div>
                                 <div class="font-semibold">{{ $fulfillment->quantity }} {{ $fulfillment->unit }}</div>
                                 <div class="text-xs text-zinc-500">
-                                    {{ $fulfillment->submitted_at->format('Y-m-d H:i') }}
+                                    <x-app.local-datetime :value="$fulfillment->submitted_at" />
                                     · {{ $fulfillment->submitter->user?->username }}
                                 </div>
                             </div>
@@ -154,8 +159,8 @@
 
                         @if ($fulfillment->actual_start_at && $fulfillment->actual_end_at)
                             <div class="text-sm text-zinc-600 dark:text-zinc-300">
-                                {{ $fulfillment->actual_start_at->setTimezone($timezone)->format('Y-m-d H:i') }}
-                                → {{ $fulfillment->actual_end_at->setTimezone($timezone)->format('H:i') }}
+                                <x-app.local-datetime :value="$fulfillment->actual_start_at" />
+                                → <x-app.local-time :value="$fulfillment->actual_end_at" />
                                 · {{ $fulfillment->duration_minutes }} min
                             </div>
                         @endif

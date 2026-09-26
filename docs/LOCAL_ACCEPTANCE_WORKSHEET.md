@@ -1726,3 +1726,108 @@ Production-infrastructure evidence pending/complete:
 ~~~
 
 The stable release may be tagged only from the exact accepted SHA after all release-blocking browser findings are regression-tested and closed. Infrastructure-specific production evidence (real mail, supervised processes, backups/restore and monitoring) must be recorded honestly when that infrastructure exists; it cannot be inferred from repository CI.
+
+
+---
+
+## Final checkpoint — First publication experience hardening
+
+Remote branch:
+
+~~~text
+codex/release-first-publication-hardening
+~~~
+
+Release PR:
+
+~~~text
+PR #28 → release/ideal-v1-rc-6
+~~~
+
+### Local sync
+
+~~~bash
+git fetch origin
+git switch codex/release-first-publication-hardening
+git pull --ff-only origin codex/release-first-publication-hardening
+git status --short
+git rev-parse --short HEAD
+
+composer install --no-interaction --prefer-dist
+php artisan optimize:clear
+
+php artisan migrate --force
+php artisan migrate:status
+
+php artisan test --compact tests/Feature/FirstPublicationExperienceTest.php
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+npm ci
+npm audit --audit-level=high
+npm run build
+composer audit
+~~~
+
+For a disposable local database only, the complete bootstrap smoke is:
+
+~~~bash
+php artisan migrate:fresh --seed --no-interaction
+~~~
+
+Never run that destructive command on the continuing acceptance or production database.
+
+### Browser story — first verified account
+
+- [ ] Create/register a fresh invited User and verify the email.
+- [ ] Open Personal Accounting. A personal ledger exists with Cash, Opening balance, General income and General expense accounts.
+- [ ] Confirm there is **no** fabricated JournalEntry and the current balance is still derived from explicit records only.
+- [ ] Re-open the verification URL / repeat provisioning paths and confirm no duplicate main ledger or system accounts are created.
+- [ ] Open Profile → Date & time preferences; change the default currency to another supported monetary unit.
+- [ ] Confirm the new unit can be used for a personal ledger while existing ledgers/history remain unchanged.
+- [ ] Confirm all four supported UI locales render the preference labels without raw translation keys.
+
+### Browser story — persistent temporal header
+
+- [ ] Navigate between Dashboard, Profile, Planner, Accounting and Group/Content surfaces.
+- [ ] On desktop width, confirm the header shows a live localized clock/date using the selected timezone/calendar.
+- [ ] Confirm seconds update without a page reload.
+- [ ] Confirm the small guidance message rotates locally and no external news/tracking request is made.
+- [ ] Switch English ↔ Persian ↔ Arabic ↔ Simplified Chinese and confirm text direction/layout remain usable.
+
+### Browser story — profile temporal consistency
+
+- [ ] Confirm PHP has the `intl` extension: `php -m | grep -i intl`.
+- [ ] Set Profile → Date & time to Persian/Jalali + Asia/Tehran. Navigate Dashboard, Planner, Accounting, Content, Groups, Relationships, Proposals, Contracts, Commitments, Finance, Notifications and Profile surfaces; visible dates/timestamps use the selected calendar/timezone.
+- [ ] With Persian/Jalali selected, confirm a clearly labelled **Gregorian equivalent** appears as secondary reference text instead of replacing the primary Persian date.
+- [ ] Switch the calendar to Gregorian; confirm the redundant Gregorian-equivalent line disappears.
+- [ ] Switch timezone between Asia/Tehran and America/Toronto. The same timestamp instant changes its displayed local clock time without changing the stored event.
+- [ ] Confirm civil date-only values (intent ranges, accounting dates, schedule dates, structured date answers) remain the same civil day when timezone changes.
+- [ ] Open date/date-time inputs in Accounting, Contracts, Commitments, Financial Settlement, Content fields and structured interactions; confirm they use the selected profile calendar rather than the browser's native Gregorian date picker.
+- [ ] Change temporal settings and save; confirm the authenticated shell refreshes so header clock and already-open surfaces reflect the new preferences together.
+- [ ] Repeat a smoke pass with Umm al-Qura selected and confirm it renders as the primary calendar with Gregorian equivalent underneath.
+- [ ] Switch UI language independently from calendar and confirm language, calendar and timezone remain separate preferences.
+
+### Browser story — fractal Planner
+
+- [ ] Open Planner → Calendar.
+- [ ] Open the year level; choose a month.
+- [ ] In month view, choose a day.
+- [ ] The day view shows all 24 hourly rows and the occurrences assigned to their local hours.
+- [ ] Open an hour and switch between 60/30/15/5/1-minute precision; confirm slot boundaries are correct.
+- [ ] Choose a minute slot; the Plan form opens with that exact date/time and the selected quantum as its default duration.
+- [ ] Use the Plan description/reminder fields from that exact slot and confirm the saved occurrence returns to the correct minute position.
+- [ ] Choose **add to day**; the Plan form can still open with only the date prefilled.
+- [ ] Navigate previous/next year/month/day and confirm the correct period is shown.
+- [ ] With enough unrelated inaccessible occurrences present, confirm the authorized user's legitimate occurrences are not truncated out of the visible result set.
+- [ ] Confirm Planner activity still creates no Contract, employment, Financial Obligation, accounting posting or payment truth.
+
+### Seed/bootstrap smoke
+
+- [ ] On a disposable local database, run `php artisan migrate:fresh --seed --no-interaction`.
+- [ ] Confirm the bootstrap User, Actor and Superadmin grant are created.
+- [ ] Confirm personal accounting defaults seed successfully with UUID/model hooks intact.
+- [ ] Run the seeder again where supported and confirm idempotent domain state rather than duplicate system records.
+
+### Publication boundary
+
+This checkpoint is publishability/UX hardening. It does not introduce a second accounting system, a generic JSON event store, implicit financial transactions, or a new authority layer. Existing Context/Action/domain-event boundaries remain authoritative.

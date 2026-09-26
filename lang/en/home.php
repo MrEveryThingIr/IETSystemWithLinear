@@ -5,6 +5,8 @@ return [
     'welcome' => 'Welcome, :name. :date · :timezone. Everything here is derived from authoritative records elsewhere in IET.',
     'new_activity' => 'New activity',
     'new_intent' => 'New Need / Offer',
+    'quick_links' => 'Quick links',
+    'quick_links_help' => 'Open your most-used personal and administrative areas.',
     'today_actions' => 'What should I do today?',
     'today_actions_help' => 'Your scheduled occurrences for today where you are an authorized participant.',
     'no_today_actions' => 'Nothing scheduled for today',

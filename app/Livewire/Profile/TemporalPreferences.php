@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Profile;
 
+use App\Actions\Auth\ProvisionVerifiedUserDefaults;
 use App\CalendarSystem;
 use App\Models\User;
 use App\Support\Localization;
+use App\Support\MonetaryUnitCatalog;
 use App\Support\TemporalPreferences as TemporalPreferenceResolver;
 use App\TimezoneMode;
 use Illuminate\Contracts\View\View;
@@ -18,6 +20,8 @@ class TemporalPreferences extends Component
     public string $calendar = 'auto';
 
     public string $timezoneMode = TimezoneMode::Auto->value;
+
+    public string $defaultMonetaryUnitCode = 'EUR';
 
     public bool $editorOpen = false;
 
@@ -73,7 +77,7 @@ class TemporalPreferences extends Component
         }
     }
 
-    public function save(): void
+    public function save(ProvisionVerifiedUserDefaults $provision): void
     {
         $user = request()->user();
         abort_unless($user instanceof User, 403);
@@ -90,6 +94,7 @@ class TemporalPreferences extends Component
                     CalendarSystem::IslamicUmmAlQura->value,
                 ]),
             ],
+            'defaultMonetaryUnitCode' => ['required', Rule::in(array_keys(MonetaryUnitCatalog::all()))],
         ]);
 
         $user->timezone = $data['timezone'];
@@ -97,7 +102,9 @@ class TemporalPreferences extends Component
         $user->calendar = $data['calendar'] === 'auto'
             ? null
             : CalendarSystem::from($data['calendar']);
+        $user->default_monetary_unit_code = $data['defaultMonetaryUnitCode'];
         $user->save();
+        $provision->execute($user->refresh());
 
         $this->dispatch('temporal-preferences-updated');
         $this->editorOpen = false;
@@ -109,6 +116,7 @@ class TemporalPreferences extends Component
         $this->timezone = TemporalPreferenceResolver::timezoneFor($user);
         $this->timezoneMode = $user->timezone_mode->value;
         $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
+        $this->defaultMonetaryUnitCode = strtoupper((string) $user->default_monetary_unit_code);
     }
 
     public function render(): View
@@ -122,6 +130,7 @@ class TemporalPreferences extends Component
             'intlLocale' => Localization::intlLocale(),
             'localeName' => Localization::supported()[app()->getLocale()]['native_name'] ?? app()->getLocale(),
             'calendarOptions' => CalendarSystem::cases(),
+            'monetaryUnits' => MonetaryUnitCatalog::all(),
             'timezones' => timezone_identifiers_list(),
         ]);
     }

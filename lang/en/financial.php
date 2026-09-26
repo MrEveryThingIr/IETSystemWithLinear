@@ -19,6 +19,7 @@ return [
         'source' => 'Source Fulfillment',
         'debtor' => 'Owes / debtor',
         'creditor' => 'Earned / creditor',
+        'recognized_label' => 'Recognized',
         'recognized' => 'Recognized :time',
         'accounting' => 'My accounting',
         'accounting_help' => 'Post only your side into your Personal Ledger. Retrying is idempotent; the other party posts their own side separately.',
