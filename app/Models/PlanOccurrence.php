@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\PlanOccurrenceStatus;
+use App\PlanOccurrenceWindowState;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -134,6 +136,46 @@ class PlanOccurrence extends Model
         } finally {
             $this->applyingLifecycle = false;
         }
+    }
+
+    public function windowState(?CarbonInterface $at = null): PlanOccurrenceWindowState
+    {
+        return match ($this->status) {
+            PlanOccurrenceStatus::InProgress => PlanOccurrenceWindowState::InProgress,
+            PlanOccurrenceStatus::Completed => PlanOccurrenceWindowState::Completed,
+            PlanOccurrenceStatus::Skipped => PlanOccurrenceWindowState::Skipped,
+            PlanOccurrenceStatus::Cancelled => PlanOccurrenceWindowState::Cancelled,
+            PlanOccurrenceStatus::Scheduled => $this->scheduledWindowState($at),
+        };
+    }
+
+    public function canStart(?CarbonInterface $at = null): bool
+    {
+        return in_array($this->windowState($at), [
+            PlanOccurrenceWindowState::Ready,
+            PlanOccurrenceWindowState::Late,
+        ], true);
+    }
+
+    private function scheduledWindowState(?CarbonInterface $at = null): PlanOccurrenceWindowState
+    {
+        $moment = $at instanceof CarbonInterface
+            ? CarbonImmutable::parse($at->toIso8601String())->utc()
+            : CarbonImmutable::now('UTC');
+
+        if ($moment->lt($this->window_start_at->utc())) {
+            return PlanOccurrenceWindowState::Upcoming;
+        }
+
+        if ($moment->lte($this->scheduled_end_at->utc())) {
+            return PlanOccurrenceWindowState::Ready;
+        }
+
+        if ($moment->lte($this->window_end_at->utc())) {
+            return PlanOccurrenceWindowState::Late;
+        }
+
+        return PlanOccurrenceWindowState::Missed;
     }
 
     /** @return BelongsTo<Plan, $this> */
