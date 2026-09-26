@@ -78,9 +78,9 @@
                             <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
                         </div>
                         <div class="mt-2 text-sm text-zinc-500">
-                            {{ $occurrence->scheduled_start_at->setTimezone($timezone)->format('H:i') }}
+                            <x-app.local-time :value="$occurrence->scheduled_start_at" />
                             →
-                            {{ $occurrence->scheduled_end_at->setTimezone($timezone)->format('H:i') }}
+                            <x-app.local-time :value="$occurrence->scheduled_end_at" />
                         </div>
                     </a>
                 @empty
@@ -291,7 +291,7 @@
                             @endif
                         </div>
                         <div class="shrink-0 text-xs text-zinc-500">
-                            {{ $entry->occurredAt->setTimezone($timezone)->format('Y-m-d H:i') }}
+                            <x-app.local-datetime :value="$entry->occurredAt" />
                         </div>
                     </div>
                 </a>
