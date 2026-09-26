@@ -351,7 +351,7 @@ class IetDatePicker extends HTMLElement {
             const showEquivalent = Boolean(value) && this.calendar !== 'gregory';
             this.equivalentDisplay.hidden = !showEquivalent;
             this.equivalentDisplay.textContent = showEquivalent
-                ? gregorianEquivalentDate(value, this.locale)
+                ? `${this.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDate(value, this.locale)}`
                 : '';
         }
     }
@@ -543,12 +543,12 @@ class IetAmbientStatus extends HTMLElement {
             const showEquivalent = calendar !== 'gregory';
             this.equivalent.hidden = !showEquivalent;
             this.equivalent.textContent = showEquivalent
-                ? new Intl.DateTimeFormat(locale, {
+                ? `${this.dataset.equivalentLabel || 'Gregorian'} · ${new Intl.DateTimeFormat(locale, {
                     calendar: 'gregory',
                     timeZone: timezone,
                     dateStyle: 'medium',
                     timeStyle: 'short',
-                }).format(now)
+                }).format(now)}`
                 : '';
         }
     }
@@ -579,7 +579,9 @@ function renderProfileTemporal(root = document) {
         if (equivalent) {
             const show = element.dataset.showEquivalent === 'true' && calendar !== 'gregory';
             equivalent.hidden = !show;
-            equivalent.textContent = show ? gregorianEquivalentDate(value, locale) : '';
+            equivalent.textContent = show
+                ? `${element.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDate(value, locale)}`
+                : '';
         }
     });
 
@@ -599,7 +601,9 @@ function renderProfileTemporal(root = document) {
         if (equivalent) {
             const show = element.dataset.showEquivalent === 'true' && calendar !== 'gregory';
             equivalent.hidden = !show;
-            equivalent.textContent = show ? gregorianEquivalentDateTime(value, locale, timezone, seconds) : '';
+            equivalent.textContent = show
+                ? `${element.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDateTime(value, locale, timezone, seconds)}`
+                : '';
         }
     });
 
@@ -660,12 +664,12 @@ function localizeTemporal(root = document) {
             equivalent.hidden = calendar === 'gregory';
             equivalent.textContent = calendar === 'gregory'
                 ? ''
-                : new Intl.DateTimeFormat(locale, {
+                : `${element.dataset.equivalentLabel || 'Gregorian'} · ${new Intl.DateTimeFormat(locale, {
                     calendar: 'gregory',
                     timeZone: timezone,
                     dateStyle: 'full',
                     timeStyle: 'short',
-                }).format(now);
+                }).format(now)}`;
         }
     });
 
