@@ -3,7 +3,6 @@
 return [
     'back_to_library' => 'Back to Content',
     'edit_in_studio' => 'Edit in Studio',
-    'published_label' => 'Published',
     'published' => 'Published :date',
     'by_author' => 'By :author',
     'outline' => 'Outline',

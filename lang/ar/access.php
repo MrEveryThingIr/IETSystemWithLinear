@@ -68,7 +68,6 @@ return [
         'created' => 'تم إنشاء دعوة الوصول.',
         'revoked' => 'تم إلغاء دعوة الوصول.',
         'revoke' => 'إلغاء الدعوة',
-        'expires_label' => 'تنتهي في',
         'expires_at' => 'صالحة حتى :time',
         'registered_count' => 'تم تسجيل :count حساب عبر هذه الدعوة.',
         'none' => 'لا توجد دعوات وصول',
