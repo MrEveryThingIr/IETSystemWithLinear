@@ -45,7 +45,7 @@
                             @if ($invitation->email)<flux:badge>{{ $invitation->maskedEmail() }}</flux:badge>@endif
                         </div>
                         <flux:text class="text-sm">{{ __('ui.invitations.secret_not_recoverable') }}</flux:text>
-                        <flux:text class="text-sm">{{ __('ui.invitations.created_expires', ['created' => $invitation->created_at->diffForHumans(), 'expires' => $invitation->expires_at?->diffForHumans() ?? __('ui.invitations.never')]) }}</flux:text>
+                        <flux:text class="text-sm"><span>{{ __('ui.invitations.created') }}</span> <x-app.local-datetime :value="$invitation->created_at" /> · <span>{{ __('ui.invitations.expires') }}</span> @if ($invitation->expires_at)<x-app.local-datetime :value="$invitation->expires_at" />@else {{ __('ui.invitations.never') }} @endif</flux:text>
                     </div>
                     @if (! $invitation->revoked_at)
                         <flux:button wire:click="revoke({{ $invitation->id }})" variant="danger" size="sm">{{ __('ui.invitations.revoke') }}</flux:button>
