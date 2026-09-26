@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Planner;
 
+use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Planner\AttachPlanOccurrenceEvidence;
 use App\Actions\Planner\TransitionPlan;
 use App\Actions\Planner\TransitionPlanOccurrence;
 use App\Models\Actor;
+use App\Models\Asset;
 use App\Models\Commitment;
 use App\Models\ContentEvidenceReference;
 use App\Models\Plan;
@@ -15,14 +17,17 @@ use App\Models\User;
 use App\PlanStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 #[Title('Plan')]
 class Show extends Component
 {
+    use WithFileUploads;
     public Plan $plan;
 
     public ?int $evidenceOccurrenceId = null;
@@ -32,6 +37,11 @@ class Show extends Component
 
     /** @var list<int> */
     public array $evidenceReferenceIds = [];
+
+    /** @var array<int, mixed> */
+    public array $evidenceUploads = [];
+
+    public string $evidenceRightsStatus = 'owned';
 
     public function mount(Plan $plan): void
     {
@@ -84,21 +94,67 @@ class Show extends Component
         Gate::forUser($this->user())->authorize('participate', $this->plan);
         $this->occurrence($occurrenceId);
         $this->evidenceOccurrenceId = $occurrenceId;
-        $this->reset(['assetIds', 'evidenceReferenceIds']);
+        $this->reset(['assetIds', 'evidenceReferenceIds', 'evidenceUploads']);
+        $this->evidenceRightsStatus = 'owned';
     }
 
-    public function attachEvidence(AttachPlanOccurrenceEvidence $attach): void
-    {
+    public function attachEvidence(
+        AttachPlanOccurrenceEvidence $attach,
+        CreateContextAsset $createAsset,
+    ): void {
         abort_unless($this->evidenceOccurrenceId !== null, 422);
 
+        $data = $this->validate([
+            'assetIds' => ['array', 'max:20'],
+            'assetIds.*' => ['integer'],
+            'evidenceReferenceIds' => ['array', 'max:20'],
+            'evidenceReferenceIds.*' => ['integer'],
+            'evidenceUploads' => ['array', 'max:10'],
+            'evidenceUploads.*' => ['file', 'max:12288'],
+            'evidenceRightsStatus' => ['required', Rule::in(Asset::RIGHTS_STATUSES)],
+        ]);
+
+        $user = $this->user();
+        $occurrence = $this->occurrence($this->evidenceOccurrenceId);
+        $uploadedAssetIds = [];
+
+        foreach ($data['evidenceUploads'] as $upload) {
+            $uploadedAssetIds[] = $createAsset->execute(
+                $this->plan->context,
+                $user,
+                $upload,
+                $data['evidenceRightsStatus'],
+            )->id;
+        }
+
+        $assetIds = collect($data['assetIds'])
+            ->merge($uploadedAssetIds)
+            ->map(fn (mixed $id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+        $referenceIds = collect($data['evidenceReferenceIds'])
+            ->map(fn (mixed $id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($assetIds === [] && $referenceIds === []) {
+            $this->addError('evidence', __('planner.validation.evidence_required'));
+
+            return;
+        }
+
         $attach->execute(
-            $this->occurrence($this->evidenceOccurrenceId),
-            $this->user(),
-            $this->assetIds,
-            $this->evidenceReferenceIds,
+            $occurrence,
+            $user,
+            $assetIds,
+            $referenceIds,
         );
 
-        $this->reset(['evidenceOccurrenceId', 'assetIds', 'evidenceReferenceIds']);
+        session()->flash('status', __('planner.messages.evidence_attached'));
+        $this->reset(['evidenceOccurrenceId', 'assetIds', 'evidenceReferenceIds', 'evidenceUploads']);
+        $this->evidenceRightsStatus = 'owned';
     }
 
     public function render(): View
@@ -125,6 +181,8 @@ class Show extends Component
 
         $canManage = Gate::forUser($user)->allows('manage', $plan);
         $canParticipate = Gate::forUser($user)->allows('participate', $plan);
+        $canUploadEvidence = $canParticipate
+            && Gate::forUser($user)->allows('submitInteractions', $plan->context);
 
         $references = $canParticipate
             ? ContentEvidenceReference::query()
@@ -145,6 +203,7 @@ class Show extends Component
         return view('livewire.planner.show', [
             'canManage' => $canManage,
             'canParticipate' => $canParticipate,
+            'canUploadEvidence' => $canUploadEvidence,
             'availableAssets' => $canParticipate ? $plan->context->assets : collect(),
             'availableEvidenceReferences' => $references,
             'originRelationship' => $originRelationship,
