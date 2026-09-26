@@ -16,6 +16,8 @@ The selective assembly process is now governed by `docs/SELECTIVE_ASSEMBLY_ROADM
 
 The owner has changed the gate from end-deferred browser acceptance to **module-by-module browser acceptance before final assembly**. Therefore the current gate is **M0/S0 baseline browser smoke**. M1 — access, identity, registration provisioning, wallet/default monetary unit — does not begin until that baseline browser check is explicitly accepted.
 
+Browser-gated process governance merged through PR #32 at assembly SHA `30dc939754c3fec7009250a61437db2633aabea7`; post-merge CI `36238246665` passed. This governance merge changed documentation/process only, not application runtime behavior.
+
 A governance gap is also recorded: the current GitHub ruleset protects `main`, not the selective assembly branch. PR-only/no-force-push discipline is therefore procedural until repository settings are extended.
 
 ### Publishable v1 hardening
