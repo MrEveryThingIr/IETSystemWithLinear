@@ -116,6 +116,39 @@ class TemporalCalendar
         return self::format($date, $user, $timezone, $pattern, calendar: $calendar);
     }
 
+    public static function dateLabelWithEquivalent(
+        DateTimeInterface $date,
+        ?User $user,
+        ?string $timezone = null,
+    ): string {
+        $timezone ??= TemporalPreferences::timezoneFor($user);
+        $primary = self::dateLabel($date, $user, $timezone);
+
+        if (TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian) {
+            return $primary;
+        }
+
+        return $primary.' · '.__('ui.profile.temporal.gregorian_equivalent').' · '
+            .self::dateLabel($date, $user, $timezone, CalendarSystem::Gregorian);
+    }
+
+    public static function dateTimeLabelWithEquivalent(
+        DateTimeInterface $date,
+        ?User $user,
+        ?string $timezone = null,
+        bool $seconds = false,
+    ): string {
+        $timezone ??= TemporalPreferences::timezoneFor($user);
+        $primary = self::dateTimeLabel($date, $user, $timezone, $seconds);
+
+        if (TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian) {
+            return $primary;
+        }
+
+        return $primary.' · '.__('ui.profile.temporal.gregorian_equivalent').' · '
+            .self::dateTimeLabel($date, $user, $timezone, $seconds, CalendarSystem::Gregorian);
+    }
+
     public static function timeLabel(
         DateTimeInterface $date,
         ?User $user,
