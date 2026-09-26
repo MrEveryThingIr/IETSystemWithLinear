@@ -16,12 +16,16 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['username', 'email', 'locale', 'timezone', 'timezone_mode', 'calendar', 'password'])]
+#[Fillable(['username', 'email', 'locale', 'timezone', 'timezone_mode', 'calendar', 'default_monetary_unit_code', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected $attributes = [
+        'default_monetary_unit_code' => 'EUR',
+    ];
 
     /**
      * Get the attributes that should be cast.
