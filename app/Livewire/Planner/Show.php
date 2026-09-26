@@ -28,6 +28,7 @@ use Livewire\WithFileUploads;
 class Show extends Component
 {
     use WithFileUploads;
+
     public Plan $plan;
 
     public ?int $evidenceOccurrenceId = null;
@@ -118,7 +119,7 @@ class Show extends Component
         $occurrence = $this->occurrence($this->evidenceOccurrenceId);
         $uploadedAssetIds = [];
 
-        foreach ($data['evidenceUploads'] as $upload) {
+        foreach ($data['evidenceUploads'] ?? [] as $upload) {
             $uploadedAssetIds[] = $createAsset->execute(
                 $this->plan->context,
                 $user,
@@ -127,13 +128,13 @@ class Show extends Component
             )->id;
         }
 
-        $assetIds = collect($data['assetIds'])
+        $assetIds = collect($data['assetIds'] ?? [])
             ->merge($uploadedAssetIds)
             ->map(fn (mixed $id): int => (int) $id)
             ->unique()
             ->values()
             ->all();
-        $referenceIds = collect($data['evidenceReferenceIds'])
+        $referenceIds = collect($data['evidenceReferenceIds'] ?? [])
             ->map(fn (mixed $id): int => (int) $id)
             ->unique()
             ->values()
