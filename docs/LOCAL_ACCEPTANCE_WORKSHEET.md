@@ -1560,8 +1560,10 @@ PR: #30
 Formatter-only repair: e57b29d2de68f97568187a19de60c9bbabf103ca
 15 pre-existing PHP style issues normalized by Pint
 No migration or dependency change
-Final merged assembly SHA: <record after PR #30 merge>
-Post-merge assembly CI: <record after PR #30 merge>
+Final merged S0 runtime/checkpoint SHA: 2b89e301ef7f167083445cd305847f83dbf3e048
+Post-merge S0 CI: 36236888120 — success
+S0 documentation closure: 707eaa621e267c31beaf3d9c71dde3c92178429e
+Documentation-closure CI: 36237332774 — success
 ~~~
 
 ### Local sync after S0 merge
@@ -1596,9 +1598,11 @@ php artisan view:clear
 
 Do not use `migrate:fresh` against the continuing database.
 
-### Deferred S0 browser smoke
+### Current required M0/S0 browser gate
 
-Use `IET_RELEASE_PROFILE=full` and reuse the established story data where available.
+The selective-assembly process now requires this smoke **before M1 implementation begins**.
+
+Use `IET_RELEASE_PROFILE=full` and reuse the established story data where available. Test the current `codex/ideal-v1-selective-assembly` head after the browser-gate process documentation is merged; the S0 runtime changes themselves were certified at `2b89e301ef7f167083445cd305847f83dbf3e048`.
 
 - [ ] English navigation/dashboard/login/profile representative pages render without raw keys or template source.
 - [ ] Persian representative pages use the selected calendar/timezone presentation and RTL layout correctly.
@@ -1610,9 +1614,100 @@ Use `IET_RELEASE_PROFILE=full` and reuse the established story data where availa
 - [ ] Keyboard focus order and primary actions remain reachable.
 - [ ] No S0 formatter-only repair changes observable domain behavior.
 
+### Acceptance record
+
+~~~text
+Tested assembly SHA:
+Local focused/full test result:
+Browser acceptance date:
+Browser tester:
+Defects found:
+Correction branch/commits:
+Final accepted baseline SHA:
+Result: PENDING
+~~~
+
+If a defect is found, do not begin M1. Create a correction branch from the current assembly head, add automated regression coverage where practical, fix it, rerun remote CI, repeat the affected browser checks, then merge the accepted correction through PR.
+
 ### Continuity
 
-S0 is the baseline certification checkpoint only. S1 and later selective modules must start from the exact merged S0 assembly head and must not attribute a pre-existing baseline defect to a newly admitted module.
+S0 is the baseline certification checkpoint only. M1 and later selective modules start only after this browser gate is explicitly accepted and must not attribute a pre-existing baseline defect to a newly admitted module.
+
+---
+
+## Selective module browser-gate template
+
+Use this section for M1 and every later module. Each module report may add domain-specific checks, but it must preserve this evidence shape.
+
+~~~text
+Module:
+Review branch:
+Review head SHA:
+Source branches/commits:
+Remote CI:
+Migrations:
+Focused local tests:
+Browser tester:
+Browser acceptance date:
+Defects found:
+Regression tests added:
+Correction commits:
+Explicit deferrals:
+Accepted review head:
+Assembly merge SHA:
+Post-merge CI:
+Next-module wiring notes:
+Result: PENDING / ACCEPTED
+~~~
+
+### Local review-branch sync
+
+~~~bash
+cd /c/laragon/www/EveryThing
+
+git status --short
+git fetch origin
+git switch <module-review-branch>
+git pull --ff-only origin <module-review-branch>
+git status --short
+git rev-parse HEAD
+
+composer install --no-interaction --prefer-dist
+php artisan optimize:clear
+php artisan migrate --force
+php artisan migrate:status
+
+npm ci
+npm run build
+
+# Run the module's focused test list from its living report.
+php artisan test --compact <focused-test-paths>
+
+# Run full safety gates when requested for the module.
+php artisan test --compact
+vendor/bin/phpstan analyse --no-progress
+composer audit --locked --no-interaction
+npm audit --audit-level=high
+~~~
+
+Never use `migrate:fresh` against the continuing acceptance database.
+
+### Required browser dimensions
+
+- [ ] Primary happy-path behavior is understandable without internal/kernel jargon.
+- [ ] Empty state is useful.
+- [ ] Invalid input gives actionable feedback.
+- [ ] Unauthorized/cross-context access is denied without data leakage.
+- [ ] Terminal/recovery state behaves coherently.
+- [ ] Durable state survives reload.
+- [ ] Previously accepted modules still behave correctly at the new seam.
+- [ ] The module does not silently create authority belonging to a later/other domain.
+- [ ] Desktop and representative mobile layout are usable.
+- [ ] Affected English/Persian/Arabic/Chinese surfaces render; Persian/Arabic RTL remains usable.
+- [ ] Keyboard/focus/accessibility smoke passes for primary actions.
+- [ ] Every release-blocking browser defect is recorded and reproduced by automated coverage where practical before correction.
+
+**Do not merge the review branch into the assembly until the owner explicitly accepts the tested head.**
 
 
 ---

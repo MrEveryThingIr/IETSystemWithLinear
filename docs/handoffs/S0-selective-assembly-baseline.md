@@ -191,3 +191,12 @@ Owner-local/browser acceptance remains deferred and separately recorded; it is n
 ## 15. Prompt for next step
 
 Begin **S1 — registration, wallet, and default monetary unit** from the current `codex/ideal-v1-selective-assembly` head. Review the S1 source material selectively; do not merge `codex/release-first-publication-hardening` wholesale. Split S1 into provisioning, personal-accounting foundation, default monetary unit, and safe seed behavior, and require the full admission contract for each reversible submodule.
+
+
+## Process revision after S0 remote closure
+
+After S0 was remotely certified and merged, the owner changed the selective-assembly process: every module must now receive owner local/browser acceptance **before final merge and before the next module begins**.
+
+S0 predates that rule. Therefore S0's remote certification remains valid, but M1 implementation is blocked until the owner completes the baseline browser smoke recorded in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+
+Future modules follow `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`: review branch → remote CI → browser acceptance/correction loop → merge exact accepted head → post-merge CI → next module.

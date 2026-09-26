@@ -1,152 +1,142 @@
-# Continuous Remote Roadmap Mode
+# Selective Assembly Execution Mode
 
-## Authorization
+## Current authorization
 
-The human owner has explicitly authorized continuous remote implementation of the accepted Ideal-v1 roadmap.
+The owner has replaced the old end-deferred browser model with **browser-gated selective assembly**.
 
-Local Laragon/browser acceptance is deferred until the integrated roadmap is complete or a true stop condition is reached.
+The active execution authority is `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`.
 
-This changes **when** human local acceptance happens. It does not weaken automated quality gates.
+Historical remote milestones and their CI remain valuable evidence, but a module is not admitted into the current assembly solely because a historical or new remote CI run is green.
 
-## Integration trunk
-
-~~~text
-integration/ideal-v1
-~~~
-
-The trunk was rooted at the last accepted pre-AI/manual baseline:
+## Assembly line
 
 ~~~text
-2c7a5c35a31fe86d761a1cafd189560bec220784
+codex/ideal-v1-selective-assembly
 ~~~
 
-The office Access Invitation / Intent Registry work is being rebuilt onto that baseline without the currently unused AI-assistance and Development-Origin runtime layers.
+Candidate and historical branches are source libraries. Never merge an aggregate candidate branch wholesale merely because it contains several desired improvements.
 
-## Remote cycle
-
-For every milestone:
+## Module cycle
 
 ~~~text
-integration/ideal-v1
-        ↓ branch
-feat/ideal-v1-<milestone>
-        ↓
-implementation
-migrations where justified
-tests
-System Manual source
-canonical docs
-phase report
-        ↓
-remote CI green
-        ↓
-integration checkpoint
-        ↓
-next milestone
+accepted assembly
+→ codex/review-<module>
+→ inspect accepted behavior
+→ inspect source/candidate implementations
+→ living pre-plan/report
+→ selective implementation
+→ focused tests
+→ full remote CI
+→ owner local/browser acceptance on review head
+→ defect → regression → correction loop as needed
+→ explicit owner acceptance
+→ merge exact accepted head into assembly
+→ post-merge CI
+→ freeze checkpoint evidence
+→ next module
 ~~~
 
-A milestone may proceed without owner-local/browser acceptance when all remote gates are green and no stop condition is present.
+No next-module implementation begins before the current module's browser gate is accepted.
 
 ## Required remote gate
 
-At minimum, when applicable:
+At minimum, where applicable:
 
 - focused PHPUnit;
 - full PHPUnit;
 - PHPStan;
-- Pint on changed PHP;
+- Pint;
+- Blade compilation;
 - Vite production build;
 - migration forward + rollback/reapply smoke;
 - scheduler/database-queue smoke;
 - backup/restore smoke;
 - npm audit;
 - Composer audit;
-- authorization and privacy regression tests;
+- authorization/privacy regression tests;
 - concurrency/idempotency tests for race-sensitive transitions.
 
-Never report a gate as passed unless GitHub Actions or another actually executed command proves it.
+Never report a gate as passed unless an actually executed command proves it.
 
-## Checkpoints
+## Required browser gate
 
-Each milestone must leave:
+The owner tests the exact review head before merge.
 
-- a coherent feature branch;
-- atomic commits;
-- a durable contract/report;
-- exact integration commit SHA;
-- exact CI run;
-- migration list;
-- known limitations;
-- deferred browser checks;
-- an entry in `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+At minimum, where relevant:
 
-Where repository tooling permits, create immutable development checkpoint tags. If tag creation is not available to the active agent, record the exact immutable SHA and do not pretend a tag exists.
+- normal journey;
+- empty state;
+- invalid input;
+- unauthorized/cross-context attempt;
+- terminal/recovery state;
+- reload/persistence;
+- desktop and representative mobile behavior;
+- English and affected Persian/Arabic/Chinese/RTL surfaces;
+- keyboard/focus/accessibility smoke;
+- confirmation that the module did not acquire authority belonging to another domain.
+
+Every release-blocking browser defect should receive automated regression coverage before correction when practical.
+
+Silence is not acceptance. The report must record the accepted head explicitly.
+
+## Checkpoint evidence
+
+Every module maintains:
+
+- `Development-CodexReports/Mxx-<module>-report.md` as a living pre-plan + implementation record;
+- `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` with exact local commands/browser checks;
+- `docs/handoffs/continuous-ideal-v1.md` as restart state;
+- `docs/CURRENT_STATE.md` with the accepted checkpoint/current gate;
+- System Manual updates when user-facing behavior changes.
+
+Record source SHAs, selected changes, rejected alternatives, migration list, remote CI, browser evidence, correction commits, final assembly SHA and next wiring notes.
+
+Do not erase the original pre-plan after implementation; preserve the evolution of the decision.
 
 ## Integration rules
 
-- never develop directly on `main`;
-- no force-push of shared history;
-- no destructive rewrite of earlier checkpoint history;
-- append-only shared migrations;
-- no `migrate:fresh` assumption;
-- integration is cumulative;
-- fixes discovered later are new commits/milestones rather than rewriting historical checkpoints;
-- a later feature may consume earlier domains but must not silently redefine their authority.
+- never develop directly on `main` or the assembly branch;
+- no force-push of shared accepted history;
+- no destructive rewrite of earlier checkpoints;
+- shared migrations are append-only;
+- never assume `migrate:fresh` on a continuing database;
+- fixes found during browser review stay on the module/correction branch until accepted;
+- later modules may consume earlier accepted domains but may not silently redefine their authority.
 
 ## Documentation-as-Content rule
 
-Every user-facing milestone updates both:
+Every material user-facing module updates both repository documentation and `App\Support\SystemManualContent`.
 
-1. repository developer/architecture docs;
-2. `App\Support\SystemManualContent`, which is the canonical source materialized as normal versioned IET Content.
-
-The System Manual must teach exact interaction, not just concepts:
+The manual must teach:
 
 ~~~text
 WHO
 → WHERE in UI
-→ WHAT user sees
+→ WHAT is visible
 → WHAT to click/select/type
 → WHAT durable result is created
 → WHO can see it
 → WHAT it does not imply
 ~~~
 
-Use `docs/EXAMPLE_STORY_WORLD.md` for consistent Alice/Bob/Carol/Diego examples.
+Use `docs/EXAMPLE_STORY_WORLD.md` for Alice/Bob/Carol/Diego continuity.
 
 ## Stop conditions
 
-Continuous mode pauses only when:
+Pause for:
 
-- canonical architecture sources materially contradict each other;
-- a destructive/data-losing migration appears necessary;
-- authorization/legal/financial semantics are genuinely ambiguous and cannot be resolved from accepted docs;
-- required dependencies or credentials need explicit owner approval;
-- remote validation infrastructure cannot prove the milestone safe enough to build upon;
-- a change would connect experimental finance to real custody/external-money movement;
-- repository permissions/tooling make the required safe Git operation impossible.
+- contradictory canonical architecture;
+- destructive/data-losing migration;
+- unresolved authorization/legal/financial semantics;
+- dependency/credential/provider requiring owner approval;
+- unsafe Git state;
+- unavailable required validation;
+- external-money/custody boundary.
 
-Normal implementation defects are not stop conditions: fix them, add regression coverage, and continue.
+A browser defect or ordinary test failure is not a reason to abandon the module. Reproduce, fix, retest, and continue its correction loop.
 
-## Current continuous checkpoint
+## Current gate
 
-Phase 20 is integrated on `integration/ideal-v1` at merge checkpoint `a02017eca6c784cb6a7de3f24630e53218d7edfe`.
+S0 remote baseline certification is complete.
 
-Phase 21 — Home / Today — is runtime-green on `feat/ideal-v1-21-home-today`: runtime `d0834e5a72545d558d074deb495fd7009daa96ff` / CI `36128745672` (**524 tests / 3244 assertions**), with documentation/manual closure pending its final feature-branch gate.
-
-After Phase 21 integration, continue directly with **Phase 22 — Realtime + Notifications** from the integration trunk.
-
-Persistent Phase 21 boundary: Today is a derived operating view only. It creates no domain truth, unread state or cross-currency total. Every action/amount remains sourced from the authoritative kernel and existing policy.
-
-## Final human gate
-
-After the roadmap is integrated remotely:
-
-1. owner backs up the local database;
-2. follows `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` checkpoint by checkpoint;
-3. migrates forward only;
-4. runs focused/full gates;
-5. follows the Alice/Bob/Carol/Diego browser story from invitation to the latest implemented domain;
-6. records defects;
-7. defects are fixed on the current integration/release line with regression tests;
-8. release candidate is frozen only after human acceptance.
+Before M1 implementation, the owner must complete the S0 browser baseline smoke on the current assembly line. If defects are found, fix them on a dedicated correction branch and repeat the affected checks before M1 begins.
