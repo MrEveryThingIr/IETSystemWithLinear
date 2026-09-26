@@ -96,7 +96,6 @@ class PlanOccurrence extends Model
         $allowed = match ($current) {
             PlanOccurrenceStatus::Scheduled => [
                 PlanOccurrenceStatus::InProgress,
-                PlanOccurrenceStatus::Completed,
                 PlanOccurrenceStatus::Skipped,
                 PlanOccurrenceStatus::Cancelled,
             ],
@@ -134,6 +133,25 @@ class PlanOccurrence extends Model
         } finally {
             $this->applyingLifecycle = false;
         }
+    }
+
+    public function canStartAt(CarbonInterface $at): bool
+    {
+        return $this->status === PlanOccurrenceStatus::Scheduled
+            && ! $at->lt($this->window_start_at)
+            && ! $at->gt($this->window_end_at);
+    }
+
+    public function startWindowIsFutureAt(CarbonInterface $at): bool
+    {
+        return $this->status === PlanOccurrenceStatus::Scheduled
+            && $at->lt($this->window_start_at);
+    }
+
+    public function startWindowHasPassedAt(CarbonInterface $at): bool
+    {
+        return $this->status === PlanOccurrenceStatus::Scheduled
+            && $at->gt($this->window_end_at);
     }
 
     /** @return BelongsTo<Plan, $this> */
