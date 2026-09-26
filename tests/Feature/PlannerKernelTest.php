@@ -139,7 +139,6 @@ class PlannerKernelTest extends TestCase
         }
     }
 
-
     public function test_future_occurrence_cannot_start_before_its_execution_window_and_completion_requires_start(): void
     {
         CarbonImmutable::setTestNow('2026-09-25 18:00:00 UTC');
