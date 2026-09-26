@@ -4,6 +4,20 @@
 
 This document defines the intended technical shape of IET after the current kernels mature. It is an architectural destination, not permission to implement every subsystem immediately.
 
+## Capability mesh composition rule
+
+The target architecture is a **mesh of independently useful capability nodes**, not one mandatory end-to-end workflow.
+
+Each kernel owns only its own authority and may be composed through explicit Actions, references, provenance links, domain events and authorized projection providers.
+
+A simple user flow must remain simple. Planner, Accounting, Content, Groups, Need/Offer, Relationship, Contract, Fulfillment, Submission and other nodes may be used independently as far as their semantics allow. Additional capability layers are attached only when the user/domain meaning requires them.
+
+Shared surfaces such as the fractal Calendar, Home/Today and the permanent ambient header are projection/orchestration surfaces. They do not duplicate or replace source-domain truth.
+
+Runtime composition should expose relevant authorized **Add / Connect / Use** actions from the current view/object/Context rather than forcing one giant wizard or hidden side effects.
+
+The detailed composition contract is defined in docs/CAPABILITY_MESH_ARCHITECTURE.md. The selective recovery/review order is defined in docs/SELECTIVE_ASSEMBLY_ROADMAP.md.
+
 The roadmap controls execution order. Existing stable behavior should be migrated incrementally, with compatibility preserved until a phase explicitly replaces it.
 
 ## Architectural style
