@@ -44,7 +44,7 @@
                         @if ($bodyKey)
                             <div class="mt-2 text-sm text-zinc-500" dir="auto">{{ __($bodyKey, $bodyParams) }}</div>
                         @endif
-                        <div class="mt-2 text-xs text-zinc-500">{{ $notification->created_at?->diffForHumans() }}</div>
+                        @if ($notification->created_at)<div class="mt-2 text-xs text-zinc-500"><x-app.local-datetime :value="$notification->created_at" /></div>@endif
                     </div>
                     <div class="flex flex-wrap gap-2">
                         @if (! $notification->read_at)

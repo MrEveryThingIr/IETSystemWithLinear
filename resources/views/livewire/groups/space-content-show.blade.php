@@ -243,7 +243,7 @@
                                 {{ __('ui.content.revision_number', ['revision' => $revision->revision]) }} · {{ $revision->title }}
                             </summary>
                             <div class="mt-3 space-y-2 text-sm">
-                                <div class="flex flex-wrap items-center gap-2 text-zinc-500"><x-app.actor-identity :actor="$revision->createdBy" size="xs" /><span>· {{ $revision->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</span></div>
+                                <div class="flex flex-wrap items-center gap-2 text-zinc-500"><x-app.actor-identity :actor="$revision->createdBy" size="xs" /><span>· <x-app.local-datetime :value="$revision->created_at" /></span></div>
                                 <div class="font-mono text-[11px] text-zinc-500">content: {{ $revision->content_hash }}</div>
                                 @if ($revision->manifest_hash)
                                     <div class="font-mono text-[11px] text-zinc-500">manifest v{{ $revision->manifest_version ?? 0 }}: {{ $revision->manifest_hash }}</div>
@@ -308,7 +308,7 @@
                                 <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-800">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <div class="font-medium">{{ __('studio.event_'.$event->event_type) }}</div>
-                                        <div class="text-xs text-zinc-500">{{ $event->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}</div>
+                                        <div class="text-xs text-zinc-500"><x-app.local-datetime :value="$event->created_at" /></div>
                                     </div>
                                     <div class="mt-1 text-zinc-600 dark:text-zinc-400" dir="auto">{{ $event->reason }}</div>
                                     <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500"><x-app.actor-identity :actor="$event->actor" size="xs" /><span>· {{ $event->from_status }} → {{ $event->to_status }}</span></div>

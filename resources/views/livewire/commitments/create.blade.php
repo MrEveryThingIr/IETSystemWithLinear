@@ -42,8 +42,8 @@
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
-                <flux:input wire:model="dueStart" type="datetime-local" :label="__('commitments.create.due_start')" />
-                <flux:input wire:model="dueEnd" type="datetime-local" :label="__('commitments.create.due_end')" />
+                <x-app.calendar-datetime-input model="dueStart" :label="__('commitments.create.due_start')" />
+                <x-app.calendar-datetime-input model="dueEnd" :label="__('commitments.create.due_end')" />
             </div>
         </flux:card>
 

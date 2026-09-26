@@ -68,6 +68,7 @@ return [
         'created' => 'Access invitation created.',
         'revoked' => 'Access invitation revoked.',
         'revoke' => 'Revoke',
+        'expires_label' => 'Expires',
         'expires_at' => 'Expires :time',
         'registered_count' => ':count account(s) registered through this invitation.',
         'none' => 'No access invitations',

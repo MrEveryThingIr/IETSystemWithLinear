@@ -45,7 +45,7 @@
 
         <flux:card class="space-y-4">
             <div class="grid gap-4 md:grid-cols-2">
-                <flux:input wire:model="effectiveAt" type="datetime-local" :label="__('contracts.create.effective_at')" />
+                <x-app.calendar-datetime-input model="effectiveAt" :label="__('contracts.create.effective_at')" :timezone="$timezone" />
                 <flux:input wire:model="timezone" :label="__('contracts.create.timezone')" maxlength="64" />
             </div>
         </flux:card>

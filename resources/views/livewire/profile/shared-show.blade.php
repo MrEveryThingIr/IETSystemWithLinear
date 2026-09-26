@@ -11,7 +11,7 @@
         @endif
         <p class="mt-1 text-xs text-zinc-500">
             @if ($grant->expires_at)
-                {{ __('ui.profile_sharing.expires_at', ['date' => $grant->expires_at->toDayDateTimeString()]) }}
+                {{ __('ui.profile_sharing.expires_label') }} <x-app.local-datetime :value="$grant->expires_at" />
             @else
                 {{ __('ui.profile_sharing.no_expiry') }}
             @endif

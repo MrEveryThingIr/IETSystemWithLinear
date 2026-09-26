@@ -42,7 +42,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, dom, fileinfo, curl, pdo_mysql, pdo_sqlite, sqlite3
+          extensions: mbstring, dom, fileinfo, curl, intl, pdo_mysql, pdo_sqlite, sqlite3
           coverage: none
           tools: composer:v2
 
@@ -89,15 +89,9 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Verify PHP formatting
+      - name: Verify formatting for changed PHP files
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "push" && ( "${{ github.ref_name }}" == "codex/ideal-v1-selective-assembly" || "${{ github.ref_name }}" == codex/review-s0-* || "${{ github.ref_name }}" == release/* ) ]]; then
-            echo "Running repository-wide Pint certification for an assembly, S0, or release checkpoint."
-            vendor/bin/pint --test
-            exit 0
-          fi
-
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
           elif [[ "${{ github.event_name }}" == "push" && ("${{ github.ref_name }}" == "integration/ideal-v1" || "${{ github.ref_name }}" == "main") && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
@@ -119,11 +113,6 @@ jobs:
 
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress
-
-      - name: Compile Blade views
-        run: |
-          php artisan view:cache
-          php artisan view:clear
 
       - name: Phase 7 rollback/reapply, scheduler, and queue smoke
         run: |

@@ -22,7 +22,7 @@
                             <x-app.actor-identity :actor="$chatMessage->author" size="xs" />
                         </flux:text>
                         <flux:text class="text-xs text-zinc-500">
-                            {{ $chatMessage->created_at->timezone($group->timezone ?: 'UTC')->format('Y-m-d H:i') }}
+                            <x-app.local-datetime :value="$chatMessage->created_at" />
                         </flux:text>
                     </div>
                     @if ($chatMessage->replyTo)

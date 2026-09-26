@@ -126,6 +126,60 @@ function localizedDate(value, locale, calendar) {
     }).format(date);
 }
 
+function localizedDateTime(value, locale, calendar, timezone, seconds = false) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value ?? '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        calendar,
+        timeZone: timezone || 'UTC',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: seconds ? '2-digit' : undefined,
+        timeZoneName: 'short',
+    }).format(date);
+}
+
+function localizedInstantTime(value, locale, timezone) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value ?? '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        timeZone: timezone || 'UTC',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(date);
+}
+
+function gregorianEquivalentDate(value, locale) {
+    const date = isoToDate(value);
+
+    if (!date) {
+        return value ?? '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        calendar: 'gregory',
+        timeZone: 'UTC',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    }).format(date);
+}
+
+function gregorianEquivalentDateTime(value, locale, timezone, seconds = false) {
+    return localizedDateTime(value, locale, 'gregory', timezone, seconds);
+}
+
 function localizedTime(value, locale) {
     const match = /^(\d{2}):(\d{2})/.exec(value ?? '');
 
@@ -156,6 +210,7 @@ class IetDatePicker extends HTMLElement {
         this.input = this.querySelector('[data-date-value]');
         this.trigger = this.querySelector('[data-date-trigger]');
         this.display = this.querySelector('[data-date-display]');
+        this.equivalentDisplay = this.querySelector('[data-date-equivalent]');
         this.popoverElement = this.querySelector('[data-date-popover]');
         this.titleElement = this.querySelector('[data-date-title]');
         this.weekdays = this.querySelector('[data-date-weekdays]');
@@ -291,6 +346,14 @@ class IetDatePicker extends HTMLElement {
         this.display.textContent = value
             ? localizedDate(value, this.locale, this.calendar)
             : (this.dataset.emptyLabel || '');
+
+        if (this.equivalentDisplay) {
+            const showEquivalent = Boolean(value) && this.calendar !== 'gregory';
+            this.equivalentDisplay.hidden = !showEquivalent;
+            this.equivalentDisplay.textContent = showEquivalent
+                ? `${this.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDate(value, this.locale)}`
+                : '';
+        }
     }
 
     renderWeekdays() {
@@ -369,7 +432,193 @@ if (!customElements.get('iet-date-picker')) {
     customElements.define('iet-date-picker', IetDatePicker);
 }
 
+class IetDateTimePicker extends HTMLElement {
+    connectedCallback() {
+        if (this.initialized) {
+            return;
+        }
+
+        this.initialized = true;
+        this.valueInput = this.querySelector('[data-datetime-value]');
+        this.dateInput = this.querySelector('[data-datetime-date]');
+        this.timeInput = this.querySelector('[data-datetime-time]');
+
+        if (!this.valueInput || !this.dateInput || !this.timeInput) {
+            return;
+        }
+
+        this.onPartChange = () => this.syncToValue();
+        this.dateInput.addEventListener('input', this.onPartChange);
+        this.dateInput.addEventListener('change', this.onPartChange);
+        this.timeInput.addEventListener('input', this.onPartChange);
+        this.timeInput.addEventListener('change', this.onPartChange);
+        this.valueInput.addEventListener('change', () => this.syncFromValue());
+
+        this.syncFromValue();
+    }
+
+    disconnectedCallback() {
+        if (!this.onPartChange) {
+            return;
+        }
+
+        this.dateInput?.removeEventListener('input', this.onPartChange);
+        this.dateInput?.removeEventListener('change', this.onPartChange);
+        this.timeInput?.removeEventListener('input', this.onPartChange);
+        this.timeInput?.removeEventListener('change', this.onPartChange);
+    }
+
+    syncFromValue() {
+        const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(this.valueInput?.value ?? '');
+
+        if (!match) {
+            return;
+        }
+
+        this.dateInput.value = match[1];
+        this.timeInput.value = match[2];
+        this.dateInput.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+
+    syncToValue() {
+        const date = this.dateInput?.value ?? '';
+        const time = this.timeInput?.value ?? '';
+
+        this.valueInput.value = date && time ? `${date}T${time}` : '';
+        this.valueInput.dispatchEvent(new Event('input', {bubbles: true}));
+        this.valueInput.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+}
+
+if (!customElements.get('iet-datetime-picker')) {
+    customElements.define('iet-datetime-picker', IetDateTimePicker);
+}
+
+class IetAmbientStatus extends HTMLElement {
+    connectedCallback() {
+        if (this.initialized) {
+            return;
+        }
+
+        this.initialized = true;
+        this.messageIndex = 0;
+        this.clock = this.querySelector('[data-ambient-clock]');
+        this.equivalent = this.querySelector('[data-ambient-equivalent]');
+        this.message = this.querySelector('[data-ambient-message]');
+        this.messages = [...this.querySelectorAll('[data-ambient-source]')]
+            .map((element) => element.textContent?.trim())
+            .filter(Boolean);
+        this.renderClock();
+        this.renderMessage();
+        this.clockTimer = window.setInterval(() => this.renderClock(), 1000);
+        this.messageTimer = window.setInterval(() => {
+            this.messageIndex = (this.messageIndex + 1) % Math.max(this.messages.length, 1);
+            this.renderMessage();
+        }, 12000);
+    }
+
+    disconnectedCallback() {
+        window.clearInterval(this.clockTimer);
+        window.clearInterval(this.messageTimer);
+    }
+
+    renderClock() {
+        if (!this.clock) {
+            return;
+        }
+
+        const locale = this.dataset.locale || 'en';
+        const calendar = calendarOrFallback(this.dataset.calendar || 'gregory');
+        const timezone = this.dataset.timezone || 'UTC';
+        const now = new Date();
+
+        this.clock.textContent = new Intl.DateTimeFormat(locale, {
+            calendar,
+            timeZone: timezone,
+            dateStyle: 'medium',
+            timeStyle: 'medium',
+        }).format(now);
+
+        if (this.equivalent) {
+            const showEquivalent = calendar !== 'gregory';
+            this.equivalent.hidden = !showEquivalent;
+            this.equivalent.textContent = showEquivalent
+                ? `${this.dataset.equivalentLabel || 'Gregorian'} · ${new Intl.DateTimeFormat(locale, {
+                    calendar: 'gregory',
+                    timeZone: timezone,
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                }).format(now)}`
+                : '';
+        }
+    }
+
+    renderMessage() {
+        if (this.message) {
+            this.message.textContent = this.messages[this.messageIndex] || '';
+        }
+    }
+}
+
+if (!customElements.get('iet-ambient-status')) {
+    customElements.define('iet-ambient-status', IetAmbientStatus);
+}
+
+function renderProfileTemporal(root = document) {
+    root.querySelectorAll?.('[data-profile-date]').forEach((element) => {
+        const value = element.dataset.profileDate;
+        const locale = element.dataset.locale || document.documentElement.lang || 'en';
+        const calendar = calendarOrFallback(element.dataset.calendar || 'gregory');
+        const primary = element.querySelector('[data-temporal-primary]');
+        const equivalent = element.querySelector('[data-temporal-equivalent]');
+
+        if (primary) {
+            primary.textContent = localizedDate(value, locale, calendar);
+        }
+
+        if (equivalent) {
+            const show = element.dataset.showEquivalent === 'true' && calendar !== 'gregory';
+            equivalent.hidden = !show;
+            equivalent.textContent = show
+                ? `${element.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDate(value, locale)}`
+                : '';
+        }
+    });
+
+    root.querySelectorAll?.('[data-profile-datetime]').forEach((element) => {
+        const value = element.dataset.profileDatetime;
+        const locale = element.dataset.locale || document.documentElement.lang || 'en';
+        const calendar = calendarOrFallback(element.dataset.calendar || 'gregory');
+        const timezone = element.dataset.timezone || 'UTC';
+        const seconds = element.dataset.seconds === 'true';
+        const primary = element.querySelector('[data-temporal-primary]');
+        const equivalent = element.querySelector('[data-temporal-equivalent]');
+
+        if (primary) {
+            primary.textContent = localizedDateTime(value, locale, calendar, timezone, seconds);
+        }
+
+        if (equivalent) {
+            const show = element.dataset.showEquivalent === 'true' && calendar !== 'gregory';
+            equivalent.hidden = !show;
+            equivalent.textContent = show
+                ? `${element.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDateTime(value, locale, timezone, seconds)}`
+                : '';
+        }
+    });
+
+    root.querySelectorAll?.('[data-profile-time]').forEach((element) => {
+        element.textContent = localizedInstantTime(
+            element.dataset.profileTime,
+            element.dataset.locale || document.documentElement.lang || 'en',
+            element.dataset.timezone || 'UTC',
+        );
+    });
+}
+
 function localizeTemporal(root = document) {
+    renderProfileTemporal(root);
+
     root.querySelectorAll?.('[data-localized-date]').forEach((element) => {
         const value = element.dataset.localizedDate;
 
@@ -402,12 +651,26 @@ function localizeTemporal(root = document) {
         const calendar = calendarOrFallback(element.dataset.calendar || 'gregory');
         const timezone = element.dataset.timezone || 'UTC';
 
+        const now = new Date();
         target.textContent = new Intl.DateTimeFormat(locale, {
             calendar,
             timeZone: timezone,
             dateStyle: 'full',
             timeStyle: 'short',
-        }).format(new Date());
+        }).format(now);
+
+        const equivalent = element.querySelector('[data-temporal-preview-equivalent]');
+        if (equivalent) {
+            equivalent.hidden = calendar === 'gregory';
+            equivalent.textContent = calendar === 'gregory'
+                ? ''
+                : `${element.dataset.equivalentLabel || 'Gregorian'} · ${new Intl.DateTimeFormat(locale, {
+                    calendar: 'gregory',
+                    timeZone: timezone,
+                    dateStyle: 'full',
+                    timeStyle: 'short',
+                }).format(now)}`;
+        }
     });
 
     root.querySelectorAll?.('iet-date-picker').forEach((picker) => picker.refreshFromInput?.());
@@ -417,4 +680,5 @@ document.addEventListener('DOMContentLoaded', () => localizeTemporal());
 document.addEventListener('livewire:navigated', () => localizeTemporal());
 document.addEventListener('livewire:init', () => {
     window.Livewire?.hook('morph.updated', ({el}) => requestAnimationFrame(() => localizeTemporal(el)));
+    window.Livewire?.on('temporal-preferences-updated', () => window.location.reload());
 });

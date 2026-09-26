@@ -42,6 +42,7 @@ class HomeTodayProjection
      * @return array{
      *   timezone: string,
      *   today: string,
+     *   todayDisplay: string,
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
@@ -61,9 +62,10 @@ class HomeTodayProjection
         $timezone = TemporalPreferences::timezoneFor($current);
         $now = CarbonImmutable::now($timezone);
         $today = $now->toDateString();
+        $todayDisplay = TemporalCalendar::dateLabelWithEquivalent($now, $current, $timezone);
 
         if (! $current->actor instanceof Actor) {
-            return $this->emptyProjection($timezone, $today);
+            return $this->emptyProjection($timezone, $today, $todayDisplay);
         }
 
         $actor = $current->actor;
@@ -113,6 +115,7 @@ class HomeTodayProjection
         return [
             'timezone' => $timezone,
             'today' => $today,
+            'todayDisplay' => $todayDisplay,
             'todayOccurrences' => $todayOccurrences,
             'waitingOnMe' => $this->waitingOnMe($current, $actor),
             'waitingOnOthers' => $this->waitingOnOthers($current, $actor),
@@ -129,6 +132,7 @@ class HomeTodayProjection
      * @return array{
      *   timezone: string,
      *   today: string,
+     *   todayDisplay: string,
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
@@ -140,11 +144,12 @@ class HomeTodayProjection
      *   recentActivity: Collection<int, TimelineEntry>
      * }
      */
-    private function emptyProjection(string $timezone, string $today): array
+    private function emptyProjection(string $timezone, string $today, string $todayDisplay): array
     {
         return [
             'timezone' => $timezone,
             'today' => $today,
+            'todayDisplay' => $todayDisplay,
             'todayOccurrences' => collect(),
             'waitingOnMe' => collect(),
             'waitingOnOthers' => collect(),

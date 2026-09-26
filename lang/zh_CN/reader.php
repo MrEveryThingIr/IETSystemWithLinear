@@ -3,6 +3,7 @@
 return [
     'back_to_library' => '返回内容',
     'edit_in_studio' => '在工作室中编辑',
+    'published_label' => '发布时间',
     'published' => '发布于 :date',
     'by_author' => '作者：:author',
     'outline' => '大纲',
