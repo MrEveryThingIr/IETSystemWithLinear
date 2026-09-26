@@ -9,7 +9,7 @@ Base: `4e553fe30391e336b4d202d74aae9742f5fd7528` on `integration/ideal-v1-tempor
 - Query results are filtered through Plan view policy before the 500-occurrence/150-plan display cap; a Context filter also applies before retrieval. There is no policy bypass via URL-selected dates or Contexts. This is a correctness improvement, not a claim that unbounded year reads scale well.
 - The creation form accepts only valid Gregorian local date, 24-hour minute, and bounded integer duration query seeds. A seed prepopulates the existing form only: it does not create a Plan, change frequency, infer a Contract, or bypass Context authorization. Existing blueprint frequency/duration defaults remain intact unless a valid explicit slot duration is passed.
 - Existing candidate occurrence start-window/readiness and same-Context evidence selection/upload behavior remain untouched. Existing localization/menu files remain untouched; new calendar wording is isolated in four language catalogs.
-- Added focused feature coverage for Persian calendar boundaries, navigation and immutable scheduled truth, valid/invalid seeds, and authorization/invalid drill-down inputs.
+- Added focused feature coverage for Persian calendar boundaries, navigation and immutable scheduled truth, valid/invalid seeds, authorization/invalid drill-down inputs, and authorized results after 501 private rows.
 
 ## Deferred and limitations
 
@@ -24,7 +24,7 @@ Base: `4e553fe30391e336b4d202d74aae9742f5fd7528` on `integration/ideal-v1-tempor
 composer install --no-interaction
 npm ci
 vendor/bin/pint --dirty --format agent
-php artisan test --compact tests/Feature/PlannerCalendarReconciliationTest.php tests/Feature/PlannerExecutionWindowTest.php tests/Feature/PlannerEvidenceUploadTest.php tests/Feature/PlannerExperienceTest.php tests/Feature/TemporalLocalizationTest.php
+php artisan test --compact tests/Feature/PlannerCalendarReconciliationTest.php tests/Feature/PlannerCalendarVisibilityTest.php tests/Feature/PlannerExecutionWindowTest.php tests/Feature/PlannerEvidenceUploadTest.php tests/Feature/PlannerExperienceTest.php tests/Feature/TemporalLocalizationTest.php
 vendor/bin/phpstan analyse --no-progress
 php artisan view:cache
 npm run build
