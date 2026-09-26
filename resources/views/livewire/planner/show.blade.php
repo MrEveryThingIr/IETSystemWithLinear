@@ -89,7 +89,7 @@
                             <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                        @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
                                             <flux:badge>{{ __('planner.occurrence_phase.'.$occurrencePhase) }}</flux:badge>
                                         @else
                                             <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
@@ -103,7 +103,7 @@
                                         {{ $occurrence->scheduled_end_at->setTimezone($plan->timezone)->format('H:i') }}
                                     </div>
 
-                                    @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                    @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
                                         <div class="mt-1 text-xs text-zinc-500">
                                             <span class="font-medium">{{ __('planner.plan.execution_window') }}:</span>
                                             {{ $occurrence->window_start_at->setTimezone($plan->timezone)->format('Y-m-d H:i') }}
@@ -124,7 +124,7 @@
 
                                 @if ($canParticipate && $plan->status === \App\PlanStatus::Active)
                                     <div class="flex flex-wrap gap-2">
-                                        @if ($occurrence->status === AppPlanOccurrenceStatus::Scheduled)
+                                        @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
                                             @if ($canStartOccurrence)
                                                 <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
                                             @elseif ($occurrencePhase === 'future')
@@ -136,7 +136,7 @@
                                             @endif
                                             <flux:button wire:click="skipOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.skip') }}</flux:button>
                                             <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
-                                        @elseif ($occurrence->status === AppPlanOccurrenceStatus::InProgress)
+                                        @elseif ($occurrence->status === \App\PlanOccurrenceStatus::InProgress)
                                             <flux:button wire:click="completeOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.finish') }}</flux:button>
                                             <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
                                         @endif
@@ -178,7 +178,7 @@
                             <flux:heading size="sm">{{ __('planner.plan.upload_evidence') }}</flux:heading>
                             <flux:input wire:model="evidenceUploads" type="file" multiple :label="__('media.choose_file')" />
                             <flux:select wire:model="evidenceRightsStatus" :label="__('media.rights_status')">
-                                @foreach (AppModelsAsset::RIGHTS_STATUSES as $rightsStatus)
+                                @foreach (\App\Models\Asset::RIGHTS_STATUSES as $rightsStatus)
                                     <option value="{{ $rightsStatus }}">{{ __('media.rights.'.$rightsStatus) }}</option>
                                 @endforeach
                             </flux:select>
