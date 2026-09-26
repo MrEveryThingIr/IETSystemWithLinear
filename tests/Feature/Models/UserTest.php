@@ -20,7 +20,7 @@ class UserTest extends TestCase
     public function test_users_contains_only_account_columns(): void
     {
         $this->assertEqualsCanonicalizing([
-            'id', 'username', 'email', 'email_verified_at', 'locale', 'timezone', 'timezone_mode', 'calendar', 'password',
+            'id', 'username', 'email', 'email_verified_at', 'locale', 'timezone', 'timezone_mode', 'calendar', 'default_monetary_unit_code', 'password',
             'status', 'remember_token', 'created_at', 'updated_at',
         ], Schema::getColumnListing('users'));
     }
@@ -31,6 +31,7 @@ class UserTest extends TestCase
 
         $this->assertSame('active', $user->status);
         $this->assertNull($user->email_verified_at);
+        $this->assertSame('EUR', $user->default_monetary_unit_code);
         $this->assertInstanceOf(Carbon::class, $user->created_at);
         $this->assertInstanceOf(Carbon::class, $user->updated_at);
     }
@@ -121,7 +122,7 @@ class UserTest extends TestCase
         $this->assertNotEmpty($user->refresh()->getRememberToken());
         $this->assertInstanceOf(Carbon::class, $user->email_verified_at);
         $this->assertEqualsCanonicalizing([
-            'id', 'username', 'email', 'email_verified_at', 'locale', 'timezone', 'timezone_mode', 'calendar', 'status', 'created_at', 'updated_at',
+            'id', 'username', 'email', 'email_verified_at', 'locale', 'timezone', 'timezone_mode', 'calendar', 'default_monetary_unit_code', 'status', 'created_at', 'updated_at',
         ], array_keys($user->toArray()));
         Auth::logout();
         $this->assertFalse(Auth::attempt(['email' => $user->email, 'password' => 'wrong-password']));
