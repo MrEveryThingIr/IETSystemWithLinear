@@ -2,7 +2,18 @@
 
 ## Status
 
-**Implementation recovery in progress. Exact branch head pending final CI/browser acceptance.**
+**Remote implementation gate complete. Owner browser acceptance pending.**
+
+Exact remotely-green review head:
+
+~~~text
+branch: codex/review-f1-shared-temporal-fabric
+SHA: 0fe4eda4ce945aaed36f3a8a6e20e3aa87850a95
+CI: 36244467404
+result: success
+~~~
+
+PR: #36 — F1: recover shared temporal fabric.
 
 ## Objective
 
@@ -276,3 +287,26 @@ F1A/F1B can be accepted when profile-aware temporal behavior and ambient shell b
 F1C is fully closed only when the recovered Calendar has a documented/implemented shared projection boundary so later nodes can plug in without Planner ownership or duplicated truth.
 
 F1D Capability Launcher remains a separate composition-contract step and must not be faked through hidden cross-domain writes.
+
+
+## Remote validation result
+
+The selective transplant exposed and corrected two compatibility classes before acceptance:
+
+1. copying whole older `ui.php` locale files temporarily erased newer assembly access/group translation keys;
+2. one recovered Commitment view still contained literal `Daily`.
+
+Corrections preserved the newer assembly locale files, merged only required temporal/group labels, and localized the literal schedule label.
+
+Final exact-head CI `36244467404` passed:
+
+- MySQL migration portability;
+- npm audit/build;
+- changed-PHP Pint verification;
+- PHPStan;
+- scheduler/queue/rollback smoke;
+- SQLite backup/restore smoke;
+- complete PHPUnit suite;
+- Composer security audit.
+
+The branch remains unmerged until owner browser acceptance because F1 changes visible cross-system date/time/calendar behavior.
