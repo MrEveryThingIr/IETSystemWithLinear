@@ -14,22 +14,26 @@ This handbook is a map, not permission to override the canonical architecture. W
 6. `docs/PRODUCTION_ROADMAP.md`;
 7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`;
 8. `docs/EXAMPLE_STORY_WORLD.md`;
-9. the active milestone contract and report;
-10. relevant ADRs, especially `docs/ADR-001-identity-authority-and-simulation-boundaries.md`.
+9. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`, which supersedes the older deferred-browser process for the active assembly;
+10. the active milestone contract and report;
+11. relevant ADRs, especially `docs/ADR-001-identity-authority-and-simulation-boundaries.md`.
 
 If this handbook conflicts with those sources, the canonical sources and accepted ADRs win. A chat, issue, branch name, old migration, or generated proposal is not architecture authority.
 
 ## Snapshot represented by this handbook
 
-This handbook was prepared on 2026-09-26 from the clean selective-assembly branch:
+This handbook was prepared on 2026-09-26 on the selective-assembly branch. The accepted runtime foundation was originally created from:
 
 ~~~text
 branch: codex/ideal-v1-selective-assembly
-HEAD:   891b333c49f166e61b9fa466e30742b3d70996c0
-base:   origin/integration/ideal-v1 at the same SHA
+runtime foundation: 891b333c49f166e61b9fa466e30742b3d70996c0
+M00 governance merge: 24cddb2b5eaa199e90df88ccf779760c9cd24590
+handbook addition: cf6023330fdade51b1847b6743be04ea39c70724
 ~~~
 
-This is the accepted integration baseline after Phase 1–22 and publish-UI localization/rendering hardening. It has no application diff from `integration/ideal-v1`.
+The runtime foundation is the accepted integration baseline after Phase 1–22 and publish-UI localization/rendering hardening. Subsequent S0/M00 work strengthens CI and records browser-gated assembly governance. M00 adds no product capability. Its remote gate is complete, but owner browser acceptance is pending; M01 implementation must not begin before that explicit acceptance.
+
+M00 evidence is recorded in `Development-CodexReports/M00-certified-foundation-browser-baseline-report.md`. The certified process checkpoint reports 552 tests / 3511 assertions, repository-wide Pint across 923 files, PHPStan, Blade compilation, MySQL/SQLite/operations, Vite, npm audit and Composer audit green. These are remote gates, not browser proof.
 
 Relevant preserved development lines are sources for selective review, not automatically accepted code:
 
@@ -40,6 +44,7 @@ Relevant preserved development lines are sources for selective review, not autom
 | `integration/ideal-v1-planner-temporal-candidate` | `4e553fe30391e336b4d202d74aae9742f5fd7528` | Planner execution-window and evidence candidate. |
 | `integration/ideal-v1-temporal-calendar-reconcile` | `536392af117a60a28bd068d70a91d792a0f1999e` | Planner/calendar reconciliation plus a documentation-only configurable-form proposal. |
 | `codex/release-first-publication-hardening` | `5830cb44e09c0238f1f1591f0134419ba67834c3` | Divergent source of user provisioning, temporal UI, ambient header, calendar and related work. Do not merge wholesale. |
+| `codex/ideal-v1-selective-assembly` | M00 governance merged at `24cddb2b5eaa199e90df88ccf779760c9cd24590`; later documentation commits build on it | Active module-by-module assembly. Fetch and inspect its current remote SHA before starting work. |
 
 There is no accepted stable `v1.0.0` tag at this snapshot. Historical release-candidate refs must not be rewritten. New defects require new commits, complete validation, and a newly numbered candidate.
 
@@ -685,7 +690,10 @@ Current selective integration topology:
 ~~~text
 integration/ideal-v1 @ 891b333
         ↓
-codex/ideal-v1-selective-assembly @ 891b333
+codex/ideal-v1-selective-assembly
+        ├── runtime foundation @ 891b333
+        ├── S0/M00 certification and governance checkpoints
+        └── fetch current remote HEAD before work
         ↓
 codex/review-<one-module>
         ↓ focused implementation + validation
@@ -698,7 +706,7 @@ new release candidate
 
 Use this deterministic order:
 
-1. Baseline CI and browser smoke on `891b333`.
+1. Complete and explicitly accept the current M00 certified-foundation browser smoke. Remote CI is green; browser acceptance remains pending.
 2. Security, authorization, privacy, immutable-history and data-loss defects.
 3. Verified-user provisioning, standard real personal accounts, default Monetary Unit and safe seeding.
 4. Minimal shared temporal kernel: locale, calendar, timezone, date-only versus instant.
@@ -712,6 +720,10 @@ Use this deterministic order:
 12. Stable tag only after every release-blocking observation has a tested correction.
 
 Configurable form extensions, Generic Workflow, Reputation, Recommendations and AI Copilot are post-v1 unless a concrete current journey cannot be released safely without them.
+
+The active execution order is M00 through M15 in `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`. Existing functionality already present in the foundation is re-reviewed and selectively improved; module numbering does not mean the capability is absent. Every module uses a dedicated review branch, living report, remote gate, owner browser acceptance before merge, post-merge CI and recorded checkpoint. M00 is the one historical exception because its browser gate was adopted after remote integration.
+
+At this snapshot, GitHub protection covers `main` but not necessarily the selective-assembly branch. Until repository rules are extended, PR-only and no-force-push discipline on the assembly branch is procedural and must be followed deliberately.
 
 ## Operations required for publication
 
