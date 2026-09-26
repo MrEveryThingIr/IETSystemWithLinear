@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted process revision prepared for review.
+**Accepted and merged.**
 
 ## Owner direction
 
@@ -52,3 +52,16 @@ M1 will remain on its review branch through local/browser acceptance. It is not 
 ## Durable authority
 
 See `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`.
+
+
+## Closure evidence
+
+- Governance review branch: `codex/selective-assembly-browser-gates`.
+- Pull request: **#32 — Assembly: require browser acceptance per module**.
+- Reviewed head: `774212e0733142d65e1369ae9cc780744cc6e95c`.
+- PR-context CI: `36238090488` — success.
+- Assembly merge SHA: `30dc939754c3fec7009250a61437db2633aabea7`.
+- Post-merge assembly CI: `36238246665` — success.
+- Runtime behavior changed by this process revision: **none**.
+- Current required gate: M0/S0 owner browser baseline acceptance.
+- M1 implementation status: **blocked until M0 browser acceptance is explicitly recorded**.
