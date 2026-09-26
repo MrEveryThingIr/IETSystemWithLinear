@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Support;
+
+use App\CalendarSystem;
+use App\Models\User;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
+use IntlDateFormatter;
+use Throwable;
+
+class TemporalCalendar
+{
+    public static function monthStart(CarbonImmutable $date, ?User $user, string $timezone): CarbonImmutable
+    {
+        $local = $date->setTimezone($timezone)->startOfDay();
+        $day = (int) self::format($local, $user, $timezone, 'd', 'en');
+
+        return $day >= 1 && $day <= 31 ? $local->subDays($day - 1) : $local->startOfMonth();
+    }
+
+    public static function nextMonthStart(CarbonImmutable $monthStart, ?User $user, string $timezone): CarbonImmutable
+    {
+        $first = self::monthStart($monthStart, $user, $timezone);
+        $key = self::monthKey($first, $user, $timezone);
+
+        for ($offset = 25; $offset <= 40; $offset++) {
+            $candidate = $first->addDays($offset);
+            if ((int) self::format($candidate, $user, $timezone, 'd', 'en') === 1
+                && self::monthKey($candidate, $user, $timezone) !== $key) {
+                return $candidate->startOfDay();
+            }
+        }
+
+        return $first->addMonth()->startOfMonth();
+    }
+
+    public static function previousMonthStart(CarbonImmutable $monthStart, ?User $user, string $timezone): CarbonImmutable
+    {
+        return self::monthStart(self::monthStart($monthStart, $user, $timezone)->subDay(), $user, $timezone);
+    }
+
+    public static function yearStart(CarbonImmutable $date, ?User $user, string $timezone): CarbonImmutable
+    {
+        $month = self::monthStart($date, $user, $timezone);
+
+        for ($guard = 0; $guard < 12; $guard++) {
+            if ((int) self::format($month, $user, $timezone, 'M', 'en') === 1) {
+                return $month;
+            }
+
+            $month = self::previousMonthStart($month, $user, $timezone);
+        }
+
+        return $date->setTimezone($timezone)->startOfYear();
+    }
+
+    public static function nextYearStart(CarbonImmutable $yearStart, ?User $user, string $timezone): CarbonImmutable
+    {
+        $month = self::yearStart($yearStart, $user, $timezone);
+
+        for ($index = 0; $index < 12; $index++) {
+            $month = self::nextMonthStart($month, $user, $timezone);
+        }
+
+        return $month;
+    }
+
+    public static function previousYearStart(CarbonImmutable $yearStart, ?User $user, string $timezone): CarbonImmutable
+    {
+        return self::yearStart(self::yearStart($yearStart, $user, $timezone)->subDay(), $user, $timezone);
+    }
+
+    public static function monthKey(DateTimeInterface $date, ?User $user, string $timezone): string
+    {
+        return self::format($date, $user, $timezone, 'y-MM', 'en');
+    }
+
+    public static function yearLabel(DateTimeInterface $date, ?User $user, string $timezone): string
+    {
+        return self::format($date, $user, $timezone, 'y');
+    }
+
+    public static function monthLabel(DateTimeInterface $date, ?User $user, string $timezone): string
+    {
+        return self::format($date, $user, $timezone, 'MMMM');
+    }
+
+    public static function dayLabel(DateTimeInterface $date, ?User $user, string $timezone): string
+    {
+        return self::format($date, $user, $timezone, 'd');
+    }
+
+    public static function format(
+        DateTimeInterface $date,
+        ?User $user,
+        string $timezone,
+        string $pattern,
+        ?string $locale = null,
+        ?CalendarSystem $calendar = null,
+    ): string {
+        $calendar ??= TemporalPreferences::calendarFor($user);
+        $locale ??= Localization::intlLocale($user?->locale);
+        $icuLocale = str_replace('-', '_', $locale).'@calendar='.$calendar->value;
+
+        try {
+            $formatter = new IntlDateFormatter(
+                $icuLocale,
+                IntlDateFormatter::NONE,
+                IntlDateFormatter::NONE,
+                $timezone,
+                IntlDateFormatter::TRADITIONAL,
+                $pattern,
+            );
+
+            $formatted = $formatter->format($date);
+            if (is_string($formatted) && $formatted !== '') {
+                return $formatted;
+            }
+        } catch (Throwable) {
+            // Fall through to canonical Gregorian output.
+        }
+
+        return CarbonImmutable::instance($date)->setTimezone($timezone)->format(match ($pattern) {
+            'y' => 'Y',
+            'M' => 'n',
+            'MM' => 'm',
+            'MMMM' => 'F',
+            'd' => 'j',
+            default => 'Y-m-d',
+        });
+    }
+}
