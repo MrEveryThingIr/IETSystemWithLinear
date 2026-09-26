@@ -139,6 +139,86 @@ class PlannerKernelTest extends TestCase
         }
     }
 
+
+    public function test_future_occurrence_cannot_start_before_its_execution_window_and_completion_requires_start(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-25 18:00:00 UTC');
+
+        try {
+            $bob = Actor::factory()->create();
+            $context = app(EnsurePersonalContext::class)->execute($bob->user);
+            $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Night study', timezone: 'UTC');
+            $rule = app(CreatePlanScheduleRule::class)->execute(
+                $plan,
+                $bob->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-25',
+                '22:00',
+                60,
+                windowBeforeMinutes: 15,
+                windowAfterMinutes: 15,
+            );
+            $occurrence = $rule->occurrences()->sole();
+
+            $this->assertSame('future', $occurrence->temporalPhase());
+            $this->assertFalse($occurrence->canStartAt());
+
+            try {
+                app(TransitionPlanOccurrence::class)->start($occurrence, $bob->user);
+                $this->fail('Future Occurrence started before its execution window.');
+            } catch (HttpException $exception) {
+                $this->assertSame(422, $exception->getStatusCode());
+            }
+
+            CarbonImmutable::setTestNow('2026-09-25 21:45:00 UTC');
+            $occurrence = $occurrence->fresh();
+            $this->assertSame('ready', $occurrence->temporalPhase());
+            $this->assertTrue($occurrence->canStartAt());
+
+            try {
+                app(TransitionPlanOccurrence::class)->complete($occurrence, $bob->user);
+                $this->fail('Scheduled Occurrence completed without an actual start.');
+            } catch (HttpException $exception) {
+                $this->assertSame(422, $exception->getStatusCode());
+            }
+
+            $occurrence = app(TransitionPlanOccurrence::class)->start($occurrence, $bob->user);
+            $this->assertSame(PlanOccurrenceStatus::InProgress, $occurrence->status);
+
+            CarbonImmutable::setTestNow('2026-09-25 23:20:00 UTC');
+            $occurrence = app(TransitionPlanOccurrence::class)->complete($occurrence, $bob->user);
+            $this->assertSame(PlanOccurrenceStatus::Completed, $occurrence->status);
+            $this->assertSame('2026-09-25 21:45:00', $occurrence->actual_start_at?->utc()->format('Y-m-d H:i:s'));
+            $this->assertSame('2026-09-25 23:20:00', $occurrence->actual_end_at?->utc()->format('Y-m-d H:i:s'));
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_scheduled_occurrence_projects_future_ready_due_late_and_missed_phases(): void
+    {
+        $bob = Actor::factory()->create();
+        $context = app(EnsurePersonalContext::class)->execute($bob->user);
+        $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Night study', timezone: 'UTC');
+        $rule = app(CreatePlanScheduleRule::class)->execute(
+            $plan,
+            $bob->user,
+            PlanScheduleFrequency::Once,
+            '2026-09-25',
+            '22:00',
+            60,
+            windowBeforeMinutes: 15,
+            windowAfterMinutes: 15,
+        );
+        $occurrence = $rule->occurrences()->sole();
+
+        $this->assertSame('future', $occurrence->temporalPhase(CarbonImmutable::parse('2026-09-25 21:44:59 UTC')));
+        $this->assertSame('ready', $occurrence->temporalPhase(CarbonImmutable::parse('2026-09-25 21:45:00 UTC')));
+        $this->assertSame('due', $occurrence->temporalPhase(CarbonImmutable::parse('2026-09-25 22:30:00 UTC')));
+        $this->assertSame('late', $occurrence->temporalPhase(CarbonImmutable::parse('2026-09-25 23:10:00 UTC')));
+        $this->assertSame('missed', $occurrence->temporalPhase(CarbonImmutable::parse('2026-09-25 23:15:01 UTC')));
+    }
+
     public function test_relationship_plan_requires_active_relationship_and_does_not_create_contract_authority(): void
     {
         $alice = Actor::factory()->create();
