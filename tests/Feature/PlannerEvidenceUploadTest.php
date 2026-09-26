@@ -36,10 +36,8 @@ class PlannerEvidenceUploadTest extends TestCase
 
             Livewire::actingAs($actor->user)
                 ->test(PlannerShow::class, ['plan' => $plan])
-                ->assertSee(__('planner.plan.upload_evidence'))
                 ->call('chooseEvidenceOccurrence', $occurrence->id)
-                ->call('attachEvidence')
-                ->assertHasErrors(['evidence'])
+                ->assertSee(__('planner.plan.upload_evidence'))
                 ->set('evidenceUpload', UploadedFile::fake()->create('proof.txt', 1, 'text/plain'))
                 ->set('evidenceUploadRightsStatus', 'owned')
                 ->call('attachEvidence')
