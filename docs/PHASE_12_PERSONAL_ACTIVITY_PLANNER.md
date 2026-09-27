@@ -194,3 +194,67 @@ Focused tests prove:
 Phase 12 exits because one Planner now supports personal and Relationship-sourced activity, timezone-safe recurrence, actual execution, evidence, reminders seam, Today/List/Calendar views and Timeline composition without becoming Contract authority.
 
 Next: **Phase 13 — Personal Accounting v1**.
+
+
+## 2026-09-27 post-phase lifecycle/readiness hardening
+
+A later browser review exposed two important Planner semantics that the original Phase 12 acceptance did not fully enforce.
+
+### Execution eligibility
+
+The materialized occurrence execution window is now authoritative:
+
+~~~text
+window_start_at = scheduled_start_at - window_before_minutes
+window_end_at   = scheduled_end_at   + window_after_minutes
+~~~
+
+For a scheduled occurrence:
+
+- before `window_start_at`: upcoming, not startable;
+- from `window_start_at` through `window_end_at`: eligible to start;
+- after `window_end_at`: start window passed, not normally startable;
+- direct `scheduled -> completed` is invalid;
+- completion requires a real `in_progress` occurrence;
+- actual completion may legitimately be earlier or later than the scheduled end once execution has started.
+
+The Action layer enforces these rules. UI button visibility is only a projection of the same domain eligibility.
+
+Plan-level completion is presented as **End plan**, not as completion of one occurrence. Ending a Plan cancels future scheduled occurrences and is rejected while any occurrence remains in progress.
+
+### Readiness checklist
+
+A Plan may declare immutable prerequisite expectations.
+
+Required prerequisites are checked independently for every materialized occurrence. An occurrence cannot start until all of its required prerequisites are complete.
+
+This deliberately distinguishes:
+
+- Plan-level expectation: what should be ready every time;
+- occurrence-level observation: whether it was actually ready for this execution.
+
+### Expected versus actual expenses
+
+A Plan may capture expected per-occurrence expenses by label, amount and MonetaryUnit.
+
+Once an occurrence has started, actual expense observations may be recorded against an estimate or as an unplanned expense. The Plan page compares expected, actual and difference per occurrence.
+
+These Planner expense records do **not** create or modify authoritative Accounting journal entries. They are planning/execution observations only; an explicit Accounting bridge can be added later where appropriate.
+
+### Calendar density rule
+
+Calendar buckets must remain bounded regardless of item count.
+
+The recovered fractal Calendar now follows progressive disclosure:
+
+~~~text
+year   -> month counts
+month  -> fixed-height day cells with counts/status summary
+day    -> fixed-height hour buckets with counts
+hour   -> fixed-height minute buckets with counts
+slot   -> scrollable detailed clickable item list
+~~~
+
+A calendar cell must never expand in proportion to the number of projected temporal items. This rule is intentionally provider-agnostic so later shared Calendar providers (notes, reminders, contracts, financial dates, annotations, and other temporal concepts) can contribute counts without forcing their full records into the grid.
+
+The source domain remains authoritative; Calendar remains an authorized temporal projection and navigation surface.
