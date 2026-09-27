@@ -99,9 +99,9 @@ class IdealServiceFinancialWorkflowTest extends TestCase
                 ->all();
 
             $this->assertSame([
-                ContractEventType::VersionProposed,
-                ContractEventType::ServiceTermsConfigured,
-                ContractEventType::PartyAccepted,
+                ContractEventType::VersionProposed->value,
+                ContractEventType::ServiceTermsConfigured->value,
+                ContractEventType::PartyAccepted->value,
             ], $versionEvents);
 
             app(AcceptContractVersion::class)->execute($version, $worker->user);
