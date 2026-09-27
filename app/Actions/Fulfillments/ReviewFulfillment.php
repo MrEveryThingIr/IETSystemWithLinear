@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fulfillments;
 
+use App\Actions\Financial\RecognizeServiceFulfillmentFinancialObligation;
 use App\CommitmentEventType;
 use App\FulfillmentReviewDecision;
 use App\FulfillmentStatus;
@@ -17,7 +18,10 @@ use Illuminate\Support\Facades\Gate;
 
 class ReviewFulfillment
 {
-    public function __construct(private readonly CommitmentProgress $progress) {}
+    public function __construct(
+        private readonly CommitmentProgress $progress,
+        private readonly RecognizeServiceFulfillmentFinancialObligation $serviceFinancial,
+    ) {}
 
     public function execute(
         Fulfillment $fulfillment,
@@ -36,7 +40,7 @@ class ReviewFulfillment
             'Rejecting or requesting clarification requires a review note.',
         );
 
-        return DB::transaction(function () use ($fulfillment, $current, $decision, $note): FulfillmentReview {
+        $review = DB::transaction(function () use ($fulfillment, $current, $decision, $note): FulfillmentReview {
             $locked = Fulfillment::query()
                 ->with(['commitment', 'review'])
                 ->lockForUpdate()
@@ -94,6 +98,16 @@ class ReviewFulfillment
                 'reviewer.user',
             ]);
         }, attempts: 3);
+
+        if ($decision === FulfillmentReviewDecision::Accepted) {
+            $this->serviceFinancial->execute($review->fulfillment, $current);
+        }
+
+        return $review->fresh([
+            'fulfillment.commitment.serviceTerm.monetaryUnit',
+            'fulfillment.financialObligation.monetaryUnit',
+            'reviewer.user',
+        ]);
     }
 
     private function currentUser(User $user): User
