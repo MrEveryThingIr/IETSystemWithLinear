@@ -119,6 +119,8 @@ class IdealServiceFinancialWorkflowTest extends TestCase
 
             $commitment = $serviceTerms->commitment;
             $this->assertInstanceOf(Commitment::class, $commitment);
+            $this->assertSame($serviceTerms->id, $commitment->serviceTerm?->id);
+            $this->assertTrue((bool) $commitment->serviceTerm?->auto_recognize_obligation);
             $this->assertSame($worker->id, $commitment->obligor_actor_id);
             $this->assertSame($employer->id, $commitment->beneficiary_actor_id);
             $this->assertSame('3.0000', $commitment->quantity);
