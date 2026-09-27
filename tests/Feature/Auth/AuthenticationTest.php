@@ -27,7 +27,10 @@ class AuthenticationTest extends TestCase
 
     public function test_login_authenticates_active_account_by_username(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'username' => 'operator@example.test',
+            'email' => 'operator-account@example.test',
+        ]);
 
         Livewire::test(Login::class)
             ->set('email', $user->username)
