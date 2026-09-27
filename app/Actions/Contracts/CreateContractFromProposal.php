@@ -24,6 +24,7 @@ class CreateContractFromProposal
     public function __construct(
         private readonly CreateContractVersion $versions,
         private readonly ConfigureContractServiceTerms $serviceTerms,
+        private readonly AcceptContractVersion $acceptVersions,
     ) {}
 
     public function execute(
@@ -117,10 +118,12 @@ class CreateContractFromProposal
                 $effectiveFrom,
                 $effectiveTimezone,
                 'Created explicitly from accepted ProposalVersion '.$sourceVersion->version,
+                acceptProposer: $serviceTerms === null,
             );
 
             if ($serviceTerms !== null) {
                 $this->serviceTerms->executeFromInput($version, $current, $serviceTerms);
+                $this->acceptVersions->execute($version, $current);
             }
 
             return $contract->fresh([
