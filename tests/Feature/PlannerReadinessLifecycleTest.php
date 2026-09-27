@@ -12,6 +12,7 @@ use App\Actions\Planner\TransitionPlan;
 use App\Actions\Planner\TransitionPlanOccurrence;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Models\Actor;
+use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
@@ -268,7 +269,7 @@ class PlannerReadinessLifecycleTest extends TestCase
     }
 
     /**
-     * @return array{Actor, \App\Models\Plan, PlanOccurrence}
+     * @return array{Actor, Plan, PlanOccurrence}
      */
     private function oneTimeOccurrence(
         string $startsOn,
