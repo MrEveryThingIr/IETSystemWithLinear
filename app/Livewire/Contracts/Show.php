@@ -48,6 +48,8 @@ class Show extends Component
 
     public string $settlementAmount = '';
 
+    public string $settlementPerspective = 'paid';
+
     public string $settlementUnitCode = '';
 
     public string $settlementPaidAt = '';
@@ -121,6 +123,7 @@ class Show extends Component
 
         $data = $this->validate([
             'settlementAmount' => ['required', 'string', 'max:40'],
+            'settlementPerspective' => ['required', 'in:paid,received'],
             'settlementUnitCode' => ['required', 'string', 'max:16'],
             'settlementPaidAt' => ['required', 'string', 'max:40'],
             'settlementReference' => ['nullable', 'string', 'max:255'],
@@ -148,6 +151,7 @@ class Show extends Component
             'cash',
             $data['settlementReference'] !== '' ? $data['settlementReference'] : null,
             $data['settlementNote'] !== '' ? $data['settlementNote'] : null,
+            perspective: $data['settlementPerspective'],
         );
 
         $this->reset('settlementAmount', 'settlementReference', 'settlementNote');
@@ -289,8 +293,29 @@ class Show extends Component
             ->unique('id')
             ->values();
 
-        if ($this->settlementUnitCode === '' && $payableUnits->isNotEmpty()) {
-            $this->settlementUnitCode = (string) $payableUnits->first()->code;
+        $receivableUnits = $financialObligations
+            ->filter(fn (FinancialObligation $obligation): bool => (int) $obligation->creditor_actor_id === (int) $actor->id
+                && $obligation->availableToSettleMinor() > 0)
+            ->pluck('monetaryUnit')
+            ->unique('id')
+            ->values();
+
+        if ($payableUnits->isEmpty() && $receivableUnits->isNotEmpty()) {
+            $this->settlementPerspective = 'received';
+        } elseif ($receivableUnits->isEmpty() && $payableUnits->isNotEmpty()) {
+            $this->settlementPerspective = 'paid';
+        }
+
+        $settlementUnits = $this->settlementPerspective === 'received'
+            ? $receivableUnits
+            : $payableUnits;
+
+        if (! $settlementUnits->contains(
+            fn (MonetaryUnit $unit): bool => $unit->code === $this->settlementUnitCode,
+        )) {
+            $this->settlementUnitCode = $settlementUnits->isNotEmpty()
+                ? (string) $settlementUnits->first()->code
+                : '';
         }
 
         if ($canAmend && $this->amendmentTerms === '' && $activeVersion instanceof ContractVersion) {
@@ -316,6 +341,8 @@ class Show extends Component
             'financialSummaries' => $financialSummaries,
             'settlementBatches' => $settlementBatches,
             'payableUnits' => $payableUnits,
+            'receivableUnits' => $receivableUnits,
+            'settlementUnits' => $settlementUnits,
         ]);
     }
 
