@@ -4,8 +4,10 @@ namespace App\Actions\Contracts;
 
 use App\Actions\Accounting\EnsureMonetaryUnit;
 use App\CommitmentKind;
+use App\ContractEventType;
 use App\ContractVersionStatus;
 use App\Models\Actor;
+use App\Models\ContractEvent;
 use App\Models\ContractServiceTerm;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
@@ -281,7 +283,7 @@ class ConfigureContractServiceTerms
                 );
             }
 
-            return ContractServiceTerm::query()->create([
+            $terms = ContractServiceTerm::query()->create([
                 'contract_version_id' => $locked->id,
                 'employer_actor_id' => $employer->id,
                 'worker_actor_id' => $worker->id,
@@ -309,7 +311,30 @@ class ConfigureContractServiceTerms
                 'window_after_minutes' => $windowAfterMinutes,
                 'reminder_offsets' => $reminderOffsets,
                 'timezone' => $timezone,
-            ])->fresh([
+            ]);
+
+            ContractEvent::query()->create([
+                'contract_id' => $locked->contract_id,
+                'contract_version_id' => $locked->id,
+                'actor_id' => $current->actor->id,
+                'event_type' => ContractEventType::ServiceTermsConfigured,
+                'payload' => [
+                    'contract_service_term_uuid' => $terms->uuid,
+                    'employer_actor_uuid' => $employer->uuid,
+                    'worker_actor_uuid' => $worker->uuid,
+                    'service_kind' => $serviceKind->value,
+                    'total_quantity' => $normalizedTotal,
+                    'quantity_per_occurrence' => $normalizedPerOccurrence,
+                    'unit' => $unit,
+                    'unit_rate_minor' => $unitRateMinor,
+                    'monetary_unit_code' => $monetaryUnit->code,
+                    'settlement_cycle' => $settlementCycle,
+                    'plan_frequency' => $planFrequency->value,
+                    'timezone' => $timezone,
+                ],
+            ]);
+
+            return $terms->fresh([
                 'contractVersion.contract',
                 'employer.user',
                 'worker.user',
