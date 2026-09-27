@@ -85,23 +85,17 @@ class ResolveFulfillmentDispute
                 ],
             ]);
 
+            if ($resolution === FulfillmentStatus::Accepted) {
+                $this->serviceFinancial->execute($fulfillment, $current);
+            }
+
             return $locked->fresh([
-                'fulfillment.commitment',
+                'fulfillment.commitment.serviceTerm.monetaryUnit',
+                'fulfillment.financialObligation.monetaryUnit',
                 'openedBy.user',
                 'resolvedBy.user',
             ]);
         }, attempts: 3);
-
-        if ($resolution === FulfillmentStatus::Accepted) {
-            $this->serviceFinancial->execute($resolved->fulfillment, $current);
-        }
-
-        return $resolved->fresh([
-            'fulfillment.commitment.serviceTerm.monetaryUnit',
-            'fulfillment.financialObligation.monetaryUnit',
-            'openedBy.user',
-            'resolvedBy.user',
-        ]);
     }
 
     private function currentUser(User $user): User
