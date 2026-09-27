@@ -63,7 +63,12 @@ return [
     ],
     'settlement_batch' => [
         'title' => 'Contract cash settlement',
-        'help' => 'Record one cash payment against the oldest accepted unpaid work. The system allocates it across obligations; the worker confirms the payment before it becomes settled truth.',
+        'help' => 'Record cash from either side: the debtor may report “I paid”, or the creditor may report “I received”. The system allocates it across the oldest accepted unpaid work, and the opposite party must confirm before it becomes settled truth.',
+        'perspective' => 'Cash statement',
+        'paid_by_me' => 'I paid cash',
+        'received_by_me' => 'I received cash',
+        'reported_paid' => 'reported as paid',
+        'reported_received' => 'reported as received',
         'amount' => 'Cash paid',
         'unit' => 'Money unit',
         'record' => 'Record cash payment',
