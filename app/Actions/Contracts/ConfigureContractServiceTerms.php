@@ -24,6 +24,61 @@ class ConfigureContractServiceTerms
     public function __construct(private readonly EnsureMonetaryUnit $monetaryUnits) {}
 
     /**
+     * @param array<string, mixed> $input
+     */
+    public function executeFromInput(
+        ContractVersion $version,
+        User $user,
+        array $input,
+    ): ContractServiceTerm {
+        $version = ContractVersion::query()
+            ->with('parties.actor.user')
+            ->findOrFail($version->id);
+
+        $parties = $version->parties
+            ->filter(fn (ContractVersionParty $party): bool => $party->actor->user instanceof User)
+            ->keyBy(fn (ContractVersionParty $party): string => (string) $party->actor->user?->username);
+
+        $employer = $parties->get((string) ($input['employer_username'] ?? ''))?->actor;
+        $worker = $parties->get((string) ($input['worker_username'] ?? ''))?->actor;
+
+        abort_unless($employer instanceof Actor && $worker instanceof Actor, 422, 'Service employer and worker must be exact ContractVersion parties.');
+
+        return $this->execute(
+            $version,
+            $user,
+            $employer,
+            $worker,
+            (string) ($input['service_title'] ?? ''),
+            CommitmentKind::from((string) ($input['service_kind'] ?? CommitmentKind::Service->value)),
+            (string) ($input['total_quantity'] ?? '1'),
+            (string) ($input['quantity_per_occurrence'] ?? '1'),
+            (string) ($input['unit'] ?? 'unit'),
+            (string) ($input['unit_rate'] ?? ''),
+            (string) ($input['monetary_unit_code'] ?? ''),
+            (string) ($input['settlement_cycle'] ?? ContractServiceTerm::SETTLEMENT_PER_FULFILLMENT),
+            (int) ($input['payment_due_days'] ?? 0),
+            PlanScheduleFrequency::from((string) ($input['plan_frequency'] ?? PlanScheduleFrequency::Once->value)),
+            (string) ($input['plan_starts_on'] ?? ''),
+            (string) ($input['plan_start_time'] ?? ''),
+            (int) ($input['plan_duration_minutes'] ?? 60),
+            (int) ($input['plan_interval'] ?? 1),
+            array_values((array) ($input['plan_weekdays'] ?? [])),
+            array_values((array) ($input['plan_selected_dates'] ?? [])),
+            ($input['plan_ends_on'] ?? null) !== '' ? ($input['plan_ends_on'] ?? null) : null,
+            ($input['plan_occurrence_limit'] ?? null) !== null && ($input['plan_occurrence_limit'] ?? '') !== ''
+                ? (int) $input['plan_occurrence_limit']
+                : null,
+            (int) ($input['window_before_minutes'] ?? 0),
+            (int) ($input['window_after_minutes'] ?? 0),
+            array_values((array) ($input['reminder_offsets'] ?? [])),
+            (string) ($input['timezone'] ?? $version->effective_timezone),
+            (bool) ($input['auto_create_plan'] ?? true),
+            (bool) ($input['auto_recognize_obligation'] ?? true),
+        );
+    }
+
+    /**
      * @param  list<int>  $weekdays
      * @param  list<string>  $selectedDates
      * @param  list<int>  $reminderOffsets
