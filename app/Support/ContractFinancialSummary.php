@@ -107,6 +107,7 @@ final class ContractFinancialSummary
         $paid = 0;
         $pending = 0;
         $outstanding = 0;
+        $available = 0;
         $disputed = 0;
         $confirmedSettlementCount = 0;
 
@@ -130,6 +131,7 @@ final class ContractFinancialSummary
             if ($obligation->fulfillment->status === FulfillmentStatus::Accepted) {
                 $earned += (int) $obligation->amount_minor;
                 $outstanding += $remaining;
+                $available += max(0, $remaining - $pendingForObligation);
             } elseif ($obligation->fulfillment->status === FulfillmentStatus::Disputed) {
                 $disputed += $remaining;
             }
@@ -144,7 +146,7 @@ final class ContractFinancialSummary
             'paid_minor' => $paid,
             'pending_minor' => $pending,
             'outstanding_minor' => $outstanding,
-            'available_minor' => max(0, $outstanding - $pending),
+            'available_minor' => $available,
             'disputed_minor' => $disputed,
             'obligation_count' => $obligations->count(),
             'confirmed_settlement_count' => $confirmedSettlementCount,
