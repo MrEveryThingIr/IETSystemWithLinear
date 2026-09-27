@@ -68,7 +68,7 @@ class ConfigureContractServiceTerms
             array_values((array) ($input['plan_weekdays'] ?? [])),
             array_values((array) ($input['plan_selected_dates'] ?? [])),
             ($input['plan_ends_on'] ?? null) !== '' ? ($input['plan_ends_on'] ?? null) : null,
-            ($input['plan_occurrence_limit'] ?? null) !== null && ($input['plan_occurrence_limit'] ?? '') !== ''
+            ($input['plan_occurrence_limit'] ?? null) !== null && $input['plan_occurrence_limit'] !== ''
                 ? (int) $input['plan_occurrence_limit']
                 : null,
             (int) ($input['window_before_minutes'] ?? 0),
@@ -321,8 +321,8 @@ class ConfigureContractServiceTerms
                 'event_type' => ContractEventType::ServiceTermsConfigured,
                 'payload' => [
                     'contract_service_term_uuid' => $terms->uuid,
-                    'employer_actor_uuid' => $employer->uuid,
-                    'worker_actor_uuid' => $worker->uuid,
+                    'employer_actor_id' => $employer->id,
+                    'worker_actor_id' => $worker->id,
                     'service_kind' => $serviceKind->value,
                     'total_quantity' => $normalizedTotal,
                     'quantity_per_occurrence' => $normalizedPerOccurrence,
