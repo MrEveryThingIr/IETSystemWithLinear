@@ -26,7 +26,7 @@ class ConfigureContractServiceTerms
     public function __construct(private readonly EnsureMonetaryUnit $monetaryUnits) {}
 
     /**
-     * @param array<string, mixed> $input
+     * @param  array<string, mixed>  $input
      */
     public function executeFromInput(
         ContractVersion $version,
