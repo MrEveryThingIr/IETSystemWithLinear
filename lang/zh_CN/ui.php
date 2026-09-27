@@ -69,7 +69,7 @@ return [
         'logout' => '登出',
         'continue_to_group' => '继续前往 :group',
         'invitation_after_login' => '您的邀请将在登录后应用。',
-        'invitation_target_hint' => '此邀请仅限 :email。请输入完整且匹配的邮箱地址以继续。',
+        'invitation_target_hint' => '此邀请仅限 :email。请登录与该邮箱地址关联的账户以继续。',
         'email' => '电子邮箱',
         'password' => '密码',
         'confirm_password' => '确认密码',
