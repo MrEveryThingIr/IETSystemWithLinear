@@ -21,6 +21,7 @@ return [
     ],
     'events' => [
         'created' => 'قرارداد ایجاد شد',
+        'service_terms_configured' => 'شرایط ساختاریافته خدمت پولی تنظیم شد',
         'version_proposed' => 'نسخه قرارداد پیشنهاد شد',
         'party_accepted' => 'یکی از طرف‌ها نسخه قرارداد را پذیرفت',
         'version_accepted' => 'همه طرف‌های لازم نسخه قرارداد را پذیرفتند',
