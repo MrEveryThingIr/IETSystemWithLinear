@@ -56,6 +56,8 @@ return [
         'accepted_at' => '所有必需当事方于 :time 接受',
         'accept_help' => '您的接受只针对当前这个精确版本。',
         'workspace' => '合同空间',
+        'service_terms' => '结构化服务条款',
+        'shared_evidence_help' => '双方都可在此空间发布内容、图片/证据和说明，但这些内容本身不会改变合同权威或财务状态。',
         'workspace_help' => '对话保存协作记录；内容保存可阅读材料；时间线重建合同实际事件。',
         'parties' => '此版本的当事方',
         'required_party' => '必需',
