@@ -18,6 +18,7 @@ return [
     ],
     'events' => [
         'created' => '合同已创建',
+        'service_terms_configured' => '结构化有偿服务条款已配置',
         'version_proposed' => '合同版本已提出',
         'party_accepted' => '一方已接受合同版本',
         'version_accepted' => '所有必需当事方已接受合同版本',
