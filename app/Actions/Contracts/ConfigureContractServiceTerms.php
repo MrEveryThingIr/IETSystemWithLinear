@@ -255,15 +255,12 @@ class ConfigureContractServiceTerms
                 'This ContractVersion already has structured service terms.',
             );
 
-            $acceptedActorIds = $locked->parties
-                ->filter(fn (ContractVersionParty $party): bool => $party->acceptance !== null)
-                ->pluck('actor_id');
-
-            abort_unless(
-                $acceptedActorIds->count() === 1
-                && (int) $acceptedActorIds->first() === (int) $current->actor->id,
+            abort_if(
+                $locked->parties->contains(
+                    fn (ContractVersionParty $party): bool => $party->acceptance !== null,
+                ),
                 422,
-                'Service terms cannot be attached after another party has accepted the ContractVersion.',
+                'Structured service terms must be fixed before any party accepts the ContractVersion.',
             );
 
             $employer = Actor::query()->with('user')->lockForUpdate()->findOrFail($employer->id);
