@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Actor;
+use App\Models\User;
 use App\Support\SystemMap\SystemMapBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,6 +15,7 @@ class SystemMapTest extends TestCase
     public function test_verified_user_can_open_system_map(): void
     {
         $actor = Actor::factory()->create();
+        $this->withoutVite();
 
         $this->actingAs($actor->user)
             ->get(route('system-map'))
@@ -29,9 +31,10 @@ class SystemMapTest extends TestCase
     {
         $this->get('/system-map')->assertRedirect(route('login'));
 
-        $actor = Actor::factory()->unverified()->create();
+        $user = User::factory()->unverified()->create();
+        Actor::factory()->create(['user_id' => $user->id]);
 
-        $this->actingAs($actor->user)
+        $this->actingAs($user)
             ->get('/system-map')
             ->assertRedirect(route('verification.notice'));
     }
