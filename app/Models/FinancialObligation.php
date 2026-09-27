@@ -106,9 +106,24 @@ class FinancialObligation extends Model
             ->sum('amount_minor');
     }
 
+    public function pendingSettlementMinor(): int
+    {
+        return (int) $this->settlements()
+            ->where('status', SettlementStatus::PendingConfirmation->value)
+            ->sum('amount_minor');
+    }
+
     public function outstandingMinor(): int
     {
         return max(0, (int) $this->amount_minor - $this->confirmedPaidMinor());
+    }
+
+    public function availableToSettleMinor(): int
+    {
+        return max(
+            0,
+            $this->outstandingMinor() - $this->pendingSettlementMinor(),
+        );
     }
 
     public function isDisputed(): bool
