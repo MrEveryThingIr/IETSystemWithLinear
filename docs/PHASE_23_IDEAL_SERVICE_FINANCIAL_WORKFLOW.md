@@ -12,7 +12,7 @@ negotiation / proposal
 → explicit acceptance
 → Contract activation
 → generated service Commitment
-→ generated shared Plan
+→ generated shared Plan or explicit custom planning
 → actual unit-job execution
 → Fulfillment + evidence
 → employer acceptance
@@ -55,13 +55,9 @@ Every required Contract party accepts the exact ContractVersion bundle before it
 
 ## Contract-driven planning
 
-When an accepted structured service ContractVersion becomes active, the system idempotently creates:
+When an accepted structured service ContractVersion becomes active, the system idempotently creates one service Commitment governed by that exact ContractVersion.
 
-1. one service Commitment governed by that exact ContractVersion;
-2. one shared Plan bound to that Commitment;
-3. materialized Plan occurrences from the agreed schedule.
-
-The ordinary Planner remains available for custom/non-contract planning.
+If automatic planning is enabled, it also creates one shared Plan bound to that Commitment and materializes occurrences from the agreed schedule. If automatic planning is disabled, the Commitment still exists and the parties may create/bind the Plan manually through the ordinary Planner.
 
 A generated Plan records scheduled intent and actual execution. It does not by itself prove that work was accepted or money became owed.
 
@@ -118,13 +114,16 @@ A cycle does not collapse multiple earned obligations into one mutable balance. 
 
 The first release supports a simple cash settlement action at Contract level.
 
-The debtor/employer records amount paid, monetary unit, paid time and optional reference/note.
+Either side may initiate the cash statement:
 
-The system allocates the payment oldest-first across accepted outstanding obligations for the same Contract, creditor and monetary unit.
+- the debtor/employer may record “I paid cash”;
+- the creditor/worker may record “I received cash”.
+
+The system allocates the stated amount oldest-first across accepted outstanding obligations for the same Contract, counterparty and monetary unit.
 
 Each allocation is still a normal Settlement row.
 
-The worker/creditor explicitly confirms or rejects the batch through its pending Settlement allocations.
+The non-proposing counterparty explicitly confirms or rejects the batch through its pending Settlement allocations.
 
 A pending payment reserves its allocated value so another payment claim cannot overlap the same outstanding amount.
 
@@ -137,7 +136,7 @@ earned
     accepted work with recognized Financial Obligation
 
 awaiting confirmation
-    payment claimed by debtor but not yet confirmed by creditor
+    cash payment/receipt claimed by one party but not yet confirmed by the other
 
 paid / settled
     confirmed Settlement value
@@ -215,7 +214,7 @@ The focused end-to-end test must prove:
 
 1. structured service terms are bound to an exact ContractVersion;
 2. no Commitment/Plan exists before full Contract acceptance;
-3. activation automatically creates one Commitment and one Plan;
+3. activation always creates one service Commitment; automatic mode also creates its Plan while custom mode intentionally does not;
 4. both parties can use the Contract Context;
 5. occurrences reflect the agreed schedule;
 6. completed occurrence can become Fulfillment;
@@ -223,7 +222,7 @@ The focused end-to-end test must prove:
 8. multiple unit-jobs produce separate immutable obligations;
 9. one cash settlement batch allocates oldest-first across obligations;
 10. pending allocations reduce still-payable-now without pretending to be paid;
-11. creditor confirmation changes pending value into confirmed paid/settled value;
+11. the non-proposing counterparty can confirm either a debtor-reported payment or creditor-reported receipt, changing pending value into confirmed paid/settled value;
 12. per-day financial rows trace values to work dates;
 13. no JournalEntry appears merely because economic truth was recognized/settled;
 14. each party can explicitly post their own Accounting side;
