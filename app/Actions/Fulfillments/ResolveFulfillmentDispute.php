@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fulfillments;
 
+use App\Actions\Financial\RecognizeServiceFulfillmentFinancialObligation;
 use App\CommitmentEventType;
 use App\FulfillmentStatus;
 use App\Models\Actor;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\Gate;
 
 class ResolveFulfillmentDispute
 {
-    public function __construct(private readonly CommitmentProgress $progress) {}
+    public function __construct(
+        private readonly CommitmentProgress $progress,
+        private readonly RecognizeServiceFulfillmentFinancialObligation $serviceFinancial,
+    ) {}
 
     public function execute(
         FulfillmentDispute $dispute,
@@ -32,7 +36,7 @@ class ResolveFulfillmentDispute
         $note = trim((string) $note);
         abort_if(mb_strlen($note) > 5000, 422, 'Dispute resolution note may not exceed 5000 characters.');
 
-        return DB::transaction(function () use ($dispute, $current, $resolution, $note): FulfillmentDispute {
+        $resolved = DB::transaction(function () use ($dispute, $current, $resolution, $note): FulfillmentDispute {
             $locked = FulfillmentDispute::query()
                 ->with('fulfillment.commitment')
                 ->lockForUpdate()
@@ -87,6 +91,17 @@ class ResolveFulfillmentDispute
                 'resolvedBy.user',
             ]);
         }, attempts: 3);
+
+        if ($resolution === FulfillmentStatus::Accepted) {
+            $this->serviceFinancial->execute($resolved->fulfillment, $current);
+        }
+
+        return $resolved->fresh([
+            'fulfillment.commitment.serviceTerm.monetaryUnit',
+            'fulfillment.financialObligation.monetaryUnit',
+            'openedBy.user',
+            'resolvedBy.user',
+        ]);
     }
 
     private function currentUser(User $user): User
