@@ -4,6 +4,7 @@ return [
     'title' => '系统地图',
     'description' => '把 IET 作为一个互联系统来探索：人的目的、领域事实、流程、代码与改进问题。',
     'canvas_label' => 'IET 交互式系统地图',
+    'canvas_loading' => '正在加载交互控件…',
     'canvas_help' => '可横向和纵向滚动，也可拖动空白区域。Ctrl/Alt + 滚轮缩放。选择节点可聚焦其邻域。',
     'actions' => ['manual' => '系统手册'],
     'callout' => [
