@@ -4,6 +4,7 @@ namespace App\Livewire\Commitments;
 
 use App\Actions\Commitments\CreateCommitmentPlan;
 use App\Actions\Financial\RecognizeFulfillmentFinancialObligation;
+use App\Actions\Financial\RecognizeServiceFulfillmentFinancialObligation;
 use App\Actions\Fulfillments\OpenFulfillmentDispute;
 use App\Actions\Fulfillments\ResolveFulfillmentDispute;
 use App\Actions\Fulfillments\ReviewFulfillment;
@@ -80,11 +81,12 @@ class Show extends Component
     public function mount(Commitment $commitment): void
     {
         Gate::forUser($this->user())->authorize('view', $commitment);
+        $commitment->loadMissing(['serviceTerm.monetaryUnit']);
         $this->commitment = $commitment;
 
         $timezone = TemporalPreferences::timezoneFor($this->user());
         $this->planStartsOn = CarbonImmutable::now($timezone)->format('Y-m-d');
-        $this->fulfillmentQuantity = $commitment->quantity;
+        $this->fulfillmentQuantity = $this->suggestedFulfillmentQuantity();
     }
 
     public function createPlan(CreateCommitmentPlan $create): void
@@ -145,8 +147,8 @@ class Show extends Component
         );
 
         $this->reset('fulfillmentOccurrenceUuid', 'fulfillmentNotes');
-        $this->fulfillmentQuantity = app(CommitmentProgress::class)->remainingQuantity($this->commitment);
         $this->refreshCommitment();
+        $this->fulfillmentQuantity = $this->suggestedFulfillmentQuantity();
         session()->flash('status', __('commitments.messages.submitted'));
     }
 
@@ -228,6 +230,24 @@ class Show extends Component
         session()->flash('status', __('commitments.messages.resolved'));
     }
 
+    public function recognizePricedFinancialObligation(
+        int $fulfillmentId,
+        RecognizeServiceFulfillmentFinancialObligation $recognize,
+    ): void {
+        $fulfillment = Fulfillment::query()
+            ->with(['commitment.serviceTerm', 'financialObligation'])
+            ->findOrFail($fulfillmentId);
+
+        abort_unless((int) $fulfillment->commitment_id === (int) $this->commitment->id, 404);
+        abort_unless($fulfillment->status === FulfillmentStatus::Accepted, 422);
+
+        $obligation = $recognize->execute($fulfillment, $this->user());
+        abort_unless($obligation !== null, 422, 'This Fulfillment does not have automatic Contract-priced economics.');
+
+        $this->refreshCommitment();
+        session()->flash('status', __('financial.messages.recognized'));
+    }
+
     public function recognizeFinancialObligation(
         int $fulfillmentId,
         RecognizeFulfillmentFinancialObligation $recognize,
@@ -303,6 +323,9 @@ class Show extends Component
             ->with([
                 'contractVersion.contract.contextBinding.context',
                 'contractVersion.termsRevision',
+                'serviceTerm.employer.user',
+                'serviceTerm.worker.user',
+                'serviceTerm.monetaryUnit',
                 'creator.user',
                 'obligor.user',
                 'beneficiary.user',
@@ -353,6 +376,20 @@ class Show extends Component
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function suggestedFulfillmentQuantity(): string
+    {
+        $remaining = app(CommitmentProgress::class)->remainingQuantity($this->commitment);
+        $perOccurrence = $this->commitment->serviceTerm?->quantity_per_occurrence;
+
+        if ($perOccurrence === null) {
+            return $remaining;
+        }
+
+        return \App\Support\QuantityAmount::compare($remaining, $perOccurrence) <= 0
+            ? $remaining
+            : (string) $perOccurrence;
     }
 
     private function user(): User
