@@ -26,6 +26,7 @@ class CreateDirectContract
         private readonly PublishContractTerms $terms,
         private readonly CreateContractVersion $versions,
         private readonly ConfigureContractServiceTerms $serviceTerms,
+        private readonly AcceptContractVersion $acceptVersions,
     ) {}
 
     /**
@@ -161,10 +162,12 @@ class CreateDirectContract
                 $effectiveFrom,
                 $effectiveTimezone,
                 'Initial Contract terms',
+                acceptProposer: $serviceTerms === null,
             );
 
             if ($serviceTerms !== null) {
                 $this->serviceTerms->executeFromInput($version, $current, $serviceTerms);
+                $this->acceptVersions->execute($version, $current);
             }
 
             return $contract->fresh([
