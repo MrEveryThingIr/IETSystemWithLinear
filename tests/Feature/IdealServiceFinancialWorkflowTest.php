@@ -230,6 +230,69 @@ class IdealServiceFinancialWorkflowTest extends TestCase
         }
     }
 
+    public function test_structured_service_contract_can_keep_planning_manual_while_still_generating_commitment(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-27 07:30:00 UTC');
+
+        try {
+            $employer = Actor::factory()->create();
+            $worker = Actor::factory()->create();
+
+            $contract = app(CreateDirectContract::class)->execute(
+                $employer->user,
+                'Custom-planned service',
+                [['actor' => $worker, 'role' => 'worker']],
+                'Worker performs two service units under a manually arranged work plan.',
+                CarbonImmutable::now(),
+                'UTC',
+                creatorRole: 'employer',
+                serviceTerms: [
+                    'employer_username' => $employer->user->username,
+                    'worker_username' => $worker->user->username,
+                    'service_title' => 'Custom-planned service unit',
+                    'service_kind' => 'service',
+                    'total_quantity' => '2',
+                    'quantity_per_occurrence' => '1',
+                    'unit' => 'unit',
+                    'unit_rate' => '25.00',
+                    'monetary_unit_code' => 'EUR',
+                    'settlement_cycle' => 'per_fulfillment',
+                    'payment_due_days' => 0,
+                    'auto_create_plan' => false,
+                    'auto_recognize_obligation' => true,
+                    'plan_frequency' => 'daily',
+                    'plan_starts_on' => '2026-09-27',
+                    'plan_start_time' => '08:00',
+                    'plan_duration_minutes' => 60,
+                    'plan_interval' => 1,
+                    'plan_weekdays' => [],
+                    'plan_selected_dates' => [],
+                    'plan_ends_on' => null,
+                    'plan_occurrence_limit' => null,
+                    'window_before_minutes' => 0,
+                    'window_after_minutes' => 0,
+                    'reminder_offsets' => [],
+                    'timezone' => 'UTC',
+                ],
+            );
+
+            app(AcceptContractVersion::class)->execute(
+                $contract->versions()->sole(),
+                $worker->user,
+            );
+
+            $version = $contract->fresh()->activeVersionRecord();
+            $this->assertNotNull($version);
+            $version->loadMissing('serviceTerm.commitment');
+
+            $this->assertInstanceOf(Commitment::class, $version->serviceTerm?->commitment);
+            $this->assertDatabaseCount('commitments', 1);
+            $this->assertDatabaseCount('plans', 0);
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
     public function test_structured_service_contract_does_not_allow_prose_only_amendment_of_economics(): void
     {
         CarbonImmutable::setTestNow('2026-09-27 07:30:00 UTC');
