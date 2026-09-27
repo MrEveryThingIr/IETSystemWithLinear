@@ -50,7 +50,7 @@ class ConfigurePlanReadiness
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
             foreach ($prerequisites as $index => $item) {
-                $title = Str::squish((string) ($item['title'] ?? ''));
+                $title = Str::squish((string) $item['title']);
                 abort_if($title === '' || mb_strlen($title) > 240, 422, 'Plan prerequisite title is invalid.');
 
                 PlanPrerequisite::query()->create([
@@ -65,9 +65,9 @@ class ConfigurePlanReadiness
             $estimateUnits = [];
 
             foreach ($expenseEstimates as $index => $item) {
-                $label = Str::squish((string) ($item['label'] ?? ''));
-                $unitCode = strtoupper(trim((string) ($item['unit_code'] ?? '')));
-                $amount = trim((string) ($item['amount'] ?? ''));
+                $label = Str::squish((string) $item['label']);
+                $unitCode = strtoupper(trim((string) $item['unit_code']));
+                $amount = trim((string) $item['amount']);
 
                 abort_if($label === '' || mb_strlen($label) > 180, 422, 'Plan expense estimate label is invalid.');
 
