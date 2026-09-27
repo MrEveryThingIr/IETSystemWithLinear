@@ -98,6 +98,8 @@ while still showing that each stage has a different authority boundary.
 
 The target is a **Visual Interactive Focusable Concept Network** that can feel like a living organism without sacrificing technical precision.
 
+One future evidence source is the private Personal Operating Laboratory described in `docs/PERSONAL_OPERATING_LAB_VISION.md`. Its 21-day narrative-first use should reveal which existing nodes need presentation improvements and which repeated concepts genuinely justify new structure. The map may later project this scenario coverage and evidence, but must not turn personal narrative into authoritative domain records automatically.
+
 Potential views:
 
 ### Structure
