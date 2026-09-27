@@ -383,6 +383,32 @@ Legacy ledger_entries:
 - use ordered line numbers;
 - restrict deletion.
 
+
+## First-release paid-service reference workflow
+
+The publishable reference workflow is intentionally conventional:
+
+~~~text
+exact accepted ContractVersion
+→ structured unit-priced service terms
+→ generated Commitment
+→ generated shared Plan
+→ actual work Occurrence
+→ Fulfillment + evidence
+→ employer acceptance
+→ deterministic Financial Obligation
+→ cash Settlement batch / confirmation
+→ optional per-party Accounting posting
+~~~
+
+Structured service economics are part of the exact ContractVersion acceptance boundary. Accepted quantity is multiplied by that immutable version's unit rate using integer arithmetic; the amount is not retyped after the work is accepted.
+
+At Contract level, cash settlement batches allocate a recorded payment oldest-first across accepted outstanding obligations while preserving each underlying unit-job and Settlement. Pending payment claims reserve their allocations but do not count as paid until the creditor confirms them.
+
+The Contract summary therefore keeps separate earned, payment awaiting confirmation, confirmed paid/settled, outstanding, still payable now and disputed value.
+
+See docs/PHASE_23_IDEAL_SERVICE_FINANCIAL_WORKFLOW.md for the full behavior and acceptance proof.
+
 ## 7. Financial Laboratory
 
 ### Purpose
