@@ -301,6 +301,7 @@ class Show extends Component
         }
 
         return view('livewire.contracts.show', [
+            'actor' => $actor,
             'pendingVersion' => $pendingVersion,
             'activeVersion' => $activeVersion,
             'pendingServiceTerms' => $pendingVersion?->serviceTerm,
