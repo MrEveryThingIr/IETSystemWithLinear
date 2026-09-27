@@ -21,6 +21,7 @@ return [
     ],
     'events' => [
         'created' => 'Contract created',
+        'service_terms_configured' => 'Structured paid-service terms configured',
         'version_proposed' => 'Contract version proposed',
         'party_accepted' => 'Contract version accepted by party',
         'version_accepted' => 'All required parties accepted Contract version',
