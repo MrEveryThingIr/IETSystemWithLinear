@@ -291,7 +291,7 @@
                 </flux:card>
             @endif
 
-            @if ($payableUnits->isNotEmpty())
+            @if ($payableUnits->isNotEmpty() || $receivableUnits->isNotEmpty())
                 <flux:card class="space-y-4">
                     <div>
                         <flux:heading size="lg">{{ __('financial.settlement_batch.title') }}</flux:heading>
@@ -299,11 +299,19 @@
                     </div>
 
                     <form wire:submit="proposeCashSettlement" class="space-y-4">
-                        <div class="grid gap-4 sm:grid-cols-3">
+                        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <flux:select wire:model.live="settlementPerspective" :label="__('financial.settlement_batch.perspective')">
+                                @if ($payableUnits->isNotEmpty())
+                                    <flux:select.option value="paid">{{ __('financial.settlement_batch.paid_by_me') }}</flux:select.option>
+                                @endif
+                                @if ($receivableUnits->isNotEmpty())
+                                    <flux:select.option value="received">{{ __('financial.settlement_batch.received_by_me') }}</flux:select.option>
+                                @endif
+                            </flux:select>
                             <flux:input wire:model="settlementAmount" :label="__('financial.settlement_batch.amount')" inputmode="decimal" />
                             <flux:select wire:model="settlementUnitCode" :label="__('financial.settlement_batch.unit')">
-                                @foreach ($payableUnits as $payableUnit)
-                                    <flux:select.option :value="$payableUnit->code">{{ $payableUnit->code }}</flux:select.option>
+                                @foreach ($settlementUnits as $settlementUnit)
+                                    <flux:select.option :value="$settlementUnit->code">{{ $settlementUnit->code }}</flux:select.option>
                                 @endforeach
                             </flux:select>
                             <x-app.calendar-datetime-input
@@ -343,6 +351,9 @@
                                     <div class="mt-1 text-xs text-zinc-500">
                                         <x-app.local-datetime :value="$batch->paid_at" />
                                         · {{ $batch->debtor->user?->username }} → {{ $batch->creditor->user?->username }}
+                                        · {{ (int) $batch->proposed_by_actor_id === (int) $batch->debtor_actor_id
+                                            ? __('financial.settlement_batch.reported_paid')
+                                            : __('financial.settlement_batch.reported_received') }}
                                     </div>
                                 </div>
                                 <flux:badge>{{ __('financial.settlement_batch.status.'.$batchStatus) }}</flux:badge>
@@ -368,7 +379,11 @@
                                 @endforeach
                             </div>
 
-                            @if ((int) $actor->id === (int) $batch->creditor_actor_id && $batch->pendingMinor() > 0)
+                            @if (
+                                $batch->pendingMinor() > 0
+                                && (int) $actor->id !== (int) $batch->proposed_by_actor_id
+                                && in_array((int) $actor->id, [(int) $batch->debtor_actor_id, (int) $batch->creditor_actor_id], true)
+                            )
                                 <div class="space-y-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
                                     <flux:input
                                         wire:model="batchRejectionNotes.{{ $batch->id }}"
