@@ -28,12 +28,18 @@ class ProposeContractSettlementBatch
         string $method = 'cash',
         ?string $reference = null,
         ?string $note = null,
+        string $perspective = 'paid',
     ): ContractSettlementBatch {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('view', $contract);
 
         abort_if($amountMinor <= 0, 422, 'Settlement batch amount must be positive.');
         abort_if($paidAt->isFuture(), 422, 'Settlement paid time cannot be in the future.');
+        abort_unless(
+            in_array($perspective, ['paid', 'received'], true),
+            422,
+            'Cash settlement perspective must be paid or received.',
+        );
 
         $method = Str::squish($method);
         $reference = $reference !== null ? Str::squish($reference) : null;
@@ -52,6 +58,7 @@ class ProposeContractSettlementBatch
             $method,
             $reference,
             $note,
+            $perspective,
         ): ContractSettlementBatch {
             $lockedContract = Contract::query()->lockForUpdate()->findOrFail($contract->id);
             Gate::forUser($current)->authorize('view', $lockedContract);
@@ -59,9 +66,8 @@ class ProposeContractSettlementBatch
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
             $lockedUnit = MonetaryUnit::query()->lockForUpdate()->findOrFail($unit->id);
 
-            $obligations = FinancialObligation::query()
+            $obligationQuery = FinancialObligation::query()
                 ->where('monetary_unit_id', $lockedUnit->id)
-                ->where('debtor_actor_id', $actor->id)
                 ->whereHas(
                     'contractVersion',
                     fn ($query) => $query->where('contract_id', $lockedContract->id),
@@ -69,8 +75,16 @@ class ProposeContractSettlementBatch
                 ->whereHas(
                     'fulfillment',
                     fn ($query) => $query->where('status', FulfillmentStatus::Accepted->value),
-                )
-                ->with(['fulfillment', 'settlements', 'creditor.user', 'contractVersion'])
+                );
+
+            if ($perspective === 'paid') {
+                $obligationQuery->where('debtor_actor_id', $actor->id);
+            } else {
+                $obligationQuery->where('creditor_actor_id', $actor->id);
+            }
+
+            $obligations = $obligationQuery
+                ->with(['fulfillment', 'settlements', 'debtor.user', 'creditor.user', 'contractVersion'])
                 ->orderByRaw('due_at IS NULL')
                 ->orderBy('due_at')
                 ->orderBy('recognized_at')
@@ -80,14 +94,27 @@ class ProposeContractSettlementBatch
                 ->filter(fn (FinancialObligation $obligation): bool => $obligation->availableToSettleMinor() > 0)
                 ->values();
 
-            abort_if($obligations->isEmpty(), 422, 'There is no outstanding accepted obligation available for payment.');
-
-            $creditorIds = $obligations->pluck('creditor_actor_id')->unique()->values();
-            abort_unless(
-                $creditorIds->count() === 1,
+            abort_if(
+                $obligations->isEmpty(),
                 422,
-                'A settlement batch can cover only one creditor at a time.',
+                'There is no outstanding accepted obligation available for this cash settlement.',
             );
+
+            $counterpartyColumn = $perspective === 'paid'
+                ? 'creditor_actor_id'
+                : 'debtor_actor_id';
+
+            $counterpartyIds = $obligations->pluck($counterpartyColumn)->unique()->values();
+
+            abort_unless(
+                $counterpartyIds->count() === 1,
+                422,
+                'A cash settlement batch can cover only one counterparty at a time.',
+            );
+
+            $counterpartyId = (int) $counterpartyIds->first();
+            $debtorActorId = $perspective === 'paid' ? $actor->id : $counterpartyId;
+            $creditorActorId = $perspective === 'paid' ? $counterpartyId : $actor->id;
 
             $availableMinor = $obligations->sum(
                 fn (FinancialObligation $obligation): int => $obligation->availableToSettleMinor(),
@@ -101,8 +128,8 @@ class ProposeContractSettlementBatch
 
             $batch = ContractSettlementBatch::query()->create([
                 'contract_id' => $lockedContract->id,
-                'debtor_actor_id' => $actor->id,
-                'creditor_actor_id' => (int) $creditorIds->first(),
+                'debtor_actor_id' => $debtorActorId,
+                'creditor_actor_id' => $creditorActorId,
                 'monetary_unit_id' => $lockedUnit->id,
                 'proposed_by_actor_id' => $actor->id,
                 'amount_minor' => $amountMinor,
