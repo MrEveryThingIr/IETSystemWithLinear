@@ -210,6 +210,34 @@ class IdealServiceFinancialWorkflowTest extends TestCase
             $this->assertSame(5_000, $confirmed['outstanding_minor']);
             $this->assertSame(5_000, $confirmed['available_minor']);
 
+            $receivedBatch = app(ProposeContractSettlementBatch::class)->execute(
+                $contract,
+                $worker->user,
+                $unit,
+                5_000,
+                CarbonImmutable::now()->subSeconds(30),
+                'cash',
+                'WEEK-1-RECEIPT',
+                'Worker records the remaining cash as received.',
+                perspective: 'received',
+            );
+
+            $this->assertSame($worker->id, $receivedBatch->proposed_by_actor_id);
+            $this->assertSame($employer->id, $receivedBatch->debtor_actor_id);
+            $this->assertSame($worker->id, $receivedBatch->creditor_actor_id);
+
+            app(RespondToContractSettlementBatch::class)->confirm(
+                $receivedBatch,
+                $employer->user,
+            );
+
+            $fullySettled = $summaryService->forContractUnit($contract, $unit);
+            $this->assertSame(20_000, $fullySettled['earned_minor']);
+            $this->assertSame(0, $fullySettled['pending_minor']);
+            $this->assertSame(20_000, $fullySettled['paid_minor']);
+            $this->assertSame(0, $fullySettled['outstanding_minor']);
+            $this->assertSame(0, $fullySettled['available_minor']);
+
             $daily = $summaryService->dailyForContractUnit($contract, $unit, 'UTC');
             $this->assertCount(2, $daily);
             $this->assertSame(['2026-09-28', '2026-09-27'], array_column($daily, 'date'));
