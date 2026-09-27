@@ -13,6 +13,8 @@ return [
     'worked' => 'Worked',
     'accepted' => 'Accepted',
     'recognize' => 'Create financial obligation',
+    'auto_recognition_help' => 'This accepted work is priced by its exact ContractVersion at :rate :currency per :unit. Normally the obligation is created automatically; use this only to safely retry that deterministic calculation.',
+    'recognize_from_contract' => 'Calculate from agreed contract',
     'recognize_help' => 'Only after explicit Fulfillment acceptance: record what is economically owed, including the amount and monetary unit. This still does not post either party’s Accounting.',
     'obligation' => [
         'title' => 'Financial obligation',
