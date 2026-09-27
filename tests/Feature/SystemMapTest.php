@@ -55,7 +55,7 @@ class SystemMapTest extends TestCase
         }
 
         $this->assertSame(
-            ['planner', 'fulfillment', 'obligations', 'settlements', 'accounting', 'financial_lab', 'payments', 'finance_review'],
+            ['contracts', 'service_economics', 'commitments', 'planner', 'fulfillment', 'obligations', 'settlements', 'accounting', 'financial_lab', 'payments', 'finance_review'],
             $map['presets']['finance'],
         );
 
