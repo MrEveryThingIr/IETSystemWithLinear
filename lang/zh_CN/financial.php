@@ -3,6 +3,8 @@
 return [
     'title' => '财务义务',
     'obligations' => '财务义务',
+    'awaiting_confirmation' => '等待确认',
+    'available_to_pay' => '当前仍可支付',
     'earned' => '已形成应收',
     'paid' => '已支付',
     'outstanding' => '未结',
@@ -49,6 +51,29 @@ return [
     'summary' => [
         'title' => '财务状态',
         'help' => '此汇总由计划、履行、财务义务和已确认结算计算得出；系统不会保存一个可手工编辑的总余额。',
+        'daily_title' => '按工作日',
+        'daily_help' => '每一行把已接受的单位工作追溯到工作日期，并显示等待确认、已确认支付和仍未支付的价值。',
+    ],
+    'settlement_batch' => [
+        'title' => '合同现金结算',
+        'help' => '记录一次现金付款并按最早的已接受未付款工作进行分配。工作者确认后才成为结算事实。',
+        'amount' => '已付现金',
+        'unit' => '货币单位',
+        'record' => '记录现金付款',
+        'history' => '结算批次',
+        'allocations' => ':count 个义务分配',
+        'status' => [
+            'pending_confirmation' => '等待工作者确认',
+            'confirmed' => '已确认 / 已结算',
+            'rejected' => '已拒绝',
+            'partial' => '部分处理',
+            'empty' => '空',
+        ],
+        'confirm' => '确认整笔付款',
+        'reject' => '拒绝整笔付款',
+        'rejection_reason' => '付款声明不正确的原因',
+        'rejection_required' => '拒绝时必须填写原因。',
+        'cash_only' => '首版使用现金结算。未来可以增加其他结算方式，而不会改写已获得价值的历史。',
     ],
     'events' => [
         'recognized' => '财务义务已确认',
@@ -59,6 +84,10 @@ return [
         'settlement_accounting_posted' => '结算已记录到个人账本',
     ],
     'messages' => [
+        'batch_proposed' => '现金付款已分配到未结工作，目前等待对方确认。',
+        'batch_confirmed' => '现金结算已确认。',
+        'batch_rejected' => '现金结算已拒绝。',
+
         'recognized' => '财务义务已从已接受履行中确认。',
         'obligation_accounting_posted' => '您这一侧的财务义务已记录到个人账本。',
         'settlement_proposed' => '付款声明已记录，正在等待对方确认。',
