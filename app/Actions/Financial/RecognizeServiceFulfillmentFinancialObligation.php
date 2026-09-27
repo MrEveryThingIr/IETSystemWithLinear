@@ -2,6 +2,7 @@
 
 namespace App\Actions\Financial;
 
+use App\Models\Actor;
 use App\Models\ContractServiceTerm;
 use App\Models\FinancialObligation;
 use App\Models\Fulfillment;
@@ -38,7 +39,7 @@ class RecognizeServiceFulfillmentFinancialObligation
         $current = User::query()->with('actor')->find($user->id);
 
         if (! $current instanceof User
-            || ! $current->actor instanceof \App\Models\Actor
+            || ! $current->actor instanceof Actor
             || (int) $current->actor->id !== (int) $terms->employer_actor_id) {
             return null;
         }
