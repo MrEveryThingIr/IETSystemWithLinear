@@ -3,6 +3,7 @@
 namespace App\Livewire\Auth;
 
 use App\Actions\Groups\RedeemGroupInvitation;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -49,7 +50,7 @@ class Login extends Component
         ]);
 
         $identifier = trim($data['email']);
-        $credential = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credential = User::query()->where('email', $identifier)->exists() ? 'email' : 'username';
 
         $key = 'login:'.Str::lower($identifier).'|'.request()->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
