@@ -24,9 +24,15 @@ return new class extends Migration
         Schema::create('plan_occurrence_prerequisite_checks', function (Blueprint $table): void {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->foreignId('plan_occurrence_id')->constrained('plan_occurrences')->restrictOnDelete();
-            $table->foreignId('plan_prerequisite_id')->constrained('plan_prerequisites')->restrictOnDelete();
-            $table->foreignId('completed_by_actor_id')->nullable()->constrained('actors')->restrictOnDelete();
+            $table->foreignId('plan_occurrence_id');
+            $table->foreignId('plan_prerequisite_id');
+            $table->foreignId('completed_by_actor_id')->nullable();
+            $table->foreign('plan_occurrence_id', 'popc_occurrence_fk')
+                ->references('id')->on('plan_occurrences')->restrictOnDelete();
+            $table->foreign('plan_prerequisite_id', 'popc_prerequisite_fk')
+                ->references('id')->on('plan_prerequisites')->restrictOnDelete();
+            $table->foreign('completed_by_actor_id', 'popc_completed_actor_fk')
+                ->references('id')->on('actors')->restrictOnDelete();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
