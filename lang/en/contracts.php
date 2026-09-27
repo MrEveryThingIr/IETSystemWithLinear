@@ -43,7 +43,6 @@ return [
         'notes' => 'Notes',
         'effective_at' => 'Effective from',
         'timezone' => 'Effective-time timezone',
-        'structured_service_locked' => 'Structured paid-service economics cannot yet be amended safely in place. Finish this first-release contract or create a new paid-service Contract for changed rate, quantity or schedule.',
         'submit' => 'Create contract',
         'proposal_source' => 'This Contract will explicitly use the accepted Proposal version “:title” as its exact source terms. Proposal decisions do not count as Contract acceptances.',
         'relationship_source' => 'This Contract preserves “:title” as its source Relationship. Every listed party must be an active Relationship participant.',
@@ -82,6 +81,7 @@ return [
     'amendment' => [
         'title' => 'Propose future amendment',
         'help' => 'Publish a new sealed ContractVersion for future behavior. The current active version remains unchanged until the new version is fully accepted and its effective time arrives.',
+'structured_service_locked' => 'Structured paid-service economics cannot yet be amended safely in place. Finish this first-release contract or create a new paid-service Contract for changed rate, quantity or schedule.',
         'terms_title' => 'Amended terms title',
         'version_note' => 'What changes?',
         'submit' => 'Propose amendment',
