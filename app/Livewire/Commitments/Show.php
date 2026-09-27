@@ -22,6 +22,7 @@ use App\PlanScheduleFrequency;
 use App\Support\CommitmentProgress;
 use App\Support\MonetaryUnitCatalog;
 use App\Support\MoneyAmount;
+use App\Support\QuantityAmount;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -387,7 +388,7 @@ class Show extends Component
             return $remaining;
         }
 
-        return \App\Support\QuantityAmount::compare($remaining, $perOccurrence) <= 0
+        return QuantityAmount::compare($remaining, $perOccurrence) <= 0
             ? $remaining
             : (string) $perOccurrence;
     }
