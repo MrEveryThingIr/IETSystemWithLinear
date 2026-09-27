@@ -17,6 +17,7 @@ use LogicException;
 #[Fillable([
     'uuid',
     'contract_version_id',
+    'contract_service_term_id',
     'created_by_actor_id',
     'obligor_actor_id',
     'beneficiary_actor_id',
@@ -62,6 +63,12 @@ class Commitment extends Model
     public function contractVersion(): BelongsTo
     {
         return $this->belongsTo(ContractVersion::class);
+    }
+
+    /** @return BelongsTo<ContractServiceTerm, $this> */
+    public function serviceTerm(): BelongsTo
+    {
+        return $this->belongsTo(ContractServiceTerm::class);
     }
 
     /** @return BelongsTo<Actor, $this> */
