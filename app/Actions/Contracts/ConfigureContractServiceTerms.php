@@ -140,7 +140,8 @@ class ConfigureContractServiceTerms
         if ($planOccurrenceLimit === null) {
             $totalScaled = QuantityAmount::toScaledInt($normalizedTotal);
             $perOccurrenceScaled = QuantityAmount::toScaledInt($normalizedPerOccurrence);
-            $planOccurrenceLimit = (int) ceil($totalScaled / $perOccurrenceScaled);
+            $planOccurrenceLimit = intdiv($totalScaled, $perOccurrenceScaled)
+                + ($totalScaled % $perOccurrenceScaled > 0 ? 1 : 0);
         }
 
         abort_if($planOccurrenceLimit < 1 || $planOccurrenceLimit > 10000, 422, 'Service occurrence limit is invalid.');
