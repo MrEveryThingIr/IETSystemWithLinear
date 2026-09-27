@@ -96,8 +96,9 @@
                     @for ($hour = 0; $hour < 24; $hour++)
                         @php
                             $items = $calendarHours->get($hour, collect());
+                            $itemCount = $items->count();
                         @endphp
-                        <div wire:key="calendar-hour-{{ $day }}-{{ $hour }}" class="grid min-h-16 grid-cols-[5rem_1fr] bg-white dark:bg-zinc-950">
+                        <div wire:key="calendar-hour-{{ $day }}-{{ $hour }}" class="grid h-16 grid-cols-[5rem_1fr] bg-white dark:bg-zinc-950">
                             <button
                                 type="button"
                                 wire:click="showHour('{{ $day }}', {{ $hour }})"
@@ -105,14 +106,18 @@
                             >
                                 {{ str_pad((string) $hour, 2, '0', STR_PAD_LEFT) }}:00
                             </button>
-                            <div class="space-y-2 p-2">
-                                @foreach ($items as $occurrence)
-                                    <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
-                                        <span class="font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
-                                        <span class="ms-2 text-xs text-zinc-500"><x-app.local-time :value="$occurrence->scheduled_start_at" /></span>
-                                    </a>
-                                @endforeach
-                            </div>
+                            <button
+                                type="button"
+                                wire:click="showHour('{{ $day }}', {{ $hour }})"
+                                class="min-w-0 px-3 py-2 text-start transition hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                            >
+                                @if ($itemCount > 0)
+                                    <span class="block text-sm font-medium">{{ trans_choice('planner.calendar.item_count', $itemCount, ['count' => $itemCount]) }}</span>
+                                    <span class="block text-xs text-zinc-500">{{ __('planner.calendar.drill_down') }}</span>
+                                @else
+                                    <span class="text-xs text-zinc-400">{{ __('planner.calendar.empty_bucket') }}</span>
+                                @endif
+                            </button>
                         </div>
                     @endfor
                 </div>
@@ -143,23 +148,26 @@
                         @foreach ($calendarSlots as $slot)
                             @php
                                 $slotTime = $slot['start']->format('H:i');
+                                $slotMinute = (int) $slot['start']->format('i');
+                                $itemCount = $slot['items']->count();
                             @endphp
-                            <div wire:key="calendar-slot-{{ $day }}-{{ $slotTime }}-{{ $slotMinutes }}" class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
+                            <div wire:key="calendar-slot-{{ $day }}-{{ $slotTime }}-{{ $slotMinutes }}" class="grid h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
                                 <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">
                                     {{ $slotTime }}
                                 </div>
 
-                                <div class="space-y-2 p-2">
-                                    @foreach ($slot['items'] as $occurrence)
-                                        <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
-                                            <span class="font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
-                                            <span class="ms-2 text-xs text-zinc-500">
-                                                <x-app.local-time :value="$occurrence->scheduled_start_at" />
-                                                → <x-app.local-time :value="$occurrence->scheduled_end_at" />
-                                            </span>
-                                        </a>
-                                    @endforeach
-                                </div>
+                                <button
+                                    type="button"
+                                    wire:click="selectSlot({{ $slotMinute }})"
+                                    class="min-w-0 px-3 py-2 text-start transition hover:bg-zinc-50 dark:hover:bg-zinc-900 {{ $selectedMinute === $slotMinute ? 'bg-zinc-50 dark:bg-zinc-900' : '' }}"
+                                >
+                                    @if ($itemCount > 0)
+                                        <span class="text-sm font-medium">{{ trans_choice('planner.calendar.item_count', $itemCount, ['count' => $itemCount]) }}</span>
+                                        <span class="ms-2 text-xs text-zinc-500">{{ __('planner.calendar.open_items') }}</span>
+                                    @else
+                                        <span class="text-xs text-zinc-400">{{ __('planner.calendar.empty_bucket') }}</span>
+                                    @endif
+                                </button>
 
                                 <div class="p-2">
                                     <flux:button
@@ -180,6 +188,42 @@
                             </div>
                         @endforeach
                     </div>
+
+                    @php
+                        $selectedSlot = $selectedMinute >= 0
+                            ? $calendarSlots->first(fn ($slot) => (int) $slot['start']->format('i') === $selectedMinute)
+                            : null;
+                    @endphp
+
+                    @if ($selectedSlot)
+                        <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <div class="font-medium">{{ __('planner.calendar.slot_details', ['time' => $selectedSlot['start']->format('H:i')]) }}</div>
+                                    <div class="mt-1 text-xs text-zinc-500">{{ trans_choice('planner.calendar.item_count', $selectedSlotItems->count(), ['count' => $selectedSlotItems->count()]) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 max-h-96 space-y-2 overflow-y-auto pe-1">
+                                @forelse ($selectedSlotItems as $occurrence)
+                                    <a
+                                        href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}"
+                                        class="block rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                                    >
+                                        <div class="font-medium" dir="auto">{{ $occurrence->plan->title }}</div>
+                                        <div class="mt-1 text-xs text-zinc-500">
+                                            <x-app.local-time :value="$occurrence->scheduled_start_at" />
+                                            →
+                                            <x-app.local-time :value="$occurrence->scheduled_end_at" />
+                                            · {{ __('planner.occurrence_phase.'.$occurrence->executionPhase()) }}
+                                        </div>
+                                    </a>
+                                @empty
+                                    <p class="text-sm text-zinc-500">{{ __('planner.calendar.empty_bucket') }}</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @else
                 <div class="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700">
@@ -193,21 +237,30 @@
                         @php
                             $dateKey = $calendarDay['key'];
                             $items = $calendarOccurrences->get($dateKey, collect());
+                            $itemCount = $items->count();
+                            $phaseCounts = $items->countBy(fn ($occurrence) => $occurrence->executionPhase());
                             $inMonth = $calendarDay['in_month'];
                         @endphp
-                        <div wire:key="calendar-day-{{ $dateKey }}" class="min-h-32 bg-white p-2 dark:bg-zinc-950 {{ $inMonth ? '' : 'opacity-50' }}">
-                            <button type="button" wire:click="showDay('{{ $dateKey }}')" class="rounded px-1 text-xs font-semibold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white">
-                                {{ $calendarDay['label'] }}
-                            </button>
-                            <div class="mt-2 space-y-1">
-                                @foreach ($items as $occurrence)
-                                    <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="block rounded-lg border border-zinc-200 px-2 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
-                                        <div class="font-medium" dir="auto">{{ $occurrence->plan->title }}</div>
-                                        <div class="text-zinc-500"><x-app.local-time :value="$occurrence->scheduled_start_at" /> · {{ __('planner.occurrence_status.'.$occurrence->status->value) }}</div>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
+                        <button
+                            type="button"
+                            wire:key="calendar-day-{{ $dateKey }}"
+                            wire:click="showDay('{{ $dateKey }}')"
+                            class="h-28 overflow-hidden bg-white p-2 text-start transition hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900 {{ $inMonth ? '' : 'opacity-50' }}"
+                            aria-label="{{ __('planner.calendar.open_day', ['date' => $dateKey]) }}"
+                        >
+                            <span class="block text-xs font-semibold text-zinc-500">{{ $calendarDay['label'] }}</span>
+
+                            @if ($itemCount > 0)
+                                <span class="mt-2 block text-sm font-semibold">{{ trans_choice('planner.calendar.item_count', $itemCount, ['count' => $itemCount]) }}</span>
+                                <span class="mt-1 block space-y-0.5 text-[11px] leading-4 text-zinc-500">
+                                    @foreach ($phaseCounts->take(3) as $phase => $count)
+                                        <span class="block">{{ __('planner.occurrence_phase.'.$phase) }} · {{ $count }}</span>
+                                    @endforeach
+                                </span>
+                            @else
+                                <span class="mt-2 block text-xs text-zinc-400">{{ __('planner.calendar.empty_bucket') }}</span>
+                            @endif
+                        </button>
                     @endforeach
                 </div>
             @endif
