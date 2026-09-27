@@ -69,7 +69,7 @@ return [
         'logout' => 'تسجيل الخروج',
         'continue_to_group' => 'المتابعة إلى :group',
         'invitation_after_login' => 'سيتم تطبيق دعوتك بعد تسجيل الدخول.',
-        'invitation_target_hint' => 'هذه الدعوة مخصصة لـ :email. أدخل العنوان الكامل المطابق للمتابعة.',
+        'invitation_target_hint' => 'هذه الدعوة مخصصة لـ :email. للمتابعة، سجّل الدخول إلى الحساب المرتبط بهذا العنوان.',
         'email' => 'البريد الإلكتروني',
         'password' => 'كلمة المرور',
         'confirm_password' => 'تأكيد كلمة المرور',
