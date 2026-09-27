@@ -75,6 +75,7 @@ use App\Livewire\Proposals\Show as ProposalShow;
 use App\Livewire\Relationships\Create as RelationshipCreate;
 use App\Livewire\Relationships\Index as RelationshipIndex;
 use App\Livewire\Relationships\Show as RelationshipShow;
+use App\Livewire\SystemMap\Index as SystemMapIndex;
 use App\Models\Actor;
 use App\Models\Contract;
 use App\Models\Group;
@@ -136,6 +137,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
     Route::get('/manual', SystemManualController::class)->name('manual');
+    Route::livewire('/system-map', SystemMapIndex::class)->name('system-map');
     Route::get('/admissions/{admission}/content', AdmissionContextContentController::class)->name('admissions.context.contents');
     Route::get('/admissions/{admission}/conversation', [AdmissionContextCollaborationController::class, 'conversation'])->name('admissions.context.conversation');
     Route::get('/admissions/{admission}/timeline', [AdmissionContextCollaborationController::class, 'timeline'])->name('admissions.context.timeline');
