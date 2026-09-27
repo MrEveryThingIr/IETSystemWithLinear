@@ -51,7 +51,7 @@ class ProposeSettlement
             $batch,
         ): Settlement {
             $locked = FinancialObligation::query()
-                ->with(['fulfillment', 'settlements'])
+                ->with(['fulfillment', 'settlements', 'contractVersion'])
                 ->lockForUpdate()
                 ->findOrFail($obligation->id);
 
