@@ -69,7 +69,7 @@ return [
         'logout' => 'خروج',
         'continue_to_group' => 'ادامه به :group',
         'invitation_after_login' => 'دعوت‌نامه شما پس از ورود اعمال خواهد شد.',
-        'invitation_target_hint' => 'این دعوت برای :email رزرو شده است. برای ادامه نشانی کامل و مطابق را وارد کنید.',
+        'invitation_target_hint' => 'این دعوت برای :email رزرو شده است. برای ادامه، وارد حسابی شوید که به این نشانی ایمیل مرتبط است.',
         'email' => 'ایمیل',
         'password' => 'رمز عبور',
         'confirm_password' => 'تأیید رمز عبور',
