@@ -50,8 +50,6 @@ class RespondToContractSettlementBatch
             $debtorId = (int) $locked->debtor_actor_id;
             $creditorId = (int) $locked->creditor_actor_id;
 
-            abort_unless(in_array($proposerId, [$debtorId, $creditorId], true), 500);
-
             $counterpartyId = $proposerId === $debtorId
                 ? $creditorId
                 : $debtorId;
