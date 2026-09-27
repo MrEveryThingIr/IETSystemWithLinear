@@ -93,21 +93,16 @@ class ReviewFulfillment
                 ],
             ]);
 
+            if ($decision === FulfillmentReviewDecision::Accepted) {
+                $this->serviceFinancial->execute($locked, $current);
+            }
+
             return $review->fresh([
-                'fulfillment.commitment',
+                'fulfillment.commitment.serviceTerm.monetaryUnit',
+                'fulfillment.financialObligation.monetaryUnit',
                 'reviewer.user',
             ]);
         }, attempts: 3);
-
-        if ($decision === FulfillmentReviewDecision::Accepted) {
-            $this->serviceFinancial->execute($review->fulfillment, $current);
-        }
-
-        return $review->fresh([
-            'fulfillment.commitment.serviceTerm.monetaryUnit',
-            'fulfillment.financialObligation.monetaryUnit',
-            'reviewer.user',
-        ]);
     }
 
     private function currentUser(User $user): User
