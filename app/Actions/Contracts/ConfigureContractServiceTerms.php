@@ -123,12 +123,16 @@ class ConfigureContractServiceTerms
         $unit = Str::squish($unit);
         abort_if($unit === '' || mb_strlen($unit) > 40, 422, 'Service unit must be between 1 and 40 characters.');
 
-        abort_if(!in_array($settlementCycle, [
-            ContractServiceTerm::SETTLEMENT_PER_FULFILLMENT,
-            ContractServiceTerm::SETTLEMENT_WEEKLY,
-            ContractServiceTerm::SETTLEMENT_MONTHLY,
-            ContractServiceTerm::SETTLEMENT_CONTRACT_END,
-        ], true), 422, 'Settlement cycle is invalid.');
+        abort_if(
+            ! in_array($settlementCycle, [
+                ContractServiceTerm::SETTLEMENT_PER_FULFILLMENT,
+                ContractServiceTerm::SETTLEMENT_WEEKLY,
+                ContractServiceTerm::SETTLEMENT_MONTHLY,
+                ContractServiceTerm::SETTLEMENT_CONTRACT_END,
+            ], true),
+            422,
+            'Settlement cycle is invalid.',
+        );
 
         abort_if($paymentDueDays < 0 || $paymentDueDays > 3650, 422, 'Payment due days are invalid.');
         abort_if($planDurationMinutes < 1 || $planDurationMinutes > 10080, 422, 'Plan duration is invalid.');
