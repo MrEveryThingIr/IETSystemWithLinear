@@ -3,6 +3,8 @@
 return [
     'title' => 'Financial obligation',
     'obligations' => 'obligations',
+    'awaiting_confirmation' => 'Awaiting confirmation',
+    'available_to_pay' => 'Still payable now',
     'earned' => 'Earned',
     'paid' => 'Paid',
     'outstanding' => 'Outstanding',
@@ -49,6 +51,29 @@ return [
     'summary' => [
         'title' => 'Financial progress',
         'help' => 'Derived from Planner, Fulfillment, Financial Obligation and confirmed Settlement source records. No editable aggregate balance is stored.',
+        'daily_title' => 'By work day',
+        'daily_help' => 'Each row follows the accepted unit-job back to its work date and shows how much of that earned value is awaiting confirmation, confirmed paid, or still outstanding.',
+    ],
+    'settlement_batch' => [
+        'title' => 'Contract cash settlement',
+        'help' => 'Record one cash payment against the oldest accepted unpaid work. The system allocates it across obligations; the worker confirms the payment before it becomes settled truth.',
+        'amount' => 'Cash paid',
+        'unit' => 'Money unit',
+        'record' => 'Record cash payment',
+        'history' => 'Settlement batches',
+        'allocations' => ':count obligation allocations',
+        'status' => [
+            'pending_confirmation' => 'Awaiting worker confirmation',
+            'confirmed' => 'Confirmed / settled',
+            'rejected' => 'Rejected',
+            'partial' => 'Partially resolved',
+            'empty' => 'Empty',
+        ],
+        'confirm' => 'Confirm whole payment',
+        'reject' => 'Reject whole payment',
+        'rejection_reason' => 'Reason this payment claim is incorrect',
+        'rejection_required' => 'A rejection reason is required.',
+        'cash_only' => 'First release uses cash settlement. Alternative settlement options will be added later without changing earned-value history.',
     ],
     'events' => [
         'recognized' => 'Financial obligation recognized',
@@ -59,6 +84,10 @@ return [
         'settlement_accounting_posted' => 'Settlement posted to personal Accounting',
     ],
     'messages' => [
+        'batch_proposed' => 'Cash payment was allocated across outstanding work and now awaits counterparty confirmation.',
+        'batch_confirmed' => 'The cash settlement was confirmed.',
+        'batch_rejected' => 'The cash settlement was rejected.',
+
         'recognized' => 'Financial Obligation was recognized from the accepted Fulfillment.',
         'obligation_accounting_posted' => 'Your side of the Financial Obligation was posted to your Personal Accounting.',
         'settlement_proposed' => 'The payment claim was recorded and awaits counterparty confirmation.',
