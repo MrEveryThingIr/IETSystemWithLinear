@@ -26,9 +26,12 @@ function initSystemMap(root) {
     const host = root.querySelector('[data-system-map-host]');
     const scene = root.querySelector('[data-system-map-scene]');
     const inspector = root.querySelector('[data-system-map-inspector]');
-    const search = root.querySelector('[data-system-map-search]');
-    const groupFilter = root.querySelector('[data-system-map-group]');
-    const statusFilter = root.querySelector('[data-system-map-status]');
+    const searchRoot = root.querySelector('[data-system-map-search]');
+    const groupRoot = root.querySelector('[data-system-map-group]');
+    const statusRoot = root.querySelector('[data-system-map-status]');
+    const search = searchRoot?.matches('input') ? searchRoot : searchRoot?.querySelector('input');
+    const groupFilter = groupRoot?.matches('select') ? groupRoot : groupRoot?.querySelector('select');
+    const statusFilter = statusRoot?.matches('select') ? statusRoot : statusRoot?.querySelector('select');
     const resultCount = root.querySelector('[data-system-map-result-count]');
     const clearFocus = root.querySelector('[data-system-map-clear-focus]');
 
@@ -433,11 +436,18 @@ function initSystemMap(root) {
         viewport.scrollTop = startTop - (event.clientY - startY);
     });
 
-    viewport.addEventListener('pointerup', (event) => {
+    const stopDragging = (event) => {
         dragging = false;
-        viewport.releasePointerCapture(event.pointerId);
+
+        if (viewport.hasPointerCapture(event.pointerId)) {
+            viewport.releasePointerCapture(event.pointerId);
+        }
+
         viewport.classList.remove('cursor-grabbing');
-    });
+    };
+
+    viewport.addEventListener('pointerup', stopDragging);
+    viewport.addEventListener('pointercancel', stopDragging);
 
     viewport.addEventListener('wheel', (event) => {
         if (!event.ctrlKey && !event.metaKey && !event.altKey) {
