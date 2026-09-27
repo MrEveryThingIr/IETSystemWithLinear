@@ -18,7 +18,8 @@ class ActivateContractVersion
 
     public function execute(ContractVersion $version, ?Actor $actor = null): ContractVersion
     {
-        $activated = DB::transaction(function () use ($version, $actor): ContractVersion {
+        return DB::transaction(function () use ($version, $actor): ContractVersion {
+            $activated = DB::transaction(function () use ($version, $actor): ContractVersion {
             $locked = ContractVersion::query()
                 ->with('contract')
                 ->lockForUpdate()
@@ -105,21 +106,22 @@ class ActivateContractVersion
                 'parties.actor.user',
                 'parties.acceptance',
             ]);
+            }, attempts: 3);
+
+            if ($activated->status === ContractVersionStatus::Active) {
+                $this->bootstrap->execute($activated);
+            }
+
+            return $activated->fresh([
+                'contract',
+                'termsRevision.content',
+                'parties.actor.user',
+                'parties.acceptance',
+                'serviceTerm.employer.user',
+                'serviceTerm.worker.user',
+                'serviceTerm.monetaryUnit',
+                'serviceTerm.commitment.planBinding.plan',
+            ]);
         }, attempts: 3);
-
-        if ($activated->status === ContractVersionStatus::Active) {
-            $this->bootstrap->execute($activated);
-        }
-
-        return $activated->fresh([
-            'contract',
-            'termsRevision.content',
-            'parties.actor.user',
-            'parties.acceptance',
-            'serviceTerm.employer.user',
-            'serviceTerm.worker.user',
-            'serviceTerm.monetaryUnit',
-            'serviceTerm.commitment.planBinding.plan',
-        ]);
     }
 }
