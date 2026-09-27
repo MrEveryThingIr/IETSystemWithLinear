@@ -46,10 +46,20 @@ class RespondToContractSettlementBatch
 
             Gate::forUser($current)->authorize('view', $locked->contract);
 
+            $proposerId = (int) $locked->proposed_by_actor_id;
+            $debtorId = (int) $locked->debtor_actor_id;
+            $creditorId = (int) $locked->creditor_actor_id;
+
+            abort_unless(in_array($proposerId, [$debtorId, $creditorId], true), 500);
+
+            $counterpartyId = $proposerId === $debtorId
+                ? $creditorId
+                : $debtorId;
+
             abort_unless(
-                (int) $current->actor->id === (int) $locked->creditor_actor_id,
+                (int) $current->actor->id === $counterpartyId,
                 403,
-                'Only the batch creditor may confirm or reject this payment claim.',
+                'Only the non-proposing settlement counterparty may confirm or reject this cash claim.',
             );
 
             $pending = $locked->settlements
