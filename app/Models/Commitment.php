@@ -68,7 +68,7 @@ class Commitment extends Model
     /** @return BelongsTo<ContractServiceTerm, $this> */
     public function serviceTerm(): BelongsTo
     {
-        return $this->belongsTo(ContractServiceTerm::class);
+        return $this->belongsTo(ContractServiceTerm::class, 'contract_service_term_id');
     }
 
     /** @return BelongsTo<Actor, $this> */
