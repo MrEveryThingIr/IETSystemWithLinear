@@ -4,6 +4,7 @@ return [
     'title' => 'System Map',
     'description' => 'Explore IET as one connected system: human purpose, domain truth, workflows, code and improvement questions.',
     'canvas_label' => 'Interactive IET system map',
+    'canvas_loading' => 'Interactive controls are loading…',
     'canvas_help' => 'Scroll in both directions or drag empty space to pan. Ctrl/Alt + wheel zooms. Select a node to focus its neighborhood.',
     'actions' => [
         'manual' => 'System manual',
