@@ -36,7 +36,7 @@ class ResolveFulfillmentDispute
         $note = trim((string) $note);
         abort_if(mb_strlen($note) > 5000, 422, 'Dispute resolution note may not exceed 5000 characters.');
 
-        $resolved = DB::transaction(function () use ($dispute, $current, $resolution, $note): FulfillmentDispute {
+        return DB::transaction(function () use ($dispute, $current, $resolution, $note): FulfillmentDispute {
             $locked = FulfillmentDispute::query()
                 ->with('fulfillment.commitment')
                 ->lockForUpdate()
