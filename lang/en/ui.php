@@ -69,7 +69,7 @@ return [
         'logout' => 'Log out',
         'continue_to_group' => 'Continue to :group',
         'invitation_after_login' => 'After login, review the invitation and continue to admission.',
-        'invitation_target_hint' => 'This invitation is reserved for :email. Enter the full matching address to continue.',
+        'invitation_target_hint' => 'This invitation is reserved for :email. Sign in to the account associated with that address to continue.',
         'email' => 'Email',
         'password' => 'Password',
         'confirm_password' => 'Confirm password',
