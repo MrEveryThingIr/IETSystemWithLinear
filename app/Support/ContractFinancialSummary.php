@@ -230,5 +230,4 @@ final class ContractFinancialSummary
 
         return array_values($rows);
     }
-
 }
