@@ -38,6 +38,8 @@ function initSystemMap(root) {
 
     const graph = JSON.parse(dataElement.textContent || '{}');
     const nodeById = new Map((graph.nodes || []).map((node) => [node.id, node]));
+    const groupById = new Map((graph.groups || []).map((group) => [group.id, group]));
+    const ui = graph.ui || {};
     const nodeElements = new Map(
         Array.from(root.querySelectorAll('[data-system-map-node]')).map((element) => [element.dataset.nodeId, element]),
     );
@@ -152,7 +154,7 @@ function initSystemMap(root) {
             }
 
             const show = visible.has(edge.source) && visible.has(edge.target);
-            element.hidden = !show;
+            element.style.display = show ? '' : 'none';
 
             if (!show) {
                 continue;
@@ -217,13 +219,13 @@ function initSystemMap(root) {
 
         const heading = createElement('div', 'space-y-2');
         const badgeRow = createElement('div', 'flex flex-wrap gap-2');
-        badgeRow.append(createElement('span', 'rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium dark:bg-zinc-800', node.group));
+        badgeRow.append(createElement('span', 'rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium dark:bg-zinc-800', groupById.get(node.group)?.label || node.group));
         badgeRow.append(createElement(
             'span',
             node.status === 'direction'
                 ? 'rounded-full border border-dashed border-amber-400 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300'
                 : 'rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
-            node.status === 'direction' ? 'Long-term direction' : 'Implemented',
+            node.status === 'direction' ? (ui.direction || 'Long-term direction') : (ui.implemented || 'Implemented'),
         ));
         heading.append(badgeRow);
         heading.append(createElement('h2', 'text-xl font-semibold', node.label));
@@ -231,16 +233,16 @@ function initSystemMap(root) {
         inspector.append(heading);
 
         if (node.route) {
-            const link = createElement('a', 'inline-flex items-center rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900', 'Open this area ↗');
+            const link = createElement('a', 'inline-flex items-center rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900', ui.open_area || 'Open this area ↗');
             link.href = node.route;
             inspector.append(link);
         }
 
-        addListSection(inspector, 'Human purpose', [node.humanPurpose]);
-        addListSection(inspector, 'Authoritative truth', [node.truth]);
-        addListSection(inspector, 'Review questions', node.review || []);
-        addListSection(inspector, 'Documentation', node.docs || []);
-        addListSection(inspector, 'Code anchors', node.code || []);
+        addListSection(inspector, ui.human_purpose || 'Human purpose', [node.humanPurpose]);
+        addListSection(inspector, ui.truth || 'Authoritative truth', [node.truth]);
+        addListSection(inspector, ui.review_questions || 'Review questions', node.review || []);
+        addListSection(inspector, ui.documentation || 'Documentation', node.docs || []);
+        addListSection(inspector, ui.code_anchors || 'Code anchors', node.code || []);
 
         const connections = [];
         for (const edge of graph.edges || []) {
@@ -259,7 +261,7 @@ function initSystemMap(root) {
             }
         }
 
-        addListSection(inspector, 'Connections', connections, (item, connection) => {
+        addListSection(inspector, ui.connections || 'Connections', connections, (item, connection) => {
             const button = createElement('button', 'w-full text-start');
             button.type = 'button';
             const relation = createElement('span', 'block text-xs text-zinc-500', connection.relation);
@@ -273,19 +275,19 @@ function initSystemMap(root) {
     function renderEmptyInspector() {
         inspector.replaceChildren();
 
-        inspector.append(createElement('h2', 'text-lg font-semibold', 'Explore the system'));
+        inspector.append(createElement('h2', 'text-lg font-semibold', ui.explore || 'Explore the system'));
         inspector.append(createElement(
             'p',
             'text-sm text-zinc-600 dark:text-zinc-300',
-            'Select any node to see why it exists, what truth it owns, how it connects, and what questions are worth reviewing next.',
+            ui.explore_help || 'Select any node to see why it exists, what truth it owns, how it connects, and what questions are worth reviewing next.',
         ));
 
         const hint = createElement('div', 'rounded-xl bg-zinc-50 p-4 text-sm dark:bg-zinc-900');
-        hint.append(createElement('div', 'font-medium', 'Useful starting point'));
+        hint.append(createElement('div', 'font-medium', ui.starting_point || 'Useful starting point'));
         hint.append(createElement(
             'p',
             'mt-1 text-zinc-600 dark:text-zinc-300',
-            'Choose “Financial flow” to review Planner costs → Fulfillment → Obligation → Settlement → Accounting as one human story.',
+            ui.starting_point_help || 'Choose “Financial flow” to review Planner costs → Fulfillment → Obligation → Settlement → Accounting as one human story.',
         ));
         inspector.append(hint);
     }
