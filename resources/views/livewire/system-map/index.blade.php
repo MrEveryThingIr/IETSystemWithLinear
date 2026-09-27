@@ -112,6 +112,7 @@
             <div class="relative h-[72vh] min-h-[620px] overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
                 <div
                     class="absolute inset-0 overflow-auto overscroll-contain cursor-grab"
+                    dir="ltr"
                     data-system-map-viewport
                     tabindex="0"
                     aria-label="{{ __('system_map.canvas_label') }}"
@@ -122,7 +123,7 @@
                         data-system-map-host
                     >
                         <div
-                            class="absolute start-0 top-0 origin-top-left"
+                            class="absolute top-0 left-0 origin-top-left"
                             style="width: {{ $map['width'] }}px; height: {{ $map['height'] }}px; transform: scale(0.6);"
                             data-system-map-scene
                         >
