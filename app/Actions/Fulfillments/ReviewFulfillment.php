@@ -40,7 +40,7 @@ class ReviewFulfillment
             'Rejecting or requesting clarification requires a review note.',
         );
 
-        $review = DB::transaction(function () use ($fulfillment, $current, $decision, $note): FulfillmentReview {
+        return DB::transaction(function () use ($fulfillment, $current, $decision, $note): FulfillmentReview {
             $locked = Fulfillment::query()
                 ->with(['commitment', 'review'])
                 ->lockForUpdate()
