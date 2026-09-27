@@ -35,6 +35,14 @@ class RecognizeServiceFulfillmentFinancialObligation
             return null;
         }
 
+        $current = User::query()->with('actor')->find($user->id);
+
+        if (! $current instanceof User
+            || ! $current->actor instanceof \App\Models\Actor
+            || (int) $current->actor->id !== (int) $terms->employer_actor_id) {
+            return null;
+        }
+
         $amountMinor = $this->compensation->amountMinor($terms, $fulfillment->quantity);
         $workAt = $fulfillment->actual_end_at
             ?? $fulfillment->reviewed_at
@@ -42,7 +50,7 @@ class RecognizeServiceFulfillmentFinancialObligation
 
         return $this->recognize->execute(
             $fulfillment,
-            $user,
+            $current,
             $terms->monetaryUnit->code,
             $amountMinor,
             $this->compensation->dueAt($terms, $workAt),
