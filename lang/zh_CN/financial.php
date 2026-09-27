@@ -13,6 +13,8 @@ return [
     'worked' => '已完成',
     'accepted' => '已接受',
     'recognize' => '确认财务义务',
+    'auto_recognition_help' => '此已接受工作在精确合同版本中按每 :unit :rate :currency 定价。财务义务通常会自动创建；此操作仅用于安全重试同一确定性计算。',
+    'recognize_from_contract' => '按已约定合同计算',
     'recognize_help' => '在履行被明确接受后，记录实际应付金额和货币单位。此操作本身不会自动写入任何一方的个人账本。',
     'obligation' => [
         'title' => '财务义务',
