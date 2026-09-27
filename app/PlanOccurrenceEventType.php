@@ -9,4 +9,6 @@ enum PlanOccurrenceEventType: string
     case Skipped = 'skipped';
     case Cancelled = 'cancelled';
     case EvidenceAttached = 'evidence_attached';
+    case PrerequisiteUpdated = 'prerequisite_updated';
+    case ExpenseRecorded = 'expense_recorded';
 }

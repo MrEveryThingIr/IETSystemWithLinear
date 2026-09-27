@@ -683,6 +683,32 @@ Implemented:
 
 The database and existing domain kernels remain authoritative. Broadcasting is transport only and may be disabled without losing durable notification state.
 
+## System Map
+
+A first interactive System Map is implemented at `/system-map`.
+
+It is a curated explanatory projection over the current architecture, not a new authority layer.
+
+Current capabilities include:
+
+- X/Y scroll and drag-pan over a large architecture canvas;
+- zoom and fit-to-map controls;
+- text search;
+- area and current/future-direction filters;
+- one-node neighborhood focus;
+- quick lenses for the north-star lifecycle, financial flow, content/knowledge, community/governance and execution;
+- a focused inspector showing:
+  - human purpose;
+  - authoritative truth;
+  - connected modules;
+  - documentation and code anchors;
+  - module-specific review questions;
+- explicit distinction between implemented capabilities and long-term directions.
+
+The first-class Financial flow lens intentionally composes Planner cost observations, Fulfillment, Financial Obligation, Settlement and Personal Accounting while preserving their separate authority boundaries. Future Financial Laboratory and external payment/reconciliation nodes are displayed as direction only, not current implementation.
+
+The long-term direction is recorded in `docs/SYSTEM_MAP_VISION.md`: progressively derive more topology from trusted repository metadata, support release/version comparisons and health overlays, and eventually provide structure/flow/human-meaning/organism views without turning the map into authorization or workflow truth.
+
 ## Production operations
 
 Current source validation is strong for the implemented scope, but production readiness is incomplete.

@@ -64,12 +64,12 @@ class TransitionPlanOccurrence
 
         return DB::transaction(function () use ($occurrence, $current, $status, $eventType): PlanOccurrence {
             $locked = PlanOccurrence::query()
-                ->with('plan')
+                ->with(['plan.prerequisites', 'prerequisiteChecks'])
                 ->lockForUpdate()
                 ->findOrFail($occurrence->id);
 
             Gate::forUser($current)->authorize('participate', $locked->plan);
-            abort_unless($locked->plan->status === PlanStatus::Active, 422, 'Occurrence execution requires an active Plan.');
+            abort_unless($locked->plan->status === PlanStatus::Active, 422, __('planner.validation.active_plan_required'));
 
             $now = now();
             $actualStart = $locked->actual_start_at;
@@ -77,23 +77,25 @@ class TransitionPlanOccurrence
             $completedAt = null;
 
             if ($status === PlanOccurrenceStatus::InProgress) {
-                abort_unless($locked->status === PlanOccurrenceStatus::Scheduled, 422, 'Only a scheduled Occurrence can be started.');
+                abort_unless($locked->status === PlanOccurrenceStatus::Scheduled, 422, __('planner.validation.scheduled_to_start'));
+                abort_unless($locked->canStartAt($now), 422, __('planner.validation.start_window'));
+                abort_unless($locked->prerequisitesSatisfied(), 422, __('planner.validation.prerequisites_incomplete'));
                 $actualStart = $now;
             } elseif ($status === PlanOccurrenceStatus::Completed) {
-                abort_unless(in_array($locked->status, [
-                    PlanOccurrenceStatus::Scheduled,
-                    PlanOccurrenceStatus::InProgress,
-                ], true), 422, 'Only scheduled or in-progress Occurrences can be completed.');
-                $actualStart ??= $now;
+                abort_unless(
+                    $locked->status === PlanOccurrenceStatus::InProgress,
+                    422,
+                    __('planner.validation.start_before_complete'),
+                );
                 $actualEnd = $now;
                 $completedAt = $now;
             } elseif ($status === PlanOccurrenceStatus::Skipped) {
-                abort_unless($locked->status === PlanOccurrenceStatus::Scheduled, 422, 'Only a scheduled Occurrence can be skipped.');
+                abort_unless($locked->status === PlanOccurrenceStatus::Scheduled, 422, __('planner.validation.scheduled_to_skip'));
             } elseif ($status === PlanOccurrenceStatus::Cancelled) {
                 abort_unless(in_array($locked->status, [
                     PlanOccurrenceStatus::Scheduled,
                     PlanOccurrenceStatus::InProgress,
-                ], true), 422, 'Only scheduled or in-progress Occurrences can be cancelled.');
+                ], true), 422, __('planner.validation.cancellable_occurrence'));
                 $actualEnd = $locked->status === PlanOccurrenceStatus::InProgress ? $now : null;
             }
 
@@ -110,7 +112,12 @@ class TransitionPlanOccurrence
                 ],
             ]);
 
-            return $locked->fresh(['plan', 'events']);
+            return $locked->fresh([
+                'plan.prerequisites',
+                'prerequisiteChecks',
+                'expenses.monetaryUnit',
+                'events',
+            ]);
         }, attempts: 3);
     }
 

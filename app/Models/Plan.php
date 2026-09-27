@@ -133,6 +133,18 @@ class Plan extends Model
         return $this->hasMany(PlanReminder::class);
     }
 
+    /** @return HasMany<PlanPrerequisite, $this> */
+    public function prerequisites(): HasMany
+    {
+        return $this->hasMany(PlanPrerequisite::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** @return HasMany<PlanExpenseEstimate, $this> */
+    public function expenseEstimates(): HasMany
+    {
+        return $this->hasMany(PlanExpenseEstimate::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     /** @return HasOne<CommitmentPlanBinding, $this> */
     public function commitmentBinding(): HasOne
     {
