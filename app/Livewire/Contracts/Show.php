@@ -204,7 +204,9 @@ class Show extends Component
         $canAccept = $pendingVersion instanceof ContractVersion
             && Gate::forUser($user)->allows('accept', [$this->contract, $pendingVersion]);
 
-        $canAmend = Gate::forUser($user)->allows('amend', $this->contract);
+        $serviceAmendmentLocked = $activeVersion?->serviceTerm !== null;
+        $canAmend = ! $serviceAmendmentLocked
+            && Gate::forUser($user)->allows('amend', $this->contract);
         $canCreateCommitment = Gate::forUser($user)->allows('create', [Commitment::class, $this->contract]);
 
         $commitments = Commitment::query()
@@ -305,6 +307,7 @@ class Show extends Component
             'activeServiceTerms' => $activeVersion?->serviceTerm,
             'canAccept' => $canAccept,
             'canAmend' => $canAmend,
+            'serviceAmendmentLocked' => $serviceAmendmentLocked,
             'canCreateCommitment' => $canCreateCommitment,
             'commitments' => $commitments,
             'context' => $context,
