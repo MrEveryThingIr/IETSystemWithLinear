@@ -61,6 +61,8 @@ return [
         'accepted_at' => 'All required parties accepted at :time',
         'accept_help' => 'Your acceptance applies only to this exact sealed Contract version.',
         'workspace' => 'Contract workspace',
+        'service_terms' => 'Structured service terms',
+        'shared_evidence_help' => 'Both parties can publish Context Content, images/evidence and explanations here without changing the authoritative Contract or financial state.',
         'workspace_help' => 'Conversation is collaboration evidence; Content is human-readable context; Timeline reconstructs durable Contract events.',
         'parties' => 'Exact version parties',
         'required_party' => 'required',
