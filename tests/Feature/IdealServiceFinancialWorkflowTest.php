@@ -13,6 +13,7 @@ use App\Actions\Financial\RespondToContractSettlementBatch;
 use App\Actions\Fulfillments\ReviewFulfillment;
 use App\Actions\Fulfillments\SubmitFulfillment;
 use App\Actions\Planner\TransitionPlanOccurrence;
+use App\ContractEventType;
 use App\FulfillmentReviewDecision;
 use App\Models\Actor;
 use App\Models\Commitment;
@@ -87,8 +88,21 @@ class IdealServiceFinancialWorkflowTest extends TestCase
 
             $this->assertNotNull($version->serviceTerm);
             $this->assertSame(10_000, $version->serviceTerm->unit_rate_minor);
+            $this->assertDatabaseCount('contract_acceptances', 1);
             $this->assertDatabaseCount('commitments', 0);
             $this->assertDatabaseCount('plans', 0);
+
+            $versionEvents = $contract->events()
+                ->where('contract_version_id', $version->id)
+                ->orderBy('id')
+                ->pluck('event_type')
+                ->all();
+
+            $this->assertSame([
+                ContractEventType::VersionProposed,
+                ContractEventType::ServiceTermsConfigured,
+                ContractEventType::PartyAccepted,
+            ], $versionEvents);
 
             app(AcceptContractVersion::class)->execute($version, $worker->user);
 
