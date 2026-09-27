@@ -34,12 +34,27 @@ function initSystemMap(root) {
     const statusFilter = statusRoot?.matches('select') ? statusRoot : statusRoot?.querySelector('select');
     const resultCount = root.querySelector('[data-system-map-result-count]');
     const clearFocus = root.querySelector('[data-system-map-clear-focus]');
+    const jsStatus = root.querySelector('[data-system-map-js-status]');
 
     if (!dataElement || !viewport || !host || !scene || !inspector) {
         return;
     }
 
-    const graph = JSON.parse(dataElement.textContent || '{}');
+    let graph;
+
+    try {
+        graph = JSON.parse(dataElement.textContent || '{}');
+    } catch (error) {
+        root.dataset.systemMapReady = '0';
+
+        if (jsStatus) {
+            jsStatus.textContent = 'Interactive map data could not be initialized.';
+        }
+
+        console.error('System Map initialization failed while parsing graph data.', error);
+
+        return;
+    }
     const nodeById = new Map((graph.nodes || []).map((node) => [node.id, node]));
     const groupById = new Map((graph.groups || []).map((group) => [group.id, group]));
     const ui = graph.ui || {};
@@ -464,6 +479,10 @@ function initSystemMap(root) {
         }
     });
 
+    if (jsStatus) {
+        jsStatus.remove();
+    }
+
     const requestedLens = root.dataset.initialLens;
     if (requestedLens && graph.presets?.[requestedLens]) {
         state.presetIds = graph.presets[requestedLens];
@@ -482,5 +501,10 @@ function bootSystemMaps() {
     document.querySelectorAll('[data-system-map]').forEach(initSystemMap);
 }
 
-document.addEventListener('DOMContentLoaded', bootSystemMaps);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootSystemMaps);
+} else {
+    bootSystemMaps();
+}
+
 document.addEventListener('livewire:navigated', bootSystemMaps);
