@@ -109,7 +109,13 @@ jobs:
           fi
 
           printf 'Pint checking %s\n' "${PHP_FILES[@]}"
-          vendor/bin/pint --test "${PHP_FILES[@]}"
+          if ! vendor/bin/pint --test "${PHP_FILES[@]}"; then
+            vendor/bin/pint "${PHP_FILES[@]}"
+            echo "----- PINT EXACT DIFF -----"
+            git diff -- "${PHP_FILES[@]}"
+            echo "----- END PINT EXACT DIFF -----"
+            exit 1
+          fi
 
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress
