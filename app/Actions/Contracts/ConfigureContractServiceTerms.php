@@ -123,7 +123,7 @@ class ConfigureContractServiceTerms
         $unit = Str::squish($unit);
         abort_if($unit === '' || mb_strlen($unit) > 40, 422, 'Service unit must be between 1 and 40 characters.');
 
-        abort_if(! in_array($settlementCycle, [
+        abort_if(!in_array($settlementCycle, [
             ContractServiceTerm::SETTLEMENT_PER_FULFILLMENT,
             ContractServiceTerm::SETTLEMENT_WEEKLY,
             ContractServiceTerm::SETTLEMENT_MONTHLY,
