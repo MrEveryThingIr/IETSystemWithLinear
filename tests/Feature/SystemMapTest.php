@@ -24,7 +24,9 @@ class SystemMapTest extends TestCase
             ->assertSee('Personal accounting')
             ->assertSee('Financial obligations')
             ->assertSee('Planner & temporal fabric')
-            ->assertSee('data-system-map', false);
+            ->assertSee('data-system-map', false)
+            ->assertSee('dir="ltr"', false)
+            ->assertSee('left-0 origin-top-left', false);
     }
 
     public function test_system_map_requires_authentication_and_verification(): void
