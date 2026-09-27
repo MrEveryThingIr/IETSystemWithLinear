@@ -18,6 +18,7 @@ return [
     ],
     'events' => [
         'created' => 'تم إنشاء العقد',
+        'service_terms_configured' => 'تم إعداد شروط الخدمة المدفوعة المنظمة',
         'version_proposed' => 'تم اقتراح نسخة عقد',
         'party_accepted' => 'قبل أحد الأطراف نسخة العقد',
         'version_accepted' => 'قبل جميع الأطراف المطلوبة نسخة العقد',
