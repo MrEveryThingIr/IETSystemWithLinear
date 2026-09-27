@@ -43,6 +43,9 @@
             <flux:sidebar.item :href="route('manual')" :current="request()->routeIs('manual') || request()->query('manual') === '1'" icon="book-open">
                 {{ __('ui.navigation.manual') }}
             </flux:sidebar.item>
+            <flux:sidebar.item :href="route('system-map')" :current="request()->routeIs('system-map')" icon="map">
+                {{ __('system_map.title') }}
+            </flux:sidebar.item>
         @endunless
         @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ManageUsers))
             <flux:sidebar.item :href="route('platform.access-invitations')" :current="request()->routeIs('platform.access-invitations')" icon="user-plus">
