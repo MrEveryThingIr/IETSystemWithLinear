@@ -49,6 +49,8 @@ class Index extends Component
     #[Url(as: 'quantum')]
     public int $slotMinutes = 15;
 
+    public int $selectedMinute = -1;
+
     #[Url(as: 'context')]
     public string $contextUuid = '';
 
@@ -235,6 +237,7 @@ class Index extends Component
         $this->month = TemporalCalendar::monthStart($date, $user, $timezone)->toDateString();
         $this->year = TemporalCalendar::yearStart($date, $user, $timezone)->toDateString();
         $this->hour = $hour;
+        $this->selectedMinute = -1;
         $this->calendarLevel = 'hour';
     }
 
@@ -243,6 +246,16 @@ class Index extends Component
         abort_unless(in_array($minutes, [60, 30, 15, 5, 1], true), 422);
 
         $this->slotMinutes = $minutes;
+        $this->selectedMinute = -1;
+    }
+
+    public function selectSlot(int $minute): void
+    {
+        abort_unless($this->calendarLevel === 'hour', 422);
+        abort_unless($minute >= 0 && $minute <= 59, 422);
+        abort_unless($minute % $this->slotMinutes === 0, 422);
+
+        $this->selectedMinute = $minute;
     }
 
     public function render(): View
@@ -286,6 +299,7 @@ class Index extends Component
         $calendarMonths = collect();
         $calendarHours = collect();
         $calendarSlots = collect();
+        $selectedSlotItems = collect();
 
         $monthStart = CarbonImmutable::parse($this->month, $timezone);
         $yearStart = CarbonImmutable::parse($this->year, $timezone);
@@ -314,16 +328,21 @@ class Index extends Component
                 for ($minute = 0; $minute < 60; $minute += $this->slotMinutes) {
                     $slotStart = $hourStart->setTime($this->hour, $minute);
                     $slotEnd = $slotStart->addMinutes($this->slotMinutes);
+                    $slotItems = $occurrences->filter(function (PlanOccurrence $occurrence) use ($slotStart, $slotEnd, $timezone): bool {
+                        $start = $occurrence->scheduled_start_at->setTimezone($timezone);
+
+                        return $start->gte($slotStart) && $start->lt($slotEnd);
+                    })->values();
 
                     $calendarSlots->push([
                         'start' => $slotStart,
                         'end' => $slotEnd,
-                        'items' => $occurrences->filter(function (PlanOccurrence $occurrence) use ($slotStart, $slotEnd, $timezone): bool {
-                            $start = $occurrence->scheduled_start_at->setTimezone($timezone);
-
-                            return $start->gte($slotStart) && $start->lt($slotEnd);
-                        })->values(),
+                        'items' => $slotItems,
                     ]);
+
+                    if ($this->selectedMinute === $minute) {
+                        $selectedSlotItems = $slotItems;
+                    }
                 }
             } elseif ($this->calendarLevel === 'day') {
                 $calendarHours = $occurrences->groupBy(
@@ -363,6 +382,7 @@ class Index extends Component
             'calendarMonths' => $calendarMonths,
             'calendarHours' => $calendarHours,
             'calendarSlots' => $calendarSlots,
+            'selectedSlotItems' => $selectedSlotItems,
             'calendarYearLabel' => TemporalCalendar::yearLabel($yearStart, $user, $timezone),
             'calendarMonthLabel' => TemporalCalendar::monthLabel($monthStart, $user, $timezone),
             'timezone' => $timezone,
