@@ -116,10 +116,14 @@
                     tabindex="0"
                     aria-label="{{ __('system_map.canvas_label') }}"
                 >
-                    <div class="relative" data-system-map-host>
+                    <div
+                        class="relative"
+                        style="width: {{ (int) round($map['width'] * 0.6) }}px; height: {{ (int) round($map['height'] * 0.6) }}px;"
+                        data-system-map-host
+                    >
                         <div
                             class="absolute start-0 top-0 origin-top-left"
-                            style="width: {{ $map['width'] }}px; height: {{ $map['height'] }}px;"
+                            style="width: {{ $map['width'] }}px; height: {{ $map['height'] }}px; transform: scale(0.6);"
                             data-system-map-scene
                         >
                             @foreach ($map['groups'] as $group)
@@ -196,8 +200,11 @@
                     </div>
                 </div>
 
-                <div class="pointer-events-none absolute bottom-3 start-3 rounded-lg bg-white/90 px-3 py-2 text-[11px] text-zinc-500 shadow-sm backdrop-blur dark:bg-zinc-900/90">
-                    {{ __('system_map.canvas_help') }}
+                <div class="pointer-events-none absolute bottom-3 start-3 space-y-1 rounded-lg bg-white/90 px-3 py-2 text-[11px] text-zinc-500 shadow-sm backdrop-blur dark:bg-zinc-900/90">
+                    <div>{{ __('system_map.canvas_help') }}</div>
+                    <div class="font-medium text-amber-700 dark:text-amber-300" data-system-map-js-status>
+                        {{ __('system_map.canvas_loading') }}
+                    </div>
                 </div>
             </div>
         </flux:card>
