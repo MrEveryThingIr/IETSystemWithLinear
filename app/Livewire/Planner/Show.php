@@ -153,7 +153,7 @@ class Show extends Component
         $this->expenseNote = '';
 
         $firstEstimate = $this->plan->expenseEstimates()->with('monetaryUnit')->first();
-        $this->expenseUnitCode = $firstEstimate?->monetaryUnit?->code
+        $this->expenseUnitCode = $firstEstimate?->monetaryUnit->code
             ?? (string) array_key_first(MonetaryUnitCatalog::all());
     }
 
