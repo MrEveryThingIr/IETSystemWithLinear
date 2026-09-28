@@ -133,7 +133,9 @@ class PersonalLifeToolsBaselineTest extends TestCase
             ->assertHasNoErrors()
             ->assertSee('Example service')
             ->assertDontSee('super-secret-value')
-            ->assertDontSee('person@example.test');
+            ->assertDontSee('person@example.test')
+            ->assertDontSee('https://example.test/login')
+            ->assertDontSee('private recovery note');
 
         $stored = DB::table('personal_secrets')->sole();
 
@@ -148,6 +150,8 @@ class PersonalLifeToolsBaselineTest extends TestCase
             ->call('toggleReveal', $item->id)
             ->assertSee('super-secret-value')
             ->assertSee('person@example.test')
+            ->assertSee('https://example.test/login')
+            ->assertSee('private recovery note')
             ->call('toggleReveal', $item->id)
             ->assertDontSee('super-secret-value');
     }
