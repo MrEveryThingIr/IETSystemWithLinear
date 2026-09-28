@@ -80,13 +80,13 @@ return new class extends Migration
 
         DB::table('iet_valuation_quotes')->insert([
             'uuid' => (string) Str::uuid(),
-            'usd_per_iet' => '0.0000010000',
+            'usd_per_iet' => '0.0000000100',
             'policy_version' => 'initial-v1',
             'factors' => json_encode([
                 'basis' => 'initial baseline',
                 'automatic_growth' => false,
             ], JSON_THROW_ON_ERROR),
-            'rationale' => 'Initial IET internal settlement valuation.',
+            'rationale' => 'Initial IET valuation: 1 IET equals 0.000001% of one USD.',
             'effective_at' => now(),
             'published_by_user_id' => null,
             'created_at' => now(),
