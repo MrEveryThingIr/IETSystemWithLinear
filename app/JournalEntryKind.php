@@ -10,6 +10,7 @@ enum JournalEntryKind: string
     case Transfer = 'transfer';
     case IetExchangeDeposit = 'iet_exchange_deposit';
     case IetExchangeCashout = 'iet_exchange_cashout';
+    case IetExchangeRelease = 'iet_exchange_release';
     case IetSettlementReserve = 'iet_settlement_reserve';
     case IetSettlementTransfer = 'iet_settlement_transfer';
     case IetSettlementRelease = 'iet_settlement_release';
