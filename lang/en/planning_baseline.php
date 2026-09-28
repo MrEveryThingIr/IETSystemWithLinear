@@ -7,7 +7,7 @@ return [
     'navigation' => [
         'workspace' => 'Workspace',
         'planning' => 'Planning',
-        'money' => 'Money',
+        'finance' => 'Finance',
         'vault' => 'Vault',
         'identity' => 'Profile',
         'invitations' => 'Invitations',
