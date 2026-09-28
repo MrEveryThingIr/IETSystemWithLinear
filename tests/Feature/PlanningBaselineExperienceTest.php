@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Actions\Contexts\EnsurePersonalContext;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
+use App\Actions\Planner\TransitionPlanOccurrence;
 use App\Http\Middleware\EnforceReleaseSurface;
 use App\Livewire\Planner\BasicCreate;
 use App\Livewire\Planner\BasicEdit;
 use App\Livewire\Planner\Index as PlannerIndex;
+use App\Livewire\Planner\Show as PlannerShow;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\PlanOccurrenceStatus;
@@ -126,6 +128,79 @@ class PlanningBaselineExperienceTest extends TestCase
             $this->assertSame(1440, $rule->duration_minutes);
             $this->assertSame('2026-09-30 00:00:00', $occurrence->window_start_at->setTimezone('UTC')->format('Y-m-d H:i:s'));
             $this->assertSame('2026-10-01 00:00:00', $occurrence->window_end_at->setTimezone('UTC')->format('Y-m-d H:i:s'));
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_repeat_tool_copies_a_completed_once_window_into_future_once_plans(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 10:30:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $source = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                'Focused Laravel study',
+                'Collections practice',
+                'UTC',
+                metadata: ['planning_studio' => 'baseline', 'category' => 'Study'],
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $source,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-28',
+                '10:00',
+                60,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            $occurrence = $source->occurrences()->sole();
+            $transition = app(TransitionPlanOccurrence::class);
+            $transition->start($occurrence, $actor->user);
+
+            CarbonImmutable::setTestNow('2026-09-28 10:45:00 UTC');
+            $transition->complete($occurrence->fresh(), $actor->user);
+
+            Livewire::actingAs($actor->user)
+                ->test(PlannerShow::class, ['plan' => $source])
+                ->call('openRepeatTool', $occurrence->id)
+                ->set('repeatMode', 'next_days')
+                ->set('repeatCount', 3)
+                ->call('applyRepeatTool')
+                ->assertHasNoErrors()
+                ->assertSet('repeatToolOpen', false);
+
+            $copies = Plan::query()
+                ->whereKeyNot($source->id)
+                ->with(['scheduleRules', 'occurrences'])
+                ->orderBy('id')
+                ->get();
+
+            $this->assertCount(3, $copies);
+            $this->assertSame(
+                ['2026-09-29', '2026-09-30', '2026-10-01'],
+                $copies->map(fn (Plan $plan): string => $plan->occurrences->sole()->local_date->format('Y-m-d'))->all(),
+            );
+
+            foreach ($copies as $copy) {
+                $rule = $copy->scheduleRules->sole();
+
+                $this->assertSame('Focused Laravel study', $copy->title);
+                $this->assertSame('Study', data_get($copy->metadata, 'category'));
+                $this->assertSame($source->uuid, data_get($copy->metadata, 'replicated_from_plan_uuid'));
+                $this->assertSame($occurrence->uuid, data_get($copy->metadata, 'replicated_from_occurrence_uuid'));
+                $this->assertSame(PlanScheduleFrequency::Once, $rule->frequency);
+                $this->assertSame(PlanTimingMode::Fixed, $rule->timing_mode);
+                $this->assertSame('10:00:00', $rule->start_time);
+                $this->assertSame(60, $rule->duration_minutes);
+            }
         } finally {
             CarbonImmutable::setTestNow();
         }
