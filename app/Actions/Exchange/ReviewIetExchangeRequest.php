@@ -6,6 +6,7 @@ use App\IetExchangeDirection;
 use App\JournalEntryKind;
 use App\Models\IetExchangeRequest;
 use App\Models\JournalEntry;
+use App\Models\Ledger;
 use App\Models\User;
 use App\PlatformCapability;
 use App\Actions\Accounting\PostJournalEntry;
@@ -37,7 +38,7 @@ class ReviewIetExchangeRequest
             $wallet = $side['wallet'];
             $funding = $side['funding'];
 
-            LedgerLock::lock($ledger->id);
+            Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->direction === IetExchangeDirection::Cashout) {
                 abort_if(
@@ -87,13 +88,5 @@ class ReviewIetExchangeRequest
 
             return $locked->fresh(['valuationQuote', 'reviewer']);
         });
-    }
-}
-
-final class LedgerLock
-{
-    public static function lock(int $ledgerId): void
-    {
-        \App\Models\Ledger::query()->whereKey($ledgerId)->lockForUpdate()->firstOrFail();
     }
 }
