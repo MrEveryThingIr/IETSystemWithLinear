@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 class PublishIetValuationQuote
 {
     /**
-     * @param array<string, mixed> $factors
+     * @param  array<string, mixed>  $factors
      */
     public function execute(
         User $user,
