@@ -139,6 +139,8 @@ return [
             'month_names' => 'نام ماه',
             'counts' => 'تعداد موارد',
             'plan_titles' => 'عنوان برنامه‌ها',
+            'details_mode' => 'جزئیات',
+            'map_mode' => 'نقشهٔ دیداری',
             'close' => 'بستن',
             'cell_mode' => 'شیوهٔ نمایش سلول',
             'mode_details' => 'جزئیات',
