@@ -46,7 +46,7 @@ class TemporalPreferences
 
     public static function showGregorianEquivalentFor(?User $user): bool
     {
-        return ! $user instanceof User || $user->show_gregorian_equivalent !== false;
+        return ! ($user instanceof User) || $user->show_gregorian_equivalent !== false;
     }
 
     public static function validTimezone(?string $timezone): bool
