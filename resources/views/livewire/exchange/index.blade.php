@@ -25,6 +25,9 @@
             <div class="mt-2 text-xl font-semibold tabular-nums" dir="ltr">
                 1 IET = &#36;{{ rtrim(rtrim((string) $quote->usd_per_iet, '0'), '.') }}
             </div>
+            <div class="mt-1 text-sm font-medium text-zinc-600 dark:text-zinc-300" dir="ltr">
+                X = {{ $quotePercent }}% of &#36;1
+            </div>
             <div class="mt-1 text-xs text-zinc-500">
                 {{ __('exchange.effective') }} <x-app.local-datetime :value="$quote->effective_at" />
             </div>
@@ -239,6 +242,9 @@
                 <article class="grid gap-2 px-5 py-4 md:grid-cols-[12rem_minmax(0,1fr)_auto] md:items-center">
                     <div class="font-semibold tabular-nums" dir="ltr">
                         1 IET = &#36;{{ rtrim(rtrim((string) $historyQuote->usd_per_iet, '0'), '.') }}
+                        <span class="ms-2 text-xs font-normal text-zinc-500">
+                            ({{ $quotePercents[$historyQuote->id] }}%)
+                        </span>
                     </div>
                     <div class="min-w-0 text-sm text-zinc-500" dir="auto">
                         {{ $historyQuote->rationale ?: __('exchange.no_rationale') }}
