@@ -268,7 +268,11 @@ class BasicIndex extends Component
     public function render(): View
     {
         $context = $this->personalContext();
-        $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
+        $ledgers = $context->ledgers()
+            ->with('monetaryUnit')
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
+            ->orderBy('id')
+            ->get();
         $ledger = $this->ledgerOrNull();
 
         $assetAccounts = collect();
