@@ -173,6 +173,8 @@ class ExchangeIndex extends Component
                 ->get()
             : collect();
 
+        $ietPerUsd = $pricing->quoteUsdMinor(100)['iet_minor'];
+
         $rateHistory = IetRateVersion::query()
             ->with('creator')
             ->latest('sequence')
@@ -185,6 +187,7 @@ class ExchangeIndex extends Component
             'usdPerIet' => $math->usdPerIet($currentRate),
             'percentOfDollar' => $math->percentOfDollar($currentRate),
             'quote' => $quote,
+            'ietPerUsd' => $ietPerUsd,
             'myRequests' => $myRequests,
             'pendingRequests' => $pendingRequests,
             'rateHistory' => $rateHistory,
