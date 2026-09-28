@@ -231,7 +231,7 @@ class CreatePlanScheduleRule
                         $conflict !== null,
                         422,
                         __('planning_baseline.validation.exclusive_overlap', [
-                            'title' => $conflict?->plan?->title ?? __('planning_baseline.validation.another_focused_plan'),
+                            'title' => $conflict->plan->title,
                         ]),
                     );
                 }
