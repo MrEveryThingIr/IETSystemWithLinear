@@ -10,6 +10,27 @@
         </div>
     @endif
 
+    <section class="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+                <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('accounting.baseline.iet_wallet') }}</div>
+                <div class="mt-1 text-2xl font-semibold tabular-nums">{{ number_format($ietBalance) }} IET</div>
+                <p class="mt-1 text-sm text-zinc-500">{{ __('accounting.baseline.iet_wallet_help') }}</p>
+            </div>
+            <div>
+                <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('accounting.baseline.iet_quote') }}</div>
+                <div class="mt-1 text-lg font-semibold tabular-nums" dir="ltr">
+                    1 IET = &#36;{{ rtrim(rtrim((string) $ietQuote->usd_per_iet, '0'), '.') }}
+                </div>
+                <p class="mt-1 text-sm text-zinc-500">{{ __('accounting.baseline.iet_quote_help') }}</p>
+            </div>
+        </div>
+
+        <flux:button :href="route('exchange.index')" variant="primary">
+            {{ __('accounting.baseline.open_exchange') }}
+        </flux:button>
+    </section>
+
     @if ($ledgers->isEmpty())
         <section class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
             <div class="max-w-2xl">
@@ -364,4 +385,84 @@
             </div>
         @endif
     @endif
+
+    <details class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <summary class="cursor-pointer list-none px-5 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-950/50">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <div class="font-semibold">{{ __('accounting.baseline.obligations') }}</div>
+                    <div class="mt-1 text-sm text-zinc-500">{{ __('accounting.baseline.obligations_help') }}</div>
+                </div>
+                <span class="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    {{ $obligationRows->count() }}
+                </span>
+            </div>
+        </summary>
+
+        <div class="overflow-x-auto border-t border-zinc-200 dark:border-zinc-800">
+            <table class="min-w-full text-sm">
+                <thead class="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-950/60">
+                    <tr>
+                        <th class="px-4 py-3 text-start">{{ __('accounting.baseline.role') }}</th>
+                        <th class="px-4 py-3 text-start">{{ __('accounting.baseline.counterparty') }}</th>
+                        <th class="px-4 py-3 text-end">{{ __('accounting.baseline.obligation_amount') }}</th>
+                        <th class="px-4 py-3 text-end">{{ __('accounting.baseline.outstanding') }}</th>
+                        <th class="px-4 py-3 text-start">{{ __('accounting.baseline.reference_value') }}</th>
+                        <th class="w-12 px-2 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    @forelse ($obligationRows as $row)
+                        @php
+                            $obligation = $row['obligation'];
+                            $unit = $obligation->monetaryUnit;
+                            $priced = $row['iet_pricing'];
+                        @endphp
+                        <tr>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium dark:bg-zinc-800">
+                                    {{ __('accounting.baseline.'.$row['role']) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 font-medium" dir="auto">{{ '@'.$row['counterparty'] }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-end tabular-nums">
+                                {{ AppSupportMoneyAmount::format((int) $obligation->amount_minor, (int) $unit->exponent) }}
+                                {{ $unit->code }}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-end font-semibold tabular-nums">
+                                {{ AppSupportMoneyAmount::format((int) $row['outstanding_minor'], (int) $unit->exponent) }}
+                                {{ $unit->code }}
+                            </td>
+                            <td class="px-4 py-3 text-xs text-zinc-500">
+                                @if ($priced)
+                                    <span class="whitespace-nowrap">
+                                        &#36;{{ AppSupportMoneyAmount::format((int) $priced->reference_usd_amount_minor, 2) }}
+                                    </span>
+                                    <span class="ms-1" dir="ltr">
+                                        @ {{ rtrim(rtrim((string) $priced->valuationQuote->usd_per_iet, '0'), '.') }}
+                                    </span>
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td class="px-2 py-2 text-end">
+                                <a
+                                    href="{{ route('financial-obligations.show', $obligation) }}"
+                                    class="inline-flex size-8 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white"
+                                    title="{{ __('accounting.baseline.open_obligation') }}"
+                                    aria-label="{{ __('accounting.baseline.open_obligation') }}"
+                                >→</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-10 text-center text-zinc-500">
+                                {{ __('accounting.baseline.no_obligations') }}
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </details>
 </section>
