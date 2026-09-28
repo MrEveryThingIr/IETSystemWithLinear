@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Contexts\EnsurePersonalContext;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
+use App\Http\Middleware\EnforceReleaseSurface;
 use App\Livewire\Planner\BasicCreate;
 use App\Livewire\Planner\BasicEdit;
 use App\Livewire\Planner\Index as PlannerIndex;
@@ -15,11 +16,10 @@ use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanTimingMode;
 use Carbon\CarbonImmutable;
-use App\Http\Middleware\EnforceReleaseSurface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Livewire\Livewire;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 class PlanningBaselineExperienceTest extends TestCase
