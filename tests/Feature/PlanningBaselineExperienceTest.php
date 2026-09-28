@@ -178,7 +178,7 @@ class PlanningBaselineExperienceTest extends TestCase
                 ->assertSet('repeatToolOpen', false);
 
             $copies = Plan::query()
-                ->whereKeyNot($source->id)
+                ->where('id', '!=', $source->id)
                 ->with(['scheduleRules', 'occurrences'])
                 ->orderBy('id')
                 ->get();
