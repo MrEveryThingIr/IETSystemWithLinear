@@ -224,7 +224,7 @@
                 </div>
 
                 <div class="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-                    <?php foreach ($calendarSlots as $slot): ?>
+                    <?php foreach ($calendarSlots as $slot) { ?>
                         <?php
                             $slotTime = $slot['start']->format('H:i');
                             $slotMinute = (int) $slot['start']->format('i');
@@ -255,7 +255,7 @@
                                 </a>
                             </div>
                         </div>
-                    <?php endforeach; ?>
+                    <?php } ?>
                 </div>
 
                 @if ($selectedSlotItems->isNotEmpty())
