@@ -246,13 +246,13 @@
                                 @endif
                             </button>
                             <div class="p-2">
-                                <flux:button
-                                    :href="route('planner.create', ['date' => $day, 'time' => $slotTime, 'duration' => $slotMinutes])"
-                                    size="sm"
-                                    variant="ghost"
-                                    icon="plus"
-                                    :aria-label="__('planning_baseline.calendar.add_at', ['time' => $slotTime])"
-                                />
+                                <a
+                                    href="{{ route('planner.create', ['date' => $day, 'time' => $slotTime, 'duration' => $slotMinutes]) }}"
+                                    class="inline-flex size-8 items-center justify-center rounded-lg text-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                                    aria-label="{{ __('planning_baseline.calendar.add_at', ['time' => $slotTime]) }}"
+                                >
+                                    +
+                                </a>
                             </div>
                         </div>
                     @endforeach
