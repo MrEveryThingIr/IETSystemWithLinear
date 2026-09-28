@@ -235,7 +235,7 @@
                         <x-app.local-date :value="$day" :show-equivalent="false" />
                         @if ($showWeekdayNames)
                             <span class="ms-2 text-xs font-normal text-zinc-500">
-                                {{ AppSupportTemporalCalendar::format(CarbonCarbonImmutable::parse($day, $timezone), auth()->user(), $timezone, 'EEEE') }}
+                                {{ $calendarDayWeekdayLabel }}
                             </span>
                         @endif
                     </span>
