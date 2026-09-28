@@ -47,14 +47,20 @@ class EnforceReleaseSurface
             return $next($request);
         }
 
-        // Livewire transports component actions through framework endpoints
-        // that are not product surfaces themselves. They must remain reachable
-        // after the initial page route has passed this release boundary.
-        if ($request->is('livewire/*')) {
+        // Livewire transports component actions/assets through framework
+        // endpoints that may use a version/hash-prefixed path such as
+        // "livewire-<hash>/update". These are infrastructure routes, not
+        // product surfaces, and must remain reachable after the page route
+        // itself has passed this release boundary.
+        $name = $request->route()?->getName();
+
+        if (
+            $request->is('livewire/*')
+            || $request->is('livewire-*/*')
+            || (is_string($name) && Str::contains($name, 'livewire'))
+        ) {
             return $next($request);
         }
-
-        $name = $request->route()?->getName();
 
         // The root landing page intentionally has no dependency on another
         // capability and remains the invitation-only entry point.
