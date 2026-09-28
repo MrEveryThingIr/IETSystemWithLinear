@@ -4,7 +4,6 @@ namespace App\Livewire\Planner;
 
 use App\Actions\Planner\AttachPlanOccurrenceEvidence;
 use App\Actions\Planner\RecordPlanOccurrenceExpense;
-use App\Actions\Planner\ReplicateCompletedOccurrenceToDates;
 use App\Actions\Planner\SetPlanOccurrencePrerequisite;
 use App\Actions\Planner\TransitionPlan;
 use App\Actions\Planner\TransitionPlanOccurrence;
@@ -20,11 +19,9 @@ use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanStatus;
 use App\Support\MonetaryUnitCatalog;
-use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -55,23 +52,6 @@ class Show extends Component
 
     public string $expenseNote = '';
 
-    public bool $repeatToolOpen = false;
-
-    public ?int $repeatSourceOccurrenceId = null;
-
-    public string $repeatMode = 'next_days';
-
-    public int $repeatCount = 21;
-
-    public string $repeatMonth = '';
-
-    public string $repeatDate = '';
-
-    /** @var list<string> */
-    public array $repeatDates = [];
-
-    public string $repeatMessage = '';
-
     public function mount(Plan $plan): void
     {
         Gate::forUser($this->user())->authorize('view', $plan);
@@ -96,77 +76,6 @@ class Show extends Component
     public function cancelPlan(TransitionPlan $transition): void
     {
         $this->plan = $transition->execute($this->plan, $this->user(), PlanStatus::Cancelled);
-    }
-
-    public function openRepeatTool(int $occurrenceId): void
-    {
-        $occurrence = $this->occurrence($occurrenceId);
-        Gate::forUser($this->user())->authorize('manage', $occurrence->plan);
-
-        abort_unless($occurrence->status === PlanOccurrenceStatus::Completed, 422);
-
-        $this->repeatSourceOccurrenceId = $occurrence->id;
-        $this->repeatMode = 'next_days';
-        $this->repeatCount = 21;
-        $this->repeatMonth = CarbonImmutable::now($this->plan->timezone)->addMonth()->format('Y-m');
-        $this->repeatDate = '';
-        $this->repeatDates = [];
-        $this->repeatMessage = '';
-        $this->repeatToolOpen = true;
-        $this->resetValidation();
-    }
-
-    public function closeRepeatTool(): void
-    {
-        $this->repeatToolOpen = false;
-        $this->repeatSourceOccurrenceId = null;
-        $this->repeatDate = '';
-        $this->repeatDates = [];
-        $this->resetValidation();
-    }
-
-    public function addRepeatDate(): void
-    {
-        $data = $this->validate([
-            'repeatDate' => ['required', 'date_format:Y-m-d'],
-        ]);
-
-        $date = $data['repeatDate'];
-
-        if (! in_array($date, $this->repeatDates, true)) {
-            $this->repeatDates[] = $date;
-            sort($this->repeatDates);
-        }
-
-        $this->repeatDate = '';
-        $this->resetValidation('repeatDate');
-    }
-
-    public function removeRepeatDate(string $date): void
-    {
-        $this->repeatDates = array_values(array_filter(
-            $this->repeatDates,
-            fn (string $candidate): bool => $candidate !== $date,
-        ));
-    }
-
-    public function applyRepeatTool(ReplicateCompletedOccurrenceToDates $repeat): void
-    {
-        $source = $this->repeatSourceOccurrence();
-        $dates = $this->repeatTargetDates($source);
-
-        $copies = $repeat->execute($source, $this->user(), $dates);
-
-        $this->repeatMessage = trans_choice(
-            'planning_baseline.tools.repeat.created',
-            $copies->count(),
-            ['count' => $copies->count()],
-        );
-        $this->repeatToolOpen = false;
-        $this->repeatSourceOccurrenceId = null;
-        $this->repeatDate = '';
-        $this->repeatDates = [];
-        $this->resetValidation();
     }
 
     public function startOccurrence(int $occurrenceId, TransitionPlanOccurrence $transition): void
@@ -396,105 +305,6 @@ class Show extends Component
         return PlanPrerequisite::query()
             ->where('plan_id', $this->plan->id)
             ->findOrFail($prerequisiteId);
-    }
-
-    private function repeatSourceOccurrence(): PlanOccurrence
-    {
-        if ($this->repeatSourceOccurrenceId === null) {
-            throw ValidationException::withMessages([
-                'repeatMode' => __('planning_baseline.tools.repeat.choose_source'),
-            ]);
-        }
-
-        return $this->occurrence($this->repeatSourceOccurrenceId);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function repeatTargetDates(PlanOccurrence $source): array
-    {
-        $today = CarbonImmutable::now($this->plan->timezone)->startOfDay();
-
-        if ($this->repeatMode === 'next_days') {
-            $this->validate([
-                'repeatCount' => ['required', 'integer', 'min:1', 'max:62'],
-            ]);
-
-            return collect(range(1, $this->repeatCount))
-                ->map(fn (int $offset): string => $today->addDays($offset)->format('Y-m-d'))
-                ->all();
-        }
-
-        if ($this->repeatMode === 'same_weekday') {
-            $this->validate([
-                'repeatCount' => ['required', 'integer', 'min:1', 'max:52'],
-            ]);
-
-            $weekday = $source->local_date->isoWeekday();
-            $cursor = $today;
-            $dates = [];
-
-            while (count($dates) < $this->repeatCount) {
-                $cursor = $cursor->addDay();
-
-                if ($cursor->isoWeekday() === $weekday) {
-                    $dates[] = $cursor->format('Y-m-d');
-                }
-            }
-
-            return $dates;
-        }
-
-        if ($this->repeatMode === 'month') {
-            $this->validate([
-                'repeatMonth' => ['required', 'date_format:Y-m'],
-            ]);
-
-            $start = CarbonImmutable::createFromFormat('!Y-m', $this->repeatMonth, $this->plan->timezone);
-            $end = $start->endOfMonth();
-
-            $dates = [];
-            for ($cursor = $start; $cursor->lte($end); $cursor = $cursor->addDay()) {
-                if ($cursor->greaterThan($today)) {
-                    $dates[] = $cursor->format('Y-m-d');
-                }
-            }
-
-            if ($dates === []) {
-                throw ValidationException::withMessages([
-                    'repeatMonth' => __('planning_baseline.tools.repeat.future_month_required'),
-                ]);
-            }
-
-            return $dates;
-        }
-
-        if ($this->repeatMode === 'selected_dates') {
-            $this->validate([
-                'repeatDates' => ['required', 'array', 'min:1', 'max:62'],
-                'repeatDates.*' => ['required', 'date_format:Y-m-d'],
-            ], [
-                'repeatDates.required' => __('planning_baseline.tools.repeat.choose_dates'),
-                'repeatDates.min' => __('planning_baseline.tools.repeat.choose_dates'),
-            ]);
-
-            foreach ($this->repeatDates as $date) {
-                $parsed = CarbonImmutable::createFromFormat('!Y-m-d', $date, $this->plan->timezone);
-
-                if (! $parsed->greaterThan($today)) {
-                    throw ValidationException::withMessages([
-                        'repeatDate' => __('planning_baseline.tools.repeat.future_only'),
-                    ]);
-                }
-            }
-
-            return $this->repeatDates;
-        }
-
-        throw ValidationException::withMessages([
-            'repeatMode' => __('planning_baseline.tools.repeat.invalid_mode'),
-        ]);
     }
 
     private function user(): User
