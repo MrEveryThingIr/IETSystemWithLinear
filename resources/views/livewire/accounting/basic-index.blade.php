@@ -22,6 +22,9 @@
                 <div class="mt-1 text-lg font-semibold tabular-nums" dir="ltr">
                     1 IET = &#36;{{ rtrim(rtrim((string) $ietQuote->usd_per_iet, '0'), '.') }}
                 </div>
+                <div class="mt-1 text-sm font-medium text-zinc-600 dark:text-zinc-300" dir="ltr">
+                    X = {{ $ietQuotePercent }}% of &#36;1
+                </div>
                 <p class="mt-1 text-sm text-zinc-500">{{ __('accounting.baseline.iet_quote_help') }}</p>
             </div>
         </div>
