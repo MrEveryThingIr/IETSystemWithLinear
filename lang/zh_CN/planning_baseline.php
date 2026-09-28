@@ -69,6 +69,8 @@ return [
         'timing' => 'Timing',
         'all_timing' => 'All timing',
         'category' => 'Category',
+        'attention' => '注意力',
+        'all_attention' => '全部注意力模式',
         'all_categories' => 'All categories',
     ],
     'timing' => [
