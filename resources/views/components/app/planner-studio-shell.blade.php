@@ -1,7 +1,7 @@
 @props(['source' => null])
 
-<div class="mx-auto grid max-w-[92rem] gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-    <aside class="lg:sticky lg:top-6 lg:self-start">
+<div class="mx-auto max-w-[92rem] lg:flex lg:items-start lg:gap-6">
+    <aside class="mb-5 lg:sticky lg:top-6 lg:mb-0 lg:w-64 lg:shrink-0">
         <div class="space-y-5 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
             <div>
                 <div class="text-sm font-semibold">{{ __('planning_baseline.sidebar.title') }}</div>
@@ -47,7 +47,7 @@
         </div>
     </aside>
 
-    <main class="min-w-0">
+    <main class="min-w-0 flex-1">
         {{ $slot }}
     </main>
 </div>
