@@ -9,11 +9,14 @@ use App\Models\FinancialObligationEvent;
 use App\Models\Settlement;
 use App\Models\User;
 use App\SettlementStatus;
+use App\Support\IetSettlementRail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class RespondToSettlement
 {
+    public function __construct(private readonly IetSettlementRail $ietRail) {}
+
     public function confirm(Settlement $settlement, User $user): Settlement
     {
         return $this->respond($settlement, $user, true, null);
@@ -72,6 +75,10 @@ class RespondToSettlement
 
                 $locked->confirm($actor, now());
 
+                if ($locked->iet_amount_minor !== null) {
+                    $this->ietRail->finalize($locked, $current);
+                }
+
                 $eventType = FinancialObligationEventType::SettlementConfirmed;
                 $payload = [
                     'amount_minor' => $locked->amount_minor,
@@ -79,6 +86,10 @@ class RespondToSettlement
                 ];
             } else {
                 $locked->reject($actor, (string) $note, now());
+
+                if ($locked->iet_amount_minor !== null) {
+                    $this->ietRail->release($locked, $current);
+                }
 
                 $eventType = FinancialObligationEventType::SettlementRejected;
                 $payload = [
