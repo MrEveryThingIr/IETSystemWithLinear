@@ -213,6 +213,10 @@ class Show extends Component
     {
         $user = $this->user();
 
+        if ((string) config('release.profile') === 'planning_baseline') {
+            return $this->renderBaseline($user);
+        }
+
         $plan = Plan::query()
             ->with([
                 'context.assets',
@@ -266,6 +270,26 @@ class Show extends Component
             'originCommitment' => $originCommitment,
             'unitCatalog' => MonetaryUnitCatalog::all(),
         ]);
+    }
+
+    private function renderBaseline(User $user): View
+    {
+        $plan = Plan::query()
+            ->with([
+                'context',
+                'creator.user',
+                'scheduleRules',
+                'occurrences.scheduleRule',
+            ])
+            ->findOrFail($this->plan->id);
+
+        Gate::forUser($user)->authorize('view', $plan);
+        $this->plan = $plan;
+
+        return view('livewire.planner.basic-show', [
+            'canManage' => Gate::forUser($user)->allows('manage', $plan),
+            'canParticipate' => Gate::forUser($user)->allows('participate', $plan),
+        ])->title($plan->title);
     }
 
     private function occurrence(int $occurrenceId): PlanOccurrence
