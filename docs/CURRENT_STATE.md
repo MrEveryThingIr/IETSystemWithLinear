@@ -1,5 +1,17 @@
 # IET Current State
 
+## Personal life tools candidate
+
+Active candidate branch: `codex/personal-money-vault-calendar-tools`.
+
+This candidate selectively admits three optional baseline capabilities on top of the accepted Planning/Profile foundation:
+
+- an icon-only Planning Studio Tools rail with toggleable Calendar cell overlays;
+- a paper-like Personal Money surface reusing the mature immutable Personal Accounting kernel, without calculator/dashboard math;
+- a per-User encrypted Private Vault with explicit Reveal/Hide semantics.
+
+See `docs/PERSONAL_LIFE_TOOLS_BASELINE.md`.
+
 ## Planning Studio baseline — active experience-first assembly
 
 Active branch: `codex/planning-studio-baseline`.
