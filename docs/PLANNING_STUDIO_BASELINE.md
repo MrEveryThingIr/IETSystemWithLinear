@@ -19,7 +19,7 @@ Included runtime layers:
 1. application/platform infrastructure;
 2. account identity, authentication and email verification;
 3. invitation-based platform access and authorized access administration;
-4. basic profile identity plus temporal preferences;
+4. clean Profile: account image/identity, interface language, and system-wide temporal/display preferences;
 5. personal Context provision required by Planner authority;
 6. basic Planning Studio;
 7. shared profile-aware temporal/calendar infrastructure;
@@ -134,16 +134,35 @@ Filters apply before accumulation:
 - timing kind: all / fixed / flexible day;
 - category.
 
-## Date/time presentation
+## Clean Profile and date/time presentation
 
-The temporal kernel remains authoritative and respects profile calendar/timezone settings.
+The baseline Profile is deliberately system-focused. It contains only:
 
-The baseline presentation is intentionally compact:
+- profile image;
+- username/email identity;
+- display name;
+- interface language;
+- timezone behavior and timezone;
+- primary calendar: automatic, Gregorian, Persian/Jalali, or Umm al-Qura;
+- date display style: long, medium, or numeric;
+- time display style: 24-hour or 12-hour;
+- optional Gregorian equivalent when a non-Gregorian calendar is primary.
 
-- primary profile calendar/date;
-- ordinary clock time;
-- no permanent equivalent-calendar/timezone text on every item;
-- detailed temporal equivalence remains infrastructure available for later opt-in/detail surfaces.
+Skills, interests, needs/offers, biography, public-profile workflows, and other domain concepts remain excluded.
+
+The temporal kernel is authoritative. Date pickers—including Planning Studio tools—reuse the profile-aware calendar picker rather than native Gregorian-only date/month controls. Repeat-by-month and same-day-of-month/year projection follow the user's selected calendar boundaries, not Gregorian boundaries hidden underneath the UI.
+
+Stored dates remain canonical Gregorian civil dates/UTC instants as appropriate; display and calendar selection do not rewrite underlying historical data.
+
+## Typography and surface hierarchy
+
+The baseline uses a bilingual font stack:
+
+- Inter for Latin text;
+- Vazirmatn for Persian/Arabic text;
+- robust system fallbacks when web fonts are unavailable.
+
+The visual baseline uses a light page canvas, distinct white working surfaces, clearer borders, and stronger selected/active states. Contrast should clarify hierarchy without turning every block into a heavy card.
 
 ## Planning Studio navigation and time-window projection tool
 
@@ -202,5 +221,8 @@ one real scenario
 7. Calendar drills Year → Month → Day → Hour → minute quantum.
 8. Month/day/hour cells show accumulated counts rather than expanding rows.
 9. Search, timing and category filters change calendar accumulation.
-10. Identity exposes account identity and temporal preferences without unrelated Profile domains.
-11. Unadmitted routes such as Groups/Accounting/Contracts are not reachable in the baseline profile.
+10. Profile exposes image/account identity/language/temporal display preferences without unrelated Profile domains.
+11. Set Persian/Jalali calendar and confirm Planner + Repeat date pickers and month projection follow Jalali boundaries.
+12. Change date format, 12/24-hour format, and Gregorian-equivalent preference; confirm shared temporal presentation follows it.
+13. Check Persian typography and mixed Persian/English text at desktop and mobile widths.
+14. Unadmitted routes such as Groups/Accounting/Contracts are not reachable in the baseline profile.
