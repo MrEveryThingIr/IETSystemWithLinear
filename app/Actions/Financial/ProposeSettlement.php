@@ -9,7 +9,7 @@ use App\Models\FinancialObligation;
 use App\Models\FinancialObligationEvent;
 use App\Models\Settlement;
 use App\Models\User;
-use App\Support\AccountingSummary;
+use App\Support\IetAvailableBalance;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -19,7 +19,7 @@ class ProposeSettlement
 {
     public function __construct(
         private readonly EnsureIetWallet $ietWallets,
-        private readonly AccountingSummary $accountingSummary,
+        private readonly IetAvailableBalance $available,
     ) {}
 
     public function execute(
@@ -73,7 +73,7 @@ class ProposeSettlement
                 $wallet = $this->ietWallets->execute($current);
 
                 abort_if(
-                    $this->accountingSummary->accountBalanceMinor($wallet['wallet']) < $amountMinor,
+                    $this->available->forUser($current, $wallet['wallet']) < $amountMinor,
                     422,
                     'Insufficient IET balance for this Settlement.',
                 );
