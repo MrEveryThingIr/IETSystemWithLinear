@@ -29,14 +29,13 @@ class EnforceReleaseSurface
         'dashboard',
         'getting-started',
         'profile.edit',
-        'profiles.show',
         'profiles.images.show',
-        'actors.profile.reference',
         'actors.avatar',
         'planner.*',
         'platform.access',
         'platform.access-invitations',
         'actors.*',
+        'livewire.*',
     ];
 
     /**
