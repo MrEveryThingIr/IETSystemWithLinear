@@ -23,6 +23,7 @@ class RespondToSettlement
         private readonly PostFinancialObligationAccounting $postObligationAccounting,
         private readonly PostSettlementAccounting $postSettlementAccounting,
     ) {}
+
     public function confirm(Settlement $settlement, User $user): Settlement
     {
         return $this->respond($settlement, $user, true, null);
@@ -85,6 +86,8 @@ class RespondToSettlement
                 );
 
                 $isIet = $obligation->monetaryUnit->code === 'IET';
+                $debtorUser = null;
+                $creditorUser = null;
 
                 if ($isIet) {
                     $debtorUser = $obligation->debtor->user;
@@ -113,8 +116,9 @@ class RespondToSettlement
                 $locked->confirm($actor, now());
 
                 if ($isIet) {
-                    $this->postSettlementAccounting->execute($locked, $obligation->debtor->user);
-                    $this->postSettlementAccounting->execute($locked, $obligation->creditor->user);
+                    abort_unless($debtorUser instanceof User && $creditorUser instanceof User, 422);
+                    $this->postSettlementAccounting->execute($locked, $debtorUser);
+                    $this->postSettlementAccounting->execute($locked, $creditorUser);
                 }
 
                 $eventType = FinancialObligationEventType::SettlementConfirmed;
