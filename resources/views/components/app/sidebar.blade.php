@@ -12,8 +12,8 @@
         <flux:sidebar.item :href="route('planner.index')" :current="request()->routeIs('planner.*')" icon="calendar-days">
             {{ __('planning_baseline.navigation.planning') }}
         </flux:sidebar.item>
-        <flux:sidebar.item :href="route('accounting.index')" :current="request()->routeIs('accounting.*')" icon="banknotes">
-            {{ __('planning_baseline.navigation.money') }}
+        <flux:sidebar.item :href="route('finance.index')" :current="request()->routeIs('finance.*') || request()->routeIs('accounting.*') || request()->routeIs('financial-obligations.*')" icon="banknotes">
+            {{ __('planning_baseline.navigation.finance') }}
         </flux:sidebar.item>
         <flux:sidebar.item :href="route('vault.index')" :current="request()->routeIs('vault.*')" icon="lock-closed">
             {{ __('planning_baseline.navigation.vault') }}
