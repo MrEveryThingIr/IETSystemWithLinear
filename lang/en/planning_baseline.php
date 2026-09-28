@@ -140,6 +140,7 @@ return [
             ],
             'count_instances' => 'How many future instances?',
             'month' => 'Month',
+            'month_help' => 'Pick any date inside the month. The picker follows your Profile calendar; the tool uses that entire calendar month.',
             'date' => 'Choose a date',
             'add_date' => 'Add date',
             'fractal_help' => 'The source window supplies the hour and duration. The tool changes the larger time partition—day, week, month, year, or selected dates—while every generated item remains an independent once-plan.',
