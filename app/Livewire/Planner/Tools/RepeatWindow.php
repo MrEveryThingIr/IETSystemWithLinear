@@ -263,6 +263,24 @@ class RepeatWindow extends Component
                 'repeatDates.min' => __('planning_baseline.tools.repeat.choose_dates'),
             ]);
 
+            $sourceDate = $sourceDay->format('Y-m-d');
+
+            foreach ($this->repeatDates as $date) {
+                $candidate = CarbonImmutable::createFromFormat('!Y-m-d', $date, $timezone);
+
+                if (! $candidate->greaterThan($today)) {
+                    throw ValidationException::withMessages([
+                        'repeatDate' => __('planning_baseline.tools.repeat.future_only'),
+                    ]);
+                }
+
+                if ($date === $sourceDate) {
+                    throw ValidationException::withMessages([
+                        'repeatDate' => __('planning_baseline.tools.repeat.other_instances_only'),
+                    ]);
+                }
+            }
+
             return $this->repeatDates;
         }
 
