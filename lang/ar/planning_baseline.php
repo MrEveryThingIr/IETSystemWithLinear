@@ -69,6 +69,8 @@ return [
         'timing' => 'Timing',
         'all_timing' => 'All timing',
         'category' => 'Category',
+        'attention' => 'نوع الانتباه',
+        'all_attention' => 'كل أنماط الانتباه',
         'all_categories' => 'All categories',
     ],
     'timing' => [
