@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Planner;
 
+use App\Actions\Contexts\EnsurePersonalContext;
 use App\Models\Context;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
@@ -504,9 +505,7 @@ class Index extends Component
     private function context(User $user): ?Context
     {
         if ($this->contextUuid === '' && (string) config('release.profile') === 'planning_baseline') {
-            return Context::query()
-                ->whereHas('personalBinding', fn ($binding) => $binding->where('actor_id', $user->actor?->id))
-                ->first();
+            return app(EnsurePersonalContext::class)->execute($user);
         }
 
         if ($this->contextUuid === '') {
