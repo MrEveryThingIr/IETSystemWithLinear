@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'back_to_money' => 'Back to Money',
+    'commitment_source' => 'Commitment',
+    'contract_source' => 'Contract',
+    'iet_pricing' => 'This obligation was priced from USD :usd at the snapshotted quote 1 IET = $:quote, producing :iet IET. Later quote changes do not alter it.',
+    'iet_settlement_boundary' => 'IET settlements are internal wallet transfers. Confirmation requires enough IET in the debtor wallet and posts both sides atomically.',
     'title' => 'Financial obligation',
     'obligations' => 'obligations',
     'earned' => 'Earned',
