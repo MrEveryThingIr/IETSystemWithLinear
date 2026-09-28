@@ -84,17 +84,6 @@
                                 <h3 class="font-semibold" dir="auto">{{ $item->title }}</h3>
                             </div>
 
-                            @if ($item->url)
-                                <a
-                                    href="{{ $item->url }}"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    class="mt-2 block max-w-xl truncate text-sm text-zinc-500 underline decoration-zinc-300 underline-offset-4 hover:text-zinc-900 dark:hover:text-white"
-                                    dir="ltr"
-                                >
-                                    {{ $item->url }}
-                                </a>
-                            @endif
                         </div>
 
                         <div class="flex shrink-0 items-center gap-1">
@@ -128,6 +117,21 @@
                                 <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('vault.secret') }}</div>
                                 <div class="mt-1 break-all font-mono text-sm" dir="auto">{{ $item->secret ?: '—' }}</div>
                             </div>
+                            @if ($item->url)
+                                <div class="sm:col-span-2">
+                                    <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('vault.url') }}</div>
+                                    <a
+                                        href="{{ $item->url }}"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        class="mt-1 block max-w-xl truncate text-sm underline decoration-zinc-300 underline-offset-4 hover:text-zinc-900 dark:hover:text-white"
+                                        dir="ltr"
+                                    >
+                                        {{ $item->url }}
+                                    </a>
+                                </div>
+                            @endif
+
                             @if ($item->notes)
                                 <div class="sm:col-span-2">
                                     <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('vault.notes') }}</div>
