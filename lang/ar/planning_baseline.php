@@ -1,4 +1,5 @@
 <?php
+
 // Baseline keys intentionally mirror English until native Arabic copy is reviewed.
 
 return [
