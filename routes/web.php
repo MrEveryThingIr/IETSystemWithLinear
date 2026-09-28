@@ -69,6 +69,7 @@ use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Planner\Show as PlannerShow;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Livewire\Platform\AccessInvitations;
+use App\Livewire\Profile\BasicManage as ProfileBasicManage;
 use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
 use App\Livewire\Profile\Show as ProfileShow;
@@ -113,7 +114,7 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
     Route::view('/getting-started', 'getting-started')->middleware('verified')->name('getting-started');
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
-    Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
+    Route::livewire('/profile', config('release.profile') === 'planning_baseline' ? ProfileBasicManage::class : ProfileManage::class)->name('profile.edit');
     Route::livewire('/notifications', NotificationIndex::class)->name('notifications.index');
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
