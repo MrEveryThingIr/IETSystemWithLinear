@@ -67,6 +67,9 @@ class Index extends Component
     #[Url]
     public string $category = '';
 
+    #[Url]
+    public string $attention = 'all';
+
     #[Url(as: 'display')]
     public bool $calendarDisplayOpen = false;
 
@@ -121,6 +124,10 @@ class Index extends Component
 
         if (! in_array($this->timing, ['all', 'fixed', 'flexible_day'], true)) {
             $this->timing = 'all';
+        }
+
+        if (! in_array($this->attention, ['all', 'exclusive', 'background'], true)) {
+            $this->attention = 'all';
         }
 
         if (! in_array($this->calendarCellMode, ['details', 'map'], true)) {
@@ -735,6 +742,10 @@ class Index extends Component
         $category = trim((string) data_get($plan->metadata, 'category', ''));
 
         if ($this->category !== '' && $category !== $this->category) {
+            return false;
+        }
+
+        if ($this->attention !== 'all' && $plan->attention_mode->value !== $this->attention) {
             return false;
         }
 
