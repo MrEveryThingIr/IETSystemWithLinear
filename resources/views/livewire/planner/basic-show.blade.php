@@ -93,6 +93,9 @@
                         @error('repeatDate')
                             <div class="text-sm text-red-600">{{ $message }}</div>
                         @enderror
+                        @error('repeatDates')
+                            <div class="text-sm text-red-600">{{ $message }}</div>
+                        @enderror
 
                         @if ($repeatDates !== [])
                             <div class="flex flex-wrap gap-2">
