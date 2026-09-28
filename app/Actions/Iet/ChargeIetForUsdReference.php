@@ -5,6 +5,7 @@ namespace App\Actions\Iet;
 use App\Actions\Accounting\PostJournalEntry;
 use App\JournalEntryKind;
 use App\Models\IetFlowCharge;
+use App\Models\Ledger;
 use App\Models\User;
 use App\Support\IetPricing;
 use App\Support\IetWalletBalance;
@@ -64,7 +65,13 @@ final class ChargeIetForUsdReference
                 return $already;
             }
 
-            $this->balances->assertAtLeast($user, $quote['iet_minor']);
+            Ledger::query()->whereKey($side['ledger']->id)->lockForUpdate()->firstOrFail();
+
+            $balance = (int) $side['wallet']->journalLines()
+                ->selectRaw('COALESCE(SUM(debit_minor), 0) - COALESCE(SUM(credit_minor), 0) AS balance_minor')
+                ->value('balance_minor');
+
+            abort_if($balance < $quote['iet_minor'], 422, __('iet.validation.insufficient_balance'));
 
             $expense = $side['ledger']->accounts()->where('system_key', 'general_expense')->firstOrFail();
 
