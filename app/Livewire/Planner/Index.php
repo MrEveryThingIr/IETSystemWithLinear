@@ -287,6 +287,13 @@ class Index extends Component
         $this->calendarLevel = 'hour';
     }
 
+    public function updatedCalendarCellMode(string $mode): void
+    {
+        if ($mode === 'map' && $this->calendarColorBy === 'none') {
+            $this->calendarColorBy = 'plan';
+        }
+    }
+
     public function setSlotMinutes(int $minutes): void
     {
         abort_unless(in_array($minutes, [60, 30, 15, 5, 1], true), 422);
