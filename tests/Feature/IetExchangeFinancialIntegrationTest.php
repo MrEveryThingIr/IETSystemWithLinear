@@ -38,14 +38,15 @@ class IetExchangeFinancialIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_initial_quote_prices_three_fifty_as_three_point_five_million_iet_without_float_math(): void
+    public function test_initial_quote_prices_literal_point_zero_zero_zero_zero_zero_one_percent_without_float_math(): void
     {
         $pricing = app(IetPricing::class);
         $quote = $pricing->currentQuote();
 
-        $this->assertSame('0.0000010000', (string) $quote->usd_per_iet);
-        $this->assertSame(3_500_000, $pricing->ietForUsdMinor(350, $quote));
-        $this->assertSame(1_000_000, $pricing->ietForUsdMinor(100, $quote));
+        $this->assertSame('0.0000000100', (string) $quote->usd_per_iet);
+        $this->assertSame('0.000001', $pricing->percentOfUsd($quote));
+        $this->assertSame(350_000_000, $pricing->ietForUsdMinor(350, $quote));
+        $this->assertSame(100_000_000, $pricing->ietForUsdMinor(100, $quote));
     }
 
     public function test_manual_deposit_internal_charge_and_cashout_reconcile_to_one_iet_wallet(): void
@@ -65,7 +66,7 @@ class IetExchangeFinancialIntegrationTest extends TestCase
             'DEPOSIT-350',
         );
 
-        $this->assertSame(3_500_000, $deposit->iet_amount);
+        $this->assertSame(350_000_000, $deposit->iet_amount);
         $this->assertSame(IetExchangeStatus::Pending, $deposit->status);
 
         app(ReviewIetExchangeRequest::class)->confirm($deposit, $admin->user);
@@ -74,7 +75,7 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         $summary = app(AccountingSummary::class);
 
         $this->assertSame(
-            3_500_000,
+            350_000_000,
             $summary->accountBalanceMinor($wallet['wallet']),
         );
         $this->assertSame(
@@ -92,9 +93,9 @@ class IetExchangeFinancialIntegrationTest extends TestCase
             'One-dollar internal flow',
         );
 
-        $this->assertSame(1_000_000, $charge->iet_amount);
+        $this->assertSame(100_000_000, $charge->iet_amount);
         $this->assertSame(
-            2_500_000,
+            250_000_000,
             $summary->accountBalanceMinor($wallet['wallet']->fresh()),
         );
 
@@ -119,7 +120,7 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         app(ReviewIetExchangeRequest::class)->confirm($cashout, $admin->user);
 
         $this->assertSame(
-            1_500_000,
+            150_000_000,
             $summary->accountBalanceMinor($wallet['wallet']->fresh()),
         );
         $this->assertSame(IetExchangeStatus::Confirmed, $cashout->fresh()->status);
@@ -143,7 +144,7 @@ class IetExchangeFinancialIntegrationTest extends TestCase
 
         $newQuote = app(PublishIetValuationQuote::class)->execute(
             $admin->user,
-            '0.0000010001',
+            '0.0000000101',
             'Small audited valuation update.',
             ['successful_flow_count' => 12],
         );
@@ -155,8 +156,8 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         );
 
         $this->assertNotSame($old->valuation_quote_id, $new->valuation_quote_id);
-        $this->assertSame('0.0000010000', (string) $old->fresh()->valuationQuote->usd_per_iet);
-        $this->assertSame('0.0000010001', (string) $newQuote->usd_per_iet);
+        $this->assertSame('0.0000000100', (string) $old->fresh()->valuationQuote->usd_per_iet);
+        $this->assertSame('0.0000000101', (string) $newQuote->usd_per_iet);
         $this->assertLessThan($old->iet_amount, $new->iet_amount);
         $this->assertDatabaseCount('iet_valuation_quotes', 2);
     }
@@ -221,13 +222,13 @@ class IetExchangeFinancialIntegrationTest extends TestCase
             );
 
             $this->assertSame(350, $priced->reference_usd_amount_minor);
-            $this->assertSame(3_500_000, $priced->iet_amount);
+            $this->assertSame(350_000_000, $priced->iet_amount);
             $this->assertSame('IET', $priced->obligation->monetaryUnit->code);
 
             $settlement = app(ProposeSettlement::class)->execute(
                 $priced->obligation,
                 $alice->user,
-                3_500_000,
+                350_000_000,
                 CarbonImmutable::now()->subMinute(),
                 'IET internal settlement',
             );
@@ -241,11 +242,11 @@ class IetExchangeFinancialIntegrationTest extends TestCase
             $bobWallet = app(EnsureIetWallet::class)->execute($bob->user);
 
             $this->assertSame(
-                1_500_000,
+                150_000_000,
                 $summary->accountBalanceMinor($aliceWallet['wallet']),
             );
             $this->assertSame(
-                3_500_000,
+                350_000_000,
                 $summary->accountBalanceMinor($bobWallet['wallet']),
             );
 
