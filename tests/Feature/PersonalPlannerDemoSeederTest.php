@@ -47,7 +47,9 @@ class PersonalPlannerDemoSeederTest extends TestCase
 
         $occurrenceStatuses = PlanOccurrence::query()
             ->whereHas('plan', fn ($query) => $query->where('origin_type', 'demo.personal_planner'))
+            ->get()
             ->pluck('status')
+            ->map(fn (PlanOccurrenceStatus $status): string => $status->value)
             ->unique();
 
         foreach (PlanOccurrenceStatus::cases() as $status) {
@@ -59,7 +61,9 @@ class PersonalPlannerDemoSeederTest extends TestCase
 
         $frequencies = PlanScheduleRule::query()
             ->whereHas('plan', fn ($query) => $query->where('origin_type', 'demo.personal_planner'))
+            ->get()
             ->pluck('frequency')
+            ->map(fn (PlanScheduleFrequency $frequency): string => $frequency->value)
             ->unique();
 
         foreach (PlanScheduleFrequency::cases() as $frequency) {
