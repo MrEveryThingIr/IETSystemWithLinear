@@ -42,7 +42,7 @@ final class IetPricing
         }
 
         [$whole, $fraction] = explode('.', $decimal, 2);
-        $denominator = 10 ** strlen($fraction);
+        $denominator = (int) (10 ** strlen($fraction));
         $numerator = ((int) $whole * $denominator) + (int) $fraction;
 
         if ($numerator <= 0) {
@@ -70,7 +70,9 @@ final class IetPricing
 
         $product = $left * $right;
 
-        return intdiv($product + $denominator - 1, $denominator);
+        $quotient = intdiv($product, $denominator);
+
+        return $product % $denominator === 0 ? $quotient : $quotient + 1;
     }
 
     private function gcd(int $a, int $b): int
