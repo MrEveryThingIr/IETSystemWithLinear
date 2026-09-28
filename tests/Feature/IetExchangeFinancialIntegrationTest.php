@@ -391,7 +391,6 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         $this->assertDatabaseCount('journal_entries', 0);
     }
 
-
     /**
      * @return array{0: Actor, 1: Actor, 2: Contract, 3: Commitment}
      */
