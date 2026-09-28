@@ -110,7 +110,28 @@ function localeWeekday(locale, dayNumber) {
     }).format(date);
 }
 
-function localizedDate(value, locale, calendar) {
+function dateFormatOptions(dateFormat = 'long') {
+    if (dateFormat === 'numeric') {
+        return {year: 'numeric', month: '2-digit', day: '2-digit'};
+    }
+
+    if (dateFormat === 'medium') {
+        return {year: 'numeric', month: 'short', day: 'numeric'};
+    }
+
+    return {year: 'numeric', month: 'long', day: 'numeric'};
+}
+
+function timeFormatOptions(timeFormat = '24h', seconds = false) {
+    return {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: seconds ? '2-digit' : undefined,
+        hour12: timeFormat === '12h',
+    };
+}
+
+function localizedDate(value, locale, calendar, dateFormat = 'long') {
     const date = isoToDate(value);
 
     if (!date) {
@@ -120,13 +141,11 @@ function localizedDate(value, locale, calendar) {
     return new Intl.DateTimeFormat(locale, {
         calendar,
         timeZone: 'UTC',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+        ...dateFormatOptions(dateFormat),
     }).format(date);
 }
 
-function localizedDateTime(value, locale, calendar, timezone, seconds = false) {
+function localizedDateTime(value, locale, calendar, timezone, seconds = false, dateFormat = 'long', timeFormat = '24h') {
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
@@ -136,17 +155,13 @@ function localizedDateTime(value, locale, calendar, timezone, seconds = false) {
     return new Intl.DateTimeFormat(locale, {
         calendar,
         timeZone: timezone || 'UTC',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        second: seconds ? '2-digit' : undefined,
+        ...dateFormatOptions(dateFormat),
+        ...timeFormatOptions(timeFormat, seconds),
         timeZoneName: 'short',
     }).format(date);
 }
 
-function localizedInstantTime(value, locale, timezone) {
+function localizedInstantTime(value, locale, timezone, timeFormat = '24h') {
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
@@ -155,32 +170,19 @@ function localizedInstantTime(value, locale, timezone) {
 
     return new Intl.DateTimeFormat(locale, {
         timeZone: timezone || 'UTC',
-        hour: 'numeric',
-        minute: '2-digit',
+        ...timeFormatOptions(timeFormat),
     }).format(date);
 }
 
-function gregorianEquivalentDate(value, locale) {
-    const date = isoToDate(value);
-
-    if (!date) {
-        return value ?? '';
-    }
-
-    return new Intl.DateTimeFormat(locale, {
-        calendar: 'gregory',
-        timeZone: 'UTC',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    }).format(date);
+function gregorianEquivalentDate(value, locale, dateFormat = 'long') {
+    return localizedDate(value, locale, 'gregory', dateFormat);
 }
 
-function gregorianEquivalentDateTime(value, locale, timezone, seconds = false) {
-    return localizedDateTime(value, locale, 'gregory', timezone, seconds);
+function gregorianEquivalentDateTime(value, locale, timezone, seconds = false, dateFormat = 'long', timeFormat = '24h') {
+    return localizedDateTime(value, locale, 'gregory', timezone, seconds, dateFormat, timeFormat);
 }
 
-function localizedTime(value, locale) {
+function localizedTime(value, locale, timeFormat = '24h') {
     const match = /^(\d{2}):(\d{2})/.exec(value ?? '');
 
     if (!match) {
@@ -191,8 +193,7 @@ function localizedTime(value, locale) {
 
     return new Intl.DateTimeFormat(locale, {
         timeZone: 'UTC',
-        hour: 'numeric',
-        minute: '2-digit',
+        ...timeFormatOptions(timeFormat),
     }).format(date);
 }
 
@@ -206,6 +207,8 @@ class IetDatePicker extends HTMLElement {
         this.locale = this.dataset.locale || document.documentElement.lang || 'en';
         this.calendar = calendarOrFallback(this.dataset.calendar || 'gregory');
         this.timezone = this.dataset.timezone || 'UTC';
+        this.dateFormat = this.dataset.dateFormat || 'long';
+        this.showEquivalent = this.dataset.showEquivalent !== 'false';
         this.firstDay = Number(this.dataset.firstDay || 1);
         this.input = this.querySelector('[data-date-value]');
         this.trigger = this.querySelector('[data-date-trigger]');
@@ -344,14 +347,14 @@ class IetDatePicker extends HTMLElement {
     renderDisplay() {
         const value = this.input?.value ?? '';
         this.display.textContent = value
-            ? localizedDate(value, this.locale, this.calendar)
+            ? localizedDate(value, this.locale, this.calendar, this.dateFormat)
             : (this.dataset.emptyLabel || '');
 
         if (this.equivalentDisplay) {
-            const showEquivalent = Boolean(value) && this.calendar !== 'gregory';
+            const showEquivalent = this.showEquivalent && Boolean(value) && this.calendar !== 'gregory';
             this.equivalentDisplay.hidden = !showEquivalent;
             this.equivalentDisplay.textContent = showEquivalent
-                ? `${this.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDate(value, this.locale)}`
+                ? `${this.dataset.equivalentLabel || 'Gregorian'} · ${gregorianEquivalentDate(value, this.locale, this.dateFormat)}`
                 : '';
         }
     }
