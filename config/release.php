@@ -6,12 +6,17 @@ return [
     | Release experience profile
     |--------------------------------------------------------------------------
     |
-    | office_alpha keeps the first published experience intentionally small:
-    | invitation onboarding, Dashboard, Needs/Offers/Services, Profile, Help,
-    | and Access Invitations for authorized administrators. Mature kernels
-    | remain in the codebase and routes so development can continue without
-    | coupling release UX simplification to destructive feature removal.
+    | planning_baseline is the default experience-first assembly. It exposes
+    | only the system foundation (identity/auth/access invitation) plus the
+    | basic Planning Studio and its shared temporal/calendar surface.
+    |
+    | Mature capabilities remain in the repository as source-library code and
+    | can be re-admitted deliberately. They are not part of this runtime until
+    | a later selective-assembly milestone accepts them.
+    |
+    | full keeps the historical integrated runtime available for regression
+    | tests and source-library verification.
     |
     */
-    'profile' => env('IET_RELEASE_PROFILE', 'office_alpha'),
+    'profile' => env('IET_RELEASE_PROFILE', 'planning_baseline'),
 ];

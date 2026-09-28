@@ -53,6 +53,7 @@ use App\Livewire\Groups\Invitations;
 use App\Livewire\Groups\Show as GroupShow;
 use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceManagement;
+use App\Livewire\Home\PlanningWorkspace;
 use App\Livewire\Home\Today as HomeToday;
 use App\Livewire\Intents\Create as IntentCreate;
 use App\Livewire\Intents\Directory as IntentDirectory;
@@ -61,11 +62,14 @@ use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Journeys\Index as JourneyIndex;
 use App\Livewire\Notifications\Index as NotificationIndex;
+use App\Livewire\Planner\BasicCreate as PlannerBasicCreate;
+use App\Livewire\Planner\BasicEdit as PlannerBasicEdit;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Planner\Show as PlannerShow;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Livewire\Platform\AccessInvitations;
+use App\Livewire\Profile\BasicManage as ProfileBasicManage;
 use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
 use App\Livewire\Profile\Show as ProfileShow;
@@ -106,11 +110,11 @@ Route::post('/logout', LogoutController::class)->middleware('auth')->name('logou
 Route::middleware(['auth', 'account.active'])->group(function (): void {
     Route::livewire('/email/verify', VerifyEmailNotice::class)->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
-    Route::livewire('/dashboard', HomeToday::class)->middleware('verified')->name('dashboard');
-    Route::view('/getting-started', 'getting-started')->middleware('verified')->name('getting-started');
+    Route::livewire('/dashboard', config('release.profile') === 'planning_baseline' ? PlanningWorkspace::class : HomeToday::class)->middleware('verified')->name('dashboard');
+    Route::view('/getting-started', config('release.profile') === 'planning_baseline' ? 'getting-started-baseline' : 'getting-started')->middleware('verified')->name('getting-started');
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
-    Route::livewire('/profile', ProfileManage::class)->name('profile.edit');
+    Route::livewire('/profile', config('release.profile') === 'planning_baseline' ? ProfileBasicManage::class : ProfileManage::class)->name('profile.edit');
     Route::livewire('/notifications', NotificationIndex::class)->name('notifications.index');
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
@@ -131,7 +135,8 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->can('view', 'obligation')
         ->name('financial-obligations.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
-    Route::livewire('/planner/create', PlannerCreate::class)->name('planner.create');
+    Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
+    Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
     Route::livewire('/accounting', AccountingIndex::class)->name('accounting.index');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\EnforceReleaseSurface;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -19,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ['middleware' => ['web', 'auth', 'account.active', 'verified']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [AssignRequestId::class, SetLocale::class]);
+        $middleware->web(append: [AssignRequestId::class, SetLocale::class, EnforceReleaseSurface::class]);
         $middleware->alias(['account.active' => EnsureAccountIsActive::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

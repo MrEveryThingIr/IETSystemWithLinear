@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        $this->call(SystemManualSeeder::class);
+        if ((string) config('release.profile') !== 'planning_baseline') {
+            $this->call(SystemManualSeeder::class);
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Planner;
 
+use App\Actions\Contexts\EnsurePersonalContext;
 use App\Models\Context;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
@@ -12,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -54,6 +56,15 @@ class Index extends Component
     #[Url(as: 'context')]
     public string $contextUuid = '';
 
+    #[Url]
+    public string $search = '';
+
+    #[Url]
+    public string $timing = 'all';
+
+    #[Url]
+    public string $category = '';
+
     public function mount(): void
     {
         if (! in_array($this->view, ['today', 'list', 'calendar'], true)) {
@@ -83,6 +94,10 @@ class Index extends Component
 
         if (! in_array($this->slotMinutes, [60, 30, 15, 5, 1], true)) {
             $this->slotMinutes = 15;
+        }
+
+        if (! in_array($this->timing, ['all', 'fixed', 'flexible_day'], true)) {
+            $this->timing = 'all';
         }
     }
 
@@ -270,6 +285,7 @@ class Index extends Component
             ->with([
                 'plan.context',
                 'plan.participants.actor.user',
+                'scheduleRule',
             ])
             ->when($context instanceof Context, fn ($query) => $query->whereHas(
                 'plan',
@@ -280,17 +296,29 @@ class Index extends Component
             ->get()
             ->filter(function (PlanOccurrence $occurrence) use ($user, $context): bool {
                 return ($context === null || (int) $occurrence->plan->context_id === (int) $context->id)
-                    && Gate::forUser($user)->allows('view', $occurrence->plan);
+                    && Gate::forUser($user)->allows('view', $occurrence->plan)
+                    && $this->matchesOccurrenceFilters($occurrence);
             })
             ->take(500)
             ->values();
 
-        $plans = Plan::query()
-            ->with(['context', 'participants.actor.user'])
+        $allPlans = Plan::query()
+            ->with(['context', 'participants.actor.user', 'scheduleRules'])
             ->when($context instanceof Context, fn ($query) => $query->where('context_id', $context->id))
             ->latest('updated_at')
             ->get()
             ->filter(fn (Plan $plan): bool => Gate::forUser($user)->allows('view', $plan))
+            ->values();
+
+        $categories = $allPlans
+            ->map(fn (Plan $plan): string => trim((string) data_get($plan->metadata, 'category', '')))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        $plans = $allPlans
+            ->filter(fn (Plan $plan): bool => $this->matchesPlanFilters($plan))
             ->take(150)
             ->values();
 
@@ -298,7 +326,10 @@ class Index extends Component
         $calendarOccurrences = collect();
         $calendarMonths = collect();
         $calendarHours = collect();
+        $calendarFlexible = collect();
         $calendarSlots = collect();
+        $baselineCalendarHours = collect();
+        $baselineCalendarSlots = collect();
         $selectedSlotItems = collect();
 
         $monthStart = CarbonImmutable::parse($this->month, $timezone);
@@ -329,6 +360,10 @@ class Index extends Component
                     $slotStart = $hourStart->setTime($this->hour, $minute);
                     $slotEnd = $slotStart->addMinutes($this->slotMinutes);
                     $slotItems = $occurrences->filter(function (PlanOccurrence $occurrence) use ($slotStart, $slotEnd, $timezone): bool {
+                        if (($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') !== 'fixed') {
+                            return false;
+                        }
+
                         $start = $occurrence->scheduled_start_at->setTimezone($timezone);
 
                         return $start->gte($slotStart) && $start->lt($slotEnd);
@@ -340,16 +375,36 @@ class Index extends Component
                         'items' => $slotItems,
                     ]);
 
+                    $baselineCalendarSlots->push([
+                        'time' => $slotStart->format('H:i'),
+                        'minute' => $minute,
+                        'count' => $slotItems->count(),
+                    ]);
+
                     if ($this->selectedMinute === $minute) {
                         $selectedSlotItems = $slotItems;
                     }
                 }
             } elseif ($this->calendarLevel === 'day') {
-                $calendarHours = $occurrences->groupBy(
-                    fn (PlanOccurrence $occurrence): int => (int) $occurrence->scheduled_start_at
-                        ->setTimezone($timezone)
-                        ->format('G'),
-                );
+                $calendarFlexible = $occurrences
+                    ->filter(fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'flexible_day')
+                    ->values();
+
+                $calendarHours = $occurrences
+                    ->filter(fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'fixed')
+                    ->groupBy(
+                        fn (PlanOccurrence $occurrence): int => (int) $occurrence->scheduled_start_at
+                            ->setTimezone($timezone)
+                            ->format('G'),
+                    );
+
+                for ($hourIndex = 0; $hourIndex < 24; $hourIndex++) {
+                    $baselineCalendarHours->push([
+                        'hour' => $hourIndex,
+                        'label' => str_pad((string) $hourIndex, 2, '0', STR_PAD_LEFT).':00',
+                        'count' => $calendarHours->get($hourIndex, collect())->count(),
+                    ]);
+                }
             } else {
                 $firstDay = TemporalPreferences::weekdayOrder($user->locale)[0] ?? 1;
                 $carbonFirstDay = $firstDay === 7 ? CarbonInterface::SUNDAY : $firstDay;
@@ -357,37 +412,57 @@ class Index extends Component
                 $gridStart = $monthStart->startOfWeek($carbonFirstDay);
                 $gridEnd = $monthEnd->endOfWeek($carbonFirstDay);
 
-                for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
-                    $calendarDays->push([
-                        'date' => $date,
-                        'key' => $date->toDateString(),
-                        'label' => TemporalCalendar::dayLabel($date, $user, $timezone),
-                        'in_month' => TemporalCalendar::monthKey($date, $user, $timezone) === $selectedMonthKey,
-                    ]);
-                }
-
                 $calendarOccurrences = $occurrences->groupBy(
                     fn (PlanOccurrence $occurrence): string => $occurrence->scheduled_start_at
                         ->setTimezone($timezone)
                         ->format('Y-m-d'),
                 );
+
+                for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
+                    $key = $date->toDateString();
+                    $dayItems = $calendarOccurrences->get($key, collect());
+
+                    $calendarDays->push([
+                        'date' => $date,
+                        'key' => $key,
+                        'label' => TemporalCalendar::dayLabel($date, $user, $timezone),
+                        'in_month' => TemporalCalendar::monthKey($date, $user, $timezone) === $selectedMonthKey,
+                        'count' => $dayItems->count(),
+                        'fixed_count' => $dayItems->filter(
+                            fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'fixed',
+                        )->count(),
+                        'flexible_count' => $dayItems->filter(
+                            fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'flexible_day',
+                        )->count(),
+                    ]);
+                }
             }
         }
 
-        return view('livewire.planner.index', [
+        $viewName = (string) config('release.profile') === 'planning_baseline'
+            ? 'livewire.planner.baseline-index'
+            : 'livewire.planner.index';
+
+        return view($viewName, [
             'plans' => $plans,
             'occurrences' => $occurrences,
             'calendarDays' => $calendarDays,
             'calendarOccurrences' => $calendarOccurrences,
             'calendarMonths' => $calendarMonths,
             'calendarHours' => $calendarHours,
+            'calendarFlexible' => $calendarFlexible,
             'calendarSlots' => $calendarSlots,
+            'baselineCalendarHours' => $baselineCalendarHours,
+            'baselineCalendarSlots' => $baselineCalendarSlots,
             'selectedSlotItems' => $selectedSlotItems,
             'calendarYearLabel' => TemporalCalendar::yearLabel($yearStart, $user, $timezone),
             'calendarMonthLabel' => TemporalCalendar::monthLabel($monthStart, $user, $timezone),
             'timezone' => $timezone,
             'context' => $context,
-        ])->title(__('planner.title'));
+            'categories' => $categories,
+        ])->title((string) config('release.profile') === 'planning_baseline'
+            ? __('planning_baseline.title')
+            : __('planner.title'));
     }
 
     /** @return array{CarbonImmutable, CarbonImmutable} */
@@ -457,6 +532,10 @@ class Index extends Component
 
     private function context(User $user): ?Context
     {
+        if ($this->contextUuid === '' && (string) config('release.profile') === 'planning_baseline') {
+            return app(EnsurePersonalContext::class)->execute($user);
+        }
+
         if ($this->contextUuid === '') {
             return null;
         }
@@ -465,6 +544,62 @@ class Index extends Component
         Gate::forUser($user)->authorize('view', $context);
 
         return $context;
+    }
+
+    private function matchesOccurrenceFilters(PlanOccurrence $occurrence): bool
+    {
+        if ((string) config('release.profile') === 'planning_baseline'
+            && $occurrence->status->value === 'cancelled') {
+            return false;
+        }
+
+        $mode = $occurrence->scheduleRule?->timing_mode->value ?? 'fixed';
+
+        if ($this->timing !== 'all' && $mode !== $this->timing) {
+            return false;
+        }
+
+        return $this->matchesPlanText($occurrence->plan);
+    }
+
+    private function matchesPlanFilters(Plan $plan): bool
+    {
+        if (! $this->matchesPlanText($plan)) {
+            return false;
+        }
+
+        if ($this->timing === 'all') {
+            return true;
+        }
+
+        return $plan->scheduleRules->contains(
+            fn ($rule): bool => $rule->timing_mode->value === $this->timing,
+        );
+    }
+
+    private function matchesPlanText(Plan $plan): bool
+    {
+        if ((string) config('release.profile') === 'planning_baseline'
+            && data_get($plan->metadata, 'planning_studio') !== 'baseline') {
+            return false;
+        }
+
+        $category = trim((string) data_get($plan->metadata, 'category', ''));
+
+        if ($this->category !== '' && $category !== $this->category) {
+            return false;
+        }
+
+        $needle = Str::lower(trim($this->search));
+        if ($needle === '') {
+            return true;
+        }
+
+        return Str::contains(Str::lower(implode(' ', [
+            $plan->title,
+            (string) $plan->description,
+            $category,
+        ])), $needle);
     }
 
     private function user(): User
