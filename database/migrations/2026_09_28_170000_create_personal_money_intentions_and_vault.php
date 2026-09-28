@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('title', 180);
             $table->text('identifier')->nullable();
             $table->text('secret')->nullable();
-            $table->string('url', 2048)->nullable();
+            $table->text('url')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
 
