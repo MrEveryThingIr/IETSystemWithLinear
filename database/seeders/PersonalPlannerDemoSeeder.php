@@ -20,6 +20,7 @@ use App\PlanStatus;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 
 class PersonalPlannerDemoSeeder extends Seeder
@@ -44,27 +45,43 @@ class PersonalPlannerDemoSeeder extends Seeder
             return;
         }
 
-        $user = User::query()
-            ->with('actor')
-            ->where('email', 'test@example.com')
-            ->first();
+        // DatabaseSeeder intentionally suppresses model events, while the Planner
+        // domain Actions rely on model creating hooks for UUIDs and invariants.
+        // Re-enable events only for this scenario seed, then restore the caller's
+        // disabled state so the surrounding bootstrap keeps its existing contract.
+        $restoreEventsDisabled = Model::getEventDispatcher() === null;
 
-        if (! $user instanceof User || $user->actor === null) {
-            return;
+        if ($restoreEventsDisabled) {
+            Model::setEventDispatcher(app('events'));
         }
 
-        $context = app(EnsurePersonalContext::class)->execute($user);
-        $timezone = TemporalPreferences::timezoneFor($user);
-        $now = CarbonImmutable::now($timezone)->startOfMinute();
+        try {
+            $user = User::query()
+                ->with('actor')
+                ->where('email', 'test@example.com')
+                ->first();
 
-        $this->seedMorningFoundation($context, $user, $timezone, $now);
-        $this->seedEveningReplacement($context, $user, $timezone, $now);
-        $this->seedCurrentFocus($context, $user, $timezone, $now);
-        $this->seedWeeklyReview($context, $user, $timezone, $now);
-        $this->seedGroceriesAndBudget($context, $user, $timezone, $now);
-        $this->seedWalkingChallenge($context, $user, $timezone, $now);
-        $this->seedCancelledExperiment($context, $user, $timezone, $now);
-        $this->seedPassedButUnresolvedTask($context, $user, $timezone, $now);
+            if (! $user instanceof User || $user->actor === null) {
+                return;
+            }
+
+            $context = app(EnsurePersonalContext::class)->execute($user);
+            $timezone = TemporalPreferences::timezoneFor($user);
+            $now = CarbonImmutable::now($timezone)->startOfMinute();
+
+            $this->seedMorningFoundation($context, $user, $timezone, $now);
+            $this->seedEveningReplacement($context, $user, $timezone, $now);
+            $this->seedCurrentFocus($context, $user, $timezone, $now);
+            $this->seedWeeklyReview($context, $user, $timezone, $now);
+            $this->seedGroceriesAndBudget($context, $user, $timezone, $now);
+            $this->seedWalkingChallenge($context, $user, $timezone, $now);
+            $this->seedCancelledExperiment($context, $user, $timezone, $now);
+            $this->seedPassedButUnresolvedTask($context, $user, $timezone, $now);
+        } finally {
+            if ($restoreEventsDisabled) {
+                Model::unsetEventDispatcher();
+            }
+        }
     }
 
     private function seedMorningFoundation(
