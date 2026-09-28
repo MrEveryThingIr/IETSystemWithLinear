@@ -20,17 +20,28 @@ final class IetPricing
     {
         $decimal = trim($quote instanceof IetValuationQuote ? (string) $quote->usd_per_iet : $quote);
 
-        if (! preg_match('/^(?:0|[1-9]\d*)\.(\d{1,10})$/', $decimal, $matches)) {
+        if (! preg_match('/^(?:0|[1-9]\d*)\.(\d{1,18})$/', $decimal, $matches)) {
             throw new InvalidArgumentException('Invalid IET valuation precision.');
         }
 
-        [$whole] = explode('.', $decimal, 2);
-        $fraction = str_pad($matches[1], 10, '0');
-        $percentWhole = ltrim($whole.substr($fraction, 0, 2), '0');
-        $percentWhole = $percentWhole === '' ? '0' : $percentWhole;
-        $percentFraction = rtrim(substr($fraction, 2), '0');
+        [$whole, $fraction] = explode('.', $decimal, 2);
+        $digits = ltrim($whole.$fraction, '0');
+        $digits = $digits === '' ? '0' : $digits;
+        $scale = strlen($fraction) - 2;
 
-        return $percentFraction === '' ? $percentWhole : $percentWhole.'.'.$percentFraction;
+        if ($scale <= 0) {
+            return $digits.str_repeat('0', abs($scale));
+        }
+
+        if (strlen($digits) <= $scale) {
+            $value = '0.'.str_repeat('0', $scale - strlen($digits)).$digits;
+        } else {
+            $value = substr($digits, 0, -$scale).'.'.substr($digits, -$scale);
+        }
+
+        $value = rtrim(rtrim($value, '0'), '.');
+
+        return $value === '' ? '0' : $value;
     }
 
     public function ietForUsdMinor(int $usdMinor, ?IetValuationQuote $quote = null): int
@@ -54,7 +65,7 @@ final class IetPricing
     {
         $decimal = trim($decimal);
 
-        if (! preg_match('/^(?:0|[1-9]\d*)\.\d{1,10}$/', $decimal)) {
+        if (! preg_match('/^(?:0|[1-9]\d*)\.\d{1,18}$/', $decimal)) {
             throw new InvalidArgumentException('Invalid IET valuation precision.');
         }
 
