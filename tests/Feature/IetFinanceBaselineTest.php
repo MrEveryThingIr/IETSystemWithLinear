@@ -57,7 +57,7 @@ class IetFinanceBaselineTest extends TestCase
 
         $required = IetValueMath::ietMinorForUsdMinor(350, $snapshot->usd_pico_per_iet);
 
-        $this->assertSame(350_000_000_000_000, $required);
+        $this->assertSame(35_000_000_000, $required);
         $this->assertSame('350000000', IetValueMath::formatIetMinor($required));
     }
 
@@ -82,7 +82,7 @@ class IetFinanceBaselineTest extends TestCase
             app(ReviewIetExchangeRequest::class)->confirm($deposit, $admin->user);
 
             $this->assertSame(
-                350_000_000_000_000,
+                35_000_000_000,
                 app(IetWallet::class)->availableMinor($owner->user),
             );
 
@@ -94,7 +94,7 @@ class IetFinanceBaselineTest extends TestCase
             );
 
             $this->assertSame(
-                250_000_000_000_000,
+                25_000_000_000,
                 app(IetWallet::class)->availableMinor($owner->user),
             );
 
@@ -105,7 +105,7 @@ class IetFinanceBaselineTest extends TestCase
             );
 
             $this->assertSame(
-                350_000_000_000_000,
+                35_000_000_000,
                 app(IetWallet::class)->availableMinor($owner->user),
             );
             $this->assertSame(IetExchangeStatus::Rejected, $cashout->fresh()->status);
@@ -143,7 +143,7 @@ class IetFinanceBaselineTest extends TestCase
 
             $this->assertSame('0.0000010001', IetValueMath::xPercent($newSnapshot->usd_pico_per_iet));
             $this->assertNotSame($before->iet_valuation_snapshot_id, $after->iet_valuation_snapshot_id);
-            $this->assertSame(350_000_000_000_000, $before->iet_amount_minor);
+            $this->assertSame(35_000_000_000, $before->iet_amount_minor);
             $this->assertLessThan($before->iet_amount_minor, $after->iet_amount_minor);
             $this->assertSame(
                 10000,
@@ -175,13 +175,13 @@ class IetFinanceBaselineTest extends TestCase
             );
 
             $this->assertSame(SettlementStatus::PendingConfirmation, $settlement->status);
-            $this->assertSame(350_000_000_000_000, $settlement->iet_amount_minor);
+            $this->assertSame(35_000_000_000, $settlement->iet_amount_minor);
             $this->assertSame(
-                650_000_000_000_000,
+                65_000_000_000,
                 app(IetWallet::class)->availableMinor($debtor->user),
             );
             $this->assertSame(
-                350_000_000_000_000,
+                35_000_000_000,
                 app(IetWallet::class)->reservedMinor($debtor->user),
             );
             $this->assertSame(0, app(IetWallet::class)->availableMinor($creditor->user));
@@ -192,7 +192,7 @@ class IetFinanceBaselineTest extends TestCase
             $this->assertSame(0, $obligation->fresh()->outstandingMinor());
             $this->assertSame(0, app(IetWallet::class)->reservedMinor($debtor->user));
             $this->assertSame(
-                350_000_000_000_000,
+                35_000_000_000,
                 app(IetWallet::class)->availableMinor($creditor->user),
             );
         } finally {
@@ -219,7 +219,7 @@ class IetFinanceBaselineTest extends TestCase
             );
 
             $this->assertSame(
-                300_000_000_000_000,
+                30_000_000_000,
                 app(IetWallet::class)->availableMinor($debtor->user),
             );
 
@@ -231,7 +231,7 @@ class IetFinanceBaselineTest extends TestCase
 
             $this->assertSame(SettlementStatus::Rejected, $settlement->fresh()->status);
             $this->assertSame(
-                500_000_000_000_000,
+                50_000_000_000,
                 app(IetWallet::class)->availableMinor($debtor->user),
             );
             $this->assertSame(0, app(IetWallet::class)->reservedMinor($debtor->user));
