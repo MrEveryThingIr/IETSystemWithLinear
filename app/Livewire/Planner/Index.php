@@ -521,6 +521,11 @@ class Index extends Component
 
     private function matchesOccurrenceFilters(PlanOccurrence $occurrence): bool
     {
+        if ((string) config('release.profile') === 'planning_baseline'
+            && $occurrence->status->value === 'cancelled') {
+            return false;
+        }
+
         $mode = $occurrence->scheduleRule?->timing_mode?->value ?? 'fixed';
 
         if ($this->timing !== 'all' && $mode !== $this->timing) {
@@ -547,6 +552,11 @@ class Index extends Component
 
     private function matchesPlanText(Plan $plan): bool
     {
+        if ((string) config('release.profile') === 'planning_baseline'
+            && data_get($plan->metadata, 'planning_studio') !== 'baseline') {
+            return false;
+        }
+
         $category = trim((string) data_get($plan->metadata, 'category', ''));
 
         if ($this->category !== '' && $category !== $this->category) {
