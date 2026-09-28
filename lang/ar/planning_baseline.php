@@ -9,8 +9,8 @@ return [
     'navigation' => [
         'workspace' => 'Workspace',
         'planning' => 'Planning',
-        'money' => 'Money',
-        'vault' => 'Vault',
+        'money' => 'المال',
+        'vault' => 'الخزنة',
         'identity' => 'Profile',
         'invitations' => 'Invitations',
         'access' => 'Access',
@@ -127,13 +127,13 @@ return [
     ],
     'tools' => [
         'calendar_display' => [
-            'sidebar' => 'Calendar display',
-            'title' => 'Calendar cell display',
-            'help' => 'Choose what the fractal calendar reveals without making every cell permanently busy.',
-            'weekday_names' => 'Weekday names',
-            'month_names' => 'Month names',
-            'counts' => 'Item counts',
-            'plan_titles' => 'Plan titles',
+            'sidebar' => 'عرض التقويم',
+            'title' => 'عرض خلايا التقويم',
+            'help' => 'اختر ما يظهر داخل خلايا التقويم الكسري من دون إبقائها مزدحمة دائمًا.',
+            'weekday_names' => 'أسماء أيام الأسبوع',
+            'month_names' => 'أسماء الشهور',
+            'counts' => 'عدد العناصر',
+            'plan_titles' => 'عناوين الخطط',
         ],
         'title' => 'Tools',
         'repeat' => [
