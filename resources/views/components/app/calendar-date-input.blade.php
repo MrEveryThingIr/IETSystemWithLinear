@@ -4,6 +4,8 @@
     'calendar' => \App\Support\TemporalPreferences::calendarFor(auth()->user())->value,
     'locale' => \App\Support\Localization::intlLocale(auth()->user()?->locale),
     'timezone' => \App\Support\TemporalPreferences::timezoneFor(auth()->user()),
+    'dateFormat' => \App\Support\TemporalPreferences::dateFormatFor(auth()->user()),
+    'showEquivalent' => \App\Support\TemporalPreferences::showGregorianEquivalentFor(auth()->user()),
     'firstDay' => \App\Support\Localization::firstDayOfWeek(auth()->user()?->locale),
 ])
 
@@ -15,6 +17,8 @@
         data-locale="{{ $locale }}"
         data-calendar="{{ $calendar }}"
         data-timezone="{{ $timezone }}"
+        data-date-format="{{ $dateFormat }}"
+        data-show-equivalent="{{ $showEquivalent ? 'true' : 'false' }}"
         data-first-day="{{ $firstDay }}"
         data-empty-label="{{ __('ui.profile.temporal.choose_date') }}"
         data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
