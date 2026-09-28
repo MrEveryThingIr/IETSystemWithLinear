@@ -294,6 +294,17 @@ class Index extends Component
         }
     }
 
+    public function setCalendarCellMode(string $mode): void
+    {
+        abort_unless(in_array($mode, ['details', 'map'], true), 422);
+
+        $this->calendarCellMode = $mode;
+
+        if ($mode === 'map' && $this->calendarColorBy === 'none') {
+            $this->calendarColorBy = 'plan';
+        }
+    }
+
     public function setSlotMinutes(int $minutes): void
     {
         abort_unless(in_array($minutes, [60, 30, 15, 5, 1], true), 422);
