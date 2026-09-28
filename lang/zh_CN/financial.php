@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'back_to_money' => '返回资金',
+    'commitment_source' => '承诺',
+    'contract_source' => '合同',
+    'iet_pricing' => '该义务由 :usd 美元按快照报价 1 IET = $:quote 定价，得到 :iet IET。之后的报价变化不会修改它。',
+    'iet_settlement_boundary' => 'IET 结算是内部钱包转移。确认时要求债务方钱包余额充足，并原子化记账双方。',
     'title' => '财务义务',
     'obligations' => '财务义务',
     'earned' => '已形成应收',
