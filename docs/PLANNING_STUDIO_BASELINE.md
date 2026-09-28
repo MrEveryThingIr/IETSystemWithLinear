@@ -145,22 +145,29 @@ The baseline presentation is intentionally compact:
 - no permanent equivalent-calendar/timezone text on every item;
 - detailed temporal equivalence remains infrastructure available for later opt-in/detail surfaces.
 
-## ToolsBar: repeat a completed time window
+## Planning Studio sidebar and time-window projection tool
 
-The first admitted contextual tool appears on a baseline Plan after one of its once-occurrences is completed.
+Planning Studio now owns a small internal sidebar. It separates ordinary planning surfaces from optional tools:
 
-It intentionally does **not** turn the Plan into a large recurrence editor. Instead, it uses the completed occurrence as a template and creates independent future once-plans while preserving provenance back to the source Plan and occurrence.
+- Plan: Today, Next 30 days, Calendar, New item;
+- Tools: Repeat time window.
 
-Current target selectors:
+The repeat tool is **not** owned by an individual Plan detail page. A Plan detail can preselect its own occurrence as a convenience, but the tool remains a Studio-level capability and can also be opened directly from the Studio sidebar.
 
-- next N days;
-- the same weekday for N future instances;
-- all future days in a chosen month;
+Any non-cancelled baseline once-plan can be used as a source, including a future Plan that has never started. Completion or success is not required.
+
+The first time-fractal projection modes are:
+
+- following days;
+- same weekday across future weeks;
+- same day-of-month across future months;
+- same month/day across future years;
+- every future day in a chosen month;
 - individually selected future dates.
 
-For a fixed-time source, copies preserve the planned start time and duration. For a flexible-day source, copies remain flexible-day items.
+The source occurrence supplies the lower-level time window. For a fixed-time source, its hour and duration are preserved. For a flexible-day source, the copies remain flexible-day items.
 
-This tool uses `Completed` only as an eligibility threshold for choosing a historical template. It does not redefine `Completed` as successful or high-quality; outcome/quality remains a separate future concept.
+Generated items remain independent once-plans and preserve provenance back to the source Plan and occurrence. This gives useful recurrence-like engineering without reintroducing a large recurrence editor into the baseline.
 
 ## Admission rule for the next capability
 
