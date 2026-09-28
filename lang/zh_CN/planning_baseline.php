@@ -9,8 +9,8 @@ return [
     'navigation' => [
         'workspace' => 'Workspace',
         'planning' => 'Planning',
-        'money' => 'Money',
-        'vault' => 'Vault',
+        'money' => '资金',
+        'vault' => '保险库',
         'identity' => 'Profile',
         'invitations' => 'Invitations',
         'access' => 'Access',
@@ -127,13 +127,13 @@ return [
     ],
     'tools' => [
         'calendar_display' => [
-            'sidebar' => 'Calendar display',
-            'title' => 'Calendar cell display',
-            'help' => 'Choose what the fractal calendar reveals without making every cell permanently busy.',
-            'weekday_names' => 'Weekday names',
-            'month_names' => 'Month names',
-            'counts' => 'Item counts',
-            'plan_titles' => 'Plan titles',
+            'sidebar' => '日历显示',
+            'title' => '日历单元格显示',
+            'help' => '选择分形日历单元格显示哪些信息，同时保持默认界面简洁。',
+            'weekday_names' => '星期名称',
+            'month_names' => '月份名称',
+            'counts' => '项目数量',
+            'plan_titles' => '计划标题',
         ],
         'title' => 'Tools',
         'repeat' => [
