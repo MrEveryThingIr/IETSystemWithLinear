@@ -15,7 +15,10 @@ use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanTimingMode;
 use Carbon\CarbonImmutable;
+use App\Http\Middleware\EnforceReleaseSurface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -28,6 +31,18 @@ class PlanningBaselineExperienceTest extends TestCase
         parent::setUp();
 
         config(['release.profile' => 'planning_baseline']);
+    }
+
+    public function test_baseline_release_boundary_allows_livewire_transport_requests(): void
+    {
+        $request = Request::create('/livewire/update', 'POST');
+
+        $response = app(EnforceReleaseSurface::class)->handle(
+            $request,
+            fn (): Response => new Response('', 204),
+        );
+
+        $this->assertSame(204, $response->getStatusCode());
     }
 
     public function test_fixed_item_requires_only_human_scale_basic_fields(): void
