@@ -664,7 +664,7 @@ class PlanningBaselineExperienceTest extends TestCase
                 ->call('apply')
                 ->assertHasNoErrors();
 
-            $copies = Plan::query()->whereKeyNot($source->id)->get();
+            $copies = Plan::query()->where('id', '!=', $source->id)->get();
 
             foreach ($copies as $copy) {
                 $this->assertSame($source->uuid, data_get($copy->metadata, 'replicated_from_plan_uuid'));
