@@ -30,6 +30,25 @@ class TemporalPreferences
         return self::validTimezone($fallback) ? $fallback : 'UTC';
     }
 
+    public static function dateFormatFor(?User $user): string
+    {
+        $value = $user?->date_display_format;
+
+        return in_array($value, ['long', 'medium', 'numeric'], true) ? $value : 'long';
+    }
+
+    public static function timeFormatFor(?User $user): string
+    {
+        $value = $user?->time_display_format;
+
+        return in_array($value, ['24h', '12h'], true) ? $value : '24h';
+    }
+
+    public static function showGregorianEquivalentFor(?User $user): bool
+    {
+        return ! $user instanceof User || $user->show_gregorian_equivalent !== false;
+    }
+
     public static function validTimezone(?string $timezone): bool
     {
         if ($timezone === null || $timezone === '') {
