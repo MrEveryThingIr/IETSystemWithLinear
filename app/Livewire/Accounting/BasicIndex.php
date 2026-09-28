@@ -149,7 +149,7 @@ class BasicIndex extends Component
             'description' => ['nullable', 'string', 'max:500'],
             'category' => ['nullable', 'string', 'max:180'],
             'accountUuid' => ['required', 'uuid'],
-            'toAccountUuid' => ['nullable', 'uuid'],
+            'toAccountUuid' => ['required_if:action,transfer', 'nullable', 'uuid'],
         ]);
 
         $ledger = $this->ledger();
