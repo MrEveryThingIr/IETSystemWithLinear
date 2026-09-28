@@ -120,7 +120,7 @@
                                 {{ __('exchange.direction.'.$request->direction->value) }}
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-end tabular-nums">
-                                &#36;{{ AppSupportMoneyAmount::format($request->external_amount_minor, 2) }}
+                                &#36;{{ \App\Support\MoneyAmount::format($request->external_amount_minor, 2) }}
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-end font-semibold tabular-nums">
                                 {{ number_format($request->iet_amount) }}
@@ -164,7 +164,7 @@
                                 <div class="font-semibold" dir="auto">{{ '@'.$request->user->username }}</div>
                                 <div class="mt-1 text-sm text-zinc-500">
                                     {{ __('exchange.direction.'.$request->direction->value) }}
-                                    · &#36;{{ AppSupportMoneyAmount::format($request->external_amount_minor, 2) }}
+                                    · &#36;{{ \App\Support\MoneyAmount::format($request->external_amount_minor, 2) }}
                                     · {{ number_format($request->iet_amount) }} IET
                                 </div>
                                 @if ($request->external_reference)
