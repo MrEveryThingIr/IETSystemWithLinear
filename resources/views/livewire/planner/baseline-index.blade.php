@@ -230,7 +230,7 @@
                             $slotMinute = (int) $slot['start']->format('i');
                             $itemCount = $slot['items']->count();
                         @endphp
-                        <div wire:key="baseline-slot-{{ $day }}-{{ $slotTime }}-{{ $slotMinutes }}" class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
+                        <div class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
                             <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">
                                 {{ $slotTime }}
                             </div>
