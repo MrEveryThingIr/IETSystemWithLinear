@@ -11,6 +11,7 @@ use App\Models\User;
 use App\PlanEventType;
 use App\PlanScheduleFrequency;
 use App\PlanStatus;
+use App\PlanTimingMode;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,7 @@ class CreatePlanScheduleRule
         int $windowBeforeMinutes = 0,
         int $windowAfterMinutes = 0,
         array $reminderOffsets = [],
+        PlanTimingMode $timingMode = PlanTimingMode::Fixed,
     ): PlanScheduleRule {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('manage', $plan);
@@ -122,6 +124,7 @@ class CreatePlanScheduleRule
             $windowBeforeMinutes,
             $windowAfterMinutes,
             $reminders,
+            $timingMode,
         ): PlanScheduleRule {
             $plan = Plan::query()->lockForUpdate()->findOrFail($lockedPlan->id);
             Gate::forUser($current)->authorize('manage', $plan);
@@ -133,6 +136,7 @@ class CreatePlanScheduleRule
                 'plan_id' => $plan->id,
                 'created_by_actor_id' => $actor->id,
                 'frequency' => $frequency,
+                'timing_mode' => $timingMode,
                 'interval' => $interval,
                 'starts_on' => $startDate->format('Y-m-d'),
                 'start_time' => $startTime.':00',
@@ -164,6 +168,7 @@ class CreatePlanScheduleRule
                 'payload' => [
                     'schedule_rule_uuid' => $rule->uuid,
                     'frequency' => $frequency->value,
+                    'timing_mode' => $timingMode->value,
                     'reminder_offsets' => $reminders,
                 ],
             ]);
