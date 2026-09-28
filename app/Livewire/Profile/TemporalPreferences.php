@@ -19,6 +19,12 @@ class TemporalPreferences extends Component
 
     public string $timezoneMode = TimezoneMode::Auto->value;
 
+    public string $dateFormat = 'long';
+
+    public string $timeFormat = '24h';
+
+    public bool $showGregorianEquivalent = true;
+
     public bool $editorOpen = false;
 
     public function mount(): void
@@ -90,6 +96,9 @@ class TemporalPreferences extends Component
                     CalendarSystem::IslamicUmmAlQura->value,
                 ]),
             ],
+            'dateFormat' => ['required', Rule::in(['long', 'medium', 'numeric'])],
+            'timeFormat' => ['required', Rule::in(['24h', '12h'])],
+            'showGregorianEquivalent' => ['boolean'],
         ]);
 
         $user->timezone = $data['timezone'];
@@ -97,6 +106,9 @@ class TemporalPreferences extends Component
         $user->calendar = $data['calendar'] === 'auto'
             ? null
             : CalendarSystem::from($data['calendar']);
+        $user->date_display_format = $data['dateFormat'];
+        $user->time_display_format = $data['timeFormat'];
+        $user->show_gregorian_equivalent = $data['showGregorianEquivalent'];
         $user->save();
 
         $this->dispatch('temporal-preferences-updated');
@@ -109,6 +121,9 @@ class TemporalPreferences extends Component
         $this->timezone = TemporalPreferenceResolver::timezoneFor($user);
         $this->timezoneMode = $user->timezone_mode->value;
         $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
+        $this->dateFormat = TemporalPreferenceResolver::dateFormatFor($user);
+        $this->timeFormat = TemporalPreferenceResolver::timeFormatFor($user);
+        $this->showGregorianEquivalent = TemporalPreferenceResolver::showGregorianEquivalentFor($user);
     }
 
     public function render(): View
