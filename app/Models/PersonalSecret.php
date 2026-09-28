@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
     'url',
     'notes',
 ])]
-#[Hidden(['identifier', 'secret', 'notes'])]
+#[Hidden(['identifier', 'secret', 'url', 'notes'])]
 class PersonalSecret extends Model
 {
     protected static function booted(): void
