@@ -655,7 +655,7 @@ class Index extends Component
             return [];
         }
 
-        $namespace = $context?->uuid ?? 'all';
+        $namespace = $context === null ? 'all' : $context->uuid;
 
         return $items
             ->map(function (PlanOccurrence $occurrence) use ($namespace): array {
