@@ -29,7 +29,7 @@ final class PlanAttentionConflicts
                     ->where('attention_mode', PlanAttentionMode::Exclusive->value);
 
                 if ($exceptPlanId !== null) {
-                    $query->whereKeyNot($exceptPlanId);
+                    $query->where('id', '!=', $exceptPlanId);
                 }
             })
             ->whereHas(
