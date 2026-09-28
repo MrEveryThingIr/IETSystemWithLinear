@@ -7,6 +7,8 @@ return [
     'navigation' => [
         'workspace' => 'Workspace',
         'planning' => 'Planning',
+        'money' => 'Money',
+        'vault' => 'Vault',
         'identity' => 'Profile',
         'invitations' => 'Invitations',
         'access' => 'Access',
@@ -65,6 +67,8 @@ return [
         'timing' => 'Timing',
         'all_timing' => 'All timing',
         'category' => 'Category',
+        'attention' => 'Attention',
+        'all_attention' => 'All attention',
         'all_categories' => 'All categories',
     ],
     'timing' => [
@@ -74,8 +78,15 @@ return [
         'flexible_day_help' => 'It matters that this is done on the day; the exact hour does not.',
         'flexible_day_short' => 'Any time today',
     ],
+    'attention' => [
+        'exclusive' => 'Needs full focus',
+        'exclusive_help' => 'Treat this interval as foreground time. Another full-focus plan cannot overlap it.',
+        'background' => 'Can run in the background',
+        'background_help' => 'This may overlap foreground work, such as listening to audio while doing another activity.',
+    ],
     'fields' => [
         'title' => 'What do you want to do?',
+        'attention' => 'Attention',
         'when' => 'When does time matter?',
         'date' => 'Date',
         'starts' => 'Starts',
@@ -122,6 +133,27 @@ return [
         'add_at' => 'Add item at :time',
     ],
     'tools' => [
+        'calendar_display' => [
+            'sidebar' => 'Calendar display',
+            'title' => 'Calendar cell display',
+            'help' => 'Choose what the fractal calendar reveals without making every cell permanently busy.',
+            'weekday_names' => 'Weekday names',
+            'month_names' => 'Month names',
+            'counts' => 'Item counts',
+            'plan_titles' => 'Plan titles',
+            'details_mode' => 'Details',
+            'map_mode' => 'Visual map',
+            'close' => 'Close',
+            'cell_mode' => 'Cell mode',
+            'mode_details' => 'Details',
+            'mode_map' => 'Visual map',
+            'color_by' => 'Color mapping',
+            'color_none' => 'No colors',
+            'color_plan' => 'By plan',
+            'color_category' => 'By category',
+            'color_attention' => 'By attention',
+            'uncategorized' => 'Uncategorized',
+        ],
         'title' => 'Tools',
         'repeat' => [
             'sidebar' => 'Repeat time window',
@@ -161,6 +193,8 @@ return [
     ],
     'validation' => [
         'end_after_start' => 'End time must be after start time.',
+        'exclusive_overlap' => 'This time overlaps with “:title”, which also needs full focus. Choose another time or mark one plan as background-compatible.',
+        'another_focused_plan' => 'another focused plan',
         'finish_running_before_edit' => 'Finish the running occurrence before changing its schedule.',
     ],
 ];

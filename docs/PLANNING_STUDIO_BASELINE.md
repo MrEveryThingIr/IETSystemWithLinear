@@ -23,7 +23,9 @@ Included runtime layers:
 5. personal Context provision required by Planner authority;
 6. basic Planning Studio;
 7. shared profile-aware temporal/calendar infrastructure;
-8. the existing fractal calendar navigation.
+8. the existing fractal calendar navigation;
+9. the selectively admitted paper-like Personal Money surface;
+10. the per-User encrypted Private Vault.
 
 The historical integrated application remains available as the `full` profile for regression/source-library verification. PHPUnit explicitly uses that profile so previously developed capabilities are not silently invalidated by the smaller product surface.
 
@@ -37,7 +39,7 @@ The source tree may contain these mature capabilities, but this runtime does not
 - Groups / GroupSpace collaboration;
 - Content Studio and Evidence workflows;
 - Submission / Evaluation;
-- Accounting / economic obligations / settlement;
+- shared economic obligations / settlement and advanced financial workflows;
 - Planner prerequisites and readiness configuration;
 - Planner expense estimates and actual expense capture;
 - Planner participant assignment;
@@ -93,6 +95,15 @@ notes
 
 Internally this uses the existing occurrence kernel with a day-wide execution window. The UI does not pretend that midnight is the intended start time.
 
+### Attention
+
+Attention is orthogonal to timing:
+
+- **Needs full focus** is the safe default for a timed Plan. Two full-focus baseline intervals cannot overlap.
+- **Can run in the background** may overlap full-focus work, such as listening to audio while working.
+
+This distinction is not inferred from category. It is authored explicitly and preserved by Repeat time window.
+
 ## Execution meaning
 
 `Done` means only:
@@ -132,7 +143,8 @@ Filters apply before accumulation:
 
 - free-text search over title, notes and category;
 - timing kind: all / fixed / flexible day;
-- category.
+- category;
+- attention: all / full-focus / background-compatible.
 
 ## Clean Profile and date/time presentation
 
@@ -225,4 +237,7 @@ one real scenario
 11. Set Persian/Jalali calendar and confirm Planner + Repeat date pickers and month projection follow Jalali boundaries.
 12. Change date format, 12/24-hour format, and Gregorian-equivalent preference; confirm shared temporal presentation follows it.
 13. Check Persian typography and mixed Persian/English text at desktop and mobile widths.
-14. Unadmitted routes such as Groups/Accounting/Contracts are not reachable in the baseline profile.
+14. Personal Money and Private Vault are reachable, while unadmitted routes such as Groups/Contracts/Content Studio remain unavailable in the baseline profile.
+15. A fixed full-focus item cannot overlap another full-focus item; a background-compatible item may overlap it.
+16. Calendar minute/quarter/hour cells reflect the complete interval of a timed item, not only its start timestamp.
+17. Calendar display tools can switch between details and a quiet visual map and color by Plan, category, or attention.

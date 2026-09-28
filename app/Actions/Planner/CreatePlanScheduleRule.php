@@ -8,10 +8,12 @@ use App\Models\PlanEvent;
 use App\Models\PlanReminder;
 use App\Models\PlanScheduleRule;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\PlanEventType;
 use App\PlanScheduleFrequency;
 use App\PlanStatus;
 use App\PlanTimingMode;
+use App\Support\PlanAttentionConflicts;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +22,10 @@ use Throwable;
 
 class CreatePlanScheduleRule
 {
-    public function __construct(private readonly MaterializePlanOccurrences $materialize) {}
+    public function __construct(
+        private readonly MaterializePlanOccurrences $materialize,
+        private readonly PlanAttentionConflicts $attentionConflicts,
+    ) {}
 
     /**
      * @param  list<int>  $weekdays
@@ -132,6 +137,16 @@ class CreatePlanScheduleRule
 
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
+            if (
+                data_get($plan->metadata, 'planning_studio') === 'baseline'
+                && $plan->attention_mode === PlanAttentionMode::Exclusive
+                && $timingMode === PlanTimingMode::Fixed
+            ) {
+                // Serialize focused scheduling inside a Context so two concurrent
+                // saves cannot both pass the overlap check.
+                $plan->context()->lockForUpdate()->firstOrFail();
+            }
+
             $rule = PlanScheduleRule::query()->create([
                 'plan_id' => $plan->id,
                 'created_by_actor_id' => $actor->id,
@@ -198,6 +213,27 @@ class CreatePlanScheduleRule
             }
 
             $this->materialize->execute($rule, $materializeFrom, $materializeThrough);
+
+            if (
+                data_get($plan->metadata, 'planning_studio') === 'baseline'
+                && $plan->attention_mode === PlanAttentionMode::Exclusive
+                && $timingMode === PlanTimingMode::Fixed
+            ) {
+                foreach ($rule->occurrences()->where('status', '!=', 'cancelled')->get() as $occurrence) {
+                    $conflict = $this->attentionConflicts->firstForWindow(
+                        $plan->context,
+                        $occurrence->scheduled_start_at,
+                        $occurrence->scheduled_end_at,
+                        $plan->id,
+                    );
+
+                    if ($conflict !== null) {
+                        abort(422, __('planning_baseline.validation.exclusive_overlap', [
+                            'title' => $conflict->plan->title,
+                        ]));
+                    }
+                }
+            }
 
             return $rule->fresh(['plan', 'reminders', 'occurrences']);
         }, attempts: 3);

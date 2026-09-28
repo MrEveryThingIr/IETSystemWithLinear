@@ -32,6 +32,8 @@ class EnforceReleaseSurface
         'profiles.images.show',
         'actors.avatar',
         'planner.*',
+        'accounting.*',
+        'vault.*',
         'platform.access',
         'platform.access-invitations',
         'actors.*',

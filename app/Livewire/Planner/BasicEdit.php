@@ -9,16 +9,18 @@ use App\Models\Actor;
 use App\Models\Plan;
 use App\Models\PlanScheduleRule;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanStatus;
 use App\PlanTimingMode;
+use App\Support\PlanAttentionConflicts;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -36,6 +38,8 @@ class BasicEdit extends Component
     public string $category = '';
 
     public string $timingMode = 'fixed';
+
+    public string $attentionMode = 'exclusive';
 
     public string $date = '';
 
@@ -63,6 +67,7 @@ class BasicEdit extends Component
         $this->description = (string) $plan->description;
         $this->category = (string) data_get($plan->metadata, 'category', '');
         $this->timingMode = $rule->timing_mode->value;
+        $this->attentionMode = $plan->attention_mode->value;
         $this->date = $rule->starts_on->format('Y-m-d');
 
         if ($rule->timing_mode === PlanTimingMode::Fixed) {
@@ -78,12 +83,14 @@ class BasicEdit extends Component
     public function save(
         CancelPlanScheduleRule $cancelRule,
         CreatePlanScheduleRule $createRule,
+        PlanAttentionConflicts $attentionConflicts,
     ): mixed {
         $data = $this->validate([
             'title' => ['required', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:10000'],
             'category' => ['nullable', 'string', 'max:80'],
             'timingMode' => ['required', 'in:fixed,flexible_day'],
+            'attentionMode' => ['required', 'in:exclusive,background'],
             'date' => ['required', 'date_format:Y-m-d'],
             'startTime' => ['required_if:timingMode,fixed', 'date_format:H:i'],
             'endTime' => ['required_if:timingMode,fixed', 'date_format:H:i'],
@@ -101,11 +108,26 @@ class BasicEdit extends Component
 
         $timezone = $plan->timezone;
         $mode = PlanTimingMode::from($data['timingMode']);
+        $attentionMode = PlanAttentionMode::from($data['attentionMode']);
         [$startTime, $duration] = $mode === PlanTimingMode::FlexibleDay
             ? ['00:00', 1440]
             : [$data['startTime'], $this->duration($data['date'], $data['startTime'], $data['endTime'], $timezone)];
 
-        DB::transaction(function () use ($plan, $user, $data, $mode, $startTime, $duration, $cancelRule, $createRule): void {
+        if ($mode === PlanTimingMode::Fixed && $attentionMode === PlanAttentionMode::Exclusive) {
+            $start = CarbonImmutable::parse($data['date'].' '.$startTime, $timezone);
+            $end = $start->addMinutes($duration);
+            $conflict = $attentionConflicts->firstForWindow($plan->context, $start, $end, $plan->id);
+
+            if ($conflict !== null) {
+                throw ValidationException::withMessages([
+                    'startTime' => __('planning_baseline.validation.exclusive_overlap', [
+                        'title' => $conflict->plan->title,
+                    ]),
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($plan, $user, $data, $mode, $attentionMode, $startTime, $duration, $cancelRule, $createRule): void {
             $metadata = $plan->metadata ?? [];
             $metadata['planning_studio'] = 'baseline';
             $metadata['category'] = trim($data['category']) !== '' ? trim($data['category']) : null;
@@ -113,6 +135,7 @@ class BasicEdit extends Component
             $plan->forceFill([
                 'title' => trim($data['title']),
                 'description' => trim($data['description']) !== '' ? trim($data['description']) : null,
+                'attention_mode' => $attentionMode,
                 'metadata' => $metadata,
             ])->save();
 

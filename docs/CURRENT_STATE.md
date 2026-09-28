@@ -1,5 +1,19 @@
 # IET Current State
 
+## Personal life tools candidate
+
+Active candidate branch: `codex/personal-money-vault-calendar-tools`.
+
+This candidate selectively admits focused personal-life capabilities on top of the accepted Planning/Profile foundation:
+
+- explicit full-focus versus background-compatible Plan attention semantics with focused-overlap prevention;
+- interval-aware fractal Calendar occupancy, so every touched minute/quantum is represented;
+- an icon-only Planning Studio Tools rail with detail/map rendering and color mapping by Plan, category, or attention;
+- a paper-like Personal Money surface reusing the mature immutable Personal Accounting kernel, without calculator/dashboard math;
+- a per-User encrypted Private Vault with explicit Reveal/Hide semantics.
+
+See `docs/PERSONAL_LIFE_TOOLS_BASELINE.md`.
+
 ## Planning Studio baseline — active experience-first assembly
 
 Active branch: `codex/planning-studio-baseline`.

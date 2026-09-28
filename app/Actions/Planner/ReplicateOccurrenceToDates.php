@@ -5,6 +5,7 @@ namespace App\Actions\Planner;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\PlanTimingMode;
@@ -96,7 +97,11 @@ class ReplicateOccurrenceToDates
             ): Plan {
                 $metadata = $source->plan->metadata ?? [];
                 $metadata['planning_studio'] = 'baseline';
-                $metadata['replicated_from_plan_uuid'] = $source->plan->uuid;
+                $metadata['replicated_from_plan_uuid'] = (string) data_get(
+                    $source->plan->metadata,
+                    'replicated_from_plan_uuid',
+                    $source->plan->uuid,
+                );
                 $metadata['replicated_from_occurrence_uuid'] = $source->uuid;
                 $metadata['replication_tool'] = 'repeat_time_window';
 
@@ -107,6 +112,7 @@ class ReplicateOccurrenceToDates
                     $source->plan->description,
                     $source->plan->timezone,
                     metadata: $metadata,
+                    attentionMode: $source->plan->attention_mode ?? PlanAttentionMode::Exclusive,
                 );
 
                 $this->createScheduleRule->execute(

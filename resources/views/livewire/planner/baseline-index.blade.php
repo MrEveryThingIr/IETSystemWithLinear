@@ -25,7 +25,7 @@
         </button>
     </nav>
 
-    <div class="grid gap-3 rounded-xl border border-zinc-200 p-4 md:grid-cols-[minmax(0,1fr)_12rem_12rem] dark:border-zinc-800">
+    <div class="grid gap-3 rounded-xl border border-zinc-200 p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_11rem_11rem_11rem] dark:border-zinc-800">
         <label class="space-y-1 text-sm">
             <span class="font-medium">{{ __('planning_baseline.filters.search') }}</span>
             <input
@@ -52,6 +52,15 @@
                 @foreach ($categories as $availableCategory)
                     <option value="{{ $availableCategory }}">{{ $availableCategory }}</option>
                 @endforeach
+            </select>
+        </label>
+
+        <label class="space-y-1 text-sm">
+            <span class="font-medium">{{ __('planning_baseline.filters.attention') }}</span>
+            <select wire:model.live="attention" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                <option value="all">{{ __('planning_baseline.filters.all_attention') }}</option>
+                <option value="exclusive">{{ __('planning_baseline.attention.exclusive') }}</option>
+                <option value="background">{{ __('planning_baseline.attention.background') }}</option>
             </select>
         </label>
     </div>
@@ -130,14 +139,139 @@
                 </button>
             </div>
 
+            @if ($calendarDisplayOpen)
+                <div class="rounded-xl border border-zinc-300 bg-zinc-50 p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <div class="font-semibold">{{ __('planning_baseline.tools.calendar_display.title') }}</div>
+                            <div class="mt-1 text-sm text-zinc-500">{{ __('planning_baseline.tools.calendar_display.help') }}</div>
+                        </div>
+                        <button
+                            type="button"
+                            wire:click="$set('calendarDisplayOpen', false)"
+                            class="inline-flex size-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-white hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-white"
+                            aria-label="{{ __('planning_baseline.tools.calendar_display.close') }}"
+                        >×</button>
+                    </div>
+
+                    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+                        <label class="text-sm">
+                            <span class="mb-1 block font-medium">{{ __('planning_baseline.tools.calendar_display.cell_mode') }}</span>
+                            <select wire:model.live="calendarCellMode" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                                <option value="details">{{ __('planning_baseline.tools.calendar_display.mode_details') }}</option>
+                                <option value="map">{{ __('planning_baseline.tools.calendar_display.mode_map') }}</option>
+                            </select>
+                        </label>
+
+                        <label class="text-sm">
+                            <span class="mb-1 block font-medium">{{ __('planning_baseline.tools.calendar_display.color_by') }}</span>
+                            <select wire:model.live="calendarColorBy" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                                <option value="none">{{ __('planning_baseline.tools.calendar_display.color_none') }}</option>
+                                <option value="plan">{{ __('planning_baseline.tools.calendar_display.color_plan') }}</option>
+                                <option value="category">{{ __('planning_baseline.tools.calendar_display.color_category') }}</option>
+                                <option value="attention">{{ __('planning_baseline.tools.calendar_display.color_attention') }}</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_14rem]">
+                        <div class="space-y-3">
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ([
+                                    'showWeekdayNames' => 'planning_baseline.tools.calendar_display.weekday_names',
+                                    'showMonthNames' => 'planning_baseline.tools.calendar_display.month_names',
+                                    'showCalendarCounts' => 'planning_baseline.tools.calendar_display.counts',
+                                    'showCalendarTitles' => 'planning_baseline.tools.calendar_display.plan_titles',
+                                ] as $property => $label)
+                                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
+                                        <input type="checkbox" wire:model.live="{{ $property }}" class="rounded border-zinc-300">
+                                        <span>{{ __($label) }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="setCalendarCellMode('details')"
+                                    class="rounded-full border px-3 py-2 text-sm {{ $calendarCellMode === 'details' ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}"
+                                >
+                                    {{ __('planning_baseline.tools.calendar_display.details_mode') }}
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="setCalendarCellMode('map')"
+                                    class="rounded-full border px-3 py-2 text-sm {{ $calendarCellMode === 'map' ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}"
+                                >
+                                    {{ __('planning_baseline.tools.calendar_display.map_mode') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">{{ __('planning_baseline.tools.calendar_display.color_by') }}</span>
+                            <select wire:model.live="calendarColorBy" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                                <option value="none">{{ __('planning_baseline.tools.calendar_display.color_none') }}</option>
+                                <option value="plan">{{ __('planning_baseline.tools.calendar_display.color_plan') }}</option>
+                                <option value="category">{{ __('planning_baseline.tools.calendar_display.color_category') }}</option>
+                                <option value="attention">{{ __('planning_baseline.tools.calendar_display.color_attention') }}</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    @if ($calendarColorBy !== 'none' && $calendarLegend !== [])
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700">
+                            @foreach ($calendarLegend as $marker)
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="size-2.5 rounded-full" style="background-color: {{ $marker['color'] }}"></span>
+                                    <span class="max-w-48 truncate text-zinc-600 dark:text-zinc-300" dir="auto">{{ $marker['label'] }}</span>
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($calendarColorBy !== 'none' && $calendarLegend !== [])
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700">
+                            @foreach ($calendarLegend as $marker)
+                                <span class="inline-flex items-center gap-2">
+                                    <span class="size-2.5 rounded-full" style="background-color: {{ $marker['color'] }}"></span>
+                                    <span class="max-w-48 truncate text-zinc-600 dark:text-zinc-300" dir="auto">{{ $marker['label'] }}</span>
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             @if ($calendarLevel === 'year')
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach ($calendarMonths as $calendarMonth)
-                        <button type="button" wire:click="showMonth('{{ $calendarMonth['key'] }}')" class="rounded-xl border border-zinc-200 p-4 text-start hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900">
-                            <span class="block font-semibold">{{ $calendarMonth['label'] }}</span>
-                            <span class="mt-1 block text-sm text-zinc-500">
-                                {{ trans_choice('planning_baseline.calendar.items', $calendarMonth['count'], ['count' => $calendarMonth['count']]) }}
+                        <button type="button" wire:click="showMonth('{{ $calendarMonth['key'] }}')" class="min-h-28 rounded-xl border border-zinc-200 bg-white p-4 text-start hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900">
+                            <span class="block font-semibold">
+                                {{ $showMonthNames ? $calendarMonth['label'] : $calendarMonth['number'] }}
                             </span>
+
+                            @if ($showCalendarCounts)
+                                <span class="mt-1 block text-sm text-zinc-500">
+                                    {{ trans_choice('planning_baseline.calendar.items', $calendarMonth['count'], ['count' => $calendarMonth['count']]) }}
+                                </span>
+                            @endif
+
+                            @if ($calendarCellMode === 'details' && $showCalendarTitles && $calendarMonth['titles']->isNotEmpty())
+                                <span class="mt-3 block space-y-1">
+                                    @foreach ($calendarMonth['titles'] as $title)
+                                        <span class="block truncate text-xs text-zinc-500" dir="auto">{{ $title }}</span>
+                                    @endforeach
+                                </span>
+                            @endif
+
+                            @if ($calendarMonth['markers'] !== [])
+                                <span class="mt-3 flex h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                    @foreach ($calendarMonth['markers'] as $marker)
+                                        <span class="h-full min-w-1 flex-1" style="background-color: {{ $marker['color'] }}" title="{{ $marker['label'] }}"></span>
+                                    @endforeach
+                                </span>
+                            @endif
                         </button>
                     @endforeach
                 </div>
@@ -151,19 +285,43 @@
                             wire:click="showDay('{{ $calendarDay['key'] }}')"
                             class="min-h-24 bg-white p-2 text-start hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900 {{ $calendarDay['in_month'] ? '' : 'opacity-45' }}"
                         >
-                            <span class="text-xs font-medium">{{ $calendarDay['label'] }}</span>
-                            @if ($calendarDay['count'] > 0)
+                            <span class="flex items-start justify-between gap-2">
+                                <span class="text-xs font-medium">{{ $calendarDay['label'] }}</span>
+                                @if ($showWeekdayNames)
+                                    <span class="truncate text-[0.68rem] text-zinc-400">{{ $calendarDay['weekday_label'] }}</span>
+                                @endif
+                            </span>
+
+                            @if ($showCalendarCounts && $calendarDay['count'] > 0)
                                 <span class="mt-2 block text-sm font-semibold">{{ $calendarDay['count'] }}</span>
-                                <span class="mt-1 block text-[0.68rem] leading-4 text-zinc-500">
-                                    @if ($calendarDay['fixed_count'] > 0)
-                                        {{ __('planning_baseline.calendar.fixed_count', ['count' => $calendarDay['fixed_count']]) }}
-                                    @endif
-                                    @if ($calendarDay['fixed_count'] > 0 && $calendarDay['flexible_count'] > 0)
-                                        ·
-                                    @endif
-                                    @if ($calendarDay['flexible_count'] > 0)
-                                        {{ __('planning_baseline.calendar.flexible_count', ['count' => $calendarDay['flexible_count']]) }}
-                                    @endif
+                                @if ($calendarCellMode === 'details')
+                                    <span class="mt-1 block text-[0.68rem] leading-4 text-zinc-500">
+                                        @if ($calendarDay['fixed_count'] > 0)
+                                            {{ __('planning_baseline.calendar.fixed_count', ['count' => $calendarDay['fixed_count']]) }}
+                                        @endif
+                                        @if ($calendarDay['fixed_count'] > 0 && $calendarDay['flexible_count'] > 0)
+                                            ·
+                                        @endif
+                                        @if ($calendarDay['flexible_count'] > 0)
+                                            {{ __('planning_baseline.calendar.flexible_count', ['count' => $calendarDay['flexible_count']]) }}
+                                        @endif
+                                    </span>
+                                @endif
+                            @endif
+
+                            @if ($calendarCellMode === 'details' && $showCalendarTitles && $calendarDay['titles']->isNotEmpty())
+                                <span class="mt-2 block space-y-0.5">
+                                    @foreach ($calendarDay['titles'] as $title)
+                                        <span class="block truncate text-[0.68rem] text-zinc-500" dir="auto">{{ $title }}</span>
+                                    @endforeach
+                                </span>
+                            @endif
+
+                            @if ($calendarDay['markers'] !== [])
+                                <span class="mt-2 flex h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                    @foreach ($calendarDay['markers'] as $marker)
+                                        <span class="h-full min-w-1 flex-1" style="background-color: {{ $marker['color'] }}" title="{{ $marker['label'] }}"></span>
+                                    @endforeach
                                 </span>
                             @endif
                         </button>
@@ -173,7 +331,14 @@
 
             @if ($calendarLevel === 'day')
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900">
-                    <span class="font-medium"><x-app.local-date :value="$day" :show-equivalent="false" /></span>
+                    <span class="font-medium">
+                        <x-app.local-date :value="$day" :show-equivalent="false" />
+                        @if ($showWeekdayNames)
+                            <span class="ms-2 text-xs font-normal text-zinc-500">
+                                {{ $calendarDayWeekdayLabel }}
+                            </span>
+                        @endif
+                    </span>
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ route('planner.create', ['date' => $day, 'timing' => 'flexible_day']) }}" class="rounded-lg bg-white px-3 py-2 text-sm dark:bg-zinc-950">
                             {{ __('planning_baseline.calendar.add_flexible') }}
@@ -204,11 +369,29 @@
                             class="grid h-14 w-full grid-cols-[5rem_1fr] items-center bg-white text-start hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
                             <span class="border-e border-zinc-200 px-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">{{ $calendarHour['label'] }}</span>
-                            <span class="px-3 text-sm">
-                                @if ($calendarHour['count'] > 0)
-                                    {{ trans_choice('planning_baseline.calendar.items', $calendarHour['count'], ['count' => $calendarHour['count']]) }}
-                                @else
-                                    <span class="text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
+                            <span class="min-w-0 px-3 text-sm">
+                                @if ($showCalendarCounts)
+                                    @if ($calendarHour['count'] > 0)
+                                        {{ trans_choice('planning_baseline.calendar.items', $calendarHour['count'], ['count' => $calendarHour['count']]) }}
+                                    @else
+                                        <span class="text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
+                                    @endif
+                                @endif
+
+                                @if ($calendarCellMode === 'details' && $showCalendarTitles && $calendarHour['titles']->isNotEmpty())
+                                    <span class="mt-1 flex min-w-0 flex-wrap gap-x-2 gap-y-0.5">
+                                        @foreach ($calendarHour['titles'] as $title)
+                                            <span class="max-w-48 truncate text-xs text-zinc-500" dir="auto">{{ $title }}</span>
+                                        @endforeach
+                                    </span>
+                                @endif
+
+                                @if ($calendarHour['markers'] !== [])
+                                    <span class="mt-1 flex h-1.5 max-w-56 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                        @foreach ($calendarHour['markers'] as $marker)
+                                            <span class="h-full min-w-1 flex-1" style="background-color: {{ $marker['color'] }}" title="{{ $marker['label'] }}"></span>
+                                        @endforeach
+                                    </span>
                                 @endif
                             </span>
                         </button>
@@ -232,11 +415,29 @@
                     @foreach ($baselineCalendarSlots as $slot)
                         <div class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
                             <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">{{ $slot['time'] }}</div>
-                            <button type="button" wire:click="selectSlot({{ $slot['minute'] }})" class="px-3 py-2 text-start hover:bg-zinc-50 dark:hover:bg-zinc-900">
-                                @if ($slot['count'] > 0)
-                                    {{ trans_choice('planning_baseline.calendar.items', $slot['count'], ['count' => $slot['count']]) }}
-                                @else
-                                    <span class="text-xs text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
+                            <button type="button" wire:click="selectSlot({{ $slot['minute'] }})" class="min-w-0 px-3 py-2 text-start hover:bg-zinc-50 dark:hover:bg-zinc-900">
+                                @if ($showCalendarCounts)
+                                    @if ($slot['count'] > 0)
+                                        {{ trans_choice('planning_baseline.calendar.items', $slot['count'], ['count' => $slot['count']]) }}
+                                    @else
+                                        <span class="text-xs text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
+                                    @endif
+                                @endif
+
+                                @if ($calendarCellMode === 'details' && $showCalendarTitles && $slot['titles']->isNotEmpty())
+                                    <span class="mt-1 flex min-w-0 flex-wrap gap-x-2 gap-y-0.5">
+                                        @foreach ($slot['titles'] as $title)
+                                            <span class="max-w-48 truncate text-xs text-zinc-500" dir="auto">{{ $title }}</span>
+                                        @endforeach
+                                    </span>
+                                @endif
+
+                                @if ($slot['markers'] !== [])
+                                    <span class="mt-1 flex h-1.5 max-w-56 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                        @foreach ($slot['markers'] as $marker)
+                                            <span class="h-full min-w-1 flex-1" style="background-color: {{ $marker['color'] }}" title="{{ $marker['label'] }}"></span>
+                                        @endforeach
+                                    </span>
                                 @endif
                             </button>
                             <div class="p-2">
