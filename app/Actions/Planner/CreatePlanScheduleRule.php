@@ -137,6 +137,16 @@ class CreatePlanScheduleRule
 
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
+            if (
+                data_get($plan->metadata, 'planning_studio') === 'baseline'
+                && $plan->attention_mode === PlanAttentionMode::Exclusive
+                && $timingMode === PlanTimingMode::Fixed
+            ) {
+                // Serialize focused scheduling inside a Context so two concurrent
+                // saves cannot both pass the overlap check.
+                $plan->context()->lockForUpdate()->firstOrFail();
+            }
+
             $rule = PlanScheduleRule::query()->create([
                 'plan_id' => $plan->id,
                 'created_by_actor_id' => $actor->id,
