@@ -25,7 +25,7 @@
         </button>
     </nav>
 
-    <div class="grid gap-3 rounded-xl border border-zinc-200 p-4 md:grid-cols-[minmax(0,1fr)_12rem_12rem] dark:border-zinc-800">
+    <div class="grid gap-3 rounded-xl border border-zinc-200 p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_11rem_11rem_11rem] dark:border-zinc-800">
         <label class="space-y-1 text-sm">
             <span class="font-medium">{{ __('planning_baseline.filters.search') }}</span>
             <input
@@ -52,6 +52,15 @@
                 @foreach ($categories as $availableCategory)
                     <option value="{{ $availableCategory }}">{{ $availableCategory }}</option>
                 @endforeach
+            </select>
+        </label>
+
+        <label class="space-y-1 text-sm">
+            <span class="font-medium">{{ __('planning_baseline.filters.attention') }}</span>
+            <select wire:model.live="attention" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                <option value="all">{{ __('planning_baseline.filters.all_attention') }}</option>
+                <option value="exclusive">{{ __('planning_baseline.attention.exclusive') }}</option>
+                <option value="background">{{ __('planning_baseline.attention.background') }}</option>
             </select>
         </label>
     </div>
