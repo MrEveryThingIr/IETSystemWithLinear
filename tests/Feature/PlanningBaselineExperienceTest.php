@@ -415,6 +415,7 @@ class PlanningBaselineExperienceTest extends TestCase
                 'Buy engine oil',
                 timezone: 'UTC',
                 metadata: ['planning_studio' => 'baseline', 'category' => 'Home'],
+                attentionMode: PlanAttentionMode::Background,
             );
             app(CreatePlanScheduleRule::class)->execute(
                 $flexible,
@@ -455,6 +456,10 @@ class PlanningBaselineExperienceTest extends TestCase
                 ->assertSee('Buy engine oil')
                 ->assertDontSee('Dentist appointment')
                 ->set('timing', 'all')
+                ->set('attention', 'background')
+                ->assertSee('Buy engine oil')
+                ->assertDontSee('Dentist appointment')
+                ->set('attention', 'all')
                 ->set('search', 'engine')
                 ->assertSee('Buy engine oil')
                 ->assertDontSee('Dentist appointment')
