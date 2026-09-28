@@ -224,12 +224,12 @@
                 </div>
 
                 <div class="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-                    @foreach ($calendarSlots as $slot)
-                        @php
+                    <?php foreach ($calendarSlots as $slot): ?>
+                        <?php
                             $slotTime = $slot['start']->format('H:i');
                             $slotMinute = (int) $slot['start']->format('i');
                             $itemCount = $slot['items']->count();
-                        @endphp
+                        ?>
                         <div class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
                             <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">
                                 {{ $slotTime }}
@@ -255,7 +255,7 @@
                                 </a>
                             </div>
                         </div>
-                    @endforeach
+                    <?php endforeach; ?>
                 </div>
 
                 @if ($selectedSlotItems->isNotEmpty())
