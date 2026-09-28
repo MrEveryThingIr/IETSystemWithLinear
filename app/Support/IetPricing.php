@@ -16,6 +16,23 @@ final class IetPricing
             ->firstOrFail();
     }
 
+    public function percentOfUsd(IetValuationQuote|string $quote): string
+    {
+        $decimal = trim($quote instanceof IetValuationQuote ? (string) $quote->usd_per_iet : $quote);
+
+        if (! preg_match('/^(?:0|[1-9]\d*)\.(\d{1,10})$/', $decimal, $matches)) {
+            throw new InvalidArgumentException('Invalid IET valuation precision.');
+        }
+
+        [$whole] = explode('.', $decimal, 2);
+        $fraction = str_pad($matches[1], 10, '0');
+        $percentWhole = ltrim($whole.substr($fraction, 0, 2), '0');
+        $percentWhole = $percentWhole === '' ? '0' : $percentWhole;
+        $percentFraction = rtrim(substr($fraction, 2), '0');
+
+        return $percentFraction === '' ? $percentWhole : $percentWhole.'.'.$percentFraction;
+    }
+
     public function ietForUsdMinor(int $usdMinor, ?IetValuationQuote $quote = null): int
     {
         if ($usdMinor <= 0) {
