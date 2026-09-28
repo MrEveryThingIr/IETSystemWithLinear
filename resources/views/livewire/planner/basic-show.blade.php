@@ -1,138 +1,29 @@
+@php
+    $category = (string) data_get($plan->metadata, 'category', '');
+    $occurrences = $plan->occurrences->sortByDesc('scheduled_start_at')->values();
+    $repeatSource = $occurrences->first(fn ($occurrence) =>
+        $occurrence->status !== \App\PlanOccurrenceStatus::Cancelled
+        && $occurrence->scheduleRule?->frequency === \App\PlanScheduleFrequency::Once
+    );
+@endphp
+
+<x-app.planner-studio-shell :source="$repeatSource?->uuid">
 <section class="mx-auto max-w-4xl space-y-6">
-    @php
-        $category = (string) data_get($plan->metadata, 'category', '');
-        $occurrences = $plan->occurrences->sortByDesc('scheduled_start_at')->values();
-    @endphp
 
-    <x-app.page-header :title="$plan->title" />
-
-
-    @if ($repeatMessage !== '')
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-            {{ $repeatMessage }}
-        </div>
-    @endif
-
-    @php
-        $completedOccurrence = $occurrences
-            ->first(fn ($occurrence) => $occurrence->status === \App\PlanOccurrenceStatus::Completed);
-    @endphp
-
-    <x-app.tools-bar>
-        @if ($canManage && $plan->status === \App\PlanStatus::Active)
-            <flux:button :href="route('planner.edit', $plan)" size="sm" variant="ghost" icon="pencil-square">
-                {{ __('planning_baseline.show.edit') }}
-            </flux:button>
-        @endif
-
-        <flux:button :href="route('planner.index', ['view' => 'calendar'])" size="sm" variant="ghost" icon="calendar-days">
-            {{ __('planning_baseline.workspace.calendar') }}
-        </flux:button>
-
-        @if ($canManage && $completedOccurrence)
-            <flux:button wire:click="openRepeatTool({{ $completedOccurrence->id }})" size="sm" variant="ghost">
-                {{ __('planning_baseline.tools.repeat.button') }}
-            </flux:button>
-        @endif
-    </x-app.tools-bar>
-
-    @if ($canManage && $completedOccurrence && $repeatToolOpen)
-            <flux:card class="space-y-5">
-                <div>
-                    <div class="font-medium">{{ __('planning_baseline.tools.repeat.title') }}</div>
-                    <div class="mt-1 text-sm text-zinc-500">
-                        {{ __('planning_baseline.tools.repeat.help') }}
-                    </div>
-                </div>
-
-                <div class="grid gap-2 sm:grid-cols-2">
-                    @foreach ([
-                        'next_days' => 'planning_baseline.tools.repeat.modes.next_days',
-                        'same_weekday' => 'planning_baseline.tools.repeat.modes.same_weekday',
-                        'month' => 'planning_baseline.tools.repeat.modes.month',
-                        'selected_dates' => 'planning_baseline.tools.repeat.modes.selected_dates',
-                    ] as $modeValue => $labelKey)
-                        <label class="cursor-pointer rounded-xl border p-3 {{ $repeatMode === $modeValue ? 'border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900' : 'border-zinc-200 dark:border-zinc-700' }}">
-                            <input class="sr-only" type="radio" wire:model.live="repeatMode" value="{{ $modeValue }}">
-                            <div class="text-sm font-medium">{{ __($labelKey) }}</div>
-                        </label>
-                    @endforeach
-                </div>
-
-                @error('repeatMode')
-                    <div class="text-sm text-red-600">{{ $message }}</div>
-                @enderror
-
-                @if (in_array($repeatMode, ['next_days', 'same_weekday'], true))
-                    <flux:input
-                        wire:model="repeatCount"
-                        type="number"
-                        min="1"
-                        :max="$repeatMode === 'next_days' ? 62 : 52"
-                        :label="$repeatMode === 'next_days'
-                            ? __('planning_baseline.tools.repeat.count_days')
-                            : __('planning_baseline.tools.repeat.count_weeks')"
-                    />
-                @elseif ($repeatMode === 'month')
-                    <flux:input
-                        wire:model="repeatMonth"
-                        type="month"
-                        :label="__('planning_baseline.tools.repeat.month')"
-                    />
-                @else
-                    <div class="space-y-3">
-                        <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
-                            <div class="flex-1">
-                                <x-app.calendar-date-input model="repeatDate" :label="__('planning_baseline.tools.repeat.date')" />
-                            </div>
-                            <flux:button type="button" wire:click="addRepeatDate" variant="ghost">
-                                {{ __('planning_baseline.tools.repeat.add_date') }}
-                            </flux:button>
-                        </div>
-
-                        @error('repeatDate')
-                            <div class="text-sm text-red-600">{{ $message }}</div>
-                        @enderror
-                        @error('repeatDates')
-                            <div class="text-sm text-red-600">{{ $message }}</div>
-                        @enderror
-
-                        @if ($repeatDates !== [])
-                            <div class="flex flex-wrap gap-2">
-                                @foreach ($repeatDates as $date)
-                                    <button
-                                        type="button"
-                                        wire:click="removeRepeatDate('{{ $date }}')"
-                                        class="rounded-full border border-zinc-200 px-3 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
-                                    >
-                                        {{ $date }} ×
-                                    </button>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
+    <x-app.page-header :title="$plan->title">
+        <x-slot:actions>
+            <div class="flex flex-wrap gap-2">
+                @if ($canManage && $plan->status === \App\PlanStatus::Active)
+                    <flux:button :href="route('planner.edit', $plan)" variant="ghost" icon="pencil-square">
+                        {{ __('planning_baseline.show.edit') }}
+                    </flux:button>
                 @endif
-
-                <div class="rounded-xl bg-zinc-50 p-3 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
-                    {{ __('planning_baseline.tools.repeat.preserve_window') }}
-                </div>
-
-                <div class="flex flex-wrap justify-end gap-2">
-                    <flux:button type="button" wire:click="closeRepeatTool" variant="ghost">
-                        {{ __('studio.cancel') }}
-                    </flux:button>
-                    <flux:button
-                        type="button"
-                        wire:click="applyRepeatTool"
-                        wire:loading.attr="disabled"
-                        wire:target="applyRepeatTool"
-                        variant="primary"
-                    >
-                        {{ __('planning_baseline.tools.repeat.apply') }}
-                    </flux:button>
-                </div>
-            </flux:card>
-    @endif
+                <flux:button :href="route('planner.index', ['view' => 'calendar'])" variant="ghost" icon="calendar-days">
+                    {{ __('planning_baseline.workspace.calendar') }}
+                </flux:button>
+            </div>
+        </x-slot:actions>
+    </x-app.page-header>
 
     @if ($category !== '' || $plan->description)
         <flux:card class="space-y-3">
@@ -215,3 +106,4 @@
         {{ __('planning_baseline.show.done_meaning') }}
     </p>
 </section>
+</x-app.planner-studio-shell>
