@@ -181,6 +181,25 @@ class ExchangeIndex extends Component
             ->limit(12)
             ->get();
 
+        $myRequestRows = $myRequests->map(fn (IetExchangeRequest $request): array => [
+            'id' => $request->id,
+            'username' => $user->username,
+            'direction' => $request->direction->value,
+            'status' => $request->status->value,
+            'iet' => number_format((int) $request->iet_amount_minor),
+            'usd' => MoneyAmount::format((int) $request->fiat_amount_minor, 2),
+            'rate_sequence' => $request->rateVersion->sequence,
+        ]);
+
+        $pendingRows = $pendingRequests->map(fn (IetExchangeRequest $request): array => [
+            'id' => $request->id,
+            'username' => (string) $request->user?->username,
+            'direction' => $request->direction->value,
+            'iet' => number_format((int) $request->iet_amount_minor),
+            'usd' => MoneyAmount::format((int) $request->fiat_amount_minor, 2),
+            'rate_sequence' => $request->rateVersion->sequence,
+        ]);
+
         return view('livewire.iet.exchange-index', [
             'balance' => $balance,
             'currentRate' => $currentRate,
@@ -190,6 +209,8 @@ class ExchangeIndex extends Component
             'ietPerUsd' => $ietPerUsd,
             'myRequests' => $myRequests,
             'pendingRequests' => $pendingRequests,
+            'myRequestRows' => $myRequestRows,
+            'pendingRows' => $pendingRows,
             'rateHistory' => $rateHistory,
             'canReview' => $canReview,
         ]);
