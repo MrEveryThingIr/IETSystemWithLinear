@@ -1,59 +1,72 @@
 <section class="mx-auto max-w-7xl space-y-5">
-    <x-app.page-header :title="__('planning_baseline.title')" :description="__('planning_baseline.help')">
-        <x-slot:actions>
-            <flux:button :href="route('planner.create')" variant="primary" icon="plus">
-                {{ __('planning_baseline.new') }}
-            </flux:button>
-        </x-slot:actions>
-    </x-app.page-header>
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold">{{ __('planning_baseline.title') }}</h1>
+            <p class="mt-1 text-sm text-zinc-500">{{ __('planning_baseline.help') }}</p>
+        </div>
+        <a
+            href="{{ route('planner.create') }}"
+            class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+        >
+            {{ __('planning_baseline.new') }}
+        </a>
+    </header>
 
-    <div class="flex flex-wrap gap-2">
-        @foreach (['today', 'list', 'calendar'] as $mode)
-            <flux:button
-                wire:click="$set('view', '{{ $mode }}')"
-                :variant="$view === $mode ? 'primary' : 'ghost'"
-                size="sm"
+    <nav class="flex flex-wrap gap-2" aria-label="{{ __('planning_baseline.title') }}">
+        <button type="button" wire:click="$set('view', 'today')" class="rounded-lg px-3 py-2 text-sm {{ $view === 'today' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-900' }}">
+            {{ __('planning_baseline.views.today') }}
+        </button>
+        <button type="button" wire:click="$set('view', 'list')" class="rounded-lg px-3 py-2 text-sm {{ $view === 'list' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-900' }}">
+            {{ __('planning_baseline.views.list') }}
+        </button>
+        <button type="button" wire:click="$set('view', 'calendar')" class="rounded-lg px-3 py-2 text-sm {{ $view === 'calendar' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-900' }}">
+            {{ __('planning_baseline.views.calendar') }}
+        </button>
+    </nav>
+
+    <div class="grid gap-3 rounded-xl border border-zinc-200 p-4 md:grid-cols-[minmax(0,1fr)_12rem_12rem] dark:border-zinc-800">
+        <label class="space-y-1 text-sm">
+            <span class="font-medium">{{ __('planning_baseline.filters.search') }}</span>
+            <input
+                type="search"
+                wire:model.live.debounce.300ms="search"
+                placeholder="{{ __('planning_baseline.filters.search_placeholder') }}"
+                class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950"
             >
-                {{ __('planning_baseline.views.'.$mode) }}
-            </flux:button>
-        @endforeach
+        </label>
+
+        <label class="space-y-1 text-sm">
+            <span class="font-medium">{{ __('planning_baseline.filters.timing') }}</span>
+            <select wire:model.live="timing" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                <option value="all">{{ __('planning_baseline.filters.all_timing') }}</option>
+                <option value="fixed">{{ __('planning_baseline.timing.fixed') }}</option>
+                <option value="flexible_day">{{ __('planning_baseline.timing.flexible_day') }}</option>
+            </select>
+        </label>
+
+        <label class="space-y-1 text-sm">
+            <span class="font-medium">{{ __('planning_baseline.filters.category') }}</span>
+            <select wire:model.live="category" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                <option value="">{{ __('planning_baseline.filters.all_categories') }}</option>
+                @foreach ($categories as $availableCategory)
+                    <option value="{{ $availableCategory }}">{{ $availableCategory }}</option>
+                @endforeach
+            </select>
+        </label>
     </div>
 
-    <flux:card class="grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem_12rem]">
-        <flux:input
-            wire:model.live.debounce.300ms="search"
-            icon="magnifying-glass"
-            :label="__('planning_baseline.filters.search')"
-            :placeholder="__('planning_baseline.filters.search_placeholder')"
-        />
-
-        <flux:select wire:model.live="timing" :label="__('planning_baseline.filters.timing')">
-            <option value="all">{{ __('planning_baseline.filters.all_timing') }}</option>
-            <option value="fixed">{{ __('planning_baseline.timing.fixed') }}</option>
-            <option value="flexible_day">{{ __('planning_baseline.timing.flexible_day') }}</option>
-        </flux:select>
-
-        <flux:select wire:model.live="category" :label="__('planning_baseline.filters.category')">
-            <option value="">{{ __('planning_baseline.filters.all_categories') }}</option>
-            @foreach ($categories as $availableCategory)
-                <option value="{{ $availableCategory }}">{{ $availableCategory }}</option>
-            @endforeach
-        </flux:select>
-    </flux:card>
-
-    @if ($view !== 'calendar')
+    @if ($view === 'today' || $view === 'list')
         <div class="space-y-2">
             @forelse ($occurrences as $occurrence)
-                @php($mode = $occurrence->scheduleRule?->timing_mode?->value ?? 'fixed')
                 <a
                     href="{{ route('planner.show', $occurrence->plan) }}"
-                    class="flex items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                    class="flex items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
                 >
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="truncate font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
                             @if (filled(data_get($occurrence->plan->metadata, 'category')))
-                                <flux:badge color="zinc">{{ data_get($occurrence->plan->metadata, 'category') }}</flux:badge>
+                                <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs dark:bg-zinc-800">{{ data_get($occurrence->plan->metadata, 'category') }}</span>
                             @endif
                         </div>
                         <div class="mt-1 text-sm text-zinc-500">
@@ -61,7 +74,7 @@
                                 <x-app.local-date :value="$occurrence->scheduled_start_at" :show-equivalent="false" /> ·
                             @endif
 
-                            @if ($mode === 'flexible_day')
+                            @if (($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'flexible_day')
                                 {{ __('planning_baseline.timing.flexible_day_short') }}
                             @else
                                 <x-app.local-time :value="$occurrence->scheduled_start_at" />
@@ -70,61 +83,56 @@
                             @endif
                         </div>
                     </div>
-                    <flux:badge color="zinc">{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                    <span class="rounded-full bg-zinc-100 px-2 py-1 text-xs dark:bg-zinc-800">
+                        {{ __('planner.occurrence_status.'.$occurrence->status->value) }}
+                    </span>
                 </a>
             @empty
-                <x-app.empty-state
-                    :title="$view === 'today' ? __('planning_baseline.empty.today') : __('planning_baseline.empty.list')"
-                    :description="__('planning_baseline.empty.help')"
-                />
+                <div class="rounded-xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
+                    <div class="font-medium">{{ $view === 'today' ? __('planning_baseline.empty.today') : __('planning_baseline.empty.list') }}</div>
+                    <div class="mt-1 text-sm text-zinc-500">{{ __('planning_baseline.empty.help') }}</div>
+                </div>
             @endforelse
         </div>
-    @else
-        <flux:card class="space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <flux:button wire:click="previousPeriod" variant="ghost" size="sm" icon="chevron-left">
-                    {{ __('planner.calendar.previous') }}
-                </flux:button>
+    @endif
 
-                <div class="flex flex-wrap items-center justify-center gap-1">
-                    <flux:button wire:click="showYear('{{ $year }}')" :variant="$calendarLevel === 'year' ? 'primary' : 'ghost'" size="sm">
-                        {{ $calendarYearLabel }}
-                    </flux:button>
+    @if ($view === 'calendar')
+        <div class="space-y-4 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <button type="button" wire:click="previousPeriod" class="rounded-lg bg-zinc-100 px-3 py-2 text-sm dark:bg-zinc-900">
+                    {{ __('planner.calendar.previous') }}
+                </button>
+
+                <div class="flex flex-wrap items-center justify-center gap-2 text-sm">
+                    <button type="button" wire:click="showYear('{{ $year }}')" class="font-medium">{{ $calendarYearLabel }}</button>
 
                     @if ($calendarLevel !== 'year')
-                        <span class="text-zinc-300 dark:text-zinc-700">/</span>
-                        <flux:button wire:click="showMonth('{{ $month }}')" :variant="$calendarLevel === 'month' ? 'primary' : 'ghost'" size="sm">
-                            {{ $calendarMonthLabel }}
-                        </flux:button>
+                        <span>/</span>
+                        <button type="button" wire:click="showMonth('{{ $month }}')" class="font-medium">{{ $calendarMonthLabel }}</button>
                     @endif
 
-                    @if (in_array($calendarLevel, ['day', 'hour'], true))
-                        <span class="text-zinc-300 dark:text-zinc-700">/</span>
-                        <flux:button wire:click="showDay('{{ $day }}')" :variant="$calendarLevel === 'day' ? 'primary' : 'ghost'" size="sm">
+                    @if ($calendarLevel === 'day' || $calendarLevel === 'hour')
+                        <span>/</span>
+                        <button type="button" wire:click="showDay('{{ $day }}')" class="font-medium">
                             <x-app.local-date :value="$day" :show-equivalent="false" />
-                        </flux:button>
+                        </button>
                     @endif
 
                     @if ($calendarLevel === 'hour')
-                        <span class="text-zinc-300 dark:text-zinc-700">/</span>
-                        <flux:badge color="zinc">{{ str_pad((string) $hour, 2, '0', STR_PAD_LEFT) }}:00</flux:badge>
+                        <span>/</span>
+                        <span>{{ str_pad((string) $hour, 2, '0', STR_PAD_LEFT) }}:00</span>
                     @endif
                 </div>
 
-                <flux:button wire:click="nextPeriod" variant="ghost" size="sm" icon-trailing="chevron-right">
+                <button type="button" wire:click="nextPeriod" class="rounded-lg bg-zinc-100 px-3 py-2 text-sm dark:bg-zinc-900">
                     {{ __('planner.calendar.next') }}
-                </flux:button>
+                </button>
             </div>
 
             @if ($calendarLevel === 'year')
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach ($calendarMonths as $calendarMonth)
-                        <button
-                            type="button"
-                            wire:key="baseline-calendar-month-{{ $calendarMonth['key'] }}"
-                            wire:click="showMonth('{{ $calendarMonth['key'] }}')"
-                            class="rounded-xl border border-zinc-200 p-4 text-start transition hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-                        >
+                        <button type="button" wire:click="showMonth('{{ $calendarMonth['key'] }}')" class="rounded-xl border border-zinc-200 p-4 text-start hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900">
                             <span class="block font-semibold">{{ $calendarMonth['label'] }}</span>
                             <span class="mt-1 block text-sm text-zinc-500">
                                 {{ trans_choice('planning_baseline.calendar.items', $calendarMonth['count'], ['count' => $calendarMonth['count']]) }}
@@ -132,48 +140,46 @@
                         </button>
                     @endforeach
                 </div>
-            @elseif ($calendarLevel === 'month')
+            @endif
+
+            @if ($calendarLevel === 'month')
                 <div class="grid grid-cols-7 gap-px overflow-hidden rounded-xl bg-zinc-200 dark:bg-zinc-800">
                     @foreach ($calendarDays as $calendarDay)
-                        @php
-                            $dayItems = $calendarOccurrences->get($calendarDay['key'], collect());
-                            $fixedCount = $dayItems->filter(fn ($item) => ($item->scheduleRule?->timing_mode?->value ?? 'fixed') === 'fixed')->count();
-                            $flexibleCount = $dayItems->filter(fn ($item) => ($item->scheduleRule?->timing_mode?->value ?? 'fixed') === 'flexible_day')->count();
-                        @endphp
                         <button
                             type="button"
-                            wire:key="baseline-calendar-day-{{ $calendarDay['key'] }}"
                             wire:click="showDay('{{ $calendarDay['key'] }}')"
-                            class="min-h-24 bg-white p-2 text-start transition hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900 {{ $calendarDay['in_month'] ? '' : 'opacity-45' }}"
+                            class="min-h-24 bg-white p-2 text-start hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900 {{ $calendarDay['in_month'] ? '' : 'opacity-45' }}"
                         >
                             <span class="text-xs font-medium">{{ $calendarDay['label'] }}</span>
-                            @if ($dayItems->isNotEmpty())
-                                <span class="mt-2 block text-sm font-semibold">{{ $dayItems->count() }}</span>
+                            @if ($calendarDay['count'] > 0)
+                                <span class="mt-2 block text-sm font-semibold">{{ $calendarDay['count'] }}</span>
                                 <span class="mt-1 block text-[0.68rem] leading-4 text-zinc-500">
-                                    @if ($fixedCount > 0)
-                                        {{ __('planning_baseline.calendar.fixed_count', ['count' => $fixedCount]) }}
+                                    @if ($calendarDay['fixed_count'] > 0)
+                                        {{ __('planning_baseline.calendar.fixed_count', ['count' => $calendarDay['fixed_count']]) }}
                                     @endif
-                                    @if ($fixedCount > 0 && $flexibleCount > 0)
+                                    @if ($calendarDay['fixed_count'] > 0 && $calendarDay['flexible_count'] > 0)
                                         ·
                                     @endif
-                                    @if ($flexibleCount > 0)
-                                        {{ __('planning_baseline.calendar.flexible_count', ['count' => $flexibleCount]) }}
+                                    @if ($calendarDay['flexible_count'] > 0)
+                                        {{ __('planning_baseline.calendar.flexible_count', ['count' => $calendarDay['flexible_count']]) }}
                                     @endif
                                 </span>
                             @endif
                         </button>
                     @endforeach
                 </div>
-            @elseif ($calendarLevel === 'day')
+            @endif
+
+            @if ($calendarLevel === 'day')
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900">
                     <span class="font-medium"><x-app.local-date :value="$day" :show-equivalent="false" /></span>
                     <div class="flex flex-wrap gap-2">
-                        <flux:button :href="route('planner.create', ['date' => $day, 'timing' => 'flexible_day'])" size="sm" variant="ghost">
+                        <a href="{{ route('planner.create', ['date' => $day, 'timing' => 'flexible_day']) }}" class="rounded-lg bg-white px-3 py-2 text-sm dark:bg-zinc-950">
                             {{ __('planning_baseline.calendar.add_flexible') }}
-                        </flux:button>
-                        <flux:button :href="route('planner.create', ['date' => $day])" size="sm" icon="plus">
+                        </a>
+                        <a href="{{ route('planner.create', ['date' => $day]) }}" class="rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900">
                             {{ __('planning_baseline.calendar.add_fixed') }}
-                        </flux:button>
+                        </a>
                     </div>
                 </div>
 
@@ -183,79 +189,64 @@
                         @foreach ($calendarFlexible as $item)
                             <a href="{{ route('planner.show', $item->plan) }}" class="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 p-3 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900">
                                 <span class="font-medium" dir="auto">{{ $item->plan->title }}</span>
-                                <flux:badge color="zinc">{{ __('planning_baseline.timing.flexible_day_short') }}</flux:badge>
+                                <span class="text-xs text-zinc-500">{{ __('planning_baseline.timing.flexible_day_short') }}</span>
                             </a>
                         @endforeach
                     </div>
                 @endif
 
                 <div class="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-                    @for ($hourIndex = 0; $hourIndex < 24; $hourIndex++)
-                        @php($items = $calendarHours->get($hourIndex, collect()))
+                    @foreach ($baselineCalendarHours as $calendarHour)
                         <button
                             type="button"
-                            wire:key="baseline-hour-{{ $day }}-{{ $hourIndex }}"
-                            wire:click="showHour('{{ $day }}', {{ $hourIndex }})"
-                            class="grid h-14 w-full grid-cols-[5rem_1fr] items-center bg-white text-start transition hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                            wire:click="showHour('{{ $day }}', {{ $calendarHour['hour'] }})"
+                            class="grid h-14 w-full grid-cols-[5rem_1fr] items-center bg-white text-start hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
-                            <span class="border-e border-zinc-200 px-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">
-                                {{ str_pad((string) $hourIndex, 2, '0', STR_PAD_LEFT) }}:00
-                            </span>
+                            <span class="border-e border-zinc-200 px-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">{{ $calendarHour['label'] }}</span>
                             <span class="px-3 text-sm">
-                                @if ($items->isNotEmpty())
-                                    {{ trans_choice('planning_baseline.calendar.items', $items->count(), ['count' => $items->count()]) }}
+                                @if ($calendarHour['count'] > 0)
+                                    {{ trans_choice('planning_baseline.calendar.items', $calendarHour['count'], ['count' => $calendarHour['count']]) }}
                                 @else
                                     <span class="text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
                                 @endif
                             </span>
                         </button>
-                    @endfor
+                    @endforeach
                 </div>
-            @elseif ($calendarLevel === 'hour')
+            @endif
+
+            @if ($calendarLevel === 'hour')
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900">
                     <div class="text-sm font-medium">{{ str_pad((string) $hour, 2, '0', STR_PAD_LEFT) }}:00</div>
-                    <div class="flex flex-wrap items-center gap-1">
-                        @foreach ([60, 30, 15, 5, 1] as $quantum)
-                            <flux:button wire:click="setSlotMinutes({{ $quantum }})" :variant="$slotMinutes === $quantum ? 'primary' : 'ghost'" size="sm">
-                                {{ __('planner.calendar.quantum_minutes', ['count' => $quantum]) }}
-                            </flux:button>
-                        @endforeach
+                    <div class="flex flex-wrap gap-1">
+                        <button type="button" wire:click="setSlotMinutes(60)" class="rounded-lg px-2 py-1 text-sm {{ $slotMinutes === 60 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-white dark:bg-zinc-950' }}">60m</button>
+                        <button type="button" wire:click="setSlotMinutes(30)" class="rounded-lg px-2 py-1 text-sm {{ $slotMinutes === 30 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-white dark:bg-zinc-950' }}">30m</button>
+                        <button type="button" wire:click="setSlotMinutes(15)" class="rounded-lg px-2 py-1 text-sm {{ $slotMinutes === 15 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-white dark:bg-zinc-950' }}">15m</button>
+                        <button type="button" wire:click="setSlotMinutes(5)" class="rounded-lg px-2 py-1 text-sm {{ $slotMinutes === 5 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-white dark:bg-zinc-950' }}">5m</button>
+                        <button type="button" wire:click="setSlotMinutes(1)" class="rounded-lg px-2 py-1 text-sm {{ $slotMinutes === 1 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-white dark:bg-zinc-950' }}">1m</button>
                     </div>
                 </div>
 
                 <div class="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-                    @for ($slotIndex = 0; $slotIndex < $calendarSlots->count(); $slotIndex++)
-                        @php($slot = $calendarSlots->get($slotIndex))
-                        @php($slotTime = $slot['start']->format('H:i'))
-                        @php($slotMinute = (int) $slot['start']->format('i'))
-                        @php($itemCount = $slot['items']->count())
-
+                    @foreach ($baselineCalendarSlots as $slot)
                         <div class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
-                            <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">
-                                {{ $slotTime }}
-                            </div>
-                            <button
-                                type="button"
-                                wire:click="selectSlot({{ $slotMinute }})"
-                                class="px-3 py-2 text-start transition hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                            >
-                                @if ($itemCount > 0)
-                                    {{ trans_choice('planning_baseline.calendar.items', $itemCount, ['count' => $itemCount]) }}
+                            <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">{{ $slot['time'] }}</div>
+                            <button type="button" wire:click="selectSlot({{ $slot['minute'] }})" class="px-3 py-2 text-start hover:bg-zinc-50 dark:hover:bg-zinc-900">
+                                @if ($slot['count'] > 0)
+                                    {{ trans_choice('planning_baseline.calendar.items', $slot['count'], ['count' => $slot['count']]) }}
                                 @else
                                     <span class="text-xs text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
                                 @endif
                             </button>
                             <div class="p-2">
                                 <a
-                                    href="{{ route('planner.create', ['date' => $day, 'time' => $slotTime, 'duration' => $slotMinutes]) }}"
-                                    class="inline-flex size-8 items-center justify-center rounded-lg text-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                                    aria-label="{{ __('planning_baseline.calendar.add_at', ['time' => $slotTime]) }}"
-                                >
-                                    +
-                                </a>
+                                    href="{{ route('planner.create', ['date' => $day, 'time' => $slot['time'], 'duration' => $slotMinutes]) }}"
+                                    class="inline-flex size-8 items-center justify-center rounded-lg text-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                    aria-label="{{ __('planning_baseline.calendar.add_at', ['time' => $slot['time']]) }}"
+                                >+</a>
                             </div>
                         </div>
-                    @endfor
+                    @endforeach
                 </div>
 
                 @if ($selectedSlotItems->isNotEmpty())
@@ -272,6 +263,6 @@
                     </div>
                 @endif
             @endif
-        </flux:card>
+        </div>
     @endif
 </section>
