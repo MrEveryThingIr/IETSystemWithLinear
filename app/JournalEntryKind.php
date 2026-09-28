@@ -10,6 +10,9 @@ enum JournalEntryKind: string
     case Transfer = 'transfer';
     case ObligationRecognition = 'obligation_recognition';
     case Settlement = 'settlement';
+    case IetExchangeDeposit = 'iet_exchange_deposit';
+    case IetExchangeCashout = 'iet_exchange_cashout';
+    case IetFlowCharge = 'iet_flow_charge';
     case Reversal = 'reversal';
     case Correction = 'correction';
 }
