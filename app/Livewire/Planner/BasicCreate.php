@@ -7,8 +7,10 @@ use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
 use App\Models\Actor;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\PlanScheduleFrequency;
 use App\PlanTimingMode;
+use App\Support\PlanAttentionConflicts;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -28,6 +30,8 @@ class BasicCreate extends Component
     public string $category = '';
 
     public string $timingMode = 'fixed';
+
+    public string $attentionMode = 'exclusive';
 
     public string $date = '';
 
@@ -68,12 +72,14 @@ class BasicCreate extends Component
         EnsurePersonalContext $personal,
         CreatePlan $createPlan,
         CreatePlanScheduleRule $createRule,
+        PlanAttentionConflicts $attentionConflicts,
     ): mixed {
         $data = $this->validate([
             'title' => ['required', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:10000'],
             'category' => ['nullable', 'string', 'max:80'],
             'timingMode' => ['required', 'in:fixed,flexible_day'],
+            'attentionMode' => ['required', 'in:exclusive,background'],
             'date' => ['required', 'date_format:Y-m-d'],
             'startTime' => ['required_if:timingMode,fixed', 'date_format:H:i'],
             'endTime' => ['required_if:timingMode,fixed', 'date_format:H:i'],
@@ -82,6 +88,7 @@ class BasicCreate extends Component
         $user = $this->user();
         $timezone = TemporalPreferences::timezoneFor($user);
         $mode = PlanTimingMode::from($data['timingMode']);
+        $attentionMode = PlanAttentionMode::from($data['attentionMode']);
 
         [$startTime, $duration] = $mode === PlanTimingMode::FlexibleDay
             ? ['00:00', 1440]
@@ -89,9 +96,24 @@ class BasicCreate extends Component
 
         $category = trim($data['category']);
         $description = trim($data['description']);
+        $context = $personal->execute($user);
+
+        if ($mode === PlanTimingMode::Fixed && $attentionMode === PlanAttentionMode::Exclusive) {
+            $start = CarbonImmutable::parse($data['date'].' '.$startTime, $timezone);
+            $end = $start->addMinutes($duration);
+            $conflict = $attentionConflicts->firstForWindow($context, $start, $end);
+
+            if ($conflict !== null) {
+                throw ValidationException::withMessages([
+                    'startTime' => __('planning_baseline.validation.exclusive_overlap', [
+                        'title' => $conflict->plan->title,
+                    ]),
+                ]);
+            }
+        }
 
         $plan = $createPlan->execute(
-            $personal->execute($user),
+            $context,
             $user,
             $data['title'],
             $description !== '' ? $description : null,
@@ -100,6 +122,7 @@ class BasicCreate extends Component
                 'planning_studio' => 'baseline',
                 'category' => $category !== '' ? $category : null,
             ],
+            attentionMode: $attentionMode,
         );
 
         $createRule->execute(
