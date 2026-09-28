@@ -160,6 +160,12 @@ class Index extends Component
 
         return view('livewire.exchange.index', [
             'quote' => $quote,
+            'quotePercent' => $pricing->percentOfUsd($quote),
+            'quotePercents' => $quotes->mapWithKeys(
+                fn (IetValuationQuote $historyQuote): array => [
+                    $historyQuote->id => $pricing->percentOfUsd($historyQuote),
+                ],
+            ),
             'walletBalance' => $balance,
             'ownRequests' => $ownRequests,
             'canManageExchange' => $canManage,
