@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Middleware\AssignRequestId;
-use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnforceReleaseSurface;
+use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
