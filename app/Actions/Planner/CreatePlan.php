@@ -11,6 +11,7 @@ use App\Models\Plan;
 use App\Models\PlanEvent;
 use App\Models\PlanParticipant;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\PlanEventType;
 use App\Support\TemporalPreferences;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,7 @@ class CreatePlan
         ?string $originUuid = null,
         array $metadata = [],
         ?DomainBlueprintVersion $domainBlueprintVersion = null,
+        PlanAttentionMode $attentionMode = PlanAttentionMode::Exclusive,
     ): Plan {
         $current = $this->currentUser($user);
         $title = Str::squish($title);
@@ -60,6 +62,7 @@ class CreatePlan
             $originUuid,
             $metadata,
             $domainBlueprintVersion,
+            $attentionMode,
         ): Plan {
             $lockedContext = Context::query()->lockForUpdate()->findOrFail($context->id);
 
@@ -119,6 +122,7 @@ class CreatePlan
                 'title' => $title,
                 'description' => $description,
                 'timezone' => $timezone,
+                'attention_mode' => $attentionMode,
                 'origin_type' => $originType,
                 'origin_uuid' => $originUuid,
                 'metadata' => $metadata,
@@ -151,6 +155,7 @@ class CreatePlan
                     'origin_type' => $originType,
                     'origin_uuid' => $originUuid,
                     'domain_blueprint_version_uuid' => $lockedBlueprintVersion?->uuid,
+                    'attention_mode' => $attentionMode->value,
                 ],
             ]);
 
