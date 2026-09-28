@@ -328,6 +328,8 @@ class Index extends Component
         $calendarHours = collect();
         $calendarFlexible = collect();
         $calendarSlots = collect();
+        $baselineCalendarHours = collect();
+        $baselineCalendarSlots = collect();
         $selectedSlotItems = collect();
 
         $monthStart = CarbonImmutable::parse($this->month, $timezone);
@@ -373,6 +375,12 @@ class Index extends Component
                         'items' => $slotItems,
                     ]);
 
+                    $baselineCalendarSlots->push([
+                        'time' => $slotStart->format('H:i'),
+                        'minute' => $minute,
+                        'count' => $slotItems->count(),
+                    ]);
+
                     if ($this->selectedMinute === $minute) {
                         $selectedSlotItems = $slotItems;
                     }
@@ -389,6 +397,14 @@ class Index extends Component
                             ->setTimezone($timezone)
                             ->format('G'),
                     );
+
+                for ($hourIndex = 0; $hourIndex < 24; $hourIndex++) {
+                    $baselineCalendarHours->push([
+                        'hour' => $hourIndex,
+                        'label' => str_pad((string) $hourIndex, 2, '0', STR_PAD_LEFT).':00',
+                        'count' => $calendarHours->get($hourIndex, collect())->count(),
+                    ]);
+                }
             } else {
                 $firstDay = TemporalPreferences::weekdayOrder($user->locale)[0] ?? 1;
                 $carbonFirstDay = $firstDay === 7 ? CarbonInterface::SUNDAY : $firstDay;
@@ -396,20 +412,30 @@ class Index extends Component
                 $gridStart = $monthStart->startOfWeek($carbonFirstDay);
                 $gridEnd = $monthEnd->endOfWeek($carbonFirstDay);
 
-                for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
-                    $calendarDays->push([
-                        'date' => $date,
-                        'key' => $date->toDateString(),
-                        'label' => TemporalCalendar::dayLabel($date, $user, $timezone),
-                        'in_month' => TemporalCalendar::monthKey($date, $user, $timezone) === $selectedMonthKey,
-                    ]);
-                }
-
                 $calendarOccurrences = $occurrences->groupBy(
                     fn (PlanOccurrence $occurrence): string => $occurrence->scheduled_start_at
                         ->setTimezone($timezone)
                         ->format('Y-m-d'),
                 );
+
+                for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
+                    $key = $date->toDateString();
+                    $dayItems = $calendarOccurrences->get($key, collect());
+
+                    $calendarDays->push([
+                        'date' => $date,
+                        'key' => $key,
+                        'label' => TemporalCalendar::dayLabel($date, $user, $timezone),
+                        'in_month' => TemporalCalendar::monthKey($date, $user, $timezone) === $selectedMonthKey,
+                        'count' => $dayItems->count(),
+                        'fixed_count' => $dayItems->filter(
+                            fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'fixed',
+                        )->count(),
+                        'flexible_count' => $dayItems->filter(
+                            fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'flexible_day',
+                        )->count(),
+                    ]);
+                }
             }
         }
 
@@ -426,6 +452,8 @@ class Index extends Component
             'calendarHours' => $calendarHours,
             'calendarFlexible' => $calendarFlexible,
             'calendarSlots' => $calendarSlots,
+            'baselineCalendarHours' => $baselineCalendarHours,
+            'baselineCalendarSlots' => $baselineCalendarSlots,
             'selectedSlotItems' => $selectedSlotItems,
             'calendarYearLabel' => TemporalCalendar::yearLabel($yearStart, $user, $timezone),
             'calendarMonthLabel' => TemporalCalendar::monthLabel($monthStart, $user, $timezone),
