@@ -471,11 +471,13 @@ class Show extends Component
         }
 
         if ($this->repeatMode === 'selected_dates') {
-            if ($this->repeatDates === []) {
-                throw ValidationException::withMessages([
-                    'repeatDate' => __('planning_baseline.tools.repeat.choose_dates'),
-                ]);
-            }
+            $this->validate([
+                'repeatDates' => ['required', 'array', 'min:1', 'max:62'],
+                'repeatDates.*' => ['required', 'date_format:Y-m-d'],
+            ], [
+                'repeatDates.required' => __('planning_baseline.tools.repeat.choose_dates'),
+                'repeatDates.min' => __('planning_baseline.tools.repeat.choose_dates'),
+            ]);
 
             foreach ($this->repeatDates as $date) {
                 $parsed = CarbonImmutable::createFromFormat('!Y-m-d', $date, $this->plan->timezone);
