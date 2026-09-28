@@ -195,7 +195,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="whitespace-nowrap px-4 py-3 text-end font-semibold tabular-nums">
-                                                    {{ $sign }}{{ $symbol }} {{ AppSupportMoneyAmount::format($row['amount_minor'], $exponent) }}
+                                                    {{ $sign }}{{ $symbol }} {{ \App\Support\MoneyAmount::format($row['amount_minor'], $exponent) }}
                                                 </td>
                                                 <td class="px-2 py-2 text-end">
                                                     @if (! $row['reversed'] && $row['kind'] !== 'reversal')
@@ -281,7 +281,7 @@
                                                 <div class="min-w-0">
                                                     <div class="font-semibold" dir="auto">{{ $intention->title }}</div>
                                                     <div class="mt-1 text-sm font-medium tabular-nums">
-                                                        {{ $symbol }} {{ AppSupportMoneyAmount::format((int) $intention->amount_minor, $exponent) }}
+                                                        {{ $symbol }} {{ \App\Support\MoneyAmount::format((int) $intention->amount_minor, $exponent) }}
                                                     </div>
                                                 </div>
                                                 <span class="rounded-full bg-white px-2 py-1 text-xs text-zinc-500 dark:bg-zinc-900">
