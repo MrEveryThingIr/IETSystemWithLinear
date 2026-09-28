@@ -78,8 +78,15 @@ return [
         'flexible_day_help' => 'It matters that this is done on the day; the exact hour does not.',
         'flexible_day_short' => 'Any time today',
     ],
+    'attention' => [
+        'exclusive' => '需要专注',
+        'exclusive_help' => '把这段时间视为前台专注时间；另一项同样需要专注的计划不能与它重叠。',
+        'background' => '可后台进行',
+        'background_help' => '可以和主要活动同时进行，例如工作时听英语音频。',
+    ],
     'fields' => [
         'title' => 'What do you want to do?',
+        'attention' => '注意力模式',
         'when' => 'When does time matter?',
         'date' => 'Date',
         'starts' => 'Starts',
@@ -134,6 +141,16 @@ return [
             'month_names' => '月份名称',
             'counts' => '项目数量',
             'plan_titles' => '计划标题',
+            'close' => '关闭',
+            'cell_mode' => '单元格模式',
+            'mode_details' => '详细信息',
+            'mode_map' => '视觉地图',
+            'color_by' => '颜色映射',
+            'color_none' => '不使用颜色',
+            'color_plan' => '按计划',
+            'color_category' => '按分类',
+            'color_attention' => '按注意力',
+            'uncategorized' => '未分类',
         ],
         'title' => 'Tools',
         'repeat' => [
@@ -174,6 +191,8 @@ return [
     ],
     'validation' => [
         'end_after_start' => 'End time must be after start time.',
+        'exclusive_overlap' => '此时间与同样需要专注的“:title”重叠。请选择其他时间，或把其中一个计划标记为可后台进行。',
+        'another_focused_plan' => '另一项专注计划',
         'finish_running_before_edit' => 'Finish the running occurrence before changing its schedule.',
     ],
 ];
