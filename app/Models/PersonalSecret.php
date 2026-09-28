@@ -44,6 +44,7 @@ class PersonalSecret extends Model
         return [
             'identifier' => 'encrypted',
             'secret' => 'encrypted',
+            'url' => 'encrypted',
             'notes' => 'encrypted',
         ];
     }
