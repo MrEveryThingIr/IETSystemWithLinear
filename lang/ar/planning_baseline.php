@@ -78,8 +78,15 @@ return [
         'flexible_day_help' => 'It matters that this is done on the day; the exact hour does not.',
         'flexible_day_short' => 'Any time today',
     ],
+    'attention' => [
+        'exclusive' => 'يتطلب تركيزًا كاملًا',
+        'exclusive_help' => 'اعتبر هذه الفترة وقتًا أساسيًا؛ لا يمكن لخطة أخرى تتطلب تركيزًا كاملًا أن تتداخل معها.',
+        'background' => 'يمكن تشغيله في الخلفية',
+        'background_help' => 'يمكن أن يتزامن مع عمل أساسي، مثل الاستماع إلى صوت أثناء تنفيذ نشاط آخر.',
+    ],
     'fields' => [
         'title' => 'What do you want to do?',
+        'attention' => 'نوع الانتباه',
         'when' => 'When does time matter?',
         'date' => 'Date',
         'starts' => 'Starts',
@@ -134,6 +141,16 @@ return [
             'month_names' => 'أسماء الشهور',
             'counts' => 'عدد العناصر',
             'plan_titles' => 'عناوين الخطط',
+            'close' => 'إغلاق',
+            'cell_mode' => 'نمط الخلية',
+            'mode_details' => 'تفاصيل',
+            'mode_map' => 'خريطة مرئية',
+            'color_by' => 'تلوين حسب',
+            'color_none' => 'بلا ألوان',
+            'color_plan' => 'الخطة',
+            'color_category' => 'الفئة',
+            'color_attention' => 'نوع الانتباه',
+            'uncategorized' => 'بلا فئة',
         ],
         'title' => 'Tools',
         'repeat' => [
@@ -174,6 +191,8 @@ return [
     ],
     'validation' => [
         'end_after_start' => 'End time must be after start time.',
+        'exclusive_overlap' => 'يتداخل هذا الوقت مع «:title» التي تتطلب أيضًا تركيزًا كاملًا. اختر وقتًا آخر أو اجعل إحدى الخطتين قابلة للعمل في الخلفية.',
+        'another_focused_plan' => 'خطة أخرى تتطلب تركيزًا كاملًا',
         'finish_running_before_edit' => 'Finish the running occurrence before changing its schedule.',
     ],
 ];
