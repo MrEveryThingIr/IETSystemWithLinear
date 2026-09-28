@@ -48,7 +48,11 @@ class BasicEdit extends Component
         Gate::forUser($user)->authorize('manage', $plan);
 
         $plan->loadMissing('context');
-        abort_unless($plan->context->kind === ContextKind::Personal, 404);
+        abort_unless(
+            $plan->context->kind === ContextKind::Personal
+            && data_get($plan->metadata, 'planning_studio') === 'baseline',
+            404,
+        );
 
         $rule = $this->activeRule($plan);
         abort_unless($rule->frequency === PlanScheduleFrequency::Once, 422);
