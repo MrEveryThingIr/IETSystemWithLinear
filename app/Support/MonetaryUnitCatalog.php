@@ -8,7 +8,7 @@ final class MonetaryUnitCatalog
     public static function all(): array
     {
         return [
-            'IET' => ['name' => 'IET Internal Credit', 'exponent' => 6, 'symbol' => 'IET'],
+            'IET' => ['name' => 'IET Internal Credit', 'exponent' => 2, 'symbol' => 'IET'],
             'EUR' => ['name' => 'Euro', 'exponent' => 2, 'symbol' => '€'],
             'USD' => ['name' => 'US Dollar', 'exponent' => 2, 'symbol' => '$'],
             'GBP' => ['name' => 'Pound Sterling', 'exponent' => 2, 'symbol' => '£'],
