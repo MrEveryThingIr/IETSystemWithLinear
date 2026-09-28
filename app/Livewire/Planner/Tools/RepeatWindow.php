@@ -8,6 +8,7 @@ use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
+use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -18,7 +19,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Throwable;
 
 #[Layout('layouts.app')]
 #[Title('Repeat time window')]
@@ -44,8 +44,10 @@ class RepeatWindow extends Component
     {
         abort_unless((string) config('release.profile') === 'planning_baseline', 404);
 
-        $timezone = TemporalPreferences::timezoneFor($this->user());
-        $this->repeatMonth = CarbonImmutable::now($timezone)->addMonth()->format('Y-m');
+        $user = $this->user();
+        $timezone = TemporalPreferences::timezoneFor($user);
+        $currentMonth = TemporalCalendar::monthStart(CarbonImmutable::now($timezone), $user, $timezone);
+        $this->repeatMonth = TemporalCalendar::nextMonthStart($currentMonth, $user, $timezone)->format('Y-m-d');
     }
 
     public function updatedSourceUuid(): void
@@ -104,9 +106,29 @@ class RepeatWindow extends Component
             ? route('planner.show', $source->plan)
             : route('planner.index');
 
+        $user = $this->user();
+        $sourceLabels = $sources->mapWithKeys(function (PlanOccurrence $occurrence) use ($user): array {
+            $timezone = $occurrence->plan->timezone;
+            $date = CarbonImmutable::parse($occurrence->local_date->format('Y-m-d'), 'UTC');
+            $dateLabel = TemporalCalendar::dateLabel($date, $user, 'UTC');
+
+            if ($occurrence->scheduleRule?->timing_mode?->value === 'flexible_day') {
+                $timeLabel = __('planning_baseline.timing.flexible_day_short');
+            } else {
+                $localStart = CarbonImmutable::parse(
+                    $occurrence->local_date->format('Y-m-d').' '.$occurrence->scheduleRule->start_time,
+                    $timezone,
+                );
+                $timeLabel = TemporalCalendar::timeLabel($localStart, $user, $timezone);
+            }
+
+            return [$occurrence->uuid => $occurrence->plan->title.' — '.$dateLabel.' · '.$timeLabel];
+        });
+
         return view('livewire.planner.tools.repeat-window', [
             'sources' => $sources,
             'sourceOccurrence' => $source,
+            'sourceLabels' => $sourceLabels,
             'cancelUrl' => $cancelUrl,
         ]);
     }
@@ -192,25 +214,27 @@ class RepeatWindow extends Component
         if ($this->repeatMode === 'same_monthday') {
             $this->validate(['repeatCount' => ['required', 'integer', 'min:1', 'max:36']]);
 
-            $day = $sourceDay->day;
-            $cursor = $anchor->startOfMonth();
+            $user = $this->user();
+            $day = (int) TemporalCalendar::format($sourceDay, $user, $timezone, 'd', 'en');
+            $cursor = TemporalCalendar::monthStart($anchor, $user, $timezone);
             $dates = [];
             $sourceDate = $sourceDay->format('Y-m-d');
 
             while (count($dates) < $this->repeatCount) {
-                if ($day <= $cursor->daysInMonth) {
-                    $candidate = $cursor->day($day);
+                $candidate = $cursor->addDays(max(0, $day - 1));
+                $candidateDay = (int) TemporalCalendar::format($candidate, $user, $timezone, 'd', 'en');
 
-                    if (
-                        $candidate->greaterThan($anchor)
-                        && $candidate->greaterThan($today)
-                        && $candidate->format('Y-m-d') !== $sourceDate
-                    ) {
-                        $dates[] = $candidate->format('Y-m-d');
-                    }
+                if (
+                    $candidateDay === $day
+                    && TemporalCalendar::monthKey($candidate, $user, $timezone) === TemporalCalendar::monthKey($cursor, $user, $timezone)
+                    && $candidate->greaterThan($anchor)
+                    && $candidate->greaterThan($today)
+                    && $candidate->format('Y-m-d') !== $sourceDate
+                ) {
+                    $dates[] = $candidate->format('Y-m-d');
                 }
 
-                $cursor = $cursor->addMonth()->startOfMonth();
+                $cursor = TemporalCalendar::nextMonthStart($cursor, $user, $timezone);
             }
 
             return $dates;
@@ -219,40 +243,47 @@ class RepeatWindow extends Component
         if ($this->repeatMode === 'same_yearday') {
             $this->validate(['repeatCount' => ['required', 'integer', 'min:1', 'max:20']]);
 
-            $month = $sourceDay->month;
-            $day = $sourceDay->day;
-            $year = $anchor->year;
+            $user = $this->user();
+            $month = (int) TemporalCalendar::format($sourceDay, $user, $timezone, 'M', 'en');
+            $day = (int) TemporalCalendar::format($sourceDay, $user, $timezone, 'd', 'en');
+            $yearCursor = TemporalCalendar::yearStart($anchor, $user, $timezone);
             $dates = [];
             $sourceDate = $sourceDay->format('Y-m-d');
 
             while (count($dates) < $this->repeatCount) {
-                try {
-                    $candidate = CarbonImmutable::createSafe($year, $month, $day, 0, 0, 0, $timezone);
-                } catch (Throwable) {
-                    $year++;
+                $monthCursor = $yearCursor;
 
-                    continue;
+                for ($index = 1; $index < $month; $index++) {
+                    $monthCursor = TemporalCalendar::nextMonthStart($monthCursor, $user, $timezone);
                 }
 
+                $candidate = $monthCursor->addDays(max(0, $day - 1));
+                $candidateMonth = (int) TemporalCalendar::format($candidate, $user, $timezone, 'M', 'en');
+                $candidateDay = (int) TemporalCalendar::format($candidate, $user, $timezone, 'd', 'en');
+
                 if (
-                    $candidate->greaterThan($anchor)
+                    $candidateMonth === $month
+                    && $candidateDay === $day
+                    && $candidate->greaterThan($anchor)
                     && $candidate->greaterThan($today)
                     && $candidate->format('Y-m-d') !== $sourceDate
                 ) {
                     $dates[] = $candidate->format('Y-m-d');
                 }
 
-                $year++;
+                $yearCursor = TemporalCalendar::nextYearStart($yearCursor, $user, $timezone);
             }
 
             return $dates;
         }
 
         if ($this->repeatMode === 'month') {
-            $this->validate(['repeatMonth' => ['required', 'date_format:Y-m']]);
+            $this->validate(['repeatMonth' => ['required', 'date_format:Y-m-d']]);
 
-            $start = CarbonImmutable::parse($this->repeatMonth.'-01', $timezone)->startOfDay();
-            $end = $start->endOfMonth();
+            $user = $this->user();
+            $picked = CarbonImmutable::parse($this->repeatMonth, $timezone)->startOfDay();
+            $start = TemporalCalendar::monthStart($picked, $user, $timezone);
+            $end = TemporalCalendar::nextMonthStart($start, $user, $timezone)->subDay();
             $sourceDate = $sourceDay->format('Y-m-d');
             $dates = [];
 
