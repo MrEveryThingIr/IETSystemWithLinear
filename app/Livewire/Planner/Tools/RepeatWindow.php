@@ -8,6 +8,7 @@ use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
+use App\PlanTimingMode;
 use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
@@ -111,12 +112,17 @@ class RepeatWindow extends Component
             $timezone = $occurrence->plan->timezone;
             $date = CarbonImmutable::parse($occurrence->local_date->format('Y-m-d'), 'UTC');
             $dateLabel = TemporalCalendar::dateLabel($date, $user, 'UTC');
+            $rule = $occurrence->scheduleRule;
 
-            if ($occurrence->scheduleRule?->timing_mode?->value === 'flexible_day') {
+            if ($rule === null) {
+                return [$occurrence->uuid => $occurrence->plan->title.' — '.$dateLabel];
+            }
+
+            if ($rule->timing_mode === PlanTimingMode::FlexibleDay) {
                 $timeLabel = __('planning_baseline.timing.flexible_day_short');
             } else {
                 $localStart = CarbonImmutable::parse(
-                    $occurrence->local_date->format('Y-m-d').' '.$occurrence->scheduleRule->start_time,
+                    $occurrence->local_date->format('Y-m-d').' '.$rule->start_time,
                     $timezone,
                 );
                 $timeLabel = TemporalCalendar::timeLabel($localStart, $user, $timezone);
@@ -160,12 +166,14 @@ class RepeatWindow extends Component
     private function availableSources(): Collection
     {
         $user = $this->user();
+        $actorId = $user->actor?->id;
+        abort_unless(is_int($actorId), 403);
 
         return PlanOccurrence::query()
             ->with(['plan', 'scheduleRule'])
-            ->whereHas('plan', function ($query) use ($user): void {
+            ->whereHas('plan', function ($query) use ($actorId): void {
                 $query
-                    ->where('created_by_actor_id', $user->actor->id)
+                    ->where('created_by_actor_id', $actorId)
                     ->where('metadata->planning_studio', 'baseline');
             })
             ->whereHas('scheduleRule', fn ($query) => $query->where('frequency', PlanScheduleFrequency::Once->value))
