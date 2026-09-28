@@ -25,11 +25,16 @@
         </x-slot:actions>
     </x-app.page-header>
 
-    @if ($category !== '' || $plan->description)
+    @if ($category !== '' || $plan->description || $plan->attention_mode)
         <flux:card class="space-y-3">
-            @if ($category !== '')
-                <flux:badge color="zinc">{{ $category }}</flux:badge>
-            @endif
+            <div class="flex flex-wrap gap-2">
+                @if ($category !== '')
+                    <flux:badge color="zinc">{{ $category }}</flux:badge>
+                @endif
+                <flux:badge color="zinc">
+                    {{ __('planning_baseline.attention.'.$plan->attention_mode->value) }}
+                </flux:badge>
+            </div>
             @if ($plan->description)
                 <div class="whitespace-pre-line text-sm leading-6 text-zinc-700 dark:text-zinc-300" dir="auto">{{ $plan->description }}</div>
             @endif
