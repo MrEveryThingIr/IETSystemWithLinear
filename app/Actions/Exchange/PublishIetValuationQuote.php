@@ -21,6 +21,10 @@ class PublishIetValuationQuote
         abort_unless($user->hasPlatformCapability(PlatformCapability::ManageExchange), 403);
 
         $usdPerIet = trim($usdPerIet);
+        $rationale = trim($rationale);
+
+        abort_if($rationale === '' || mb_strlen($rationale) > 4000, 422, 'A valuation rationale is required.');
+
         abort_unless(
             preg_match('/^(?:0|[1-9]\d*)\.\d{1,18}$/', $usdPerIet) === 1
             && trim(str_replace(['0', '.'], '', $usdPerIet)) !== '',
@@ -33,7 +37,7 @@ class PublishIetValuationQuote
             'usd_per_iet' => $usdPerIet,
             'policy_version' => 'manual-v1',
             'factors' => $factors,
-            'rationale' => trim($rationale) !== '' ? trim($rationale) : null,
+            'rationale' => $rationale,
             'effective_at' => now(),
             'published_by_user_id' => $user->id,
         ]);
