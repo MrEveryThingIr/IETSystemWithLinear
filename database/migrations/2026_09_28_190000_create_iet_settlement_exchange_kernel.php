@@ -34,7 +34,7 @@ return new class extends Migration
                 'policy' => 'bootstrap',
             ], JSON_THROW_ON_ERROR),
             'note' => 'Initial IET internal settlement valuation.',
-            'effective_at' => now(),
+            'effective_at' => '2000-01-01 00:00:00',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
