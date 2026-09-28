@@ -11,6 +11,13 @@ return [
         'invitations' => 'Invitations',
         'access' => 'Access',
     ],
+    'identity' => [
+        'title' => 'Identity & time',
+        'help' => 'Keep account identity and personal time preferences in one small settings surface.',
+        'username' => 'Username',
+        'email' => 'Email',
+        'display_name' => 'Display name',
+    ],
     'workspace' => [
         'title' => 'Workspace',
         'help' => 'A quiet starting point for what matters now and what is coming next.',
