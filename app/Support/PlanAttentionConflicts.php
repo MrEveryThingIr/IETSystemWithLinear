@@ -19,7 +19,10 @@ final class PlanAttentionConflicts
     ): ?PlanOccurrence {
         return PlanOccurrence::query()
             ->with('plan')
-            ->where('status', '!=', PlanOccurrenceStatus::Cancelled->value)
+            ->whereIn('status', [
+                PlanOccurrenceStatus::Scheduled->value,
+                PlanOccurrenceStatus::InProgress->value,
+            ])
             ->where('scheduled_start_at', '<', $end->utc())
             ->where('scheduled_end_at', '>', $start->utc())
             ->whereHas('plan', function ($query) use ($context, $exceptPlanId): void {
