@@ -482,6 +482,12 @@ class Index extends Component
             'selectedSlotItems' => $selectedSlotItems,
             'calendarYearLabel' => TemporalCalendar::yearLabel($yearStart, $user, $timezone),
             'calendarMonthLabel' => TemporalCalendar::monthLabel($monthStart, $user, $timezone),
+            'calendarDayWeekdayLabel' => TemporalCalendar::format(
+                CarbonImmutable::parse($this->day, $timezone),
+                $user,
+                $timezone,
+                'EEEE',
+            ),
             'timezone' => $timezone,
             'context' => $context,
             'categories' => $categories,
