@@ -136,9 +136,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->name('financial-obligations.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
-    if (config('release.profile') === 'planning_baseline') {
-        Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
-    }
+    Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
     Route::livewire('/accounting', AccountingIndex::class)->name('accounting.index');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
