@@ -78,7 +78,11 @@ class BasicIndex extends Component
         $this->date = $today;
         $this->intentionDate = $today;
 
-        $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
+        $ledgers = $context->ledgers()
+            ->with('monetaryUnit')
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
+            ->orderBy('id')
+            ->get();
 
         if ($this->ledgerUuid !== '') {
             abort_unless($ledgers->contains('uuid', $this->ledgerUuid), 404);
@@ -90,7 +94,13 @@ class BasicIndex extends Component
     public function selectLedger(string $uuid): void
     {
         $context = $this->personalContext();
-        abort_unless($context->ledgers()->where('uuid', $uuid)->exists(), 404);
+        abort_unless(
+            $context->ledgers()
+                ->where('uuid', $uuid)
+                ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
+                ->exists(),
+            404,
+        );
 
         $this->ledgerUuid = $uuid;
         $this->accountUuid = '';
@@ -104,6 +114,8 @@ class BasicIndex extends Component
             'unitCode' => ['required', 'string', 'max:12'],
             'ledgerName' => ['nullable', 'string', 'max:180'],
         ]);
+
+        abort_if(strtoupper($data['unitCode']) === 'IET', 422, 'IET is managed through the internal Finance rail.');
 
         $ledger = $create->execute(
             $this->user(),
@@ -300,7 +312,11 @@ class BasicIndex extends Component
             'assetAccounts' => $assetAccounts,
             'rows' => $rows,
             'intentions' => $intentions,
-            'unitCatalog' => MonetaryUnitCatalog::all(),
+            'unitCatalog' => array_filter(
+                MonetaryUnitCatalog::all(),
+                fn (array $meta, string $code): bool => $code !== 'IET',
+                ARRAY_FILTER_USE_BOTH,
+            ),
         ]);
     }
 
@@ -358,6 +374,7 @@ class BasicIndex extends Component
             ->ledgers()
             ->with('monetaryUnit')
             ->where('uuid', $this->ledgerUuid)
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
             ->first();
 
         abort_unless($ledger instanceof Ledger, 404);
