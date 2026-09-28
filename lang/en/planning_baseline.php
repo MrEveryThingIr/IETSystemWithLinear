@@ -139,6 +139,8 @@ return [
             'month_names' => 'Month names',
             'counts' => 'Item counts',
             'plan_titles' => 'Plan titles',
+            'details_mode' => 'Details',
+            'map_mode' => 'Visual map',
             'close' => 'Close',
             'cell_mode' => 'Cell mode',
             'mode_details' => 'Details',
