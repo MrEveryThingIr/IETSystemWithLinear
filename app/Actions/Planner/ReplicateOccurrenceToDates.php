@@ -97,7 +97,11 @@ class ReplicateOccurrenceToDates
             ): Plan {
                 $metadata = $source->plan->metadata ?? [];
                 $metadata['planning_studio'] = 'baseline';
-                $metadata['replicated_from_plan_uuid'] = $source->plan->uuid;
+                $metadata['replicated_from_plan_uuid'] = (string) data_get(
+                    $source->plan->metadata,
+                    'replicated_from_plan_uuid',
+                    $source->plan->uuid,
+                );
                 $metadata['replicated_from_occurrence_uuid'] = $source->uuid;
                 $metadata['replication_tool'] = 'repeat_time_window';
 
