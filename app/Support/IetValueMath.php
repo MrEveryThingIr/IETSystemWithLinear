@@ -16,9 +16,9 @@ final class IetValueMath
 
     private const USD_PICO_PER_CENT = '10000000000';
 
-    private const IET_MINOR_PER_IET = '1000000';
+    private const IET_MINOR_PER_IET = '100';
 
-    private const QUOTE_DENOMINATOR = '10000000000000000';
+    private const QUOTE_DENOMINATOR = '1000000000000';
 
     public static function ietMinorForUsdMinor(int $usdMinor, int $usdPicoPerIet): int
     {
@@ -97,7 +97,7 @@ final class IetValueMath
 
     public static function formatIetMinor(int $ietMinor): string
     {
-        return self::trimDecimal(MoneyAmount::format($ietMinor, 6));
+        return self::trimDecimal(MoneyAmount::format($ietMinor, 2));
     }
 
     private static function trimDecimal(string $value): string
