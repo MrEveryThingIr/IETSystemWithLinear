@@ -14,11 +14,17 @@ use App\JournalEntryKind;
 use App\Models\Account;
 use App\Models\Actor;
 use App\Models\Context;
+use App\Models\FinancialObligation;
+use App\Models\IetPricedFinancialObligation;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\Ledger;
 use App\Models\MoneyIntention;
+use App\Models\MonetaryUnit;
 use App\Models\User;
+use App\SettlementStatus;
+use App\Support\AccountingSummary;
+use App\Support\IetPricing;
 use App\Support\MonetaryUnitCatalog;
 use App\Support\MoneyAmount;
 use App\Support\TemporalPreferences;
@@ -253,11 +259,62 @@ class BasicIndex extends Component
         session()->flash('status', __('accounting.messages.reversed'));
     }
 
-    public function render(): View
+    public function render(IetPricing $ietPricing, AccountingSummary $summary): View
     {
         $context = $this->personalContext();
+        $user = $this->user();
+        $actor = $user->actor;
+        abort_unless($actor instanceof Actor, 403);
+
         $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
         $ledger = $this->ledgerOrNull();
+
+        $ietQuote = $ietPricing->currentQuote();
+        $ietUnit = MonetaryUnit::query()->where('code', 'IET')->first();
+        $ietLedger = $ietUnit instanceof MonetaryUnit
+            ? $context->ledgers()
+                ->where('monetary_unit_id', $ietUnit->id)
+                ->where('key', 'main')
+                ->first()
+            : null;
+        $ietWallet = $ietLedger?->accounts()->where('system_key', 'cash')->first();
+        $ietBalance = $ietWallet instanceof Account ? $summary->accountBalanceMinor($ietWallet) : 0;
+
+        $obligations = FinancialObligation::query()
+            ->with(['monetaryUnit', 'debtor.user', 'creditor.user', 'settlements'])
+            ->where(function ($query) use ($actor): void {
+                $query
+                    ->where('debtor_actor_id', $actor->id)
+                    ->orWhere('creditor_actor_id', $actor->id);
+            })
+            ->latest('recognized_at')
+            ->limit(50)
+            ->get();
+
+        $priced = IetPricedFinancialObligation::query()
+            ->with('valuationQuote')
+            ->whereIn('financial_obligation_id', $obligations->pluck('id'))
+            ->get()
+            ->keyBy('financial_obligation_id');
+
+        $obligationRows = $obligations->map(function (FinancialObligation $obligation) use ($actor, $priced): array {
+            $paid = (int) $obligation->settlements
+                ->filter(fn ($settlement): bool => $settlement->status === SettlementStatus::Confirmed)
+                ->sum('amount_minor');
+
+            $isDebtor = (int) $obligation->debtor_actor_id === (int) $actor->id;
+            $counterparty = $isDebtor ? $obligation->creditor : $obligation->debtor;
+            $ietPricing = $priced->get($obligation->id);
+
+            return [
+                'obligation' => $obligation,
+                'role' => $isDebtor ? 'owe' : 'receive',
+                'counterparty' => $counterparty->user?->username ?? 'actor-'.$counterparty->id,
+                'paid_minor' => $paid,
+                'outstanding_minor' => max(0, (int) $obligation->amount_minor - $paid),
+                'iet_pricing' => $ietPricing,
+            ];
+        });
 
         $assetAccounts = collect();
         $entries = collect();
@@ -301,6 +358,9 @@ class BasicIndex extends Component
             'rows' => $rows,
             'intentions' => $intentions,
             'unitCatalog' => MonetaryUnitCatalog::all(),
+            'ietQuote' => $ietQuote,
+            'ietBalance' => $ietBalance,
+            'obligationRows' => $obligationRows,
         ]);
     }
 
