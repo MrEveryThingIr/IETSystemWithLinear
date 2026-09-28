@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\PlanScheduleFrequency;
-use App\PlanTimingMode;
 use App\PlanScheduleRuleStatus;
+use App\PlanTimingMode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
