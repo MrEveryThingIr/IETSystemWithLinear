@@ -9,6 +9,7 @@ use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\PlanTimingMode;
+use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -40,8 +41,9 @@ class RepeatWindow extends Component
 
     public function mount(): void
     {
-        $timezone = $this->user()->timezone;
-        $timezone = is_string($timezone) && $timezone !== '' ? $timezone : 'UTC';
+        abort_unless((string) config('release.profile') === 'planning_baseline', 404);
+
+        $timezone = TemporalPreferences::timezoneFor($this->user());
         $this->repeatMonth = CarbonImmutable::now($timezone)->addMonth()->format('Y-m');
     }
 
@@ -127,7 +129,7 @@ class RepeatWindow extends Component
     /**
      * @return \Illuminate\Database\Eloquent\Collection<int, PlanOccurrence>
      */
-    private function availableSources()
+    private function availableSources(): \Illuminate\Database\Eloquent\Collection
     {
         $user = $this->user();
 
