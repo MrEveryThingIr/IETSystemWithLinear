@@ -34,5 +34,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(SystemManualSeeder::class);
+        $this->call(PersonalPlannerDemoSeeder::class);
     }
 }
