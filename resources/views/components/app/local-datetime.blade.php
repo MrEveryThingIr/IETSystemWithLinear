@@ -1,6 +1,6 @@
 @props([
     'value',
-    'showEquivalent' => true,
+    'showEquivalent' => null,
     'seconds' => false,
 ])
 
@@ -9,6 +9,9 @@
     $timezone = \App\Support\TemporalPreferences::timezoneFor($user);
     $calendarSystem = \App\Support\TemporalPreferences::calendarFor($user);
     $calendar = $calendarSystem->value;
+    $dateFormat = \App\Support\TemporalPreferences::dateFormatFor($user);
+    $timeFormat = \App\Support\TemporalPreferences::timeFormatFor($user);
+    $showEquivalent ??= \App\Support\TemporalPreferences::showGregorianEquivalentFor($user);
     $locale = \App\Support\Localization::intlLocale($user?->locale);
     $instantDate = $value instanceof \DateTimeInterface
         ? \Carbon\CarbonImmutable::instance($value)
@@ -27,6 +30,8 @@
     data-locale="{{ $locale }}"
     data-calendar="{{ $calendar }}"
     data-timezone="{{ $timezone }}"
+    data-date-format="{{ $dateFormat }}"
+    data-time-format="{{ $timeFormat }}"
     data-show-equivalent="{{ $showEquivalent ? 'true' : 'false' }}"
     data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
     data-seconds="{{ $seconds ? 'true' : 'false' }}"

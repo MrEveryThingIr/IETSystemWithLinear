@@ -117,9 +117,9 @@ class TemporalPresentationConsistencyTest extends TestCase
             $contents = $file->getContents();
 
             $this->assertDoesNotMatchRegularExpression(
-                '/type\s*=\s*["\'](?:date|datetime-local)["\']/i',
+                '/type\s*=\s*["\'](?:date|datetime-local|month)["\']/i',
                 $contents,
-                'Native Gregorian date control remains in '.$file->getRelativePathname(),
+                'Native Gregorian date/month control remains in '.$file->getRelativePathname(),
             );
         }
     }

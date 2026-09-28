@@ -1,5 +1,5 @@
 @if (config('release.profile') === 'planning_baseline')
-<flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+<flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
     <flux:sidebar.header>
         <flux:sidebar.brand :href="route('dashboard')" :name="config('app.name')" />
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" :aria-label="__('ui.navigation.close')" />

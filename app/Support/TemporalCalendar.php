@@ -100,7 +100,13 @@ class TemporalCalendar
     ): string {
         $timezone ??= TemporalPreferences::timezoneFor($user);
 
-        return self::format($date, $user, $timezone, 'd MMMM y', calendar: $calendar);
+        return self::format(
+            $date,
+            $user,
+            $timezone,
+            self::datePattern($user),
+            calendar: $calendar,
+        );
     }
 
     public static function dateTimeLabel(
@@ -111,7 +117,8 @@ class TemporalCalendar
         ?CalendarSystem $calendar = null,
     ): string {
         $timezone ??= TemporalPreferences::timezoneFor($user);
-        $pattern = $seconds ? 'd MMMM y, HH:mm:ss z' : 'd MMMM y, HH:mm z';
+        $timePattern = self::timePattern($user, $seconds);
+        $pattern = self::datePattern($user).', '.$timePattern.' z';
 
         return self::format($date, $user, $timezone, $pattern, calendar: $calendar);
     }
@@ -124,7 +131,10 @@ class TemporalCalendar
         $timezone ??= TemporalPreferences::timezoneFor($user);
         $primary = self::dateLabel($date, $user, $timezone);
 
-        if (TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian) {
+        if (
+            TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian
+            || ! TemporalPreferences::showGregorianEquivalentFor($user)
+        ) {
             return $primary;
         }
 
@@ -141,7 +151,10 @@ class TemporalCalendar
         $timezone ??= TemporalPreferences::timezoneFor($user);
         $primary = self::dateTimeLabel($date, $user, $timezone, $seconds);
 
-        if (TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian) {
+        if (
+            TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian
+            || ! TemporalPreferences::showGregorianEquivalentFor($user)
+        ) {
             return $primary;
         }
 
@@ -156,7 +169,24 @@ class TemporalCalendar
     ): string {
         $timezone ??= TemporalPreferences::timezoneFor($user);
 
-        return self::format($date, $user, $timezone, 'HH:mm');
+        return self::format($date, $user, $timezone, self::timePattern($user));
+    }
+
+    private static function datePattern(?User $user): string
+    {
+        return match (TemporalPreferences::dateFormatFor($user)) {
+            'numeric' => 'yyyy/MM/dd',
+            'medium' => 'd MMM y',
+            default => 'd MMMM y',
+        };
+    }
+
+    private static function timePattern(?User $user, bool $seconds = false): string
+    {
+        return match (TemporalPreferences::timeFormatFor($user)) {
+            '12h' => $seconds ? 'h:mm:ss a' : 'h:mm a',
+            default => $seconds ? 'HH:mm:ss' : 'HH:mm',
+        };
     }
 
     public static function format(

@@ -1,8 +1,14 @@
+@php
+    $category = (string) data_get($plan->metadata, 'category', '');
+    $occurrences = $plan->occurrences->sortByDesc('scheduled_start_at')->values();
+    $repeatSource = $occurrences->first(fn ($occurrence) =>
+        $occurrence->status !== \App\PlanOccurrenceStatus::Cancelled
+        && $occurrence->scheduleRule?->frequency === \App\PlanScheduleFrequency::Once
+    );
+@endphp
+
+<x-app.planner-studio-shell :source="$repeatSource?->uuid">
 <section class="mx-auto max-w-4xl space-y-6">
-    @php
-        $category = (string) data_get($plan->metadata, 'category', '');
-        $occurrences = $plan->occurrences->sortByDesc('scheduled_start_at')->values();
-    @endphp
 
     <x-app.page-header :title="$plan->title">
         <x-slot:actions>
@@ -100,3 +106,4 @@
         {{ __('planning_baseline.show.done_meaning') }}
     </p>
 </section>
+</x-app.planner-studio-shell>

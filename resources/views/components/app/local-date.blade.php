@@ -1,12 +1,14 @@
 @props([
     'value',
-    'showEquivalent' => true,
+    'showEquivalent' => null,
 ])
 
 @php
     $user = request()->user();
     $calendarSystem = \App\Support\TemporalPreferences::calendarFor($user);
     $calendar = $calendarSystem->value;
+    $dateFormat = \App\Support\TemporalPreferences::dateFormatFor($user);
+    $showEquivalent ??= \App\Support\TemporalPreferences::showGregorianEquivalentFor($user);
     $locale = \App\Support\Localization::intlLocale($user?->locale);
     // This component represents a civil date, not an instant. Preserve the
     // supplied Y-m-d exactly so changing timezone can never move it a day.
@@ -26,6 +28,7 @@
     data-profile-date="{{ $date }}"
     data-locale="{{ $locale }}"
     data-calendar="{{ $calendar }}"
+    data-date-format="{{ $dateFormat }}"
     data-show-equivalent="{{ $showEquivalent ? 'true' : 'false' }}"
     data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
 >

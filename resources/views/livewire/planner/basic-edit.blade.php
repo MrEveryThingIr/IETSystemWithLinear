@@ -1,3 +1,4 @@
+<x-app.planner-studio-shell>
 <section class="mx-auto max-w-2xl space-y-6">
     <x-app.page-header :title="__('planning_baseline.edit.title')" :description="__('planning_baseline.edit.help')" />
 
@@ -42,3 +43,5 @@
         </div>
     </form>
 </section>
+
+</x-app.planner-studio-shell>
