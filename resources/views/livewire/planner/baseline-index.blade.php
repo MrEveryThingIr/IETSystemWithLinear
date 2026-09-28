@@ -165,19 +165,61 @@
                         </label>
                     </div>
 
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        @foreach ([
-                            'showWeekdayNames' => 'planning_baseline.tools.calendar_display.weekday_names',
-                            'showMonthNames' => 'planning_baseline.tools.calendar_display.month_names',
-                            'showCalendarCounts' => 'planning_baseline.tools.calendar_display.counts',
-                            'showCalendarTitles' => 'planning_baseline.tools.calendar_display.plan_titles',
-                        ] as $property => $label)
-                            <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
-                                <input type="checkbox" wire:model.live="{{ $property }}" class="rounded border-zinc-300">
-                                <span>{{ __($label) }}</span>
-                            </label>
-                        @endforeach
+                    <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_14rem]">
+                        <div class="space-y-3">
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ([
+                                    'showWeekdayNames' => 'planning_baseline.tools.calendar_display.weekday_names',
+                                    'showMonthNames' => 'planning_baseline.tools.calendar_display.month_names',
+                                    'showCalendarCounts' => 'planning_baseline.tools.calendar_display.counts',
+                                    'showCalendarTitles' => 'planning_baseline.tools.calendar_display.plan_titles',
+                                ] as $property => $label)
+                                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
+                                        <input type="checkbox" wire:model.live="{{ $property }}" class="rounded border-zinc-300">
+                                        <span>{{ __($label) }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="$set('calendarCellMode', 'details')"
+                                    class="rounded-full border px-3 py-2 text-sm {{ $calendarCellMode === 'details' ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}"
+                                >
+                                    {{ __('planning_baseline.tools.calendar_display.details_mode') }}
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="$set('calendarCellMode', 'map')"
+                                    class="rounded-full border px-3 py-2 text-sm {{ $calendarCellMode === 'map' ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}"
+                                >
+                                    {{ __('planning_baseline.tools.calendar_display.map_mode') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <label class="space-y-1 text-sm">
+                            <span class="font-medium">{{ __('planning_baseline.tools.calendar_display.color_by') }}</span>
+                            <select wire:model.live="calendarColorBy" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950">
+                                <option value="none">{{ __('planning_baseline.tools.calendar_display.color_none') }}</option>
+                                <option value="plan">{{ __('planning_baseline.tools.calendar_display.color_plan') }}</option>
+                                <option value="category">{{ __('planning_baseline.tools.calendar_display.color_category') }}</option>
+                                <option value="attention">{{ __('planning_baseline.tools.calendar_display.color_attention') }}</option>
+                            </select>
+                        </label>
                     </div>
+
+                    @if ($calendarColorBy !== 'none' && $calendarLegend !== [])
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700">
+                            @foreach ($calendarLegend as $marker)
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="size-2.5 rounded-full" style="background-color: {{ $marker['color'] }}"></span>
+                                    <span class="max-w-48 truncate text-zinc-600 dark:text-zinc-300" dir="auto">{{ $marker['label'] }}</span>
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
 
                     @if ($calendarColorBy !== 'none' && $calendarLegend !== [])
                         <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700">
