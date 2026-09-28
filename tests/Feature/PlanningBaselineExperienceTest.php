@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Contexts\EnsurePersonalContext;
+use App\CalendarSystem;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
 use App\Http\Middleware\EnforceReleaseSurface;
@@ -10,6 +11,8 @@ use App\Livewire\Planner\BasicCreate;
 use App\Livewire\Planner\BasicEdit;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Planner\Tools\RepeatWindow;
+use App\Livewire\Profile\BasicManage;
+use App\Livewire\Profile\TemporalPreferences as ProfileTemporalPreferences;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\PlanOccurrenceStatus;
@@ -45,6 +48,111 @@ class PlanningBaselineExperienceTest extends TestCase
             );
 
             $this->assertSame(204, $response->getStatusCode(), $path);
+        }
+    }
+
+    public function test_clean_profile_keeps_only_account_and_system_preferences(): void
+    {
+        $actor = Actor::factory()->create();
+        $actor->user->forceFill([
+            'locale' => 'en',
+            'timezone' => 'UTC',
+        ])->save();
+
+        Livewire::actingAs($actor->user)
+            ->test(BasicManage::class)
+            ->assertSee('Profile & system preferences')
+            ->assertSee('Account profile')
+            ->assertSee('Date & time preferences')
+            ->assertDontSee('Skills, interests & learning')
+            ->assertDontSee('Needs & offers');
+    }
+
+    public function test_profile_temporal_display_preferences_are_persisted(): void
+    {
+        $actor = Actor::factory()->create();
+        $actor->user->forceFill([
+            'locale' => 'fa',
+            'timezone' => 'Asia/Tehran',
+            'calendar' => CalendarSystem::Persian,
+        ])->save();
+
+        Livewire::actingAs($actor->user)
+            ->test(ProfileTemporalPreferences::class)
+            ->set('timezoneMode', 'fixed')
+            ->set('timezone', 'Asia/Tehran')
+            ->set('calendar', CalendarSystem::Persian->value)
+            ->set('dateFormat', 'numeric')
+            ->set('timeFormat', '12h')
+            ->set('showGregorianEquivalent', false)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $user = $actor->user->fresh();
+
+        $this->assertSame('numeric', $user->date_display_format);
+        $this->assertSame('12h', $user->time_display_format);
+        $this->assertFalse($user->show_gregorian_equivalent);
+        $this->assertSame(CalendarSystem::Persian, $user->calendar);
+        $this->assertSame('Asia/Tehran', $user->timezone);
+    }
+
+    public function test_repeat_month_uses_the_profile_calendar_month_not_gregorian_month(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 08:00:00 Asia/Tehran');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill([
+                'locale' => 'fa',
+                'timezone' => 'Asia/Tehran',
+                'calendar' => CalendarSystem::Persian,
+            ])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $source = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                'Read four pages',
+                timezone: 'Asia/Tehran',
+                metadata: ['planning_studio' => 'baseline'],
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $source,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-10-01',
+                '20:00',
+                60,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            $occurrence = $source->occurrences()->sole();
+
+            Livewire::actingAs($actor->user)
+                ->test(RepeatWindow::class)
+                ->set('sourceUuid', $occurrence->uuid)
+                ->set('repeatMode', 'month')
+                ->set('repeatMonth', '2026-10-24')
+                ->call('apply')
+                ->assertHasNoErrors();
+
+            $dates = Plan::query()
+                ->where('id', '!=', $source->id)
+                ->with('occurrences')
+                ->get()
+                ->flatMap->occurrences
+                ->pluck('local_date')
+                ->map(fn ($date): string => $date->format('Y-m-d'))
+                ->sort()
+                ->values();
+
+            $this->assertSame('2026-10-23', $dates->first());
+            $this->assertSame('2026-11-21', $dates->last());
+            $this->assertCount(30, $dates);
+        } finally {
+            CarbonImmutable::setTestNow();
         }
     }
 
