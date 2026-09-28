@@ -9,7 +9,7 @@ return [
     'navigation' => [
         'workspace' => 'Workspace',
         'planning' => 'Planning',
-        'money' => 'المال',
+        'finance' => 'المالية',
         'vault' => 'الخزنة',
         'identity' => 'Profile',
         'invitations' => 'Invitations',
