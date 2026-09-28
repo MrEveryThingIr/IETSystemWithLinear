@@ -8,7 +8,6 @@ use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
-use App\PlanTimingMode;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -117,7 +116,7 @@ class RepeatWindow extends Component
 
         $source = $this->availableSources()->firstWhere('uuid', $this->sourceUuid);
 
-        if (! $source instanceof PlanOccurrence) {
+        if (! ($source instanceof PlanOccurrence)) {
             throw ValidationException::withMessages([
                 'sourceUuid' => __('planning_baseline.tools.repeat.choose_source'),
             ]);
