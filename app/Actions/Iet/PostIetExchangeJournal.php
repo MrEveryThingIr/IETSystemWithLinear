@@ -36,6 +36,14 @@ final class PostIetExchangeJournal
         ): JournalEntry {
             Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
 
+            if ($request->direction === IetExchangeDirection::Cashout) {
+                $balance = (int) $wallet->journalLines()
+                    ->selectRaw('COALESCE(SUM(debit_minor), 0) - COALESCE(SUM(credit_minor), 0) AS balance_minor')
+                    ->value('balance_minor');
+
+                abort_if($balance < (int) $request->iet_amount_minor, 422, __('iet.validation.insufficient_balance'));
+            }
+
             $existing = JournalEntry::query()
                 ->where('ledger_id', $ledger->id)
                 ->where('idempotency_key', 'iet-exchange:'.$request->uuid)
