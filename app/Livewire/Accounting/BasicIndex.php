@@ -214,7 +214,7 @@ class BasicIndex extends Component
             'ledger_id' => $ledger->id,
             'kind' => $data['intentionKind'],
             'title' => trim($data['intentionTitle']),
-            'amount_minor' => $this->minorAmount($ledger, $data['intentionAmount']),
+            'amount_minor' => $this->minorAmount($ledger, $data['intentionAmount'], 'intentionAmount'),
             'target_on' => $data['intentionDate'] !== '' ? $data['intentionDate'] : null,
             'notes' => trim($data['intentionNotes']) !== '' ? trim($data['intentionNotes']) : null,
         ]);
@@ -389,13 +389,13 @@ class BasicIndex extends Component
             ->firstOrFail();
     }
 
-    private function minorAmount(Ledger $ledger, string $amount): int
+    private function minorAmount(Ledger $ledger, string $amount, string $field = 'amount'): int
     {
         try {
             $minor = MoneyAmount::parse($amount, $ledger->monetaryUnit->exponent);
         } catch (InvalidArgumentException) {
             throw ValidationException::withMessages([
-                'amount' => __('accounting.validation.amount'),
+                $field => __('accounting.validation.amount'),
             ]);
         }
 
