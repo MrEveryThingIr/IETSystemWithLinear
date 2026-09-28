@@ -1,3 +1,4 @@
+<x-app.planner-studio-shell>
 <section class="mx-auto max-w-7xl space-y-5">
     <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -266,3 +267,5 @@
         </div>
     @endif
 </section>
+
+</x-app.planner-studio-shell>
