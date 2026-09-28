@@ -27,15 +27,18 @@ class PlanningWorkspace extends Component
             ->with(['plan', 'scheduleRule'])
             ->whereHas('plan', fn ($plans) => $plans
                 ->where('created_by_actor_id', $user->actor->id)
-                ->whereNull('origin_type'));
+                ->whereNull('origin_type')
+                ->where('metadata->planning_studio', 'baseline'));
 
         $today = (clone $base)
+            ->where('status', '!=', 'cancelled')
             ->whereBetween('scheduled_start_at', [$now->startOfDay()->utc(), $now->endOfDay()->utc()])
             ->orderBy('scheduled_start_at')
             ->limit(12)
             ->get();
 
         $upcoming = (clone $base)
+            ->where('status', 'scheduled')
             ->where('scheduled_start_at', '>', $now->endOfDay()->utc())
             ->orderBy('scheduled_start_at')
             ->limit(8)
