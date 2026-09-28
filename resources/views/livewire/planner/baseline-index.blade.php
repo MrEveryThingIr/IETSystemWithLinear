@@ -231,7 +231,14 @@
 
             @if ($calendarLevel === 'day')
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-900">
-                    <span class="font-medium"><x-app.local-date :value="$day" :show-equivalent="false" /></span>
+                    <span class="font-medium">
+                        <x-app.local-date :value="$day" :show-equivalent="false" />
+                        @if ($showWeekdayNames)
+                            <span class="ms-2 text-xs font-normal text-zinc-500">
+                                {{ AppSupportTemporalCalendar::format(CarbonCarbonImmutable::parse($day, $timezone), auth()->user(), $timezone, 'EEEE') }}
+                            </span>
+                        @endif
+                    </span>
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ route('planner.create', ['date' => $day, 'timing' => 'flexible_day']) }}" class="rounded-lg bg-white px-3 py-2 text-sm dark:bg-zinc-950">
                             {{ __('planning_baseline.calendar.add_flexible') }}
@@ -262,13 +269,21 @@
                             class="grid h-14 w-full grid-cols-[5rem_1fr] items-center bg-white text-start hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
                             <span class="border-e border-zinc-200 px-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">{{ $calendarHour['label'] }}</span>
-                            <span class="px-3 text-sm">
+                            <span class="min-w-0 px-3 text-sm">
                                 @if ($showCalendarCounts)
                                     @if ($calendarHour['count'] > 0)
                                         {{ trans_choice('planning_baseline.calendar.items', $calendarHour['count'], ['count' => $calendarHour['count']]) }}
                                     @else
                                         <span class="text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
                                     @endif
+                                @endif
+
+                                @if ($showCalendarTitles && $calendarHour['titles']->isNotEmpty())
+                                    <span class="mt-1 flex min-w-0 flex-wrap gap-x-2 gap-y-0.5">
+                                        @foreach ($calendarHour['titles'] as $title)
+                                            <span class="max-w-48 truncate text-xs text-zinc-500" dir="auto">{{ $title }}</span>
+                                        @endforeach
+                                    </span>
                                 @endif
                             </span>
                         </button>
@@ -292,13 +307,21 @@
                     @foreach ($baselineCalendarSlots as $slot)
                         <div class="grid min-h-14 grid-cols-[6rem_1fr_auto] items-stretch bg-white dark:bg-zinc-950">
                             <div class="border-e border-zinc-200 px-3 py-3 text-xs font-medium tabular-nums text-zinc-500 dark:border-zinc-800">{{ $slot['time'] }}</div>
-                            <button type="button" wire:click="selectSlot({{ $slot['minute'] }})" class="px-3 py-2 text-start hover:bg-zinc-50 dark:hover:bg-zinc-900">
+                            <button type="button" wire:click="selectSlot({{ $slot['minute'] }})" class="min-w-0 px-3 py-2 text-start hover:bg-zinc-50 dark:hover:bg-zinc-900">
                                 @if ($showCalendarCounts)
                                     @if ($slot['count'] > 0)
                                         {{ trans_choice('planning_baseline.calendar.items', $slot['count'], ['count' => $slot['count']]) }}
                                     @else
                                         <span class="text-xs text-zinc-400">{{ __('planning_baseline.calendar.empty') }}</span>
                                     @endif
+                                @endif
+
+                                @if ($showCalendarTitles && $slot['titles']->isNotEmpty())
+                                    <span class="mt-1 flex min-w-0 flex-wrap gap-x-2 gap-y-0.5">
+                                        @foreach ($slot['titles'] as $title)
+                                            <span class="max-w-48 truncate text-xs text-zinc-500" dir="auto">{{ $title }}</span>
+                                        @endforeach
+                                    </span>
                                 @endif
                             </button>
                             <div class="p-2">
