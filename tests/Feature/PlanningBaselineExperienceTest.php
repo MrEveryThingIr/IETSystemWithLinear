@@ -705,4 +705,191 @@ class PlanningBaselineExperienceTest extends TestCase
 
         $this->assertSame(PlanTimingMode::Fixed, $rule->timing_mode);
     }
+    public function test_focused_plans_cannot_overlap_but_background_plans_can(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 06:00:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+
+            Livewire::actingAs($actor->user)
+                ->test(BasicCreate::class)
+                ->set('title', 'Deep work')
+                ->set('timingMode', 'fixed')
+                ->set('attentionMode', PlanAttentionMode::Exclusive->value)
+                ->set('date', '2026-09-29')
+                ->set('startTime', '07:00')
+                ->set('endTime', '07:30')
+                ->call('save')
+                ->assertHasNoErrors();
+
+            Livewire::actingAs($actor->user)
+                ->test(BasicCreate::class)
+                ->set('title', 'Another focused task')
+                ->set('timingMode', 'fixed')
+                ->set('attentionMode', PlanAttentionMode::Exclusive->value)
+                ->set('date', '2026-09-29')
+                ->set('startTime', '07:15')
+                ->set('endTime', '07:45')
+                ->call('save')
+                ->assertHasErrors(['startTime']);
+
+            $this->assertSame(1, Plan::query()->count());
+
+            Livewire::actingAs($actor->user)
+                ->test(BasicCreate::class)
+                ->set('title', 'English audio')
+                ->set('timingMode', 'fixed')
+                ->set('attentionMode', PlanAttentionMode::Background->value)
+                ->set('date', '2026-09-29')
+                ->set('startTime', '07:15')
+                ->set('endTime', '07:45')
+                ->call('save')
+                ->assertHasNoErrors();
+
+            $this->assertSame(2, Plan::query()->count());
+            $this->assertSame(
+                PlanAttentionMode::Background,
+                Plan::query()->where('title', 'English audio')->sole()->attention_mode,
+            );
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_calendar_quarters_are_occupied_for_the_entire_plan_interval(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 06:00:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $plan = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                '07:00 to 07:30 focus',
+                timezone: 'UTC',
+                metadata: ['planning_studio' => 'baseline'],
+                attentionMode: PlanAttentionMode::Exclusive,
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $plan,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-29',
+                '07:00',
+                30,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            $calendar = Livewire::actingAs($actor->user)
+                ->test(PlannerIndex::class)
+                ->set('view', 'calendar')
+                ->call('showHour', '2026-09-29', 7)
+                ->call('setSlotMinutes', 15);
+
+            $calendar
+                ->call('selectSlot', 0)
+                ->assertSee('07:00 to 07:30 focus')
+                ->call('selectSlot', 15)
+                ->assertSee('07:00 to 07:30 focus')
+                ->call('selectSlot', 30)
+                ->assertDontSee('07:00 to 07:30 focus');
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_repeat_tool_preserves_attention_mode_for_projected_instances(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 06:00:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $source = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                'Background English audio',
+                timezone: 'UTC',
+                metadata: ['planning_studio' => 'baseline'],
+                attentionMode: PlanAttentionMode::Background,
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $source,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-29',
+                '08:00',
+                60,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            Livewire::actingAs($actor->user)
+                ->test(RepeatWindow::class)
+                ->set('sourceUuid', $source->occurrences()->sole()->uuid)
+                ->set('repeatMode', 'next_days')
+                ->set('repeatCount', 2)
+                ->call('apply')
+                ->assertHasNoErrors();
+
+            $copies = Plan::query()->whereKeyNot($source->id)->get();
+
+            $this->assertCount(2, $copies);
+            $this->assertTrue(
+                $copies->every(fn (Plan $copy): bool => $copy->attention_mode === PlanAttentionMode::Background),
+            );
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_visual_calendar_map_can_use_stable_plan_markers_without_titles(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 06:00:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $plan = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                'Morning reading',
+                timezone: 'UTC',
+                metadata: ['planning_studio' => 'baseline', 'category' => 'Study'],
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $plan,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-29',
+                '07:00',
+                30,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            Livewire::actingAs($actor->user)
+                ->test(PlannerIndex::class)
+                ->set('view', 'calendar')
+                ->set('calendarDisplayOpen', true)
+                ->call('setCalendarCellMode', 'map')
+                ->assertSet('calendarCellMode', 'map')
+                ->assertSet('calendarColorBy', 'plan')
+                ->assertSee(__('planning_baseline.tools.calendar_display.color_plan'));
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+
 }
