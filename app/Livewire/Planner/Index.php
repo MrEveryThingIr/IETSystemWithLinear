@@ -65,6 +65,21 @@ class Index extends Component
     #[Url]
     public string $category = '';
 
+    #[Url(as: 'display')]
+    public bool $calendarDisplayOpen = false;
+
+    #[Url(as: 'weekday')]
+    public bool $showWeekdayNames = false;
+
+    #[Url(as: 'month_names')]
+    public bool $showMonthNames = true;
+
+    #[Url(as: 'counts')]
+    public bool $showCalendarCounts = true;
+
+    #[Url(as: 'titles')]
+    public bool $showCalendarTitles = false;
+
     public function mount(): void
     {
         if (! in_array($this->view, ['today', 'list', 'calendar'], true)) {
@@ -341,15 +356,19 @@ class Index extends Component
                 $cursor = $yearStart;
                 for ($index = 0; $index < 12; $index++) {
                     $next = TemporalCalendar::nextMonthStart($cursor, $user, $timezone);
+                    $monthItems = $occurrences->filter(function (PlanOccurrence $occurrence) use ($cursor, $next, $timezone): bool {
+                        $start = $occurrence->scheduled_start_at->setTimezone($timezone);
+
+                        return $start->gte($cursor) && $start->lt($next);
+                    })->values();
+
                     $calendarMonths->push([
                         'date' => $cursor,
                         'key' => $cursor->toDateString(),
                         'label' => TemporalCalendar::monthLabel($cursor, $user, $timezone),
-                        'count' => $occurrences->filter(function (PlanOccurrence $occurrence) use ($cursor, $next, $timezone): bool {
-                            $start = $occurrence->scheduled_start_at->setTimezone($timezone);
-
-                            return $start->gte($cursor) && $start->lt($next);
-                        })->count(),
+                        'number' => TemporalCalendar::format($cursor, $user, $timezone, 'M'),
+                        'count' => $monthItems->count(),
+                        'titles' => $monthItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
                     ]);
                     $cursor = $next;
                 }
@@ -426,6 +445,7 @@ class Index extends Component
                         'date' => $date,
                         'key' => $key,
                         'label' => TemporalCalendar::dayLabel($date, $user, $timezone),
+                        'weekday_label' => TemporalCalendar::format($date, $user, $timezone, 'EEE'),
                         'in_month' => TemporalCalendar::monthKey($date, $user, $timezone) === $selectedMonthKey,
                         'count' => $dayItems->count(),
                         'fixed_count' => $dayItems->filter(
@@ -434,6 +454,7 @@ class Index extends Component
                         'flexible_count' => $dayItems->filter(
                             fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'flexible_day',
                         )->count(),
+                        'titles' => $dayItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
                     ]);
                 }
             }
