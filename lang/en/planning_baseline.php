@@ -67,6 +67,8 @@ return [
         'timing' => 'Timing',
         'all_timing' => 'All timing',
         'category' => 'Category',
+        'attention' => 'Attention',
+        'all_attention' => 'All attention',
         'all_categories' => 'All categories',
     ],
     'timing' => [
