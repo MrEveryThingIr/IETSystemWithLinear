@@ -189,18 +189,22 @@ class RepeatWindow extends Component
             $day = $sourceDay->day;
             $cursor = $anchor->startOfMonth();
             $dates = [];
+            $sourceDate = $sourceDay->format('Y-m-d');
 
             while (count($dates) < $this->repeatCount) {
+                if ($day <= $cursor->daysInMonth) {
+                    $candidate = $cursor->day($day);
+
+                    if (
+                        $candidate->greaterThan($anchor)
+                        && $candidate->greaterThan($today)
+                        && $candidate->format('Y-m-d') !== $sourceDate
+                    ) {
+                        $dates[] = $candidate->format('Y-m-d');
+                    }
+                }
+
                 $cursor = $cursor->addMonth()->startOfMonth();
-
-                if ($day > $cursor->daysInMonth) {
-                    continue;
-                }
-
-                $candidate = $cursor->day($day);
-                if ($candidate->greaterThan($today)) {
-                    $dates[] = $candidate->format('Y-m-d');
-                }
             }
 
             return $dates;
@@ -213,19 +217,26 @@ class RepeatWindow extends Component
             $day = $sourceDay->day;
             $year = $anchor->year;
             $dates = [];
+            $sourceDate = $sourceDay->format('Y-m-d');
 
             while (count($dates) < $this->repeatCount) {
-                $year++;
-
                 try {
                     $candidate = CarbonImmutable::createSafe($year, $month, $day, 0, 0, 0, $timezone);
                 } catch (\Throwable) {
+                    $year++;
+
                     continue;
                 }
 
-                if ($candidate->greaterThan($today)) {
+                if (
+                    $candidate->greaterThan($anchor)
+                    && $candidate->greaterThan($today)
+                    && $candidate->format('Y-m-d') !== $sourceDate
+                ) {
                     $dates[] = $candidate->format('Y-m-d');
                 }
+
+                $year++;
             }
 
             return $dates;
