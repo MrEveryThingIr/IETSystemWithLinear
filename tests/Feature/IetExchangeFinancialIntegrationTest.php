@@ -46,7 +46,7 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         $pricing = app(IetPricing::class);
         $quote = $pricing->currentQuote();
 
-        $this->assertSame('0.0000000100', (string) $quote->usd_per_iet);
+        $this->assertSame('0.000000010000000000', (string) $quote->usd_per_iet);
         $this->assertSame('0.000001', $pricing->percentOfUsd($quote));
         $this->assertSame(350_000_000, $pricing->ietForUsdMinor(350, $quote));
         $this->assertSame(100_000_000, $pricing->ietForUsdMinor(100, $quote));
@@ -73,6 +73,31 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         $this->assertSame('0.000000010000000001', (string) $quote->usd_per_iet);
         $this->assertSame('0.0000010000000001', $pricing->percentOfUsd($quote));
         $this->assertSame(100_000_000, $pricing->ietForUsdMinor(100, $quote));
+    }
+
+    public function test_quote_publication_requires_an_auditable_rationale(): void
+    {
+        $admin = Actor::factory()->create();
+
+        PlatformAccessGrant::factory()->create([
+            'user_id' => $admin->user->id,
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        try {
+            app(PublishIetValuationQuote::class)->execute(
+                $admin->user,
+                '0.000000010100000000',
+                '',
+                ['successful_flow_count' => 12],
+            );
+
+            $this->fail('A valuation quote was published without a rationale.');
+        } catch (HttpException $exception) {
+            $this->assertSame(422, $exception->getStatusCode());
+        }
+
+        $this->assertDatabaseCount('iet_valuation_quotes', 1);
     }
 
     public function test_manual_deposit_internal_charge_and_cashout_reconcile_to_one_iet_wallet(): void
@@ -170,7 +195,7 @@ class IetExchangeFinancialIntegrationTest extends TestCase
 
         $newQuote = app(PublishIetValuationQuote::class)->execute(
             $admin->user,
-            '0.0000000101',
+            '0.000000010100000000',
             'Small audited valuation update.',
             ['successful_flow_count' => 12],
         );
@@ -182,8 +207,8 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         );
 
         $this->assertNotSame($old->valuation_quote_id, $new->valuation_quote_id);
-        $this->assertSame('0.0000000100', (string) $old->fresh()->valuationQuote->usd_per_iet);
-        $this->assertSame('0.0000000101', (string) $newQuote->usd_per_iet);
+        $this->assertSame('0.000000010000000000', (string) $old->fresh()->valuationQuote->usd_per_iet);
+        $this->assertSame('0.000000010100000000', (string) $newQuote->usd_per_iet);
         $this->assertLessThan($old->iet_amount, $new->iet_amount);
         $this->assertDatabaseCount('iet_valuation_quotes', 2);
     }
