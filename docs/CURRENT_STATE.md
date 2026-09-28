@@ -4,7 +4,7 @@ Active candidate branch: `codex/iet-internal-settlement-exchange`.
 
 This candidate merges Personal Accounting and the existing Financial Obligation/Settlement kernel around a versioned internal IET settlement unit:
 
-- initial exact quote `1 IET = 0.000001 USD`;
+- initial exact quote `1 IET = 0.00000001 USD` (`0.000001%` of one USD);
 - system-controlled IET wallet inside the existing ledger kernel;
 - manual-confirmation Exchange placeholders for deposit/cash-out;
 - immutable valuation epochs and successful-flow signals;
@@ -151,6 +151,7 @@ Implemented:
   - ManageActors
   - ManagePlatformAccess
   - ViewPlatformAudit
+  - ManageExchange (Superadmin-only in the current baseline)
 
 Current Phase 4 identity/Profile state:
 
