@@ -7,7 +7,7 @@ use App\JournalEntryKind;
 use App\Models\IetInternalCharge;
 use App\Models\Ledger;
 use App\Models\User;
-use App\Support\AccountingSummary;
+use App\Support\IetAvailableBalance;
 use App\Support\IetPricing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -17,7 +17,7 @@ class ChargeIetForUsdFlow
     public function __construct(
         private readonly IetPricing $pricing,
         private readonly EnsureIetWallet $wallets,
-        private readonly AccountingSummary $summary,
+        private readonly IetAvailableBalance $available,
         private readonly PostJournalEntry $post,
     ) {}
 
@@ -58,7 +58,7 @@ class ChargeIetForUsdFlow
             Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
 
             abort_if(
-                $this->summary->accountBalanceMinor($side['wallet']) < $ietAmount,
+                $this->available->forUser($user, $side['wallet']) < $ietAmount,
                 422,
                 'Insufficient IET balance for this internal flow.',
             );
