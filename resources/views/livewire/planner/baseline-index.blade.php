@@ -184,14 +184,14 @@
                             <div class="flex flex-wrap gap-2">
                                 <button
                                     type="button"
-                                    wire:click="$set('calendarCellMode', 'details')"
+                                    wire:click="setCalendarCellMode('details')"
                                     class="rounded-full border px-3 py-2 text-sm {{ $calendarCellMode === 'details' ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}"
                                 >
                                     {{ __('planning_baseline.tools.calendar_display.details_mode') }}
                                 </button>
                                 <button
                                     type="button"
-                                    wire:click="$set('calendarCellMode', 'map')"
+                                    wire:click="setCalendarCellMode('map')"
                                     class="rounded-full border px-3 py-2 text-sm {{ $calendarCellMode === 'map' ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}"
                                 >
                                     {{ __('planning_baseline.tools.calendar_display.map_mode') }}
