@@ -1,5 +1,20 @@
 # IET Current State
 
+## IET settlement & exchange candidate
+
+Active candidate branch: codex/iet-settlement-exchange-kernel.
+
+This candidate selectively joins the accepted Accounting and Financial kernels through an internal IET settlement rail:
+
+- immutable/versioned IET-to-USD valuation snapshots;
+- bootstrap X = 0.000001% (1 IET = 0.00000001 USD);
+- ledger-backed IET wallet with no mutable balance column;
+- manual-placeholder deposit/cashout requests with independent review;
+- USD obligation -> locked IET reserve -> bilateral confirmation -> internal transfer;
+- unified, compact Finance workspace;
+- future valuation-policy seam without an invented auto-growth formula.
+
+See docs/IET_SETTLEMENT_EXCHANGE_BASELINE.md.
 ## Personal life tools candidate
 
 Active candidate branch: `codex/personal-money-vault-calendar-tools`.
