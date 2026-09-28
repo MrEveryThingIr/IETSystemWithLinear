@@ -33,6 +33,8 @@ class EnforceReleaseSurface
         'actors.avatar',
         'planner.*',
         'accounting.*',
+        'exchange.*',
+        'financial-obligations.*',
         'vault.*',
         'platform.access',
         'platform.access-invitations',
