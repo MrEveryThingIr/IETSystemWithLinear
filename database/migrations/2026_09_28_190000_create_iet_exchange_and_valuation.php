@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('iet_valuation_quotes', function (Blueprint $table): void {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->decimal('usd_per_iet', 24, 10);
+            $table->decimal('usd_per_iet', 36, 18);
             $table->string('policy_version', 80)->default('manual-v1');
             $table->json('factors')->nullable();
             $table->text('rationale')->nullable();
@@ -80,7 +80,7 @@ return new class extends Migration
 
         DB::table('iet_valuation_quotes')->insert([
             'uuid' => (string) Str::uuid(),
-            'usd_per_iet' => '0.0000000100',
+            'usd_per_iet' => '0.000000010000000000',
             'policy_version' => 'initial-v1',
             'factors' => json_encode([
                 'basis' => 'initial baseline',
