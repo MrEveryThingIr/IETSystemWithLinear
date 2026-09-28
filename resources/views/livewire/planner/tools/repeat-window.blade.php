@@ -35,12 +35,7 @@
                     >
                         <option value="">{{ __('planning_baseline.tools.repeat.choose_source') }}</option>
                         @foreach ($sources as $source)
-                            <option value="{{ $source->uuid }}">
-                                {{ $source->plan->title }} — {{ $source->local_date->format('Y-m-d') }}
-                                @if (($source->scheduleRule?->timing_mode ?? \App\PlanTimingMode::Fixed) === \App\PlanTimingMode::Fixed)
-                                    {{ substr((string) $source->scheduleRule->start_time, 0, 5) }}
-                                @endif
-                            </option>
+                            <option value="{{ $source->uuid }}">{{ $sourceLabels[$source->uuid] }}</option>
                         @endforeach
                     </select>
                     @error('sourceUuid')
@@ -92,7 +87,13 @@
                             :label="__('planning_baseline.tools.repeat.count_instances')"
                         />
                     @elseif ($repeatMode === 'month')
-                        <flux:input wire:model="repeatMonth" type="month" :label="__('planning_baseline.tools.repeat.month')" />
+                        <x-app.calendar-date-input
+                            model="repeatMonth"
+                            :label="__('planning_baseline.tools.repeat.month')"
+                        />
+                        <p class="-mt-3 text-xs leading-5 text-zinc-500">
+                            {{ __('planning_baseline.tools.repeat.month_help') }}
+                        </p>
                     @else
                         <div class="space-y-3">
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
