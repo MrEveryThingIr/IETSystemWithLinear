@@ -16,6 +16,8 @@ use LogicException;
     'uuid',
     'financial_obligation_id',
     'amount_minor',
+    'iet_valuation_snapshot_id',
+    'iet_amount_minor',
     'paid_at',
     'method',
     'reference',
@@ -54,6 +56,8 @@ class Settlement extends Model
                 'uuid',
                 'financial_obligation_id',
                 'amount_minor',
+                'iet_valuation_snapshot_id',
+                'iet_amount_minor',
                 'paid_at',
                 'method',
                 'reference',
@@ -78,6 +82,12 @@ class Settlement extends Model
     public function obligation(): BelongsTo
     {
         return $this->belongsTo(FinancialObligation::class, 'financial_obligation_id');
+    }
+
+    /** @return BelongsTo<IetValuationSnapshot, $this> */
+    public function ietValuation(): BelongsTo
+    {
+        return $this->belongsTo(IetValuationSnapshot::class, 'iet_valuation_snapshot_id');
     }
 
     /** @return BelongsTo<Actor, $this> */
@@ -141,6 +151,7 @@ class Settlement extends Model
     {
         return [
             'amount_minor' => 'integer',
+            'iet_amount_minor' => 'integer',
             'paid_at' => 'immutable_datetime',
             'status' => SettlementStatus::class,
             'confirmed_at' => 'immutable_datetime',
