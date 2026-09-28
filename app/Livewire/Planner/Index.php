@@ -398,6 +398,7 @@ class Index extends Component
                         'time' => $slotStart->format('H:i'),
                         'minute' => $minute,
                         'count' => $slotItems->count(),
+                        'titles' => $slotItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
                     ]);
 
                     if ($this->selectedMinute === $minute) {
@@ -418,10 +419,13 @@ class Index extends Component
                     );
 
                 for ($hourIndex = 0; $hourIndex < 24; $hourIndex++) {
+                    $hourItems = $calendarHours->get($hourIndex, collect());
+
                     $baselineCalendarHours->push([
                         'hour' => $hourIndex,
                         'label' => str_pad((string) $hourIndex, 2, '0', STR_PAD_LEFT).':00',
-                        'count' => $calendarHours->get($hourIndex, collect())->count(),
+                        'count' => $hourItems->count(),
+                        'titles' => $hourItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
                     ]);
                 }
             } else {
