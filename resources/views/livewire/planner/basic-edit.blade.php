@@ -22,6 +22,22 @@
                 </div>
             </div>
 
+            <div>
+                <div class="mb-2 text-sm font-medium">{{ __('planning_baseline.fields.attention') }}</div>
+                <div class="grid gap-2 sm:grid-cols-2">
+                    <label class="cursor-pointer rounded-xl border p-4 transition {{ $attentionMode === 'exclusive' ? 'border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900' : 'border-zinc-200 dark:border-zinc-700' }}">
+                        <input class="sr-only" type="radio" wire:model.live="attentionMode" value="exclusive">
+                        <div class="font-medium">{{ __('planning_baseline.attention.exclusive') }}</div>
+                        <div class="mt-1 text-sm text-zinc-500">{{ __('planning_baseline.attention.exclusive_help') }}</div>
+                    </label>
+                    <label class="cursor-pointer rounded-xl border p-4 transition {{ $attentionMode === 'background' ? 'border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900' : 'border-zinc-200 dark:border-zinc-700' }}">
+                        <input class="sr-only" type="radio" wire:model.live="attentionMode" value="background">
+                        <div class="font-medium">{{ __('planning_baseline.attention.background') }}</div>
+                        <div class="mt-1 text-sm text-zinc-500">{{ __('planning_baseline.attention.background_help') }}</div>
+                    </label>
+                </div>
+            </div>
+
             <x-app.calendar-date-input model="date" :label="__('planning_baseline.fields.date')" />
 
             @if ($timingMode === 'fixed')
