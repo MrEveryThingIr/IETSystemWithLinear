@@ -12,6 +12,16 @@ return [
         'invitations' => 'Invitations',
         'access' => 'Access',
     ],
+    'onboarding' => [
+        'title' => 'Start simple',
+        'help' => 'Your account is ready. Begin with an empty workspace, then add only what you need.',
+        'workspace_title' => 'Open your workspace',
+        'workspace_help' => 'See today, what is coming next, and your calendar without unrelated modules.',
+        'workspace_button' => 'Open workspace',
+        'identity_title' => 'Identity & time',
+        'identity_help' => 'Set your display name, timezone, and preferred calendar.',
+        'identity_button' => 'Review settings',
+    ],
     'identity' => [
         'title' => 'Identity & time',
         'help' => 'Keep account identity and personal time preferences in one small settings surface.',
