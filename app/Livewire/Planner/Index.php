@@ -80,6 +80,12 @@ class Index extends Component
     #[Url(as: 'titles')]
     public bool $showCalendarTitles = false;
 
+    #[Url(as: 'cell')]
+    public string $calendarCellMode = 'details';
+
+    #[Url(as: 'color')]
+    public string $calendarColorBy = 'none';
+
     public function mount(): void
     {
         if (! in_array($this->view, ['today', 'list', 'calendar'], true)) {
@@ -113,6 +119,14 @@ class Index extends Component
 
         if (! in_array($this->timing, ['all', 'fixed', 'flexible_day'], true)) {
             $this->timing = 'all';
+        }
+
+        if (! in_array($this->calendarCellMode, ['details', 'map'], true)) {
+            $this->calendarCellMode = 'details';
+        }
+
+        if (! in_array($this->calendarColorBy, ['none', 'plan', 'category', 'attention'], true)) {
+            $this->calendarColorBy = 'none';
         }
     }
 
@@ -306,7 +320,8 @@ class Index extends Component
                 'plan',
                 fn ($plans) => $plans->where('context_id', $context->id),
             ))
-            ->whereBetween('scheduled_start_at', [$from->utc(), $through->utc()])
+            ->where('scheduled_start_at', '<=', $through->utc())
+            ->where('scheduled_end_at', '>', $from->utc())
             ->orderBy('scheduled_start_at')
             ->get()
             ->filter(function (PlanOccurrence $occurrence) use ($user, $context): bool {
