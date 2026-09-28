@@ -373,6 +373,7 @@ class BasicIndex extends Component
             'intentions' => $intentions,
             'unitCatalog' => collect(MonetaryUnitCatalog::all())->except('IET')->all(),
             'ietQuote' => $ietQuote,
+            'ietQuotePercent' => $ietPricing->percentOfUsd($ietQuote),
             'ietBalance' => $ietBalance,
             'obligationRows' => $obligationRows,
         ]);
