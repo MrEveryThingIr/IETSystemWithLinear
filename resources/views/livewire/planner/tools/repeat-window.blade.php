@@ -1,43 +1,26 @@
 <x-app.planner-studio-shell :source="$sourceOccurrence?->uuid">
-    <section class="min-h-[28rem] space-y-6">
+    <section class="space-y-5">
         <x-app.page-header
             :title="__('planning_baseline.tools.title')"
             :description="__('planning_baseline.sidebar.help')"
         />
 
-        <div class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-            <div class="font-medium">{{ __('planning_baseline.tools.repeat.sidebar') }}</div>
-            <div class="mt-1 text-sm text-zinc-500">{{ __('planning_baseline.tools.repeat.sidebar_help') }}</div>
-        </div>
-    </section>
-
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[1px]" role="presentation">
-        <div
-            class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="repeat-window-title"
+        <details
+            open
+            class="group overflow-hidden rounded-2xl border-2 border-zinc-300 bg-zinc-50/80 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/60"
         >
-            <div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-zinc-200 bg-white px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950">
+            <summary class="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-4 hover:bg-zinc-100/70 dark:hover:bg-zinc-900">
                 <div>
-                    <h2 id="repeat-window-title" class="text-lg font-semibold">
-                        {{ __('planning_baseline.tools.repeat.title') }}
-                    </h2>
-                    <p class="mt-1 text-sm leading-6 text-zinc-500">
+                    <div class="text-base font-semibold">{{ __('planning_baseline.tools.repeat.title') }}</div>
+                    <div class="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                         {{ __('planning_baseline.tools.repeat.help') }}
-                    </p>
+                    </div>
                 </div>
 
-                <a
-                    href="{{ $cancelUrl }}"
-                    class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-xl text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    aria-label="{{ __('studio.cancel') }}"
-                >
-                    ×
-                </a>
-            </div>
+                <div class="shrink-0 text-lg text-zinc-500 transition group-open:rotate-180">⌄</div>
+            </summary>
 
-            <div class="space-y-5 p-5">
+            <div class="space-y-5 border-t border-zinc-300 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-950">
                 @if ($message !== '')
                     <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
                         {{ $message }}
@@ -92,7 +75,7 @@
                                 'month' => 'planning_baseline.tools.repeat.modes.month',
                                 'selected_dates' => 'planning_baseline.tools.repeat.modes.selected_dates',
                             ] as $modeValue => $labelKey)
-                                <label class="cursor-pointer rounded-xl border p-3 {{ $repeatMode === $modeValue ? 'border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900' : 'border-zinc-200 dark:border-zinc-700' }}">
+                                <label class="cursor-pointer rounded-xl border p-3 {{ $repeatMode === $modeValue ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-800' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}">
                                     <input class="sr-only" type="radio" wire:model.live="repeatMode" value="{{ $modeValue }}">
                                     <div class="text-sm font-medium">{{ __($labelKey) }}</div>
                                 </label>
@@ -134,7 +117,7 @@
                                         <button
                                             type="button"
                                             wire:click="removeRepeatDate('{{ $date }}')"
-                                            class="rounded-full border border-zinc-200 px-3 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                                            class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:bg-zinc-900"
                                         >
                                             {{ $date }} ×
                                         </button>
@@ -144,28 +127,28 @@
                         </div>
                     @endif
 
-                    <div class="rounded-xl bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
                         {{ __('planning_baseline.tools.repeat.fractal_help') }}
                     </div>
                 @endif
-            </div>
 
-            <div class="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-zinc-200 bg-white px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950">
-                <flux:button :href="$cancelUrl" variant="ghost">
-                    {{ __('studio.cancel') }}
-                </flux:button>
+                <div class="flex flex-wrap justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                    <flux:button :href="$cancelUrl" variant="ghost">
+                        {{ __('studio.cancel') }}
+                    </flux:button>
 
-                <flux:button
-                    type="button"
-                    wire:click="apply"
-                    wire:loading.attr="disabled"
-                    wire:target="apply"
-                    variant="primary"
-                    :disabled="$sourceOccurrence === null"
-                >
-                    {{ __('planning_baseline.tools.repeat.apply') }}
-                </flux:button>
+                    <flux:button
+                        type="button"
+                        wire:click="apply"
+                        wire:loading.attr="disabled"
+                        wire:target="apply"
+                        variant="primary"
+                        :disabled="$sourceOccurrence === null"
+                    >
+                        {{ __('planning_baseline.tools.repeat.apply') }}
+                    </flux:button>
+                </div>
             </div>
-        </div>
-    </div>
+        </details>
+    </section>
 </x-app.planner-studio-shell>
