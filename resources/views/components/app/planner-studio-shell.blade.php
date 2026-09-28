@@ -7,7 +7,7 @@
 
 <div class="mx-auto max-w-[92rem] lg:flex lg:items-start lg:gap-4" dir="ltr">
     <aside
-        class="mb-4 lg:sticky lg:top-6 lg:mb-0 lg:w-40 xl:w-44 lg:shrink-0 {{ $rtl ? 'lg:order-1' : 'lg:order-2' }}"
+        class="mb-4 lg:sticky lg:top-6 lg:mb-0 lg:w-36 xl:w-40 lg:shrink-0 {{ $rtl ? 'lg:order-1' : 'lg:order-2' }}"
         dir="{{ $contentDir }}"
     >
         <div class="rounded-xl border border-zinc-200 bg-zinc-50/70 p-2.5 dark:border-zinc-800 dark:bg-zinc-900/40">
@@ -19,10 +19,7 @@
                 href="{{ route('planner.tools.repeat', array_filter(['source' => $source])) }}"
                 class="mt-1 block rounded-lg px-2.5 py-2 {{ request()->routeIs('planner.tools.repeat') ? 'bg-white shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800' : 'hover:bg-white dark:hover:bg-zinc-950' }}"
             >
-                <span class="block text-sm font-medium leading-5">{{ __('planning_baseline.tools.repeat.sidebar') }}</span>
-                <span class="mt-1 hidden text-[0.72rem] leading-5 text-zinc-500 xl:block">
-                    {{ __('planning_baseline.tools.repeat.sidebar_help') }}
-                </span>
+                <span class="block break-words text-sm font-medium leading-5">{{ __('planning_baseline.tools.repeat.sidebar') }}</span>
             </a>
         </div>
     </aside>
