@@ -358,7 +358,7 @@ class Index extends Component
                     $slotStart = $hourStart->setTime($this->hour, $minute);
                     $slotEnd = $slotStart->addMinutes($this->slotMinutes);
                     $slotItems = $occurrences->filter(function (PlanOccurrence $occurrence) use ($slotStart, $slotEnd, $timezone): bool {
-                        if (($occurrence->scheduleRule?->timing_mode?->value ?? 'fixed') !== 'fixed') {
+                        if (($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') !== 'fixed') {
                             return false;
                         }
 
@@ -379,11 +379,11 @@ class Index extends Component
                 }
             } elseif ($this->calendarLevel === 'day') {
                 $calendarFlexible = $occurrences
-                    ->filter(fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode?->value ?? 'fixed') === 'flexible_day')
+                    ->filter(fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'flexible_day')
                     ->values();
 
                 $calendarHours = $occurrences
-                    ->filter(fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode?->value ?? 'fixed') === 'fixed')
+                    ->filter(fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'fixed')
                     ->groupBy(
                         fn (PlanOccurrence $occurrence): int => (int) $occurrence->scheduled_start_at
                             ->setTimezone($timezone)
@@ -525,7 +525,7 @@ class Index extends Component
             return false;
         }
 
-        $mode = $occurrence->scheduleRule?->timing_mode?->value ?? 'fixed';
+        $mode = $occurrence->scheduleRule?->timing_mode->value ?? 'fixed';
 
         if ($this->timing !== 'all' && $mode !== $this->timing) {
             return false;
@@ -545,7 +545,7 @@ class Index extends Component
         }
 
         return $plan->scheduleRules->contains(
-            fn ($rule): bool => ($rule->timing_mode?->value ?? 'fixed') === $this->timing,
+            fn ($rule): bool => $rule->timing_mode->value === $this->timing,
         );
     }
 
