@@ -100,9 +100,14 @@ class RepeatWindow extends Component
             ? $sources->firstWhere('uuid', $this->sourceUuid)
             : null;
 
+        $cancelUrl = $source instanceof PlanOccurrence
+            ? route('planner.show', $source->plan)
+            : route('planner.index');
+
         return view('livewire.planner.tools.repeat-window', [
             'sources' => $sources,
             'sourceOccurrence' => $source,
+            'cancelUrl' => $cancelUrl,
         ]);
     }
 
