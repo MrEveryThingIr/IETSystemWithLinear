@@ -2,18 +2,27 @@
 
 namespace App\Actions\Financial;
 
+use App\Actions\Exchange\EnsureIetWallet;
 use App\FinancialObligationEventType;
 use App\Models\Actor;
 use App\Models\FinancialObligation;
 use App\Models\FinancialObligationEvent;
+use App\Models\Ledger;
 use App\Models\Settlement;
 use App\Models\User;
 use App\SettlementStatus;
+use App\Support\AccountingSummary;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class RespondToSettlement
 {
+    public function __construct(
+        private readonly EnsureIetWallet $ietWallets,
+        private readonly AccountingSummary $accountingSummary,
+        private readonly PostFinancialObligationAccounting $postObligationAccounting,
+        private readonly PostSettlementAccounting $postSettlementAccounting,
+    ) {}
     public function confirm(Settlement $settlement, User $user): Settlement
     {
         return $this->respond($settlement, $user, true, null);
@@ -38,14 +47,19 @@ class RespondToSettlement
 
         return DB::transaction(function () use ($settlement, $current, $confirm, $note): Settlement {
             $locked = Settlement::query()
-                ->with('obligation.fulfillment')
+                ->with([
+                    'obligation.fulfillment',
+                    'obligation.monetaryUnit',
+                    'obligation.debtor.user',
+                    'obligation.creditor.user',
+                ])
                 ->lockForUpdate()
                 ->findOrFail($settlement->id);
 
             Gate::forUser($current)->authorize('respond', $locked);
 
             $obligation = FinancialObligation::query()
-                ->with('fulfillment')
+                ->with(['fulfillment', 'monetaryUnit', 'debtor.user', 'creditor.user'])
                 ->lockForUpdate()
                 ->findOrFail($locked->financial_obligation_id);
 
@@ -70,7 +84,38 @@ class RespondToSettlement
                     'Confirming this Settlement would exceed the Financial Obligation amount.',
                 );
 
+                $isIet = $obligation->monetaryUnit->code === 'IET';
+
+                if ($isIet) {
+                    $debtorUser = $obligation->debtor->user;
+                    $creditorUser = $obligation->creditor->user;
+                    abort_unless($debtorUser instanceof User && $creditorUser instanceof User, 422, 'IET settlement requires active user wallets.');
+
+                    $debtorSide = $this->ietWallets->execute($debtorUser);
+                    $creditorSide = $this->ietWallets->execute($creditorUser);
+
+                    Ledger::query()
+                        ->whereIn('id', [$debtorSide['ledger']->id, $creditorSide['ledger']->id])
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->get();
+
+                    abort_if(
+                        $this->accountingSummary->accountBalanceMinor($debtorSide['wallet']) < (int) $locked->amount_minor,
+                        422,
+                        'Debtor has insufficient IET balance for this Settlement.',
+                    );
+
+                    $this->postObligationAccounting->execute($obligation, $debtorUser);
+                    $this->postObligationAccounting->execute($obligation, $creditorUser);
+                }
+
                 $locked->confirm($actor, now());
+
+                if ($isIet) {
+                    $this->postSettlementAccounting->execute($locked, $obligation->debtor->user);
+                    $this->postSettlementAccounting->execute($locked, $obligation->creditor->user);
+                }
 
                 $eventType = FinancialObligationEventType::SettlementConfirmed;
                 $payload = [
