@@ -8,21 +8,21 @@ It does not create a second balance table. IET lives inside the same immutable L
 
 ## Initial valuation
 
-The baseline normalizes the initial requirement to the exact quote:
+The initial requirement is interpreted literally as **X = 0.000001% of one USD**.
 
 ```text
-1 IET = 0.000001 USD
+X = 0.000001%
+1 IET = 0.000001% × 1 USD
+1 IET = 0.00000001 USD
 ```
 
 Therefore:
 
 ```text
-3.50 USD / 0.000001 USD per IET = 3,500,000 IET
+3.50 USD / 0.00000001 USD per IET = 350,000,000 IET
 ```
 
-The stored quote is exact decimal data. Pricing uses integer/rational arithmetic rather than floating-point financial math.
-
-> If product language later intends **0.000001 percent of one USD** literally rather than `0.000001 USD`, only the initial quote should change to `0.00000001 USD/IET`. The architecture and historical quote model remain unchanged.
+The stored quote is exact decimal data. Pricing uses integer/rational arithmetic rather than floating-point financial math. The UI shows both the USD-per-IET quote and its equivalent X-percent form so the economic meaning is explicit.
 
 ## IET monetary identity
 
@@ -65,7 +65,7 @@ The baseline snapshots signals such as:
 
 These are **inputs/evidence**, not an automatic appreciation formula.
 
-The baseline intentionally does not encode “IET must always rise.” Future policy can derive new quotes from transparent factors and version that policy independently.
+The baseline intentionally does not encode “IET must always rise.” A future valuation policy may derive a candidate quote from transparent factors, but publishing a new quote remains an explicit, versioned economic decision. This avoids silently turning activity metrics into a guaranteed-return mechanism.
 
 ## Exchange capability
 
