@@ -145,14 +145,19 @@ The baseline presentation is intentionally compact:
 - no permanent equivalent-calendar/timezone text on every item;
 - detailed temporal equivalence remains infrastructure available for later opt-in/detail surfaces.
 
-## Planning Studio sidebar and time-window projection tool
+## Planning Studio navigation and time-window projection tool
 
-Planning Studio now owns a small internal sidebar. It separates ordinary planning surfaces from optional tools:
+Planning Studio keeps its primary views as a compact horizontal navigation:
 
-- Plan: Today, Next 30 days, Calendar, New item;
-- Tools: Repeat time window.
+- Today;
+- Next 30 days;
+- Calendar.
 
-The repeat tool is **not** owned by an individual Plan detail page. A Plan detail can preselect its own occurrence as a convenience, but the tool remains a Studio-level capability and can also be opened directly from the Studio sidebar.
+`New item` remains a separate primary action.
+
+Optional capabilities live in a deliberately narrow **Tools rail** beside the Studio. The rail does not replace the primary Planner navigation and should consume as little calendar width as practical.
+
+The first optional tool is **Repeat time window**. Opening it presents a strongly distinguished, collapsible inline panel rather than a modal. The operation has an explicit Cancel action and can be collapsed without leaving the Studio.
 
 Any non-cancelled baseline once-plan can be used as a source, including a future Plan that has never started. Completion or success is not required.
 
