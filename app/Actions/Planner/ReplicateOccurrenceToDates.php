@@ -5,6 +5,7 @@ namespace App\Actions\Planner;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\PlanTimingMode;
@@ -107,6 +108,7 @@ class ReplicateOccurrenceToDates
                     $source->plan->description,
                     $source->plan->timezone,
                     metadata: $metadata,
+                    attentionMode: $source->plan->attention_mode ?? PlanAttentionMode::Exclusive,
                 );
 
                 $this->createScheduleRule->execute(
