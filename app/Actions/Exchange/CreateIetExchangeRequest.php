@@ -5,7 +5,7 @@ namespace App\Actions\Exchange;
 use App\IetExchangeDirection;
 use App\Models\IetExchangeRequest;
 use App\Models\User;
-use App\Support\AccountingSummary;
+use App\Support\IetAvailableBalance;
 use App\Support\IetPricing;
 
 class CreateIetExchangeRequest
@@ -13,7 +13,7 @@ class CreateIetExchangeRequest
     public function __construct(
         private readonly IetPricing $pricing,
         private readonly EnsureIetWallet $wallets,
-        private readonly AccountingSummary $summary,
+        private readonly IetAvailableBalance $available,
     ) {}
 
     public function execute(
@@ -30,15 +30,8 @@ class CreateIetExchangeRequest
 
         if ($direction === IetExchangeDirection::Cashout) {
             $wallet = $this->wallets->execute($user);
-            $balance = $this->summary->accountBalanceMinor($wallet['wallet']);
-            $reserved = (int) IetExchangeRequest::query()
-                ->where('user_id', $user->id)
-                ->where('direction', IetExchangeDirection::Cashout->value)
-                ->where('status', 'pending')
-                ->sum('iet_amount');
-
             abort_if(
-                max(0, $balance - $reserved) < $ietAmount,
+                $this->available->forUser($user, $wallet['wallet']) < $ietAmount,
                 422,
                 'Insufficient available IET balance for this cash-out request.',
             );
