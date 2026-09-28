@@ -9,8 +9,8 @@ use App\Models\FinancialObligation;
 use App\Models\FinancialObligationEvent;
 use App\Models\Settlement;
 use App\Models\User;
-use Carbon\CarbonInterface;
 use App\Support\AccountingSummary;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -21,6 +21,7 @@ class ProposeSettlement
         private readonly EnsureIetWallet $ietWallets,
         private readonly AccountingSummary $accountingSummary,
     ) {}
+
     public function execute(
         FinancialObligation $obligation,
         User $user,
