@@ -84,6 +84,22 @@ class PlanningBaselineExperienceTest extends TestCase
         }
     }
 
+    public function test_fixed_item_end_time_must_be_after_start_time_without_http_error(): void
+    {
+        $actor = Actor::factory()->create();
+        $actor->user->forceFill(['timezone' => 'UTC'])->save();
+
+        Livewire::actingAs($actor->user)
+            ->test(BasicCreate::class)
+            ->set('title', 'Invalid meeting')
+            ->set('timingMode', 'fixed')
+            ->set('date', '2026-09-29')
+            ->set('startTime', '11:00')
+            ->set('endTime', '10:00')
+            ->call('save')
+            ->assertHasErrors(['endTime']);
+    }
+
     public function test_flexible_day_item_has_a_day_window_without_asking_for_an_hour(): void
     {
         CarbonImmutable::setTestNow('2026-09-28 12:00:00 UTC');
