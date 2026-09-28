@@ -7,7 +7,7 @@ return [
     'navigation' => [
         'workspace' => 'Workspace',
         'planning' => 'Planning',
-        'identity' => 'Identity',
+        'identity' => 'Profile',
         'invitations' => 'Invitations',
         'access' => 'Access',
     ],
@@ -22,11 +22,15 @@ return [
         'identity_button' => 'Review settings',
     ],
     'identity' => [
-        'title' => 'Identity & time',
-        'help' => 'Keep account identity and personal time preferences in one small settings surface.',
+        'title' => 'Profile & system preferences',
+        'help' => 'Keep only the account details and system-wide preferences that shape your experience.'
         'username' => 'Username',
         'email' => 'Email',
         'display_name' => 'Display name',
+        'account' => 'Account profile',
+        'account_help' => 'Your image, account identity, display name, and interface language. Skills, needs, interests, and other domain data do not belong here.',
+        'language' => 'Interface language',
+        'language_help' => 'Changing the language also changes text direction and the default calendar when Calendar is set to Automatic.',
     ],
     'sidebar' => [
         'title' => 'Planning Studio',
