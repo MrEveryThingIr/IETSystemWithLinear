@@ -5,7 +5,6 @@ namespace App\Actions\Exchange;
 use App\Actions\Accounting\PostJournalEntry;
 use App\JournalEntryKind;
 use App\Models\IetInternalCharge;
-use App\Models\JournalEntry;
 use App\Models\Ledger;
 use App\Models\User;
 use App\Support\AccountingSummary;
@@ -34,7 +33,13 @@ class ChargeIetForUsdFlow
         $sourceType = Str::squish($sourceType);
         abort_if($sourceType === '' || mb_strlen($sourceType) > 80, 422, 'Internal charge source type is invalid.');
 
-        return DB::transaction(function () use ($user, $usdAmountMinor, $sourceType, $sourceUuid, $description): IetInternalCharge {
+        return DB::transaction(function () use (
+            $user,
+            $usdAmountMinor,
+            $sourceType,
+            $sourceUuid,
+            $description,
+        ): IetInternalCharge {
             $existing = IetInternalCharge::query()
                 ->where('user_id', $user->id)
                 ->where('source_type', $sourceType)
