@@ -229,7 +229,7 @@ class PlanningBaselineExperienceTest extends TestCase
 
             $occurrence = $source->occurrences()->sole();
 
-            Livewire::actingAs($actor->user)
+            $tool = Livewire::actingAs($actor->user)
                 ->test(RepeatWindow::class)
                 ->set('sourceUuid', $occurrence->uuid)
                 ->set('repeatMode', 'same_weekday')
@@ -237,7 +237,19 @@ class PlanningBaselineExperienceTest extends TestCase
                 ->call('apply')
                 ->assertHasNoErrors();
 
-            $weeklyDates = Plan::query()
+            $tool
+                ->set('repeatMode', 'same_monthday')
+                ->set('repeatCount', 2)
+                ->call('apply')
+                ->assertHasNoErrors();
+
+            $tool
+                ->set('repeatMode', 'same_yearday')
+                ->set('repeatCount', 1)
+                ->call('apply')
+                ->assertHasNoErrors();
+
+            $projectedDates = Plan::query()
                 ->where('id', '!=', $source->id)
                 ->with('occurrences')
                 ->get()
@@ -248,7 +260,13 @@ class PlanningBaselineExperienceTest extends TestCase
                 ->values()
                 ->all();
 
-            $this->assertSame(['2026-10-22', '2026-10-29'], $weeklyDates);
+            $this->assertSame([
+                '2026-10-22',
+                '2026-10-29',
+                '2026-11-15',
+                '2026-12-15',
+                '2027-10-15',
+            ], $projectedDates);
         } finally {
             CarbonImmutable::setTestNow();
         }
