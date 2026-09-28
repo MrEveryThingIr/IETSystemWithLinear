@@ -154,7 +154,7 @@ class RepeatWindow extends Component
     {
         $timezone = $source->plan->timezone;
         $today = CarbonImmutable::now($timezone)->startOfDay();
-        $sourceDay = CarbonImmutable::createFromFormat('!Y-m-d', $source->local_date->format('Y-m-d'), $timezone);
+        $sourceDay = CarbonImmutable::parse($source->local_date->format('Y-m-d'), $timezone)->startOfDay();
         $anchor = $sourceDay->greaterThan($today) ? $sourceDay : $today;
 
         if ($this->repeatMode === 'next_days') {
@@ -245,7 +245,7 @@ class RepeatWindow extends Component
         if ($this->repeatMode === 'month') {
             $this->validate(['repeatMonth' => ['required', 'date_format:Y-m']]);
 
-            $start = CarbonImmutable::createFromFormat('!Y-m', $this->repeatMonth, $timezone);
+            $start = CarbonImmutable::parse($this->repeatMonth.'-01', $timezone)->startOfDay();
             $end = $start->endOfMonth();
             $sourceDate = $sourceDay->format('Y-m-d');
             $dates = [];
@@ -277,7 +277,7 @@ class RepeatWindow extends Component
             $sourceDate = $sourceDay->format('Y-m-d');
 
             foreach ($this->repeatDates as $date) {
-                $candidate = CarbonImmutable::createFromFormat('!Y-m-d', $date, $timezone);
+                $candidate = CarbonImmutable::parse($date, $timezone)->startOfDay();
 
                 if (! $candidate->greaterThan($today)) {
                     throw ValidationException::withMessages([
