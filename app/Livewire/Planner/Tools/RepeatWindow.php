@@ -12,12 +12,14 @@ use App\PlanTimingMode;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Throwable;
 
 #[Layout('layouts.app')]
 #[Title('Repeat time window')]
@@ -127,9 +129,9 @@ class RepeatWindow extends Component
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Collection<int, PlanOccurrence>
+     * @return Collection<int, PlanOccurrence>
      */
-    private function availableSources(): \Illuminate\Database\Eloquent\Collection
+    private function availableSources(): Collection
     {
         $user = $this->user();
 
@@ -222,7 +224,7 @@ class RepeatWindow extends Component
             while (count($dates) < $this->repeatCount) {
                 try {
                     $candidate = CarbonImmutable::createSafe($year, $month, $day, 0, 0, 0, $timezone);
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     $year++;
 
                     continue;
