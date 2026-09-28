@@ -1,5 +1,18 @@
 # IET Current State
 
+## Planning Studio baseline — active experience-first assembly
+
+Active branch: `codex/planning-studio-baseline`.
+
+The current product gate is intentionally smaller than the historical integrated runtime. The default `planning_baseline` profile admits only platform infrastructure, identity/authentication/verification, access invitation administration, focused identity + temporal preferences, Personal Context authority, and a minimal personal Planning Studio.
+
+The first Planning Studio has only two authored timing shapes: **fixed time** and **flexible day**. Create/edit deliberately omit recurrence, reminders, readiness/prerequisites, finance, participants, evidence, contracts and other advanced Planner seams. The existing profile-aware temporal kernel and fractal Calendar remain, with compact accumulated cells and search/timing/category filtering.
+
+Previously developed systems remain source-library code rather than being discarded. PHPUnit runs the `full` release profile so the historical capability set continues to receive regression coverage while the default browser experience stays narrow.
+
+See `docs/PLANNING_STUDIO_BASELINE.md` for the runtime boundary and browser acceptance contract.
+
+
 ## Snapshot
 
 ### Selective assembly release reconciliation
