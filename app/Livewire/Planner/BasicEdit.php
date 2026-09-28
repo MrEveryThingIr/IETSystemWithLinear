@@ -16,6 +16,7 @@ use App\PlanStatus;
 use App\PlanTimingMode;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -150,7 +151,11 @@ class BasicEdit extends Component
         $start = CarbonImmutable::parse($date.' '.$startTime, $timezone);
         $end = CarbonImmutable::parse($date.' '.$endTime, $timezone);
 
-        abort_unless($end->greaterThan($start), 422, __('planning_baseline.validation.end_after_start'));
+        if (! $end->greaterThan($start)) {
+            throw ValidationException::withMessages([
+                'endTime' => __('planning_baseline.validation.end_after_start'),
+            ]);
+        }
 
         return (int) $start->diffInMinutes($end);
     }
