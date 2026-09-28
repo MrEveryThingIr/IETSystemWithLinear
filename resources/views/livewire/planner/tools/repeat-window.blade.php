@@ -47,7 +47,7 @@
                     <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
                         <div class="font-medium" dir="auto">{{ $sourceOccurrence->plan->title }}</div>
                         <div class="mt-1 text-sm text-zinc-500">
-                            <x-app.local-date :value="$sourceOccurrence->scheduled_start_at" :show-equivalent="false" />
+                            <x-app.local-date :value="$sourceOccurrence->scheduled_start_at" />
                             ·
                             @if (($sourceOccurrence->scheduleRule?->timing_mode ?? \App\PlanTimingMode::Fixed) === \App\PlanTimingMode::FlexibleDay)
                                 {{ __('planning_baseline.timing.flexible_day_short') }}
@@ -120,7 +120,7 @@
                                             wire:click="removeRepeatDate('{{ $date }}')"
                                             class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:bg-zinc-900"
                                         >
-                                            {{ $date }} ×
+                                            <x-app.local-date :value="$date" :show-equivalent="false" /> <span aria-hidden="true">×</span>
                                         </button>
                                     @endforeach
                                 </div>
