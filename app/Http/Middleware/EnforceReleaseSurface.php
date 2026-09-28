@@ -32,6 +32,8 @@ class EnforceReleaseSurface
         'profiles.images.show',
         'actors.avatar',
         'planner.*',
+        'finance.*',
+        'financial-obligations.*',
         'accounting.*',
         'vault.*',
         'platform.access',
