@@ -13,6 +13,18 @@
         </a>
     </header>
 
+    <nav class="inline-flex flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900" aria-label="{{ __('planning_baseline.title') }}">
+        <button type="button" wire:click="$set('view', 'today')" class="rounded-lg px-3 py-2 text-sm {{ $view === 'today' ? 'bg-white font-medium shadow-sm dark:bg-zinc-950' : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}">
+            {{ __('planning_baseline.views.today') }}
+        </button>
+        <button type="button" wire:click="$set('view', 'list')" class="rounded-lg px-3 py-2 text-sm {{ $view === 'list' ? 'bg-white font-medium shadow-sm dark:bg-zinc-950' : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}">
+            {{ __('planning_baseline.views.list') }}
+        </button>
+        <button type="button" wire:click="$set('view', 'calendar')" class="rounded-lg px-3 py-2 text-sm {{ $view === 'calendar' ? 'bg-white font-medium shadow-sm dark:bg-zinc-950' : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}">
+            {{ __('planning_baseline.views.calendar') }}
+        </button>
+    </nav>
+
     <div class="grid gap-3 rounded-xl border border-zinc-200 p-4 md:grid-cols-[minmax(0,1fr)_12rem_12rem] dark:border-zinc-800">
         <label class="space-y-1 text-sm">
             <span class="font-medium">{{ __('planning_baseline.filters.search') }}</span>
