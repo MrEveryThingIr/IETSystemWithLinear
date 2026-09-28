@@ -15,6 +15,7 @@ use App\Models\Account;
 use App\Models\Actor;
 use App\Models\Context;
 use App\Models\JournalEntry;
+use App\Models\JournalLine;
 use App\Models\Ledger;
 use App\Models\MoneyIntention;
 use App\Models\User;
@@ -23,7 +24,6 @@ use App\Support\MoneyAmount;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -313,9 +313,9 @@ class BasicIndex extends Component
     private function entryRow(JournalEntry $entry): array
     {
         $lines = $entry->lines;
-        $assetDebit = $lines->first(fn ($line): bool => $line->account?->type === AccountType::Asset && (int) $line->debit_minor > 0);
-        $assetCredit = $lines->first(fn ($line): bool => $line->account?->type === AccountType::Asset && (int) $line->credit_minor > 0);
-        $other = $lines->first(fn ($line): bool => $line->account?->type !== AccountType::Asset);
+        $assetDebit = $lines->first(fn (JournalLine $line): bool => $line->account?->type === AccountType::Asset && (int) $line->debit_minor > 0);
+        $assetCredit = $lines->first(fn (JournalLine $line): bool => $line->account?->type === AccountType::Asset && (int) $line->credit_minor > 0);
+        $other = $lines->first(fn (JournalLine $line): bool => $line->account?->type !== AccountType::Asset);
         $amount = (int) $lines->sum('debit_minor');
 
         return [
@@ -401,7 +401,7 @@ class BasicIndex extends Component
 
         if ($minor <= 0) {
             throw ValidationException::withMessages([
-                'amount' => __('accounting.validation.amount'),
+                $field => __('accounting.validation.amount'),
             ]);
         }
 
