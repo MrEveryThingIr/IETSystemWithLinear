@@ -67,6 +67,8 @@ return [
         'timing' => 'نوع زمان‌بندی',
         'all_timing' => 'همه',
         'category' => 'دسته',
+        'attention' => 'نوع توجه',
+        'all_attention' => 'همهٔ حالت‌های توجه',
         'all_categories' => 'همهٔ دسته‌ها',
     ],
     'timing' => [
