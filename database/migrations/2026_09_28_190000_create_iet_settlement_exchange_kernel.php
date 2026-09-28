@@ -2,7 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -22,6 +24,20 @@ return new class extends Migration
 
             $table->index(['effective_at', 'id'], 'iet_valuation_effective_index');
         });
+
+        DB::table('iet_valuation_snapshots')->insert([
+            'uuid' => (string) Str::uuid(),
+            'usd_pico_per_iet' => 10000,
+            'source' => 'initial',
+            'factors' => json_encode([
+                'x_percent' => '0.000001',
+                'policy' => 'bootstrap',
+            ], JSON_THROW_ON_ERROR),
+            'note' => 'Initial IET internal settlement valuation.',
+            'effective_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         Schema::create('iet_exchange_requests', function (Blueprint $table): void {
             $table->id();
