@@ -5,12 +5,11 @@ namespace Tests\Feature;
 use App\Actions\Contexts\EnsurePersonalContext;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
-use App\Actions\Planner\TransitionPlanOccurrence;
 use App\Http\Middleware\EnforceReleaseSurface;
 use App\Livewire\Planner\BasicCreate;
 use App\Livewire\Planner\BasicEdit;
 use App\Livewire\Planner\Index as PlannerIndex;
-use App\Livewire\Planner\Show as PlannerShow;
+use App\Livewire\Planner\Tools\RepeatWindow;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\PlanOccurrenceStatus;
@@ -133,7 +132,7 @@ class PlanningBaselineExperienceTest extends TestCase
         }
     }
 
-    public function test_repeat_tool_copies_a_completed_once_window_into_future_once_plans(): void
+    public function test_repeat_tool_projects_a_future_once_window_before_it_has_started(): void
     {
         CarbonImmutable::setTestNow('2026-09-28 10:30:00 UTC');
 
@@ -145,8 +144,8 @@ class PlanningBaselineExperienceTest extends TestCase
             $source = app(CreatePlan::class)->execute(
                 $context,
                 $actor->user,
-                'Focused Laravel study',
-                'Collections practice',
+                'Read four pages',
+                'A specific book',
                 'UTC',
                 metadata: ['planning_studio' => 'baseline', 'category' => 'Study'],
             );
@@ -155,27 +154,22 @@ class PlanningBaselineExperienceTest extends TestCase
                 $source,
                 $actor->user,
                 PlanScheduleFrequency::Once,
-                '2026-09-28',
-                '10:00',
+                '2026-09-29',
+                '20:00',
                 60,
                 timingMode: PlanTimingMode::Fixed,
             );
 
             $occurrence = $source->occurrences()->sole();
-            $transition = app(TransitionPlanOccurrence::class);
-            $transition->start($occurrence, $actor->user);
-
-            CarbonImmutable::setTestNow('2026-09-28 10:45:00 UTC');
-            $transition->complete($occurrence->fresh(), $actor->user);
+            $this->assertSame(PlanOccurrenceStatus::Scheduled, $occurrence->status);
 
             Livewire::actingAs($actor->user)
-                ->test(PlannerShow::class, ['plan' => $source])
-                ->call('openRepeatTool', $occurrence->id)
+                ->test(RepeatWindow::class)
+                ->set('sourceUuid', $occurrence->uuid)
                 ->set('repeatMode', 'next_days')
                 ->set('repeatCount', 3)
-                ->call('applyRepeatTool')
-                ->assertHasNoErrors()
-                ->assertSet('repeatToolOpen', false);
+                ->call('apply')
+                ->assertHasNoErrors();
 
             $copies = Plan::query()
                 ->where('id', '!=', $source->id)
@@ -185,22 +179,76 @@ class PlanningBaselineExperienceTest extends TestCase
 
             $this->assertCount(3, $copies);
             $this->assertSame(
-                ['2026-09-29', '2026-09-30', '2026-10-01'],
+                ['2026-09-30', '2026-10-01', '2026-10-02'],
                 $copies->map(fn (Plan $plan): string => $plan->occurrences->sole()->local_date->format('Y-m-d'))->all(),
             );
 
             foreach ($copies as $copy) {
                 $rule = $copy->scheduleRules->sole();
 
-                $this->assertSame('Focused Laravel study', $copy->title);
+                $this->assertSame('Read four pages', $copy->title);
                 $this->assertSame('Study', data_get($copy->metadata, 'category'));
                 $this->assertSame($source->uuid, data_get($copy->metadata, 'replicated_from_plan_uuid'));
                 $this->assertSame($occurrence->uuid, data_get($copy->metadata, 'replicated_from_occurrence_uuid'));
                 $this->assertSame(PlanScheduleFrequency::Once, $rule->frequency);
                 $this->assertSame(PlanTimingMode::Fixed, $rule->timing_mode);
-                $this->assertSame('10:00:00', $rule->start_time);
+                $this->assertSame('20:00:00', $rule->start_time);
                 $this->assertSame(60, $rule->duration_minutes);
             }
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_repeat_tool_can_project_the_same_window_across_week_month_and_year_partitions(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 10:30:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $source = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                'Fractal source',
+                timezone: 'UTC',
+                metadata: ['planning_studio' => 'baseline'],
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $source,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-10-15',
+                '17:00',
+                45,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            $occurrence = $source->occurrences()->sole();
+
+            Livewire::actingAs($actor->user)
+                ->test(RepeatWindow::class)
+                ->set('sourceUuid', $occurrence->uuid)
+                ->set('repeatMode', 'same_weekday')
+                ->set('repeatCount', 2)
+                ->call('apply')
+                ->assertHasNoErrors();
+
+            $weeklyDates = Plan::query()
+                ->where('id', '!=', $source->id)
+                ->with('occurrences')
+                ->get()
+                ->flatMap->occurrences
+                ->pluck('local_date')
+                ->map(fn ($date): string => $date->format('Y-m-d'))
+                ->sort()
+                ->values()
+                ->all();
+
+            $this->assertSame(['2026-10-22', '2026-10-29'], $weeklyDates);
         } finally {
             CarbonImmutable::setTestNow();
         }
