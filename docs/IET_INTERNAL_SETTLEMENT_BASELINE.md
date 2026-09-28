@@ -22,7 +22,7 @@ Therefore:
 3.50 USD / 0.00000001 USD per IET = 350,000,000 IET
 ```
 
-The stored quote is exact decimal data. Pricing uses integer/rational arithmetic rather than floating-point financial math. The UI shows both the USD-per-IET quote and its equivalent X-percent form so the economic meaning is explicit.
+The stored quote is exact decimal data with up to 18 fractional digits. Pricing uses integer/rational arithmetic rather than floating-point financial math. The UI shows both the USD-per-IET quote and its equivalent X-percent form so the economic meaning is explicit.
 
 ## IET monetary identity
 
@@ -45,14 +45,14 @@ Dedicated posting paths are:
 
 Each quote stores:
 
-- exact `usd_per_iet`;
+- exact `usd_per_iet` at up to 18 decimal places;
 - effective timestamp;
 - policy version;
 - optional factor snapshot;
 - rationale;
 - publisher.
 
-Exchange requests, direct internal charges, and USD-priced IET obligations pin the quote used at creation. A later valuation change never changes old economic facts.
+A non-empty rationale is mandatory for every newly published quote. Exchange requests, direct internal charges, and USD-priced IET obligations pin the quote used at creation. A later valuation change never changes old economic facts.
 
 ### Successful-flow signals
 
