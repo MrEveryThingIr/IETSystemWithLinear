@@ -14,6 +14,7 @@ use App\Support\PlanAttentionConflicts;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -112,28 +113,45 @@ class BasicCreate extends Component
             }
         }
 
-        $plan = $createPlan->execute(
+        $plan = DB::transaction(function () use (
+            $createPlan,
+            $createRule,
             $context,
             $user,
-            $data['title'],
-            $description !== '' ? $description : null,
+            $data,
+            $description,
             $timezone,
-            metadata: [
-                'planning_studio' => 'baseline',
-                'category' => $category !== '' ? $category : null,
-            ],
-            attentionMode: $attentionMode,
-        );
-
-        $createRule->execute(
-            $plan,
-            $user,
-            PlanScheduleFrequency::Once,
-            $data['date'],
+            $category,
+            $attentionMode,
             $startTime,
             $duration,
-            timingMode: $mode,
-        );
+            $mode,
+        ) {
+            $plan = $createPlan->execute(
+                $context,
+                $user,
+                $data['title'],
+                $description !== '' ? $description : null,
+                $timezone,
+                metadata: [
+                    'planning_studio' => 'baseline',
+                    'category' => $category !== '' ? $category : null,
+                ],
+                attentionMode: $attentionMode,
+            );
+
+            $createRule->execute(
+                $plan,
+                $user,
+                PlanScheduleFrequency::Once,
+                $data['date'],
+                $startTime,
+                $duration,
+                timingMode: $mode,
+            );
+
+            return $plan;
+        }, attempts: 3);
 
         return $this->redirectRoute('planner.show', $plan);
     }
