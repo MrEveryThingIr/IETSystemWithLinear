@@ -284,6 +284,7 @@ class Show extends Component
             ->findOrFail($this->plan->id);
 
         Gate::forUser($user)->authorize('view', $plan);
+        abort_unless(data_get($plan->metadata, 'planning_studio') === 'baseline', 404);
         $this->plan = $plan;
 
         return view('livewire.planner.basic-show', [
