@@ -55,6 +55,11 @@ class ReviewIetExchangeRequest
 
             $owner = $locked->user;
             abort_unless($owner->actor instanceof Actor, 422);
+            abort_if(
+                (int) $owner->id === (int) $current->id,
+                403,
+                'Exchange requests require review by another authorized user.',
+            );
 
             $wallet = $this->wallet->ensure($owner);
             Ledger::query()->whereKey($wallet['ledger']->id)->lockForUpdate()->firstOrFail();
