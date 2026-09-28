@@ -227,13 +227,11 @@ class CreatePlanScheduleRule
                         $plan->id,
                     );
 
-                    abort_if(
-                        $conflict !== null,
-                        422,
-                        __('planning_baseline.validation.exclusive_overlap', [
+                    if ($conflict !== null) {
+                        abort(422, __('planning_baseline.validation.exclusive_overlap', [
                             'title' => $conflict->plan->title,
-                        ]),
-                    );
+                        ]));
+                    }
                 }
             }
 
