@@ -48,7 +48,7 @@ class IetValuationQuote extends Model
     protected function casts(): array
     {
         return [
-            'usd_per_iet' => 'decimal:10',
+            'usd_per_iet' => 'decimal:18',
             'factors' => 'array',
             'effective_at' => 'immutable_datetime',
         ];
