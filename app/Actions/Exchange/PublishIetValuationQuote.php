@@ -22,10 +22,10 @@ class PublishIetValuationQuote
 
         $usdPerIet = trim($usdPerIet);
         abort_unless(
-            preg_match('/^(?:0|[1-9]\d*)\.\d{1,10}$/', $usdPerIet) === 1
+            preg_match('/^(?:0|[1-9]\d*)\.\d{1,18}$/', $usdPerIet) === 1
             && trim(str_replace(['0', '.'], '', $usdPerIet)) !== '',
             422,
-            'Enter a positive USD-per-IET value with at most 10 decimals.',
+            'Enter a positive USD-per-IET value with at most 18 decimals.',
         );
 
         return IetValuationQuote::query()->create([
