@@ -141,6 +141,8 @@ return [
             'month_names' => '月份名称',
             'counts' => '项目数量',
             'plan_titles' => '计划标题',
+            'details_mode' => '详细信息',
+            'map_mode' => '视觉地图',
             'close' => '关闭',
             'cell_mode' => '单元格模式',
             'mode_details' => '详细信息',
