@@ -7,11 +7,13 @@ use App\Models\Context;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -371,11 +373,14 @@ class Index extends Component
                 $cursor = $yearStart;
                 for ($index = 0; $index < 12; $index++) {
                     $next = TemporalCalendar::nextMonthStart($cursor, $user, $timezone);
-                    $monthItems = $occurrences->filter(function (PlanOccurrence $occurrence) use ($cursor, $next, $timezone): bool {
-                        $start = $occurrence->scheduled_start_at->setTimezone($timezone);
-
-                        return $start->gte($cursor) && $start->lt($next);
-                    })->values();
+                    $monthItems = $occurrences->filter(
+                        fn (PlanOccurrence $occurrence): bool => $this->occurrenceOverlaps(
+                            $occurrence,
+                            $cursor,
+                            $next,
+                            $timezone,
+                        ),
+                    )->values();
 
                     $calendarMonths->push([
                         'date' => $cursor,
@@ -384,6 +389,7 @@ class Index extends Component
                         'number' => TemporalCalendar::format($cursor, $user, $timezone, 'M'),
                         'count' => $monthItems->count(),
                         'titles' => $monthItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
+                        'markers' => $this->calendarMarkers($monthItems, $context),
                     ]);
                     $cursor = $next;
                 }
@@ -394,13 +400,8 @@ class Index extends Component
                     $slotStart = $hourStart->setTime($this->hour, $minute);
                     $slotEnd = $slotStart->addMinutes($this->slotMinutes);
                     $slotItems = $occurrences->filter(function (PlanOccurrence $occurrence) use ($slotStart, $slotEnd, $timezone): bool {
-                        if (($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') !== 'fixed') {
-                            return false;
-                        }
-
-                        $start = $occurrence->scheduled_start_at->setTimezone($timezone);
-
-                        return $start->gte($slotStart) && $start->lt($slotEnd);
+                        return ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'fixed'
+                            && $this->occurrenceOverlaps($occurrence, $slotStart, $slotEnd, $timezone);
                     })->values();
 
                     $calendarSlots->push([
@@ -414,6 +415,7 @@ class Index extends Component
                         'minute' => $minute,
                         'count' => $slotItems->count(),
                         'titles' => $slotItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
+                        'markers' => $this->calendarMarkers($slotItems, $context),
                     ]);
 
                     if ($this->selectedMinute === $minute) {
@@ -433,14 +435,22 @@ class Index extends Component
                             ->format('G'),
                     );
 
+                $selectedDay = CarbonImmutable::parse($this->day, $timezone);
+
                 for ($hourIndex = 0; $hourIndex < 24; $hourIndex++) {
-                    $hourItems = $calendarHours->get($hourIndex, collect());
+                    $hourStart = $selectedDay->setTime($hourIndex, 0);
+                    $hourEnd = $hourStart->addHour();
+                    $hourItems = $occurrences->filter(function (PlanOccurrence $occurrence) use ($hourStart, $hourEnd, $timezone): bool {
+                        return ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'fixed'
+                            && $this->occurrenceOverlaps($occurrence, $hourStart, $hourEnd, $timezone);
+                    })->values();
 
                     $baselineCalendarHours->push([
                         'hour' => $hourIndex,
                         'label' => str_pad((string) $hourIndex, 2, '0', STR_PAD_LEFT).':00',
                         'count' => $hourItems->count(),
                         'titles' => $hourItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
+                        'markers' => $this->calendarMarkers($hourItems, $context),
                     ]);
                 }
             } else {
@@ -458,7 +468,16 @@ class Index extends Component
 
                 for ($date = $gridStart; $date->lte($gridEnd); $date = $date->addDay()) {
                     $key = $date->toDateString();
-                    $dayItems = $calendarOccurrences->get($key, collect());
+                    $dayStart = $date->startOfDay();
+                    $dayEnd = $dayStart->addDay();
+                    $dayItems = $occurrences->filter(
+                        fn (PlanOccurrence $occurrence): bool => $this->occurrenceOverlaps(
+                            $occurrence,
+                            $dayStart,
+                            $dayEnd,
+                            $timezone,
+                        ),
+                    )->values();
 
                     $calendarDays->push([
                         'date' => $date,
@@ -474,10 +493,13 @@ class Index extends Component
                             fn (PlanOccurrence $occurrence): bool => ($occurrence->scheduleRule?->timing_mode->value ?? 'fixed') === 'flexible_day',
                         )->count(),
                         'titles' => $dayItems->pluck('plan.title')->filter()->unique()->take(2)->values(),
+                        'markers' => $this->calendarMarkers($dayItems, $context),
                     ]);
                 }
             }
         }
+
+        $calendarLegend = $this->calendarMarkers($occurrences, $context, 12);
 
         $viewName = (string) config('release.profile') === 'planning_baseline'
             ? 'livewire.planner.baseline-index'
@@ -495,6 +517,7 @@ class Index extends Component
             'baselineCalendarHours' => $baselineCalendarHours,
             'baselineCalendarSlots' => $baselineCalendarSlots,
             'selectedSlotItems' => $selectedSlotItems,
+            'calendarLegend' => $calendarLegend,
             'calendarYearLabel' => TemporalCalendar::yearLabel($yearStart, $user, $timezone),
             'calendarMonthLabel' => TemporalCalendar::monthLabel($monthStart, $user, $timezone),
             'calendarDayWeekdayLabel' => TemporalCalendar::format(
@@ -590,6 +613,67 @@ class Index extends Component
         Gate::forUser($user)->authorize('view', $context);
 
         return $context;
+    }
+
+    private function occurrenceOverlaps(
+        PlanOccurrence $occurrence,
+        CarbonInterface $start,
+        CarbonInterface $end,
+        string $timezone,
+    ): bool {
+        $occurrenceStart = $occurrence->scheduled_start_at->setTimezone($timezone);
+        $occurrenceEnd = $occurrence->scheduled_end_at->setTimezone($timezone);
+
+        return $occurrenceStart->lt($end) && $occurrenceEnd->gt($start);
+    }
+
+    /**
+     * @param  Collection<int, PlanOccurrence>  $items
+     * @return list<array{key:string, label:string, color:string}>
+     */
+    private function calendarMarkers(Collection $items, ?Context $context, int $limit = 4): array
+    {
+        if ($this->calendarColorBy === 'none' || $items->isEmpty()) {
+            return [];
+        }
+
+        $namespace = $context?->uuid ?? 'all';
+
+        return $items
+            ->map(function (PlanOccurrence $occurrence) use ($namespace): array {
+                $plan = $occurrence->plan;
+                $category = trim((string) data_get($plan->metadata, 'category', ''));
+
+                [$key, $label, $hue] = match ($this->calendarColorBy) {
+                    'attention' => [
+                        'attention:'.$plan->attention_mode->value,
+                        __('planning_baseline.attention.'.$plan->attention_mode->value),
+                        $plan->attention_mode === PlanAttentionMode::Background ? 184 : 8,
+                    ],
+                    'category' => [
+                        'category:'.($category !== '' ? $category : '_'),
+                        $category !== '' ? $category : __('planning_baseline.tools.calendar_display.uncategorized'),
+                        null,
+                    ],
+                    default => [
+                        'plan:'.(string) data_get($plan->metadata, 'replicated_from_plan_uuid', $plan->uuid),
+                        $plan->title,
+                        null,
+                    ],
+                };
+
+                $resolvedHue = $hue ?? (abs((int) crc32($namespace.'|'.$key)) % 360);
+
+                return [
+                    'key' => $key,
+                    'label' => $label,
+                    'color' => sprintf('hsl(%d 68%% 48%%)', $resolvedHue),
+                ];
+            })
+            ->unique('key')
+            ->take($limit)
+            ->values()
+            ->all();
     }
 
     private function matchesOccurrenceFilters(PlanOccurrence $occurrence): bool
