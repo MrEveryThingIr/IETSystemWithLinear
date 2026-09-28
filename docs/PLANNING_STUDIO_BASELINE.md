@@ -143,7 +143,8 @@ Filters apply before accumulation:
 
 - free-text search over title, notes and category;
 - timing kind: all / fixed / flexible day;
-- category.
+- category;
+- attention: all / full-focus / background-compatible.
 
 ## Clean Profile and date/time presentation
 
