@@ -47,6 +47,13 @@ class EnforceReleaseSurface
             return $next($request);
         }
 
+        // Livewire transports component actions through framework endpoints
+        // that are not product surfaces themselves. They must remain reachable
+        // after the initial page route has passed this release boundary.
+        if ($request->is('livewire/*')) {
+            return $next($request);
+        }
+
         $name = $request->route()?->getName();
 
         // The root landing page intentionally has no dependency on another
