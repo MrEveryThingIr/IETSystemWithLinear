@@ -2,6 +2,7 @@
 
 namespace App\Actions\Financial;
 
+use App\Actions\Exchange\EnsureIetWallet;
 use App\FinancialObligationEventType;
 use App\Models\Actor;
 use App\Models\FinancialObligation;
@@ -9,12 +10,17 @@ use App\Models\FinancialObligationEvent;
 use App\Models\Settlement;
 use App\Models\User;
 use Carbon\CarbonInterface;
+use App\Support\AccountingSummary;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class ProposeSettlement
 {
+    public function __construct(
+        private readonly EnsureIetWallet $ietWallets,
+        private readonly AccountingSummary $accountingSummary,
+    ) {}
     public function execute(
         FinancialObligation $obligation,
         User $user,
@@ -48,7 +54,7 @@ class ProposeSettlement
             $note,
         ): Settlement {
             $locked = FinancialObligation::query()
-                ->with(['fulfillment', 'settlements'])
+                ->with(['fulfillment', 'settlements', 'monetaryUnit'])
                 ->lockForUpdate()
                 ->findOrFail($obligation->id);
 
@@ -58,6 +64,19 @@ class ProposeSettlement
                 422,
                 'Settlement amount exceeds the currently outstanding obligation amount.',
             );
+
+            if (
+                $locked->monetaryUnit->code === 'IET'
+                && (int) $locked->debtor_actor_id === (int) $current->actor->id
+            ) {
+                $wallet = $this->ietWallets->execute($current);
+
+                abort_if(
+                    $this->accountingSummary->accountBalanceMinor($wallet['wallet']) < $amountMinor,
+                    422,
+                    'Insufficient IET balance for this Settlement.',
+                );
+            }
 
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
