@@ -141,6 +141,8 @@ return [
             'month_names' => 'أسماء الشهور',
             'counts' => 'عدد العناصر',
             'plan_titles' => 'عناوين الخطط',
+            'details_mode' => 'تفاصيل',
+            'map_mode' => 'خريطة بصرية',
             'close' => 'إغلاق',
             'cell_mode' => 'نمط الخلية',
             'mode_details' => 'تفاصيل',
