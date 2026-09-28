@@ -15,6 +15,7 @@ use App\Livewire\Profile\BasicManage;
 use App\Livewire\Profile\TemporalPreferences as ProfileTemporalPreferences;
 use App\Models\Actor;
 use App\Models\Plan;
+use App\PlanAttentionMode;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
@@ -183,6 +184,7 @@ class PlanningBaselineExperienceTest extends TestCase
             $this->assertSame('Dentist appointment', $plan->title);
             $this->assertSame('baseline', data_get($plan->metadata, 'planning_studio'));
             $this->assertSame('Health', data_get($plan->metadata, 'category'));
+            $this->assertSame(PlanAttentionMode::Exclusive, $plan->attention_mode);
             $this->assertSame(PlanTimingMode::Fixed, $rule->timing_mode);
             $this->assertSame(90, $rule->duration_minutes);
             $this->assertSame('10:00:00', $rule->start_time);
@@ -296,6 +298,7 @@ class PlanningBaselineExperienceTest extends TestCase
 
                 $this->assertSame('Read four pages', $copy->title);
                 $this->assertSame('Study', data_get($copy->metadata, 'category'));
+                $this->assertSame(PlanAttentionMode::Exclusive, $copy->attention_mode);
                 $this->assertSame($source->uuid, data_get($copy->metadata, 'replicated_from_plan_uuid'));
                 $this->assertSame($occurrence->uuid, data_get($copy->metadata, 'replicated_from_occurrence_uuid'));
                 $this->assertSame(PlanScheduleFrequency::Once, $rule->frequency);
@@ -515,6 +518,171 @@ class PlanningBaselineExperienceTest extends TestCase
             $this->assertSame('2026-10-01', $activeRule->starts_on->format('Y-m-d'));
             $this->assertSame('18:00:00', $activeRule->start_time);
             $this->assertSame(60, $activeRule->duration_minutes);
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_full_focus_plans_cannot_overlap_but_background_plans_can(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 06:00:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+
+            Livewire::actingAs($actor->user)
+                ->test(BasicCreate::class)
+                ->set('title', 'Focused study')
+                ->set('timingMode', 'fixed')
+                ->set('attentionMode', 'exclusive')
+                ->set('date', '2026-09-29')
+                ->set('startTime', '07:00')
+                ->set('endTime', '07:30')
+                ->call('save')
+                ->assertHasNoErrors();
+
+            Livewire::actingAs($actor->user)
+                ->test(BasicCreate::class)
+                ->set('title', 'Second focused task')
+                ->set('timingMode', 'fixed')
+                ->set('attentionMode', 'exclusive')
+                ->set('date', '2026-09-29')
+                ->set('startTime', '07:15')
+                ->set('endTime', '07:45')
+                ->call('save')
+                ->assertHasErrors(['startTime']);
+
+            Livewire::actingAs($actor->user)
+                ->test(BasicCreate::class)
+                ->set('title', 'English audio')
+                ->set('timingMode', 'fixed')
+                ->set('attentionMode', 'background')
+                ->set('date', '2026-09-29')
+                ->set('startTime', '07:15')
+                ->set('endTime', '07:45')
+                ->call('save')
+                ->assertHasNoErrors();
+
+            $plans = Plan::query()->orderBy('id')->get();
+
+            $this->assertCount(2, $plans);
+            $this->assertSame(PlanAttentionMode::Exclusive, $plans[0]->attention_mode);
+            $this->assertSame(PlanAttentionMode::Background, $plans[1]->attention_mode);
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_fractal_calendar_marks_every_slot_touched_by_a_plan_interval(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 06:00:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $plan = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                '07:00 focus block',
+                timezone: 'UTC',
+                metadata: ['planning_studio' => 'baseline'],
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $plan,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-29',
+                '07:00',
+                30,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            $calendar = Livewire::actingAs($actor->user)
+                ->test(PlannerIndex::class)
+                ->set('view', 'calendar')
+                ->call('showHour', '2026-09-29', 7)
+                ->call('setSlotMinutes', 15);
+
+            $calendar
+                ->call('selectSlot', 0)
+                ->assertSee('07:00 focus block')
+                ->call('selectSlot', 15)
+                ->assertSee('07:00 focus block')
+                ->call('selectSlot', 30)
+                ->assertDontSee('07:00 focus block');
+
+            $calendar
+                ->call('setSlotMinutes', 1)
+                ->call('selectSlot', 29)
+                ->assertSee('07:00 focus block')
+                ->call('selectSlot', 30)
+                ->assertDontSee('07:00 focus block');
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_calendar_visual_map_can_color_by_repeated_plan_category_or_attention(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-28 06:00:00 UTC');
+
+        try {
+            $actor = Actor::factory()->create();
+            $actor->user->forceFill(['timezone' => 'UTC'])->save();
+            $context = app(EnsurePersonalContext::class)->execute($actor->user);
+
+            $source = app(CreatePlan::class)->execute(
+                $context,
+                $actor->user,
+                'Morning English',
+                timezone: 'UTC',
+                metadata: ['planning_studio' => 'baseline', 'category' => 'Study'],
+                attentionMode: PlanAttentionMode::Background,
+            );
+
+            app(CreatePlanScheduleRule::class)->execute(
+                $source,
+                $actor->user,
+                PlanScheduleFrequency::Once,
+                '2026-09-29',
+                '07:00',
+                30,
+                timingMode: PlanTimingMode::Fixed,
+            );
+
+            $occurrence = $source->occurrences()->sole();
+
+            Livewire::actingAs($actor->user)
+                ->test(RepeatWindow::class)
+                ->set('sourceUuid', $occurrence->uuid)
+                ->set('repeatMode', 'next_days')
+                ->set('repeatCount', 3)
+                ->call('apply')
+                ->assertHasNoErrors();
+
+            $copies = Plan::query()->whereKeyNot($source->id)->get();
+
+            foreach ($copies as $copy) {
+                $this->assertSame($source->uuid, data_get($copy->metadata, 'replicated_from_plan_uuid'));
+                $this->assertSame(PlanAttentionMode::Background, $copy->attention_mode);
+            }
+
+            Livewire::actingAs($actor->user)
+                ->test(PlannerIndex::class)
+                ->set('view', 'calendar')
+                ->set('calendarLevel', 'month')
+                ->set('month', '2026-09-01')
+                ->set('calendarCellMode', 'map')
+                ->set('calendarColorBy', 'plan')
+                ->assertSee('Morning English')
+                ->set('calendarColorBy', 'category')
+                ->assertSee('Study')
+                ->set('calendarColorBy', 'attention')
+                ->assertSee(__('planning_baseline.attention.background'));
         } finally {
             CarbonImmutable::setTestNow();
         }
