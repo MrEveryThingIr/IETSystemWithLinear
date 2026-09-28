@@ -77,16 +77,42 @@ final class IetWallet
 
     public function availableMinor(User $user): int
     {
-        $wallet = $this->ensure($user);
+        $ledger = $this->existingLedger($user);
+        if (! $ledger instanceof Ledger) {
+            return 0;
+        }
 
-        return $this->accountBalanceMinor($wallet['cash']);
+        $cash = $ledger->accounts()->where('system_key', 'cash')->first();
+
+        return $cash instanceof Account ? $this->accountBalanceMinor($cash) : 0;
     }
 
     public function reservedMinor(User $user): int
     {
-        $wallet = $this->ensure($user);
+        $ledger = $this->existingLedger($user);
+        if (! $ledger instanceof Ledger) {
+            return 0;
+        }
 
-        return $this->accountBalanceMinor($wallet['settlement_reserve']);
+        $reserved = $ledger->accounts()->where('system_key', 'iet_settlement_reserve')->first();
+
+        return $reserved instanceof Account ? $this->accountBalanceMinor($reserved) : 0;
+    }
+
+    private function existingLedger(User $user): ?Ledger
+    {
+        $actorId = $user->actor?->id
+            ?? User::query()->with('actor')->find($user->id)?->actor?->id;
+
+        if (! is_int($actorId)) {
+            return null;
+        }
+
+        return Ledger::query()
+            ->where('key', 'main')
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', 'IET'))
+            ->whereHas('context.personalBinding', fn ($query) => $query->where('actor_id', $actorId))
+            ->first();
     }
 
     public function accountBalanceMinor(Account $account): int
