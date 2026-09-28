@@ -107,7 +107,7 @@ class Index extends Component
     ): void {
         $data = $this->validate([
             'newUsdPerIet' => ['required', 'string', 'max:32'],
-            'valuationRationale' => ['nullable', 'string', 'max:4000'],
+            'valuationRationale' => ['required', 'string', 'max:4000'],
         ]);
 
         $publish->execute(
