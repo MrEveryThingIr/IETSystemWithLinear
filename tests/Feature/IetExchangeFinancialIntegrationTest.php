@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\AccountType;
+use App\Actions\Accounting\CreateLedgerAccount;
+use App\Actions\Accounting\PostJournalEntry;
 use App\Actions\Commitments\CreateCommitment;
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\CreateDirectContract;
@@ -262,6 +265,84 @@ class IetExchangeFinancialIntegrationTest extends TestCase
             CarbonImmutable::setTestNow();
         }
     }
+
+    public function test_pending_cashout_reserves_iet_against_new_internal_charges(): void
+    {
+        $actor = Actor::factory()->create();
+        $admin = Actor::factory()->create();
+
+        PlatformAccessGrant::factory()->create([
+            'user_id' => $admin->user->id,
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        $deposit = app(CreateIetExchangeRequest::class)->execute(
+            $actor->user,
+            IetExchangeDirection::Deposit,
+            350,
+        );
+        app(ReviewIetExchangeRequest::class)->confirm($deposit, $admin->user);
+
+        app(CreateIetExchangeRequest::class)->execute(
+            $actor->user,
+            IetExchangeDirection::Cashout,
+            300,
+        );
+
+        try {
+            app(ChargeIetForUsdFlow::class)->execute(
+                $actor->user,
+                100,
+                'reserved-balance-check',
+                (string) Str::uuid(),
+            );
+
+            $this->fail('Pending cash-out reservation was ignored by an internal charge.');
+        } catch (HttpException $exception) {
+            $this->assertSame(422, $exception->getStatusCode());
+        }
+
+        $wallet = app(EnsureIetWallet::class)->execute($actor->user);
+
+        $this->assertSame(
+            350_000_000,
+            app(AccountingSummary::class)->accountBalanceMinor($wallet['wallet']),
+        );
+    }
+
+    public function test_generic_accounting_cannot_mint_or_mutate_iet_wallet(): void
+    {
+        $actor = Actor::factory()->create();
+        $side = app(EnsureIetWallet::class)->execute($actor->user);
+
+        $income = app(CreateLedgerAccount::class)->execute(
+            $side['ledger'],
+            $actor->user,
+            'Attempted manual income',
+            AccountType::Income,
+        );
+
+        try {
+            app(PostJournalEntry::class)->execute(
+                $side['ledger'],
+                $actor->user,
+                JournalEntryKind::Income,
+                now()->toDateString(),
+                'Attempted manual IET mint',
+                [
+                    ['account' => $side['wallet'], 'debit_minor' => 10],
+                    ['account' => $income, 'credit_minor' => 10],
+                ],
+            );
+
+            $this->fail('Generic accounting posted directly into the IET wallet.');
+        } catch (HttpException $exception) {
+            $this->assertSame(422, $exception->getStatusCode());
+        }
+
+        $this->assertDatabaseCount('journal_entries', 0);
+    }
+
 
     /**
      * @return array{0: Actor, 1: Actor, 2: Contract, 3: Commitment}
