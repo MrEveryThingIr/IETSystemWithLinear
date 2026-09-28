@@ -23,7 +23,7 @@ return [
     ],
     'identity' => [
         'title' => 'Profile & system preferences',
-        'help' => 'Keep only the account details and system-wide preferences that shape your experience.'
+        'help' => 'Keep only the account details and system-wide preferences that shape your experience.',
         'username' => 'Username',
         'email' => 'Email',
         'display_name' => 'Display name',
