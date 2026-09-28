@@ -31,7 +31,7 @@ The stored quote is exact decimal data. Pricing uses integer/rational arithmetic
 - exponent: 0 in this baseline
 - wallet: the Personal IET Ledger's system cash account
 
-A user cannot manually mint IET by recording Income, Opening Balance, arbitrary Expense/Transfer corrections, or generic reversals.
+A user cannot manually mint or mutate IET by recording Income, Opening Balance, arbitrary Expense/Transfer corrections, generic reversals, or by calling the generic journal kernel with an unapproved entry kind/source. The journal kernel allow-lists the dedicated IET posting paths.
 
 Dedicated posting paths are:
 
@@ -85,9 +85,10 @@ Current modes:
 
 1. user requests a USD external amount;
 2. quote is snapshotted;
-3. required IET is reserved conceptually by pending cash-out requests;
-4. confirmation rechecks actual wallet funding;
-5. confirmed cash-out posts IET out of the wallet.
+3. required IET is reserved from the user's available internal-spend balance while the cash-out is pending;
+4. internal charges and new IET settlements respect that reservation;
+5. confirmation rechecks actual wallet funding;
+6. confirmed cash-out posts IET out of the wallet.
 
 No external money is actually moved by this baseline.
 
