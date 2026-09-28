@@ -11,7 +11,7 @@ use App\Models\Ledger;
 use App\Models\Settlement;
 use App\Models\User;
 use App\SettlementStatus;
-use App\Support\AccountingSummary;
+use App\Support\IetAvailableBalance;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -19,7 +19,7 @@ class RespondToSettlement
 {
     public function __construct(
         private readonly EnsureIetWallet $ietWallets,
-        private readonly AccountingSummary $accountingSummary,
+        private readonly IetAvailableBalance $available,
         private readonly PostFinancialObligationAccounting $postObligationAccounting,
         private readonly PostSettlementAccounting $postSettlementAccounting,
     ) {}
@@ -104,7 +104,7 @@ class RespondToSettlement
                         ->get();
 
                     abort_if(
-                        $this->accountingSummary->accountBalanceMinor($debtorSide['wallet']) < (int) $locked->amount_minor,
+                        $this->available->forUser($debtorUser, $debtorSide['wallet']) < (int) $locked->amount_minor,
                         422,
                         'Debtor has insufficient IET balance for this Settlement.',
                     );
