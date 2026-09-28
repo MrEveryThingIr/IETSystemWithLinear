@@ -20,16 +20,9 @@
 }
 
 
-html[lang='fa'] body,
-html[lang='fa-IR'] body,
-html[lang='ar'] body {
-    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Arial, sans-serif;
+body {
     font-feature-settings: 'kern' 1;
     text-rendering: optimizeLegibility;
-}
-
-html[lang='en'] body {
-    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
 
 ::selection {
