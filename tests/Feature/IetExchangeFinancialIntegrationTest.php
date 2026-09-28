@@ -52,6 +52,29 @@ class IetExchangeFinancialIntegrationTest extends TestCase
         $this->assertSame(100_000_000, $pricing->ietForUsdMinor(100, $quote));
     }
 
+    public function test_quote_precision_supports_eighteen_decimal_places_without_float_math(): void
+    {
+        $admin = Actor::factory()->create();
+
+        PlatformAccessGrant::factory()->create([
+            'user_id' => $admin->user->id,
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        $quote = app(PublishIetValuationQuote::class)->execute(
+            $admin->user,
+            '0.000000010000000001',
+            'Precision proof.',
+            ['successful_flow_count' => 1],
+        );
+
+        $pricing = app(IetPricing::class);
+
+        $this->assertSame('0.000000010000000001', (string) $quote->usd_per_iet);
+        $this->assertSame('0.0000010000000001', $pricing->percentOfUsd($quote));
+        $this->assertSame(100_000_000, $pricing->ietForUsdMinor(100, $quote));
+    }
+
     public function test_manual_deposit_internal_charge_and_cashout_reconcile_to_one_iet_wallet(): void
     {
         $userActor = Actor::factory()->create();
