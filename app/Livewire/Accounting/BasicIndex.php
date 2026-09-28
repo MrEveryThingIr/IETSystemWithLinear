@@ -84,7 +84,11 @@ class BasicIndex extends Component
         $this->date = $today;
         $this->intentionDate = $today;
 
-        $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
+        $ledgers = $context->ledgers()
+            ->with('monetaryUnit')
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
+            ->orderBy('id')
+            ->get();
 
         if ($this->ledgerUuid !== '') {
             abort_unless($ledgers->contains('uuid', $this->ledgerUuid), 404);
@@ -107,7 +111,7 @@ class BasicIndex extends Component
     public function createLedger(CreatePersonalLedger $create): void
     {
         $data = $this->validate([
-            'unitCode' => ['required', 'string', 'max:12'],
+            'unitCode' => ['required', 'string', 'max:12', 'not_in:IET'],
             'ledgerName' => ['nullable', 'string', 'max:180'],
         ]);
 
@@ -357,7 +361,7 @@ class BasicIndex extends Component
             'assetAccounts' => $assetAccounts,
             'rows' => $rows,
             'intentions' => $intentions,
-            'unitCatalog' => MonetaryUnitCatalog::all(),
+            'unitCatalog' => collect(MonetaryUnitCatalog::all())->except('IET')->all(),
             'ietQuote' => $ietQuote,
             'ietBalance' => $ietBalance,
             'obligationRows' => $obligationRows,
