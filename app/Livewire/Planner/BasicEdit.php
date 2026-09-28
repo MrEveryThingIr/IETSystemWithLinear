@@ -14,7 +14,6 @@ use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanStatus;
 use App\PlanTimingMode;
-use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +94,7 @@ class BasicEdit extends Component
             __('planning_baseline.validation.finish_running_before_edit'),
         );
 
-        $timezone = TemporalPreferences::timezoneFor($user);
+        $timezone = $plan->timezone;
         $mode = PlanTimingMode::from($data['timingMode']);
         [$startTime, $duration] = $mode === PlanTimingMode::FlexibleDay
             ? ['00:00', 1440]
