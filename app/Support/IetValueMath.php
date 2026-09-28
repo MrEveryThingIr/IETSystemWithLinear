@@ -95,6 +95,11 @@ final class IetValueMath
         );
     }
 
+    public static function formatIetMinor(int $ietMinor): string
+    {
+        return self::trimDecimal(MoneyAmount::format($ietMinor, 6));
+    }
+
     private static function trimDecimal(string $value): string
     {
         if (! str_contains($value, '.')) {
