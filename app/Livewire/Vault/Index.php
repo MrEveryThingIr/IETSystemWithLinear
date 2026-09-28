@@ -36,7 +36,7 @@ class Index extends Component
             'title' => ['required', 'string', 'max:180'],
             'identifier' => ['nullable', 'string', 'max:1000'],
             'secret' => ['nullable', 'string', 'max:10000'],
-            'url' => ['nullable', 'url', 'max:1000'],
+            'url' => ['nullable', 'url:http,https', 'max:1000'],
             'notes' => ['nullable', 'string', 'max:10000'],
         ]);
 
