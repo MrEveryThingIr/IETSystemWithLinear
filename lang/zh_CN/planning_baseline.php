@@ -9,7 +9,7 @@ return [
     'navigation' => [
         'workspace' => 'Workspace',
         'planning' => 'Planning',
-        'money' => '资金',
+        'finance' => '财务',
         'vault' => '保险库',
         'identity' => 'Profile',
         'invitations' => 'Invitations',

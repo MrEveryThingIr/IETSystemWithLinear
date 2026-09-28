@@ -6,6 +6,7 @@ use App\FinancialObligationEventType;
 use App\Models\Actor;
 use App\Models\FinancialObligation;
 use App\Models\FinancialObligationEvent;
+use App\Models\IetValuationSnapshot;
 use App\Models\Settlement;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -23,6 +24,8 @@ class ProposeSettlement
         ?string $method = null,
         ?string $reference = null,
         ?string $note = null,
+        ?IetValuationSnapshot $ietValuation = null,
+        ?int $ietAmountMinor = null,
     ): Settlement {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('proposeSettlement', $obligation);
@@ -37,6 +40,8 @@ class ProposeSettlement
         abort_if($reference !== null && mb_strlen($reference) > 255, 422, 'Settlement reference is too long.');
         abort_if(mb_strlen($note) > 5000, 422, 'Settlement note is too long.');
         abort_if($paidAt->isFuture(), 422, 'Settlement paid time cannot be in the future.');
+        abort_if(($ietValuation === null) !== ($ietAmountMinor === null), 422, 'IET valuation and amount must be supplied together.');
+        abort_if($ietAmountMinor !== null && $ietAmountMinor <= 0, 422, 'IET settlement amount must be positive.');
 
         return DB::transaction(function () use (
             $obligation,
@@ -46,6 +51,8 @@ class ProposeSettlement
             $method,
             $reference,
             $note,
+            $ietValuation,
+            $ietAmountMinor,
         ): Settlement {
             $locked = FinancialObligation::query()
                 ->with(['fulfillment', 'settlements'])
@@ -54,7 +61,7 @@ class ProposeSettlement
 
             Gate::forUser($current)->authorize('proposeSettlement', $locked);
             abort_if(
-                $amountMinor > $locked->outstandingMinor(),
+                $amountMinor > $locked->availableToSettleMinor(),
                 422,
                 'Settlement amount exceeds the currently outstanding obligation amount.',
             );
@@ -64,6 +71,8 @@ class ProposeSettlement
             $settlement = Settlement::query()->create([
                 'financial_obligation_id' => $locked->id,
                 'amount_minor' => $amountMinor,
+                'iet_valuation_snapshot_id' => $ietValuation?->id,
+                'iet_amount_minor' => $ietAmountMinor,
                 'paid_at' => $paidAt->utc(),
                 'method' => $method !== '' ? $method : null,
                 'reference' => $reference !== '' ? $reference : null,
@@ -80,6 +89,8 @@ class ProposeSettlement
                     'amount_minor' => $amountMinor,
                     'paid_at' => $settlement->paid_at->toISOString(),
                     'reference' => $settlement->reference,
+                    'iet_valuation_snapshot_uuid' => $ietValuation?->uuid,
+                    'iet_amount_minor' => $ietAmountMinor,
                 ],
             ]);
 

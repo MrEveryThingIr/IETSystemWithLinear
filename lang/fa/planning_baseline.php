@@ -7,7 +7,7 @@ return [
     'navigation' => [
         'workspace' => 'فضای کار',
         'planning' => 'برنامه‌ریزی',
-        'money' => 'پول',
+        'finance' => 'مالی',
         'vault' => 'گاوصندوق',
         'identity' => 'پروفایل',
         'invitations' => 'دعوت‌ها',

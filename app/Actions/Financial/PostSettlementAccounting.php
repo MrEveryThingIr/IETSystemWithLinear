@@ -23,6 +23,11 @@ class PostSettlementAccounting
         Gate::forUser($user)->authorize('postAccounting', $settlement);
 
         $settlement->loadMissing('obligation');
+        abort_if(
+            $settlement->iet_amount_minor !== null,
+            422,
+            'IET Settlement wallet accounting is posted automatically by the internal settlement rail.',
+        );
         $obligation = $settlement->obligation;
         $side = $this->accounts->execute($obligation, $user);
         $actor = $side['actor'];
