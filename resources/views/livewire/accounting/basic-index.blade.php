@@ -426,17 +426,17 @@
                             </td>
                             <td class="px-4 py-3 font-medium" dir="auto">{{ '@'.$row['counterparty'] }}</td>
                             <td class="whitespace-nowrap px-4 py-3 text-end tabular-nums">
-                                {{ AppSupportMoneyAmount::format((int) $obligation->amount_minor, (int) $unit->exponent) }}
+                                {{ \App\Support\MoneyAmount::format((int) $obligation->amount_minor, (int) $unit->exponent) }}
                                 {{ $unit->code }}
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-end font-semibold tabular-nums">
-                                {{ AppSupportMoneyAmount::format((int) $row['outstanding_minor'], (int) $unit->exponent) }}
+                                {{ \App\Support\MoneyAmount::format((int) $row['outstanding_minor'], (int) $unit->exponent) }}
                                 {{ $unit->code }}
                             </td>
                             <td class="px-4 py-3 text-xs text-zinc-500">
                                 @if ($priced)
                                     <span class="whitespace-nowrap">
-                                        &#36;{{ AppSupportMoneyAmount::format((int) $priced->reference_usd_amount_minor, 2) }}
+                                        &#36;{{ \App\Support\MoneyAmount::format((int) $priced->reference_usd_amount_minor, 2) }}
                                     </span>
                                     <span class="ms-1" dir="ltr">
                                         @ {{ rtrim(rtrim((string) $priced->valuationQuote->usd_per_iet, '0'), '.') }}
