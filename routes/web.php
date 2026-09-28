@@ -62,6 +62,8 @@ use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Journeys\Index as JourneyIndex;
 use App\Livewire\Notifications\Index as NotificationIndex;
+use App\Livewire\Planner\BasicCreate as PlannerBasicCreate;
+use App\Livewire\Planner\BasicEdit as PlannerBasicEdit;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Planner\Show as PlannerShow;
@@ -132,7 +134,10 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->can('view', 'obligation')
         ->name('financial-obligations.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
-    Route::livewire('/planner/create', PlannerCreate::class)->name('planner.create');
+    Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
+    if (config('release.profile') === 'planning_baseline') {
+        Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
+    }
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
     Route::livewire('/accounting', AccountingIndex::class)->name('accounting.index');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
