@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\PlanScheduleFrequency;
+use App\PlanTimingMode;
 use App\PlanScheduleRuleStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,7 @@ use LogicException;
     'plan_id',
     'created_by_actor_id',
     'frequency',
+    'timing_mode',
     'interval',
     'starts_on',
     'start_time',
@@ -37,6 +39,7 @@ class PlanScheduleRule extends Model
     private bool $applyingLifecycle = false;
 
     protected $attributes = [
+        'timing_mode' => PlanTimingMode::Fixed->value,
         'interval' => 1,
         'duration_minutes' => 60,
         'window_before_minutes' => 0,
@@ -56,6 +59,7 @@ class PlanScheduleRule extends Model
                 'plan_id',
                 'created_by_actor_id',
                 'frequency',
+                'timing_mode',
                 'interval',
                 'starts_on',
                 'start_time',
@@ -130,6 +134,7 @@ class PlanScheduleRule extends Model
     {
         return [
             'frequency' => PlanScheduleFrequency::class,
+            'timing_mode' => PlanTimingMode::class,
             'status' => PlanScheduleRuleStatus::class,
             'starts_on' => 'immutable_date',
             'ends_on' => 'immutable_date',
