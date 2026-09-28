@@ -2,14 +2,13 @@
 
 namespace App\Actions\Exchange;
 
+use App\Actions\Accounting\PostJournalEntry;
 use App\IetExchangeDirection;
 use App\JournalEntryKind;
 use App\Models\IetExchangeRequest;
-use App\Models\JournalEntry;
 use App\Models\Ledger;
 use App\Models\User;
 use App\PlatformCapability;
-use App\Actions\Accounting\PostJournalEntry;
 use App\Support\AccountingSummary;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +24,10 @@ class ReviewIetExchangeRequest
     {
         abort_unless($reviewer->hasPlatformCapability(PlatformCapability::ManageExchange), 403);
 
-        return DB::transaction(function () use ($request, $reviewer): IetExchangeRequest {
+        return DB::transaction(function () use (
+            $request,
+            $reviewer,
+        ): IetExchangeRequest {
             $locked = IetExchangeRequest::query()
                 ->with(['user', 'valuationQuote'])
                 ->lockForUpdate()
@@ -82,7 +84,11 @@ class ReviewIetExchangeRequest
     {
         abort_unless($reviewer->hasPlatformCapability(PlatformCapability::ManageExchange), 403);
 
-        return DB::transaction(function () use ($request, $reviewer, $note): IetExchangeRequest {
+        return DB::transaction(function () use (
+            $request,
+            $reviewer,
+            $note,
+        ): IetExchangeRequest {
             $locked = IetExchangeRequest::query()->lockForUpdate()->findOrFail($request->id);
             $locked->reject($reviewer, $note);
 
