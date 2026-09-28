@@ -17,9 +17,9 @@ return [
         'workspace_title' => 'Open your workspace',
         'workspace_help' => 'See today, what is coming next, and your calendar without unrelated modules.',
         'workspace_button' => 'Open workspace',
-        'identity_title' => 'Identity & time',
-        'identity_help' => 'Set your display name, timezone, and preferred calendar.',
-        'identity_button' => 'Review settings',
+        'identity_title' => 'Profile & settings',
+        'identity_help' => 'Set your image, display name, language, timezone, calendar, and date/time display.',
+        'identity_button' => 'Open profile',
     ],
     'identity' => [
         'title' => 'Profile & system preferences',
