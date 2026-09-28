@@ -50,6 +50,17 @@ return new class extends Migration
             $table->index(['status', 'id']);
         });
 
+        Schema::create('iet_priced_financial_obligations', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('financial_obligation_id')->unique()
+                ->constrained('financial_obligations')->restrictOnDelete();
+            $table->unsignedBigInteger('reference_usd_amount_minor');
+            $table->foreignId('valuation_quote_id')
+                ->constrained('iet_valuation_quotes')->restrictOnDelete();
+            $table->unsignedBigInteger('iet_amount');
+            $table->timestamps();
+        });
+
         Schema::create('iet_internal_charges', function (Blueprint $table): void {
             $table->id();
             $table->uuid('uuid')->unique();
@@ -86,6 +97,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('iet_internal_charges');
+        Schema::dropIfExists('iet_priced_financial_obligations');
         Schema::dropIfExists('iet_exchange_requests');
         Schema::dropIfExists('iet_valuation_quotes');
     }
