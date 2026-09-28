@@ -31,8 +31,17 @@ class CreateIetExchangeRequest
         if ($direction === IetExchangeDirection::Cashout) {
             $wallet = $this->wallets->execute($user);
             $balance = $this->summary->accountBalanceMinor($wallet['wallet']);
+            $reserved = (int) IetExchangeRequest::query()
+                ->where('user_id', $user->id)
+                ->where('direction', IetExchangeDirection::Cashout->value)
+                ->where('status', 'pending')
+                ->sum('iet_amount');
 
-            abort_if($balance < $ietAmount, 422, 'Insufficient IET balance for this cash-out request.');
+            abort_if(
+                max(0, $balance - $reserved) < $ietAmount,
+                422,
+                'Insufficient available IET balance for this cash-out request.',
+            );
         }
 
         return IetExchangeRequest::query()->create([
