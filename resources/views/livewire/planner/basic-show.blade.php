@@ -4,20 +4,7 @@
         $occurrences = $plan->occurrences->sortByDesc('scheduled_start_at')->values();
     @endphp
 
-    <x-app.page-header :title="$plan->title">
-        <x-slot:actions>
-            <div class="flex flex-wrap gap-2">
-                @if ($canManage && $plan->status === \App\PlanStatus::Active)
-                    <flux:button :href="route('planner.edit', $plan)" variant="ghost" icon="pencil-square">
-                        {{ __('planning_baseline.show.edit') }}
-                    </flux:button>
-                @endif
-                <flux:button :href="route('planner.index', ['view' => 'calendar'])" variant="ghost" icon="calendar-days">
-                    {{ __('planning_baseline.workspace.calendar') }}
-                </flux:button>
-            </div>
-        </x-slot:actions>
-    </x-app.page-header>
+    <x-app.page-header :title="$plan->title" />
 
 
     @if ($repeatMessage !== '')
@@ -31,14 +18,25 @@
             ->first(fn ($occurrence) => $occurrence->status === \App\PlanOccurrenceStatus::Completed);
     @endphp
 
-    @if ($canManage && $completedOccurrence)
-        <x-app.tools-bar>
+    <x-app.tools-bar>
+        @if ($canManage && $plan->status === \App\PlanStatus::Active)
+            <flux:button :href="route('planner.edit', $plan)" size="sm" variant="ghost" icon="pencil-square">
+                {{ __('planning_baseline.show.edit') }}
+            </flux:button>
+        @endif
+
+        <flux:button :href="route('planner.index', ['view' => 'calendar'])" size="sm" variant="ghost" icon="calendar-days">
+            {{ __('planning_baseline.workspace.calendar') }}
+        </flux:button>
+
+        @if ($canManage && $completedOccurrence)
             <flux:button wire:click="openRepeatTool({{ $completedOccurrence->id }})" size="sm" variant="ghost">
                 {{ __('planning_baseline.tools.repeat.button') }}
             </flux:button>
-        </x-app.tools-bar>
+        @endif
+    </x-app.tools-bar>
 
-        @if ($repeatToolOpen)
+    @if ($canManage && $completedOccurrence && $repeatToolOpen)
             <flux:card class="space-y-5">
                 <div>
                     <div class="font-medium">{{ __('planning_baseline.tools.repeat.title') }}</div>
@@ -131,7 +129,6 @@
                     </flux:button>
                 </div>
             </flux:card>
-        @endif
     @endif
 
     @if ($category !== '' || $plan->description)
