@@ -2,20 +2,20 @@
 
 namespace Tests\Feature;
 
-use App\Actions\Contexts\EnsureGroupSpaceContext;
+use App\Actions\Contexts\CreateContextContent;
 use App\Actions\Contexts\EnsurePersonalContext;
 use App\Actions\Planner\AttachPlanOccurrenceEvidence;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
+use App\Actions\Relationships\CreateRelationship;
+use App\Actions\Relationships\RespondToRelationship;
 use App\Livewire\Planner\Show as PlannerShow;
 use App\Models\Actor;
 use App\Models\Asset;
+use App\Models\Concept;
 use App\Models\ContentEvidenceReference;
-use App\Models\Group;
-use App\Models\GroupMembership;
-use App\Models\GroupSpace;
-use App\Models\SpaceContent;
-use App\Models\SpaceContentRevision;
+use App\Models\SpaceContentDefinition;
+use App\Models\SpaceContentDefinitionVersion;
 use App\PlanScheduleFrequency;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -68,27 +68,19 @@ class PlannerEvidenceUploadTest extends TestCase
     {
         $owner = Actor::factory()->create();
         $participant = Actor::factory()->create();
-        $group = Group::factory()->create(['created_by_actor_id' => $owner->id]);
 
-        GroupMembership::factory()->create([
-            'group_id' => $group->id,
-            'actor_id' => $owner->id,
-            'role' => 'owner',
-            'status' => 'active',
-        ]);
-        GroupMembership::factory()->create([
-            'group_id' => $group->id,
-            'actor_id' => $participant->id,
-            'role' => 'member',
-            'status' => 'active',
-        ]);
-
-        $space = GroupSpace::factory()->create([
-            'group_id' => $group->id,
-            'created_by_actor_id' => $owner->id,
-            'access_mode' => 'group',
-        ]);
-        $context = app(EnsureGroupSpaceContext::class)->execute($space);
+        $relationship = app(CreateRelationship::class)->execute(
+            $owner->user,
+            Concept::factory()->create(),
+            'owner',
+            [['actor' => $participant, 'role' => 'participant']],
+        );
+        $relationship = app(RespondToRelationship::class)->execute(
+            $relationship,
+            $participant->user,
+            true,
+        );
+        $context = $relationship->contextBinding->context;
 
         $plan = app(CreatePlan::class)->execute(
             $context,
@@ -107,16 +99,26 @@ class PlannerEvidenceUploadTest extends TestCase
         );
         $occurrence = $rule->occurrences()->sole();
 
-        $content = SpaceContent::factory()->create([
-            'group_space_id' => $space->id,
+        $definition = SpaceContentDefinition::factory()->create([
             'context_id' => $context->id,
-            'author_actor_id' => $owner->id,
-            'status' => 'draft',
+            'group_space_id' => null,
+            'created_by_actor_id' => $owner->id,
+            'status' => 'active',
         ]);
-        $revision = SpaceContentRevision::factory()->create([
-            'space_content_id' => $content->id,
+        SpaceContentDefinitionVersion::factory()->published()->create([
+            'space_content_definition_id' => $definition->id,
             'created_by_actor_id' => $owner->id,
         ]);
+        $content = app(CreateContextContent::class)->execute(
+            $context,
+            $definition,
+            $owner->user,
+            'Owner private draft',
+            ['summary' => 'Private evidence'],
+        );
+        $revision = $content->draftRevisionRecord();
+        $this->assertNotNull($revision);
+
         $reference = ContentEvidenceReference::factory()->create([
             'context_id' => $context->id,
             'space_content_id' => $content->id,
@@ -131,5 +133,4 @@ class PlannerEvidenceUploadTest extends TestCase
             $participant->user,
             evidenceReferenceIds: [$reference->id],
         );
-    }
-}
+    }}
