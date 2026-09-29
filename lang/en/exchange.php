@@ -58,6 +58,17 @@ return [
     'history_title' => 'Valuation history',
     'history_help' => 'Immutable quote epochs preserve what every past conversion meant.',
     'no_rationale' => 'No rationale recorded.',
+    'treasury' => [
+        'title' => 'IET treasury',
+        'help' => 'Read-only system accounting. Exchange reserve and future service-advance receivables are backing assets; net issuance records IET created minus IET retired.',
+        'metrics' => [
+            'exchange_reserve' => 'Exchange reserve equivalent',
+            'service_advance_receivable' => 'Service advances receivable',
+            'settlement_clearing' => 'Settlement clearing',
+            'net_issuance' => 'Net IET issuance',
+            'fee_income' => 'System fee income',
+        ],
+    ],
     'market' => [
         'title' => 'Reference rates',
         'help' => 'Latest effective quotes across monetary units, crypto assets, commodities, indexes, asset classes and service units.',
