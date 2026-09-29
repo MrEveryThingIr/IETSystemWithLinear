@@ -5,6 +5,12 @@ return [
     'description' => '经过整理且不可变的来源记录，用于把设计对话和决定关联到路线图阶段、仓库文档、提交和系统版本。',
     'capture_heading' => '记录一个来源',
     'capture_help' => '保存经过审阅的摘要和引用。除非明确希望把私人聊天作为长期项目证据，否则不要粘贴完整私人聊天记录。',
+    'source_types' => [
+        'chatgpt' => 'ChatGPT',
+        'design_session' => '设计会话',
+        'external_discussion' => '外部讨论',
+        'manual_note' => '手动备注',
+    ],
     'source_type' => '来源类型',
     'source_url' => '来源链接',
     'origin_title' => '标题',
