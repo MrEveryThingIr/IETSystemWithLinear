@@ -72,6 +72,11 @@ class Index extends Component
         $this->date = $today;
         $this->periodDate = $today;
 
+        $defaultUnit = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
+        $this->unitCode = array_key_exists($defaultUnit, MonetaryUnitCatalog::all())
+            ? $defaultUnit
+            : (string) array_key_first(MonetaryUnitCatalog::all());
+
         $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
 
         if ($this->ledgerUuid !== '') {
