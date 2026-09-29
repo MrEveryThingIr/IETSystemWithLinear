@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\PlatformAccessGrant;
+use App\Models\Relationship;
+use App\Models\RelationshipParticipant;
 use App\PlatformRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -62,14 +64,29 @@ class ReleaseExperienceTest extends TestCase
         config()->set('release.profile', 'full');
 
         $actor = Actor::factory()->create();
+        $counterparty = Actor::factory()->create();
         $user = $actor->user;
         $user->forceFill(['locale' => 'fa'])->save();
+
+        $relationship = Relationship::factory()->active()->create([
+            'created_by_actor_id' => $actor->id,
+        ]);
+        RelationshipParticipant::factory()->manager()->create([
+            'relationship_id' => $relationship->id,
+            'actor_id' => $actor->id,
+            'invited_by_actor_id' => $actor->id,
+        ]);
+        RelationshipParticipant::factory()->active()->create([
+            'relationship_id' => $relationship->id,
+            'actor_id' => $counterparty->id,
+            'invited_by_actor_id' => $actor->id,
+        ]);
 
         $faUi = require lang_path('fa/ui.php');
 
         $this->withoutVite()
             ->actingAs($user)
-            ->get(route('proposals.create'))
+            ->get(route('proposals.create', ['relationship' => $relationship->uuid]))
             ->assertOk()
             ->assertSee($faUi['common']['cancel'])
             ->assertDontSee('ui.actions.cancel');
