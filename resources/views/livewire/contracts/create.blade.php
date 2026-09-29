@@ -3,31 +3,11 @@
 
     <x-app.page-header :title="__('contracts.create.title')" :description="__('contracts.create.help')" />
 
-    @if ($proposal)
-        <flux:callout>
-            {{ __('contracts.create.proposal_source', ['title' => $proposal->title]) }}
-        </flux:callout>
-    @elseif ($relationship)
-        <flux:callout>
-            {{ __('contracts.create.relationship_source', ['title' => $relationship->title ?: 'REL-'.str_pad((string) $relationship->id, 6, '0', STR_PAD_LEFT)]) }}
-        </flux:callout>
-    @endif
+    <flux:callout>
+        {{ __('contracts.create.proposal_source', ['title' => $proposal->title]) }}
+    </flux:callout>
 
     <form wire:submit="save" class="space-y-6">
-        @if (! $proposal)
-            <flux:card class="space-y-4">
-                <flux:input wire:model="title" :label="__('contracts.create.contract_title')" maxlength="180" />
-                <flux:input wire:model="creatorRole" :label="__('contracts.create.creator_role')" maxlength="80" />
-                <flux:textarea wire:model="partyLines" :label="__('contracts.create.parties')" rows="6" />
-                <flux:text size="sm">{{ __('contracts.create.parties_help') }}</flux:text>
-            </flux:card>
-
-            <flux:card class="space-y-4">
-                <flux:textarea wire:model="summary" :label="__('contracts.create.summary')" rows="3" />
-                <flux:textarea wire:model="terms" :label="__('contracts.create.terms')" rows="12" />
-                <flux:textarea wire:model="notes" :label="__('contracts.create.notes')" rows="4" />
-            </flux:card>
-        @else
             <flux:card class="space-y-3">
                 <flux:heading size="lg">{{ $proposal->title }}</flux:heading>
                 <flux:text>{{ __('contracts.boundary') }}</flux:text>
@@ -39,8 +19,7 @@
                         </div>
                         <div class="mt-2 whitespace-pre-wrap" dir="auto">{{ $sourceVersion->termsRevision->payload['terms'] ?? '' }}</div>
                     </div>
-                @endif
-            </flux:card>
+                    </flux:card>
         @endif
 
         <flux:card class="space-y-5">
