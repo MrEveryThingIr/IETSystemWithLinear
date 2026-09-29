@@ -6,17 +6,13 @@ return [
     | Release experience profile
     |--------------------------------------------------------------------------
     |
-    | planning_baseline is the default experience-first assembly. It exposes
-    | only the system foundation (identity/auth/access invitation) plus the
-    | basic Planning Studio and its shared temporal/calendar surface.
+    | full is the unified-finalization default. It restores the mature
+    | integrated product surface while preserving the newer Planner, Calendar,
+    | Money, Exchange and Vault implementations already present in the tree.
     |
-    | Mature capabilities remain in the repository as source-library code and
-    | can be re-admitted deliberately. They are not part of this runtime until
-    | a later selective-assembly milestone accepts them.
-    |
-    | full keeps the historical integrated runtime available for regression
-    | tests and source-library verification.
+    | planning_baseline remains available explicitly for focused regression
+    | and browser comparison, but it is no longer the default product runtime.
     |
     */
-    'profile' => env('IET_RELEASE_PROFILE', 'planning_baseline'),
+    'profile' => env('IET_RELEASE_PROFILE', 'full'),
 ];
