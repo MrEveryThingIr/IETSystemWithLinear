@@ -1476,7 +1476,8 @@ Different currencies are not added together.
 
 Opening Today creates no Relationship, Proposal, Contract, Plan, Fulfillment, Settlement, Submission, JournalEntry or financial obligation.
 TEXT,
-                ],                [
+                ],
+                [
                     'title' => '27. AI Assistance and Development Origins',
                     'summary' => <<<'TEXT'
 AI in IET is an assistance layer over existing domain authority. It may converse, explain, or propose structured Content edits, but it does not gain permission to publish Content, approve work, accept agreements, move money, or mutate authoritative state merely because a model generated text.
