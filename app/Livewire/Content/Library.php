@@ -296,6 +296,7 @@ class Library extends Component
             ContextKind::Reference => __('library.context.reference', [
                 'key' => $context->referenceBinding->key ?? $context->uuid,
             ]),
+            ContextKind::System => 'System',
         };
     }
 
