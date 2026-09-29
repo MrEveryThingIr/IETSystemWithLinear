@@ -37,7 +37,7 @@ class SystemManualContentTest extends TestCase
         $first = app(EnsureSystemManualContent::class)->execute($user);
 
         $this->assertSame(ContextKind::Reference, $first['context']->kind);
-        $this->assertCount(26, $first['chapters']);
+        $this->assertCount(27, $first['chapters']);
         $this->assertTrue(Gate::forUser($reader->user)->allows('view', $first['context']));
         $this->assertTrue(Gate::forUser($reader->user)->allows('interactContent', $first['context']));
         $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $first['context']));
@@ -157,6 +157,19 @@ class SystemManualContentTest extends TestCase
         $this->assertSame(
             SystemManualContent::CHAPTER_TITLES['home-today'],
             app(SystemManualHelpMap::class)->chapterTitle('home-today'),
+        );
+
+        $aiChapter = $first['chapters']->first(
+            static fn ($content): bool => $content->activeRevisionRecord()?->title
+                === SystemManualContent::CHAPTER_TITLES['ai-assistance'],
+        );
+        $this->assertNotNull($aiChapter);
+        $this->assertSame('ai-assistance', app(SystemManualHelpMap::class)->topicForRoute('ai.chat'));
+        $this->assertSame('ai-assistance', app(SystemManualHelpMap::class)->topicForRoute('contexts.contents.ai'));
+        $this->assertSame('ai-assistance', app(SystemManualHelpMap::class)->topicForRoute('platform.development-origins'));
+        $this->assertSame(
+            SystemManualContent::CHAPTER_TITLES['ai-assistance'],
+            app(SystemManualHelpMap::class)->chapterTitle('ai-assistance'),
         );
 
         $this->actingAs($reader->user)
@@ -289,12 +302,22 @@ class SystemManualContentTest extends TestCase
                 ]).'#field-how_to_use',
             );
 
+        $this->actingAs($reader->user)
+            ->get(route('manual', ['topic' => 'ai-assistance']))
+            ->assertRedirect(
+                route('contexts.contents.show', [
+                    $first['context'],
+                    $aiChapter,
+                    'manual' => 1,
+                ]).'#field-how_to_use',
+            );
+
         $this->assertSame('published', $first['root']->status);
 
         $rootRevision = $first['root']->activeRevisionRecord();
         $this->assertInstanceOf(SpaceContentRevision::class, $rootRevision);
         $this->assertTrue($rootRevision->hasVerifiableManifest());
-        $this->assertCount(26, $rootRevision->relationships()->get());
+        $this->assertCount(27, $rootRevision->relationships()->get());
 
         $chapter = $first['chapters']->first();
         $this->assertNotNull($chapter);
