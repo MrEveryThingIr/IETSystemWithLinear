@@ -7,6 +7,10 @@ use InvalidArgumentException;
 
 final class IetPricing
 {
+    public function __construct(
+        private readonly IetMarketQuoteBridge $marketQuotes,
+    ) {}
+
     private const INITIAL_QUOTE_UUID = '00000000-0000-4000-8000-000000000001';
 
     public function currentQuote(): IetValuationQuote
@@ -18,10 +22,12 @@ final class IetPricing
             ->first();
 
         if ($quote instanceof IetValuationQuote) {
+            $this->marketQuotes->mirror($quote);
+
             return $quote;
         }
 
-        return IetValuationQuote::query()->firstOrCreate([
+        $quote = IetValuationQuote::query()->firstOrCreate([
             'uuid' => self::INITIAL_QUOTE_UUID,
         ], [
             'usd_per_iet' => '0.000000010000000000',
@@ -34,6 +40,10 @@ final class IetPricing
             'effective_at' => now(),
             'published_by_user_id' => null,
         ]);
+
+        $this->marketQuotes->mirror($quote);
+
+        return $quote;
     }
 
     public function percentOfUsd(IetValuationQuote|string $quote): string
