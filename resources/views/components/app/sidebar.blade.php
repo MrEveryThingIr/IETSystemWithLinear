@@ -66,8 +66,17 @@
             <flux:sidebar.item :href="route('planner.index')" :current="request()->routeIs('planner.*')" icon="calendar-days">
                 {{ __('planner.title') }}
             </flux:sidebar.item>
+            <flux:sidebar.item :href="route('money.index')" :current="request()->routeIs('money.*') || request()->routeIs('financial-obligations.*')" icon="wallet">
+                {{ __('accounting.baseline.title') }}
+            </flux:sidebar.item>
             <flux:sidebar.item :href="route('accounting.index')" :current="request()->routeIs('accounting.*')" icon="banknotes">
                 {{ __('accounting.title') }}
+            </flux:sidebar.item>
+            <flux:sidebar.item :href="route('exchange.index')" :current="request()->routeIs('exchange.*')" icon="arrows-right-left">
+                {{ __('exchange.title') }}
+            </flux:sidebar.item>
+            <flux:sidebar.item :href="route('vault.index')" :current="request()->routeIs('vault.*')" icon="lock-closed">
+                {{ __('vault.title') }}
             </flux:sidebar.item>
             <flux:sidebar.item :href="route('content.library')" :current="request()->routeIs('content.library')" icon="rectangle-stack">
                 {{ __('library.title') }}
