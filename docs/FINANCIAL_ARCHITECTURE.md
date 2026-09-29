@@ -300,7 +300,8 @@ For a Contract such as **1,500,000 per accepted 08:00–17:00 workday**, the sou
 
 ~~~text
 accepted ContractVersion
-→ work Commitment + payment Commitment
+→ structured service Commitment
+→ automatic or custom Planner schedule
 → scheduled Occurrence
 → actual Fulfillment (start/end/status/evidence)
 → authorized acceptance of Fulfillment
@@ -382,6 +383,32 @@ Legacy ledger_entries:
 - remove unique(transaction, account, direction);
 - use ordered line numbers;
 - restrict deletion.
+
+
+## First-release paid-service reference workflow
+
+The publishable reference workflow is intentionally conventional:
+
+~~~text
+exact accepted ContractVersion
+→ structured unit-priced service terms
+→ generated Commitment
+→ generated shared Plan
+→ actual work Occurrence
+→ Fulfillment + evidence
+→ employer acceptance
+→ deterministic Financial Obligation
+→ cash Settlement batch / confirmation
+→ optional per-party Accounting posting
+~~~
+
+Structured service economics are part of the exact ContractVersion acceptance boundary. Accepted quantity is multiplied by that immutable version's unit rate using integer arithmetic; the amount is not retyped after the work is accepted.
+
+At Contract level, cash settlement batches allocate a recorded cash statement oldest-first across accepted outstanding obligations while preserving each underlying unit-job and Settlement. The debtor may report cash paid or the creditor may report cash received; the opposite party confirms. Pending claims reserve their allocations but do not count as paid until confirmed.
+
+The Contract summary therefore keeps separate earned, payment awaiting confirmation, confirmed paid/settled, outstanding, still payable now and disputed value.
+
+See docs/PHASE_23_IDEAL_SERVICE_FINANCIAL_WORKFLOW.md for the full behavior and acceptance proof.
 
 ## 7. Financial Laboratory
 
