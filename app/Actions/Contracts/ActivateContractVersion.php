@@ -14,6 +14,8 @@ use LogicException;
 
 class ActivateContractVersion
 {
+    public function __construct(private readonly BootstrapContractServiceWorkflow $bootstrap) {}
+
     public function execute(ContractVersion $version, ?Actor $actor = null): ContractVersion
     {
         return DB::transaction(function () use ($version, $actor): ContractVersion {
@@ -23,7 +25,18 @@ class ActivateContractVersion
                 ->findOrFail($version->id);
 
             if ($locked->status === ContractVersionStatus::Active) {
-                return $locked;
+                $this->bootstrap->execute($locked);
+
+                return $locked->fresh([
+                    'contract',
+                    'termsRevision.content',
+                    'parties.actor.user',
+                    'parties.acceptance',
+                    'serviceTerm.employer.user',
+                    'serviceTerm.worker.user',
+                    'serviceTerm.monetaryUnit',
+                    'serviceTerm.commitment.planBinding.plan',
+                ]);
             }
 
             abort_unless(
@@ -38,7 +51,9 @@ class ActivateContractVersion
                 return $locked;
             }
 
-            $contract = Contract::query()->lockForUpdate()->findOrFail($locked->contract_id);
+            $contract = Contract::query()
+                ->lockForUpdate()
+                ->findOrFail($locked->contract_id);
 
             $otherActive = ContractVersion::query()
                 ->where('contract_id', $contract->id)
@@ -64,7 +79,9 @@ class ActivateContractVersion
                 );
 
                 abort_if(
-                    $otherActive->contains(fn (ContractVersion $candidate): bool => (int) $candidate->id !== (int) $previous->id),
+                    $otherActive->contains(
+                        fn (ContractVersion $candidate): bool => (int) $candidate->id !== (int) $previous->id,
+                    ),
                     409,
                     'Contract has conflicting active versions.',
                 );
@@ -97,11 +114,24 @@ class ActivateContractVersion
                 ],
             ]);
 
-            return $locked->fresh([
+            $activated = $locked->fresh([
                 'contract',
                 'termsRevision.content',
                 'parties.actor.user',
                 'parties.acceptance',
+            ]);
+
+            $this->bootstrap->execute($activated);
+
+            return $activated->fresh([
+                'contract',
+                'termsRevision.content',
+                'parties.actor.user',
+                'parties.acceptance',
+                'serviceTerm.employer.user',
+                'serviceTerm.worker.user',
+                'serviceTerm.monetaryUnit',
+                'serviceTerm.commitment.planBinding.plan',
             ]);
         }, attempts: 3);
     }
