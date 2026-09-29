@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Planner;
 
+use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Planner\AttachPlanOccurrenceEvidence;
 use App\Actions\Planner\RecordPlanOccurrenceExpense;
 use App\Actions\Planner\SetPlanOccurrencePrerequisite;
 use App\Actions\Planner\TransitionPlan;
 use App\Actions\Planner\TransitionPlanOccurrence;
 use App\Models\Actor;
+use App\Models\Asset;
 use App\Models\Commitment;
 use App\Models\ContentEvidenceReference;
 use App\Models\Plan;
@@ -20,16 +22,21 @@ use App\PlanOccurrenceStatus;
 use App\PlanStatus;
 use App\Support\MonetaryUnitCatalog;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Layout('layouts.app')]
 #[Title('Plan')]
 class Show extends Component
 {
+    use WithFileUploads;
+
     public Plan $plan;
 
     public ?int $evidenceOccurrenceId = null;
@@ -39,6 +46,10 @@ class Show extends Component
 
     /** @var list<int> */
     public array $evidenceReferenceIds = [];
+
+    public mixed $evidenceUpload = null;
+
+    public string $evidenceUploadRightsStatus = 'private_study_only';
 
     public ?int $expenseOccurrenceId = null;
 
@@ -80,12 +91,32 @@ class Show extends Component
 
     public function startOccurrence(int $occurrenceId, TransitionPlanOccurrence $transition): void
     {
-        $transition->start($this->occurrence($occurrenceId), $this->user());
+        $this->resetErrorBag('execution.'.$occurrenceId);
+
+        try {
+            $transition->start($this->occurrence($occurrenceId), $this->user());
+        } catch (HttpException $exception) {
+            if ($exception->getStatusCode() !== 422) {
+                throw $exception;
+            }
+
+            $this->addError('execution.'.$occurrenceId, $exception->getMessage());
+        }
     }
 
     public function completeOccurrence(int $occurrenceId, TransitionPlanOccurrence $transition): void
     {
-        $transition->complete($this->occurrence($occurrenceId), $this->user());
+        $this->resetErrorBag('execution.'.$occurrenceId);
+
+        try {
+            $transition->complete($this->occurrence($occurrenceId), $this->user());
+        } catch (HttpException $exception) {
+            if ($exception->getStatusCode() !== 422) {
+                throw $exception;
+            }
+
+            $this->addError('execution.'.$occurrenceId, $exception->getMessage());
+        }
     }
 
     public function skipOccurrence(int $occurrenceId, TransitionPlanOccurrence $transition): void
@@ -119,21 +150,51 @@ class Show extends Component
         Gate::forUser($this->user())->authorize('participate', $this->plan);
         $this->occurrence($occurrenceId);
         $this->evidenceOccurrenceId = $occurrenceId;
-        $this->reset(['assetIds', 'evidenceReferenceIds']);
+        $this->reset(['assetIds', 'evidenceReferenceIds', 'evidenceUpload']);
+        $this->resetErrorBag('evidence');
     }
 
-    public function attachEvidence(AttachPlanOccurrenceEvidence $attach): void
+    public function attachEvidence(CreateContextAsset $createAsset, AttachPlanOccurrenceEvidence $attach): void
     {
         abort_unless($this->evidenceOccurrenceId !== null, 422);
 
-        $attach->execute(
-            $this->occurrence($this->evidenceOccurrenceId),
-            $this->user(),
-            $this->assetIds,
-            $this->evidenceReferenceIds,
-        );
+        $occurrence = $this->occurrence($this->evidenceOccurrenceId);
+        $user = $this->user();
+        Gate::forUser($user)->authorize('participate', $this->plan);
 
-        $this->reset(['evidenceOccurrenceId', 'assetIds', 'evidenceReferenceIds']);
+        $this->validate([
+            'assetIds' => ['array', 'max:20'],
+            'assetIds.*' => ['integer'],
+            'evidenceReferenceIds' => ['array', 'max:20'],
+            'evidenceReferenceIds.*' => ['integer'],
+            'evidenceUpload' => ['nullable', 'file', 'max:12288'],
+            'evidenceUploadRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
+        ]);
+
+        if ($this->assetIds === [] && $this->evidenceReferenceIds === [] && ! ($this->evidenceUpload instanceof UploadedFile)) {
+            $this->addError('evidence', __('planner.validation.evidence_required'));
+
+            return;
+        }
+
+        $assetIds = $this->assetIds;
+
+        if ($this->evidenceUpload instanceof UploadedFile) {
+            $asset = $createAsset->execute(
+                $this->plan->context()->firstOrFail(),
+                $user,
+                $this->evidenceUpload,
+                $this->evidenceUploadRightsStatus,
+            );
+            $assetIds[] = $asset->id;
+        }
+
+        $attach->execute($occurrence, $user, $assetIds, $this->evidenceReferenceIds);
+
+        $this->reset(['evidenceOccurrenceId', 'assetIds', 'evidenceReferenceIds', 'evidenceUpload']);
+        $this->evidenceUploadRightsStatus = 'private_study_only';
+
+        session()->flash('status', __('planner.messages.evidence_attached'));
     }
 
     public function chooseExpenseOccurrence(int $occurrenceId): void
@@ -244,6 +305,8 @@ class Show extends Component
 
         $canManage = Gate::forUser($user)->allows('manage', $plan);
         $canParticipate = Gate::forUser($user)->allows('participate', $plan);
+        $canUploadEvidence = $canParticipate
+            && Gate::forUser($user)->allows('submitInteractions', $plan->context);
 
         $references = $canParticipate
             ? ContentEvidenceReference::query()
@@ -264,8 +327,10 @@ class Show extends Component
         return view('livewire.planner.show', [
             'canManage' => $canManage,
             'canParticipate' => $canParticipate,
+            'canUploadEvidence' => $canUploadEvidence,
             'availableAssets' => $canParticipate ? $plan->context->assets : collect(),
             'availableEvidenceReferences' => $references,
+            'assetRightsStatuses' => Asset::RIGHTS_STATUSES,
             'originRelationship' => $originRelationship,
             'originCommitment' => $originCommitment,
             'unitCatalog' => MonetaryUnitCatalog::all(),
