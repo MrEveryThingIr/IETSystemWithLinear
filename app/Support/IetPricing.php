@@ -3,17 +3,35 @@
 namespace App\Support;
 
 use App\Models\IetValuationQuote;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 final class IetPricing
 {
     public function currentQuote(): IetValuationQuote
     {
-        return IetValuationQuote::query()
+        $quote = IetValuationQuote::query()
             ->where('effective_at', '<=', now())
             ->latest('effective_at')
             ->latest('id')
-            ->firstOrFail();
+            ->first();
+
+        if ($quote instanceof IetValuationQuote) {
+            return $quote;
+        }
+
+        return IetValuationQuote::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'usd_per_iet' => '0.000000010000000000',
+            'policy_version' => 'initial-v1',
+            'factors' => [
+                'basis' => 'initial baseline',
+                'automatic_growth' => false,
+            ],
+            'rationale' => 'Initial IET valuation: 1 IET equals 0.000001% of one USD.',
+            'effective_at' => now(),
+            'published_by_user_id' => null,
+        ]);
     }
 
     public function percentOfUsd(IetValuationQuote|string $quote): string
