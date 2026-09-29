@@ -212,6 +212,8 @@ return [
             'next_month' => 'Next month',
             'saved' => 'Date & time preferences saved.',
             'invalid_timezone' => 'The browser returned an unsupported timezone.',
+            'default_currency' => 'Default currency',
+            'default_currency_help' => 'Used when creating your personal ledger for a currency you have not used before. Existing accounting history is never converted automatically.',
         ],
         'semantic_added' => 'Profile item added.',
         'semantic_removed' => 'Profile item removed.',
