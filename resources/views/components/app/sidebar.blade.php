@@ -21,6 +21,9 @@
         <flux:sidebar.item :href="route('profile.edit')" :current="request()->routeIs('profile.*')" icon="user-circle">
             {{ __('planning_baseline.navigation.identity') }}
         </flux:sidebar.item>
+        <flux:sidebar.item :href="route('ai.chat')" :current="request()->routeIs('ai.*')" icon="sparkles">
+            {{ __('ai.chat.title') }}
+        </flux:sidebar.item>
 
         @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ManageUsers))
             <flux:sidebar.item :href="route('platform.access-invitations')" :current="request()->routeIs('platform.access-invitations')" icon="user-plus">
@@ -49,6 +52,9 @@
         </flux:sidebar.item>
         <flux:sidebar.item :href="route('profile.edit')" :current="request()->routeIs('profile.*')" icon="user-circle">
             {{ __('ui.navigation.profile') }}
+        </flux:sidebar.item>
+        <flux:sidebar.item :href="route('ai.chat')" :current="request()->routeIs('ai.*')" icon="sparkles">
+            {{ __('ai.chat.title') }}
         </flux:sidebar.item>
         @unless ($officeAlpha)
             <flux:sidebar.item :href="route('journeys.index')" :current="request()->routeIs('journeys.*')" icon="map">
