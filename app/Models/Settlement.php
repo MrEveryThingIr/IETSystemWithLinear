@@ -15,6 +15,7 @@ use LogicException;
 #[Fillable([
     'uuid',
     'financial_obligation_id',
+    'contract_settlement_batch_id',
     'amount_minor',
     'paid_at',
     'method',
@@ -53,6 +54,7 @@ class Settlement extends Model
             if ($settlement->isDirty([
                 'uuid',
                 'financial_obligation_id',
+                'contract_settlement_batch_id',
                 'amount_minor',
                 'paid_at',
                 'method',
@@ -78,6 +80,12 @@ class Settlement extends Model
     public function obligation(): BelongsTo
     {
         return $this->belongsTo(FinancialObligation::class, 'financial_obligation_id');
+    }
+
+    /** @return BelongsTo<ContractSettlementBatch, $this> */
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(ContractSettlementBatch::class, 'contract_settlement_batch_id');
     }
 
     /** @return BelongsTo<Actor, $this> */
