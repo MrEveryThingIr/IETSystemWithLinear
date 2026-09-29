@@ -51,6 +51,17 @@ return [
     'history_title' => '报价历史',
     'history_help' => '不可变的报价时期确保历史转换含义始终可追溯。',
     'no_rationale' => '未记录理由。',
+    'treasury' => [
+        'title' => 'IET 国库',
+        'help' => '只读系统会计。兑换储备和未来的服务预付款应收款属于支持资产；净发行量表示已创建 IET 减去已退回/销毁 IET。',
+        'metrics' => [
+            'exchange_reserve' => '兑换储备等值',
+            'service_advance_receivable' => '服务预付款应收款',
+            'settlement_clearing' => '结算清算',
+            'net_issuance' => 'IET 净发行量',
+            'fee_income' => '系统手续费收入',
+        ],
+    ],
     'market' => [
         'title' => '参考汇率',
         'help' => '货币单位、加密资产、商品、指数、资产类别和服务单位的最新生效报价。',
