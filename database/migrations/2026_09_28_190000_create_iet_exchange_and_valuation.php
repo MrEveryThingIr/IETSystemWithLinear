@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -79,7 +78,7 @@ return new class extends Migration
         });
 
         DB::table('iet_valuation_quotes')->insert([
-            'uuid' => (string) Str::uuid(),
+            'uuid' => '00000000-0000-4000-8000-000000000001',
             'usd_per_iet' => '0.000000010000000000',
             'policy_version' => 'initial-v1',
             'factors' => json_encode([
