@@ -102,6 +102,20 @@ return [
         'evidence' => '证据',
         'attach_evidence' => '附加证据',
         'select_evidence' => '选择此空间中的现有证据',
+
+        'select_evidence_help' => '选择此空间中已有的文件或内容证据，也可以在这里直接上传新的证据文件。',
+
+        'existing_files' => '已有文件',
+
+        'existing_content_evidence' => '已有内容证据',
+
+        'upload_evidence' => '上传新证据',
+
+        'upload_evidence_help' => '上传的文件会保存在当前空间，并关联到这个精确的计划事项。',
+
+        'no_evidence_available' => '没有可附加的证据',
+
+        'no_evidence_available_help' => '当前空间没有可用文件或内容证据，而且您没有直接上传权限。',
         'no_evidence' => '未附加证据',
         'start' => '开始',
         'finish' => '完成',
@@ -143,6 +157,8 @@ return [
         'open_day' => '打开 :date',
     ],
     'validation' => [
+
+        'evidence_required' => '附加证据前，请选择已有证据或上传一个文件。',
         'active_plan_required' => '执行事项需要一个有效计划。',
         'scheduled_to_start' => '只有已安排的事项可以开始。',
         'start_window' => '此事项只能在配置的执行窗口内开始。',
