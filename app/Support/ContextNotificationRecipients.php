@@ -24,6 +24,7 @@ class ContextNotificationRecipients
             ContextKind::Negotiation => $this->proposalActors($context),
             ContextKind::Contract => $this->contractActors($context),
             ContextKind::Reference => $this->referenceActors($context),
+            ContextKind::System => collect(),
         };
 
         return $actors
