@@ -64,6 +64,47 @@ Admitted behavior includes:
 
 The only substantive code conflict, `ProposeSettlement`, was resolved explicitly so contract settlement batches coexist with newer IET wallet funding/availability rules.
 
+### Planner hardening/fix branch family
+
+Status: **audited and selectively reconciled**.
+
+Reviewed sources include:
+
+- `integration/ideal-v1-planner-temporal-candidate`;
+- `fix/planner-execution-window-calendar-evidence`;
+- `fix/planner-temporal-evidence-calendar-hardening`;
+- `fix/rc-planner-execution-calendar-hardening`;
+- `fix/rc-planner-temporal-evidence-calendar-hardening`.
+
+Additional behavior recovered from this family:
+
+- late-start allowance is anchored to the nominal **scheduled start**, not the scheduled end;
+- existing scheduled/unstarted occurrences are corrected by a forward migration;
+- the execution state changes from Ready to Late after nominal start, then to Missed after the configured grace closes;
+- Planner creation defaults to a practical 15-minute early / 15-minute late start window;
+- Contract-generated service schedules use the same defaults;
+- Content evidence references are reauthorized against their exact Content before attachment, preventing private/draft evidence leakage merely because the reference shares a Context.
+
+Older overlapping Planner view code was not restored where the current compact high-density calendar, readiness, expense and temporal implementations are stronger.
+
+### `codex/personal-planner-demo-seed`
+
+Status: **restored as local/testing acceptance data**.
+
+The idempotent demo fixture exercises:
+
+- all Plan lifecycle states;
+- scheduled/in-progress/completed/skipped/cancelled occurrence states;
+- once/daily/weekly/selected-date schedules;
+- readiness prerequisites;
+- reminders;
+- start windows;
+- expected-versus-actual Planner expenses;
+- dense past/current/future calendar data;
+- a deliberately Missed unresolved occurrence.
+
+The fixture is development evidence only. It does not create Contract, Settlement or Accounting authority.
+
 ### `integration/ideal-v1-temporal-calendar-reconcile`
 
 Status: **selectively reconciled; newer temporal core retained**.
