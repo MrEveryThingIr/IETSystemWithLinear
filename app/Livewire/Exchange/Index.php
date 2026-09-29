@@ -23,6 +23,7 @@ use App\Models\User;
 use App\PlatformCapability;
 use App\Support\AccountingSummary;
 use App\Support\IetPricing;
+use App\Support\IetTreasuryMetrics;
 use App\Support\IetValuationMetrics;
 use App\Support\MoneyAmount;
 use Illuminate\Contracts\View\View;
@@ -198,6 +199,7 @@ class Index extends Component
         IetPricing $pricing,
         AccountingSummary $summary,
         IetValuationMetrics $metrics,
+        IetTreasuryMetrics $treasury,
     ): View {
         $user = $this->user();
         $quote = $pricing->currentQuote();
@@ -264,6 +266,7 @@ class Index extends Component
             'instruments' => $instruments,
             'instrumentKinds' => EconomicInstrumentKind::cases(),
             'marketQuotes' => $marketQuotes,
+            'treasuryMetrics' => $canManage ? $treasury->snapshot($user) : null,
         ]);
     }
 
