@@ -213,6 +213,24 @@
     </details>
 
     @if ($canManageExchange)
+        <details open class="overflow-hidden rounded-2xl border border-sky-200 bg-sky-50/40 shadow-sm dark:border-sky-900 dark:bg-sky-950/20">
+            <summary class="cursor-pointer list-none px-5 py-4 hover:bg-sky-50 dark:hover:bg-sky-950/30">
+                <div>
+                    <div class="font-semibold">{{ __('exchange.treasury.title') }}</div>
+                    <div class="mt-1 text-sm text-zinc-500">{{ __('exchange.treasury.help') }}</div>
+                </div>
+            </summary>
+
+            <div class="grid gap-3 border-t border-sky-200 p-5 sm:grid-cols-2 lg:grid-cols-5 dark:border-sky-900">
+                @foreach (['exchange_reserve', 'service_advance_receivable', 'settlement_clearing', 'net_issuance', 'fee_income'] as $metric)
+                    <article class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="text-xs font-medium text-zinc-500">{{ __('exchange.treasury.metrics.'.$metric) }}</div>
+                        <div class="mt-2 text-lg font-semibold tabular-nums">{{ number_format($treasuryMetrics[$metric]) }} IET</div>
+                    </article>
+                @endforeach
+            </div>
+        </details>
+
         <details class="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/40 shadow-sm dark:border-amber-900 dark:bg-amber-950/20">
             <summary class="cursor-pointer list-none px-5 py-4 hover:bg-amber-50 dark:hover:bg-amber-950/30">
                 <div class="flex items-center justify-between gap-4">
