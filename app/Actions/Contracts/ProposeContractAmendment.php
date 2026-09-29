@@ -36,7 +36,13 @@ class ProposeContractAmendment
         $active = $contract->activeVersionRecord();
         abort_unless($active instanceof ContractVersion, 422, 'Active ContractVersion is missing.');
 
-        $active->loadMissing(['parties.actor', 'parties.sourceProposalParty']);
+        $active->loadMissing(['parties.actor', 'parties.sourceProposalParty', 'serviceTerm']);
+
+        abort_if(
+            $active->serviceTerm !== null,
+            422,
+            __('contracts.amendment.structured_service_locked'),
+        );
 
         $revision = $this->terms->execute(
             $context,
