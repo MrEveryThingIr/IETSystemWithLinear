@@ -8,8 +8,8 @@ use App\Actions\Exchange\RegisterEconomicInstrument;
 use App\EconomicInstrumentKind;
 use App\Models\Actor;
 use App\Models\EconomicInstrument;
-use App\Models\MarketQuote;
 use App\Models\IetValuationQuote;
+use App\Models\MarketQuote;
 use App\Models\PlatformAccessGrant;
 use App\Models\QuoteSource;
 use App\PlatformRole;
@@ -23,8 +23,6 @@ use Tests\TestCase;
 class EconomicMarketQuoteRegistryTest extends TestCase
 {
     use RefreshDatabase;
-
-
 
     public function test_exchange_manager_can_register_service_unit_and_publish_manual_reference_quote(): void
     {
