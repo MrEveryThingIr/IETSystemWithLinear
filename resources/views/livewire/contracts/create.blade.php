@@ -8,19 +8,19 @@
     </flux:callout>
 
     <form wire:submit="save" class="space-y-6">
-            <flux:card class="space-y-3">
-                <flux:heading size="lg">{{ $proposal->title }}</flux:heading>
-                <flux:text>{{ __('contracts.boundary') }}</flux:text>
-                @php($sourceVersion = $proposal->currentVersionRecord())
-                @if ($sourceVersion)
-                    <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
-                        <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                            {{ __('proposals.show.current_version', ['version' => $sourceVersion->version]) }}
-                        </div>
-                        <div class="mt-2 whitespace-pre-wrap" dir="auto">{{ $sourceVersion->termsRevision->payload['terms'] ?? '' }}</div>
+        <flux:card class="space-y-3">
+            <flux:heading size="lg">{{ $proposal->title }}</flux:heading>
+            <flux:text>{{ __('contracts.boundary') }}</flux:text>
+            @php($sourceVersion = $proposal->currentVersionRecord())
+            @if ($sourceVersion)
+                <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
+                    <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        {{ __('proposals.show.current_version', ['version' => $sourceVersion->version]) }}
                     </div>
-                    </flux:card>
-        @endif
+                    <div class="mt-2 whitespace-pre-wrap" dir="auto">{{ $sourceVersion->termsRevision->payload['terms'] ?? '' }}</div>
+                </div>
+            @endif
+        </flux:card>
 
         <flux:card class="space-y-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
