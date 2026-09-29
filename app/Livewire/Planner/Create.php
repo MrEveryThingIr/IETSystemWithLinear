@@ -138,7 +138,7 @@ class Create extends Component
         $this->expenseEstimates[] = [
             'label' => '',
             'amount' => '',
-            'unit_code' => (string) array_key_first(MonetaryUnitCatalog::all()),
+            'unit_code' => $this->defaultMonetaryUnitCode(),
         ];
     }
 
@@ -358,6 +358,15 @@ class Create extends Component
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function defaultMonetaryUnitCode(): string
+    {
+        $code = strtoupper((string) ($this->user()->default_monetary_unit_code ?: 'USD'));
+
+        return array_key_exists($code, MonetaryUnitCatalog::all())
+            ? $code
+            : (string) array_key_first(MonetaryUnitCatalog::all());
     }
 
     private function user(): User
