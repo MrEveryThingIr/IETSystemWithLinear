@@ -11,4 +11,5 @@ enum ContextKind: string
     case Negotiation = 'negotiation';
     case Contract = 'contract';
     case Reference = 'reference';
+    case System = 'system';
 }
