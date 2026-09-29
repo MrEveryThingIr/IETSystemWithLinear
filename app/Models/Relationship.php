@@ -109,6 +109,18 @@ class Relationship extends Model
         return $this->hasMany(RelationshipEvent::class)->orderBy('id');
     }
 
+    /** @return HasMany<Proposal, $this> */
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(Proposal::class);
+    }
+
+    /** @return HasMany<Contract, $this> */
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class);
+    }
+
     /** @return HasOne<RelationshipContext, $this> */
     public function contextBinding(): HasOne
     {
