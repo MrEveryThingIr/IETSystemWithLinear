@@ -187,6 +187,7 @@ return [
         'finish_active_occurrences_first' => 'Finish or cancel every in-progress occurrence before ending the Plan.',
     ],
     'messages' => [
+        'evidence_attached' => 'Evidence was attached to this occurrence.',
         'expense_recorded' => 'Actual expense recorded.',
     ],
     'weekdays' => [
