@@ -1,3 +1,24 @@
+## 2026-09-29 convergence update
+
+The unified branch now also includes:
+
+- the mature paid-service financial workflow from `codex/ideal-v1-service-financial-workflow`, reconciled semantically from common ancestor `ec1ae38859e2e4e00fe41da3a886181f9a7e0626` rather than force-merged;
+- structured `ContractServiceTerm` economics bound to an exact ContractVersion;
+- Contract activation -> service Commitment -> optional shared Planner Plan;
+- accepted Fulfillment -> deterministic Financial Obligation pricing;
+- contract cash settlement batches with pending-allocation protection and per-work-day traceability;
+- coexistence of those cash/service semantics with the newer IET settlement balance checks;
+- the restored audited AI Content Assistant from `feat/context-ai-assistance-provenance`;
+- a new authenticated AI Chat Lab using the OpenAI Responses API with server-side credentials and `store=false`;
+- immutable `AiAssistanceRun` provenance and stale-proposal protection;
+- restored `DevelopmentOrigin` records for deliberately reviewed ChatGPT/design-session -> branch/commit/docs traceability.
+
+The AI key is never stored in repository data or sent to the browser. Configure it only through the runtime environment.
+
+Service-backed IET credit remains intentionally downstream of verified Contract/Fulfillment evidence. A self-declared skill or manually registered service-rate reference is not mint authority.
+
+---
+
 # Unified Ideal-v1 Finalization Architecture
 
 ## Purpose
