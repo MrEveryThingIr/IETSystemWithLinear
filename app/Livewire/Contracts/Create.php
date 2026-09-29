@@ -95,9 +95,9 @@ class Create extends Component
 
     public string $serviceOccurrenceLimit = '';
 
-    public int $serviceWindowBeforeMinutes = 0;
+    public int $serviceWindowBeforeMinutes = 15;
 
-    public int $serviceWindowAfterMinutes = 0;
+    public int $serviceWindowAfterMinutes = 15;
 
     public string $serviceReminderOffsets = '60,15';
 
