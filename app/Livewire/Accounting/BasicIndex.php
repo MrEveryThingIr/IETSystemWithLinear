@@ -323,7 +323,7 @@ class BasicIndex extends Component
             return [
                 'obligation' => $obligation,
                 'role' => $isDebtor ? 'owe' : 'receive',
-                'counterparty' => $counterparty->user?->username ?? 'actor-'.$counterparty->id,
+                'counterparty' => $counterparty->user->username ?? 'actor-'.$counterparty->id,
                 'paid_minor' => $paid,
                 'outstanding_minor' => max(0, (int) $obligation->amount_minor - $paid),
                 'iet_pricing' => $ietPricing,
