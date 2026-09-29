@@ -140,7 +140,7 @@
                     >
                         <div class="line-clamp-2" dir="auto">{{ $run->prompt }}</div>
                         <div class="mt-2 flex items-center justify-between gap-2 text-xs text-zinc-500">
-                            <span>{{ $run->created_at->format('Y-m-d H:i') }}</span>
+                            <span><x-app.local-datetime :value="$run->created_at" /></span>
                             <span>{{ $run->status }}</span>
                         </div>
                     </button>
