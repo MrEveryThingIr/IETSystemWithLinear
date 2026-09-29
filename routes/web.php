@@ -74,6 +74,7 @@ use App\Livewire\Planner\Show as PlannerShow;
 use App\Livewire\Planner\Tools\RepeatWindow as PlannerRepeatWindow;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Livewire\Platform\AccessInvitations;
+use App\Livewire\Platform\DevelopmentOrigins;
 use App\Livewire\Profile\BasicManage as ProfileBasicManage;
 use App\Livewire\Profile\Manage as ProfileManage;
 use App\Livewire\Profile\SharedShow;
@@ -186,6 +187,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/profile-shares/{grant}', SharedShow::class)->name('profiles.shares.show');
     Route::livewire('/platform/access', PlatformAccess::class)->name('platform.access');
     Route::livewire('/platform/access-invitations', AccessInvitations::class)->name('platform.access-invitations');
+    Route::livewire('/platform/development-origins', DevelopmentOrigins::class)->name('platform.development-origins');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
     Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');
