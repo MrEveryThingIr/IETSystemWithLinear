@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\ContractStatus;
-use App\FulfillmentStatus;
 use App\ContractVersionStatus;
+use App\FulfillmentStatus;
 use App\Models\Actor;
 use App\Models\Commitment;
+use App\Models\Contract;
 use App\Models\ContractVersion;
 use App\Models\Fulfillment;
-use App\Models\Contract;
 use App\Models\Proposal;
 use App\Models\Relationship;
 use App\Models\RelationshipParticipant;
