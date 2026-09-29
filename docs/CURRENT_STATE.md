@@ -1,3 +1,21 @@
+## Unified finalization convergence
+
+Active convergence branch: `integration/ideal-v1-unified-finalization`.
+
+This line starts from the newer IET/Planner/Calendar/Money/Vault candidate and restores the mature integrated product surface by making `full` the default release profile. The compact paper-like Money workspace remains available at `/money` beside mature Accounting, Exchange and Vault.
+
+Repository audit identified three important sibling sources that must be reconciled selectively rather than wholesale-overwriting this line:
+
+- `release/ideal-v1-rc-7-hardening` — 19 unique commits / 18 files;
+- `integration/ideal-v1-temporal-calendar-reconcile` — 19 unique commits / 26 files;
+- `codex/ideal-v1-service-financial-workflow` — 129 unique commits / 51 files.
+
+The generalized economic direction now separates Monetary Units, Economic Instruments, immutable Market Quotes, specific owned/offered assets, ledger Accounts and Financial Obligations. Trusted skill is modeled as a versioned service-unit offering feeding the existing Need/Offer -> Proposal -> Contract -> Commitment -> Fulfillment -> Obligation -> Settlement lifecycle. IET remains the internal settlement unit; its valuation becomes a versioned policy over auditable signals rather than guaranteed appreciation.
+
+See `docs/UNIFIED_FINALIZATION_ARCHITECTURE.md`.
+
+---
+
 ## IET internal settlement candidate
 
 Active candidate branch: `codex/iet-internal-settlement-exchange`.
