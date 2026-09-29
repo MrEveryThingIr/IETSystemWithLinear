@@ -70,6 +70,66 @@
                 </flux:card>
             @endif
 
+            @php($displayServiceTerms = $pendingServiceTerms ?: $activeServiceTerms)
+            @if ($displayServiceTerms)
+                <flux:card class="space-y-4">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <flux:heading size="lg">{{ __('contracts.service.active_title') }}</flux:heading>
+                            <flux:text>{{ __('contracts.show.service_terms') }}</flux:text>
+                        </div>
+                        <flux:badge color="zinc">
+                            {{ $displayServiceTerms->monetaryUnit->code }}
+                        </flux:badge>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
+                            <div class="text-xs text-zinc-500">{{ __('contracts.service.worker') }}</div>
+                            <div class="mt-1 font-medium">{{ $displayServiceTerms->worker->user?->username }}</div>
+                        </div>
+                        <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
+                            <div class="text-xs text-zinc-500">{{ __('contracts.service.employer') }}</div>
+                            <div class="mt-1 font-medium">{{ $displayServiceTerms->employer->user?->username }}</div>
+                        </div>
+                        <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
+                            <div class="text-xs text-zinc-500">{{ __('contracts.service.unit_rate') }}</div>
+                            <div class="mt-1 font-medium">
+                                {{ AppSupportMoneyAmount::format($displayServiceTerms->unit_rate_minor, $displayServiceTerms->monetaryUnit->exponent) }}
+                                {{ $displayServiceTerms->monetaryUnit->code }} / {{ $displayServiceTerms->unit }}
+                            </div>
+                        </div>
+                        <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
+                            <div class="text-xs text-zinc-500">{{ __('contracts.service.settlement_cycle') }}</div>
+                            <div class="mt-1 font-medium">{{ __('contracts.service.cycles.'.$displayServiceTerms->settlement_cycle) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="text-sm text-zinc-600 dark:text-zinc-300">
+                        {{ __('contracts.service.quantity_sentence', [
+                            'quantity' => $displayServiceTerms->total_quantity,
+                            'unit' => $displayServiceTerms->unit,
+                            'per' => $displayServiceTerms->quantity_per_occurrence,
+                        ]) }}
+                    </div>
+
+                    @if ($displayServiceTerms->commitment?->planBinding?->plan)
+                        <flux:button
+                            :href="route('planner.show', $displayServiceTerms->commitment->planBinding->plan)"
+                            variant="primary"
+                        >
+                            {{ __('contracts.service.open_plan') }}
+                        </flux:button>
+                    @elseif ($pendingServiceTerms)
+                        <flux:callout>{{ __('contracts.service.schedule_help') }}</flux:callout>
+                    @endif
+                </flux:card>
+            @endif
+
+            @if ($serviceAmendmentLocked)
+                <flux:callout>{{ __('contracts.amendment.structured_service_locked') }}</flux:callout>
+            @endif
+
             @if ($canAmend)
                 <flux:card class="space-y-4">
                     <div>
@@ -143,14 +203,22 @@
                                 <div class="font-semibold">{{ $unit->code }}</div>
                                 <flux:badge color="zinc">{{ $summary['obligation_count'] }} {{ __('financial.obligations') }}</flux:badge>
                             </div>
-                            <div class="grid gap-3 sm:grid-cols-4">
+                            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
                                 <div>
                                     <div class="text-xs text-zinc-500">{{ __('financial.earned') }}</div>
                                     <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['earned_minor'], $unit->exponent) }}</div>
                                 </div>
                                 <div>
+                                    <div class="text-xs text-zinc-500">{{ __('financial.awaiting_confirmation') }}</div>
+                                    <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['pending_minor'], $unit->exponent) }}</div>
+                                </div>
+                                <div>
                                     <div class="text-xs text-zinc-500">{{ __('financial.paid') }}</div>
                                     <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['paid_minor'], $unit->exponent) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-zinc-500">{{ __('financial.available_to_pay') }}</div>
+                                    <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['available_minor'], $unit->exponent) }}</div>
                                 </div>
                                 <div>
                                     <div class="text-xs text-zinc-500">{{ __('financial.outstanding') }}</div>
@@ -167,6 +235,37 @@
                                 <span>{{ __('financial.worked') }}: {{ $summary['worked_count'] }}</span>
                                 <span>·</span>
                                 <span>{{ __('financial.accepted') }}: {{ $summary['accepted_count'] }}</span>
+                            </div>
+                            <div class="border-t border-zinc-200 pt-3 dark:border-zinc-800">
+                                <div class="mb-2">
+                                    <div class="text-sm font-medium">{{ __('financial.summary.daily_title') }}</div>
+                                    <div class="text-xs text-zinc-500">{{ __('financial.summary.daily_help') }}</div>
+                                </div>
+                                <div class="max-h-72 overflow-y-auto">
+                                    <div class="min-w-[620px] divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+                                        @foreach ($financial['daily'] as $daily)
+                                            <div class="grid grid-cols-5 gap-3 py-2">
+                                                <div><x-app.local-date :value="$daily['date']" /></div>
+                                                <div>
+                                                    <span class="text-xs text-zinc-500">{{ __('financial.earned') }}</span>
+                                                    <div>{{ \App\Support\MoneyAmount::format($daily['earned_minor'], $unit->exponent) }}</div>
+                                                </div>
+                                                <div>
+                                                    <span class="text-xs text-zinc-500">{{ __('financial.awaiting_confirmation') }}</span>
+                                                    <div>{{ \App\Support\MoneyAmount::format($daily['pending_minor'], $unit->exponent) }}</div>
+                                                </div>
+                                                <div>
+                                                    <span class="text-xs text-zinc-500">{{ __('financial.paid') }}</span>
+                                                    <div>{{ \App\Support\MoneyAmount::format($daily['paid_minor'], $unit->exponent) }}</div>
+                                                </div>
+                                                <div>
+                                                    <span class="text-xs text-zinc-500">{{ __('financial.outstanding') }}</span>
+                                                    <div>{{ \App\Support\MoneyAmount::format($daily['outstanding_minor'], $unit->exponent) }}</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -189,6 +288,119 @@
                             </a>
                         @endforeach
                     </div>
+                </flux:card>
+            @endif
+
+            @if ($payableUnits->isNotEmpty() || $receivableUnits->isNotEmpty())
+                <flux:card class="space-y-4">
+                    <div>
+                        <flux:heading size="lg">{{ __('financial.settlement_batch.title') }}</flux:heading>
+                        <flux:text>{{ __('financial.settlement_batch.help') }}</flux:text>
+                    </div>
+
+                    <form wire:submit="proposeCashSettlement" class="space-y-4">
+                        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <flux:select wire:model.live="settlementPerspective" :label="__('financial.settlement_batch.perspective')">
+                                @if ($payableUnits->isNotEmpty())
+                                    <flux:select.option value="paid">{{ __('financial.settlement_batch.paid_by_me') }}</flux:select.option>
+                                @endif
+                                @if ($receivableUnits->isNotEmpty())
+                                    <flux:select.option value="received">{{ __('financial.settlement_batch.received_by_me') }}</flux:select.option>
+                                @endif
+                            </flux:select>
+                            <flux:input wire:model="settlementAmount" :label="__('financial.settlement_batch.amount')" inputmode="decimal" />
+                            <flux:select wire:model="settlementUnitCode" :label="__('financial.settlement_batch.unit')">
+                                @foreach ($settlementUnits as $settlementUnit)
+                                    <flux:select.option :value="$settlementUnit->code">{{ $settlementUnit->code }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                            <x-app.calendar-datetime-input
+                                model="settlementPaidAt"
+                                :label="__('financial.settlement.paid_at')"
+                                :timezone="$timezone"
+                            />
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <flux:input wire:model="settlementReference" :label="__('financial.settlement.reference')" maxlength="255" />
+                            <flux:input wire:model="settlementNote" :label="__('financial.settlement.note')" maxlength="5000" />
+                        </div>
+
+                        <flux:button type="submit" variant="primary">
+                            {{ __('financial.settlement_batch.record') }}
+                        </flux:button>
+                    </form>
+
+                    <flux:callout>{{ __('financial.settlement_batch.cash_only') }}</flux:callout>
+                </flux:card>
+            @endif
+
+            @if ($settlementBatches->isNotEmpty())
+                <flux:card class="space-y-4">
+                    <flux:heading size="lg">{{ __('financial.settlement_batch.history') }}</flux:heading>
+
+                    @foreach ($settlementBatches as $batch)
+                        @php($batchStatus = $batch->derivedStatus())
+                        <article wire:key="contract-settlement-batch-{{ $batch->uuid }}" class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div class="text-lg font-semibold">
+                                        {{ \App\Support\MoneyAmount::format($batch->amount_minor, $batch->monetaryUnit->exponent) }}
+                                        {{ $batch->monetaryUnit->code }}
+                                    </div>
+                                    <div class="mt-1 text-xs text-zinc-500">
+                                        <x-app.local-datetime :value="$batch->paid_at" />
+                                        · {{ $batch->debtor->user?->username }} → {{ $batch->creditor->user?->username }}
+                                        · {{ (int) $batch->proposed_by_actor_id === (int) $batch->debtor_actor_id
+                                            ? __('financial.settlement_batch.reported_paid')
+                                            : __('financial.settlement_batch.reported_received') }}
+                                    </div>
+                                </div>
+                                <flux:badge>{{ __('financial.settlement_batch.status.'.$batchStatus) }}</flux:badge>
+                            </div>
+
+                            <div class="text-xs text-zinc-500">
+                                {{ __('financial.settlement_batch.allocations', ['count' => $batch->settlements->count()]) }}
+                            </div>
+
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                @foreach ($batch->settlements as $allocation)
+                                    <a
+                                        href="{{ route('financial-obligations.show', $allocation->obligation) }}"
+                                        class="rounded-lg bg-zinc-50 p-3 text-sm hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                                    >
+                                        <div class="font-medium" dir="auto">{{ $allocation->obligation->fulfillment->commitment->title }}</div>
+                                        <div class="mt-1 text-xs text-zinc-500">
+                                            {{ \App\Support\MoneyAmount::format($allocation->amount_minor, $batch->monetaryUnit->exponent) }}
+                                            {{ $batch->monetaryUnit->code }}
+                                            · {{ __('financial.settlement.'.$allocation->status->value) }}
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+
+                            @if (
+                                $batch->pendingMinor() > 0
+                                && (int) $actor->id !== (int) $batch->proposed_by_actor_id
+                                && in_array((int) $actor->id, [(int) $batch->debtor_actor_id, (int) $batch->creditor_actor_id], true)
+                            )
+                                <div class="space-y-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+                                    <flux:input
+                                        wire:model="batchRejectionNotes.{{ $batch->id }}"
+                                        :label="__('financial.settlement_batch.rejection_reason')"
+                                    />
+                                    <div class="flex flex-wrap gap-2">
+                                        <flux:button wire:click="confirmSettlementBatch({{ $batch->id }})" size="sm" variant="primary">
+                                            {{ __('financial.settlement_batch.confirm') }}
+                                        </flux:button>
+                                        <flux:button wire:click="rejectSettlementBatch({{ $batch->id }})" size="sm" variant="danger">
+                                            {{ __('financial.settlement_batch.reject') }}
+                                        </flux:button>
+                                    </div>
+                                </div>
+                            @endif
+                        </article>
+                    @endforeach
                 </flux:card>
             @endif
 
@@ -263,6 +475,7 @@
                 <flux:card class="space-y-3">
                     <flux:heading>{{ __('contracts.show.workspace') }}</flux:heading>
                     <flux:text>{{ __('contracts.show.workspace_help') }}</flux:text>
+                    <flux:text>{{ __('contracts.show.shared_evidence_help') }}</flux:text>
                     <div class="grid gap-2">
                         <flux:button :href="route('contexts.conversation', $context)" variant="primary">
                             {{ __('collaboration.tabs.conversation') }}
