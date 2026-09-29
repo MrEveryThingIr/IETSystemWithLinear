@@ -4,6 +4,7 @@ namespace App\Livewire\Relationships;
 
 use App\Models\Relationship;
 use App\Models\User;
+use App\Support\DealPipeline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ class Index extends Component
 {
     public string $status = 'all';
 
-    public function render(): View
+    public function render(DealPipeline $pipeline): View
     {
         Gate::authorize('viewAny', Relationship::class);
 
@@ -30,6 +31,8 @@ class Index extends Component
                 'originatingIntent',
                 'participants.actor.user',
                 'contextBinding.context',
+                'proposals',
+                'contracts',
             ])
             ->latest('updated_at');
 
@@ -39,6 +42,6 @@ class Index extends Component
 
         $relationships = $query->limit(100)->get();
 
-        return view('livewire.relationships.index', compact('relationships'));
+        return view('livewire.relationships.index', compact('relationships', 'pipeline'));
     }
 }
