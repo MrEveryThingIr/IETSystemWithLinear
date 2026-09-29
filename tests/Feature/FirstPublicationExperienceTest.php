@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Auth\ProvisionVerifiedUserDefaults;
 use App\Actions\Contexts\EnsurePersonalContext;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
@@ -43,8 +44,12 @@ class FirstPublicationExperienceTest extends TestCase
 
     public function test_default_currency_can_change_without_converting_existing_history(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'default_monetary_unit_code' => 'USD',
+        ]);
         $user->actor()->create();
+
+        app(ProvisionVerifiedUserDefaults::class)->execute($user->refresh());
 
         Livewire::actingAs($user->refresh())
             ->test(TemporalPreferences::class)
@@ -54,7 +59,11 @@ class FirstPublicationExperienceTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame('IRR', $user->refresh()->default_monetary_unit_code);
-        $this->assertDatabaseHas('monetary_units', ['code' => 'IRR']);
+
+        $context = app(EnsurePersonalContext::class)->execute($user->refresh());
+        $ledger = $context->ledgers()->with('monetaryUnit')->sole();
+
+        $this->assertSame('USD', $ledger->monetaryUnit->code);
         $this->assertDatabaseCount('ledgers', 1);
         $this->assertDatabaseCount('journal_entries', 0);
     }
