@@ -36,6 +36,7 @@ return [
         'boundary' => 'Creating a Commitment does not prove performance and does not create money, Accounting, payment, or Settlement truth.',
     ],
     'show' => [
+        'auto_plan_expected' => 'This Commitment is contract-driven and its shared Plan is generated automatically when the accepted ContractVersion activates. If no Plan appears, treat that as a workflow error rather than creating a second manual Plan.',
         'help' => 'Track the obligation, schedule it when useful, submit actual performance, and review evidence explicitly.',
         'governing_version' => 'Governed by Contract version :version',
         'obligation' => 'Obligation',
