@@ -65,8 +65,14 @@ class Show extends Component
 
     public function mount(Plan $plan): void
     {
-        Gate::forUser($this->user())->authorize('view', $plan);
+        $user = $this->user();
+        Gate::forUser($user)->authorize('view', $plan);
         $this->plan = $plan;
+
+        $code = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
+        $this->expenseUnitCode = array_key_exists($code, MonetaryUnitCatalog::all())
+            ? $code
+            : (string) array_key_first(MonetaryUnitCatalog::all());
     }
 
     public function pause(TransitionPlan $transition): void
