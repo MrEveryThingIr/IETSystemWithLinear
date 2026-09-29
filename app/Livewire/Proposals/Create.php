@@ -40,6 +40,7 @@ class Create extends Component
 
         if ($this->relationshipUuid === '') {
             session()->flash('status', __('deals.pipeline_only'));
+
             return $this->redirectRoute('deals.index');
         }
 
