@@ -44,11 +44,11 @@ class PlannerExecutionWindowTest extends TestCase
             $this->assertRejected(fn () => $transition->complete($occurrence, $actor->user));
             $this->assertNull($occurrence->fresh()->actual_start_at);
 
-            CarbonImmutable::setTestNow('2026-09-25 07:05:00 UTC');
+            CarbonImmutable::setTestNow('2026-09-25 06:05:00 UTC');
             $this->assertSame(PlanOccurrenceWindowState::Late, $occurrence->windowState());
             $occurrence = $transition->start($occurrence, $actor->user);
             $this->assertSame(PlanOccurrenceStatus::InProgress, $occurrence->status);
-            $this->assertSame('2026-09-25 07:05:00', $occurrence->actual_start_at?->utc()->format('Y-m-d H:i:s'));
+            $this->assertSame('2026-09-25 06:05:00', $occurrence->actual_start_at?->utc()->format('Y-m-d H:i:s'));
             $this->assertSame(PlanOccurrenceWindowState::InProgress, $occurrence->windowState());
 
             CarbonImmutable::setTestNow('2026-09-25 07:15:00 UTC');
@@ -62,7 +62,7 @@ class PlannerExecutionWindowTest extends TestCase
 
     public function test_missed_window_does_not_fabricate_an_actual_start(): void
     {
-        CarbonImmutable::setTestNow('2026-09-25 07:11:00 UTC');
+        CarbonImmutable::setTestNow('2026-09-25 06:11:00 UTC');
 
         try {
             $actor = Actor::factory()->create();
