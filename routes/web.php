@@ -20,6 +20,7 @@ use App\Http\Controllers\SubmissionAssetController;
 use App\Http\Controllers\SystemManualController;
 use App\Livewire\Accounting\BasicIndex as AccountingBasicIndex;
 use App\Livewire\Accounting\Index as AccountingIndex;
+use App\Livewire\Ai\Chat as AiChat;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -33,6 +34,7 @@ use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Commitments\Create as CommitmentCreate;
 use App\Livewire\Commitments\Show as CommitmentShow;
 use App\Livewire\Content\Library as ContentLibrary;
+use App\Livewire\Contexts\ContentAiAssistant as ContextContentAiAssistant;
 use App\Livewire\Contexts\ContentAppearance as ContextContentAppearance;
 use App\Livewire\Contexts\ContentBlocks as ContextContentBlocks;
 use App\Livewire\Contexts\ContentIndex as ContextContentIndex;
@@ -147,6 +149,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/accounting', config('release.profile') === 'planning_baseline' ? AccountingBasicIndex::class : AccountingIndex::class)->name('accounting.index');
     Route::livewire('/exchange', ExchangeIndex::class)->name('exchange.index');
     Route::livewire('/vault', VaultIndex::class)->name('vault.index');
+    Route::livewire('/ai/chat', AiChat::class)->name('ai.chat');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');
     Route::get('/manual', SystemManualController::class)->name('manual');
@@ -166,6 +169,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/contexts/{context}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'downloadContext'])
         ->name('contexts.contents.assets.download');
     Route::livewire('/contexts/{context}/contents/{content}/studio', ContextContentStudio::class)->name('contexts.contents.studio');
+    Route::livewire('/contexts/{context}/contents/{content}/studio/ai', ContextContentAiAssistant::class)->name('contexts.contents.ai');
     Route::livewire('/contexts/{context}/contents/{content}/studio/blocks', ContextContentBlocks::class)->name('contexts.contents.blocks');
     Route::livewire('/contexts/{context}/contents/{content}/studio/appearance', ContextContentAppearance::class)->name('contexts.contents.appearance');
     Route::livewire('/contexts/{context}/contents/{content}/outline', ContextContentOutline::class)->name('contexts.contents.outline');
