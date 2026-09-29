@@ -27,11 +27,14 @@ return new class extends Migration
 
                 $rules = DB::table('plan_schedule_rules')
                     ->whereIn('id', $ruleIds)
-                    ->pluck('window_after_minutes', 'id');
+                    ->get(['id', 'window_after_minutes', 'timing_mode'])
+                    ->keyBy('id');
 
                 foreach ($occurrences as $occurrence) {
-                    $after = (int) ($rules[$occurrence->schedule_rule_id] ?? 0);
-                    $anchor = $useScheduledStart
+                    $rule = $rules->get($occurrence->schedule_rule_id);
+                    $after = (int) ($rule->window_after_minutes ?? 0);
+                    $isFlexibleDay = ($rule->timing_mode ?? 'fixed') === 'flexible_day';
+                    $anchor = $useScheduledStart && ! $isFlexibleDay
                         ? $occurrence->scheduled_start_at
                         : $occurrence->scheduled_end_at;
 
