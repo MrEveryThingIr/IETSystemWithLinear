@@ -7,9 +7,11 @@ use App\EconomicInstrumentKind;
 use App\Models\Actor;
 use App\Models\EconomicInstrument;
 use App\Models\MarketQuote;
+use App\Models\IetValuationQuote;
 use App\Models\PlatformAccessGrant;
 use App\Models\QuoteSource;
 use App\PlatformRole;
+use App\Support\IetPricing;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
@@ -19,6 +21,51 @@ use Tests\TestCase;
 class EconomicMarketQuoteRegistryTest extends TestCase
 {
     use RefreshDatabase;
+
+
+    public function test_current_and_published_iet_valuations_are_mirrored_into_general_market_history(): void
+    {
+        $initial = app(IetPricing::class)->currentQuote();
+
+        $this->assertDatabaseHas('market_quotes', [
+            'source_reference' => 'iet-valuation:'.$initial->uuid,
+        ]);
+
+        $admin = Actor::factory()->create();
+
+        PlatformAccessGrant::factory()->create([
+            'user_id' => $admin->user->id,
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        $published = app(\App\Actions\Exchange\PublishIetValuationQuote::class)->execute(
+            $admin->user,
+            '0.000000010100000000',
+            'Audited compatibility bridge proof.',
+            ['successful_flow_count' => 12],
+        );
+
+        $this->assertInstanceOf(IetValuationQuote::class, $published);
+        $this->assertDatabaseHas('market_quotes', [
+            'source_reference' => 'iet-valuation:'.$published->uuid,
+            'published_by_user_id' => $admin->user->id,
+        ]);
+
+        $marketQuote = MarketQuote::query()
+            ->where('source_reference', 'iet-valuation:'.$published->uuid)
+            ->with(['baseInstrument', 'quoteInstrument', 'source'])
+            ->sole();
+
+        $this->assertSame('IET', $marketQuote->baseInstrument->code);
+        $this->assertSame('USD', $marketQuote->quoteInstrument->code);
+        $this->assertSame('iet-valuation-policy', $marketQuote->source->key);
+        $this->assertSame('0.00000001010000000000', (string) $marketQuote->price);
+        $this->assertDatabaseCount('market_quotes', 2);
+
+        app(IetPricing::class)->currentQuote();
+
+        $this->assertDatabaseCount('market_quotes', 2);
+    }
 
     public function test_authorized_exchange_manager_can_publish_precise_immutable_quote(): void
     {
