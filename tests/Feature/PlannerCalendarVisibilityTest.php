@@ -69,7 +69,14 @@ class PlannerCalendarVisibilityTest extends TestCase
         Livewire::actingAs($visitor->user)->test(PlannerIndex::class)
             ->set('view', 'calendar')
             ->call('showMonth', '2026-09-27')
-            ->assertSee('#occurrence-'.$visibleOccurrence->uuid)
+            ->assertSee('1 calendar item')
+            ->assertDontSee('Owner-only activity')
+            ->call('showDay', '2026-09-27')
+            ->call('showHour', '2026-09-27', 9)
+            ->call('setSlotMinutes', 60)
+            ->call('selectSlot', 0)
+            ->assertSee('#occurrence-'.$visibleOccurrence->uuid, false)
+            ->assertSee('Visible appointment')
             ->assertDontSee('Owner-only activity');
     }
 }
