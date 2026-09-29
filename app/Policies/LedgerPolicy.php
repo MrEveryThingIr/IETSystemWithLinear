@@ -4,8 +4,8 @@ namespace App\Policies;
 
 use App\ContextKind;
 use App\Models\Ledger;
-use App\PlatformCapability;
 use App\Models\User;
+use App\PlatformCapability;
 
 class LedgerPolicy
 {
