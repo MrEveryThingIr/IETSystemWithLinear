@@ -33,7 +33,7 @@ class Index extends Component
                 'participants.actor.user',
                 'contextBinding.context',
                 'proposals',
-                'contracts',
+                'contracts.versions.commitments.fulfillments',
             ])
             ->latest('updated_at');
 
