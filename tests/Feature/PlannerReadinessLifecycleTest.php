@@ -83,7 +83,7 @@ class PlannerReadinessLifecycleTest extends TestCase
                 afterMinutes: 30,
             );
 
-            $this->assertSame('passed', $occurrence->executionPhase());
+            $this->assertSame('missed', $occurrence->executionPhase());
 
             $this->assertHttp422(
                 fn () => app(TransitionPlanOccurrence::class)->start($occurrence, $bob->user),
