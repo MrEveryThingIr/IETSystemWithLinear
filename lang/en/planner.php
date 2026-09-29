@@ -116,6 +116,20 @@ return [
         'evidence' => 'Evidence',
         'attach_evidence' => 'Attach evidence',
         'select_evidence' => 'Select existing Context evidence',
+
+        'select_evidence_help' => 'Attach an existing file or content reference from this planning context, or upload a new evidence file here.',
+
+        'existing_files' => 'Existing files',
+
+        'existing_content_evidence' => 'Existing content evidence',
+
+        'upload_evidence' => 'Upload new evidence',
+
+        'upload_evidence_help' => 'The uploaded file stays in this context and is linked to this exact occurrence.',
+
+        'no_evidence_available' => 'No attachable evidence is available',
+
+        'no_evidence_available_help' => 'You do not currently have an existing file, content reference, or upload permission in this context.',
         'no_evidence' => 'No evidence attached',
         'start' => 'Start',
         'finish' => 'Complete',
@@ -157,6 +171,8 @@ return [
         'open_day' => 'Open :date',
     ],
     'validation' => [
+
+        'evidence_required' => 'Select existing evidence or upload a file before attaching evidence.',
         'active_plan_required' => 'Occurrence execution requires an active Plan.',
         'scheduled_to_start' => 'Only a scheduled occurrence can be started.',
         'start_window' => 'This occurrence can only start inside its configured execution window.',
