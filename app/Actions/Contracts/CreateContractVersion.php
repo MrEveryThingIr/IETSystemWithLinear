@@ -37,6 +37,7 @@ class CreateContractVersion
         CarbonInterface $effectiveFrom,
         string $effectiveTimezone,
         ?string $note = null,
+        bool $acceptProposer = true,
     ): ContractVersion {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('participate', $contract);
@@ -70,6 +71,7 @@ class CreateContractVersion
             $effectiveAt,
             $effectiveTimezone,
             $note,
+            $acceptProposer,
         ): ContractVersion {
             $locked = Contract::query()
                 ->with(['contextBinding.context', 'sourceProposalVersion.proposal'])
@@ -163,12 +165,6 @@ class CreateContractVersion
 
             abort_unless($proposerParty instanceof ContractVersionParty, 422, 'ContractVersion proposer must be a party.');
 
-            $acceptance = ContractAcceptance::query()->create([
-                'contract_version_party_id' => $proposerParty->id,
-                'accepted_by_user_id' => $current->id,
-                'accepted_at' => now(),
-            ]);
-
             ContractEvent::query()->create([
                 'contract_id' => $locked->id,
                 'contract_version_id' => $version->id,
@@ -182,16 +178,24 @@ class CreateContractVersion
                 ],
             ]);
 
-            ContractEvent::query()->create([
-                'contract_id' => $locked->id,
-                'contract_version_id' => $version->id,
-                'actor_id' => $current->actor->id,
-                'event_type' => ContractEventType::PartyAccepted,
-                'payload' => [
-                    'contract_version_party_uuid' => $proposerParty->uuid,
-                    'acceptance_uuid' => $acceptance->uuid,
-                ],
-            ]);
+            if ($acceptProposer) {
+                $acceptance = ContractAcceptance::query()->create([
+                    'contract_version_party_id' => $proposerParty->id,
+                    'accepted_by_user_id' => $current->id,
+                    'accepted_at' => now(),
+                ]);
+
+                ContractEvent::query()->create([
+                    'contract_id' => $locked->id,
+                    'contract_version_id' => $version->id,
+                    'actor_id' => $current->actor->id,
+                    'event_type' => ContractEventType::PartyAccepted,
+                    'payload' => [
+                        'contract_version_party_uuid' => $proposerParty->uuid,
+                        'acceptance_uuid' => $acceptance->uuid,
+                    ],
+                ]);
+            }
 
             return $version->fresh([
                 'contract',
@@ -200,6 +204,10 @@ class CreateContractVersion
                 'parties.acceptance',
             ]);
         }, attempts: 3);
+
+        if (! $acceptProposer) {
+            return $version;
+        }
 
         return $this->finalize->execute($version, $current->actor);
     }
