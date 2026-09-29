@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Exchange\PublishManualMarketQuote;
 use App\Actions\Exchange\PublishMarketQuote;
+use App\Actions\Exchange\RegisterEconomicInstrument;
 use App\EconomicInstrumentKind;
 use App\Models\Actor;
 use App\Models\EconomicInstrument;
@@ -22,6 +24,48 @@ class EconomicMarketQuoteRegistryTest extends TestCase
 {
     use RefreshDatabase;
 
+
+
+    public function test_exchange_manager_can_register_service_unit_and_publish_manual_reference_quote(): void
+    {
+        $admin = Actor::factory()->create();
+
+        PlatformAccessGrant::factory()->create([
+            'user_id' => $admin->user->id,
+            'role' => PlatformRole::Superadmin,
+        ]);
+
+        app(IetPricing::class)->currentQuote();
+
+        $service = app(RegisterEconomicInstrument::class)->execute(
+            $admin->user,
+            'service_qc_part',
+            'Inspect one machined part',
+            EconomicInstrumentKind::ServiceUnit,
+        );
+
+        $usd = EconomicInstrument::query()->where('code', 'USD')->firstOrFail();
+
+        $quote = app(PublishManualMarketQuote::class)->execute(
+            $admin->user,
+            $service->uuid,
+            $usd->uuid,
+            '18.50',
+            'Provider offer backed by the current service-unit definition.',
+            'OFFER-QC-001',
+        );
+
+        $this->assertSame('SERVICE_QC_PART', $service->code);
+        $this->assertSame(EconomicInstrumentKind::ServiceUnit, $service->kind);
+        $this->assertFalse($service->settlement_enabled);
+        $this->assertSame('18.50000000000000000000', (string) $quote->price);
+        $this->assertSame('manual-admin', $quote->source->key);
+        $this->assertSame('OFFER-QC-001', $quote->source_reference);
+        $this->assertSame(
+            'Provider offer backed by the current service-unit definition.',
+            $quote->metadata['rationale'],
+        );
+    }
 
     public function test_current_and_published_iet_valuations_are_mirrored_into_general_market_history(): void
     {
