@@ -78,6 +78,8 @@ return [
     'occurrence_phase' => [
         'upcoming' => 'Upcoming',
         'ready' => 'Ready to start',
+        'late' => 'Late start',
+        'missed' => 'Missed start window',
         'passed' => 'Start window passed',
         'in_progress' => 'In progress',
         'completed' => 'Completed',
@@ -87,6 +89,8 @@ return [
     'execution' => [
         'upcoming' => 'Start becomes available at',
         'ready' => 'The execution window is open.',
+        'late' => 'The planned start has passed, but the late-start window is still open.',
+        'missed' => 'This occurrence was not started before its allowed window closed.',
         'passed' => 'This occurrence was not started inside its execution window.',
         'prerequisites_remaining' => '{1} :count required prerequisite remains|[2,*] :count required prerequisites remain',
     ],
