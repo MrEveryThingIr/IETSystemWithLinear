@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\PlanOccurrenceStatus;
 use App\PlanOccurrenceWindowState;
+use App\PlanTimingMode;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -177,7 +178,11 @@ class PlanOccurrence extends Model
             return PlanOccurrenceWindowState::Upcoming;
         }
 
-        if ($moment->lte($this->scheduled_start_at->utc())) {
+        $readyThrough = $this->scheduleRule?->timing_mode === PlanTimingMode::FlexibleDay
+            ? $this->scheduled_end_at->utc()
+            : $this->scheduled_start_at->utc();
+
+        if ($moment->lte($readyThrough)) {
             return PlanOccurrenceWindowState::Ready;
         }
 
