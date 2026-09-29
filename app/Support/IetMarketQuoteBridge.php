@@ -79,7 +79,7 @@ final class IetMarketQuoteBridge
                 abort_unless(
                     (int) $existing->base_instrument_id === (int) $iet->id
                     && (int) $existing->quote_instrument_id === (int) $usd->id
-                    && bccomp((string) $existing->price, (string) $legacyQuote->usd_per_iet, 18) === 0,
+                    && $this->sameDecimal((string) $existing->price, (string) $legacyQuote->usd_per_iet),
                     409,
                     'Existing generalized IET quote does not match its compatibility source.',
                 );
@@ -106,5 +106,20 @@ final class IetMarketQuoteBridge
                 ],
             ])->fresh(['baseInstrument', 'quoteInstrument', 'source', 'publisher']);
         }, attempts: 3);
+    }
+
+    private function sameDecimal(string $left, string $right): bool
+    {
+        return $this->canonicalDecimal($left) === $this->canonicalDecimal($right);
+    }
+
+    private function canonicalDecimal(string $value): string
+    {
+        $value = trim($value);
+        [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
+        $whole = ltrim($whole, '0');
+        $fraction = rtrim($fraction, '0');
+
+        return ($whole === '' ? '0' : $whole).($fraction === '' ? '' : '.'.$fraction);
     }
 }
