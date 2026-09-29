@@ -102,6 +102,11 @@
                 {{ __('access.admin.title') }}
             </flux:sidebar.item>
         @endif
+        @if (request()->user()?->hasPlatformCapability(\App\PlatformCapability::ViewPlatformAudit))
+            <flux:sidebar.item :href="route('platform.development-origins')" :current="request()->routeIs('platform.development-origins')" icon="clock">
+                {{ __('development.title') }}
+            </flux:sidebar.item>
+        @endif
         @unless ($officeAlpha)
             @can('viewAny', App\Models\Actor::class)
                 <flux:sidebar.item :href="route('actors.index')" :current="request()->routeIs('actors.*')" icon="users">
