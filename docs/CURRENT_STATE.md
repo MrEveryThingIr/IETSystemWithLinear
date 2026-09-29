@@ -17,6 +17,7 @@ Current integrated boundaries include:
 - compact personal Money beside mature Accounting;
 - restored AI Content Assistance, authenticated AI Chat, and immutable Development Origins;
 - versioned System Manual coverage for AI and the existing domain surfaces.
+- a realistic local/testing Planner demo fixture for cumulative browser acceptance and lifecycle regression coverage.
 
 The generalized economic model separates Monetary Units, Economic Instruments, immutable Market Quotes, specific owned/offered assets, ledger Accounts and Financial Obligations. A self-declared skill is never mint authority. Trusted service economics must flow through versioned Contract/Fulfillment evidence.
 
