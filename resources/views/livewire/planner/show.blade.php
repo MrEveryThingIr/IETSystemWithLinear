@@ -122,7 +122,7 @@
                                 @if ($canParticipate && $plan->status === \App\PlanStatus::Active)
                                     <div class="flex flex-wrap gap-2">
                                         @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
-                                            @if ($phase === 'ready' && $remainingPrerequisites === 0)
+                                            @if (in_array($phase, ['ready', 'late'], true) && $remainingPrerequisites === 0)
                                                 <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
                                             @endif
                                             <flux:button wire:click="skipOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.skip') }}</flux:button>
@@ -144,12 +144,14 @@
                                     @if ($phase === 'upcoming')
                                         {{ __('planner.execution.upcoming') }}
                                         <x-app.local-datetime :value="$occurrence->window_start_at" />
-                                    @elseif ($phase === 'ready' && $remainingPrerequisites > 0)
+                                    @elseif (in_array($phase, ['ready', 'late'], true) && $remainingPrerequisites > 0)
                                         {{ trans_choice('planner.execution.prerequisites_remaining', $remainingPrerequisites, ['count' => $remainingPrerequisites]) }}
                                     @elseif ($phase === 'ready')
                                         {{ __('planner.execution.ready') }}
+                                    @elseif ($phase === 'late')
+                                        {{ __('planner.execution.late') }}
                                     @else
-                                        {{ __('planner.execution.passed') }}
+                                        {{ __('planner.execution.missed') }}
                                     @endif
                                 </div>
                             @endif
@@ -165,7 +167,7 @@
                                                 $canToggle = $canParticipate
                                                     && $plan->status === \App\PlanStatus::Active
                                                     && $occurrence->status === \App\PlanOccurrenceStatus::Scheduled
-                                                    && $phase !== 'passed';
+                                                    && $phase !== 'missed';
                                             @endphp
                                             <button
                                                 type="button"
