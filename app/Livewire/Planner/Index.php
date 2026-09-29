@@ -265,13 +265,12 @@ class Index extends Component
 
     public function showDay(string $day): void
     {
-        abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1, 422);
-
         $user = $this->user();
         $timezone = TemporalPreferences::timezoneFor($user);
-        $date = CarbonImmutable::parse($day, $timezone);
+        $date = $this->canonicalDate($day, $timezone);
+        abort_unless($date instanceof CarbonImmutable, 422);
 
-        $this->day = $day;
+        $this->day = $date->toDateString();
         $this->month = TemporalCalendar::monthStart($date, $user, $timezone)->toDateString();
         $this->year = TemporalCalendar::yearStart($date, $user, $timezone)->toDateString();
         $this->calendarLevel = 'day';
@@ -279,14 +278,14 @@ class Index extends Component
 
     public function showHour(string $day, int $hour): void
     {
-        abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1, 422);
         abort_unless($hour >= 0 && $hour <= 23, 422);
 
         $user = $this->user();
         $timezone = TemporalPreferences::timezoneFor($user);
-        $date = CarbonImmutable::parse($day, $timezone);
+        $date = $this->canonicalDate($day, $timezone);
+        abort_unless($date instanceof CarbonImmutable, 422);
 
-        $this->day = $day;
+        $this->day = $date->toDateString();
         $this->month = TemporalCalendar::monthStart($date, $user, $timezone)->toDateString();
         $this->year = TemporalCalendar::yearStart($date, $user, $timezone)->toDateString();
         $this->hour = $hour;
@@ -614,14 +613,29 @@ class Index extends Component
         }
 
         if (preg_match('/^\d{4}-\d{2}$/', $value) === 1) {
-            return CarbonImmutable::parse($value.'-01', $timezone);
+            [$year, $month] = array_map('intval', explode('-', $value));
+
+            return $month >= 1 && $month <= 12
+                ? CarbonImmutable::create($year, $month, 1, 0, 0, 0, $timezone)
+                : null;
         }
 
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1) {
-            return CarbonImmutable::parse($value, $timezone);
+        return $this->canonicalDate($value, $timezone);
+    }
+
+    private function canonicalDate(string $value, string $timezone): ?CarbonImmutable
+    {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return null;
         }
 
-        return null;
+        [$year, $month, $day] = array_map('intval', explode('-', $value));
+
+        if (! checkdate($month, $day, $year)) {
+            return null;
+        }
+
+        return CarbonImmutable::create($year, $month, $day, 0, 0, 0, $timezone);
     }
 
     private function context(User $user): ?Context
