@@ -2,14 +2,23 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Contexts\EnsureGroupSpaceContext;
 use App\Actions\Contexts\EnsurePersonalContext;
+use App\Actions\Planner\AttachPlanOccurrenceEvidence;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
 use App\Livewire\Planner\Show as PlannerShow;
 use App\Models\Actor;
+use App\Models\SpaceContentRevision;
+use App\Models\SpaceContent;
+use App\Models\GroupSpace;
+use App\Models\GroupMembership;
+use App\Models\Group;
+use App\Models\ContentEvidenceReference;
 use App\Models\Asset;
 use App\PlanScheduleFrequency;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -54,4 +63,73 @@ class PlannerEvidenceUploadTest extends TestCase
             CarbonImmutable::setTestNow();
         }
     }
+    public function test_participant_cannot_attach_content_evidence_they_cannot_view(): void
+    {
+        $owner = Actor::factory()->create();
+        $participant = Actor::factory()->create();
+        $group = Group::factory()->create(['created_by_actor_id' => $owner->id]);
+
+        GroupMembership::factory()->create([
+            'group_id' => $group->id,
+            'actor_id' => $owner->id,
+            'role' => 'owner',
+            'status' => 'active',
+        ]);
+        GroupMembership::factory()->create([
+            'group_id' => $group->id,
+            'actor_id' => $participant->id,
+            'role' => 'member',
+            'status' => 'active',
+        ]);
+
+        $space = GroupSpace::factory()->create([
+            'group_id' => $group->id,
+            'created_by_actor_id' => $owner->id,
+            'access_mode' => 'group',
+        ]);
+        $context = app(EnsureGroupSpaceContext::class)->execute($space);
+
+        $plan = app(CreatePlan::class)->execute(
+            $context,
+            $owner->user,
+            'Shared plan',
+            timezone: 'UTC',
+            participants: [['actor' => $participant, 'role' => 'participant']],
+        );
+        $rule = app(CreatePlanScheduleRule::class)->execute(
+            $plan,
+            $owner->user,
+            PlanScheduleFrequency::Once,
+            now('UTC')->addDay()->toDateString(),
+            '12:00',
+            60,
+        );
+        $occurrence = $rule->occurrences()->sole();
+
+        $content = SpaceContent::factory()->create([
+            'group_space_id' => $space->id,
+            'context_id' => $context->id,
+            'author_actor_id' => $owner->id,
+            'status' => 'draft',
+        ]);
+        $revision = SpaceContentRevision::factory()->create([
+            'space_content_id' => $content->id,
+            'created_by_actor_id' => $owner->id,
+        ]);
+        $reference = ContentEvidenceReference::factory()->create([
+            'context_id' => $context->id,
+            'space_content_id' => $content->id,
+            'space_content_revision_id' => $revision->id,
+            'created_by_actor_id' => $owner->id,
+        ]);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(AttachPlanOccurrenceEvidence::class)->execute(
+            $occurrence,
+            $participant->user,
+            evidenceReferenceIds: [$reference->id],
+        );
+    }
+
 }
