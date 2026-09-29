@@ -207,6 +207,8 @@ return [
             'next_month' => '下个月',
             'saved' => '日期与时间偏好已保存。',
             'invalid_timezone' => '浏览器返回了不受支持的时区。',
+            'default_currency' => '默认货币',
+            'default_currency_help' => '当你首次使用某种货币创建个人账本时使用。现有财务历史绝不会自动换算。',
         ],
         'semantic_added' => '资料项目已添加。',
         'semantic_removed' => '资料项目已移除。',
