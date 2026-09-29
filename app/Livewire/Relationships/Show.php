@@ -17,7 +17,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Relationship')]
+#[Title('Deal')]
 class Show extends Component
 {
     public Relationship $relationship;
