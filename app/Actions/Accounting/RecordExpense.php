@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\Ledger;
 use App\Models\User;
+use App\Support\IetLedgerGuard;
 
 class RecordExpense
 {
@@ -25,6 +26,7 @@ class RecordExpense
         string $category = 'General expense',
         ?string $description = null,
     ): JournalEntry {
+        IetLedgerGuard::rejectManualMutation($ledger);
         abort_unless($paymentAccount->type === AccountType::Asset, 422, 'Expense payment requires an Asset Account.');
         abort_if($amountMinor <= 0, 422, 'Expense amount must be positive.');
 

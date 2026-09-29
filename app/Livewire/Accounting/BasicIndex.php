@@ -14,11 +14,17 @@ use App\JournalEntryKind;
 use App\Models\Account;
 use App\Models\Actor;
 use App\Models\Context;
+use App\Models\FinancialObligation;
+use App\Models\IetPricedFinancialObligation;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\Ledger;
+use App\Models\MonetaryUnit;
 use App\Models\MoneyIntention;
 use App\Models\User;
+use App\SettlementStatus;
+use App\Support\AccountingSummary;
+use App\Support\IetPricing;
 use App\Support\MonetaryUnitCatalog;
 use App\Support\MoneyAmount;
 use App\Support\TemporalPreferences;
@@ -78,7 +84,11 @@ class BasicIndex extends Component
         $this->date = $today;
         $this->intentionDate = $today;
 
-        $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
+        $ledgers = $context->ledgers()
+            ->with('monetaryUnit')
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
+            ->orderBy('id')
+            ->get();
 
         if ($this->ledgerUuid !== '') {
             abort_unless($ledgers->contains('uuid', $this->ledgerUuid), 404);
@@ -90,7 +100,13 @@ class BasicIndex extends Component
     public function selectLedger(string $uuid): void
     {
         $context = $this->personalContext();
-        abort_unless($context->ledgers()->where('uuid', $uuid)->exists(), 404);
+        abort_unless(
+            $context->ledgers()
+                ->where('uuid', $uuid)
+                ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
+                ->exists(),
+            404,
+        );
 
         $this->ledgerUuid = $uuid;
         $this->accountUuid = '';
@@ -101,7 +117,7 @@ class BasicIndex extends Component
     public function createLedger(CreatePersonalLedger $create): void
     {
         $data = $this->validate([
-            'unitCode' => ['required', 'string', 'max:12'],
+            'unitCode' => ['required', 'string', 'max:12', 'not_in:IET'],
             'ledgerName' => ['nullable', 'string', 'max:180'],
         ]);
 
@@ -253,11 +269,66 @@ class BasicIndex extends Component
         session()->flash('status', __('accounting.messages.reversed'));
     }
 
-    public function render(): View
+    public function render(IetPricing $ietPricing, AccountingSummary $summary): View
     {
         $context = $this->personalContext();
-        $ledgers = $context->ledgers()->with('monetaryUnit')->orderBy('id')->get();
+        $user = $this->user();
+        $actor = $user->actor;
+        abort_unless($actor instanceof Actor, 403);
+
+        $ledgers = $context->ledgers()
+            ->with('monetaryUnit')
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
+            ->orderBy('id')
+            ->get();
         $ledger = $this->ledgerOrNull();
+
+        $ietQuote = $ietPricing->currentQuote();
+        $ietUnit = MonetaryUnit::query()->where('code', 'IET')->first();
+        $ietLedger = $ietUnit instanceof MonetaryUnit
+            ? $context->ledgers()
+                ->where('monetary_unit_id', $ietUnit->id)
+                ->where('key', 'main')
+                ->first()
+            : null;
+        $ietWallet = $ietLedger?->accounts()->where('system_key', 'cash')->first();
+        $ietBalance = $ietWallet instanceof Account ? $summary->accountBalanceMinor($ietWallet) : 0;
+
+        $obligations = FinancialObligation::query()
+            ->with(['monetaryUnit', 'debtor.user', 'creditor.user', 'settlements'])
+            ->where(function ($query) use ($actor): void {
+                $query
+                    ->where('debtor_actor_id', $actor->id)
+                    ->orWhere('creditor_actor_id', $actor->id);
+            })
+            ->latest('recognized_at')
+            ->limit(50)
+            ->get();
+
+        $priced = IetPricedFinancialObligation::query()
+            ->with('valuationQuote')
+            ->whereIn('financial_obligation_id', $obligations->pluck('id'))
+            ->get()
+            ->keyBy('financial_obligation_id');
+
+        $obligationRows = $obligations->map(function (FinancialObligation $obligation) use ($actor, $priced): array {
+            $paid = (int) $obligation->settlements
+                ->filter(fn ($settlement): bool => $settlement->status === SettlementStatus::Confirmed)
+                ->sum('amount_minor');
+
+            $isDebtor = (int) $obligation->debtor_actor_id === (int) $actor->id;
+            $counterparty = $isDebtor ? $obligation->creditor : $obligation->debtor;
+            $ietPricing = $priced->get($obligation->id);
+
+            return [
+                'obligation' => $obligation,
+                'role' => $isDebtor ? 'owe' : 'receive',
+                'counterparty' => $counterparty->user->username ?? 'actor-'.$counterparty->id,
+                'paid_minor' => $paid,
+                'outstanding_minor' => max(0, (int) $obligation->amount_minor - $paid),
+                'iet_pricing' => $ietPricing,
+            ];
+        });
 
         $assetAccounts = collect();
         $entries = collect();
@@ -300,7 +371,11 @@ class BasicIndex extends Component
             'assetAccounts' => $assetAccounts,
             'rows' => $rows,
             'intentions' => $intentions,
-            'unitCatalog' => MonetaryUnitCatalog::all(),
+            'unitCatalog' => collect(MonetaryUnitCatalog::all())->except('IET')->all(),
+            'ietQuote' => $ietQuote,
+            'ietQuotePercent' => $ietPricing->percentOfUsd($ietQuote),
+            'ietBalance' => $ietBalance,
+            'obligationRows' => $obligationRows,
         ]);
     }
 
@@ -358,6 +433,7 @@ class BasicIndex extends Component
             ->ledgers()
             ->with('monetaryUnit')
             ->where('uuid', $this->ledgerUuid)
+            ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
             ->first();
 
         abort_unless($ledger instanceof Ledger, 404);

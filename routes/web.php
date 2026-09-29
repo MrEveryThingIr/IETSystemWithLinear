@@ -44,6 +44,7 @@ use App\Livewire\Contexts\Timeline as ContextTimeline;
 use App\Livewire\Contracts\Create as ContractCreate;
 use App\Livewire\Contracts\Index as ContractIndex;
 use App\Livewire\Contracts\Show as ContractShow;
+use App\Livewire\Exchange\Index as ExchangeIndex;
 use App\Livewire\Financial\Show as FinancialObligationShow;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
@@ -143,6 +144,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
     Route::livewire('/accounting', config('release.profile') === 'planning_baseline' ? AccountingBasicIndex::class : AccountingIndex::class)->name('accounting.index');
+    Route::livewire('/exchange', ExchangeIndex::class)->name('exchange.index');
     Route::livewire('/vault', VaultIndex::class)->name('vault.index');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');

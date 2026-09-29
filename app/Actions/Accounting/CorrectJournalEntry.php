@@ -6,6 +6,7 @@ use App\JournalEntryKind;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\User;
+use App\Support\IetLedgerGuard;
 use Illuminate\Support\Facades\DB;
 
 class CorrectJournalEntry
@@ -27,6 +28,9 @@ class CorrectJournalEntry
         ?string $replacementDescription,
         array $replacementLines,
     ): array {
+        $entry->loadMissing('ledger');
+        IetLedgerGuard::rejectManualMutation($entry->ledger);
+
         abort_unless($replacementKind !== JournalEntryKind::Reversal, 422, 'Correction replacement cannot itself be a reversal.');
 
         return DB::transaction(function () use (

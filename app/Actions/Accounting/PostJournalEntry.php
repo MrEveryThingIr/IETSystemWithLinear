@@ -33,6 +33,27 @@ class PostJournalEntry
     ): JournalEntry {
         Gate::forUser($user)->authorize('manage', $ledger);
 
+        $ledger->loadMissing('monetaryUnit');
+
+        if ($ledger->monetaryUnit->code === 'IET') {
+            $allowed = [
+                JournalEntryKind::ExchangeDeposit->value => 'iet_exchange_request',
+                JournalEntryKind::ExchangeCashout->value => 'iet_exchange_request',
+                JournalEntryKind::InternalCharge->value => 'iet_internal_charge',
+                JournalEntryKind::ObligationRecognition->value => 'financial_obligation',
+                JournalEntryKind::Settlement->value => 'settlement',
+            ];
+
+            abort_unless(
+                isset($allowed[$kind->value])
+                && $sourceType === $allowed[$kind->value]
+                && $sourceUuid !== null
+                && $idempotencyKey !== null,
+                422,
+                'IET Journal Entries require an approved dedicated posting path.',
+            );
+        }
+
         $actor = $this->actor($user);
         $date = CarbonImmutable::createFromFormat('!Y-m-d', $occurredOn);
         abort_unless($date !== null && $date->format('Y-m-d') === $occurredOn, 422, 'Invalid accounting date.');

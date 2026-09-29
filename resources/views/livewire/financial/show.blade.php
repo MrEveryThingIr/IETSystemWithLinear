@@ -3,9 +3,24 @@
 
     <x-app.page-header :title="__('financial.obligation.title')" :description="__('financial.obligation.help')">
         <x-slot:actions>
+            @if (config('release.profile') === 'planning_baseline')
+                <flux:button :href="route('accounting.index')" variant="ghost">
+                    {{ __('financial.back_to_money') }}
+                </flux:button>
+            @endif
             <flux:badge>{{ $obligation->monetaryUnit->code }}</flux:badge>
         </x-slot:actions>
     </x-app.page-header>
+
+    @if ($ietPricing)
+        <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300">
+            {{ __('financial.iet_pricing', [
+                'usd' => AppSupportMoneyAmount::format((int) $ietPricing->reference_usd_amount_minor, 2),
+                'iet' => number_format((int) $ietPricing->iet_amount),
+                'quote' => rtrim(rtrim((string) $ietPricing->valuationQuote->usd_per_iet, '0'), '.'),
+            ]) }}
+        </div>
+    @endif
 
     @if ($obligation->isDisputed())
         <flux:callout variant="danger">{{ __('financial.obligation.frozen') }}</flux:callout>
@@ -158,21 +173,37 @@
         <div class="space-y-6">
             <flux:card class="space-y-3">
                 <flux:heading>{{ __('financial.obligation.source') }}</flux:heading>
-                <flux:button
-                    :href="route('commitments.show', $obligation->fulfillment->commitment).'#fulfillment-'.$obligation->fulfillment->uuid"
-                    variant="ghost"
-                    class="w-full"
-                >
-                    {{ $obligation->fulfillment->commitment->title }}
-                </flux:button>
-                <flux:button
-                    :href="route('contracts.show', $obligation->fulfillment->commitment->contractVersion->contract)"
-                    variant="ghost"
-                    class="w-full"
-                >
-                    {{ $obligation->fulfillment->commitment->contractVersion->contract->title }}
-                </flux:button>
+
+                @if (config('release.profile') === 'planning_baseline')
+                    <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+                        <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('financial.commitment_source') }}</div>
+                        <div class="mt-1 font-medium" dir="auto">{{ $obligation->fulfillment->commitment->title }}</div>
+                    </div>
+                    <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+                        <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('financial.contract_source') }}</div>
+                        <div class="mt-1 font-medium" dir="auto">{{ $obligation->fulfillment->commitment->contractVersion->contract->title }}</div>
+                    </div>
+                @else
+                    <flux:button
+                        :href="route('commitments.show', $obligation->fulfillment->commitment).'#fulfillment-'.$obligation->fulfillment->uuid"
+                        variant="ghost"
+                        class="w-full"
+                    >
+                        {{ $obligation->fulfillment->commitment->title }}
+                    </flux:button>
+                    <flux:button
+                        :href="route('contracts.show', $obligation->fulfillment->commitment->contractVersion->contract)"
+                        variant="ghost"
+                        class="w-full"
+                    >
+                        {{ $obligation->fulfillment->commitment->contractVersion->contract->title }}
+                    </flux:button>
+                @endif
             </flux:card>
+
+            @if ($obligation->monetaryUnit->code === 'IET')
+                <flux:callout>{{ __('financial.iet_settlement_boundary') }}</flux:callout>
+            @endif
 
             <flux:callout>{{ __('financial.boundary') }}</flux:callout>
         </div>
