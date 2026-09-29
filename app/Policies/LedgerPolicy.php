@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\ContextKind;
 use App\Models\Ledger;
+use App\PlatformCapability;
 use App\Models\User;
 
 class LedgerPolicy
@@ -14,6 +15,10 @@ class LedgerPolicy
     {
         $ledger->loadMissing('context');
 
+        if ($ledger->context->kind === ContextKind::System) {
+            return $user->hasPlatformCapability(PlatformCapability::ManageExchange);
+        }
+
         return $ledger->context->kind === ContextKind::Personal
             && $this->contexts->view($user, $ledger->context);
     }
@@ -22,8 +27,15 @@ class LedgerPolicy
     {
         $ledger->loadMissing('context');
 
-        return $ledger->status === 'active'
-            && $ledger->context->kind === ContextKind::Personal
+        if ($ledger->status !== 'active') {
+            return false;
+        }
+
+        if ($ledger->context->kind === ContextKind::System) {
+            return $user->hasPlatformCapability(PlatformCapability::ManageExchange);
+        }
+
+        return $ledger->context->kind === ContextKind::Personal
             && $this->contexts->manageContent($user, $ledger->context);
     }
 }
