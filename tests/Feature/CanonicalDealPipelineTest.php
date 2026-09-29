@@ -3,7 +3,12 @@
 namespace Tests\Feature;
 
 use App\ContractStatus;
+use App\FulfillmentStatus;
+use App\ContractVersionStatus;
 use App\Models\Actor;
+use App\Models\Commitment;
+use App\Models\ContractVersion;
+use App\Models\Fulfillment;
 use App\Models\Contract;
 use App\Models\Proposal;
 use App\Models\Relationship;
@@ -37,14 +42,69 @@ class CanonicalDealPipelineTest extends TestCase
             $pipeline->stage($negotiating->fresh()->load(['proposals', 'contracts'])),
         );
 
-        Contract::factory()->create([
+        $contract = Contract::factory()->create([
             'relationship_id' => $negotiating->id,
             'status' => ContractStatus::Active,
         ]);
 
+        $version = ContractVersion::factory()->create([
+            'contract_id' => $contract->id,
+            'status' => ContractVersionStatus::Active,
+            'accepted_at' => now(),
+            'activated_at' => now(),
+        ]);
+
+        $commitment = Commitment::factory()->create([
+            'contract_version_id' => $version->id,
+        ]);
+
         $this->assertSame(
             'work',
-            $pipeline->stage($negotiating->fresh()->load(['proposals', 'contracts'])),
+            $pipeline->stage($negotiating->fresh()->load([
+                'proposals',
+                'contracts.versions.commitments.fulfillments',
+            ])),
+        );
+
+        Fulfillment::factory()->create([
+            'commitment_id' => $commitment->id,
+            'status' => FulfillmentStatus::Submitted,
+        ]);
+
+        $this->assertSame(
+            'review',
+            $pipeline->stage($negotiating->fresh()->load([
+                'proposals',
+                'contracts.versions.commitments.fulfillments',
+            ])),
+        );
+
+        $settlementRelationship = Relationship::factory()->active()->create();
+        $settlementContract = Contract::factory()->create([
+            'relationship_id' => $settlementRelationship->id,
+            'status' => ContractStatus::Active,
+        ]);
+        $settlementVersion = ContractVersion::factory()->create([
+            'contract_id' => $settlementContract->id,
+            'status' => ContractVersionStatus::Active,
+            'accepted_at' => now(),
+            'activated_at' => now(),
+        ]);
+        $settlementCommitment = Commitment::factory()->create([
+            'contract_version_id' => $settlementVersion->id,
+        ]);
+        Fulfillment::factory()->create([
+            'commitment_id' => $settlementCommitment->id,
+            'status' => FulfillmentStatus::Accepted,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->assertSame(
+            'settle',
+            $pipeline->stage($settlementRelationship->fresh()->load([
+                'proposals',
+                'contracts.versions.commitments.fulfillments',
+            ])),
         );
     }
 
