@@ -14,12 +14,12 @@
                         <div>
                             <flux:heading size="lg" dir="auto">{{ $origin->title }}</flux:heading>
                             <div class="mt-1 flex flex-wrap gap-2">
-                                <flux:badge>{{ $origin->source_type }}</flux:badge>
+                                <flux:badge>{{ __('development.source_types.'.$origin->source_type) }}</flux:badge>
                                 @if ($origin->phase_key)<flux:badge>{{ $origin->phase_key }}</flux:badge>@endif
                                 @if ($origin->system_version)<flux:badge>{{ $origin->system_version }}</flux:badge>@endif
                             </div>
                         </div>
-                        <div class="text-xs text-zinc-500">{{ $origin->created_at->format('Y-m-d H:i') }}</div>
+                        <div class="text-xs text-zinc-500"><x-app.local-datetime :value="$origin->created_at" /></div>
                     </div>
 
                     <div class="whitespace-pre-wrap text-sm" dir="auto">{{ $origin->summary }}</div>
@@ -35,7 +35,7 @@
                             <div><span class="text-zinc-500">{{ __('development.branch') }}:</span> <code>{{ $origin->branch }}</code></div>
                         @endif
                         @if ($origin->occurred_at)
-                            <div><span class="text-zinc-500">{{ __('development.occurred_at') }}:</span> {{ $origin->occurred_at->format('Y-m-d H:i') }}</div>
+                            <div><span class="text-zinc-500">{{ __('development.occurred_at') }}:</span> <x-app.local-datetime :value="$origin->occurred_at" /></div>
                         @endif
                         @if ($origin->baseline_commit_sha)
                             <div class="break-all"><span class="text-zinc-500">{{ __('development.baseline') }}:</span> <code>{{ $origin->baseline_commit_sha }}</code></div>
@@ -70,10 +70,10 @@
 
                 <form wire:submit="capture" class="space-y-4">
                     <flux:select wire:model="sourceType" :label="__('development.source_type')">
-                        <option value="chatgpt">ChatGPT</option>
-                        <option value="design_session">Design session</option>
-                        <option value="external_discussion">External discussion</option>
-                        <option value="manual_note">Manual note</option>
+                        <option value="chatgpt">{{ __('development.source_types.chatgpt') }}</option>
+                        <option value="design_session">{{ __('development.source_types.design_session') }}</option>
+                        <option value="external_discussion">{{ __('development.source_types.external_discussion') }}</option>
+                        <option value="manual_note">{{ __('development.source_types.manual_note') }}</option>
                     </flux:select>
 
                     <flux:input wire:model="sourceUrl" :label="__('development.source_url')" maxlength="2000" />
@@ -87,7 +87,7 @@
                     <flux:input wire:model="baselineCommitSha" :label="__('development.baseline')" maxlength="40" />
                     <flux:input wire:model="resultCommitSha" :label="__('development.result')" maxlength="40" />
                     <flux:textarea wire:model="repositoryPaths" :label="__('development.repository_paths')" :description="__('development.repository_paths_help')" rows="5" maxlength="8000" />
-                    <flux:input wire:model="occurredAt" type="datetime-local" :label="__('development.occurred_at')" />
+                    <x-app.calendar-datetime-input model="occurredAt" :label="__('development.occurred_at')" />
 
                     <flux:button type="submit" variant="primary" class="w-full">{{ __('development.capture') }}</flux:button>
                 </form>
