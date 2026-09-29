@@ -64,9 +64,9 @@ class Create extends Component
 
     public string $occurrenceLimit = '';
 
-    public int $windowBeforeMinutes = 0;
+    public int $windowBeforeMinutes = 15;
 
-    public int $windowAfterMinutes = 0;
+    public int $windowAfterMinutes = 15;
 
     public string $reminderOffsets = '15';
 
