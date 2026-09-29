@@ -46,10 +46,7 @@ class OpenAiChatClient
 
                 return [
                     'role' => $role,
-                    'content' => [[
-                        'type' => $role === 'assistant' ? 'output_text' : 'input_text',
-                        'text' => $content,
-                    ]],
+                    'content' => $content,
                 ];
             })
             ->values()
