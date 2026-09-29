@@ -5,10 +5,15 @@ namespace App\Actions\Exchange;
 use App\Models\IetValuationQuote;
 use App\Models\User;
 use App\PlatformCapability;
+use App\Support\IetMarketQuoteBridge;
 use Illuminate\Support\Str;
 
 class PublishIetValuationQuote
 {
+    public function __construct(
+        private readonly IetMarketQuoteBridge $marketQuotes,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $factors
      */
@@ -32,7 +37,7 @@ class PublishIetValuationQuote
             'Enter a positive USD-per-IET value with at most 18 decimals.',
         );
 
-        return IetValuationQuote::query()->create([
+        $quote = IetValuationQuote::query()->create([
             'uuid' => (string) Str::uuid(),
             'usd_per_iet' => $usdPerIet,
             'policy_version' => 'manual-v1',
@@ -41,5 +46,9 @@ class PublishIetValuationQuote
             'effective_at' => now(),
             'published_by_user_id' => $user->id,
         ]);
+
+        $this->marketQuotes->mirror($quote);
+
+        return $quote;
     }
 }
