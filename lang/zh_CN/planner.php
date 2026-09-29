@@ -172,7 +172,10 @@ return [
         'cancellable_occurrence' => '只能取消已安排或正在执行的事项。',
         'finish_active_occurrences_first' => '结束计划前，请先完成或取消所有正在执行的事项。',
     ],
-    'messages' => ['expense_recorded' => '实际支出已记录。'],
+    'messages' => [
+        'evidence_attached' => '证据已附加到此计划事项。',
+        'expense_recorded' => '实际支出已记录。',
+    ],
     'weekdays' => [
         1 => '星期一', 2 => '星期二', 3 => '星期三', 4 => '星期四',
         5 => '星期五', 6 => '星期六', 7 => '星期日',
