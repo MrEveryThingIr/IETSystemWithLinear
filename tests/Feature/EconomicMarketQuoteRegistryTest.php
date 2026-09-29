@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Exchange\PublishIetValuationQuote;
 use App\Actions\Exchange\PublishManualMarketQuote;
 use App\Actions\Exchange\PublishMarketQuote;
 use App\Actions\Exchange\RegisterEconomicInstrument;
@@ -80,7 +81,7 @@ class EconomicMarketQuoteRegistryTest extends TestCase
             'role' => PlatformRole::Superadmin,
         ]);
 
-        $published = app(\App\Actions\Exchange\PublishIetValuationQuote::class)->execute(
+        $published = app(PublishIetValuationQuote::class)->execute(
             $admin->user,
             '0.000000010100000000',
             'Audited compatibility bridge proof.',
