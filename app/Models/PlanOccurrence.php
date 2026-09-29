@@ -177,7 +177,7 @@ class PlanOccurrence extends Model
             return PlanOccurrenceWindowState::Upcoming;
         }
 
-        if ($moment->lte($this->scheduled_end_at->utc())) {
+        if ($moment->lte($this->scheduled_start_at->utc())) {
             return PlanOccurrenceWindowState::Ready;
         }
 
