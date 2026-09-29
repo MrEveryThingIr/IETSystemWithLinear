@@ -21,13 +21,18 @@ use Illuminate\Support\Facades\Gate;
 
 class CreateContractFromProposal
 {
-    public function __construct(private readonly CreateContractVersion $versions) {}
+    public function __construct(
+        private readonly CreateContractVersion $versions,
+        private readonly ConfigureContractServiceTerms $serviceTerms,
+        private readonly AcceptContractVersion $acceptVersions,
+    ) {}
 
     public function execute(
         Proposal $proposal,
         User $user,
         CarbonInterface $effectiveFrom,
         string $effectiveTimezone,
+        ?array $serviceTerms = null,
     ): Contract {
         $current = $this->currentUser($user);
 
@@ -39,6 +44,7 @@ class CreateContractFromProposal
             $current,
             $effectiveFrom,
             $effectiveTimezone,
+            $serviceTerms,
         ): Contract {
             $lockedProposal = Proposal::query()
                 ->with([
@@ -104,7 +110,7 @@ class CreateContractFromProposal
                 ->values()
                 ->all();
 
-            $this->versions->execute(
+            $version = $this->versions->execute(
                 $contract,
                 $current,
                 $sourceVersion->termsRevision,
@@ -112,7 +118,13 @@ class CreateContractFromProposal
                 $effectiveFrom,
                 $effectiveTimezone,
                 'Created explicitly from accepted ProposalVersion '.$sourceVersion->version,
+                acceptProposer: $serviceTerms === null,
             );
+
+            if ($serviceTerms !== null) {
+                $this->serviceTerms->executeFromInput($version, $current, $serviceTerms);
+                $this->acceptVersions->execute($version, $current);
+            }
 
             return $contract->fresh([
                 'relationship',
@@ -122,6 +134,9 @@ class CreateContractFromProposal
                 'versions.termsRevision.content',
                 'versions.parties.actor.user',
                 'versions.parties.acceptance',
+                'versions.serviceTerm.employer.user',
+                'versions.serviceTerm.worker.user',
+                'versions.serviceTerm.monetaryUnit',
                 'events.actor.user',
             ]);
         }, attempts: 3);
