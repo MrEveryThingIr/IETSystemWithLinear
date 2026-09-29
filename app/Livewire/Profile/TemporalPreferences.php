@@ -5,6 +5,7 @@ namespace App\Livewire\Profile;
 use App\CalendarSystem;
 use App\Models\User;
 use App\Support\Localization;
+use App\Support\MonetaryUnitCatalog;
 use App\Support\TemporalPreferences as TemporalPreferenceResolver;
 use App\TimezoneMode;
 use Illuminate\Contracts\View\View;
@@ -22,6 +23,8 @@ class TemporalPreferences extends Component
     public string $dateFormat = 'long';
 
     public string $timeFormat = '24h';
+
+    public string $defaultMonetaryUnitCode = 'USD';
 
     public bool $showGregorianEquivalent = true;
 
@@ -98,6 +101,7 @@ class TemporalPreferences extends Component
             ],
             'dateFormat' => ['required', Rule::in(['long', 'medium', 'numeric'])],
             'timeFormat' => ['required', Rule::in(['24h', '12h'])],
+            'defaultMonetaryUnitCode' => ['required', Rule::in(array_keys(MonetaryUnitCatalog::all()))],
             'showGregorianEquivalent' => ['boolean'],
         ]);
 
@@ -108,6 +112,7 @@ class TemporalPreferences extends Component
             : CalendarSystem::from($data['calendar']);
         $user->date_display_format = $data['dateFormat'];
         $user->time_display_format = $data['timeFormat'];
+        $user->default_monetary_unit_code = $data['defaultMonetaryUnitCode'];
         $user->show_gregorian_equivalent = $data['showGregorianEquivalent'];
         $user->save();
 
@@ -123,6 +128,7 @@ class TemporalPreferences extends Component
         $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
         $this->dateFormat = TemporalPreferenceResolver::dateFormatFor($user);
         $this->timeFormat = TemporalPreferenceResolver::timeFormatFor($user);
+        $this->defaultMonetaryUnitCode = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
         $this->showGregorianEquivalent = TemporalPreferenceResolver::showGregorianEquivalentFor($user);
     }
 
@@ -137,6 +143,7 @@ class TemporalPreferences extends Component
             'intlLocale' => Localization::intlLocale(),
             'localeName' => Localization::supported()[app()->getLocale()]['native_name'] ?? app()->getLocale(),
             'calendarOptions' => CalendarSystem::cases(),
+            'monetaryUnits' => MonetaryUnitCatalog::all(),
             'timezones' => timezone_identifiers_list(),
         ]);
     }
