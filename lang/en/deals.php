@@ -36,5 +36,8 @@ return [
     'continue_negotiation' => 'Continue negotiation',
     'finalize_agreement' => 'Finalize accepted terms',
     'open_contract' => 'Open agreement',
+    'pipeline_only' => 'Start negotiation from an active Deal. Standalone proposals are not part of the normal workflow.',
+    'contract_requires_proposal' => 'Finalize a Contract from an accepted Proposal. Standalone contracts are not part of the normal workflow.',
+    'proposal_parties_help' => 'Proposal parties come from the active Deal so negotiation cannot silently add unrelated people.',
     'market_response' => 'Respond / negotiate',
 ];
