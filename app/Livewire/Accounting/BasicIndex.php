@@ -84,6 +84,12 @@ class BasicIndex extends Component
         $this->date = $today;
         $this->intentionDate = $today;
 
+        $defaultUnit = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
+        $personalUnits = collect(MonetaryUnitCatalog::all())->except('IET')->all();
+        $this->unitCode = array_key_exists($defaultUnit, $personalUnits)
+            ? $defaultUnit
+            : (array_key_exists('USD', $personalUnits) ? 'USD' : (string) array_key_first($personalUnits));
+
         $ledgers = $context->ledgers()
             ->with('monetaryUnit')
             ->whereHas('monetaryUnit', fn ($query) => $query->where('code', '!=', 'IET'))
