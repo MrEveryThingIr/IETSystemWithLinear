@@ -19,13 +19,12 @@
                 maxlength="180"
             />
 
-            <div>
-                <flux:textarea
-                    wire:model="partyUsernames"
-                    :label="__('proposals.create.parties')"
-                    rows="3"
-                />
-                <p class="mt-1 text-xs text-zinc-500">{{ __('proposals.create.parties_help') }}</p>
+            <div class="space-y-2">
+                <div class="text-sm font-medium">{{ __('proposals.create.parties') }}</div>
+                <div class="rounded-xl bg-zinc-50 p-3 text-sm dark:bg-zinc-950" dir="auto">
+                    {{ $partyUsernames }}
+                </div>
+                <p class="text-xs text-zinc-500">{{ __('deals.proposal_parties_help') }}</p>
             </div>
 
             <flux:textarea
@@ -47,7 +46,7 @@
             />
 
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <flux:button :href="route('proposals.index')" variant="ghost">
+                <flux:button :href="route('relationships.show', $relationship)" variant="ghost">
                     {{ __('ui.common.cancel') }}
                 </flux:button>
                 <flux:button type="submit" variant="primary">

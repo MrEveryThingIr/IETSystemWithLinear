@@ -127,6 +127,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');
     Route::livewire('/journeys', JourneyIndex::class)->name('journeys.index');
+    Route::livewire('/deals', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('deals.index');
     Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
     Route::livewire('/relationships/create', RelationshipCreate::class)->can('create', Relationship::class)->name('relationships.create');
     Route::livewire('/relationships/{relationship}', RelationshipShow::class)->can('view', 'relationship')->name('relationships.show');

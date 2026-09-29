@@ -2,11 +2,6 @@
     <x-app.flash-message />
 
     <x-app.page-header :title="__('contracts.title')" :description="__('contracts.help')">
-        <x-slot:actions>
-            <flux:button :href="route('contracts.create')" variant="primary">
-                {{ __('contracts.create.title') }}
-            </flux:button>
-        </x-slot:actions>
     </x-app.page-header>
 
     <flux:callout>{{ __('contracts.boundary') }}</flux:callout>

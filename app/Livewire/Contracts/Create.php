@@ -3,21 +3,15 @@
 namespace App\Livewire\Contracts;
 
 use App\Actions\Contracts\CreateContractFromProposal;
-use App\Actions\Contracts\CreateDirectContract;
 use App\Models\Actor;
 use App\Models\Contract;
 use App\Models\Proposal;
-use App\Models\Relationship;
-use App\Models\RelationshipParticipant;
 use App\Models\User;
 use App\ProposalStatus;
-use App\RelationshipParticipantStatus;
-use App\RelationshipStatus;
 use App\Support\MonetaryUnitCatalog;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -32,21 +26,6 @@ class Create extends Component
 {
     #[Url(as: 'proposal')]
     public string $proposalUuid = '';
-
-    #[Url(as: 'relationship')]
-    public string $relationshipUuid = '';
-
-    public string $title = '';
-
-    public string $creatorRole = 'party';
-
-    public string $partyLines = '';
-
-    public string $summary = '';
-
-    public string $terms = '';
-
-    public string $notes = '';
 
     public string $effectiveAt = '';
 
@@ -105,9 +84,15 @@ class Create extends Component
 
     public bool $serviceAutoRecognizeObligation = true;
 
-    public function mount(): void
+    public function mount(): mixed
     {
         Gate::forUser($this->user())->authorize('create', Contract::class);
+
+        if ($this->proposalUuid === '') {
+            session()->flash('status', __('deals.contract_requires_proposal'));
+
+            return $this->redirectRoute('deals.index');
+        }
 
         $user = $this->user();
         $this->timezone = TemporalPreferences::timezoneFor($user);
@@ -123,102 +108,33 @@ class Create extends Component
             ? $defaultUnit
             : (string) array_key_first(MonetaryUnitCatalog::all());
 
-        if ($this->proposalUuid !== '') {
-            $proposal = $this->proposal();
-            $proposal->loadMissing('parties.actor.user');
+        $proposal = $this->proposal();
+        $proposal->loadMissing('parties.actor.user');
 
-            $this->title = $proposal->title;
-            $this->serviceTitle = $proposal->title;
-            $this->serviceWorkerUsername = (string) $proposal->parties
-                ->first(fn ($party): bool => (int) $party->actor_id !== (int) $user->actor?->id)
-                ?->actor
-                ?->user
-                ?->username;
+        $this->serviceTitle = $proposal->title;
+        $this->serviceWorkerUsername = (string) $proposal->parties
+            ->first(fn ($party): bool => (int) $party->actor_id !== (int) $user->actor?->id)
+            ?->actor
+            ?->user
+            ?->username;
 
-            return;
-        }
-
-        if ($this->relationshipUuid !== '') {
-            $relationship = $this->relationship();
-            $this->title = $relationship->title ?? '';
-            $this->serviceTitle = $relationship->title ?? '';
-
-            $currentParticipant = $relationship->participants()
-                ->where('actor_id', $user->actor?->id)
-                ->first();
-
-            if ($currentParticipant instanceof RelationshipParticipant) {
-                $this->creatorRole = $currentParticipant->role;
-            }
-
-            $participants = $relationship->participants()
-                ->where('status', RelationshipParticipantStatus::Active->value)
-                ->where('actor_id', '!=', $user->actor?->id)
-                ->with('actor.user')
-                ->get();
-
-            $this->partyLines = $participants
-                ->map(function (RelationshipParticipant $participant): ?string {
-                    $username = $participant->actor->user?->username;
-
-                    return $username !== null
-                        ? $username.' | '.$participant->role
-                        : null;
-                })
-                ->filter()
-                ->implode("\n");
-
-            $this->serviceWorkerUsername = (string) $participants->first()?->actor?->user?->username;
-        }
+        return null;
     }
 
-    public function save(
-        CreateDirectContract $createDirect,
-        CreateContractFromProposal $createFromProposal,
-    ): mixed {
+    public function save(CreateContractFromProposal $createFromProposal): mixed
+    {
         $this->validate([
             'effectiveAt' => ['required', 'string', 'max:40'],
             'timezone' => ['required', 'timezone:all'],
+            'proposalUuid' => ['required', 'uuid'],
         ]);
 
-        $effective = $this->effectiveInstant();
-        $serviceTerms = $this->serviceTermsInput();
-
-        if ($this->proposalUuid !== '') {
-            $contract = $createFromProposal->execute(
-                $this->proposal(),
-                $this->user(),
-                $effective,
-                $this->timezone,
-                $serviceTerms,
-            );
-
-            return $this->redirectRoute('contracts.show', $contract);
-        }
-
-        $data = $this->validate([
-            'title' => ['required', 'string', 'max:180'],
-            'creatorRole' => ['required', 'string', 'max:80'],
-            'partyLines' => ['required', 'string', 'max:4000'],
-            'summary' => ['nullable', 'string', 'max:10000'],
-            'terms' => ['required', 'string', 'max:50000'],
-            'notes' => ['nullable', 'string', 'max:10000'],
-        ]);
-
-        $partySpecs = $this->partySpecs($data['partyLines']);
-
-        $contract = $createDirect->execute(
+        $contract = $createFromProposal->execute(
+            $this->proposal(),
             $this->user(),
-            $data['title'],
-            $partySpecs,
-            $data['terms'],
-            $effective,
+            $this->effectiveInstant(),
             $this->timezone,
-            $data['summary'] !== '' ? $data['summary'] : null,
-            $data['notes'] !== '' ? $data['notes'] : null,
-            $data['creatorRole'],
-            $this->relationshipUuid !== '' ? $this->relationship() : null,
-            $serviceTerms,
+            $this->serviceTermsInput(),
         );
 
         return $this->redirectRoute('contracts.show', $contract);
@@ -227,8 +143,7 @@ class Create extends Component
     public function render(): View
     {
         return view('livewire.contracts.create', [
-            'proposal' => $this->proposalUuid !== '' ? $this->proposal() : null,
-            'relationship' => $this->relationshipUuid !== '' ? $this->relationship() : null,
+            'proposal' => $this->proposal(),
             'monetaryUnits' => MonetaryUnitCatalog::all(),
             'weekdayOrder' => TemporalPreferences::weekdayOrder($this->user()->locale),
         ]);
@@ -321,59 +236,6 @@ class Create extends Component
         ];
     }
 
-    /**
-     * @return list<array{actor: Actor, role: string, required: bool}>
-     */
-    private function partySpecs(string $raw): array
-    {
-        $lines = collect(preg_split('/\r\n|\r|\n/', trim($raw)) ?: [])
-            ->map(fn (string $line): string => trim($line))
-            ->filter()
-            ->values();
-
-        abort_if($lines->isEmpty() || $lines->count() > 19, 422, 'Provide between one and nineteen other Contract parties.');
-
-        $parsed = $lines->map(function (string $line): array {
-            [$username, $role] = array_pad(array_map('trim', explode('|', $line, 2)), 2, 'party');
-
-            return [
-                'username' => $username,
-                'role' => $role !== '' ? $role : 'party',
-            ];
-        });
-
-        $usernames = $parsed->pluck('username')->filter()->unique()->values();
-        abort_unless($usernames->count() === $parsed->count(), 422, 'Contract party usernames must be unique.');
-
-        $actors = Actor::query()
-            ->where('status', 'active')
-            ->whereHas('user', fn (Builder $query) => $query
-                ->where('status', 'active')
-                ->whereNotNull('email_verified_at')
-                ->whereIn('username', $usernames->all()))
-            ->with('user')
-            ->get()
-            ->keyBy(fn (Actor $actor): string => (string) $actor->user?->username);
-
-        if ($actors->count() !== $usernames->count()) {
-            $this->addError('partyLines', __('contracts.create.parties_not_found'));
-            abort(422, __('contracts.create.parties_not_found'));
-        }
-
-        return $parsed
-            ->map(function (array $spec) use ($actors): array {
-                $actor = $actors->get($spec['username']);
-                abort_unless($actor instanceof Actor, 422);
-
-                return [
-                    'actor' => $actor,
-                    'role' => $spec['role'],
-                    'required' => true,
-                ];
-            })
-            ->all();
-    }
-
     private function effectiveInstant(): CarbonImmutable
     {
         try {
@@ -395,18 +257,6 @@ class Create extends Component
         abort_unless($proposal->status === ProposalStatus::Accepted, 422);
 
         return $proposal;
-    }
-
-    private function relationship(): Relationship
-    {
-        $relationship = Relationship::query()
-            ->where('uuid', $this->relationshipUuid)
-            ->firstOrFail();
-
-        Gate::forUser($this->user())->authorize('participate', $relationship);
-        abort_unless($relationship->status === RelationshipStatus::Active, 422);
-
-        return $relationship;
     }
 
     /** @return list<string> */

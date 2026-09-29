@@ -9,6 +9,7 @@ use App\Models\Actor;
 use App\Models\Relationship;
 use App\Models\RelationshipParticipant;
 use App\Models\User;
+use App\Support\DealPipeline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Relationship')]
+#[Title('Deal')]
 class Show extends Component
 {
     public Relationship $relationship;
@@ -51,7 +52,7 @@ class Show extends Component
         session()->flash('status', __('relationships.messages.ended'));
     }
 
-    public function render(): View
+    public function render(DealPipeline $pipeline): View
     {
         $user = $this->user();
 
@@ -60,9 +61,12 @@ class Show extends Component
                 'purposeConcept.labels',
                 'domainBlueprintVersion.blueprint',
                 'originatingIntent.profile.actor.user',
+                'matchedIntent.profile.actor.user',
                 'participants.actor.user',
                 'events.actor.user',
                 'contextBinding.context',
+                'proposals.versions.derivedContract',
+                'contracts.versions.commitments.fulfillments',
             ])
             ->findOrFail($this->relationship->id);
 
@@ -74,8 +78,16 @@ class Show extends Component
             ->where('actor_id', $user->actor->id)
             ->firstOrFail();
 
+        $latestProposal = $relationship->proposals->sortByDesc('id')->first();
+        $latestContract = $relationship->contracts->sortByDesc('id')->first();
+
         return view('livewire.relationships.show', [
             'participant' => $participant,
+            'dealStage' => $pipeline->stage($relationship),
+            'dealSteps' => $pipeline->steps(),
+            'dealNextAction' => $pipeline->nextAction($relationship),
+            'latestProposal' => $latestProposal,
+            'latestContract' => $latestContract,
             'canRespond' => Gate::forUser($user)->allows('respond', $relationship),
             'canCancel' => Gate::forUser($user)->allows('cancel', $relationship),
             'canEnd' => Gate::forUser($user)->allows('end', $relationship),

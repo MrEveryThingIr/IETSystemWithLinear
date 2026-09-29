@@ -30,10 +30,17 @@ class ProposalExperienceTest extends TestCase
         $bob = Actor::factory()->create();
         $carol = Actor::factory()->create();
 
+        $relationship = $this->activeRelationship(
+            $alice,
+            [$bob, $carol],
+            'Riverside construction collaboration',
+        );
+
         Livewire::actingAs($alice->user)
+            ->withQueryParams(['relationship' => $relationship->uuid])
             ->test(ProposalCreate::class)
+            ->assertSet('partyUsernames', $bob->user->username.', '.$carol->user->username)
             ->set('title', 'Riverside construction collaboration')
-            ->set('partyUsernames', $bob->user->username.', '.$carol->user->username)
             ->set('summary', 'Coordinate Riverside construction.')
             ->set('terms', 'Alice coordinates the project. Bob provides construction work. Carol coordinates site requirements.')
             ->call('save');
@@ -162,10 +169,13 @@ class ProposalExperienceTest extends TestCase
         $bob = Actor::factory()->create();
         $outsider = Actor::factory()->create();
 
+        $relationship = $this->activeRelationship($alice, [$bob], 'Private deal');
+
         Livewire::actingAs($alice->user)
+            ->withQueryParams(['relationship' => $relationship->uuid])
             ->test(ProposalCreate::class)
+            ->assertSet('partyUsernames', $bob->user->username)
             ->set('title', 'Private proposal')
-            ->set('partyUsernames', $bob->user->username)
             ->set('terms', 'Private proposed terms.')
             ->call('save');
 
@@ -178,5 +188,34 @@ class ProposalExperienceTest extends TestCase
         $this->actingAs($outsider->user)
             ->get(route('contexts.conversation', $proposal->contextBinding->context))
             ->assertForbidden();
+    }
+
+    /**
+     * @param  list<Actor>  $participants
+     */
+    private function activeRelationship(Actor $creator, array $participants, string $title): Relationship
+    {
+        $relationship = Relationship::factory()->active()->create([
+            'title' => $title,
+            'created_by_actor_id' => $creator->id,
+        ]);
+
+        RelationshipParticipant::factory()->manager()->create([
+            'relationship_id' => $relationship->id,
+            'actor_id' => $creator->id,
+            'invited_by_actor_id' => $creator->id,
+            'role' => 'coordinator',
+        ]);
+
+        foreach ($participants as $participant) {
+            RelationshipParticipant::factory()->active()->create([
+                'relationship_id' => $relationship->id,
+                'actor_id' => $participant->id,
+                'invited_by_actor_id' => $creator->id,
+                'role' => 'party',
+            ]);
+        }
+
+        return $relationship;
     }
 }

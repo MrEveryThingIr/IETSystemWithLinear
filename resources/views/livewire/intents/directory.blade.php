@@ -102,7 +102,7 @@
                                 size="sm"
                                 variant="ghost"
                             >
-                                {{ __('relationships.from_intent') }}
+                                {{ __('deals.market_response') }}
                             </flux:button>
                         @endif
                     @endunless

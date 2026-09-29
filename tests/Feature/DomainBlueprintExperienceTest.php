@@ -5,9 +5,13 @@ namespace Tests\Feature;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Relationships\Create as RelationshipCreate;
 use App\Models\Actor;
+use App\Models\ActorProfile;
+use App\Models\ActorProfileIntent;
 use App\Models\Concept;
 use App\Models\Plan;
 use App\Models\Relationship;
+use App\ProfileIntentStatus;
+use App\ProfileItemVisibility;
 use App\Support\DomainBlueprintCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -40,16 +44,31 @@ class DomainBlueprintExperienceTest extends TestCase
         $purpose = Concept::factory()->create(['slug' => 'service']);
         $version = app(DomainBlueprintCatalog::class)->version('service-job');
 
+        $profile = ActorProfile::factory()->authenticated()->create([
+            'actor_id' => $bob->id,
+        ]);
+        $intent = ActorProfileIntent::factory()->create([
+            'actor_profile_id' => $profile->id,
+            'concept_id' => $purpose->id,
+            'created_by_actor_id' => $bob->id,
+            'status' => ProfileIntentStatus::Active,
+            'visibility' => ProfileItemVisibility::Authenticated,
+            'title' => 'Electrical service needed',
+        ]);
+
         Livewire::actingAs($alice->user)
-            ->withQueryParams(['blueprint' => 'service-job'])
+            ->withQueryParams([
+                'intent' => $intent->uuid,
+                'blueprint' => 'service-job',
+            ])
             ->test(RelationshipCreate::class)
             ->assertSet('blueprintSlug', 'service-job')
             ->assertSet('creatorRole', 'client')
             ->assertSet('participantRole', 'service provider')
             ->assertSet('purposeSearch', 'service')
             ->assertSee('Service Job')
-            ->call('selectPurpose', $purpose->id)
-            ->set('participantUsername', $bob->user->username)
+            ->assertSet('purposeLocked', true)
+            ->assertSet('participantLocked', true)
             ->set('title', 'Riverside electrical service')
             ->call('save')
             ->assertHasNoErrors();

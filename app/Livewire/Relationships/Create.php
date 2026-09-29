@@ -24,7 +24,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Start relationship')]
+#[Title('Respond to need or offer')]
 class Create extends Component
 {
     #[Url(as: 'intent')]
@@ -58,13 +58,19 @@ class Create extends Component
 
     public bool $participantLocked = false;
 
-    public function mount(): void
+    public function mount(): mixed
     {
         Gate::authorize('create', Relationship::class);
 
         $queryIntent = trim((string) request()->query('intent', ''));
         if ($queryIntent !== '') {
             $this->intentUuid = $queryIntent;
+        }
+
+        if ($this->intentUuid === '') {
+            session()->flash('status', __('deals.start_from_market'));
+
+            return $this->redirectRoute('intents.index');
         }
 
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
@@ -76,13 +82,21 @@ class Create extends Component
             $this->applyBlueprintDefaults();
         }
 
-        if ($this->intentUuid !== '') {
-            $this->loadOriginIntent();
-        }
+        $this->loadOriginIntent();
 
         if ($this->matchIntentUuid !== '') {
             $this->loadMatchedIntent();
+        } else {
+            $origin = ActorProfileIntent::query()
+                ->where('uuid', $this->intentUuid)
+                ->firstOrFail();
+
+            if ((int) $origin->profile->actor_id === (int) $this->user()->actor?->id) {
+                return $this->redirectRoute('intents.matches', $origin);
+            }
         }
+
+        return null;
     }
 
     public function selectPurpose(int $conceptId): void

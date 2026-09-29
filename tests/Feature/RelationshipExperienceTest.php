@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Relationships\CreateRelationship;
 use App\Livewire\Relationships\Create as RelationshipCreate;
 use App\Livewire\Relationships\Show as RelationshipShow;
 use App\Models\Actor;
@@ -79,29 +80,15 @@ class RelationshipExperienceTest extends TestCase
         $this->assertDatabaseCount('group_memberships', 0);
     }
 
-    public function test_direct_relationship_request_uses_known_username_and_selected_purpose(): void
+    public function test_standalone_relationship_browser_entry_redirects_to_the_market(): void
     {
         config()->set('release.profile', 'ideal_v1');
 
         $alice = Actor::factory()->create();
-        $carol = Actor::factory()->create();
-        $purpose = Concept::factory()->create();
 
-        Livewire::actingAs($alice->user)
-            ->test(RelationshipCreate::class)
-            ->call('selectPurpose', $purpose->id)
-            ->set('participantUsername', $carol->user->username)
-            ->set('creatorRole', 'project owner')
-            ->set('participantRole', 'capital collaborator')
-            ->set('title', 'Riverside capital collaboration')
-            ->call('save');
-
-        $relationship = Relationship::query()->with('participants')->sole();
-
-        $this->assertSame($purpose->id, $relationship->purpose_concept_id);
-        $this->assertNull($relationship->originating_intent_id);
-        $this->assertSame('project owner', $relationship->participants->firstWhere('actor_id', $alice->id)?->role);
-        $this->assertSame('capital collaborator', $relationship->participants->firstWhere('actor_id', $carol->id)?->role);
+        $this->actingAs($alice->user)
+            ->get(route('relationships.create'))
+            ->assertRedirect(route('intents.index'));
     }
 
     public function test_relationship_pages_are_participant_only_and_workspace_is_read_only_until_acceptance(): void
@@ -112,15 +99,15 @@ class RelationshipExperienceTest extends TestCase
         $bob = Actor::factory()->create();
         $outsider = Actor::factory()->create();
 
-        Livewire::actingAs($alice->user)
-            ->test(RelationshipCreate::class)
-            ->call('selectPurpose', Concept::factory()->create()->id)
-            ->set('participantUsername', $bob->user->username)
-            ->set('creatorRole', 'client')
-            ->set('participantRole', 'provider')
-            ->call('save');
-
-        $relationship = Relationship::query()->with('contextBinding.context')->sole();
+        $relationship = app(CreateRelationship::class)->execute(
+            $alice->user,
+            Concept::factory()->create(),
+            'client',
+            [[
+                'actor' => $bob,
+                'role' => 'provider',
+            ]],
+        )->load('contextBinding.context');
         $context = $relationship->contextBinding->context;
 
         $this->actingAs($alice->user)
