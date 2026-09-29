@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\ContractStatus;
+use App\FulfillmentStatus;
 use App\Models\Contract;
 use App\Models\Proposal;
 use App\Models\Relationship;
@@ -32,7 +33,29 @@ final class DealPipeline
             ->first();
 
         if ($contract instanceof Contract) {
-            return $contract->status === ContractStatus::Active ? 'work' : 'agree';
+            if ($contract->status !== ContractStatus::Active) {
+                return 'agree';
+            }
+
+            $fulfillments = $contract->versions
+                ->flatMap(fn ($version) => $version->commitments)
+                ->flatMap(fn ($commitment) => $commitment->fulfillments);
+
+            if ($fulfillments->contains(fn ($fulfillment): bool => in_array($fulfillment->status, [
+                FulfillmentStatus::Submitted,
+                FulfillmentStatus::ClarificationRequested,
+                FulfillmentStatus::Rejected,
+                FulfillmentStatus::Corrected,
+                FulfillmentStatus::Disputed,
+            ], true))) {
+                return 'review';
+            }
+
+            if ($fulfillments->contains(fn ($fulfillment): bool => $fulfillment->status === FulfillmentStatus::Accepted)) {
+                return 'settle';
+            }
+
+            return 'work';
         }
 
         $proposal = $relationship->proposals
