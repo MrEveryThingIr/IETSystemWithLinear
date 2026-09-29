@@ -12,6 +12,12 @@ class SystemManualHelpMap
             return 'feedback';
         }
 
+        if ($routeName === 'ai.chat'
+            || str_starts_with($routeName, 'contexts.contents.ai')
+            || $routeName === 'platform.development-origins') {
+            return 'ai-assistance';
+        }
+
         if (str_starts_with($routeName, 'journeys.')) {
             return 'journeys';
         }

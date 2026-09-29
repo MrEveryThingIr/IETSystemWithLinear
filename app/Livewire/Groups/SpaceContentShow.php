@@ -36,19 +36,28 @@ class SpaceContentShow extends Component
     use WithFileUploads;
 
     public Group $group;
+
     public GroupSpace $space;
+
     public SpaceContent $content;
+
     public string $title = '';
 
     /** @var array<string, mixed> */
     public array $payload = [];
 
     public mixed $assetUpload = null;
+
     public string $assetRightsStatus = 'unknown';
+
     public string $assetCaption = '';
+
     public string $recordingCaption = '';
+
     public string $archiveReason = '';
+
     public string $restoreReason = '';
+
     public bool $showArchiveConfirmation = false;
 
     public function mount(Group $group, GroupSpace $space, SpaceContent $content): void

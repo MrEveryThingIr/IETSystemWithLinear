@@ -38,7 +38,7 @@
                                     <div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                                         <x-app.actor-identity :actor="$item->author" size="xs" />
                                         <span>·</span>
-                                        <span>{{ $item->published_at?->timezone($group->timezone ?: 'UTC')->format('Y-m-d') }}</span>
+                                        <span>@if ($item->published_at)<x-app.local-date :value="$item->published_at->setTimezone(\App\Support\TemporalPreferences::timezoneFor(request()->user()))" />@endif</span>
                                         <flux:badge size="sm">{{ $item->definition->name }}</flux:badge>
                                     </div>
                                     <a href="{{ route('groups.spaces.contents.show', [$group, $space, $item]) }}" class="block text-lg font-semibold text-zinc-950 hover:underline dark:text-white" dir="auto">{{ $revision?->title ?? __('ui.content.untitled') }}</a>

@@ -7,6 +7,7 @@ use App\Models\PlanScheduleRule;
 use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanStatus;
+use App\PlanTimingMode;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 
@@ -88,7 +89,10 @@ class MaterializePlanOccurrences
                     'local_date' => $date->format('Y-m-d'),
                     'scheduled_end_at' => $localEnd->utc(),
                     'window_start_at' => $localStart->subMinutes($current->window_before_minutes)->utc(),
-                    'window_end_at' => $localEnd->addMinutes($current->window_after_minutes)->utc(),
+                    'window_end_at' => ($current->timing_mode === PlanTimingMode::FlexibleDay
+                        ? $localEnd
+                        : $localStart
+                    )->addMinutes($current->window_after_minutes)->utc(),
                     'timezone' => $timezone,
                     'origin_type' => $current->plan->origin_type,
                     'origin_uuid' => $current->plan->origin_uuid,

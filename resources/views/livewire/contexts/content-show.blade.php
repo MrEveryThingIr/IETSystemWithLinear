@@ -143,7 +143,7 @@
                 <div class="mb-3 flex flex-wrap items-center gap-2 text-sm" style="color: var(--content-muted)">
                     <x-app.actor-identity :actor="$content->author" size="xs" />
                     <span aria-hidden="true">·</span>
-                    <span>{{ __('reader.published', ['date' => $readerPublishedAt?->timezone($viewerTimezone)->format('Y-m-d H:i') ?? '—']) }}</span>
+                    <span>{{ __('reader.published_label') }} @if ($readerPublishedAt)<x-app.local-datetime :value="$readerPublishedAt" />@else — @endif</span>
                     @unless ($legacyEvidence)
                         <flux:badge size="sm">{{ __('reader.verified_edition') }}</flux:badge>
                     @endunless
@@ -492,7 +492,7 @@
                                                 <flux:badge size="sm">🔒 {{ __('interactions.visibility_value.private') }}</flux:badge>
                                             @endif
                                         </div>
-                                        <div class="text-xs" style="color: var(--content-muted)">{{ $annotation->created_at->timezone($viewerTimezone)->format('Y-m-d H:i') }}</div>
+                                        <div class="text-xs" style="color: var(--content-muted)"><x-app.local-datetime :value="$annotation->created_at" /></div>
                                     </div>
                                     @php
                                         $latestDisposition = $annotation->latestDisposition;
@@ -585,7 +585,7 @@
                                                             <x-app.actor-identity :actor="$reply->author" size="xs" />
                                                             <flux:badge size="sm">{{ __('interactions.kind.'.$reply->kind) }}</flux:badge>
                                                         </div>
-                                                        <div class="text-xs" style="color: var(--content-muted)">{{ $reply->created_at->timezone($viewerTimezone)->format('Y-m-d H:i') }}</div>
+                                                        <div class="text-xs" style="color: var(--content-muted)"><x-app.local-datetime :value="$reply->created_at" /></div>
                                                     </div>
                                                     @if ($reply->body)
                                                         <div class="whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $reply->body }}</div>

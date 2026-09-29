@@ -22,8 +22,11 @@ use Livewire\Component;
 class SpaceContentBlockStudio extends Component
 {
     public Group $group;
+
     public GroupSpace $space;
+
     public SpaceContent $content;
+
     public string $compositionMode = SpaceContentRevision::COMPOSITION_FIELDS;
 
     /** @var list<array<string, mixed>> */

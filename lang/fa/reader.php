@@ -3,6 +3,7 @@
 return [
     'back_to_library' => 'بازگشت به کتابخانه محتوا',
     'edit_in_studio' => 'ویرایش محتوا',
+    'published_label' => 'زمان انتشار',
     'published' => 'منتشرشده در :date',
     'by_author' => 'نویسنده: :author',
     'outline' => 'فهرست مطالب',

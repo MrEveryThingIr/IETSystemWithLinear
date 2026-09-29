@@ -1,0 +1,48 @@
+<?php
+
+return [
+    'title' => '系统地图',
+    'description' => '把 IET 作为一个互联系统来探索：人的目的、领域事实、流程、代码与改进问题。',
+    'canvas_label' => 'IET 交互式系统地图',
+    'canvas_loading' => '正在加载交互控件…',
+    'canvas_help' => '可横向和纵向滚动，也可拖动空白区域。Ctrl/Alt + 滚轮缩放。选择节点可聚焦其邻域。',
+    'actions' => ['manual' => '系统手册'],
+    'callout' => [
+        'title' => '这是评审工具，不是装饰图',
+        'body' => '修改模块前先在整体系统中理解它。普通节点表示当前实现，虚线节点表示明确的长期方向。',
+    ],
+    'lenses' => [
+        'north_star' => '主生命周期',
+        'finance' => '财务流程',
+        'content' => '内容与知识',
+        'community' => '社区与治理',
+        'execution' => '执行',
+    ],
+    'controls' => [
+        'search' => '搜索',
+        'search_placeholder' => '会计、计划、证据…',
+        'module' => '区域',
+        'all_modules' => '全部区域',
+        'status' => '状态',
+        'all_statuses' => '当前 + 方向',
+        'zoom_in' => '放大',
+        'zoom_out' => '缩小',
+        'fit' => '适配地图',
+        'visible_nodes' => '个可见节点',
+        'clear_focus' => '清除聚焦',
+    ],
+    'status' => ['implemented' => '已实现', 'direction' => '长期方向'],
+    'inspector' => [
+        'explore' => '探索系统',
+        'explore_help' => '选择任意节点，了解它为何存在、拥有什么权威事实、如何连接，以及下一步值得评审的问题。',
+        'starting_point' => '建议起点',
+        'starting_point_help' => '选择“财务流程”，把计划成本 → 履约 → 财务义务 → 结算 → 会计作为一个人的完整故事来检查。',
+        'open_area' => '打开此区域 ↗',
+        'human_purpose' => '人的目的',
+        'truth' => '权威事实',
+        'review_questions' => '评审问题',
+        'documentation' => '文档',
+        'code_anchors' => '代码锚点',
+        'connections' => '连接',
+    ],
+];

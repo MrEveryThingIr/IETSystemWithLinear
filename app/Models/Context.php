@@ -89,6 +89,12 @@ class Context extends Model
         return $this->hasOne(ReferenceContext::class);
     }
 
+    /** @return HasOne<SystemContext, $this> */
+    public function systemBinding(): HasOne
+    {
+        return $this->hasOne(SystemContext::class);
+    }
+
     /** @return HasMany<Ledger, $this> */
     public function ledgers(): HasMany
     {

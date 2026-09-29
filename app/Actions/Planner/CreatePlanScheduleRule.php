@@ -8,9 +8,12 @@ use App\Models\PlanEvent;
 use App\Models\PlanReminder;
 use App\Models\PlanScheduleRule;
 use App\Models\User;
+use App\PlanAttentionMode;
 use App\PlanEventType;
 use App\PlanScheduleFrequency;
 use App\PlanStatus;
+use App\PlanTimingMode;
+use App\Support\PlanAttentionConflicts;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +22,10 @@ use Throwable;
 
 class CreatePlanScheduleRule
 {
-    public function __construct(private readonly MaterializePlanOccurrences $materialize) {}
+    public function __construct(
+        private readonly MaterializePlanOccurrences $materialize,
+        private readonly PlanAttentionConflicts $attentionConflicts,
+    ) {}
 
     /**
      * @param  list<int>  $weekdays
@@ -41,6 +47,7 @@ class CreatePlanScheduleRule
         int $windowBeforeMinutes = 0,
         int $windowAfterMinutes = 0,
         array $reminderOffsets = [],
+        PlanTimingMode $timingMode = PlanTimingMode::Fixed,
     ): PlanScheduleRule {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('manage', $plan);
@@ -122,6 +129,7 @@ class CreatePlanScheduleRule
             $windowBeforeMinutes,
             $windowAfterMinutes,
             $reminders,
+            $timingMode,
         ): PlanScheduleRule {
             $plan = Plan::query()->lockForUpdate()->findOrFail($lockedPlan->id);
             Gate::forUser($current)->authorize('manage', $plan);
@@ -129,10 +137,21 @@ class CreatePlanScheduleRule
 
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
+            if (
+                data_get($plan->metadata, 'planning_studio') === 'baseline'
+                && $plan->attention_mode === PlanAttentionMode::Exclusive
+                && $timingMode === PlanTimingMode::Fixed
+            ) {
+                // Serialize focused scheduling inside a Context so two concurrent
+                // saves cannot both pass the overlap check.
+                $plan->context()->lockForUpdate()->firstOrFail();
+            }
+
             $rule = PlanScheduleRule::query()->create([
                 'plan_id' => $plan->id,
                 'created_by_actor_id' => $actor->id,
                 'frequency' => $frequency,
+                'timing_mode' => $timingMode,
                 'interval' => $interval,
                 'starts_on' => $startDate->format('Y-m-d'),
                 'start_time' => $startTime.':00',
@@ -164,6 +183,7 @@ class CreatePlanScheduleRule
                 'payload' => [
                     'schedule_rule_uuid' => $rule->uuid,
                     'frequency' => $frequency->value,
+                    'timing_mode' => $timingMode->value,
                     'reminder_offsets' => $reminders,
                 ],
             ]);
@@ -193,6 +213,27 @@ class CreatePlanScheduleRule
             }
 
             $this->materialize->execute($rule, $materializeFrom, $materializeThrough);
+
+            if (
+                data_get($plan->metadata, 'planning_studio') === 'baseline'
+                && $plan->attention_mode === PlanAttentionMode::Exclusive
+                && $timingMode === PlanTimingMode::Fixed
+            ) {
+                foreach ($rule->occurrences()->where('status', '!=', 'cancelled')->get() as $occurrence) {
+                    $conflict = $this->attentionConflicts->firstForWindow(
+                        $plan->context,
+                        $occurrence->scheduled_start_at,
+                        $occurrence->scheduled_end_at,
+                        $plan->id,
+                    );
+
+                    if ($conflict !== null) {
+                        abort(422, __('planning_baseline.validation.exclusive_overlap', [
+                            'title' => $conflict->plan->title,
+                        ]));
+                    }
+                }
+            }
 
             return $rule->fresh(['plan', 'reminders', 'occurrences']);
         }, attempts: 3);

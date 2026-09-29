@@ -23,7 +23,9 @@ use Livewire\Component;
 class SpaceContentStructure extends Component
 {
     public Group $group;
+
     public GroupSpace $space;
+
     public SpaceContent $content;
 
     /** @var list<int> */
@@ -33,6 +35,7 @@ class SpaceContentStructure extends Component
     public array $savedChildIds = [];
 
     public string $selectedChildId = '';
+
     public string $search = '';
 
     public function mount(Group $group, GroupSpace $space, SpaceContent $content): void

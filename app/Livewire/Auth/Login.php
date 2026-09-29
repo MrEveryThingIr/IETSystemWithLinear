@@ -3,6 +3,7 @@
 namespace App\Livewire\Auth;
 
 use App\Actions\Groups\RedeemGroupInvitation;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -43,29 +44,36 @@ class Login extends Component
     public function login(RedeemGroupInvitation $redemption): void
     {
         $data = $this->validate([
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
             'remember' => ['boolean'],
         ]);
 
-        if ($this->invitationToken !== null) {
-            $invitation = $redemption->preview($this->invitationToken);
+        $identifier = trim($data['email']);
+        $credential = User::query()->where('email', $identifier)->exists() ? 'email' : 'username';
 
-            if ($invitation->email !== null && strcasecmp($invitation->email, $data['email']) !== 0) {
-                throw ValidationException::withMessages([
-                    'email' => __('ui.messages.invitation_email_mismatch'),
-                ]);
-            }
-        }
-
-        $key = 'login:'.Str::lower($this->email).'|'.request()->ip();
+        $key = 'login:'.Str::lower($identifier).'|'.request()->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
             throw ValidationException::withMessages(['email' => __('ui.messages.too_many_login_attempts')]);
         }
 
-        if (! Auth::attempt(['email' => $data['email'], 'password' => $data['password'], 'status' => 'active'], $this->remember)) {
+        if (! Auth::attempt([$credential => $identifier, 'password' => $data['password'], 'status' => 'active'], $this->remember)) {
             RateLimiter::hit($key, 60);
             throw ValidationException::withMessages(['email' => __('auth.failed')]);
+        }
+
+        if ($this->invitationToken !== null) {
+            $invitation = $redemption->preview($this->invitationToken);
+            $user = Auth::user();
+
+            if ($invitation->email !== null && strcasecmp($invitation->email, $user->email) !== 0) {
+                Auth::logout();
+                RateLimiter::hit($key, 60);
+
+                throw ValidationException::withMessages([
+                    'email' => __('ui.messages.invitation_email_mismatch'),
+                ]);
+            }
         }
 
         RateLimiter::clear($key);

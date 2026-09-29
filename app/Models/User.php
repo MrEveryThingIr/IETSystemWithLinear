@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['username', 'email', 'locale', 'timezone', 'timezone_mode', 'calendar', 'password'])]
+#[Fillable(['username', 'email', 'locale', 'timezone', 'timezone_mode', 'calendar', 'default_monetary_unit_code', 'date_display_format', 'time_display_format', 'show_gregorian_equivalent', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail
 {
@@ -33,6 +33,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return [
             'email_verified_at' => 'datetime',
             'calendar' => CalendarSystem::class,
+            'show_gregorian_equivalent' => 'boolean',
             'timezone_mode' => TimezoneMode::class,
             'password' => 'hashed',
         ];

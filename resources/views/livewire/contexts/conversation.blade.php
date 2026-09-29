@@ -22,7 +22,7 @@
                 <article id="message-{{ $chatMessage->uuid }}" wire:key="context-message-{{ $chatMessage->uuid }}" class="space-y-2">
                     <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                         <x-app.actor-identity :actor="$chatMessage->author" size="xs" />
-                        <span class="text-xs text-zinc-500">{{ $chatMessage->created_at?->format('Y-m-d H:i') }}</span>
+                        <span class="text-xs text-zinc-500">@if ($chatMessage->created_at)<x-app.local-datetime :value="$chatMessage->created_at" />@endif</span>
                     </div>
 
                     @if ($chatMessage->replyTo)

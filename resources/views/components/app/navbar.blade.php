@@ -11,9 +11,12 @@
     <flux:sidebar.toggle class="lg:hidden" icon="bars-2" :aria-label="__('ui.navigation.open')" />
     <flux:text class="min-w-0 truncate font-medium text-zinc-900 dark:text-white">{{ $title }}</flux:text>
     <flux:spacer />
-    <flux:button :href="route('manual', ['topic' => $manualTopic])" variant="ghost" size="sm" icon="question-mark-circle">
-        <span class="hidden sm:inline">{{ __('ui.navigation.help') }}</span>
-    </flux:button>
+    @unless (config('release.profile') === 'planning_baseline')
+        <x-app.ambient-status />
+        <flux:button :href="route('manual', ['topic' => $manualTopic])" variant="ghost" size="sm" icon="question-mark-circle">
+            <span class="hidden sm:inline">{{ __('ui.navigation.help') }}</span>
+        </flux:button>
+    @endunless
     <x-app.locale-switcher />
     <x-app.user-menu />
 </flux:header>

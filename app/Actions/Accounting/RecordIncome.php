@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\Ledger;
 use App\Models\User;
+use App\Support\IetLedgerGuard;
 
 class RecordIncome
 {
@@ -25,6 +26,7 @@ class RecordIncome
         string $category = 'General income',
         ?string $description = null,
     ): JournalEntry {
+        IetLedgerGuard::rejectManualMutation($ledger);
         abort_unless($receivingAccount->type === AccountType::Asset, 422, 'Income receipt requires an Asset Account.');
         abort_if($amountMinor <= 0, 422, 'Income amount must be positive.');
 

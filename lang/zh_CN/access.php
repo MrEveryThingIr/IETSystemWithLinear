@@ -68,6 +68,7 @@ return [
         'created' => '访问邀请已创建。',
         'revoked' => '访问邀请已撤销。',
         'revoke' => '撤销邀请',
+        'expires_label' => '过期时间',
         'expires_at' => '有效至 :time',
         'registered_count' => '已有 :count 个账户通过此邀请注册。',
         'none' => '没有访问邀请',

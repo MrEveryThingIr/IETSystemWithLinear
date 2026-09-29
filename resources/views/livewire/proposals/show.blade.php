@@ -148,7 +148,7 @@
                                     {{ __('proposals.show.version_label', ['version' => $version->version]) }}
                                 </div>
                                 <div class="text-xs text-zinc-500">
-                                    {{ $version->proposed_at?->format('Y-m-d H:i') }}
+                                    @if ($version->proposed_at)<x-app.local-datetime :value="$version->proposed_at" />@endif
                                 </div>
                             </div>
 

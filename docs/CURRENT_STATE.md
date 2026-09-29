@@ -1,6 +1,116 @@
+## Unified finalization convergence
+
+Canonical integration branch: `integration/ideal-v1-unified-finalization`.
+
+This is now the single selective convergence line for the mature Ideal-v1 runtime plus the strongest later Planner, fractal Calendar, Personal Money, Accounting, Vault, Exchange/IET Treasury, service-financial, temporal, AI-assistance and provenance work. The default release profile is `full`.
+
+The major sibling branches previously identified for recovery have been reviewed and reconciled. They are historical source/evidence lines, not competing candidates. The exact admitted/superseded decisions are recorded in `docs/UNIFIED_FINALIZATION_CONVERGENCE.md`.
+
+Current integrated boundaries include:
+
+- profile-aware timezone/calendar/date/time presentation with equivalent Gregorian display when configured;
+- high-density fractal Calendar and readiness-aware Planner, including direct occurrence evidence upload;
+- default monetary-unit preference for future creation defaults without historical conversion;
+- mature Contract -> service Commitment -> Planner -> Fulfillment -> Financial Obligation -> Settlement semantics;
+- generalized Economic Instruments and immutable Market Quotes;
+- guarded IET user wallets plus a platform System-Context Treasury and independent exchange review;
+- compact personal Money beside mature Accounting;
+- restored AI Content Assistance, authenticated AI Chat, and immutable Development Origins;
+- versioned System Manual coverage for AI and the existing domain surfaces.
+- a realistic local/testing Planner demo fixture for cumulative browser acceptance and lifecycle regression coverage.
+
+The generalized economic model separates Monetary Units, Economic Instruments, immutable Market Quotes, specific owned/offered assets, ledger Accounts and Financial Obligations. A self-declared skill is never mint authority. Trusted service economics must flow through versioned Contract/Fulfillment evidence.
+
+Acceptance policy: CI must be fully green on the exact convergence SHA before local cumulative browser acceptance and release-line promotion.
+
+See `docs/UNIFIED_FINALIZATION_ARCHITECTURE.md` and `docs/UNIFIED_FINALIZATION_CONVERGENCE.md`.
+
+---
+
+## IET internal settlement candidate
+
+Active candidate branch: `codex/iet-internal-settlement-exchange`.
+
+This candidate merges Personal Accounting and the existing Financial Obligation/Settlement kernel around a versioned internal IET settlement unit:
+
+- initial exact quote `1 IET = 0.00000001 USD` (`0.000001%` of one USD);
+- system-controlled IET wallet inside the existing ledger kernel;
+- manual-confirmation Exchange placeholders for deposit/cash-out;
+- immutable valuation epochs and successful-flow signals;
+- funded direct internal charges;
+- USD-priced IET Financial Obligations with quote provenance;
+- atomic funded IET Settlement between debtor and creditor wallets;
+- one merged Money surface rather than separate accounting/financial navigation.
+
+See `docs/IET_INTERNAL_SETTLEMENT_BASELINE.md`.
+
 # IET Current State
 
+## Personal life tools candidate
+
+Active candidate branch: `codex/personal-money-vault-calendar-tools`.
+
+This candidate selectively admits focused personal-life capabilities on top of the accepted Planning/Profile foundation:
+
+- explicit full-focus versus background-compatible Plan attention semantics with focused-overlap prevention;
+- interval-aware fractal Calendar occupancy, so every touched minute/quantum is represented;
+- an icon-only Planning Studio Tools rail with detail/map rendering and color mapping by Plan, category, or attention;
+- a paper-like Personal Money surface reusing the mature immutable Personal Accounting kernel, without calculator/dashboard math;
+- a per-User encrypted Private Vault with explicit Reveal/Hide semantics.
+
+See `docs/PERSONAL_LIFE_TOOLS_BASELINE.md`.
+
+## Planning Studio baseline — active experience-first assembly
+
+Active branch: `codex/planning-studio-baseline`.
+
+The current product gate is intentionally smaller than the historical integrated runtime. The default `planning_baseline` profile admits only platform infrastructure, identity/authentication/verification, access invitation administration, focused identity + temporal preferences, Personal Context authority, and a minimal personal Planning Studio.
+
+The first Planning Studio has only two authored timing shapes: **fixed time** and **flexible day**. Create/edit deliberately omit recurrence, reminders, readiness/prerequisites, finance, participants, evidence, contracts and other advanced Planner seams. The existing profile-aware temporal kernel and fractal Calendar remain, with compact accumulated cells and search/timing/category filtering.
+
+Previously developed systems remain source-library code rather than being discarded. PHPUnit runs the `full` release profile so the historical capability set continues to receive regression coverage while the default browser experience stays narrow.
+
+See `docs/PLANNING_STUDIO_BASELINE.md` for the runtime boundary and browser acceptance contract.
+
+
 ## Snapshot
+
+### Selective assembly release reconciliation
+
+**Roadmap revised to capability-mesh reassembly.** Owner browser inspection confirmed the current assembly is a healthy old baseline but not the intended product checkpoint because later already-tested cross-cutting work is absent. M01 registration is paused.
+
+Immediate priority is **F1 — Shared Temporal Fabric recovery and second review**:
+
+1. profile-aware Temporal Kernel across the whole system;
+2. permanent Ambient Capability Rail in the app shell;
+3. shared Fractal Calendar Fabric decoupled conceptually from Planner;
+4. Capability Launcher / explicit composition contract.
+
+Relevant source libraries: codex/release-first-publication-hardening, integration/ideal-v1-planner-temporal-candidate, integration/ideal-v1-temporal-calendar-reconcile, fix/planner-execution-window-calendar-evidence and fix/planner-temporal-evidence-calendar-hardening.
+
+The architectural rule is now: independent capability nodes + explicit optional seams + shared projections. See docs/CAPABILITY_MESH_ARCHITECTURE.md and docs/SELECTIVE_ASSEMBLY_ROADMAP.md.
+
+**Current active gate: M00/S0 browser baseline.** The browser-gated assembly process is merged at `30dc939754c3fec7009250a61437db2633aabea7`; post-merge CI `36238246665` passed with 552 tests / 3511 assertions, repository-wide Pint 923 files, PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer green. The living browser plan is `Development-CodexReports/M00-certified-foundation-browser-baseline-report.md`.
+
+M01 implementation remains blocked until the owner explicitly accepts the M00 browser gate.
+
+
+
+The release line is now being reconciled through `codex/ideal-v1-selective-assembly` rather than by wholesale merging later aggregate candidate branches.
+
+The assembly was created exactly at accepted integration SHA `891b333c49f166e61b9fa466e30742b3d70996c0`. Later planner/temporal/calendar/publication branches are treated as implementation/evidence sources whose changes must be admitted independently.
+
+**S0 — baseline certification is remotely closed.** PR #30 merged the reviewed S0 changes into `codex/ideal-v1-selective-assembly` at `2b89e301ef7f167083445cd305847f83dbf3e048`; post-merge CI `36236888120` passed.
+
+S0 strengthened CI so assembly/S0/release pushes run repository-wide Pint and explicitly compile Blade views. That stronger gate exposed 15 pre-existing formatter issues across 923 PHP files; they were normalized by Pint in formatter-only commit `e57b29d2de68f97568187a19de60c9bbabf103ca`. Final S0 proof is **923 Pint files passed, PHPStan 0 errors, Blade compile passed, MySQL/SQLite/ops passed, 552 tests / 3511 assertions, Vite passed, npm audit 0 vulnerabilities, Composer audit clean**.
+
+The selective assembly process is now governed by `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`. Existing modules are reviewed and selectively improved one at a time; candidate branches remain source libraries rather than wholesale merge targets.
+
+The owner has changed the gate from end-deferred browser acceptance to **module-by-module browser acceptance before final assembly**. Therefore the current gate is **M0/S0 baseline browser smoke**. M1 — access, identity, registration provisioning, wallet/default monetary unit — does not begin until that baseline browser check is explicitly accepted.
+
+Browser-gated process governance merged through PR #32 at assembly SHA `30dc939754c3fec7009250a61437db2633aabea7`; post-merge CI `36238246665` passed. This governance merge changed documentation/process only, not application runtime behavior.
+
+A governance gap is also recorded: the current GitHub ruleset protects `main`, not the selective assembly branch. PR-only/no-force-push discipline is therefore procedural until repository settings are extended.
 
 ### Publishable v1 hardening
 
@@ -23,7 +133,7 @@ Root baseline:
 
 `2c7a5c35a31fe86d761a1cafd189560bec220784`
 
-The owner has authorized continuous remote development with local/browser acceptance deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`.
+Historical Phase 1–22 integration used continuous remote development with browser acceptance deferred to `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`. **That process is no longer the active selective-assembly gate**; current modules follow `docs/SELECTIVE_ASSEMBLY_ROADMAP.md` and require owner browser acceptance before merge/progression.
 
 The active line intentionally excludes the experimental/unused AI-assistance and Development-Origin runtime. AI returns only at the later dedicated roadmap phase.
 
@@ -70,6 +180,7 @@ Implemented:
   - ManageActors
   - ManagePlatformAccess
   - ViewPlatformAudit
+  - ManageExchange (Superadmin-only in the current baseline)
 
 Current Phase 4 identity/Profile state:
 
@@ -645,6 +756,32 @@ Implemented:
 - live inbox/navigation unread refresh.
 
 The database and existing domain kernels remain authoritative. Broadcasting is transport only and may be disabled without losing durable notification state.
+
+## System Map
+
+A first interactive System Map is implemented at `/system-map`.
+
+It is a curated explanatory projection over the current architecture, not a new authority layer.
+
+Current capabilities include:
+
+- X/Y scroll and drag-pan over a large architecture canvas;
+- zoom and fit-to-map controls;
+- text search;
+- area and current/future-direction filters;
+- one-node neighborhood focus;
+- quick lenses for the north-star lifecycle, financial flow, content/knowledge, community/governance and execution;
+- a focused inspector showing:
+  - human purpose;
+  - authoritative truth;
+  - connected modules;
+  - documentation and code anchors;
+  - module-specific review questions;
+- explicit distinction between implemented capabilities and long-term directions.
+
+The first-class Financial flow lens intentionally composes Planner cost observations, Fulfillment, Financial Obligation, Settlement and Personal Accounting while preserving their separate authority boundaries. Future Financial Laboratory and external payment/reconciliation nodes are displayed as direction only, not current implementation.
+
+The long-term direction is recorded in `docs/SYSTEM_MAP_VISION.md`: progressively derive more topology from trusted repository metadata, support release/version comparisons and health overlays, and eventually provide structure/flow/human-meaning/organism views without turning the map into authorization or workflow truth.
 
 ## Production operations
 

@@ -6,12 +6,13 @@ return [
     | Release experience profile
     |--------------------------------------------------------------------------
     |
-    | office_alpha keeps the first published experience intentionally small:
-    | invitation onboarding, Dashboard, Needs/Offers/Services, Profile, Help,
-    | and Access Invitations for authorized administrators. Mature kernels
-    | remain in the codebase and routes so development can continue without
-    | coupling release UX simplification to destructive feature removal.
+    | full is the unified-finalization default. It restores the mature
+    | integrated product surface while preserving the newer Planner, Calendar,
+    | Money, Exchange and Vault implementations already present in the tree.
+    |
+    | planning_baseline remains available explicitly for focused regression
+    | and browser comparison, but it is no longer the default product runtime.
     |
     */
-    'profile' => env('IET_RELEASE_PROFILE', 'office_alpha'),
+    'profile' => env('IET_RELEASE_PROFILE', 'full'),
 ];

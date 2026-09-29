@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\PlanOccurrenceStatus;
+use App\PlanOccurrenceWindowState;
+use App\PlanTimingMode;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -96,7 +100,6 @@ class PlanOccurrence extends Model
         $allowed = match ($current) {
             PlanOccurrenceStatus::Scheduled => [
                 PlanOccurrenceStatus::InProgress,
-                PlanOccurrenceStatus::Completed,
                 PlanOccurrenceStatus::Skipped,
                 PlanOccurrenceStatus::Cancelled,
             ],
@@ -136,6 +139,102 @@ class PlanOccurrence extends Model
         }
     }
 
+    public function windowState(?CarbonInterface $at = null): PlanOccurrenceWindowState
+    {
+        return match ($this->status) {
+            PlanOccurrenceStatus::InProgress => PlanOccurrenceWindowState::InProgress,
+            PlanOccurrenceStatus::Completed => PlanOccurrenceWindowState::Completed,
+            PlanOccurrenceStatus::Skipped => PlanOccurrenceWindowState::Skipped,
+            PlanOccurrenceStatus::Cancelled => PlanOccurrenceWindowState::Cancelled,
+            PlanOccurrenceStatus::Scheduled => $this->scheduledWindowState($at),
+        };
+    }
+
+    public function executionPhase(?CarbonInterface $at = null): string
+    {
+        return $this->windowState($at)->value;
+    }
+
+    public function canStart(?CarbonInterface $at = null): bool
+    {
+        return in_array($this->windowState($at), [
+            PlanOccurrenceWindowState::Ready,
+            PlanOccurrenceWindowState::Late,
+        ], true);
+    }
+
+    public function canStartAt(CarbonInterface $at): bool
+    {
+        return $this->canStart($at);
+    }
+
+    private function scheduledWindowState(?CarbonInterface $at = null): PlanOccurrenceWindowState
+    {
+        $moment = $at instanceof CarbonInterface
+            ? CarbonImmutable::parse($at->toIso8601String())->utc()
+            : CarbonImmutable::now('UTC');
+
+        if ($moment->lt($this->window_start_at->utc())) {
+            return PlanOccurrenceWindowState::Upcoming;
+        }
+
+        $readyThrough = $this->scheduleRule?->timing_mode === PlanTimingMode::FlexibleDay
+            ? $this->scheduled_end_at->utc()
+            : $this->scheduled_start_at->utc();
+
+        if ($moment->lte($readyThrough)) {
+            return PlanOccurrenceWindowState::Ready;
+        }
+
+        if ($moment->lte($this->window_end_at->utc())) {
+            return PlanOccurrenceWindowState::Late;
+        }
+
+        return PlanOccurrenceWindowState::Missed;
+    }
+
+    public function prerequisitesSatisfied(): bool
+    {
+        return $this->remainingRequiredPrerequisites() === 0;
+    }
+
+    public function remainingRequiredPrerequisites(): int
+    {
+        $requiredIds = $this->requiredPrerequisites()->pluck('id');
+
+        if ($requiredIds->isEmpty()) {
+            return 0;
+        }
+
+        $completedIds = $this->completedPrerequisiteChecks()
+            ->pluck('plan_prerequisite_id');
+
+        return $requiredIds->diff($completedIds)->count();
+    }
+
+    /** @return Collection<int, PlanPrerequisite> */
+    private function requiredPrerequisites(): Collection
+    {
+        $plan = $this->plan;
+
+        $items = $plan->relationLoaded('prerequisites')
+            ? $plan->prerequisites
+            : $plan->prerequisites()->get();
+
+        return $items->where('is_required', true)->values();
+    }
+
+    /** @return Collection<int, PlanOccurrencePrerequisiteCheck> */
+    private function completedPrerequisiteChecks(): Collection
+    {
+        $checks = $this->relationLoaded('prerequisiteChecks')
+            ? $this->prerequisiteChecks
+            : $this->prerequisiteChecks()->get();
+
+        return $checks->filter(fn (PlanOccurrencePrerequisiteCheck $check): bool => $check->completed_at !== null)
+            ->values();
+    }
+
     /** @return BelongsTo<Plan, $this> */
     public function plan(): BelongsTo
     {
@@ -152,6 +251,18 @@ class PlanOccurrence extends Model
     public function events(): HasMany
     {
         return $this->hasMany(PlanOccurrenceEvent::class)->orderBy('id');
+    }
+
+    /** @return HasMany<PlanOccurrencePrerequisiteCheck, $this> */
+    public function prerequisiteChecks(): HasMany
+    {
+        return $this->hasMany(PlanOccurrencePrerequisiteCheck::class);
+    }
+
+    /** @return HasMany<PlanOccurrenceExpense, $this> */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(PlanOccurrenceExpense::class)->orderBy('occurred_at')->orderBy('id');
     }
 
     /** @return BelongsToMany<Asset, $this> */

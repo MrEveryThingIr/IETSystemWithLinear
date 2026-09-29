@@ -19,7 +19,7 @@ class SpaceContentSchema
     ];
 
     /**
-     * @param array<int, mixed> $fields
+     * @param  array<int, mixed>  $fields
      * @return array{fields: list<array{key: string, label: string, type: string, required: bool, help: string|null, options: list<array{value: string, label: string}>}>}
      */
     public static function normalizeDefinitionFields(array $fields): array
@@ -94,8 +94,8 @@ class SpaceContentSchema
     }
 
     /**
-     * @param array<string, mixed> $schema
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $schema
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     public static function normalizePayload(array $schema, array $payload): array
@@ -163,10 +163,6 @@ class SpaceContentSchema
         );
     }
 
-    /**
-     * @param mixed $value
-     * @return mixed
-     */
     private static function canonicalize(mixed $value): mixed
     {
         if (! is_array($value)) {
@@ -187,7 +183,6 @@ class SpaceContentSchema
     }
 
     /**
-     * @param mixed $options
      * @return list<array{value: string, label: string}>
      */
     private static function normalizeOptions(mixed $options, string $type, int $fieldIndex): array

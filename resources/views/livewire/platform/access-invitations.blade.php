@@ -41,7 +41,7 @@
                             @if ($invitation->maskedEmail())<flux:badge>{{ $invitation->maskedEmail() }}</flux:badge>@endif
                             <flux:badge>{{ $invitation->uses_count }}/{{ $invitation->max_uses }}</flux:badge>
                         </div>
-                        <flux:text class="text-sm">{{ __('access.admin.expires_at', ['time' => $invitation->expires_at?->diffForHumans() ?? '—']) }}</flux:text>
+                        <flux:text class="text-sm">{{ __('access.admin.expires_label') }} @if ($invitation->expires_at)<x-app.local-datetime :value="$invitation->expires_at" />@else — @endif</flux:text>
                     </div>
                     @if ($invitation->revoked_at === null && $invitation->state() === 'available')
                         <flux:button wire:click="revoke({{ $invitation->id }})" variant="danger" size="sm">{{ __('access.admin.revoke') }}</flux:button>

@@ -3,6 +3,7 @@
 namespace App\Livewire\Planner;
 
 use App\Actions\Contexts\EnsurePersonalContext;
+use App\Actions\Planner\ConfigurePlanReadiness;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
 use App\ContextKind;
@@ -16,10 +17,13 @@ use App\PlanScheduleFrequency;
 use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
 use App\Support\DomainBlueprintCatalog;
+use App\Support\MonetaryUnitCatalog;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -60,11 +64,17 @@ class Create extends Component
 
     public string $occurrenceLimit = '';
 
-    public int $windowBeforeMinutes = 0;
+    public int $windowBeforeMinutes = 15;
 
-    public int $windowAfterMinutes = 0;
+    public int $windowAfterMinutes = 15;
 
     public string $reminderOffsets = '15';
+
+    /** @var list<array{title: string, required: bool}> */
+    public array $prerequisites = [];
+
+    /** @var list<array{label: string, amount: string, unit_code: string}> */
+    public array $expenseEstimates = [];
 
     public function mount(EnsurePersonalContext $personal): void
     {
@@ -76,6 +86,14 @@ class Create extends Component
         $this->startTime = $now->addHour()->format('H:00');
         $this->weekdays = [$now->isoWeekday()];
 
+        $requestedDate = trim((string) request()->query('date', ''));
+        $requestedDateValue = $this->canonicalDate($requestedDate);
+
+        if ($requestedDateValue instanceof CarbonImmutable) {
+            $this->startsOn = $requestedDateValue->toDateString();
+            $this->weekdays = [$requestedDateValue->isoWeekday()];
+        }
+
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
         if ($queryBlueprint !== '') {
             $this->blueprintSlug = $queryBlueprint;
@@ -83,6 +101,20 @@ class Create extends Component
 
         if ($this->blueprintSlug !== '') {
             $this->applyBlueprintDefaults();
+        }
+
+        $requestedTime = trim((string) request()->query('time', ''));
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $requestedTime) === 1) {
+            $this->startTime = $requestedTime;
+        }
+
+        $requestedDurationRaw = trim((string) request()->query('duration', ''));
+        if (preg_match('/^\d+$/', $requestedDurationRaw) === 1) {
+            $requestedDuration = (int) $requestedDurationRaw;
+
+            if ($requestedDuration >= 1 && $requestedDuration <= 10080) {
+                $this->durationMinutes = $requestedDuration;
+            }
         }
 
         if ($this->contextUuid === '') {
@@ -93,8 +125,43 @@ class Create extends Component
         Gate::forUser($user)->authorize('interactContent', $context);
     }
 
-    public function save(CreatePlan $createPlan, CreatePlanScheduleRule $createRule): mixed
+    public function addPrerequisite(): void
     {
+        abort_if(count($this->prerequisites) >= 50, 422);
+        $this->prerequisites[] = ['title' => '', 'required' => true];
+    }
+
+    public function removePrerequisite(int $index): void
+    {
+        abort_unless(array_key_exists($index, $this->prerequisites), 404);
+        unset($this->prerequisites[$index]);
+        $this->prerequisites = array_values($this->prerequisites);
+    }
+
+    public function addExpenseEstimate(): void
+    {
+        abort_if(count($this->expenseEstimates) >= 50, 422);
+        $this->expenseEstimates[] = [
+            'label' => '',
+            'amount' => '',
+            'unit_code' => $this->defaultMonetaryUnitCode(),
+        ];
+    }
+
+    public function removeExpenseEstimate(int $index): void
+    {
+        abort_unless(array_key_exists($index, $this->expenseEstimates), 404);
+        unset($this->expenseEstimates[$index]);
+        $this->expenseEstimates = array_values($this->expenseEstimates);
+    }
+
+    public function save(
+        CreatePlan $createPlan,
+        ConfigurePlanReadiness $configureReadiness,
+        CreatePlanScheduleRule $createRule,
+    ): mixed {
+        $unitCodes = array_keys(MonetaryUnitCatalog::all());
+
         $data = $this->validate([
             'title' => ['required', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:10000'],
@@ -112,6 +179,13 @@ class Create extends Component
             'windowBeforeMinutes' => ['integer', 'min:0', 'max:10080'],
             'windowAfterMinutes' => ['integer', 'min:0', 'max:10080'],
             'reminderOffsets' => ['nullable', 'string', 'max:500'],
+            'prerequisites' => ['array', 'max:50'],
+            'prerequisites.*.title' => ['required', 'string', 'max:240'],
+            'prerequisites.*.required' => ['boolean'],
+            'expenseEstimates' => ['array', 'max:50'],
+            'expenseEstimates.*.label' => ['required', 'string', 'max:180'],
+            'expenseEstimates.*.amount' => ['required', 'string', 'max:40'],
+            'expenseEstimates.*.unit_code' => ['required', 'string', Rule::in($unitCodes)],
         ]);
 
         $user = $this->user();
@@ -120,36 +194,55 @@ class Create extends Component
 
         [$participants, $originType, $originUuid] = $this->provenance($context, $user);
 
-        $plan = $createPlan->execute(
+        return DB::transaction(function () use (
+            $createPlan,
+            $configureReadiness,
+            $createRule,
             $context,
             $user,
-            $data['title'],
-            $data['description'] !== '' ? $data['description'] : null,
-            $data['timezone'],
+            $data,
             $participants,
             $originType,
             $originUuid,
-            domainBlueprintVersion: $this->blueprintVersion(),
-        );
+        ): mixed {
+            $plan = $createPlan->execute(
+                $context,
+                $user,
+                $data['title'],
+                $data['description'] !== '' ? $data['description'] : null,
+                $data['timezone'],
+                $participants,
+                $originType,
+                $originUuid,
+                domainBlueprintVersion: $this->blueprintVersion(),
+            );
 
-        $createRule->execute(
-            $plan,
-            $user,
-            PlanScheduleFrequency::from($data['frequency']),
-            $data['startsOn'],
-            $data['startTime'],
-            $data['durationMinutes'],
-            $data['interval'],
-            $data['weekdays'],
-            $this->dates($data['selectedDates']),
-            $data['endsOn'] !== '' ? $data['endsOn'] : null,
-            $data['occurrenceLimit'] !== '' ? (int) $data['occurrenceLimit'] : null,
-            $data['windowBeforeMinutes'],
-            $data['windowAfterMinutes'],
-            $this->integers($data['reminderOffsets']),
-        );
+            $configureReadiness->execute(
+                $plan,
+                $user,
+                $data['prerequisites'],
+                $data['expenseEstimates'],
+            );
 
-        return $this->redirectRoute('planner.show', $plan);
+            $createRule->execute(
+                $plan,
+                $user,
+                PlanScheduleFrequency::from($data['frequency']),
+                $data['startsOn'],
+                $data['startTime'],
+                $data['durationMinutes'],
+                $data['interval'],
+                $data['weekdays'],
+                $this->dates($data['selectedDates']),
+                $data['endsOn'] !== '' ? $data['endsOn'] : null,
+                $data['occurrenceLimit'] !== '' ? (int) $data['occurrenceLimit'] : null,
+                $data['windowBeforeMinutes'],
+                $data['windowAfterMinutes'],
+                $this->integers($data['reminderOffsets']),
+            );
+
+            return $this->redirectRoute('planner.show', $plan);
+        });
     }
 
     public function render(): View
@@ -167,6 +260,7 @@ class Create extends Component
             'contextLabel' => $this->contextLabel($context),
             'weekdayOrder' => TemporalPreferences::weekdayOrder($this->user()->locale),
             'blueprintVersion' => $this->blueprintVersion(),
+            'unitCatalog' => MonetaryUnitCatalog::all(),
         ]);
     }
 
@@ -270,6 +364,30 @@ class Create extends Component
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function canonicalDate(string $value): ?CarbonImmutable
+    {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return null;
+        }
+
+        [$year, $month, $day] = array_map('intval', explode('-', $value));
+
+        if (! checkdate($month, $day, $year)) {
+            return null;
+        }
+
+        return CarbonImmutable::create($year, $month, $day, 0, 0, 0, $this->timezone);
+    }
+
+    private function defaultMonetaryUnitCode(): string
+    {
+        $code = strtoupper((string) ($this->user()->default_monetary_unit_code ?: 'USD'));
+
+        return array_key_exists($code, MonetaryUnitCatalog::all())
+            ? $code
+            : (string) array_key_first(MonetaryUnitCatalog::all());
     }
 
     private function user(): User

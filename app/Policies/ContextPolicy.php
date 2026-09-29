@@ -44,6 +44,7 @@ class ContextPolicy
             ContextKind::Contract => ($contract = $this->contract($context)) instanceof Contract
                 && $this->contracts->view($current, $contract),
             ContextKind::Reference => $this->reference($context) instanceof ReferenceContext,
+            ContextKind::System => false,
         };
     }
 
@@ -69,6 +70,7 @@ class ContextPolicy
             ContextKind::Contract => ($contract = $this->contract($context)) instanceof Contract
                 && $this->contracts->participate($current, $contract),
             ContextKind::Reference => $this->isReferenceManager($current, $context),
+            ContextKind::System => false,
         };
     }
 
@@ -100,6 +102,7 @@ class ContextPolicy
             ContextKind::Negotiation => false,
             ContextKind::Contract => false,
             ContextKind::Reference => $this->isReferenceManager($current, $context),
+            ContextKind::System => false,
         };
     }
 
@@ -123,6 +126,7 @@ class ContextPolicy
             ContextKind::Negotiation => false,
             ContextKind::Contract => false,
             ContextKind::Reference => $this->isReferenceManager($current, $context),
+            ContextKind::System => false,
         };
     }
 

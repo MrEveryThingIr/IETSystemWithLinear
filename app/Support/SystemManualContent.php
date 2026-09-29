@@ -36,6 +36,7 @@ class SystemManualContent
         'matching' => '24. Need / Offer Matching',
         'community' => '25. Group / Community Composition',
         'home-today' => '26. Home / Today Operating View',
+        'ai-assistance' => '27. AI Assistance and Development Origins',
     ];
 
     /** @return array{summary: string, chapters: list<array{title: string, summary: string, current_behavior: string, how_to_use: string, authorization: string, ideal_target: string, misunderstandings: string}>} */
@@ -1476,6 +1477,55 @@ Different currencies are not added together.
 Opening Today creates no Relationship, Proposal, Contract, Plan, Fulfillment, Settlement, Submission, JournalEntry or financial obligation.
 TEXT,
                 ],
+                [
+                    'title' => '27. AI Assistance and Development Origins',
+                    'summary' => <<<'TEXT'
+AI in IET is an assistance layer over existing domain authority. It may converse, explain, or propose structured Content edits, but it does not gain permission to publish Content, approve work, accept agreements, move money, or mutate authoritative state merely because a model generated text.
+TEXT,
+                    'current_behavior' => <<<'TEXT'
+The authenticated AI Chat Lab at /ai/chat tests the configured server-side OpenAI Responses API connection. The API key stays in the Laravel environment and is never sent to the browser. Chat history is bounded to the current Livewire page state and provider response storage is disabled for these requests.
+
+Content Studio also exposes an AI Content Assistant. It sends the current editable Content snapshot plus the user's request to the configured provider and records an immutable AiAssistanceRun. The provider returns schema-constrained proposal data for trusted fields, blocks and presentation options. Nothing is applied until the user explicitly chooses Apply. Application rechecks current authorization and rejects stale proposals when the Content revision changed after planning.
+
+Development Origins are a separate platform-audit capability. Authorized auditors may record a reviewed ChatGPT/design-session/manual source, phase/version, branch, exact Git commit references and affected repository paths as immutable historical provenance.
+TEXT,
+                    'how_to_use' => <<<'TEXT'
+To test the API:
+1. Keep OPENAI_API_KEY only in the server .env file.
+2. Optionally choose OPENAI_CHAT_MODEL.
+3. Clear Laravel configuration cache.
+4. Open AI Chat Lab and send a harmless test message.
+5. Confirm the page shows a provider response, model and response identifier.
+
+To use assisted Content authoring:
+1. Open an editable Content item in Studio.
+2. Choose AI Content Assistant.
+3. Describe the desired change.
+4. Review the structured proposal, including any pending media requests.
+5. Apply only when the proposal is correct.
+6. Continue editing and publish through the normal Content workflow.
+
+To record a development origin, use the platform audit surface only for a deliberately reviewed source. Prefer a concise reviewed summary and canonical repository paths over copying private raw chat history.
+TEXT,
+                    'authorization' => <<<'TEXT'
+AI does not bypass policy. Chat requires an authenticated active verified account. Content planning and apply require normal Content update authority, and apply reauthorizes against the current record. Development Origins require ViewPlatformAudit.
+
+Provider credentials are server-side. AI output is untrusted proposal data. Authoritative domain Actions remain the only path for protected transitions.
+TEXT,
+                    'ideal_target' => <<<'TEXT'
+Later AI adapters may assist forms and workflows by consuming explicit manifests of allowed fields/actions and returning proposals. Tool-enabled agents may eventually perform approved actions, but each action must remain independently authorized, validated, auditable and attributable.
+
+Generated media should enter the existing Asset pipeline with source/provider, rights, scan/processing and review provenance before Content placement. Development Origins may later connect explicitly to releases and System Manual editions while repository docs and accepted domain evidence remain the source of truth.
+TEXT,
+                    'misunderstandings' => <<<'TEXT'
+An AI response is not approval, acceptance, payment, publication, evidence or a database transaction.
+
+The API key must never be committed to Git or stored in browser-visible state.
+
+Development Origins explain why work began; they do not make a chat transcript more authoritative than accepted code, tests, documentation and immutable domain evidence.
+TEXT,
+                ],
+
             ],
         ];
     }

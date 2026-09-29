@@ -92,7 +92,7 @@
                                 <option value="{{ $mode }}">{{ __('accounting.period.'.$mode) }}</option>
                             @endforeach
                         </flux:select>
-                        <flux:input wire:model.live="periodDate" type="date" />
+                        <x-app.calendar-date-input model="periodDate" :label="__('accounting.date')" />
                     </div>
                 </div>
             </flux:card>
@@ -111,7 +111,7 @@
                                 </flux:select>
 
                                 <flux:input wire:model="amount" :label="__('accounting.amount')" inputmode="decimal" />
-                                <flux:input wire:model="date" type="date" :label="__('accounting.date')" />
+                                <x-app.calendar-date-input model="date" :label="__('accounting.date')" />
                             </div>
 
                             <div class="grid gap-4 sm:grid-cols-2">
@@ -161,7 +161,7 @@
                                                 @if ($entry->reversals->isNotEmpty())
                                                     <flux:badge size="sm" color="zinc">{{ __('accounting.reversed') }}</flux:badge>
                                                 @endif
-                                                <span class="text-xs text-zinc-500">{{ $entry->occurred_on->format('Y-m-d') }}</span>
+                                                <span class="text-xs text-zinc-500"><x-app.local-date :value="$entry->occurred_on" /></span>
                                             </div>
                                             <div class="mt-2 font-medium" dir="auto">{{ $entry->description ?: __('accounting.entry_kind.'.$entry->kind->value) }}</div>
                                             <div class="mt-1 text-xs text-zinc-500">

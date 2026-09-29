@@ -25,6 +25,22 @@ class AuthenticationTest extends TestCase
         $this->assertNotEmpty($user->refresh()->getRememberToken());
     }
 
+    public function test_login_authenticates_active_account_by_username(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'operator@example.test',
+            'email' => 'operator-account@example.test',
+        ]);
+
+        Livewire::test(Login::class)
+            ->set('email', $user->username)
+            ->set('password', 'password')
+            ->call('login')
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     #[DataProvider('inactiveStatuses')]
     public function test_inactive_account_cannot_login(string $status): void
     {

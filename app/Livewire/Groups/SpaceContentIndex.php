@@ -6,7 +6,6 @@ use App\Actions\Groups\CreateSpaceContent;
 use App\Models\Actor;
 use App\Models\Group;
 use App\Models\GroupSpace;
-use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinition;
 use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
@@ -24,8 +23,11 @@ use Livewire\Component;
 class SpaceContentIndex extends Component
 {
     public Group $group;
+
     public GroupSpace $space;
+
     public string $definitionId = '';
+
     public string $title = '';
 
     /** @var array<string, mixed> */

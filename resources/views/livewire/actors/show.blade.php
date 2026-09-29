@@ -12,11 +12,11 @@
                 <flux:badge>{{ __('ui.actors.accountless') }}</flux:badge>
             @endif
         </dd></div>
-        <div><dt class="font-medium">{{ __('ui.actors.created') }}</dt><dd>{{ $actor->created_at?->translatedFormat('Y-m-d H:i:s') }}</dd></div>
-        <div><dt class="font-medium">{{ __('ui.actors.updated') }}</dt><dd>{{ $actor->updated_at?->translatedFormat('Y-m-d H:i:s') }}</dd></div>
+        <div><dt class="font-medium">{{ __('ui.actors.created') }}</dt><dd>@if ($actor->created_at)<x-app.local-datetime :value="$actor->created_at" :seconds="true" />@endif</dd></div>
+        <div><dt class="font-medium">{{ __('ui.actors.updated') }}</dt><dd>@if ($actor->updated_at)<x-app.local-datetime :value="$actor->updated_at" :seconds="true" />@endif</dd></div>
         <div><dt class="font-medium">{{ __('ui.actors.status') }}</dt><dd><flux:badge :color="$actor->status === 'active' ? 'green' : 'zinc'">{{ __('ui.actors.statuses.'.$actor->status) }}</flux:badge></dd></div>
         @if ($actor->archived_at)
-            <div><dt class="font-medium">{{ __('ui.actors.archived_at') }}</dt><dd>{{ $actor->archived_at->translatedFormat('Y-m-d H:i:s') }}</dd></div>
+            <div><dt class="font-medium">{{ __('ui.actors.archived_at') }}</dt><dd><x-app.local-datetime :value="$actor->archived_at" :seconds="true" /></dd></div>
             <div><dt class="font-medium">{{ __('ui.actors.archive_reason') }}</dt><dd>{{ $actor->archive_reason }}</dd></div>
         @endif
     </dl>

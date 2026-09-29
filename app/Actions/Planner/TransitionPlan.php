@@ -30,6 +30,17 @@ class TransitionPlan
             Gate::forUser($current)->authorize('manage', $locked);
 
             $from = $locked->status;
+
+            if ($status === PlanStatus::Completed) {
+                abort_if(
+                    $locked->occurrences->contains(
+                        fn ($occurrence): bool => $occurrence->status === PlanOccurrenceStatus::InProgress,
+                    ),
+                    422,
+                    __('planner.validation.finish_active_occurrences_first'),
+                );
+            }
+
             $locked->applyStatus($status);
 
             $eventType = match ($status) {
@@ -49,10 +60,11 @@ class TransitionPlan
                 }
 
                 foreach ($locked->occurrences as $occurrence) {
-                    if (in_array($occurrence->status, [
-                        PlanOccurrenceStatus::Scheduled,
-                        PlanOccurrenceStatus::InProgress,
-                    ], true) === false) {
+                    $cancellableStatuses = $status === PlanStatus::Completed
+                        ? [PlanOccurrenceStatus::Scheduled]
+                        : [PlanOccurrenceStatus::Scheduled, PlanOccurrenceStatus::InProgress];
+
+                    if (! in_array($occurrence->status, $cancellableStatuses, true)) {
                         continue;
                     }
 

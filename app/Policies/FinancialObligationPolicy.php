@@ -29,7 +29,7 @@ class FinancialObligationPolicy
     {
         return $this->view($user, $obligation)
             && $obligation->isEconomicallyAccepted()
-            && $obligation->outstandingMinor() > 0;
+            && $obligation->availableToSettleMinor() > 0;
     }
 
     private function currentActor(User $user): ?Actor

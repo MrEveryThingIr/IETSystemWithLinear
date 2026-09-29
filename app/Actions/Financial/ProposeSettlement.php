@@ -2,12 +2,15 @@
 
 namespace App\Actions\Financial;
 
+use App\Actions\Exchange\EnsureIetWallet;
 use App\FinancialObligationEventType;
 use App\Models\Actor;
+use App\Models\ContractSettlementBatch;
 use App\Models\FinancialObligation;
 use App\Models\FinancialObligationEvent;
 use App\Models\Settlement;
 use App\Models\User;
+use App\Support\IetAvailableBalance;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -15,6 +18,11 @@ use Illuminate\Support\Str;
 
 class ProposeSettlement
 {
+    public function __construct(
+        private readonly EnsureIetWallet $ietWallets,
+        private readonly IetAvailableBalance $available,
+    ) {}
+
     public function execute(
         FinancialObligation $obligation,
         User $user,
@@ -23,6 +31,7 @@ class ProposeSettlement
         ?string $method = null,
         ?string $reference = null,
         ?string $note = null,
+        ?ContractSettlementBatch $batch = null,
     ): Settlement {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('proposeSettlement', $obligation);
@@ -46,23 +55,54 @@ class ProposeSettlement
             $method,
             $reference,
             $note,
+            $batch,
         ): Settlement {
             $locked = FinancialObligation::query()
-                ->with(['fulfillment', 'settlements'])
+                ->with(['fulfillment', 'settlements', 'monetaryUnit', 'contractVersion'])
                 ->lockForUpdate()
                 ->findOrFail($obligation->id);
 
             Gate::forUser($current)->authorize('proposeSettlement', $locked);
             abort_if(
-                $amountMinor > $locked->outstandingMinor(),
+                $amountMinor > $locked->availableToSettleMinor(),
                 422,
-                'Settlement amount exceeds the currently outstanding obligation amount.',
+                'Settlement amount exceeds the amount currently available for a new payment claim.',
             );
+
+            if (
+                $locked->monetaryUnit->code === 'IET'
+                && (int) $locked->debtor_actor_id === (int) $current->actor->id
+            ) {
+                $wallet = $this->ietWallets->execute($current);
+
+                abort_if(
+                    $this->available->forUser($current, $wallet['wallet']) < $amountMinor,
+                    422,
+                    'Insufficient IET balance for this Settlement.',
+                );
+            }
+
+            $lockedBatch = null;
+            if ($batch instanceof ContractSettlementBatch) {
+                $lockedBatch = ContractSettlementBatch::query()
+                    ->lockForUpdate()
+                    ->findOrFail($batch->id);
+
+                abort_unless(
+                    (int) $lockedBatch->contract_id === (int) $locked->contractVersion->contract_id
+                    && (int) $lockedBatch->debtor_actor_id === (int) $locked->debtor_actor_id
+                    && (int) $lockedBatch->creditor_actor_id === (int) $locked->creditor_actor_id
+                    && (int) $lockedBatch->monetary_unit_id === (int) $locked->monetary_unit_id,
+                    422,
+                    'Settlement batch does not match this Financial Obligation.',
+                );
+            }
 
             $actor = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
             $settlement = Settlement::query()->create([
                 'financial_obligation_id' => $locked->id,
+                'contract_settlement_batch_id' => $lockedBatch?->id,
                 'amount_minor' => $amountMinor,
                 'paid_at' => $paidAt->utc(),
                 'method' => $method !== '' ? $method : null,
@@ -80,6 +120,7 @@ class ProposeSettlement
                     'amount_minor' => $amountMinor,
                     'paid_at' => $settlement->paid_at->toISOString(),
                     'reference' => $settlement->reference,
+                    'contract_settlement_batch_uuid' => $lockedBatch?->uuid,
                 ],
             ]);
 

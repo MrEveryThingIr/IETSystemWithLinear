@@ -8,6 +8,7 @@ use App\Actions\Financial\ProposeSettlement;
 use App\Actions\Financial\RespondToSettlement;
 use App\Models\Actor;
 use App\Models\FinancialObligation;
+use App\Models\IetPricedFinancialObligation;
 use App\Models\JournalEntry;
 use App\Models\Settlement;
 use App\Models\User;
@@ -152,8 +153,14 @@ class Show extends Component
             ->pluck('source_uuid')
             ->flip();
 
+        $ietPricing = IetPricedFinancialObligation::query()
+            ->with('valuationQuote')
+            ->where('financial_obligation_id', $this->obligation->id)
+            ->first();
+
         return view('livewire.financial.show', [
             'actor' => $actor,
+            'ietPricing' => $ietPricing,
             'timezone' => TemporalPreferences::timezoneFor($user),
             'obligationAccountingPosted' => $obligationAccountingPosted,
             'settlementAccounting' => $settlementAccounting,

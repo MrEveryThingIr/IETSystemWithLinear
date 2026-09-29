@@ -546,8 +546,8 @@ class BritishEnglishFileIntermediatePlusDemoSeeder extends Seeder
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @param array<string, mixed> $style
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $style
      * @return array<string, mixed>
      */
     private function block(string $key, string $type, array $data, array $style): array

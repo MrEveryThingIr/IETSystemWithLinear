@@ -2,7 +2,9 @@
 
 ## Mission
 
-Implement the full accepted Ideal-v1 roadmap continuously on GitHub with remote automated gates at every milestone and deferred owner-local/browser acceptance.
+Complete the first publishable Ideal-v1 through **browser-gated selective assembly**.
+
+The project is not rebuilt from scratch. Existing accepted code and later candidate branches are source libraries. One module is inspected, selectively improved, remotely validated, browser-accepted, corrected if necessary, and only then merged into the cumulative assembly.
 
 ## Read first
 
@@ -11,84 +13,161 @@ Implement the full accepted Ideal-v1 roadmap continuously on GitHub with remote 
 3. `docs/PROJECT_COMPASS.md`
 4. `docs/CURRENT_STATE.md`
 5. `docs/TARGET_ARCHITECTURE.md`
-6. `docs/PRODUCTION_ROADMAP.md`
-7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
-8. `docs/EXAMPLE_STORY_WORLD.md`
-9. active milestone contract/report
+6. `docs/CAPABILITY_MESH_ARCHITECTURE.md`
+7. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`
+8. `docs/PRODUCTION_ROADMAP.md`
+9. `docs/CONTINUOUS_REMOTE_EXECUTION.md`
+10. `docs/EXAMPLE_STORY_WORLD.md`
+11. active module report/handoff
 
-## Git line
+## Current Git line
 
-Integration trunk:
-
-~~~text
-integration/ideal-v1
-~~~
-
-Root baseline:
+Selective assembly:
 
 ~~~text
-2c7a5c35a31fe86d761a1cafd189560bec220784
+codex/ideal-v1-selective-assembly
 ~~~
 
-First reconstructed office-foundation commit:
+Initial accepted pre-selective foundation:
 
 ~~~text
-79367e717a74b877fbbb81c4ea9c9ab79fcbf773
+891b333c49f166e61b9fa466e30742b3d70996c0
 ~~~
 
-This reconstruction intentionally removes the unused AI assistance / Development Origin runtime while retaining the new Access Invitation + Intent Registry product work.
+S0 certified runtime checkpoint:
 
-## Current objective
+~~~text
+PR #30 merged
+runtime/checkpoint: 2b89e301ef7f167083445cd305847f83dbf3e048
+post-merge CI: 36236888120
+result: 552 tests / 3511 assertions
+Pint: 923 files
+PHPStan/Blade/MySQL/SQLite/ops/Vite/npm/Composer: green
+~~~
 
-The bounded Publishable Ideal-v1 code line is integrated on `integration/ideal-v1`.
+The assembly later received S0 documentation-only closure at `707eaa621e267c31beaf3d9c71dde3c92178429e` with CI `36237332774` green.
 
-The latest release hardening is the native-Persian UI localization pass:
+Browser-gated process checkpoint:
 
-- 11 previously absent Persian locale modules were added;
-- `lang/fa/access.php` and `lang/fa/intents.php` no longer load English;
-- user-facing wording across Access, Needs/Offers, Relationships, Proposals, Contracts, Commitments/Fulfillment, Planner, Finance/Accounting, Collaboration, Content, Reader/Studio, Notifications and shared UI vocabulary was rewritten toward simple native Persian rather than literal translation;
-- repeated implementation jargon such as Actor/Context/Blueprint/Studio is no longer exposed untranslated in Persian UI copy where a clear Persian term exists;
-- `LocalizationParityTest` requires every real English translation leaf to exist in Persian and forbids Persian locale files from loading English passthroughs;
-- Laravel's locale-specific validation aliases remain intentionally allowed in addition to the English validation-key baseline.
+~~~text
+PR #32 merged
+assembly SHA: 30dc939754c3fec7009250a61437db2633aabea7
+post-merge CI: 36238246665 — success
+runtime changes: none (governance/docs only)
+~~~
 
-Release evidence:
+## Current objective — F1 Shared Temporal Fabric
 
-- localization feature head: `1a6fc7831b11588ef494fa8b36b3c2e465223bd5`;
-- feature CI: `36160123238` — green;
-- PR #25 CI: `36160463461` — green;
-- integration merge: `edff668b6e8ad6c4a58a7d6c08bb54a821ce9662`;
-- integration CI: `36160798652` — green;
-- full regression: **545 tests / 3376 assertions**;
-- MySQL 8.4 + SQLite migrations, Pint, PHPStan, Vite, npm audit and Composer audit: green;
-- `release/ideal-v1-rc-4` is the immutable pre-doc-sync localization checkpoint;
-- `release/ideal-v1-rc-5` is the docs-synchronized release candidate to use for owner-local/browser acceptance.
+M00 proved the assembly is technically healthy. Owner browser inspection then confirmed that it is the older baseline and lacks several already-tested later improvements.
 
-Do **not** mutate old RC refs. Any browser defect must become an automated regression, a correction branch from the current integration line, a complete CI pass, an integration merge, and a newly numbered RC.
+The current product gate is therefore **not M01 registration**.
 
-Do **not** implement AI Copilot, Generic Workflow, Reputation or Recommendations as part of this release. They remain post-v1 unless a concrete browser/release defect requires otherwise.
+Recover and second-review:
 
-Persian UI localization is hardened, but the seeded/System Manual content is still English-canonical. A full native-reviewed Persian Manual is a separate content-translation milestone, not a hidden requirement for this RC.
+1. F1A — profile-aware Temporal Kernel across the application;
+2. F1B — permanent Ambient Capability Rail;
+3. F1C — shared Fractal Calendar Fabric;
+4. F1D — Capability Launcher / composition contract.
+
+Primary source libraries:
+
+~~~text
+codex/release-first-publication-hardening
+integration/ideal-v1-planner-temporal-candidate
+integration/ideal-v1-temporal-calendar-reconcile
+fix/planner-execution-window-calendar-evidence
+fix/planner-temporal-evidence-calendar-hardening
+~~~
+
+Do not merge those branches wholesale. Compare/select/refactor the strongest coherent implementation.
+
+## Active review model
+
+The old strict M0→M15 pipeline is superseded by docs/SELECTIVE_ASSEMBLY_ROADMAP.md.
+
+Review model:
+
+~~~text
+shared foundation recovery
+→ independently accept capability nodes
+→ independently accept explicit seams
+→ test human-centered compositions that may stop at any level
+~~~
+
+Priority node pool after F1:
+
+1. Planner;
+2. Personal Accounting / Finance;
+3. Agreement / Contract authority;
+4. Need / Offer / Relationship;
+5. Group / Invitation / Admission / Membership;
+6. Content / Assets / Evidence;
+7. Submission / Evaluation;
+8. Notifications / Realtime / Home-Today.
+
+The review order is a priority order, not a claim that every earlier node is a runtime prerequisite.
+
+## Module admission contract
+
+Each module remains on its review branch until explicit browser acceptance.
+
+Every living module report records:
+
+- objective and current behavior;
+- source branches/commits/files/hunks;
+- authority/dependency/consumer maps;
+- wiring contract;
+- persistence/migration/authorization/privacy/temporal/money/locale/accessibility risks;
+- required/recommended/deferred improvements;
+- rollback;
+- remote tests;
+- browser script;
+- defects/fixes;
+- exact accepted head;
+- merge/post-merge CI;
+- next-module wiring notes.
+
+Preserve the original pre-plan. Append actual decisions rather than replacing history with a hindsight-only summary.
+
+## Git discipline
+
+- Never develop directly on `main`, an RC, or `codex/ideal-v1-selective-assembly`.
+- Branch each module from the current accepted assembly head.
+- Candidate branches are source libraries, not merge units.
+- One independently reversible PR per module or intentionally separated submodule.
+- Keep the PR open/draft through browser review.
+- Merge only the exact browser-accepted head.
+- No force-push of accepted shared history.
+- Shared migrations remain append-only.
+- Never use `migrate:fresh` on the owner's continuing acceptance database.
+- Keep rejected candidates until stable release.
+
+Current governance gap: GitHub server-side rules protect `main`, not the assembly branch. PR-only discipline therefore remains mandatory.
 
 ## Persistent product rules
 
-- Content is one independent versioned system; GroupSpace is only one Context kind.
-- Content has a home/origin Context for authoring/authorization but may be presented/referenced elsewhere.
-- normal presentation may follow the current published revision; evidence must pin an exact published revision/target.
-- Contexts compose modules; they do not require duplicate module tables.
-- user journeys progressively activate capabilities rather than selecting a giant universal type.
-- Need/Offer is intent, not Match/Contract/obligation.
-- Relationship is an explicit direct coordination boundary, not Group Membership, Contract, ownership, employment, financing rights or payment.
-- Relationship Context is writable only after explicit participant consent and becomes read-only when terminal.
-- Conversation is collaboration evidence, not authoritative acceptance.
-- finance uses explicit domain-event → obligation → accounting actions; balances are derived.
-- user-facing UX uses plain actions while specialized kernels retain authority.
-- Alice/Bob/Carol/Diego examples are canonical across docs/tests.
+- User authentication and Actor participation are distinct.
+- Platform authority, Group Membership and Context access are distinct.
+- Content is one independent versioned system with home Context + authorized placement/reference.
+- Evidence pins exact immutable publication targets.
+- Need/Offer is intent; matching creates no obligation.
+- Relationship coordinates people but is not Contract/ownership/employment/financing authority.
+- Conversation text is collaboration evidence, not acceptance.
+- Group Agreement and party-specific negotiated Contract are distinct.
+- Contract, Commitment, Fulfillment, Financial Obligation/Settlement and Accounting remain separate authorities.
+- Financial truth flows through explicit Actions; balances are derived.
+- Planner schedule/completion never silently becomes Contract or financial truth.
+- Realtime is transport, not authority.
+- Alice/Bob/Carol/Diego examples remain canonical.
 
 ## Interruption recovery
 
 If interrupted:
 
-1. inspect latest `integration/ideal-v1` SHA and CI;
-2. inspect active feature branch/report if one exists;
-3. never restart from chat memory;
-4. update this handoff after each remotely integrated milestone.
+1. inspect current assembly SHA and CI;
+2. inspect current review branch/PR;
+3. read `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`;
+4. read the active living module report;
+5. inspect latest browser-acceptance status in the worksheet/report;
+6. do not start the next module unless the current browser gate is accepted;
+7. never resume from chat memory or merge an aggregate candidate wholesale.

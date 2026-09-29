@@ -801,6 +801,10 @@ After the final human gate:
 - support/incident ownership;
 - feedback → roadmap loop.
 
-## Remote progression rule
+## Selective assembly progression rule
 
-The agent proceeds from one remotely-green milestone to the next without waiting for local browser acceptance, unless a stop condition in `docs/CONTINUOUS_REMOTE_EXECUTION.md` is met.
+For the current first-publication reconciliation, `docs/SELECTIVE_ASSEMBLY_ROADMAP.md` supersedes the older remote-only progression rule.
+
+A module may be implemented and validated remotely, but it is **not admitted into `codex/ideal-v1-selective-assembly` until the owner has browser-tested and explicitly accepted the exact review head**. Browser findings are regression-tested and corrected on the review/correction branch before merge. Only after merge + post-merge CI + checkpoint documentation may implementation of the next dependent module begin.
+
+The final cumulative 0→100 release acceptance still runs after all module-level gates; module acceptance reduces integration ambiguity but does not replace final release validation.

@@ -5,6 +5,7 @@ namespace App\Actions\Accounting;
 use App\JournalEntryKind;
 use App\Models\JournalEntry;
 use App\Models\User;
+use App\Support\IetLedgerGuard;
 
 class ReverseJournalEntry
 {
@@ -17,6 +18,7 @@ class ReverseJournalEntry
         ?string $description = null,
     ): JournalEntry {
         $entry->loadMissing(['ledger', 'lines.account']);
+        IetLedgerGuard::rejectManualMutation($entry->ledger);
         abort_unless($entry->kind !== JournalEntryKind::Reversal, 422, 'A reversal cannot be reversed directly.');
 
         $lines = $entry->lines->map(fn ($line): array => [

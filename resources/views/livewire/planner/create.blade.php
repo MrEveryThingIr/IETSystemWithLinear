@@ -43,13 +43,13 @@
                     @endforeach
                 </flux:select>
 
-                <flux:input wire:model="startsOn" type="date" :label="__('planner.create.starts_on')" />
+                <x-app.calendar-date-input model="startsOn" :label="__('planner.create.starts_on')" :timezone="$timezone" />
                 <flux:input wire:model="startTime" type="time" :label="__('planner.create.start_time')" />
                 <flux:input wire:model="durationMinutes" type="number" min="1" max="10080" :label="__('planner.create.duration')" />
                 <flux:input wire:model="interval" type="number" min="1" max="365" :label="__('planner.create.interval')" />
 
                 @if (in_array($frequency, ['daily', 'weekly'], true))
-                    <flux:input wire:model="endsOn" type="date" :label="__('planner.create.ends_on')" />
+                    <x-app.calendar-date-input model="endsOn" :label="__('planner.create.ends_on')" :timezone="$timezone" />
                     <flux:input wire:model="occurrenceLimit" type="number" min="1" max="10000" :label="__('planner.create.occurrence_limit')" />
                 @endif
             </div>
@@ -84,6 +84,69 @@
                 <flux:input wire:model="reminderOffsets" :label="__('planner.create.reminders')" />
                 <p class="mt-1 text-xs text-zinc-500">{{ __('planner.create.reminders_help') }}</p>
             </div>
+        </flux:card>
+
+        <flux:card class="space-y-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <flux:heading size="lg">{{ __('planner.create.readiness') }}</flux:heading>
+                    <p class="mt-1 text-sm text-zinc-500">{{ __('planner.create.readiness_help') }}</p>
+                </div>
+                <flux:button type="button" wire:click="addPrerequisite" size="sm" variant="ghost" icon="plus">
+                    {{ __('planner.create.add_prerequisite') }}
+                </flux:button>
+            </div>
+
+            @if ($prerequisites === [])
+                <p class="text-sm text-zinc-500">{{ __('planner.create.no_prerequisites') }}</p>
+            @else
+                <div class="space-y-3">
+                    @foreach ($prerequisites as $index => $prerequisite)
+                        <div wire:key="plan-prerequisite-{{ $index }}" class="grid gap-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+                            <flux:input wire:model="prerequisites.{{ $index }}.title" :label="__('planner.create.prerequisite')" maxlength="240" />
+                            <flux:checkbox wire:model="prerequisites.{{ $index }}.required" :label="__('planner.create.prerequisite_required')" />
+                            <flux:button type="button" wire:click="removePrerequisite({{ $index }})" size="sm" variant="ghost">
+                                {{ __('planner.create.remove') }}
+                            </flux:button>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </flux:card>
+
+        <flux:card class="space-y-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <flux:heading size="lg">{{ __('planner.create.expense_estimates') }}</flux:heading>
+                    <p class="mt-1 text-sm text-zinc-500">{{ __('planner.create.expense_estimates_help') }}</p>
+                </div>
+                <flux:button type="button" wire:click="addExpenseEstimate" size="sm" variant="ghost" icon="plus">
+                    {{ __('planner.create.add_expense_estimate') }}
+                </flux:button>
+            </div>
+
+            @if ($expenseEstimates === [])
+                <p class="text-sm text-zinc-500">{{ __('planner.create.no_expense_estimates') }}</p>
+            @else
+                <div class="space-y-3">
+                    @foreach ($expenseEstimates as $index => $estimate)
+                        <div wire:key="plan-estimate-{{ $index }}" class="grid gap-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700 sm:grid-cols-[minmax(0,1fr)_10rem_9rem_auto] sm:items-end">
+                            <flux:input wire:model="expenseEstimates.{{ $index }}.label" :label="__('planner.create.expense_label')" maxlength="180" />
+                            <flux:input wire:model="expenseEstimates.{{ $index }}.amount" :label="__('planner.create.estimated_amount')" inputmode="decimal" />
+                            <flux:select wire:model="expenseEstimates.{{ $index }}.unit_code" :label="__('planner.create.monetary_unit')">
+                                @foreach ($unitCatalog as $code => $unit)
+                                    <option value="{{ $code }}">{{ $code }} · {{ $unit['name'] }}</option>
+                                @endforeach
+                            </flux:select>
+                            <flux:button type="button" wire:click="removeExpenseEstimate({{ $index }})" size="sm" variant="ghost">
+                                {{ __('planner.create.remove') }}
+                            </flux:button>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <flux:callout>{{ __('planner.create.expense_non_authority') }}</flux:callout>
         </flux:card>
 
         <flux:callout variant="warning">{{ __('planner.create.non_authority') }}</flux:callout>

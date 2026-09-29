@@ -63,7 +63,7 @@
                             <flux:input wire:model="answers.{{ $key }}" type="number" step="any" />
                             @break
                         @case('date')
-                            <flux:input wire:model="answers.{{ $key }}" type="date" />
+                            <x-app.calendar-date-input model="answers.{{ $key }}" :label="$item['label']" />
                             @break
                         @case('boolean')
                             <flux:select wire:model="answers.{{ $key }}">

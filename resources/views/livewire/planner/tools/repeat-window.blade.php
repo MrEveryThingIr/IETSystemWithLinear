@@ -1,0 +1,155 @@
+<x-app.planner-studio-shell :source="$sourceOccurrence?->uuid">
+    <section class="space-y-5">
+        <x-app.page-header
+            :title="__('planning_baseline.tools.title')"
+            :description="__('planning_baseline.sidebar.help')"
+        />
+
+        <details
+            open
+            class="group overflow-hidden rounded-2xl border-2 border-zinc-300 bg-zinc-50/80 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/60"
+        >
+            <summary class="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-4 hover:bg-zinc-100/70 dark:hover:bg-zinc-900">
+                <div>
+                    <div class="text-base font-semibold">{{ __('planning_baseline.tools.repeat.title') }}</div>
+                    <div class="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                        {{ __('planning_baseline.tools.repeat.help') }}
+                    </div>
+                </div>
+
+                <div class="shrink-0 text-lg text-zinc-500 transition group-open:rotate-180">⌄</div>
+            </summary>
+
+            <div class="space-y-5 border-t border-zinc-300 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-950">
+                @if ($message !== '')
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                        {{ $message }}
+                    </div>
+                @endif
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium">{{ __('planning_baseline.tools.repeat.source') }}</label>
+                    <select
+                        wire:model.live="sourceUuid"
+                        class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    >
+                        <option value="">{{ __('planning_baseline.tools.repeat.choose_source') }}</option>
+                        @foreach ($sources as $source)
+                            <option value="{{ $source->uuid }}">{{ $sourceLabels[$source->uuid] }}</option>
+                        @endforeach
+                    </select>
+                    @error('sourceUuid')
+                        <div class="mt-1 text-sm text-red-600">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                @if ($sourceOccurrence)
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="font-medium" dir="auto">{{ $sourceOccurrence->plan->title }}</div>
+                        <div class="mt-1 text-sm text-zinc-500">
+                            <x-app.local-date :value="$sourceOccurrence->scheduled_start_at" />
+                            ·
+                            @if (($sourceOccurrence->scheduleRule?->timing_mode ?? \App\PlanTimingMode::Fixed) === \App\PlanTimingMode::FlexibleDay)
+                                {{ __('planning_baseline.timing.flexible_day_short') }}
+                            @else
+                                <x-app.local-time :value="$sourceOccurrence->scheduled_start_at" />
+                                –
+                                <x-app.local-time :value="$sourceOccurrence->scheduled_end_at" />
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="mb-2 text-sm font-medium">{{ __('planning_baseline.tools.repeat.pattern') }}</div>
+                        <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                            @foreach ([
+                                'next_days' => 'planning_baseline.tools.repeat.modes.next_days',
+                                'same_weekday' => 'planning_baseline.tools.repeat.modes.same_weekday',
+                                'same_monthday' => 'planning_baseline.tools.repeat.modes.same_monthday',
+                                'same_yearday' => 'planning_baseline.tools.repeat.modes.same_yearday',
+                                'month' => 'planning_baseline.tools.repeat.modes.month',
+                                'selected_dates' => 'planning_baseline.tools.repeat.modes.selected_dates',
+                            ] as $modeValue => $labelKey)
+                                <label class="cursor-pointer rounded-xl border p-3 {{ $repeatMode === $modeValue ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-800' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950' }}">
+                                    <input class="sr-only" type="radio" wire:model.live="repeatMode" value="{{ $modeValue }}">
+                                    <div class="text-sm font-medium">{{ __($labelKey) }}</div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if (in_array($repeatMode, ['next_days', 'same_weekday', 'same_monthday', 'same_yearday'], true))
+                        <flux:input
+                            wire:model="repeatCount"
+                            type="number"
+                            min="1"
+                            :max="$repeatMode === 'same_yearday' ? 20 : ($repeatMode === 'same_monthday' ? 36 : ($repeatMode === 'same_weekday' ? 52 : 62))"
+                            :label="__('planning_baseline.tools.repeat.count_instances')"
+                        />
+                    @elseif ($repeatMode === 'month')
+                        <x-app.calendar-date-input
+                            model="repeatMonth"
+                            :label="__('planning_baseline.tools.repeat.month')"
+                        />
+                        <p class="-mt-3 text-xs leading-5 text-zinc-500">
+                            {{ __('planning_baseline.tools.repeat.month_help') }}
+                        </p>
+                    @else
+                        <div class="space-y-3">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                                <div class="flex-1">
+                                    <x-app.calendar-date-input model="repeatDate" :label="__('planning_baseline.tools.repeat.date')" />
+                                </div>
+                                <flux:button type="button" wire:click="addRepeatDate" variant="ghost">
+                                    {{ __('planning_baseline.tools.repeat.add_date') }}
+                                </flux:button>
+                            </div>
+
+                            @error('repeatDate')
+                                <div class="text-sm text-red-600">{{ $message }}</div>
+                            @enderror
+                            @error('repeatDates')
+                                <div class="text-sm text-red-600">{{ $message }}</div>
+                            @enderror
+
+                            @if ($repeatDates !== [])
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($repeatDates as $date)
+                                        <button
+                                            type="button"
+                                            wire:click="removeRepeatDate('{{ $date }}')"
+                                            class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                                        >
+                                            <x-app.local-date :value="$date" :show-equivalent="false" /> <span aria-hidden="true">×</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+                        {{ __('planning_baseline.tools.repeat.fractal_help') }}
+                    </div>
+                @endif
+
+                <div class="flex flex-wrap justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                    <flux:button :href="$cancelUrl" variant="ghost">
+                        {{ __('studio.cancel') }}
+                    </flux:button>
+
+                    <flux:button
+                        type="button"
+                        wire:click="apply"
+                        wire:loading.attr="disabled"
+                        wire:target="apply"
+                        variant="primary"
+                        :disabled="$sourceOccurrence === null"
+                    >
+                        {{ __('planning_baseline.tools.repeat.apply') }}
+                    </flux:button>
+                </div>
+            </div>
+        </details>
+    </section>
+</x-app.planner-studio-shell>

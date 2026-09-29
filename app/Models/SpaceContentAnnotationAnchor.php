@@ -20,10 +20,15 @@ use LogicException;
 class SpaceContentAnnotationAnchor extends Model
 {
     public const TARGET_REVISION = 'revision';
+
     public const TARGET_FIELD = 'field';
+
     public const TARGET_TEXT = 'text';
+
     public const TARGET_ASSET = 'asset';
+
     public const TARGET_RELATIONSHIP = 'relationship';
+
     public const TARGET_BLOCK = 'block';
 
     /** @var list<string> */

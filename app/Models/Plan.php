@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\PlanAttentionMode;
 use App\PlanStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ use LogicException;
     'title',
     'description',
     'timezone',
+    'attention_mode',
     'status',
     'origin_type',
     'origin_uuid',
@@ -33,6 +35,7 @@ class Plan extends Model
 
     protected $attributes = [
         'status' => PlanStatus::Active->value,
+        'attention_mode' => PlanAttentionMode::Exclusive->value,
     ];
 
     protected static function booted(): void
@@ -133,6 +136,18 @@ class Plan extends Model
         return $this->hasMany(PlanReminder::class);
     }
 
+    /** @return HasMany<PlanPrerequisite, $this> */
+    public function prerequisites(): HasMany
+    {
+        return $this->hasMany(PlanPrerequisite::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** @return HasMany<PlanExpenseEstimate, $this> */
+    public function expenseEstimates(): HasMany
+    {
+        return $this->hasMany(PlanExpenseEstimate::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     /** @return HasOne<CommitmentPlanBinding, $this> */
     public function commitmentBinding(): HasOne
     {
@@ -150,6 +165,7 @@ class Plan extends Model
     {
         return [
             'status' => PlanStatus::class,
+            'attention_mode' => PlanAttentionMode::class,
             'metadata' => 'array',
         ];
     }

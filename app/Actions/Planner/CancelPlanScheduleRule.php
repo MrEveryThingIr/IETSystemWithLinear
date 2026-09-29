@@ -30,7 +30,7 @@ class CancelPlanScheduleRule
             $actor = Actor::query()->findOrFail($current->actor->id);
 
             foreach ($locked->occurrences as $occurrence) {
-                if ($occurrence->status !== PlanOccurrenceStatus::Scheduled || $occurrence->scheduled_start_at->isPast()) {
+                if ($occurrence->status !== PlanOccurrenceStatus::Scheduled || $occurrence->window_end_at->isPast()) {
                     continue;
                 }
 

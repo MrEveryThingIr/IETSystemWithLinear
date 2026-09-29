@@ -48,7 +48,7 @@
                             </div>
                             @if ($version->effective_from)
                                 @php($displayTimezone = $group->timezone ?: 'UTC')
-                                <flux:text class="text-sm">{{ __('ui.agreements.effective', ['date' => $version->effective_from->timezone($displayTimezone)->translatedFormat('M j, Y H:i').' '.$displayTimezone]) }}</flux:text>
+                                <flux:text class="text-sm">{{ __('ui.agreements.effective_label') }} <x-app.local-datetime :value="$version->effective_from" /></flux:text>
                             @endif
                         </div>
 
@@ -76,8 +76,8 @@
                                 <flux:button wire:click="activate({{ $version->id }})" size="sm" variant="primary">{{ __('ui.agreements.activate_now') }}</flux:button>
                                 @if ($version->status === 'approved')
                                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                                        <flux:input wire:model="effectiveFrom" type="datetime-local" :label="__('ui.agreements.activation_time')" />
-                                        <flux:input wire:model="effectiveUntil" type="datetime-local" :label="__('ui.agreements.end_time')" />
+                                        <x-app.calendar-datetime-input model="effectiveFrom" :label="__('ui.agreements.activation_time')" />
+                                        <x-app.calendar-datetime-input model="effectiveUntil" :label="__('ui.agreements.end_time')" />
                                         <flux:button wire:click="schedule({{ $version->id }})" size="sm">{{ __('ui.agreements.schedule') }}</flux:button>
                                     </div>
                                 @endif

@@ -18,7 +18,9 @@ use LogicException;
 class SpaceContentReaction extends Model
 {
     public const TYPE_LIKE = 'like';
+
     public const TYPE_HELPFUL = 'helpful';
+
     public const TYPE_INSIGHTFUL = 'insightful';
 
     /** @var list<string> */

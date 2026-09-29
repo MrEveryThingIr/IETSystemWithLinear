@@ -2,26 +2,34 @@
 
 ## Purpose
 
-IET now operates in **continuous remote roadmap mode**.
+IET currently operates in **browser-gated selective assembly mode**.
 
-The repository remains the durable source of truth. The owner has explicitly deferred local Laragon/browser acceptance until the remotely integrated Ideal-v1 roadmap is complete enough for the cumulative 0→100 worksheet.
+The repository is the durable source of truth. Existing modules are reused and revised; the project is not rewritten from scratch.
 
-The circuit is:
+The active execution roadmap is `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`.
+
+## Circuit
 
 ~~~text
 owner-approved architecture
-→ canonical repository docs
-→ one remote milestone branch
-→ implementation + migrations + tests + manual source
-→ remote CI gate
-→ milestone report + acceptance worksheet entry
-→ integration/ideal-v1 checkpoint
-→ next milestone
+→ accepted assembly checkpoint
+→ one module review branch
+→ current-behavior audit
+→ candidate/source audit
+→ living module pre-plan
+→ selective implementation
+→ remote quality gate
+→ owner local/browser gate on exact review head
+→ correction + regression loop if needed
+→ owner acceptance
+→ PR merge into selective assembly
+→ post-merge CI
+→ frozen checkpoint + next wiring plan
+→ next module
 → ...
-→ integrated release candidate
-→ owner local/browser 0→100 validation
-→ correction pass
-→ release
+→ cumulative release candidate
+→ final end-to-end acceptance
+→ stable release
 ~~~
 
 ## Authority order
@@ -31,13 +39,14 @@ owner-approved architecture
 3. `docs/PROJECT_COMPASS.md`;
 4. `docs/CURRENT_STATE.md`;
 5. `docs/TARGET_ARCHITECTURE.md`;
-6. `docs/PRODUCTION_ROADMAP.md`;
-7. `docs/CONTINUOUS_REMOTE_EXECUTION.md`;
-8. active milestone contract/report;
-9. matching `.ai/rules/`;
-10. source code and tests for implemented behavior;
-11. historical reports/handoffs;
-12. issue trackers and chat history.
+6. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`;
+7. `docs/PRODUCTION_ROADMAP.md`;
+8. `docs/CONTINUOUS_REMOTE_EXECUTION.md`;
+9. active module contract/report;
+10. matching `.ai/rules/`;
+11. source code/tests for implemented behavior;
+12. historical reports/handoffs;
+13. issue trackers and chat history.
 
 ## Agent startup
 
@@ -45,44 +54,57 @@ Before code:
 
 1. read `AGENTS.md`;
 2. read matching `.ai/rules/`;
-3. read the canonical docs above;
-4. read `docs/EXAMPLE_STORY_WORLD.md`;
-5. inspect latest `integration/ideal-v1` SHA and CI;
-6. inspect the active milestone branch/report if it exists;
-7. continue from repository evidence, never from presumed chat memory.
+3. read canonical architecture docs;
+4. read `docs/SELECTIVE_ASSEMBLY_ROADMAP.md`;
+5. read `docs/EXAMPLE_STORY_WORLD.md`;
+6. inspect current `codex/ideal-v1-selective-assembly` SHA and CI;
+7. inspect active review branch/PR/report if present;
+8. inspect source branches/commits identified by the report;
+9. continue from repository evidence, never presumed chat memory.
 
-## Milestone cycle
+## Module cycle
 
 ### 1. Branch
 
-Create a coherent feature branch from the current integration SHA.
+Create one coherent review branch from the current accepted assembly SHA.
 
 ### 2. Inspect
 
-Audit the exact current implementation, migrations, policies, Actions, UI, tests, docs and applicable rules before editing.
+Audit exact current behavior: migrations, models, Actions, policies, UI, tests, docs and applicable rules.
 
-### 3. Implement
+Then inspect candidate/source branches. Treat them as implementation evidence, not merge units.
 
-Prefer existing kernels. Add a new domain layer only when an existing object cannot truthfully own the state.
+### 3. Preserve the pre-plan
+
+Create/update `Development-CodexReports/Mxx-<module>-report.md` before implementation.
+
+Record objective, current behavior, candidates, authority/dependencies/consumers, wiring contract, risks, proposed improvements, rollback, validation and browser plan.
+
+Keep this plan visible when later appending actual decisions. Do not rewrite history into a hindsight-only report.
+
+### 4. Implement selectively
+
+Prefer proven kernels. Import only selected files/hunks/ideas. Improve the module where browser/architecture/review evidence justifies it.
 
 Use atomic commits such as:
 
 ~~~text
 feat(...)
+fix(...)
 test(...)
 docs(...)
-fix(...)
 ~~~
 
-### 4. Validate remotely
+### 5. Validate remotely
 
-At minimum where applicable:
+Where applicable:
 
 ~~~text
 focused PHPUnit
 full PHPUnit
 PHPStan
 Pint
+Blade compile
 Vite production build
 migration rollback/reapply
 scheduler/queue smoke
@@ -91,80 +113,83 @@ npm audit
 Composer audit
 ~~~
 
-Also add authorization/privacy/concurrency/idempotency tests when the milestone can fail in those dimensions.
+Also test authorization/privacy/concurrency/idempotency where meaningful.
 
-### 5. Document as versioned product knowledge
+### 6. Browser acceptance before merge
 
-Update both Markdown authority and `SystemManualContent`.
+The owner switches locally to the review branch and follows its worksheet.
 
-Manual pages must document exact controls/actions and reuse the Alice/Bob/Carol/Diego story.
+Test the module independently and against previously accepted modules only. Future modules must not be required merely to make the current module appear functional.
 
-### 6. Record checkpoint
+If a defect is found:
 
-Write/update:
+~~~text
+browser finding
+→ document
+→ automated reproduction where practical
+→ correction commit
+→ focused/full remote validation
+→ repeat affected browser checks
+~~~
 
-- `Development-CodexReports/<milestone>-report.md`;
+Only explicit owner acceptance closes this gate.
+
+### 7. Merge accepted head
+
+Merge the exact browser-accepted review head into `codex/ideal-v1-selective-assembly` through PR, then require green post-merge CI.
+
+### 8. Freeze checkpoint and plan next wiring
+
+Update:
+
+- module report;
 - `docs/LOCAL_ACCEPTANCE_WORKSHEET.md`;
 - `docs/handoffs/continuous-ideal-v1.md`;
-- `docs/CURRENT_STATE.md`.
+- `docs/CURRENT_STATE.md`;
+- System Manual when user-facing behavior changed.
 
-Record exact result SHA and CI run.
-
-### 7. Integrate and continue
-
-When remote gates are green and no stop condition exists, integrate into `integration/ideal-v1` and activate the next milestone without waiting for local browser acceptance.
+Record final assembly SHA/CI and exactly how the next module may consume this module.
 
 ## Git topology
 
 ~~~text
-main                         public/stable release line
+main                                   public/stable
   ↑
-release/*                    release stabilization after final human gate
+release/*                              final stabilization
   ↑
-integration/ideal-v1         cumulative remotely-green Ideal-v1
+codex/ideal-v1-selective-assembly     browser-accepted cumulative assembly
   ↑
-feat/ideal-v1-*              one remote milestone
+codex/review-*                         one module under review
+  ← candidate/source branches          read/cherry-pick selectively
 ~~~
 
-Legacy branches remain historical evidence. Never force-reset them just to make the graph prettier.
+Never force-reset historical branches just to simplify the graph.
 
-## Deferred local gate
+## Database discipline
 
-The owner later follows `docs/LOCAL_ACCEPTANCE_WORKSHEET.md` in chronological order using the continuing database.
+No `migrate:fresh` against the continuing acceptance database.
 
-No `migrate:fresh`.
-
-Failures discovered during deferred acceptance become new correction commits on the current integration/release line with regression tests. Historical checkpoint SHAs remain honest.
+Shared migrations stay append-only. Browser-discovered fixes are correction commits/migrations, never silent history rewrites.
 
 ## Documentation story continuity
 
-The canonical cast is defined in `docs/EXAMPLE_STORY_WORLD.md`.
+Use `docs/EXAMPLE_STORY_WORLD.md`:
 
-Prefer:
-
-- Diego — office operator / Group owner;
-- Alice — property owner/requester;
+- Diego — platform/office operator;
+- Alice — owner/client;
 - Bob — service provider/worker;
-- Carol — capital provider;
+- Carol — collaborator/capital/reviewer where appropriate;
 - Maple Housing Office;
 - Riverside Home Project.
 
-Do not invent unrelated example users on every page unless a genuinely different role is needed.
+Reuse these objects as modules become wired together.
 
 ## Stop conditions
 
-Stop only for:
+Stop only for genuine architecture contradiction, unavoidable destructive/data loss, unresolved authorization/legal/financial meaning, owner approval for dependency/credential/provider, external-money/custody boundary, unsafe Git state, or unavailable required validation.
 
-- contradictory canonical architecture;
-- unavoidable destructive/data-losing migration;
-- unresolved authorization or legal/financial semantics;
-- owner approval required for dependency/credential/provider;
-- external-money/custody regulatory boundary;
-- unsafe Git operation;
-- required validation unavailable.
-
-Normal implementation defects should be repaired and the milestone continued.
+Ordinary defects are handled inside the current module correction loop.
 
 ## Handoff
 
-`docs/handoffs/continuous-ideal-v1.md` is the short operational restart point after interruption. Canonical architecture remains in the main docs.
+`docs/handoffs/continuous-ideal-v1.md` is the short restart point. `docs/SELECTIVE_ASSEMBLY_ROADMAP.md` is the active execution roadmap.

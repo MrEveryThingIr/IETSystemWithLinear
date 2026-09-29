@@ -3,6 +3,7 @@
 return [
     'back_to_library' => 'العودة إلى المحتوى',
     'edit_in_studio' => 'تحرير في الاستوديو',
+    'published_label' => 'وقت النشر',
     'published' => 'نُشر في :date',
     'by_author' => 'بواسطة :author',
     'outline' => 'المخطط',

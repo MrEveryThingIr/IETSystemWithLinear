@@ -12,7 +12,7 @@
     <x-app.flash-message />
 
     <form wire:submit="login" class="space-y-4">
-        <flux:input wire:model="email" :label="__('ui.auth.email')" type="email" autocomplete="email" required />
+        <flux:input wire:model="email" :label="__('ui.auth.email').' / '.__('ui.auth.username')" type="text" autocomplete="username" required />
         <flux:input wire:model="password" :label="__('ui.auth.password')" type="password" autocomplete="current-password" required />
         <flux:checkbox wire:model="remember" :label="__('ui.auth.remember')" />
         <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="login">{{ __('ui.auth.login') }}</flux:button>

@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\Ledger;
 use App\Models\User;
+use App\Support\IetLedgerGuard;
 
 class RecordTransfer
 {
@@ -22,6 +23,7 @@ class RecordTransfer
         string $occurredOn,
         ?string $description = null,
     ): JournalEntry {
+        IetLedgerGuard::rejectManualMutation($ledger);
         abort_unless($from->type === AccountType::Asset && $to->type === AccountType::Asset, 422, 'Transfers require Asset Accounts.');
         abort_if((int) $from->id === (int) $to->id, 422, 'Transfer Accounts must be different.');
         abort_if($amountMinor <= 0, 422, 'Transfer amount must be positive.');

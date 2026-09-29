@@ -83,7 +83,7 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <flux:badge>{{ __('ui.status.'.$admission->status) }}</flux:badge>
                             @if ($admission->submitted_at)
-                                <flux:text class="text-sm">{{ __('ui.groups.submitted_ago', ['time' => $admission->submitted_at->diffForHumans()]) }}</flux:text>
+                                <flux:text class="text-sm">{{ __('ui.groups.submitted_label') }} <x-app.local-datetime :value="$admission->submitted_at" /></flux:text>
                             @endif
                         </div>
                     </div>

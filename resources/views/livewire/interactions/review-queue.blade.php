@@ -34,7 +34,7 @@
                         <x-app.actor-identity :actor="$submission->submitter" size="xs" />
                         <div class="text-xs text-zinc-500">
                             {{ __('structured_interactions.attempt', ['number' => $submission->attempt_number]) }}
-                            · {{ $submission->submitted_at?->format('Y-m-d H:i') }}
+                            · @if ($submission->submitted_at)<x-app.local-datetime :value="$submission->submitted_at" />@endif
                         </div>
                     </div>
                     <flux:button :href="route('contexts.submissions.show', [$context, $submission])" variant="primary" class="w-full sm:w-auto">
