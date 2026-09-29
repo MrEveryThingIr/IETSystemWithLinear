@@ -57,53 +57,24 @@ The previous default `planning_baseline` profile intentionally hid most of those
 
 The newer compact Money workspace is retained independently at `/money`; mature Accounting remains at `/accounting`; Exchange and Vault remain first-class surfaces.
 
-## Important sibling-line work not yet considered automatically merged
+## Historical branch reconciliation status
 
-Do not wholesale reset or overwrite the unified branch with these branches. They are source libraries that contain valuable unique work:
+The major sibling lines have now been reviewed and selectively converged. Historical branches remain useful as implementation evidence, but they are **not** alternate release candidates and must not be wholesale-merged over this branch.
 
-### release/ideal-v1-rc-7-hardening
+Authoritative reconciliation details are recorded in:
 
-Compared with the unified starting head it has 19 unique commits touching 18 files.
+`docs/UNIFIED_FINALIZATION_CONVERGENCE.md`
 
-Notable unique work includes:
+Current status:
 
-- verified-user default provisioning;
-- default monetary unit preference;
-- ambient status/header hardening;
-- Planner and temporal presentation fixes;
-- localization/presentation fixes.
+- `codex/planner-readiness-execution-calendar-density`, `codex/personal-money-vault-calendar-tools` and `codex/review-f1-shared-temporal-fabric` are subsumed ancestors;
+- `codex/ideal-v1-service-financial-workflow` is semantically reconciled into the current Contract -> Commitment -> Planner -> Fulfillment -> Financial Obligation -> Settlement flow;
+- `integration/ideal-v1-temporal-calendar-reconcile` is selectively reconciled, preserving the newer temporal core while restoring missing evidence/execution/calendar behavior and regression tests;
+- `release/ideal-v1-rc-7-hardening` and `codex/release-first-publication-hardening` are selectively reconciled for verified-user provisioning, monetary defaults, first-publication gates and compatible presentation hardening;
+- `feat/context-ai-assistance-provenance` is restored and extended with authenticated AI Chat and System Manual integration;
+- older parallel IET exchange/settlement kernels were capability-audited; useful behaviors were retained in the canonical Treasury/quote/Obligation architecture while duplicate model families and bypass rails were rejected.
 
-These changes must be reconciled semantically because the unified branch has hundreds of later commits on the other side.
-
-### integration/ideal-v1-temporal-calendar-reconcile
-
-Compared with the unified starting head it has 19 unique commits touching 26 files.
-
-Notable unique work includes:
-
-- execution-window state;
-- temporal calendar reconciliation;
-- Planner occurrence window behavior;
-- evidence upload hardening;
-- calendar visibility tests.
-
-The current branch already contains later Planner/Calendar work, so this source is for missing behavior/tests rather than a blind merge.
-
-### codex/ideal-v1-service-financial-workflow
-
-Compared with the unified starting head it has 129 unique commits touching 51 files.
-
-Important capabilities include:
-
-- contract service terms;
-- service compensation semantics;
-- contract -> Commitment planning;
-- accepted Fulfillment -> Financial Obligation;
-- settlement batches;
-- contract financial summaries;
-- related UI/tests/documentation.
-
-This is the most important mature financial sibling to reconcile before expanding the exchange economy.
+The rule for any remaining historical branch is unchanged: admit a behavior only when it improves the current authoritative model without creating a second source of truth.
 
 ## Integration order
 
@@ -135,7 +106,7 @@ The system must distinguish:
 
 This prevents a house-price index, Bitcoin and USD from being incorrectly modeled as the same kind of object.
 
-## Proposed generalized valuation tables
+## Generalized valuation tables
 
 ### economic_instruments
 
