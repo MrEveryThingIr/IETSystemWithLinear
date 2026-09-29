@@ -64,7 +64,7 @@ class PersonalPlannerDemoSeeder extends Seeder
         $this->seedGroceriesAndBudget($context, $user, $timezone, $now);
         $this->seedWalkingChallenge($context, $user, $timezone, $now);
         $this->seedCancelledExperiment($context, $user, $timezone, $now);
-        $this->seedPassedButUnresolvedTask($context, $user, $timezone, $now);
+        $this->seedMissedButUnresolvedTask($context, $user, $timezone, $now);
     }
 
     private function seedMorningFoundation(
@@ -378,6 +378,8 @@ class PersonalPlannerDemoSeeder extends Seeder
             '17:30',
             40,
             selectedDates: $dates,
+            windowBeforeMinutes: 15,
+            windowAfterMinutes: 15,
             reminderOffsets: [30],
         );
 
@@ -423,6 +425,8 @@ class PersonalPlannerDemoSeeder extends Seeder
             '05:00',
             30,
             selectedDates: $dates,
+            windowBeforeMinutes: 15,
+            windowAfterMinutes: 15,
             reminderOffsets: [480, 15],
         );
 
@@ -442,7 +446,7 @@ class PersonalPlannerDemoSeeder extends Seeder
         app(TransitionPlan::class)->execute($plan->fresh(), $user, PlanStatus::Cancelled);
     }
 
-    private function seedPassedButUnresolvedTask(
+    private function seedMissedButUnresolvedTask(
         Context $context,
         User $user,
         string $timezone,
@@ -457,11 +461,11 @@ class PersonalPlannerDemoSeeder extends Seeder
             $user,
             self::IDS['missed'],
             'Sort the personal document inbox',
-            'This deliberately remains scheduled after its execution window passes, so the UI has a realistic overdue/passed item to inspect.',
+            'This deliberately remains scheduled after its execution window passes, so the UI has a realistic overdue/missed item to inspect.',
             $timezone,
             [
                 'life_area' => 'organization',
-                'purpose' => 'show_passed_unresolved_state',
+                'purpose' => 'show_missed_unresolved_state',
             ],
         );
 
