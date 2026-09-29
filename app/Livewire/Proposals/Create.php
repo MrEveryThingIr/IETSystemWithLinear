@@ -34,15 +34,13 @@ class Create extends Component
 
     public string $notes = '';
 
-    public function mount(): void
+    public function mount(): mixed
     {
         Gate::forUser($this->user())->authorize('create', Proposal::class);
 
         if ($this->relationshipUuid === '') {
             session()->flash('status', __('deals.pipeline_only'));
-            $this->redirectRoute('deals.index');
-
-            return;
+            return $this->redirectRoute('deals.index');
         }
 
         $relationship = $this->relationship();
@@ -58,6 +56,8 @@ class Create extends Component
             ->map(fn (RelationshipParticipant $participant): ?string => $participant->actor->user?->username)
             ->filter()
             ->implode(', ');
+
+        return null;
     }
 
     public function save(CreateProposal $create): mixed
