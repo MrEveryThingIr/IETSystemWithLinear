@@ -21,7 +21,7 @@ class UserTest extends TestCase
     {
         $this->assertEqualsCanonicalizing([
             'id', 'username', 'email', 'email_verified_at', 'locale', 'timezone', 'timezone_mode', 'calendar',
-            'date_display_format', 'time_display_format', 'show_gregorian_equivalent', 'password',
+            'default_monetary_unit_code', 'date_display_format', 'time_display_format', 'show_gregorian_equivalent', 'password',
             'status', 'remember_token', 'created_at', 'updated_at',
         ], Schema::getColumnListing('users'));
     }
@@ -123,7 +123,7 @@ class UserTest extends TestCase
         $this->assertInstanceOf(Carbon::class, $user->email_verified_at);
         $this->assertEqualsCanonicalizing([
             'id', 'username', 'email', 'email_verified_at', 'locale', 'timezone', 'timezone_mode', 'calendar',
-            'date_display_format', 'time_display_format', 'show_gregorian_equivalent', 'status', 'created_at', 'updated_at',
+            'default_monetary_unit_code', 'date_display_format', 'time_display_format', 'show_gregorian_equivalent', 'status', 'created_at', 'updated_at',
         ], array_keys($user->toArray()));
         Auth::logout();
         $this->assertFalse(Auth::attempt(['email' => $user->email, 'password' => 'wrong-password']));
