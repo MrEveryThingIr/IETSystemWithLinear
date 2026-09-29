@@ -36,5 +36,8 @@ return [
     'continue_negotiation' => '继续协商',
     'finalize_agreement' => '完成已接受条款',
     'open_contract' => '打开协议',
+    'pipeline_only' => '请从一个已激活的交易中开始协商。独立创建提案不属于正常流程。',
+    'contract_requires_proposal' => '合同必须由已接受的提案生成。独立创建合同不属于正常流程。',
+    'proposal_parties_help' => '提案参与方继承自当前交易，避免在协商中静默加入无关人员。',
     'market_response' => '回应 / 协商',
 ];
