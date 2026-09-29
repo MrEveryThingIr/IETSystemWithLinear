@@ -64,6 +64,8 @@ return [
     'occurrence_phase' => [
         'upcoming' => '尚未到时',
         'ready' => '可开始',
+        'late' => '延迟开始',
+        'missed' => '已错过开始窗口',
         'passed' => '开始窗口已过',
         'in_progress' => '进行中',
         'completed' => '已完成',
@@ -73,6 +75,8 @@ return [
     'execution' => [
         'upcoming' => '可开始时间：',
         'ready' => '当前处于允许执行的时间窗口。',
+        'late' => '计划开始时间已过，但延迟开始窗口仍然开放。',
+        'missed' => '此事项未在允许的开始窗口关闭前启动。',
         'passed' => '此事项未在允许的执行窗口内开始。',
         'prerequisites_remaining' => '[1,*] 还有 :count 个必需前置条件未完成',
     ],
