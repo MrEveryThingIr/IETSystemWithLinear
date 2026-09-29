@@ -122,6 +122,23 @@
                 </select>
             </div>
 
+            <div class="space-y-2 lg:col-span-2">
+                <label for="profile-default-currency" class="text-sm font-medium">{{ __('ui.profile.temporal.default_currency') }}</label>
+                <select
+                    id="profile-default-currency"
+                    wire:model="defaultMonetaryUnitCode"
+                    class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-950"
+                >
+                    @foreach ($monetaryUnits as $code => $meta)
+                        <option value="{{ $code }}">{{ $code }} — {{ $meta['name'] }} ({{ $meta['symbol'] }})</option>
+                    @endforeach
+                </select>
+                @error('defaultMonetaryUnitCode')
+                    <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+                <p class="text-xs leading-5 text-zinc-500">{{ __('ui.profile.temporal.default_currency_help') }}</p>
+            </div>
+
             <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950/60">
                 <input
                     type="checkbox"
