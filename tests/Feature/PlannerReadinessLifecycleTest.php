@@ -70,9 +70,9 @@ class PlannerReadinessLifecycleTest extends TestCase
         }
     }
 
-    public function test_unstarted_occurrence_cannot_start_after_window_end(): void
+    public function test_unstarted_occurrence_cannot_start_after_late_start_window_closes(): void
     {
-        CarbonImmutable::setTestNow('2026-09-27 13:31:00 UTC');
+        CarbonImmutable::setTestNow('2026-09-27 12:31:00 UTC');
 
         try {
             [$bob, , $occurrence] = $this->oneTimeOccurrence(
@@ -83,6 +83,8 @@ class PlannerReadinessLifecycleTest extends TestCase
                 afterMinutes: 30,
             );
 
+            $this->assertSame('2026-09-27 11:45:00', $occurrence->window_start_at->utc()->format('Y-m-d H:i:s'));
+            $this->assertSame('2026-09-27 12:30:00', $occurrence->window_end_at->utc()->format('Y-m-d H:i:s'));
             $this->assertSame('missed', $occurrence->executionPhase());
 
             $this->assertHttp422(
@@ -91,6 +93,34 @@ class PlannerReadinessLifecycleTest extends TestCase
 
             $this->assertSame(PlanOccurrenceStatus::Scheduled, $occurrence->fresh()->status);
             $this->assertDatabaseCount('plan_occurrence_events', 0);
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_occurrence_moves_from_ready_to_late_after_nominal_start(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-27 12:00:00 UTC');
+
+        try {
+            [, , $occurrence] = $this->oneTimeOccurrence(
+                startsOn: '2026-09-27',
+                startTime: '12:00',
+                durationMinutes: 60,
+                beforeMinutes: 15,
+                afterMinutes: 30,
+            );
+
+            $this->assertSame('ready', $occurrence->executionPhase());
+
+            CarbonImmutable::setTestNow('2026-09-27 12:15:00 UTC');
+            $this->assertSame('late', $occurrence->executionPhase());
+
+            CarbonImmutable::setTestNow('2026-09-27 12:30:00 UTC');
+            $this->assertSame('late', $occurrence->executionPhase());
+
+            CarbonImmutable::setTestNow('2026-09-27 12:30:01 UTC');
+            $this->assertSame('missed', $occurrence->executionPhase());
         } finally {
             CarbonImmutable::setTestNow();
         }
