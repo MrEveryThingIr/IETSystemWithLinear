@@ -29,6 +29,7 @@ class Index extends Component
             ->with([
                 'purposeConcept.labels',
                 'originatingIntent',
+                'matchedIntent',
                 'participants.actor.user',
                 'contextBinding.context',
                 'proposals',
