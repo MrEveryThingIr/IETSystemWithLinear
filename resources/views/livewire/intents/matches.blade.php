@@ -87,7 +87,7 @@
                         variant="primary"
                         size="sm"
                     >
-                        {{ __('intents.matches.start_relationship') }}
+                        {{ __('deals.market_response') }}
                     </flux:button>
                 </div>
             </article>
