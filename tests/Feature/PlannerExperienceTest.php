@@ -74,7 +74,7 @@ class PlannerExperienceTest extends TestCase
         }
     }
 
-    public function test_active_relationship_can_seed_selected_workdays_without_changing_relationship_authority(): void
+    public function test_relationship_context_plan_remains_supported_without_being_promoted_before_agreement(): void
     {
         $alice = Actor::factory()->create();
         $bob = Actor::factory()->create();
@@ -108,7 +108,7 @@ class PlannerExperienceTest extends TestCase
         $this->actingAs($alice->user)
             ->get(route('relationships.show', $relationship))
             ->assertOk()
-            ->assertSee(route('planner.index', ['context' => $context->uuid]), false);
+            ->assertDontSee(route('planner.index', ['context' => $context->uuid]), false);
     }
 
     public function test_occurrence_execution_and_existing_context_evidence_are_available_from_plan_page(): void
