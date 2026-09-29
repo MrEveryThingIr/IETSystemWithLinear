@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Relationships')]
+#[Title('Deals')]
 class Index extends Component
 {
     public string $status = 'all';
