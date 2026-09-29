@@ -38,8 +38,8 @@ class OpenAiChatClient
         $input = collect($messages)
             ->take(-20)
             ->map(function (array $message): array {
-                $role = (string) ($message['role'] ?? '');
-                $content = trim((string) ($message['content'] ?? ''));
+                $role = $message['role'];
+                $content = trim($message['content']);
 
                 abort_unless(in_array($role, ['user', 'assistant'], true), 422, 'Unsupported AI chat role.');
                 abort_if($content === '' || mb_strlen($content) > 12000, 422, 'AI chat messages must contain 1-12,000 characters.');
