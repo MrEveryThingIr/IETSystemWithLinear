@@ -64,7 +64,9 @@
                     @endif
                 </div>
 
-                @if (! $plan && $canManage)
+                @if (! $plan && $commitment->serviceTerm?->auto_create_plan)
+                    <flux:callout>{{ __('commitments.show.auto_plan_expected') }}</flux:callout>
+                @elseif (! $plan && $canManage)
                     <form wire:submit="createPlan" class="space-y-4">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <flux:select wire:model="planFrequency" :label="__('commitments.planner.frequency')">
@@ -211,33 +213,56 @@
                             </div>
                         @elseif ($fulfillment->status === \App\FulfillmentStatus::Accepted && $canRecognizeFinancial)
                             <div class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-                                <div>
-                                    <flux:heading size="sm">{{ __('financial.obligation.title') }}</flux:heading>
-                                    <flux:text>{{ __('financial.recognize_help') }}</flux:text>
-                                </div>
-                                <div class="grid gap-3 sm:grid-cols-2">
-                                    <flux:input
-                                        wire:model="financialAmounts.{{ $fulfillment->id }}"
-                                        :label="__('financial.obligation.amount')"
-                                    />
-                                    <flux:select
-                                        wire:model="financialUnits.{{ $fulfillment->id }}"
-                                        :label="__('accounting.monetary_unit')"
+                                @if ($commitment->serviceTerm?->auto_recognize_obligation)
+                                    <div>
+                                        <flux:heading size="sm">{{ __('financial.obligation.title') }}</flux:heading>
+                                        <flux:text>
+                                            {{ __('financial.auto_recognition_help', [
+                                                'rate' => \App\Support\MoneyAmount::format(
+                                                    $commitment->serviceTerm->unit_rate_minor,
+                                                    $commitment->serviceTerm->monetaryUnit->exponent,
+                                                ),
+                                                'currency' => $commitment->serviceTerm->monetaryUnit->code,
+                                                'unit' => $commitment->serviceTerm->unit,
+                                            ]) }}
+                                        </flux:text>
+                                    </div>
+                                    <flux:button
+                                        wire:click="recognizePricedFinancialObligation({{ $fulfillment->id }})"
+                                        size="sm"
+                                        variant="primary"
                                     >
-                                        @foreach ($monetaryUnits as $code => $unit)
-                                            <flux:select.option :value="$code">
-                                                {{ $code }} · {{ $unit['name'] }}
-                                            </flux:select.option>
-                                        @endforeach
-                                    </flux:select>
-                                </div>
-                                <flux:button
-                                    wire:click="recognizeFinancialObligation({{ $fulfillment->id }})"
-                                    size="sm"
-                                    variant="primary"
-                                >
-                                    {{ __('financial.recognize') }}
-                                </flux:button>
+                                        {{ __('financial.recognize_from_contract') }}
+                                    </flux:button>
+                                @else
+                                    <div>
+                                        <flux:heading size="sm">{{ __('financial.obligation.title') }}</flux:heading>
+                                        <flux:text>{{ __('financial.recognize_help') }}</flux:text>
+                                    </div>
+                                    <div class="grid gap-3 sm:grid-cols-2">
+                                        <flux:input
+                                            wire:model="financialAmounts.{{ $fulfillment->id }}"
+                                            :label="__('financial.obligation.amount')"
+                                        />
+                                        <flux:select
+                                            wire:model="financialUnits.{{ $fulfillment->id }}"
+                                            :label="__('accounting.monetary_unit')"
+                                        >
+                                            @foreach ($monetaryUnits as $code => $unit)
+                                                <flux:select.option :value="$code">
+                                                    {{ $code }} · {{ $unit['name'] }}
+                                                </flux:select.option>
+                                            @endforeach
+                                        </flux:select>
+                                    </div>
+                                    <flux:button
+                                        wire:click="recognizeFinancialObligation({{ $fulfillment->id }})"
+                                        size="sm"
+                                        variant="primary"
+                                    >
+                                        {{ __('financial.recognize') }}
+                                    </flux:button>
+                                @endif
                             </div>
                         @endif
 
@@ -283,6 +308,19 @@
                     {{ __('commitments.kind.'.$commitment->kind->value) }}
                     · {{ $commitment->quantity }} {{ $commitment->unit }}
                 </div>
+                @if ($commitment->serviceTerm)
+                    <div class="rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
+                        <div class="text-xs text-zinc-500">{{ __('contracts.service.active_title') }}</div>
+                        <div class="mt-1 font-medium">
+                            {{ \App\Support\MoneyAmount::format(
+                                $commitment->serviceTerm->unit_rate_minor,
+                                $commitment->serviceTerm->monetaryUnit->exponent,
+                            ) }}
+                            {{ $commitment->serviceTerm->monetaryUnit->code }}
+                            / {{ $commitment->serviceTerm->unit }}
+                        </div>
+                    </div>
+                @endif
                 <flux:button :href="route('contracts.show', $commitment->contractVersion->contract)" variant="ghost" class="w-full">
                     {{ $commitment->contractVersion->contract->title }}
                 </flux:button>
