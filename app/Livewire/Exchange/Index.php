@@ -146,7 +146,6 @@ class Index extends Component
         session()->flash('status', __('exchange.messages.quote_published'));
     }
 
-
     public function registerInstrument(RegisterEconomicInstrument $register): void
     {
         $data = $this->validate([
@@ -274,7 +273,7 @@ class Index extends Component
     {
         $unit = MonetaryUnit::query()->where('code', 'IET')->first();
 
-        if (! $unit instanceof MonetaryUnit) {
+        if (!($unit instanceof MonetaryUnit)) {
             return null;
         }
 
