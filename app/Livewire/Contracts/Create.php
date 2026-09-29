@@ -118,10 +118,10 @@ class Create extends Component
         $this->serviceWeekdays = [$now->isoWeekday()];
         $this->serviceEmployerUsername = (string) $user->username;
 
-        $defaultUnit = array_key_first(MonetaryUnitCatalog::all());
-        if (is_string($defaultUnit)) {
-            $this->serviceMonetaryUnit = $defaultUnit;
-        }
+        $defaultUnit = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
+        $this->serviceMonetaryUnit = array_key_exists($defaultUnit, MonetaryUnitCatalog::all())
+            ? $defaultUnit
+            : (string) array_key_first(MonetaryUnitCatalog::all());
 
         if ($this->proposalUuid !== '') {
             $proposal = $this->proposal();
