@@ -273,7 +273,7 @@ class Index extends Component
     {
         $unit = MonetaryUnit::query()->where('code', 'IET')->first();
 
-        if (!($unit instanceof MonetaryUnit)) {
+        if (! $unit instanceof MonetaryUnit) {
             return null;
         }
 
