@@ -218,5 +218,4 @@ class ProposalExperienceTest extends TestCase
 
         return $relationship;
     }
-
 }
