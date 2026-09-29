@@ -1,18 +1,28 @@
 ## Unified finalization convergence
 
-Active convergence branch: `integration/ideal-v1-unified-finalization`.
+Canonical integration branch: `integration/ideal-v1-unified-finalization`.
 
-This line starts from the newer IET/Planner/Calendar/Money/Vault candidate and restores the mature integrated product surface by making `full` the default release profile. The compact paper-like Money workspace remains available at `/money` beside mature Accounting, Exchange and Vault.
+This is now the single selective convergence line for the mature Ideal-v1 runtime plus the strongest later Planner, fractal Calendar, Personal Money, Accounting, Vault, Exchange/IET Treasury, service-financial, temporal, AI-assistance and provenance work. The default release profile is `full`.
 
-Repository audit identified three important sibling sources that must be reconciled selectively rather than wholesale-overwriting this line:
+The major sibling branches previously identified for recovery have been reviewed and reconciled. They are historical source/evidence lines, not competing candidates. The exact admitted/superseded decisions are recorded in `docs/UNIFIED_FINALIZATION_CONVERGENCE.md`.
 
-- `release/ideal-v1-rc-7-hardening` — 19 unique commits / 18 files;
-- `integration/ideal-v1-temporal-calendar-reconcile` — 19 unique commits / 26 files;
-- `codex/ideal-v1-service-financial-workflow` — 129 unique commits / 51 files.
+Current integrated boundaries include:
 
-The generalized economic direction now separates Monetary Units, Economic Instruments, immutable Market Quotes, specific owned/offered assets, ledger Accounts and Financial Obligations. Trusted skill is modeled as a versioned service-unit offering feeding the existing Need/Offer -> Proposal -> Contract -> Commitment -> Fulfillment -> Obligation -> Settlement lifecycle. IET remains the internal settlement unit; its valuation becomes a versioned policy over auditable signals rather than guaranteed appreciation.
+- profile-aware timezone/calendar/date/time presentation with equivalent Gregorian display when configured;
+- high-density fractal Calendar and readiness-aware Planner, including direct occurrence evidence upload;
+- default monetary-unit preference for future creation defaults without historical conversion;
+- mature Contract -> service Commitment -> Planner -> Fulfillment -> Financial Obligation -> Settlement semantics;
+- generalized Economic Instruments and immutable Market Quotes;
+- guarded IET user wallets plus a platform System-Context Treasury and independent exchange review;
+- compact personal Money beside mature Accounting;
+- restored AI Content Assistance, authenticated AI Chat, and immutable Development Origins;
+- versioned System Manual coverage for AI and the existing domain surfaces.
 
-See `docs/UNIFIED_FINALIZATION_ARCHITECTURE.md`.
+The generalized economic model separates Monetary Units, Economic Instruments, immutable Market Quotes, specific owned/offered assets, ledger Accounts and Financial Obligations. A self-declared skill is never mint authority. Trusted service economics must flow through versioned Contract/Fulfillment evidence.
+
+Acceptance policy: CI must be fully green on the exact convergence SHA before local cumulative browser acceptance and release-line promotion.
+
+See `docs/UNIFIED_FINALIZATION_ARCHITECTURE.md` and `docs/UNIFIED_FINALIZATION_CONVERGENCE.md`.
 
 ---
 
