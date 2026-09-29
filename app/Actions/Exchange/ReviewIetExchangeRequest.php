@@ -98,6 +98,12 @@ class ReviewIetExchangeRequest
             $note,
         ): IetExchangeRequest {
             $locked = IetExchangeRequest::query()->lockForUpdate()->findOrFail($request->id);
+            abort_if(
+                (int) $locked->user_id === (int) $reviewer->id,
+                403,
+                'Exchange requests require review by another authorized user.',
+            );
+
             $locked->reject($reviewer, $note);
 
             return $locked->fresh(['valuationQuote', 'reviewer']);
