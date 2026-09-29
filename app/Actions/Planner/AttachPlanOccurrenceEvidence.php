@@ -46,10 +46,15 @@ class AttachPlanOccurrenceEvidence
             abort_unless($assets->count() === count($assetIds), 422, 'Every Occurrence Asset must belong to the Plan Context.');
 
             $references = ContentEvidenceReference::query()
+                ->with('content')
                 ->where('context_id', $contextId)
                 ->whereIn('id', $evidenceReferenceIds)
                 ->get();
             abort_unless($references->count() === count($evidenceReferenceIds), 422, 'Every Occurrence evidence reference must belong to the Plan Context.');
+
+            foreach ($references as $reference) {
+                Gate::forUser($current)->authorize('view', $reference->content);
+            }
 
             $actor = Actor::query()->findOrFail($current->actor->id);
 
