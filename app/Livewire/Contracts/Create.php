@@ -90,6 +90,7 @@ class Create extends Component
 
         if ($this->proposalUuid === '') {
             session()->flash('status', __('deals.contract_requires_proposal'));
+
             return $this->redirectRoute('deals.index');
         }
 
