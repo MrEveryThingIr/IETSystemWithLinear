@@ -66,7 +66,7 @@ class Show extends Component
                 'events.actor.user',
                 'contextBinding.context',
                 'proposals.versions.derivedContract',
-                'contracts',
+                'contracts.versions.commitments.fulfillments',
             ])
             ->findOrFail($this->relationship->id);
 
