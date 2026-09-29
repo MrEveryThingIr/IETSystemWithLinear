@@ -11,6 +11,7 @@ use App\Models\Actor;
 use App\Models\Commitment;
 use App\Models\CommitmentEvent;
 use App\Models\Contract;
+use App\Models\ContractServiceTerm;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\User;
@@ -35,6 +36,7 @@ class CreateCommitment
         ?string $description = null,
         ?CarbonInterface $dueStartAt = null,
         ?CarbonInterface $dueEndAt = null,
+        ?ContractServiceTerm $serviceTerm = null,
     ): Commitment {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('create', [Commitment::class, $contract]);
@@ -74,6 +76,7 @@ class CreateCommitment
             $description,
             $dueStartAt,
             $dueEndAt,
+            $serviceTerm,
         ): Commitment {
             $locked = Contract::query()
                 ->with('versions')
@@ -116,8 +119,30 @@ class CreateCommitment
 
             $creator = Actor::query()->lockForUpdate()->findOrFail($current->actor->id);
 
+            $lockedServiceTerm = null;
+            if ($serviceTerm instanceof ContractServiceTerm) {
+                $lockedServiceTerm = ContractServiceTerm::query()
+                    ->lockForUpdate()
+                    ->findOrFail($serviceTerm->id);
+
+                abort_unless(
+                    (int) $lockedServiceTerm->contract_version_id === (int) $version->id
+                    && (int) $lockedServiceTerm->worker_actor_id === (int) $obligor->id
+                    && (int) $lockedServiceTerm->employer_actor_id === (int) $beneficiary->id,
+                    422,
+                    'Service term does not match this Commitment and active ContractVersion.',
+                );
+
+                abort_if(
+                    Commitment::query()->where('contract_service_term_id', $lockedServiceTerm->id)->exists(),
+                    422,
+                    'This Contract service term already has its generated Commitment.',
+                );
+            }
+
             $commitment = Commitment::query()->create([
                 'contract_version_id' => $version->id,
+                'contract_service_term_id' => $lockedServiceTerm?->id,
                 'created_by_actor_id' => $creator->id,
                 'obligor_actor_id' => $obligor->id,
                 'beneficiary_actor_id' => $beneficiary->id,
@@ -137,6 +162,7 @@ class CreateCommitment
                 'event_type' => CommitmentEventType::Created,
                 'payload' => [
                     'contract_version_uuid' => $version->uuid,
+                    'contract_service_term_uuid' => $lockedServiceTerm?->uuid,
                     'kind' => $kind->value,
                     'quantity' => $normalizedQuantity,
                     'unit' => $unit,
@@ -147,6 +173,7 @@ class CreateCommitment
 
             return $commitment->fresh([
                 'contractVersion.contract.contextBinding.context',
+                'serviceTerm.monetaryUnit',
                 'creator.user',
                 'obligor.user',
                 'beneficiary.user',
