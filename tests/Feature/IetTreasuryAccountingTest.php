@@ -10,6 +10,7 @@ use App\Models\PlatformAccessGrant;
 use App\Models\SystemContext;
 use App\PlatformRole;
 use App\Support\AccountingSummary;
+use App\Support\IetTreasuryMetrics;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -65,6 +66,14 @@ class IetTreasuryAccountingTest extends TestCase
             2,
             $ledger->journalEntries()->where('source_type', 'iet_exchange_request')->count(),
         );
+
+        $metrics = app(IetTreasuryMetrics::class)->snapshot($reviewer->user);
+
+        $this->assertSame(250_000_000, $metrics['exchange_reserve']);
+        $this->assertSame(250_000_000, $metrics['net_issuance']);
+        $this->assertSame(0, $metrics['service_advance_receivable']);
+        $this->assertSame(0, $metrics['settlement_clearing']);
+        $this->assertSame(0, $metrics['fee_income']);
     }
 
     public function test_exchange_request_cannot_be_self_reviewed_and_does_not_create_treasury_posting(): void
