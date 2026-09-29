@@ -102,6 +102,20 @@ return [
         'evidence' => 'الأدلة',
         'attach_evidence' => 'إرفاق دليل',
         'select_evidence' => 'اختيار دليل موجود في هذه المساحة',
+
+        'select_evidence_help' => 'اختر ملفًا أو مرجع محتوى موجودًا في هذه المساحة، أو ارفع ملف دليل جديدًا هنا.',
+
+        'existing_files' => 'الملفات الموجودة',
+
+        'existing_content_evidence' => 'أدلة المحتوى الموجودة',
+
+        'upload_evidence' => 'رفع دليل جديد',
+
+        'upload_evidence_help' => 'يبقى الملف في هذه المساحة ويرتبط بهذه النوبة المحددة.',
+
+        'no_evidence_available' => 'لا يوجد دليل متاح للإرفاق',
+
+        'no_evidence_available_help' => 'لا يوجد حاليًا ملف أو مرجع محتوى متاح، ولا تملك صلاحية الرفع المباشر في هذه المساحة.',
         'no_evidence' => 'لا يوجد دليل مرفق',
         'start' => 'بدء',
         'finish' => 'إنهاء',
@@ -143,6 +157,8 @@ return [
         'open_day' => 'فتح :date',
     ],
     'validation' => [
+
+        'evidence_required' => 'اختر دليلًا موجودًا أو ارفع ملفًا قبل الإرفاق.',
         'active_plan_required' => 'يتطلب تنفيذ النوبة خطة نشطة.',
         'scheduled_to_start' => 'يمكن بدء النوبة المجدولة فقط.',
         'start_window' => 'يمكن بدء هذه النوبة فقط داخل نافذة التنفيذ المحددة.',
