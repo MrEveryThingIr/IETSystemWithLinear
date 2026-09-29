@@ -26,7 +26,7 @@ The demo intentionally exercises the Planner as if it were the whole product:
 - groceries/meal preparation with prerequisites and expected-vs-actual spending;
 - a finite walking challenge that has been completed;
 - an early-rising experiment that was deliberately cancelled;
-- a missed one-time task that remains scheduled after its execution window passed.
+- a missed one-time task that remains scheduled after its start window closes.
 
 Together those scenarios cover:
 
@@ -38,7 +38,7 @@ Together those scenarios cover:
 - execution windows;
 - expected expenses and actual Planner expense observations;
 - past, current, and future calendar density;
-- a passed-but-unresolved scheduled item;
+- a missed-but-unresolved scheduled item;
 - safe seeder re-runs without duplicate demo plans.
 
 ## Deliberate boundary
