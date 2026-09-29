@@ -3,11 +3,11 @@
 namespace App\Support;
 
 use App\Models\IetValuationQuote;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 final class IetPricing
 {
+    private const INITIAL_QUOTE_UUID = '00000000-0000-4000-8000-000000000001';
     public function currentQuote(): IetValuationQuote
     {
         $quote = IetValuationQuote::query()
@@ -20,8 +20,9 @@ final class IetPricing
             return $quote;
         }
 
-        return IetValuationQuote::query()->create([
-            'uuid' => (string) Str::uuid(),
+        return IetValuationQuote::query()->firstOrCreate([
+            'uuid' => self::INITIAL_QUOTE_UUID,
+        ], [
             'usd_per_iet' => '0.000000010000000000',
             'policy_version' => 'initial-v1',
             'factors' => [
