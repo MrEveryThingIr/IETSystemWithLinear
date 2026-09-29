@@ -143,6 +143,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
+    Route::livewire('/money', AccountingBasicIndex::class)->name('money.index');
     Route::livewire('/accounting', config('release.profile') === 'planning_baseline' ? AccountingBasicIndex::class : AccountingIndex::class)->name('accounting.index');
     Route::livewire('/exchange', ExchangeIndex::class)->name('exchange.index');
     Route::livewire('/vault', VaultIndex::class)->name('vault.index');
