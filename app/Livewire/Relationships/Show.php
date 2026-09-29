@@ -61,6 +61,7 @@ class Show extends Component
                 'purposeConcept.labels',
                 'domainBlueprintVersion.blueprint',
                 'originatingIntent.profile.actor.user',
+                'matchedIntent.profile.actor.user',
                 'participants.actor.user',
                 'events.actor.user',
                 'contextBinding.context',
