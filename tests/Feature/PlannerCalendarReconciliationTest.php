@@ -72,7 +72,9 @@ class PlannerCalendarReconciliationTest extends TestCase
             ->test(PlannerCreate::class)
             ->assertSet('startsOn', '2026-09-26')
             ->assertSet('startTime', '10:15')
-            ->assertSet('durationMinutes', 15);
+            ->assertSet('durationMinutes', 15)
+            ->assertSet('windowBeforeMinutes', 15)
+            ->assertSet('windowAfterMinutes', 15);
         $this->assertDatabaseCount('plans', 0);
 
         Livewire::actingAs($actor->user)
