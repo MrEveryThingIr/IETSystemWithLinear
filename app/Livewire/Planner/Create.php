@@ -87,9 +87,11 @@ class Create extends Component
         $this->weekdays = [$now->isoWeekday()];
 
         $requestedDate = trim((string) request()->query('date', ''));
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate) === 1) {
-            $this->startsOn = $requestedDate;
-            $this->weekdays = [CarbonImmutable::parse($requestedDate, $this->timezone)->isoWeekday()];
+        $requestedDateValue = $this->canonicalDate($requestedDate);
+
+        if ($requestedDateValue instanceof CarbonImmutable) {
+            $this->startsOn = $requestedDateValue->toDateString();
+            $this->weekdays = [$requestedDateValue->isoWeekday()];
         }
 
         $queryBlueprint = trim((string) request()->query('blueprint', ''));
@@ -106,9 +108,13 @@ class Create extends Component
             $this->startTime = $requestedTime;
         }
 
-        $requestedDuration = (int) request()->query('duration', 0);
-        if ($requestedDuration >= 1 && $requestedDuration <= 10080) {
-            $this->durationMinutes = $requestedDuration;
+        $requestedDurationRaw = trim((string) request()->query('duration', ''));
+        if (preg_match('/^\d+$/', $requestedDurationRaw) === 1) {
+            $requestedDuration = (int) $requestedDurationRaw;
+
+            if ($requestedDuration >= 1 && $requestedDuration <= 10080) {
+                $this->durationMinutes = $requestedDuration;
+            }
         }
 
         if ($this->contextUuid === '') {
@@ -358,6 +364,21 @@ class Create extends Component
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function canonicalDate(string $value): ?CarbonImmutable
+    {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return null;
+        }
+
+        [$year, $month, $day] = array_map('intval', explode('-', $value));
+
+        if (! checkdate($month, $day, $year)) {
+            return null;
+        }
+
+        return CarbonImmutable::create($year, $month, $day, 0, 0, 0, $this->timezone);
     }
 
     private function defaultMonetaryUnitCode(): string
