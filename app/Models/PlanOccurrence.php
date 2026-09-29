@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\PlanOccurrenceStatus;
+use App\PlanOccurrenceWindowState;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -137,31 +138,54 @@ class PlanOccurrence extends Model
         }
     }
 
+    public function windowState(?CarbonInterface $at = null): PlanOccurrenceWindowState
+    {
+        return match ($this->status) {
+            PlanOccurrenceStatus::InProgress => PlanOccurrenceWindowState::InProgress,
+            PlanOccurrenceStatus::Completed => PlanOccurrenceWindowState::Completed,
+            PlanOccurrenceStatus::Skipped => PlanOccurrenceWindowState::Skipped,
+            PlanOccurrenceStatus::Cancelled => PlanOccurrenceWindowState::Cancelled,
+            PlanOccurrenceStatus::Scheduled => $this->scheduledWindowState($at),
+        };
+    }
+
     public function executionPhase(?CarbonInterface $at = null): string
     {
-        if ($this->status !== PlanOccurrenceStatus::Scheduled) {
-            return $this->status->value;
-        }
+        return $this->windowState($at)->value;
+    }
 
-        $moment = $at === null
-            ? CarbonImmutable::now('UTC')
-            : CarbonImmutable::parse($at->toIso8601String())->utc();
-
-        if ($moment->lt($this->window_start_at->utc())) {
-            return 'upcoming';
-        }
-
-        if ($moment->lte($this->window_end_at->utc())) {
-            return 'ready';
-        }
-
-        return 'passed';
+    public function canStart(?CarbonInterface $at = null): bool
+    {
+        return in_array($this->windowState($at), [
+            PlanOccurrenceWindowState::Ready,
+            PlanOccurrenceWindowState::Late,
+        ], true);
     }
 
     public function canStartAt(CarbonInterface $at): bool
     {
-        return $this->status === PlanOccurrenceStatus::Scheduled
-            && $this->executionPhase($at) === 'ready';
+        return $this->canStart($at);
+    }
+
+    private function scheduledWindowState(?CarbonInterface $at = null): PlanOccurrenceWindowState
+    {
+        $moment = $at instanceof CarbonInterface
+            ? CarbonImmutable::parse($at->toIso8601String())->utc()
+            : CarbonImmutable::now('UTC');
+
+        if ($moment->lt($this->window_start_at->utc())) {
+            return PlanOccurrenceWindowState::Upcoming;
+        }
+
+        if ($moment->lte($this->scheduled_end_at->utc())) {
+            return PlanOccurrenceWindowState::Ready;
+        }
+
+        if ($moment->lte($this->window_end_at->utc())) {
+            return PlanOccurrenceWindowState::Late;
+        }
+
+        return PlanOccurrenceWindowState::Missed;
     }
 
     public function prerequisitesSatisfied(): bool
