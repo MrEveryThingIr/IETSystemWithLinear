@@ -92,7 +92,6 @@ class RespondToSettlement
                 if ($isIet) {
                     $debtorUser = $obligation->debtor->user;
                     $creditorUser = $obligation->creditor->user;
-                    abort_unless($debtorUser instanceof User && $creditorUser instanceof User, 422, 'IET settlement requires active user wallets.');
 
                     $debtorSide = $this->ietWallets->execute($debtorUser);
                     $creditorSide = $this->ietWallets->execute($creditorUser);
@@ -116,7 +115,6 @@ class RespondToSettlement
                 $locked->confirm($actor, now());
 
                 if ($isIet) {
-                    abort_unless($debtorUser instanceof User && $creditorUser instanceof User, 422);
                     $this->postSettlementAccounting->execute($locked, $debtorUser);
                     $this->postSettlementAccounting->execute($locked, $creditorUser);
                 }
