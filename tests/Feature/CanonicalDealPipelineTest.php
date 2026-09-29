@@ -108,9 +108,13 @@ class CanonicalDealPipelineTest extends TestCase
         );
     }
 
-    public function test_standalone_proposal_and_contract_browser_creation_redirects_to_deals(): void
+    public function test_standalone_browser_creation_cannot_bypass_the_market_and_deal_pipeline(): void
     {
         $actor = Actor::factory()->create();
+
+        $this->actingAs($actor->user)
+            ->get(route('relationships.create'))
+            ->assertRedirect(route('intents.index'));
 
         $this->actingAs($actor->user)
             ->get(route('proposals.create'))
