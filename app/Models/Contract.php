@@ -100,6 +100,12 @@ class Contract extends Model
         return $this->hasMany(ContractEvent::class)->orderBy('id');
     }
 
+    /** @return HasMany<ContractSettlementBatch, $this> */
+    public function settlementBatches(): HasMany
+    {
+        return $this->hasMany(ContractSettlementBatch::class)->orderByDesc('paid_at')->orderByDesc('id');
+    }
+
     public function activeVersionRecord(): ?ContractVersion
     {
         return $this->versions()
