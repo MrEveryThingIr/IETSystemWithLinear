@@ -68,6 +68,7 @@ class CreateCommitmentPlan
                     'contractVersion.contract.contextBinding.context',
                     'obligor.user',
                     'beneficiary.user',
+                    'serviceTerm.monetaryUnit',
                     'planBinding',
                 ])
                 ->lockForUpdate()
@@ -100,6 +101,7 @@ class CreateCommitmentPlan
                 $current,
                 $locked->title,
                 $locked->description,
+                timezone: $locked->serviceTerm?->timezone,
                 participants: $participants,
                 originType: 'commitment',
                 originUuid: $locked->uuid,
@@ -108,6 +110,10 @@ class CreateCommitmentPlan
                     'contract_version_uuid' => $locked->contractVersion->uuid,
                     'quantity' => $locked->quantity,
                     'unit' => $locked->unit,
+                    'contract_service_term_uuid' => $locked->serviceTerm?->uuid,
+                    'quantity_per_occurrence' => $locked->serviceTerm?->quantity_per_occurrence,
+                    'unit_rate_minor' => $locked->serviceTerm?->unit_rate_minor,
+                    'monetary_unit_code' => $locked->serviceTerm?->monetaryUnit?->code,
                 ],
             );
 
