@@ -84,15 +84,13 @@ class Create extends Component
 
     public bool $serviceAutoRecognizeObligation = true;
 
-    public function mount(): void
+    public function mount(): mixed
     {
         Gate::forUser($this->user())->authorize('create', Contract::class);
 
         if ($this->proposalUuid === '') {
             session()->flash('status', __('deals.contract_requires_proposal'));
-            $this->redirectRoute('deals.index');
-
-            return;
+            return $this->redirectRoute('deals.index');
         }
 
         $user = $this->user();
@@ -118,6 +116,8 @@ class Create extends Component
             ?->actor
             ?->user
             ?->username;
+
+        return null;
     }
 
     public function save(CreateContractFromProposal $createFromProposal): mixed
