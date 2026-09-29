@@ -65,6 +65,7 @@ return new class extends Migration
                 'market_quotes_pair_effective_index',
             );
             $table->index(['quote_source_id', 'observed_at'], 'market_quotes_source_observed_index');
+            $table->unique(['quote_source_id', 'source_reference'], 'market_quotes_source_reference_unique');
         });
     }
 
