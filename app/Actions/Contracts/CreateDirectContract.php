@@ -25,6 +25,8 @@ class CreateDirectContract
     public function __construct(
         private readonly PublishContractTerms $terms,
         private readonly CreateContractVersion $versions,
+        private readonly ConfigureContractServiceTerms $serviceTerms,
+        private readonly AcceptContractVersion $acceptVersions,
     ) {}
 
     /**
@@ -41,6 +43,7 @@ class CreateDirectContract
         ?string $notes = null,
         string $creatorRole = 'party',
         ?Relationship $relationship = null,
+        ?array $serviceTerms = null,
     ): Contract {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('create', Contract::class);
@@ -60,6 +63,7 @@ class CreateDirectContract
             $notes,
             $creatorRole,
             $relationship,
+            $serviceTerms,
         ): Contract {
             $creator = Actor::query()->with('user')->lockForUpdate()->findOrFail($current->actor->id);
             $lockedRelationship = null;
@@ -150,7 +154,7 @@ class CreateDirectContract
                 $notes,
             );
 
-            $this->versions->execute(
+            $version = $this->versions->execute(
                 $contract,
                 $current,
                 $revision,
@@ -158,7 +162,13 @@ class CreateDirectContract
                 $effectiveFrom,
                 $effectiveTimezone,
                 'Initial Contract terms',
+                acceptProposer: $serviceTerms === null,
             );
+
+            if ($serviceTerms !== null) {
+                $this->serviceTerms->executeFromInput($version, $current, $serviceTerms);
+                $this->acceptVersions->execute($version, $current);
+            }
 
             return $contract->fresh([
                 'relationship',
@@ -167,6 +177,9 @@ class CreateDirectContract
                 'versions.termsRevision.content',
                 'versions.parties.actor.user',
                 'versions.parties.acceptance',
+                'versions.serviceTerm.employer.user',
+                'versions.serviceTerm.worker.user',
+                'versions.serviceTerm.monetaryUnit',
                 'events.actor.user',
             ]);
         }, attempts: 3);
