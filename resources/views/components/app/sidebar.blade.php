@@ -57,17 +57,12 @@
             {{ __('ai.chat.title') }}
         </flux:sidebar.item>
         @unless ($officeAlpha)
-            <flux:sidebar.item :href="route('journeys.index')" :current="request()->routeIs('journeys.*')" icon="map">
-                {{ __('journeys.title') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item :href="route('relationships.index')" :current="request()->routeIs('relationships.*')" icon="link">
-                {{ __('relationships.title') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item :href="route('proposals.index')" :current="request()->routeIs('proposals.*')" icon="document-text">
-                {{ __('proposals.title') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item :href="route('contracts.index')" :current="request()->routeIs('contracts.*')" icon="document-check">
-                {{ __('contracts.title') }}
+            <flux:sidebar.item
+                :href="route('deals.index')"
+                :current="request()->routeIs('deals.*') || request()->routeIs('relationships.*') || request()->routeIs('proposals.*') || request()->routeIs('contracts.*') || request()->routeIs('commitments.*') || request()->routeIs('financial-obligations.*')"
+                icon="arrows-right-left"
+            >
+                {{ __('deals.title') }}
             </flux:sidebar.item>
             <flux:sidebar.item :href="route('planner.index')" :current="request()->routeIs('planner.*')" icon="calendar-days">
                 {{ __('planner.title') }}
