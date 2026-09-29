@@ -37,7 +37,7 @@ class Chat extends Component
         $prompt = trim($this->message);
         $this->assistantError = null;
         $this->messages[] = ['role' => 'user', 'content' => $prompt];
-        $this->messages = array_values(array_slice($this->messages, -20));
+        $this->messages = array_slice($this->messages, -20);
         $this->message = '';
 
         try {
