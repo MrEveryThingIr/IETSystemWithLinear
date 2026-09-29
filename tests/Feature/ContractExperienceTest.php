@@ -12,6 +12,7 @@ use App\Livewire\Contracts\Index as ContractIndex;
 use App\Livewire\Contracts\Show as ContractShow;
 use App\Models\Actor;
 use App\Models\Contract;
+use App\Models\Proposal;
 use App\ProposalDecisionKind;
 use App\ProposalStatus;
 use App\Support\ContextTimeline;
@@ -24,7 +25,7 @@ class ContractExperienceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_alice_and_bob_create_and_activate_direct_paid_work_contract_in_ui(): void
+    public function test_alice_and_bob_create_and_activate_proposal_derived_contract_in_ui(): void
     {
         CarbonImmutable::setTestNow('2026-09-24 12:00:00 UTC');
 
@@ -32,12 +33,17 @@ class ContractExperienceTest extends TestCase
             $alice = Actor::factory()->create();
             $bob = Actor::factory()->create();
 
+            $proposal = $this->acceptedProposal(
+                $alice,
+                $bob,
+                'Workshop paid work',
+                'Bob works selected workshop days under the exact terms stated here.',
+            );
+
             Livewire::actingAs($alice->user)
+                ->withQueryParams(['proposal' => $proposal->uuid])
                 ->test(ContractCreate::class)
-                ->set('title', 'Workshop paid work')
-                ->set('creatorRole', 'employer')
-                ->set('partyLines', $bob->user->username.' | worker')
-                ->set('terms', 'Bob works selected workshop days under the exact terms stated here.')
+                ->assertSet('serviceTitle', 'Workshop paid work')
                 ->set('effectiveAt', '2026-09-24T12:00')
                 ->set('timezone', 'UTC')
                 ->call('save')
@@ -104,7 +110,7 @@ class ContractExperienceTest extends TestCase
             Livewire::actingAs($alice->user)
                 ->withQueryParams(['proposal' => $proposal->uuid])
                 ->test(ContractCreate::class)
-                ->assertSet('title', 'Riverside paid-work proposal')
+                ->assertSet('serviceTitle', 'Riverside paid-work proposal')
                 ->set('effectiveAt', '2026-09-24T12:00')
                 ->set('timezone', 'UTC')
                 ->call('save')
@@ -140,12 +146,16 @@ class ContractExperienceTest extends TestCase
             $alice = Actor::factory()->create();
             $bob = Actor::factory()->create();
 
+            $proposal = $this->acceptedProposal(
+                $alice,
+                $bob,
+                'Workshop paid work',
+                'Version 1 terms.',
+            );
+
             Livewire::actingAs($alice->user)
+                ->withQueryParams(['proposal' => $proposal->uuid])
                 ->test(ContractCreate::class)
-                ->set('title', 'Workshop paid work')
-                ->set('creatorRole', 'employer')
-                ->set('partyLines', $bob->user->username.' | worker')
-                ->set('terms', 'Version 1 terms.')
                 ->set('effectiveAt', '2026-09-24T12:00')
                 ->set('timezone', 'UTC')
                 ->call('save');
@@ -198,11 +208,16 @@ class ContractExperienceTest extends TestCase
             $bob = Actor::factory()->create();
             $outsider = Actor::factory()->create();
 
+            $proposal = $this->acceptedProposal(
+                $alice,
+                $bob,
+                'Private contract',
+                'Private exact terms.',
+            );
+
             Livewire::actingAs($alice->user)
+                ->withQueryParams(['proposal' => $proposal->uuid])
                 ->test(ContractCreate::class)
-                ->set('title', 'Private contract')
-                ->set('partyLines', $bob->user->username.' | party')
-                ->set('terms', 'Private exact terms.')
                 ->set('effectiveAt', '2026-09-24T12:00')
                 ->set('timezone', 'UTC')
                 ->call('save');
@@ -227,4 +242,28 @@ class ContractExperienceTest extends TestCase
             CarbonImmutable::setTestNow();
         }
     }
+
+    private function acceptedProposal(
+        Actor $creator,
+        Actor $counterparty,
+        string $title,
+        string $terms,
+    ): Proposal {
+        $proposal = app(CreateProposal::class)->execute(
+            $creator->user,
+            $title,
+            [['actor' => $counterparty, 'role' => 'party']],
+            $terms,
+            creatorRole: 'party',
+        );
+
+        app(RespondToProposal::class)->execute(
+            $proposal,
+            $counterparty->user,
+            ProposalDecisionKind::Accepted,
+        );
+
+        return $proposal->fresh();
+    }
+
 }
