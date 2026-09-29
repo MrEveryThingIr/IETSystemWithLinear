@@ -265,5 +265,4 @@ class ContractExperienceTest extends TestCase
 
         return $proposal->fresh();
     }
-
 }
