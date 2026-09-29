@@ -18,6 +18,7 @@ class ReviewIetExchangeRequest
         private readonly EnsureIetWallet $wallets,
         private readonly AccountingSummary $summary,
         private readonly PostJournalEntry $post,
+        private readonly PostIetTreasuryExchange $treasury,
     ) {}
 
     public function confirm(IetExchangeRequest $request, User $reviewer): IetExchangeRequest
@@ -34,6 +35,11 @@ class ReviewIetExchangeRequest
                 ->findOrFail($request->id);
 
             abort_unless($locked->status->value === 'pending', 422);
+            abort_if(
+                (int) $locked->user_id === (int) $reviewer->id,
+                403,
+                'Exchange requests require review by another authorized user.',
+            );
 
             $side = $this->wallets->execute($locked->user);
             $ledger = $side['ledger'];
@@ -73,6 +79,8 @@ class ReviewIetExchangeRequest
                 sourceUuid: $locked->uuid,
                 idempotencyKey: 'iet-exchange:'.$locked->uuid,
             );
+
+            $this->treasury->execute($locked, $reviewer);
 
             $locked->confirm($reviewer, $entry);
 
