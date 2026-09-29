@@ -61,7 +61,7 @@ class Chat extends Component
             'role' => 'assistant',
             'content' => $response['text'],
         ];
-        $this->messages = array_values(array_slice($this->messages, -20));
+        $this->messages = array_slice($this->messages, -20);
         $this->lastModel = $response['model'];
         $this->lastResponseId = $response['external_response_id'];
         $this->lastUsage = $response['usage'];
