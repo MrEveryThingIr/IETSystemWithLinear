@@ -133,4 +133,5 @@ class PlannerEvidenceUploadTest extends TestCase
             $participant->user,
             evidenceReferenceIds: [$reference->id],
         );
-    }}
+    }
+}
