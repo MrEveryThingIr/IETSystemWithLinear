@@ -220,3 +220,5 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/groups/{group}/invitations', Invitations::class)->name('groups.invitations');
     Route::livewire('/admissions/{admission}', AdmissionShow::class)->name('admissions.show');
 });
+
+require __DIR__.'/public-real-estate.php';
