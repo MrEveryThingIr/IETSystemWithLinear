@@ -10,6 +10,7 @@ class PublicRealEstateCase extends Model
 {
     protected $fillable = [
         'public_intake_portal_id',
+        'business_contact_id',
         'reference_code',
         'intent',
         'transaction_mode',

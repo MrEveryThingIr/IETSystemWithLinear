@@ -7,6 +7,7 @@ use App\Http\Requests\PublicIntake\StorePublicRealEstateIntakeRequest;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Support\PublicRealEstateCaseMediaStore;
+use App\Services\Contacts\BusinessContactResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -25,7 +26,8 @@ class PublicRealEstateIntakeController extends Controller
     public function store(
         StorePublicRealEstateIntakeRequest $request,
         PublicIntakePortal $portal,
-        PublicRealEstateCaseMediaStore $mediaStore
+        PublicRealEstateCaseMediaStore $mediaStore,
+        BusinessContactResolver $contactResolver
     ): SymfonyResponse {
         $this->ensureAvailable($portal);
 
@@ -39,11 +41,19 @@ class PublicRealEstateIntakeController extends Controller
             $data['recorded_video']
         );
 
+        $businessContact = $contactResolver->resolve(
+            $portal,
+            (string) $request->input('contact_name'),
+            (string) $request->input('phone'),
+            'real_estate_public_intake'
+        );
+
         $previewToken = Str::random(64);
 
-        $case = DB::transaction(function () use ($request, $portal, $data, $previewToken): PublicRealEstateCase {
+        $case = DB::transaction(function () use ($request, $portal, $data, $previewToken, $businessContact): PublicRealEstateCase {
             return $portal->realEstateCases()->create([
                 ...$data,
+                'business_contact_id' => $businessContact->getKey(),
                 'reference_code' => $this->makeReferenceCode(),
                 'built_year_calendar' => $data['built_year_calendar'] ?? 'jalali',
                 'price_unit' => $data['price_unit'] ?? 'toman',
