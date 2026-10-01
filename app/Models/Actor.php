@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use LogicException;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -99,6 +100,36 @@ class Actor extends Model
     public function acceptedGroupInvitations(): HasMany
     {
         return $this->hasMany(GroupInvitationAcceptance::class, 'accepted_by_actor_id');
+    }
+
+    /** @return MorphMany<ContactPoint, $this> */
+    public function contactPoints(): MorphMany
+    {
+        return $this->morphMany(ContactPoint::class, 'contactable');
+    }
+
+    /** @return MorphMany<ActorAddress, $this> */
+    public function addresses(): MorphMany
+    {
+        return $this->morphMany(ActorAddress::class, 'addressable');
+    }
+
+    /** @return HasMany<ActorProfession, $this> */
+    public function professions(): HasMany
+    {
+        return $this->hasMany(ActorProfession::class);
+    }
+
+    /** @return HasMany<Business, $this> */
+    public function ownedBusinesses(): HasMany
+    {
+        return $this->hasMany(Business::class, 'owner_actor_id');
+    }
+
+    /** @return HasMany<BusinessMembership, $this> */
+    public function businessMemberships(): HasMany
+    {
+        return $this->hasMany(BusinessMembership::class);
     }
 
     /** @return BelongsTo<User, $this> */

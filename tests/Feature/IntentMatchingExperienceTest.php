@@ -16,10 +16,12 @@ use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class IntentMatchingExperienceTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_private_profile_identity_stays_hidden_while_explicit_intent_can_match(): void
@@ -117,6 +119,8 @@ class IntentMatchingExperienceTest extends TestCase
             ProfileIntentKind::Offer,
             'Masonry available',
         );
+
+        $this->publishSurfaces($alice->user, ['deals']);
 
         $this->actingAs($alice->user)
             ->get(route('relationships.create', [

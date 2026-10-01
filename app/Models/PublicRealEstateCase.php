@@ -83,6 +83,7 @@ class PublicRealEstateCase extends Model
         ];
     }
 
+    /** @return BelongsTo<PublicIntakePortal, $this> */
     public function portal(): BelongsTo
     {
         return $this->belongsTo(PublicIntakePortal::class, 'public_intake_portal_id');
@@ -93,6 +94,7 @@ class PublicRealEstateCase extends Model
         return 'reference_code';
     }
 
+    /** @return HasMany<PublicRealEstateCaseMedia, $this> */
     public function media(): HasMany
     {
         return $this->hasMany(PublicRealEstateCaseMedia::class, 'public_real_estate_case_id')
@@ -100,5 +102,4 @@ class PublicRealEstateCase extends Model
             ->orderBy('sort_order')
             ->orderBy('id');
     }
-
 }

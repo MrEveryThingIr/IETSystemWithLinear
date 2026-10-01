@@ -16,10 +16,12 @@ use App\Models\RelationshipParticipant;
 use App\ProposalStatus;
 use App\Support\DealPipeline;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class CanonicalDealPipelineTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_pipeline_projects_internal_records_into_one_user_facing_progression(): void
@@ -112,6 +114,8 @@ class CanonicalDealPipelineTest extends TestCase
     {
         $actor = Actor::factory()->create();
 
+        $this->publishSurfaces($actor->user, ['deals']);
+
         $this->actingAs($actor->user)
             ->get(route('relationships.create'))
             ->assertRedirect(route('intents.index'));
@@ -146,6 +150,8 @@ class CanonicalDealPipelineTest extends TestCase
             'actor_id' => $other->id,
             'invited_by_actor_id' => $owner->id,
         ]);
+
+        $this->publishSurfaces($owner->user, ['deals']);
 
         $this->actingAs($owner->user)
             ->get(route('deals.index'))

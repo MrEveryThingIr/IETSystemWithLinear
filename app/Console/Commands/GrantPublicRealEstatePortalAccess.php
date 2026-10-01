@@ -23,6 +23,7 @@ class GrantPublicRealEstatePortalAccess extends Command
 
         if (! in_array($role, ['viewer', 'manager'], true)) {
             $this->error('Role must be viewer or manager.');
+
             return self::FAILURE;
         }
 
@@ -35,6 +36,7 @@ class GrantPublicRealEstatePortalAccess extends Command
 
         if (! $portal) {
             $this->error('Portal not found.');
+
             return self::FAILURE;
         }
 
@@ -49,6 +51,7 @@ class GrantPublicRealEstatePortalAccess extends Command
 
         if (! $user) {
             $this->error('User not found.');
+
             return self::FAILURE;
         }
 

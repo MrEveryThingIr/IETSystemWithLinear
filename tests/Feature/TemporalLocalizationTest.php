@@ -16,10 +16,12 @@ use App\Support\TemporalPreferences;
 use App\TimezoneMode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class TemporalLocalizationTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_locale_defaults_keep_language_timezone_and_calendar_separate(): void
@@ -131,6 +133,7 @@ class TemporalLocalizationTest extends TestCase
         $actor->user->timezone_mode = TimezoneMode::Fixed;
         $actor->user->calendar = null;
         $actor->user->save();
+        $this->publishSurfaces($actor->user, ['profile']);
 
         $this->actingAs($actor->user)
             ->get(route('profile.edit'))

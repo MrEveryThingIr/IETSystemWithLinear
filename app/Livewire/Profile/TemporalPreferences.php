@@ -124,7 +124,7 @@ class TemporalPreferences extends Component
     private function syncFromUser(User $user): void
     {
         $this->timezone = TemporalPreferenceResolver::timezoneFor($user);
-        $this->timezoneMode = $user->timezone_mode->value;
+        $this->timezoneMode = (string) ($user->getRawOriginal('timezone_mode') ?: 'auto');
         $this->calendar = (string) ($user->getRawOriginal('calendar') ?: 'auto');
         $this->dateFormat = TemporalPreferenceResolver::dateFormatFor($user);
         $this->timeFormat = TemporalPreferenceResolver::timeFormatFor($user);

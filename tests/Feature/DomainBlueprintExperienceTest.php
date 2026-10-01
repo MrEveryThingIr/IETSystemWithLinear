@@ -15,15 +15,19 @@ use App\ProfileItemVisibility;
 use App\Support\DomainBlueprintCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class DomainBlueprintExperienceTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_journeys_catalog_exposes_six_proven_compositions(): void
     {
         $alice = Actor::factory()->create();
+
+        $this->publishSurfaces($alice->user, ['planner']);
 
         $this->actingAs($alice->user)
             ->get(route('journeys.index'))

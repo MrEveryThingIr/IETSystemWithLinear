@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>راه‌های ارتباطی و آدرس‌ها</title>
-    @vite('resources/css/app.css')
-    <style>
-        :root{
+@extends('layouts.app')
+@section('title', app()->getLocale() === 'fa' ? 'راه‌های ارتباطی و آدرس‌ها' : 'Contacts & addresses')
+
+@section('content')
+<style>
+:root{
             --ink:#172033;--muted:#667085;--line:#d7deea;--paper:#fff;
             --purple:#7c3aed;--blue:#2563eb;--green:#059669;--orange:#ea580c;
         }
@@ -67,9 +64,7 @@
             .hero{padding:24px}.hero h1{font-size:28px}.stats,.grid,.grid3{grid-template-columns:1fr}
             .section-head,.body{padding:18px}.value{font-size:16px}
         }
-    </style>
-</head>
-<body>
+</style>
 @php
     $kindLabels = [
         'email'=>'ایمیل','mobile'=>'موبایل','phone'=>'تلفن','website'=>'وب‌سایت',
@@ -308,5 +303,4 @@
         </div>
     </section>
 </main>
-</body>
-</html>
+@endsection

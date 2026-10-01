@@ -14,10 +14,12 @@ use App\Support\MoneyAmount;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class AccountingExperienceTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_bob_tracks_everyday_money_without_using_debit_credit_terminology(): void
@@ -190,6 +192,7 @@ class AccountingExperienceTest extends TestCase
             ->call('createLedger');
 
         $ledger = Ledger::query()->sole();
+        $this->publishSurfaces($carol->user, ['accounting']);
 
         $this->actingAs($carol->user)
             ->get(route('accounting.index', ['ledger' => $ledger->uuid]))

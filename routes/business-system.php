@@ -1,0 +1,37 @@
+<?php
+
+use App\Http\Controllers\Business\BusinessContactController;
+use App\Http\Controllers\Business\BusinessController;
+use App\Http\Controllers\Business\BusinessTeamController;
+use App\Http\Controllers\Profile\ProfessionProfileController;
+use App\Http\Middleware\RequireFeatureSurface;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
+    Route::middleware(RequireFeatureSurface::class.':business')->group(function (): void {
+        Route::get('/businesses', [BusinessController::class, 'index'])->name('businesses.index');
+        Route::get('/businesses/create', [BusinessController::class, 'create'])->name('businesses.create');
+        Route::post('/businesses', [BusinessController::class, 'store'])->name('businesses.store');
+        Route::get('/businesses/{business}', [BusinessController::class, 'show'])->name('businesses.show');
+        Route::put('/businesses/{business}', [BusinessController::class, 'update'])->name('businesses.update');
+
+        Route::post('/businesses/{business}/contacts', [BusinessContactController::class, 'storeContact'])->name('businesses.contacts.store');
+        Route::delete('/businesses/{business}/contacts/{contactPoint}', [BusinessContactController::class, 'destroyContact'])->name('businesses.contacts.destroy');
+        Route::post('/businesses/{business}/addresses', [BusinessContactController::class, 'storeAddress'])->name('businesses.addresses.store');
+        Route::delete('/businesses/{business}/addresses/{address}', [BusinessContactController::class, 'destroyAddress'])->name('businesses.addresses.destroy');
+
+        Route::post('/businesses/{business}/members', [BusinessTeamController::class, 'store'])->name('businesses.members.store');
+        Route::put('/businesses/{business}/members/{membership}', [BusinessTeamController::class, 'update'])->name('businesses.members.update');
+        Route::delete('/businesses/{business}/members/{membership}', [BusinessTeamController::class, 'destroy'])->name('businesses.members.destroy');
+        Route::post('/businesses/{business}/transfer-ownership', [BusinessTeamController::class, 'transferOwnership'])->name('businesses.transfer-ownership');
+
+        Route::post('/businesses/{business}/members/{membership}/professions', [BusinessTeamController::class, 'assignProfession'])->name('businesses.members.professions.store');
+        Route::delete('/businesses/{business}/members/{membership}/professions/{profession}', [BusinessTeamController::class, 'removeProfession'])->name('businesses.members.professions.destroy');
+    });
+
+    Route::middleware(RequireFeatureSurface::class.':profile')->group(function (): void {
+        Route::get('/profile/professions', [ProfessionProfileController::class, 'index'])->name('profile.professions.index');
+        Route::post('/profile/professions', [ProfessionProfileController::class, 'store'])->name('profile.professions.store');
+        Route::delete('/profile/professions/{actorProfession}', [ProfessionProfileController::class, 'destroy'])->name('profile.professions.destroy');
+    });
+});

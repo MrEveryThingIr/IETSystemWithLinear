@@ -3,7 +3,6 @@
 namespace App\Services\Contacts;
 
 use App\Models\BusinessContact;
-use App\Models\ContactPoint;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -11,8 +10,7 @@ class BusinessContactResolver
 {
     public function __construct(
         private readonly ContactDirectoryService $directory,
-    ) {
-    }
+    ) {}
 
     public function resolve(
         Model $owner,

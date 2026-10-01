@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Profile;
 
 use App\Http\Controllers\Controller;
+use App\Models\Actor;
 use App\Models\ActorAddress;
 use App\Models\ContactPoint;
 use App\Services\Contacts\ContactDirectoryService;
@@ -16,18 +17,19 @@ class ContactCenterController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+        $actor = $this->actor($request);
 
         $contactPoints = ContactPoint::query()
-            ->where('contactable_type', $user->getMorphClass())
-            ->where('contactable_id', $user->getKey())
+            ->where('contactable_type', $actor->getMorphClass())
+            ->where('contactable_id', $actor->getKey())
             ->orderByDesc('is_primary')
             ->orderBy('kind')
             ->orderBy('id')
             ->get();
 
         $addresses = ActorAddress::query()
-            ->where('addressable_type', $user->getMorphClass())
-            ->where('addressable_id', $user->getKey())
+            ->where('addressable_type', $actor->getMorphClass())
+            ->where('addressable_id', $actor->getKey())
             ->orderByDesc('is_primary')
             ->orderBy('type')
             ->orderBy('id')
@@ -46,7 +48,7 @@ class ContactCenterController extends Controller
     ): RedirectResponse {
         $data = $request->validate($this->contactRules());
 
-        $directory->createContactPoint($request->user(), $data);
+        $directory->createContactPoint($this->actor($request), $data);
 
         return back()->with('status', 'راه ارتباطی با موفقیت اضافه شد.');
     }
@@ -58,7 +60,7 @@ class ContactCenterController extends Controller
     ): RedirectResponse {
         $data = $request->validate($this->contactRules());
 
-        $directory->updateContactPoint($request->user(), $contactPoint, $data);
+        $directory->updateContactPoint($this->actor($request), $contactPoint, $data);
 
         return back()->with('status', 'راه ارتباطی به‌روزرسانی شد.');
     }
@@ -68,7 +70,7 @@ class ContactCenterController extends Controller
         ContactPoint $contactPoint,
         ContactDirectoryService $directory
     ): RedirectResponse {
-        $directory->deleteContactPoint($request->user(), $contactPoint);
+        $directory->deleteContactPoint($this->actor($request), $contactPoint);
 
         return back()->with('status', 'راه ارتباطی حذف شد.');
     }
@@ -79,7 +81,7 @@ class ContactCenterController extends Controller
     ): RedirectResponse {
         $data = $request->validate($this->addressRules());
 
-        $directory->createAddress($request->user(), $data);
+        $directory->createAddress($this->actor($request), $data);
 
         return back()->with('status', 'آدرس با موفقیت اضافه شد.');
     }
@@ -91,7 +93,7 @@ class ContactCenterController extends Controller
     ): RedirectResponse {
         $data = $request->validate($this->addressRules());
 
-        $directory->updateAddress($request->user(), $address, $data);
+        $directory->updateAddress($this->actor($request), $address, $data);
 
         return back()->with('status', 'آدرس به‌روزرسانی شد.');
     }
@@ -101,7 +103,7 @@ class ContactCenterController extends Controller
         ActorAddress $address,
         ContactDirectoryService $directory
     ): RedirectResponse {
-        $directory->deleteAddress($request->user(), $address);
+        $directory->deleteAddress($this->actor($request), $address);
 
         return back()->with('status', 'آدرس حذف شد.');
     }
@@ -138,5 +140,13 @@ class ContactCenterController extends Controller
             'is_primary' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
+    }
+
+    private function actor(Request $request): Actor
+    {
+        $actor = $request->user()?->actor;
+        abort_unless($actor instanceof Actor && $actor->status === 'active', 403);
+
+        return $actor;
     }
 }

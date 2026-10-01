@@ -70,7 +70,6 @@ class TemporalPresentationConsistencyTest extends TestCase
             'timezone' => 'Asia/Tehran',
             'calendar' => CalendarSystem::Persian,
         ]);
-        $user->actor()->create();
 
         $this->actingAs($user)
             ->get(route('dashboard'))

@@ -16,10 +16,12 @@ use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class RelationshipExperienceTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_visible_intent_can_open_a_prefilled_relationship_request_and_activate_after_consent(): void
@@ -43,6 +45,8 @@ class RelationshipExperienceTest extends TestCase
             'visibility' => ProfileItemVisibility::Authenticated,
             'title' => 'Riverside electrical work',
         ]);
+
+        $this->publishSurfaces($bob->user, ['market']);
 
         $this->actingAs($bob->user)
             ->get(route('intents.index'))
@@ -85,6 +89,8 @@ class RelationshipExperienceTest extends TestCase
         config()->set('release.profile', 'ideal_v1');
 
         $alice = Actor::factory()->create();
+
+        $this->publishSurfaces($alice->user, ['deals']);
 
         $this->actingAs($alice->user)
             ->get(route('relationships.create'))

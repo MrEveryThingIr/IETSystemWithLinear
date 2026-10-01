@@ -224,3 +224,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
 require __DIR__.'/public-real-estate.php';
 
 require __DIR__.'/contact-center.php';
+
+require __DIR__.'/business-system.php';
+
+require __DIR__.'/workspace.php';

@@ -9,11 +9,13 @@ use App\Support\NotificationOutboxWriter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class NotificationExperienceTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use PublishesFeatureSurfaces;
 
     public function test_user_can_read_only_their_own_durable_notifications(): void
     {
@@ -60,7 +62,10 @@ class NotificationExperienceTest extends TestCase
             ->get(route('notifications.index'))
             ->assertRedirect(route('verification.notice'));
 
-        $this->actingAs(User::factory()->create())
+        $user = User::factory()->create();
+        $this->publishSurfaces($user, ['notifications']);
+
+        $this->actingAs($user)
             ->get(route('notifications.index'))
             ->assertOk()
             ->assertSee('Notifications');

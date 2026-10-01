@@ -75,4 +75,10 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     {
         return $this->locale;
     }
+
+    /** @return HasMany<FeatureSurfaceGrant, $this> */
+    public function featureSurfaceGrants(): HasMany
+    {
+        return $this->hasMany(FeatureSurfaceGrant::class);
+    }
 }

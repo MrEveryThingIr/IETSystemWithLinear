@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Contacts;
 
-use App\Models\BusinessContact;
 use App\Models\PublicIntakePortal;
 use App\Services\Contacts\BusinessContactResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;

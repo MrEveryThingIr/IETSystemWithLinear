@@ -26,11 +26,13 @@ use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class GroupCommunityCompositionTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use PublishesFeatureSurfaces;
 
     public function test_community_composes_existing_kernels_without_copying_domain_storage(): void
     {
@@ -160,6 +162,8 @@ class GroupCommunityCompositionTest extends TestCase
     public function test_group_index_opens_community_as_the_member_facing_entry_point(): void
     {
         [$group, , $member] = $this->groupWithMember();
+
+        $this->publishSurfaces($member->user, ['groups']);
 
         $this->actingAs($member->user)
             ->get(route('groups.index'))

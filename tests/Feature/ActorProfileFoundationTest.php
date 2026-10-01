@@ -17,10 +17,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class ActorProfileFoundationTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_active_verified_actor_gets_one_private_profile_with_public_uuid(): void
@@ -205,6 +207,7 @@ class ActorProfileFoundationTest extends TestCase
 
         $first = $upload->execute($actor->user, $profile, UploadedFile::fake()->image('first.jpg', 400, 400));
         $second = $upload->execute($actor->user, $profile, UploadedFile::fake()->image('second.jpg', 400, 400));
+        $this->publishSurfaces($actor->user, ['profile']);
 
         $this->actingAs($actor->user)
             ->get(route('profile.edit'))

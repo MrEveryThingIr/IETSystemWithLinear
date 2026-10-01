@@ -19,11 +19,13 @@ use App\Support\SystemManualContent;
 use App\Support\SystemManualHelpMap;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class SystemManualContentTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use PublishesFeatureSurfaces;
 
     public function test_manual_is_materialized_as_versioned_annotatable_content_and_is_idempotent(): void
     {
@@ -43,6 +45,8 @@ class SystemManualContentTest extends TestCase
         $this->assertFalse(Gate::forUser($reader->user)->allows('createContent', $first['context']));
         $this->assertFalse(Gate::forUser($reader->user)->allows('manageContent', $first['context']));
         $this->assertTrue(Gate::forUser($user)->allows('manageContent', $first['context']));
+        $this->publishSurfaces($reader->user, ['manual']);
+
         $this->actingAs($reader->user)
             ->get(route('manual'))
             ->assertRedirect(route('contexts.contents.show', [

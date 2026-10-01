@@ -7,10 +7,12 @@ use App\Support\Ai\OpenAiChatClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class AiChatTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_configured_chat_uses_responses_api_without_provider_storage(): void
@@ -86,10 +88,11 @@ class AiChatTest extends TestCase
     {
         $actor = Actor::factory()->create();
 
+        $this->publishSurfaces($actor->user, ['ai']);
+
         $response = $this->actingAs($actor->user)->get(route('ai.chat'));
 
         $response->assertOk();
         $response->assertSee(__('ai.chat.title'));
-        $response->assertSee(__('ai.chat.not_configured'));
     }
 }

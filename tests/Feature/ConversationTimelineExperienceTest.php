@@ -26,10 +26,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class ConversationTimelineExperienceTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_relationship_conversation_and_timeline_are_reconstructed_without_authoritative_side_effects(): void
@@ -175,6 +177,8 @@ class ConversationTimelineExperienceTest extends TestCase
         $this->actingAs($candidate->user)
             ->get(route('admissions.context.timeline', $admission))
             ->assertRedirect(route('contexts.timeline', $admissionContext));
+
+        $this->publishSurfaces($owner->user, ['groups']);
 
         $this->actingAs($owner->user)
             ->get(route('groups.spaces.show', [$group, $space]))

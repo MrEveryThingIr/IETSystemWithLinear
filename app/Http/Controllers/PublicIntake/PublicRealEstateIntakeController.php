@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PublicIntake\StorePublicRealEstateIntakeRequest;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
-use App\Support\PublicRealEstateCaseMediaStore;
 use App\Services\Contacts\BusinessContactResolver;
+use App\Support\PublicRealEstateCaseMediaStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -51,7 +51,8 @@ class PublicRealEstateIntakeController extends Controller
         $previewToken = Str::random(64);
 
         $case = DB::transaction(function () use ($request, $portal, $data, $previewToken, $businessContact): PublicRealEstateCase {
-            return $portal->realEstateCases()->create([
+            $case = $portal->realEstateCases()->make();
+            $case->fill([
                 ...$data,
                 'business_contact_id' => $businessContact->getKey(),
                 'reference_code' => $this->makeReferenceCode(),
@@ -65,6 +66,9 @@ class PublicRealEstateIntakeController extends Controller
                 'preview_token_hash' => hash('sha256', $previewToken),
                 'preview_expires_at' => now()->addMinutes(15),
             ]);
+            $case->save();
+
+            return $case;
         });
 
         try {
@@ -85,6 +89,7 @@ class PublicRealEstateIntakeController extends Controller
             }
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('public.real-estate.preview', [
                 'case' => $case,
                 'token' => $previewToken,
@@ -118,6 +123,7 @@ class PublicRealEstateIntakeController extends Controller
             }
 
             $locked->forceFill(['preview_viewed_at' => now()])->save();
+
             return $locked->fresh(['portal', 'media']);
         });
 

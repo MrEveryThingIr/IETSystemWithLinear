@@ -19,10 +19,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class PersonalLifeToolsBaselineTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -229,6 +231,8 @@ class PersonalLifeToolsBaselineTest extends TestCase
     public function test_baseline_routes_admit_money_and_vault(): void
     {
         $actor = Actor::factory()->create();
+
+        $this->publishSurfaces($actor->user, ['accounting', 'vault']);
 
         $this->actingAs($actor->user)
             ->get(route('accounting.index'))

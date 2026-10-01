@@ -25,6 +25,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('public_intake_portal_grants');
-        Schema::table('public_real_estate_cases', fn (Blueprint $table) => $table->dropColumn('building_age_years'));
+
+        if (Schema::hasColumn('public_real_estate_cases', 'building_age_years')) {
+            Schema::table('public_real_estate_cases', function (Blueprint $table): void {
+                $table->dropColumn('building_age_years');
+            });
+        }
     }
 };

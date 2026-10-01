@@ -20,10 +20,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class ContextContentIntegrationTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_personal_context_supports_content_without_a_group_and_denies_outsiders(): void
@@ -61,6 +63,8 @@ class ContextContentIntegrationTest extends TestCase
     public function test_personal_entry_route_lazily_provisions_one_context(): void
     {
         $owner = Actor::factory()->create();
+
+        $this->publishSurfaces($owner->user, ['content']);
 
         $response = $this->actingAs($owner->user)->get(route('contexts.personal'));
 

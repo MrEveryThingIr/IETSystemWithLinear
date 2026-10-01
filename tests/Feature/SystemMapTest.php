@@ -6,15 +6,18 @@ use App\Models\Actor;
 use App\Models\User;
 use App\Support\SystemMap\SystemMapBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class SystemMapTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_verified_user_can_open_system_map(): void
     {
         $actor = Actor::factory()->create();
+        $this->publishSurfaces($actor->user, ['system-map']);
         $this->withoutVite();
 
         $this->actingAs($actor->user)

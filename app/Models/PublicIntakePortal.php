@@ -40,14 +40,15 @@ class PublicIntakePortal extends Model
         return 'public_token';
     }
 
+    /** @return HasMany<PublicRealEstateCase, $this> */
     public function realEstateCases(): HasMany
     {
         return $this->hasMany(PublicRealEstateCase::class, 'public_intake_portal_id');
     }
 
+    /** @return HasMany<PublicIntakePortalGrant, $this> */
     public function grants(): HasMany
     {
         return $this->hasMany(PublicIntakePortalGrant::class, 'public_intake_portal_id');
     }
-
 }

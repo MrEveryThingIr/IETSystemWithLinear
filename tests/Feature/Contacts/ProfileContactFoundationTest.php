@@ -6,10 +6,12 @@ use App\Models\ActorAddress;
 use App\Models\ContactPoint;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class ProfileContactFoundationTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_guest_cannot_open_contact_center(): void
@@ -20,7 +22,8 @@ class ProfileContactFoundationTest extends TestCase
 
     public function test_user_can_add_multiple_contact_points_and_only_one_primary_per_kind(): void
     {
-        $user = User::factory()->create();
+        $user = $this->userWithActor();
+        $this->publishSurfaces($user, ['profile']);
 
         $this->actingAs($user)->post(route('profile.contacts.contact.store'), [
             'kind' => 'mobile',
@@ -39,8 +42,8 @@ class ProfileContactFoundationTest extends TestCase
         ])->assertRedirect();
 
         $points = ContactPoint::query()
-            ->where('contactable_type', $user->getMorphClass())
-            ->where('contactable_id', $user->getKey())
+            ->where('contactable_type', $user->actor->getMorphClass())
+            ->where('contactable_id', $user->actor->getKey())
             ->where('kind', 'mobile')
             ->get();
 
@@ -53,7 +56,8 @@ class ProfileContactFoundationTest extends TestCase
 
     public function test_user_can_store_work_and_residence_addresses(): void
     {
-        $user = User::factory()->create();
+        $user = $this->userWithActor();
+        $this->publishSurfaces($user, ['profile']);
 
         foreach ([
             ['type' => 'residence', 'label' => 'خانه', 'city' => 'تهران'],
@@ -69,17 +73,18 @@ class ProfileContactFoundationTest extends TestCase
         $this->assertSame(
             2,
             ActorAddress::query()
-                ->where('addressable_type', $user->getMorphClass())
-                ->where('addressable_id', $user->getKey())
+                ->where('addressable_type', $user->actor->getMorphClass())
+                ->where('addressable_id', $user->actor->getKey())
                 ->count()
         );
     }
 
     public function test_contact_center_shows_authentication_email_without_copying_it(): void
     {
-        $user = User::factory()->create([
+        $user = $this->userWithActor([
             'email' => 'identity@example.test',
         ]);
+        $this->publishSurfaces($user, ['profile']);
 
         $this->actingAs($user)
             ->get(route('profile.contacts.index'))
@@ -87,5 +92,13 @@ class ProfileContactFoundationTest extends TestCase
             ->assertSee('identity@example.test');
 
         $this->assertDatabaseCount('contact_points', 0);
+    }
+
+    private function userWithActor(array $attributes = []): User
+    {
+        $user = User::factory()->create($attributes);
+        $user->actor()->create();
+
+        return $user->refresh();
     }
 }

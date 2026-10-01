@@ -9,10 +9,12 @@ use App\Models\Relationship;
 use App\Models\RelationshipParticipant;
 use App\PlatformRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class ReleaseExperienceTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_office_alpha_keeps_ordinary_navigation_focused_on_intents_and_profile(): void
@@ -84,6 +86,8 @@ class ReleaseExperienceTest extends TestCase
 
         $faUi = require lang_path('fa/ui.php');
 
+        $this->publishSurfaces($user, ['deals']);
+
         $this->withoutVite()
             ->actingAs($user)
             ->get(route('proposals.create', ['relationship' => $relationship->uuid]))
@@ -130,6 +134,8 @@ class ReleaseExperienceTest extends TestCase
             ->assertSee(route('groups.index'), false)
             ->assertSee(route('manual'), false)
             ->assertSee(route('contexts.personal'), false);
+
+        $this->publishSurfaces($actor->user, ['groups']);
 
         $this->actingAs($actor->user)
             ->get(route('groups.index'))

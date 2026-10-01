@@ -76,6 +76,7 @@ class PublicRealEstateMediaController extends Controller
         abort_unless($media->public_real_estate_case_id === $case->getKey(), 404);
 
         $mediaStore->delete($media);
+
         return back()->with('status', 'رسانه حذف شد.');
     }
 }
