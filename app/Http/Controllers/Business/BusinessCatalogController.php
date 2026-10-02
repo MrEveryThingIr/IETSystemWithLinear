@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Business;
 
 use App\Actions\Business\SyncBusinessListingPresentation;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Actor;
 use App\Models\Business;
 use App\Models\BusinessCategory;
@@ -205,10 +206,13 @@ class BusinessCatalogController extends Controller
             'concept_label' => ['nullable', 'string', 'max:120'],
         ]);
 
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+
         $intent = $market->publishListingOffer(
             $business,
             $listing,
-            $request->user(),
+            $user,
             filled($data['concept_label'] ?? null) ? (string) $data['concept_label'] : null,
         );
 
