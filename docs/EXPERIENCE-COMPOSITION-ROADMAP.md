@@ -94,18 +94,32 @@ Acceptance evidence:
 Canonical implementation/acceptance status is tracked in
 `docs/COHERENCE-FIRST-EXECUTION-ROADMAP.md`.
 
-The next experience milestone is Phase 3 / coherence milestone C2: consolidated,
-goal-oriented destination hubs.
-
 ## Phase 3 — Consolidated entry experiences
 
-Planned:
+Status: **complete as coherence milestone C2; owner browser review remains the product-feel checkpoint**.
 
-- make Deals the canonical Relationship directory entry while preserving redirect compatibility;
-- My / Discover modes for Needs & Offers;
-- Money default with Accounting advanced;
-- unified Content entry for My Content / Library;
-- Help center composition including System Map.
+Implemented:
+
+- primary navigation now resolves to goal-oriented hubs rather than subsystem menus;
+- Needs & Offers hub with Mine / Discover / Matches;
+- Work hub combining attention, active Deals and Planner schedule;
+- Organizations hub combining Businesses and Groups while preserving domain distinction;
+- Money as the ordinary financial entry with detailed accounts one level deeper and Accounting / Exchange progressively disclosed;
+- Content hub with My Content / Explore / Create;
+- Help hub combining Manual and System Map;
+- partial-publication behavior characterized so unpublished capabilities do not leak into hubs;
+- existing deep routes retained for compatibility and specialist work.
+
+Acceptance evidence:
+
+- full exact-head CI green;
+- 708 PHPUnit tests / 5720 assertions;
+- Pint, PHPStan, migration/operational smoke, frontend/npm audit and Composer security audit green.
+
+Canonical implementation status is tracked in
+`docs/COHERENCE-FIRST-EXECUTION-ROADMAP.md`.
+
+The next experience milestone is Phase 4 / coherence milestone C3: contextual workflow shells and the standard page contract.
 
 ## Phase 4 — Contextual workflow shells
 
