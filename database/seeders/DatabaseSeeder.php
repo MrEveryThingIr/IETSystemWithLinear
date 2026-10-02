@@ -38,5 +38,6 @@ class DatabaseSeeder extends Seeder
         });
 
         $this->call(PersonalPlannerDemoSeeder::class);
+        $this->call(RealEstateBusinessDemoSeeder::class);
     }
 }
