@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Business\BusinessCatalogController;
 use App\Http\Controllers\Business\BusinessContactController;
 use App\Http\Controllers\Business\BusinessController;
 use App\Http\Controllers\Business\BusinessTeamController;
@@ -14,6 +15,12 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::post('/businesses', [BusinessController::class, 'store'])->name('businesses.store');
         Route::get('/businesses/{business}', [BusinessController::class, 'show'])->name('businesses.show');
         Route::put('/businesses/{business}', [BusinessController::class, 'update'])->name('businesses.update');
+
+        Route::get('/businesses/{business}/catalog', [BusinessCatalogController::class, 'index'])->name('businesses.catalog.index');
+        Route::post('/businesses/{business}/catalog/listings', [BusinessCatalogController::class, 'store'])->name('businesses.catalog.listings.store');
+        Route::post('/businesses/{business}/catalog/listings/{listing}/publish', [BusinessCatalogController::class, 'publish'])->name('businesses.catalog.listings.publish');
+        Route::post('/businesses/{business}/real-estate/{portal:uuid}/cases/{case}/promote', [BusinessCatalogController::class, 'promoteRealEstateCase'])
+            ->name('businesses.real-estate.cases.promote');
 
         Route::post('/businesses/{business}/contacts', [BusinessContactController::class, 'storeContact'])->name('businesses.contacts.store');
         Route::delete('/businesses/{business}/contacts/{contactPoint}', [BusinessContactController::class, 'destroyContact'])->name('businesses.contacts.destroy');
