@@ -9,6 +9,7 @@ use App\Actions\Planner\CreatePlanScheduleRule;
 use App\ContextKind;
 use App\DomainJourneyKind;
 use App\Models\Actor;
+use App\Models\Business;
 use App\Models\Context;
 use App\Models\DomainBlueprintVersion;
 use App\Models\Relationship;
@@ -270,7 +271,7 @@ class Create extends Component
     {
         if ($context->kind === ContextKind::Business) {
             $business = $context->businessBinding?->business;
-            abort_unless($business instanceof \App\Models\Business, 422);
+            abort_unless($business instanceof Business, 422);
 
             return [[], 'business', $business->uuid];
         }
