@@ -74,7 +74,7 @@
         <flux:callout variant="danger" class="break-all">{{ session('error') }}</flux:callout>
     @endif
 
-    @if ($canManageGroup || $canManageRoles || $admissions->isNotEmpty())
+    @if ($canManageGroup || $canManageRoles || $canManageMembers || $canApproveRoleChanges || $canTransferOwnership || $admissions->isNotEmpty())
         <details id="group-manage" class="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950" @if($groupNeedsAttention) open @endif>
             <summary class="cursor-pointer list-none">
                 <div>
