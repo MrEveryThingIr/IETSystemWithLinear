@@ -4,6 +4,7 @@ use App\Http\Controllers\Business\BusinessCatalogController;
 use App\Http\Controllers\Business\BusinessClientController;
 use App\Http\Controllers\Business\BusinessContactController;
 use App\Http\Controllers\Business\BusinessController;
+use App\Http\Controllers\Business\BusinessListingController;
 use App\Http\Controllers\Business\BusinessTeamController;
 use App\Http\Controllers\Profile\ProfessionProfileController;
 use App\Http\Middleware\RequireFeatureSurface;
@@ -24,6 +25,14 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::get('/businesses/{business}/catalog', [BusinessCatalogController::class, 'index'])->name('businesses.catalog.index');
         Route::post('/businesses/{business}/catalog/categories', [BusinessCatalogController::class, 'storeCategory'])->name('businesses.catalog.categories.store');
         Route::post('/businesses/{business}/catalog/listings', [BusinessCatalogController::class, 'store'])->name('businesses.catalog.listings.store');
+        Route::get('/businesses/{business}/catalog/listings/{listing}/edit', [BusinessListingController::class, 'edit'])->name('businesses.catalog.listings.edit');
+        Route::put('/businesses/{business}/catalog/listings/{listing}', [BusinessListingController::class, 'update'])->name('businesses.catalog.listings.update');
+        Route::get('/businesses/{business}/catalog/listings/{listing}/preview', [BusinessListingController::class, 'preview'])->name('businesses.catalog.listings.preview');
+        Route::post('/businesses/{business}/catalog/listings/{listing}/media', [BusinessListingController::class, 'uploadMedia'])->name('businesses.catalog.listings.media.store');
+        Route::put('/businesses/{business}/catalog/listings/{listing}/media/{mediaItem}', [BusinessListingController::class, 'updateMedia'])->name('businesses.catalog.listings.media.update');
+        Route::delete('/businesses/{business}/catalog/listings/{listing}/media/{mediaItem}', [BusinessListingController::class, 'destroyMedia'])->name('businesses.catalog.listings.media.destroy');
+        Route::get('/businesses/{business}/catalog/listings/{listing}/media/{mediaItem}', [BusinessListingController::class, 'showMedia'])->name('businesses.catalog.listings.media.show');
+        Route::post('/businesses/{business}/catalog/listings/{listing}/presentation', [BusinessListingController::class, 'syncPresentation'])->name('businesses.catalog.listings.presentation.sync');
         Route::post('/businesses/{business}/catalog/listings/{listing}/prices', [BusinessCatalogController::class, 'storePrice'])->name('businesses.catalog.listings.prices.store');
         Route::post('/businesses/{business}/catalog/listings/{listing}/publish', [BusinessCatalogController::class, 'publish'])->name('businesses.catalog.listings.publish');
         Route::post('/businesses/{business}/real-estate/{portal:uuid}/cases/{case}/promote', [BusinessCatalogController::class, 'promoteRealEstateCase'])
