@@ -110,7 +110,7 @@ class HomeTodayExperienceTest extends TestCase
             ->withSession(['email_verified_now' => true])
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Email verified');
+            ->assertSee('Your email is verified.');
     }
 
     public function test_today_hides_setup_checklist_once_minimal_setup_and_first_goal_exist(): void
