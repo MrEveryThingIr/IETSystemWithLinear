@@ -133,7 +133,8 @@ class ReleaseExperienceTest extends TestCase
             ->assertOk()
             ->assertSee(route('groups.index'), false)
             ->assertSee(route('manual'), false)
-            ->assertSee(route('contexts.personal'), false);
+            ->assertSee(route('content.library'), false)
+            ->assertDontSee(route('contexts.personal'), false);
 
         $this->publishSurfaces($actor->user, ['groups']);
 
