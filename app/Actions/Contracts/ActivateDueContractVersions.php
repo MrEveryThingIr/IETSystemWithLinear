@@ -3,6 +3,7 @@
 namespace App\Actions\Contracts;
 
 use App\ContractVersionStatus;
+use App\Models\Contract;
 use App\Models\ContractVersion;
 
 class ActivateDueContractVersions
@@ -11,11 +12,27 @@ class ActivateDueContractVersions
 
     public function execute(): int
     {
+        return $this->executeDueQuery();
+    }
+
+    public function executeForContract(Contract $contract): int
+    {
+        return $this->executeDueQuery($contract);
+    }
+
+    private function executeDueQuery(?Contract $contract = null): int
+    {
         $count = 0;
 
-        ContractVersion::query()
+        $query = ContractVersion::query()
             ->where('status', ContractVersionStatus::Accepted->value)
-            ->where('effective_from', '<=', now())
+            ->where('effective_from', '<=', now());
+
+        if ($contract instanceof Contract) {
+            $query->where('contract_id', $contract->id);
+        }
+
+        $query
             ->orderBy('effective_from')
             ->orderBy('id')
             ->get()

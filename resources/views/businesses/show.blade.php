@@ -52,6 +52,85 @@
         </div>
     </header>
 
+    @php
+        if (! $canOperate) {
+            $businessNextLabel = __('workflow.business.next_continue');
+            $businessNextHref = null;
+        } elseif ($business->contactPoints->isEmpty() && $business->addresses->isEmpty()) {
+            $businessNextLabel = __('workflow.business.next_profile');
+            $businessNextHref = '#business-profile';
+        } elseif ($business->businessContacts->isEmpty()) {
+            $businessNextLabel = __('workflow.business.next_client');
+            $businessNextHref = route('businesses.clients.index', $business);
+        } elseif ($business->listings->isEmpty()) {
+            $businessNextLabel = __('workflow.business.next_catalog');
+            $businessNextHref = route('businesses.catalog.index', $business);
+        } elseif ($canUsePlanner && $routineCount === 0 && $businessContext) {
+            $businessNextLabel = __('workflow.business.next_work');
+            $businessNextHref = route('planner.create', ['context' => $businessContext->uuid]);
+        } else {
+            $businessNextLabel = __('workflow.business.next_continue');
+            $businessNextHref = $canUsePlanner && $businessContext
+                ? route('planner.index', ['context' => $businessContext->uuid])
+                : null;
+        }
+    @endphp
+
+    <div style="margin-top:18px">
+        <x-app.workflow-shell
+            :purpose="__('workflow.business.purpose')"
+            :state="__('workflow.business.state_active')"
+            :next-action="$businessNextLabel"
+            :audience="__('workflow.business.audience')"
+            :consequence="__('workflow.business.consequence')"
+            :result="__('workflow.business.result')"
+            :steps="__('workflow.business.sections')"
+            current-step="overview"
+            :progressive="false"
+        >
+            @if ($canOperate)
+                <x-slot:actions>
+                    @if ($businessNextHref)
+                        <flux:button :href="$businessNextHref" variant="primary">
+                            {{ $businessNextLabel }}
+                        </flux:button>
+                    @endif
+                    <flux:button :href="route('businesses.clients.index', $business)" variant="ghost">
+                        {{ __('workflow.business.sections.clients') }}
+                    </flux:button>
+                    <flux:button :href="route('businesses.catalog.index', $business)" variant="ghost">
+                        {{ __('workflow.business.sections.catalog') }}
+                    </flux:button>
+                </x-slot:actions>
+
+                <x-slot:advanced>
+                    <div class="flex flex-wrap gap-2">
+                        @if ($canUsePlanner && $businessContext)
+                            <flux:button :href="route('planner.index', ['context' => $businessContext->uuid])" size="sm" variant="ghost">
+                                {{ __('workflow.business.sections.work') }}
+                            </flux:button>
+                        @endif
+                        @if ($canUseDeals)
+                            <flux:button :href="route('deals.index')" size="sm" variant="ghost">
+                                {{ __('workflow.business.sections.deals') }}
+                            </flux:button>
+                        @endif
+                        @if ($canUseMoney)
+                            <flux:button :href="route('money.index')" size="sm" variant="ghost">
+                                {{ __('workflow.business.sections.money') }}
+                            </flux:button>
+                        @endif
+                        <flux:button href="#team-settings" size="sm" variant="ghost">
+                            {{ __('workflow.business.sections.manage') }}
+                        </flux:button>
+                    </div>
+                </x-slot:advanced>
+            @endif
+
+            <x-slot:help>{{ __('workflow.business.help') }}</x-slot:help>
+        </x-app.workflow-shell>
+    </div>
+
     @if($canOperate)
     <section class="stats">
         <div class="stat"><span>اعضای فعال</span><strong>{{ $business->memberships->count() }}</strong></div>
@@ -69,14 +148,16 @@
             <strong>🧰 کاتالوگ و ارائه‌ها</strong>
             <span>کالا، خدمت، ملک و قیمت‌ها در یک زیرساخت مشترک</span>
         </a>
-        <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
-            <strong>🗓 برنامه‌های کسب‌وکار</strong>
-            <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
-        </a>
-        <a class="quick-card q1" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
-            <strong>＋ برنامه کاری جدید</strong>
-            <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
-        </a>
+        @if($canUsePlanner)
+            <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
+                <strong>🗓 برنامه‌های کسب‌وکار</strong>
+                <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
+            </a>
+            <a class="quick-card q1" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
+                <strong>＋ برنامه کاری جدید</strong>
+                <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
+            </a>
+        @endif
     </section>
     @endif
 
@@ -140,7 +221,7 @@
         </section>
     @endif
 
-    <section class="panel">
+    <section id="business-profile" class="panel">
         <div class="head"><div><h2>🏪 مشخصات کسب‌وکار</h2><p>اطلاعات پایه و سطح نمایش</p></div></div>
         <div class="body">
             @if($canManage)
@@ -230,7 +311,7 @@
     </section>
 
     @if($canOperate)
-    <section class="panel">
+    <section id="team-settings" class="panel">
         <div class="head">
             <div><h2>👥 اعضای کسب‌وکار</h2><p>عضویت با تخصص فرق دارد؛ گروه همکاری هم بعداً یک لایه جدا باقی می‌ماند.</p></div>
             <a class="btn light" href="{{ route('profile.professions.index') }}">تخصص‌های شخصی من</a>

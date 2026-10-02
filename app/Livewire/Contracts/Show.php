@@ -3,6 +3,7 @@
 namespace App\Livewire\Contracts;
 
 use App\Actions\Contracts\AcceptContractVersion;
+use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Contracts\ProposeContractAmendment;
 use App\Actions\Financial\ProposeContractSettlementBatch;
 use App\Actions\Financial\RespondToContractSettlementBatch;
@@ -65,6 +66,7 @@ class Show extends Component
     {
         Gate::forUser($this->user())->authorize('view', $contract);
         $this->contract = $contract;
+        $this->reconcileDueActivation();
 
         $user = $this->user();
         $this->timezone = TemporalPreferences::timezoneFor($user);
@@ -72,6 +74,11 @@ class Show extends Component
 
         $this->effectiveAt = $now->addDay()->format('Y-m-d\TH:i');
         $this->settlementPaidAt = $now->format('Y-m-d\TH:i');
+    }
+
+    public function hydrate(): void
+    {
+        $this->reconcileDueActivation();
     }
 
     public function accept(AcceptContractVersion $accept): void
@@ -344,6 +351,14 @@ class Show extends Component
             'receivableUnits' => $receivableUnits,
             'settlementUnits' => $settlementUnits,
         ]);
+    }
+
+    private function reconcileDueActivation(): void
+    {
+        Gate::forUser($this->user())->authorize('view', $this->contract);
+
+        app(ActivateDueContractVersions::class)->executeForContract($this->contract);
+        $this->refreshContract();
     }
 
     private function refreshContract(): void

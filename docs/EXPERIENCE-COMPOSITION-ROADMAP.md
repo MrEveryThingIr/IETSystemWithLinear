@@ -122,13 +122,26 @@ The next experience milestone is Phase 4 / coherence milestone C3:
 
 ## Phase 4 — Contextual workflow shells
 
-Planned:
+Status: **engineering-complete as coherence milestone C3; owner browser/product-feel acceptance pending**.
 
-- Deal pipeline shell;
-- Content studio shell;
-- Group shell;
-- Organization shell;
-- standard page contract: purpose, state, next action, consequence, help, durable result.
+Verified implementation head: `982b2ebd85884793bd064fd55a58c8bef238411e` — **715 tests / 6118 assertions** with the full CI gate green.
+
+Implemented:
+
+- shared page contract: purpose, state, next action, audience/visibility, consequence,
+  contextual help, durable result and progressive disclosure;
+- Deal shell over the existing Deal/Relationship pipeline;
+- Content Studio shell with Write → Structure → Media → Preview → Publish;
+- Group shell with participation first and governance under Manage;
+- Business/organization shell with state-derived next action across clients, catalog,
+  work, deals, money and team/settings, while respecting feature-publication boundaries;
+- due accepted Contract versions self-reconcile on Contract use when a local scheduler
+  was not running, without activating unrelated Contracts;
+- existing routes, policies and domain records remain authoritative;
+- C3 regression coverage and EN/FA/AR/ZH workflow copy.
+
+Canonical implementation/acceptance status remains tracked in
+`docs/COHERENCE-FIRST-EXECUTION-ROADMAP.md`.
 
 ## Phase 5 — Acceptance and release hardening
 

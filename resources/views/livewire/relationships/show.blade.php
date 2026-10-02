@@ -5,59 +5,96 @@
         $title = $relationship->title ?: $relationship->purposeConcept->displayLabel();
     @endphp
 
-    <x-app.page-header :title="$title" :description="__('deals.help')">
-        <x-slot:actions>
-            @if ($context)
-                <flux:button :href="route('contexts.conversation', $context)" variant="ghost">
-                    {{ __('collaboration.tabs.conversation') }}
-                </flux:button>
-                <flux:button :href="route('contexts.timeline', $context)" variant="ghost">
-                    {{ __('collaboration.tabs.timeline') }}
-                </flux:button>
-                <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
-                    {{ __('collaboration.tabs.content') }}
-                </flux:button>
-            @endif
-        </x-slot:actions>
-    </x-app.page-header>
+    <x-app.page-header :title="$title" :description="__('deals.help')" />
 
     @php
-        $stageIndex = array_search($dealStage, $dealSteps, true);
-        $stageIndex = $stageIndex === false ? -1 : $stageIndex;
+        $workflowStep = match ($dealStage) {
+            'connect' => 'deal',
+            'negotiate' => 'terms',
+            'agree' => 'agreement',
+            'work' => 'work',
+            'review' => 'review',
+            'settle', 'closed' => 'settlement',
+            default => 'deal',
+        };
+        $workflowState = __('relationships.status.'.$relationship->status->value);
+        $workflowNext = $dealStage === 'closed'
+            ? __('deals.actions.history')
+            : __('deals.actions.'.$dealNextAction);
     @endphp
 
-    <flux:card class="space-y-4">
-        <div>
-            <flux:heading size="lg">{{ __('deals.pipeline') }}</flux:heading>
-            <flux:text>{{ __('deals.pipeline_help') }}</flux:text>
-        </div>
+    <x-app.workflow-shell
+        :purpose="__('workflow.deal.purpose')"
+        :state="$workflowState"
+        :next-action="$workflowNext"
+        :audience="__('workflow.deal.audience')"
+        :consequence="__('workflow.deal.consequence')"
+        :result="__('workflow.deal.result')"
+        :steps="__('workflow.deal.steps')"
+        :current-step="$workflowStep"
+    >
+        <x-slot:actions>
+            @if ($canRespond)
+                <flux:button wire:click="accept" variant="primary" wire:loading.attr="disabled" wire:target="accept">
+                    {{ __('relationships.show.accept') }}
+                </flux:button>
+                <flux:button wire:click="decline" variant="ghost" wire:loading.attr="disabled" wire:target="decline">
+                    {{ __('relationships.show.decline') }}
+                </flux:button>
+            @elseif ($relationship->status === \App\RelationshipStatus::Active)
+                @if ($latestContract)
+                    <flux:button :href="route('contracts.show', $latestContract)" variant="primary">
+                        {{ __('deals.open_contract') }}
+                    </flux:button>
+                @elseif ($latestProposal)
+                    @if ($latestProposal->status === \App\ProposalStatus::Accepted)
+                        <flux:button :href="route('contracts.create', ['proposal' => $latestProposal->uuid])" variant="primary">
+                            {{ __('deals.finalize_agreement') }}
+                        </flux:button>
+                    @else
+                        <flux:button :href="route('proposals.show', $latestProposal)" variant="primary">
+                            {{ __('deals.continue_negotiation') }}
+                        </flux:button>
+                    @endif
+                @else
+                    <flux:button :href="route('proposals.create', ['relationship' => $relationship->uuid])" variant="primary">
+                        {{ __('deals.start_negotiation') }}
+                    </flux:button>
+                @endif
+            @endif
 
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-            @foreach ($dealSteps as $index => $step)
-                @php
-                    $isCurrent = $dealStage === $step;
-                    $isPast = $stageIndex >= 0 && $index < $stageIndex;
-                @endphp
-                <div class="rounded-xl border px-3 py-3 text-center text-sm
-                    {{ $isCurrent
-                        ? 'border-zinc-900 bg-zinc-900 font-semibold text-white dark:border-white dark:bg-white dark:text-zinc-950'
-                        : ($isPast
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200'
-                            : 'border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950') }}">
-                    {{ __('deals.stages.'.$step) }}
-                </div>
-            @endforeach
-        </div>
+            <flux:button :href="route('experience.work')" variant="ghost">
+                {{ __('workflow.back') }}
+            </flux:button>
+        </x-slot:actions>
 
-        @if ($dealStage === 'closed')
-            <flux:callout>{{ __('deals.actions.history') }}</flux:callout>
-        @else
-            <div class="text-sm text-zinc-600 dark:text-zinc-300">
-                {{ __('deals.next') }}:
-                <span class="font-semibold">{{ __('deals.actions.'.$dealNextAction) }}</span>
+        <x-slot:help>{{ __('workflow.deal.help') }}</x-slot:help>
+
+        <x-slot:advanced>
+            <div class="flex flex-wrap gap-2">
+                @if ($context)
+                    <flux:button :href="route('contexts.conversation', $context)" size="sm" variant="ghost">
+                        {{ __('collaboration.tabs.conversation') }}
+                    </flux:button>
+                    <flux:button :href="route('contexts.contents.index', $context)" size="sm" variant="ghost">
+                        {{ __('collaboration.tabs.content') }}
+                    </flux:button>
+                    <flux:button :href="route('contexts.timeline', $context)" size="sm" variant="ghost">
+                        {{ __('collaboration.tabs.timeline') }}
+                    </flux:button>
+                @endif
+                @if ($canCancel)
+                    <flux:button wire:click="cancel" size="sm" variant="danger" wire:loading.attr="disabled" wire:target="cancel">
+                        {{ __('relationships.show.cancel') }}
+                    </flux:button>
+                @elseif ($canEnd)
+                    <flux:button wire:click="end" size="sm" variant="danger" wire:loading.attr="disabled" wire:target="end">
+                        {{ __('relationships.show.end') }}
+                    </flux:button>
+                @endif
             </div>
-        @endif
-    </flux:card>
+        </x-slot:advanced>
+    </x-app.workflow-shell>
 
     @if ($relationship->domainBlueprintVersion)
         <flux:callout>
@@ -109,28 +146,6 @@
                 @endforeach
             </div>
 
-            @if ($canRespond)
-                <div class="flex flex-col gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800 sm:flex-row">
-                    <flux:button wire:click="accept" variant="primary" wire:loading.attr="disabled" wire:target="accept">
-                        {{ __('relationships.show.accept') }}
-                    </flux:button>
-                    <flux:button wire:click="decline" variant="danger" wire:loading.attr="disabled" wire:target="decline">
-                        {{ __('relationships.show.decline') }}
-                    </flux:button>
-                </div>
-            @elseif ($canCancel)
-                <div class="border-t border-zinc-200 pt-4 dark:border-zinc-800">
-                    <flux:button wire:click="cancel" variant="danger" wire:loading.attr="disabled" wire:target="cancel">
-                        {{ __('relationships.show.cancel') }}
-                    </flux:button>
-                </div>
-            @elseif ($canEnd)
-                <div class="border-t border-zinc-200 pt-4 dark:border-zinc-800">
-                    <flux:button wire:click="end" variant="danger" wire:loading.attr="disabled" wire:target="end">
-                        {{ __('relationships.show.end') }}
-                    </flux:button>
-                </div>
-            @endif
         </flux:card>
 
         <div class="space-y-6">
@@ -168,28 +183,6 @@
                         <flux:button :href="route('contexts.contents.index', $context)" variant="ghost" class="w-full">
                             {{ __('collaboration.tabs.content') }}
                         </flux:button>
-
-                        @if ($relationship->status === \App\RelationshipStatus::Active)
-                            @if ($latestContract)
-                                <flux:button :href="route('contracts.show', $latestContract)" variant="primary" class="w-full">
-                                    {{ __('deals.open_contract') }}
-                                </flux:button>
-                            @elseif ($latestProposal)
-                                @if ($latestProposal->status === \App\ProposalStatus::Accepted)
-                                    <flux:button :href="route('contracts.create', ['proposal' => $latestProposal->uuid])" variant="primary" class="w-full">
-                                        {{ __('deals.finalize_agreement') }}
-                                    </flux:button>
-                                @else
-                                    <flux:button :href="route('proposals.show', $latestProposal)" variant="primary" class="w-full">
-                                        {{ __('deals.continue_negotiation') }}
-                                    </flux:button>
-                                @endif
-                            @else
-                                <flux:button :href="route('proposals.create', ['relationship' => $relationship->uuid])" variant="primary" class="w-full">
-                                    {{ __('deals.start_negotiation') }}
-                                </flux:button>
-                            @endif
-                        @endif
 
                         <flux:button :href="route('contexts.timeline', $context)" variant="ghost" class="w-full">
                             {{ __('collaboration.tabs.timeline') }}

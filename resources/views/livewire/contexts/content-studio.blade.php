@@ -4,26 +4,85 @@
     <x-app.page-header
         :title="$currentRevision->title"
         :description="$content->blueprintVersion?->blueprint?->name ?? $content->definition->name"
+    />
+
+    @php
+        $contentWorkflowState = $content->status === 'archived'
+            ? __('workflow.content_shell.state_archived')
+            : ($content->draft_revision_id
+                ? __('workflow.content_shell.state_draft')
+                : __('workflow.content_shell.state_live'));
+
+        $contentWorkflowStep = $content->status === 'published' && ! $content->draft_revision_id
+            ? 'publish'
+            : ($publishBlocked
+                ? 'media'
+                : ($canPublish ? 'preview' : 'write'));
+
+        $contentWorkflowNext = $content->status === 'published' && ! $content->draft_revision_id
+            ? __('workflow.content_shell.next_history')
+            : ($publishBlocked
+                ? __('workflow.content_shell.next_media')
+                : ($canPublish
+                    ? __('workflow.content_shell.next_publish')
+                    : __('workflow.content_shell.next_write')));
+    @endphp
+
+    <x-app.workflow-shell
+        :purpose="__('workflow.content_shell.purpose')"
+        :state="$contentWorkflowState"
+        :next-action="$contentWorkflowNext"
+        :audience="__('workflow.content_shell.audience')"
+        :consequence="__('workflow.content_shell.consequence')"
+        :result="__('workflow.content_shell.result')"
+        :steps="__('workflow.content_shell.steps')"
+        :current-step="$contentWorkflowStep"
     >
         <x-slot:actions>
-            <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
-                    {{ __('ui.context_content.back') }}
+            @if ($canPublish && ! $publishBlocked)
+                <flux:button wire:click="publish" variant="primary">
+                    {{ __('ui.content.publish') }}
                 </flux:button>
-                @if ($canUpdate)
-                    <flux:button :href="route('contexts.contents.ai', [$context, $content])" variant="ghost" icon="sparkles">{{ __('ai.title') }}</flux:button>
-                    <flux:button :href="route('contexts.contents.blocks', [$context, $content])" variant="ghost">{{ __('blocks.title') }}</flux:button>
-                    <flux:button :href="route('contexts.contents.appearance', [$context, $content])" variant="ghost">{{ __('presentation.title') }}</flux:button>
-                    <flux:button :href="route('contexts.contents.outline', [$context, $content])" variant="ghost">{{ __('structure.title') }}</flux:button>
-                @endif
-                @if ($canOpenReader)
-                    <flux:button :href="route('contexts.contents.show', [$context, $content])" variant="ghost">
-                        {{ __('ui.context_content.open_reader') }}
-                    </flux:button>
-                @endif
-            </div>
+            @elseif ($canOpenReader)
+                <flux:button :href="route('contexts.contents.show', [$context, $content])" variant="primary">
+                    {{ __('ui.context_content.open_reader') }}
+                </flux:button>
+            @endif
+
+            @if ($canUpdate)
+                <flux:button :href="route('contexts.contents.outline', [$context, $content])" variant="ghost">
+                    {{ __('structure.title') }}
+                </flux:button>
+            @endif
+
+            <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
+                {{ __('workflow.back') }}
+            </flux:button>
         </x-slot:actions>
-    </x-app.page-header>
+
+        <x-slot:help>{{ __('workflow.content_shell.help') }}</x-slot:help>
+
+        @if ($canUpdate)
+            <x-slot:advanced>
+                <div class="flex flex-wrap gap-2">
+                    <flux:button :href="route('contexts.contents.ai', [$context, $content])" size="sm" variant="ghost" icon="sparkles">
+                        {{ __('ai.title') }}
+                    </flux:button>
+                    <flux:button :href="route('contexts.contents.blocks', [$context, $content])" size="sm" variant="ghost">
+                        {{ __('blocks.title') }}
+                    </flux:button>
+                    <flux:button :href="route('contexts.contents.appearance', [$context, $content])" size="sm" variant="ghost">
+                        {{ __('presentation.title') }}
+                    </flux:button>
+                    @if ($canOpenReader)
+                        <flux:button :href="route('contexts.contents.show', [$context, $content])" size="sm" variant="ghost">
+                            {{ __('ui.context_content.open_reader') }}
+                        </flux:button>
+                    @endif
+                </div>
+            </x-slot:advanced>
+        @endif
+    </x-app.workflow-shell>
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <div class="min-w-0 space-y-6">
@@ -219,17 +278,16 @@
         <div class="space-y-4 self-start xl:sticky xl:top-6">
             @if ($canPublish)
                 <flux:card class="space-y-4">
-                    <flux:heading>{{ __('ui.content.publish') }}</flux:heading>
+                    <flux:heading>{{ __('studio.publication') }}</flux:heading>
                     @if ($publishBlocked)
                         <flux:callout variant="danger">{{ __('media.publish_blocked_help') }}</flux:callout>
                         @foreach ($publicationIssues as $issue)
                             <div class="text-sm text-red-600" dir="auto">{{ $issue['filename'] }} · {{ $issue['code'] }}</div>
                         @endforeach
+                    @else
+                        <flux:callout variant="success">{{ __('studio.ready_help') }}</flux:callout>
                     @endif
                     @error('publish')<div class="text-sm text-red-600">{{ $message }}</div>@enderror
-                    <flux:button wire:click="publish" variant="primary" class="w-full" :disabled="$publishBlocked">
-                        {{ __('ui.content.publish') }}
-                    </flux:button>
                 </flux:card>
             @endif
 

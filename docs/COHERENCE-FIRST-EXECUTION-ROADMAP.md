@@ -178,7 +178,41 @@ The next active milestone is **C3 — Contextual workflow shells**.
 
 ## C3 — Standard page contract and contextual workflow shells
 
+Status: **engineering-complete on `codex/coherence-c3-contextual-workflow-shells`; owner browser/product-feel acceptance pending**.
+
+Verified implementation head: `982b2ebd85884793bd064fd55a58c8bef238411e` — CI green with **715 tests / 6118 assertions**, Pint, PHPStan, MySQL portability, rollback/reapply + scheduler/queue smoke, SQLite backup/restore, frontend build + npm audit, and Composer security audit.
+
 Goal: every important workflow teaches itself.
+
+Implemented:
+
+- shared workflow-shell contract for purpose, current state, dominant next action,
+  audience/visibility, durable result, consequence, contextual help and progressively
+  disclosed advanced controls;
+- Deal shell presents the human pipeline
+  Need/Offer → Match → Deal → Terms → Agreement → Work → Proof/Review → Settlement
+  while preserving the existing `DealPipeline`, Relationship, Proposal, Contract,
+  Commitment, Fulfillment and FinancialObligation authorities;
+- Business shell derives a deterministic next operating step from existing Business
+  state (contact/location, clients, catalog, Planner routines), keeps CRM, catalog,
+  Planner, Deal and Money records authoritative, and hides unpublished Planner / Deal /
+  Money siblings instead of leaking unavailable capabilities;
+- Group shell prioritizes Community / Spaces / Content and moves governance-oriented
+  settings behind a Manage disclosure while keeping urgent review work visible;
+- Content Studio now teaches Write → Structure → Media → Preview → Publish, keeps
+  Publish as the single dominant action, makes publication readiness informational, and
+  moves AI, blocks and appearance into Advanced rather than presenting them as required
+  starting choices;
+- English, Persian, Arabic and Simplified Chinese workflow copy added without replacing
+  the pre-existing Content workflow language keys;
+- focused C3 regression coverage added in
+  `tests/Feature/ContextualWorkflowShellTest.php`;
+- browser acceptance exposed a temporal-state gap: an accepted ContractVersion could remain
+  “waiting for effective time” after its effective instant when the scheduler was not
+  running locally. Contract pages now reconcile due activation for that Contract on
+  open/Livewire interaction while `contracts:activate-due` remains the background safety
+  net; regression coverage proves unrelated Contracts are not activated by the read;
+- no new migration, workflow-state table or domain kernel introduced.
 
 Every major page should consistently show:
 
