@@ -80,6 +80,41 @@
     </section>
     @endif
 
+    @if($canOperate)
+        <section class="panel">
+            <div class="head">
+                <div>
+                    <h2>💰 تسویه و جریان مالی کسب‌وکار</h2>
+                    <p>روال‌های داخلی بر پایه واحد تسویه کسب‌وکار محاسبه می‌شوند؛ اتصال به پول واقعی فقط از طریق درگاه‌های تأییدشده انجام خواهد شد.</p>
+                </div>
+            </div>
+            <div class="body">
+                <div class="grid3">
+                    <div class="item">
+                        <strong>واحد تسویه داخلی</strong>
+                        <div style="font-size:26px;font-weight:950;margin-top:6px">{{ $business->defaultMonetaryUnit?->code ?? 'IET' }}</div>
+                        <div class="muted" style="margin-top:5px">هزینه‌های برنامه‌ریزی Business به‌صورت پیش‌فرض از همین واحد استفاده می‌کنند.</div>
+                    </div>
+                    <div class="item">
+                        <strong>واریز پول واقعی</strong>
+                        <div class="badge" style="margin-top:9px">placeholder</div>
+                        <div class="muted" style="margin-top:5px">هیچ بانک یا پرداخت‌یار واقعی در این مرحله متصل نیست.</div>
+                    </div>
+                    <div class="item">
+                        <strong>برداشت / Cashout</strong>
+                        <div class="badge" style="margin-top:9px">placeholder</div>
+                        <div class="muted" style="margin-top:5px">تا زمان انتخاب Provider، امنیت و حسابرسی، عملیات واقعی انجام نمی‌شود.</div>
+                    </div>
+                </div>
+                <div class="badges" style="margin-top:12px">
+                    @foreach($externalMoneyGateways as $gateway)
+                        <span class="badge">{{ $gateway['label'] }} — {{ $gateway['status'] }}</span>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     @if($canOperate && $business->kind === 'real_estate' && $business->publicIntakePortals->isNotEmpty())
         <section class="panel">
             <div class="head">
