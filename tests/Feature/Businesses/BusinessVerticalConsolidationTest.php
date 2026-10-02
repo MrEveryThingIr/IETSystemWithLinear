@@ -77,6 +77,36 @@ class BusinessVerticalConsolidationTest extends TestCase
         $this->assertCount(2, $contact->contactPoints);
     }
 
+    public function test_public_business_does_not_expose_operating_context_crm_or_catalog_to_strangers(): void
+    {
+        $owner = $this->userWithActor();
+        $stranger = $this->userWithActor();
+        $this->publishSurfaces($stranger, ['business']);
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Public Identity, Private Operations',
+            'kind' => 'services',
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $context = $business->contextBinding()->with('context')->sole()->context;
+
+        $this->assertFalse(Gate::forUser($stranger)->allows('view', $context));
+
+        $this->actingAs($stranger)
+            ->get(route('businesses.show', $business))
+            ->assertForbidden();
+
+        $this->actingAs($stranger)
+            ->get(route('businesses.clients.index', $business))
+            ->assertForbidden();
+
+        $this->actingAs($stranger)
+            ->get(route('businesses.catalog.index', $business))
+            ->assertForbidden();
+    }
+
     public function test_listing_publish_freezes_version_and_price_history_is_separate(): void
     {
         $owner = $this->userWithActor();
