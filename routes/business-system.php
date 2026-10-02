@@ -24,6 +24,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::get('/businesses/{business}/catalog', [BusinessCatalogController::class, 'index'])->name('businesses.catalog.index');
         Route::post('/businesses/{business}/catalog/categories', [BusinessCatalogController::class, 'storeCategory'])->name('businesses.catalog.categories.store');
         Route::post('/businesses/{business}/catalog/listings', [BusinessCatalogController::class, 'store'])->name('businesses.catalog.listings.store');
+        Route::post('/businesses/{business}/catalog/listings/{listing}/prices', [BusinessCatalogController::class, 'storePrice'])->name('businesses.catalog.listings.prices.store');
         Route::post('/businesses/{business}/catalog/listings/{listing}/publish', [BusinessCatalogController::class, 'publish'])->name('businesses.catalog.listings.publish');
         Route::post('/businesses/{business}/real-estate/{portal:uuid}/cases/{case}/promote', [BusinessCatalogController::class, 'promoteRealEstateCase'])
             ->name('businesses.real-estate.cases.promote');
