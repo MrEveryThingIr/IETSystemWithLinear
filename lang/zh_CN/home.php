@@ -47,7 +47,7 @@ return [
     'recent_activity_help' => '你有权查看的近期工作和变更简要记录。',
     'no_recent_activity' => '没有近期可见活动',
     'boundary' => '“今天”只是派生的操作视图。任何操作都会打开真正拥有事实的原始记录。',
-        'onboarding' => [
+    'onboarding' => [
         'title' => '完成基础设置',
         'help' => '只需先完成必要信息，其他资料以后再补充。',
         'done' => '已完成',
