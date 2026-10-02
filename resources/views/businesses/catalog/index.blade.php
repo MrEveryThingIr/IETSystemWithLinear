@@ -5,9 +5,9 @@
 @php($fa = app()->getLocale() === 'fa')
 <style>
 .cat{max-width:1220px;margin:auto;padding:26px 16px 70px}.cat-head{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}.cat-head h1{font-size:32px;margin:4px 0}.muted{color:#667085;line-height:1.8}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:0;border-radius:14px;padding:10px 14px;font-weight:900;cursor:pointer}.primary{background:#4f46e5;color:#fff}.light{background:#fff;color:#334155;border:1px solid #cbd5e1}.green{background:#047857;color:#fff}
-.panel{background:#fff;border:1px solid #e4e7ec;border-radius:24px;margin-top:18px;padding:20px;box-shadow:0 7px 24px rgba(15,23,42,.04)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:14px}.listing{border:1px solid #e2e8f0;border-radius:20px;padding:18px;background:#fff}.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:850}.listing h3{font-size:20px;margin:10px 0 6px}.prices{margin-top:12px;display:grid;gap:5px}.price{font-size:14px;color:#334155}
+.panel{background:#fff;border:1px solid #e4e7ec;border-radius:24px;margin-top:18px;padding:20px;box-shadow:0 7px 24px rgba(15,23,42,.04)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:14px}.listing{border:1px solid #e2e8f0;border-radius:20px;padding:18px;background:#fff}.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:850}.listing h3{font-size:20px;margin:10px 0 6px}.prices{margin-top:12px;display:grid;gap:5px}.price{font-size:14px;color:#334155}.price-form{margin-top:14px;padding-top:14px;border-top:1px dashed #cbd5e1}.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,select,textarea{width:100%;border:1.5px solid #aab4c4;border-radius:12px;padding:11px;background:#fff}.empty{border:2px dashed #cbd5e1;border-radius:20px;padding:30px;text-align:center;color:#64748b}
-@media(max-width:800px){.grid{grid-template-columns:1fr}}
+@media(max-width:800px){.grid,.price-grid{grid-template-columns:1fr}}
 </style>
 <main class="cat">
     @if(session('status'))<div class="panel" style="background:#ecfdf5;color:#065f46;font-weight:900">✓ {{ session('status') }}</div>@endif
@@ -111,10 +111,50 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                                 <strong>{{ $price->price_type }}</strong>:
                                 {{ AppSupportMoneyAmount::format((int)$price->amount_minor, (int)$price->monetaryUnit->exponent) }}
                                 {{ $price->monetaryUnit->code }}
+                                @if($price->basis) / {{ $price->basis }} @endif
                                 <span class="badge">{{ $price->visibility }}</span>
+                                @if($price->reason)<div class="muted" style="font-size:12px">{{ $price->reason }}</div>@endif
                             </div>
                         @endforeach
                     </div>
+
+                    @if($canManage)
+                        <form class="price-form" method="POST" action="{{ route('businesses.catalog.listings.prices.store',[$business,$listing]) }}">
+                            @csrf
+                            <div class="price-grid">
+                                <label><span>{{ $fa ? 'نوع قیمت' : 'Price type' }}</span>
+                                    <select name="price_type" required>
+                                        <option value="retail">{{ $fa ? 'فروش / خرده‌فروشی' : 'Retail / sale' }}</option>
+                                        <option value="service">{{ $fa ? 'قیمت خدمت' : 'Service price' }}</option>
+                                        <option value="hourly">{{ $fa ? 'ساعتی' : 'Hourly' }}</option>
+                                        <option value="daily">{{ $fa ? 'روزانه' : 'Daily' }}</option>
+                                        <option value="monthly">{{ $fa ? 'ماهانه' : 'Monthly' }}</option>
+                                        <option value="wholesale">{{ $fa ? 'عمده' : 'Wholesale' }}</option>
+                                        <option value="cost">{{ $fa ? 'هزینه داخلی' : 'Internal cost' }}</option>
+                                        <option value="asking">{{ $fa ? 'قیمت پیشنهادی' : 'Asking price' }}</option>
+                                    </select>
+                                </label>
+                                <label><span>{{ $fa ? 'واحد پول' : 'Monetary unit' }}</span>
+                                    <select name="unit_code" required>
+                                        @foreach($unitCatalog as $code => $meta)
+                                            <option value="{{ $code }}" @selected($code === ($business->defaultMonetaryUnit?->code ?? 'IET'))>{{ $code }} — {{ $meta['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <label><span>{{ $fa ? 'مبلغ' : 'Amount' }}</span><input name="amount" required inputmode="decimal" placeholder="0"></label>
+                                <label><span>{{ $fa ? 'مبنای قیمت' : 'Basis' }}</span><input name="basis" maxlength="80" placeholder="{{ $fa ? 'مثلاً هر عدد، هر ساعت، هر مترمربع' : 'per item, per hour, per m²' }}"></label>
+                                <label><span>{{ $fa ? 'نمایش قیمت' : 'Price visibility' }}</span>
+                                    <select name="visibility">
+                                        <option value="members">{{ $fa ? 'اعضای کسب‌وکار' : 'Business members' }}</option>
+                                        <option value="public">{{ $fa ? 'عمومی' : 'Public' }}</option>
+                                        <option value="private">{{ $fa ? 'خصوصی' : 'Private' }}</option>
+                                    </select>
+                                </label>
+                                <label><span>{{ $fa ? 'علت / یادداشت تغییر' : 'Reason / change note' }}</span><input name="reason" maxlength="500"></label>
+                            </div>
+                            <button class="btn light" style="margin-top:9px">{{ $fa ? '＋ ثبت نسخه قیمت جدید' : '+ Add new price version' }}</button>
+                        </form>
+                    @endif
 
                     @if($canManage && $version && $version->published_at === null)
                         <form method="POST" action="{{ route('businesses.catalog.listings.publish',[$business,$listing]) }}" style="margin-top:14px">
