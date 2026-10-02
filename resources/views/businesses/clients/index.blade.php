@@ -74,10 +74,41 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                         @endforeach
                     </div>
                     @if($canManage && $client->status === 'active')
-                        <form method="POST" action="{{ route('businesses.clients.archive',[$business,$client]) }}" onsubmit="return confirm('{{ $fa ? 'این مخاطب بایگانی شود؟' : 'Archive this contact?' }}')">
-                            @csrf @method('PATCH')
-                            <button class="btn danger">{{ $fa ? 'بایگانی' : 'Archive' }}</button>
-                        </form>
+                        <div style="min-width:min(100%,360px)">
+                            <details>
+                                <summary class="btn primary" style="list-style:none">{{ $fa ? 'ثبت نیاز این مشتری در بازار' : 'Publish a Need for this client' }}</summary>
+                                <form method="POST" action="{{ route('businesses.clients.needs.store',[$business,$client]) }}" style="margin-top:10px;padding:12px;border:1px dashed #cbd5e1;border-radius:14px">
+                                    @csrf
+                                    <label><span>{{ $fa ? 'مفهوم نیاز' : 'Need concept' }}</span><input name="concept_label" required placeholder="{{ $fa ? 'مثلاً ملک مسکونی، تعمیر کولر، خرید دریل' : 'e.g. residential property, AC repair, cordless drill' }}"></label>
+                                    <label style="display:block;margin-top:8px"><span>{{ $fa ? 'عنوان' : 'Title' }}</span><input name="title"></label>
+                                    <div class="grid" style="margin-top:8px">
+                                        <label><span>{{ $fa ? 'نوع' : 'Type' }}</span>
+                                            <select name="subject_kind">
+                                                <option value="service">{{ $fa ? 'خدمت' : 'Service' }}</option>
+                                                <option value="good">{{ $fa ? 'کالا' : 'Good' }}</option>
+                                                <option value="property">{{ $fa ? 'ملک' : 'Property' }}</option>
+                                                <option value="other">{{ $fa ? 'سایر' : 'Other' }}</option>
+                                            </select>
+                                        </label>
+                                        <label><span>{{ $fa ? 'روش' : 'Arrangement' }}</span>
+                                            <select name="arrangement_kind">
+                                                <option value="service">{{ $fa ? 'خدمت' : 'Service' }}</option>
+                                                <option value="ownership_transfer">{{ $fa ? 'خرید / انتقال مالکیت' : 'Buy / ownership' }}</option>
+                                                <option value="temporary_use">{{ $fa ? 'اجاره / استفاده موقت' : 'Rent / temporary use' }}</option>
+                                                <option value="other">{{ $fa ? 'سایر' : 'Other' }}</option>
+                                            </select>
+                                        </label>
+                                        <label><span>{{ $fa ? 'محل' : 'Location' }}</span><input name="location_text"></label>
+                                    </div>
+                                    <label style="display:block;margin-top:8px"><span>{{ $fa ? 'توضیح' : 'Description' }}</span><textarea name="description" rows="2">{{ $client->notes }}</textarea></label>
+                                    <button class="btn primary" style="margin-top:8px">{{ $fa ? 'انتشار نیاز و دیدن تطبیق‌ها' : 'Publish Need & see matches' }}</button>
+                                </form>
+                            </details>
+                            <form method="POST" action="{{ route('businesses.clients.archive',[$business,$client]) }}" onsubmit="return confirm('{{ $fa ? 'این مخاطب بایگانی شود؟' : 'Archive this contact?' }}')" style="margin-top:8px">
+                                @csrf @method('PATCH')
+                                <button class="btn danger">{{ $fa ? 'بایگانی' : 'Archive' }}</button>
+                            </form>
+                        </div>
                     @endif
                 </article>
             @empty
