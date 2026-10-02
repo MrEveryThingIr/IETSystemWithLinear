@@ -48,21 +48,25 @@ class BusinessPriceVersion extends Model
         ];
     }
 
+    /** @return BelongsTo<BusinessListing, $this> */
     public function listing(): BelongsTo
     {
         return $this->belongsTo(BusinessListing::class, 'business_listing_id');
     }
 
+    /** @return BelongsTo<BusinessListingVersion, $this> */
     public function listingVersion(): BelongsTo
     {
         return $this->belongsTo(BusinessListingVersion::class, 'business_listing_version_id');
     }
 
+    /** @return BelongsTo<MonetaryUnit, $this> */
     public function monetaryUnit(): BelongsTo
     {
         return $this->belongsTo(MonetaryUnit::class);
     }
 
+    /** @return BelongsTo<Actor, $this> */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'created_by_actor_id');
