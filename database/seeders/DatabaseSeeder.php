@@ -38,6 +38,9 @@ class DatabaseSeeder extends Seeder
         });
 
         $this->call(PersonalPlannerDemoSeeder::class);
-        $this->call(RealEstateBusinessDemoSeeder::class);
+
+        if (app()->environment('local')) {
+            $this->call(RealEstateBusinessDemoSeeder::class);
+        }
     }
 }
