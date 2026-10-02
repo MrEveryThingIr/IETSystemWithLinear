@@ -273,6 +273,22 @@ Status: **coherence baseline engineering-complete; next whole-product browser re
 - desktop/mobile/RTL/keyboard/focus;
 - novice / ordinary / manager / operator personas.
 
+## M7–M11 closure evidence
+
+C5–C7 close M7 through M11 for the current engineering baseline on
+`codex/coherence-c5-c7-baseline-completion`.
+
+Verified implementation head: `f19f0f11cdb9c477357cb75ad2f575e12aa1789e`.
+
+CI: **728 tests / 6734 assertions**, Pint/PHPStan/MySQL/ops/backup/frontend/npm/Composer
+gates green.
+
+The local acceptance world and exact expected balances are documented in
+`docs/COHERENCE-BASELINE-ACCEPTANCE.md`.
+
+Remaining work is product-friction review, localization/mobile/RTL polish and eventual
+real external payment-provider integration; those are not missing Business kernels.
+
 ## First full acceptance story
 
 The canonical acceptance story remains:
