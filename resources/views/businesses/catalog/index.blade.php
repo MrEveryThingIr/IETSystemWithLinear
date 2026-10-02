@@ -24,6 +24,27 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
 
     @if($canManage)
         <section class="panel">
+            <h2 style="margin-top:0">{{ $fa ? 'دسته‌بندی کاتالوگ' : 'Catalog taxonomy' }}</h2>
+            <p class="muted">{{ $fa ? 'دسته‌ها ساختار سازمان‌دهی هستند؛ قیمت، مشتری و زمان‌بندی داخل دسته ذخیره نمی‌شوند.' : 'Categories organize the catalog; transaction data such as price, customer, and schedule does not belong in categories.' }}</p>
+            <form method="POST" action="{{ route('businesses.catalog.categories.store',$business) }}">
+                @csrf
+                <div class="grid">
+                    <label><span>{{ $fa ? 'نام دسته' : 'Category name' }}</span><input name="name" required maxlength="180"></label>
+                    <label><span>{{ $fa ? 'نامک (اختیاری)' : 'Slug (optional)' }}</span><input name="slug" maxlength="180"></label>
+                    <label><span>{{ $fa ? 'دسته مادر' : 'Parent category' }}</span>
+                        <select name="parent_id">
+                            <option value="">{{ $fa ? 'ریشه' : 'Root' }}</option>
+                            @foreach($business->categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                </div>
+                <button class="btn light" style="margin-top:12px">{{ $fa ? '＋ افزودن دسته' : '+ Add category' }}</button>
+            </form>
+        </section>
+
+        <section class="panel">
             <h2 style="margin-top:0">{{ $fa ? '＋ ارائه جدید' : '+ New listing' }}</h2>
             <p class="muted">{{ $fa ? 'یک پیش‌نویس ساده بسازید. برای ملک، جزئیات تخصصی از کانال املاک یا ویرایشگر تخصصی تکمیل می‌شود.' : 'Create a simple draft. Property-specific details can be completed from the real-estate intake channel or a specialized editor.' }}</p>
             <form method="POST" action="{{ route('businesses.catalog.listings.store',$business) }}">
