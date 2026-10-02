@@ -166,14 +166,14 @@ return new class extends Migration
 
         if (Schema::hasColumn('business_listing_versions', 'presentation_content_id')) {
             Schema::table('business_listing_versions', function (Blueprint $table): void {
-                $table->dropForeign('business_listing_presentation_content_fk');
+                $table->dropForeign(['presentation_content_id']);
                 $table->dropColumn('presentation_content_id');
             });
         }
 
         Schema::table('business_listings', function (Blueprint $table): void {
             if (Schema::hasColumn('business_listings', 'business_contact_id')) {
-                $table->dropForeign('business_listing_contact_fk');
+                $table->dropForeign(['business_contact_id']);
             }
 
             $columns = array_values(array_filter([
