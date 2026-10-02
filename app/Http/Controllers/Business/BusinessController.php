@@ -8,6 +8,7 @@ use App\Models\Actor;
 use App\Models\Business;
 use App\Models\Profession;
 use App\Services\Business\BusinessService;
+use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
 use App\Support\ExternalMoneyGatewayRegistry;
@@ -74,6 +75,7 @@ class BusinessController extends Controller
         Business $business,
         EnsureBusinessContext $contexts,
         ExternalMoneyGatewayRegistry $externalGateways,
+        FeatureSurfaceAccess $surfaceAccess,
     ): View {
         abort_unless(BusinessAccess::canView($request->user(), $business), 403);
 
@@ -127,6 +129,10 @@ class BusinessController extends Controller
             'canOperate' => $canOperate,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
+            'canUsePlanner' => $surfaceAccess->allows($request->user(), 'planner'),
+            'canUseDeals' => $surfaceAccess->allows($request->user(), 'deals'),
+            'canUseMoney' => collect(['money', 'accounting', 'exchange'])
+                ->contains(fn (string $surface): bool => $surfaceAccess->allows($request->user(), $surface)),
             'kindLabels' => BusinessDirectory::KINDS,
             'roleLabels' => BusinessDirectory::ROLES,
             'visibilityLabels' => BusinessDirectory::VISIBILITIES,
