@@ -113,6 +113,33 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('Your email is verified.');
     }
 
+    public function test_today_asks_the_user_to_choose_a_first_goal_instead_of_picking_one_for_them(): void
+    {
+        $actor = Actor::factory()->create();
+        ActorProfile::factory()->create([
+            'actor_id' => $actor->id,
+            'display_name' => 'Choice User',
+        ]);
+        $actor->contactPoints()->create([
+            'kind' => 'mobile',
+            'label' => 'Primary',
+            'value' => '09121234567',
+            'normalized_value' => '+989121234567',
+            'is_primary' => true,
+            'visibility' => 'private',
+        ]);
+
+        $this->publishSurfaces($actor->user, ['profile', 'market', 'planner', 'business', 'groups', 'content']);
+
+        Livewire::actingAs($actor->user)
+            ->test(Today::class)
+            ->assertSee('Choose your first useful action')
+            ->assertSee('Choose a goal')
+            ->assertSee('Find or offer something')
+            ->assertSee('Plan something')
+            ->assertSee('Run a business');
+    }
+
     public function test_today_hides_setup_checklist_once_minimal_setup_and_first_goal_exist(): void
     {
         $actor = Actor::factory()->create();
