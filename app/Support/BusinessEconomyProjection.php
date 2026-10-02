@@ -21,7 +21,10 @@ final class BusinessEconomyProjection
      *   contract_count:int,
      *   iet_receivable_minor:int,
      *   iet_payable_minor:int,
-     *   iet_net_minor:int
+     *   iet_net_minor:int,
+     *   iet_realized_revenue_minor:int,
+     *   iet_realized_expense_minor:int,
+     *   iet_realized_profit_minor:int
      * }
      */
     public function forBusiness(Business $business): array
@@ -58,6 +61,8 @@ final class BusinessEconomyProjection
 
         $receivable = 0;
         $payable = 0;
+        $realizedRevenue = 0;
+        $realizedExpense = 0;
 
         if ($unitId !== null && $versionIds->isNotEmpty() && $memberActorIds->isNotEmpty()) {
             $obligations = FinancialObligation::query()
@@ -82,10 +87,12 @@ final class BusinessEconomyProjection
 
                 if ($creditorIsBusiness && ! $debtorIsBusiness) {
                     $receivable += $outstanding;
+                    $realizedRevenue += $confirmed;
                 }
 
                 if ($debtorIsBusiness && ! $creditorIsBusiness) {
                     $payable += $outstanding;
+                    $realizedExpense += $confirmed;
                 }
             }
         }
@@ -97,6 +104,9 @@ final class BusinessEconomyProjection
             'iet_receivable_minor' => $receivable,
             'iet_payable_minor' => $payable,
             'iet_net_minor' => $receivable - $payable,
+            'iet_realized_revenue_minor' => $realizedRevenue,
+            'iet_realized_expense_minor' => $realizedExpense,
+            'iet_realized_profit_minor' => $realizedRevenue - $realizedExpense,
         ];
     }
 }
