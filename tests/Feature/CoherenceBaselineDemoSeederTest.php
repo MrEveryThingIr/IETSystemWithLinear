@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Business;
 use App\Models\User;
 use App\ProfileIntentKind;
+use App\Support\BusinessEconomyProjection;
 use App\Support\IetPosition;
 use App\Support\IntentMatchFinder;
 use Database\Seeders\CoherenceBaselineDemoSeeder;
@@ -63,6 +64,25 @@ class CoherenceBaselineDemoSeederTest extends TestCase
             );
         }
 
+        $businessEconomy = app(BusinessEconomyProjection::class);
+
+        $atlas = Business::query()->where('name', 'Atlas Inspection Services')->sole();
+        $atlasProjection = $businessEconomy->forBusiness($atlas);
+        $this->assertSame(1, $atlasProjection['deal_count']);
+        $this->assertSame(1, $atlasProjection['contract_count']);
+        $this->assertSame(0, $atlasProjection['iet_receivable_minor']);
+        $this->assertSame(120, $atlasProjection['iet_realized_revenue_minor']);
+        $this->assertSame(120, $atlasProjection['iet_realized_profit_minor']);
+
+        $tools = Business::query()->where('name', 'Everyday Tools Store')->sole();
+        $toolsProjection = $businessEconomy->forBusiness($tools);
+        $this->assertSame(1, $toolsProjection['deal_count']);
+        $this->assertSame(1, $toolsProjection['contract_count']);
+        $this->assertSame(80, $toolsProjection['iet_receivable_minor']);
+        $this->assertSame(0, $toolsProjection['iet_realized_revenue_minor']);
+
+        $this->assertDatabaseCount('relationships', 4);
+        $this->assertDatabaseCount('contracts', 4);
         $this->assertDatabaseCount('financial_obligations', 4);
         $this->assertDatabaseCount('settlements', 1);
     }
