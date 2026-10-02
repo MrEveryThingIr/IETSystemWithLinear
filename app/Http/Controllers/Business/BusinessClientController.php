@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Business;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\ActorProfileIntent;
 use App\Models\Business;
 use App\Models\BusinessContact;
+use App\Models\User;
 use App\Services\Business\BusinessMarketService;
 use App\Services\Contacts\BusinessContactResolver;
 use App\Services\Contacts\ContactDirectoryService;
