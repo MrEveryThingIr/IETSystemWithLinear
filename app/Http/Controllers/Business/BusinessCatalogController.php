@@ -7,7 +7,6 @@ use App\Models\Actor;
 use App\Models\Business;
 use App\Models\BusinessCategory;
 use App\Models\BusinessListing;
-use App\Models\BusinessListingVersion;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Services\Business\BusinessCatalogService;
