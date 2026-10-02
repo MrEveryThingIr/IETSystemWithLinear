@@ -53,7 +53,7 @@ class BusinessPropertyDetails extends Model
         static::updating(function (self $details): void {
             $details->loadMissing('listingVersion');
 
-            if ($details->listingVersion?->published_at !== null) {
+            if ($details->listingVersion->published_at !== null) {
                 throw new LogicException('Published property details are immutable.');
             }
         });
