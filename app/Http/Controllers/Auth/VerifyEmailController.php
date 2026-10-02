@@ -13,6 +13,7 @@ class VerifyEmailController extends Controller
     {
         $request->fulfill();
         $provision->execute($request->user());
+        session()->flash('email_verified_now', true);
 
         return redirect()->intended(route('dashboard'));
     }
