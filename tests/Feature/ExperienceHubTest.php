@@ -55,7 +55,8 @@ class ExperienceHubTest extends TestCase
             ->get(route('experience.organizations'))
             ->assertOk()
             ->assertSee(route('businesses.index'), false)
-            ->assertDontSee(route('groups.index'), false);
+            ->assertDontSee(route('groups.index'), false)
+            ->assertDontSee('Groups');
 
         $this->actingAs($actor->user)
             ->get(route('experience.work'))
@@ -99,6 +100,31 @@ class ExperienceHubTest extends TestCase
             ->assertSee(route('planner.index'), false);
     }
 
+    public function test_work_hub_hides_unpublished_deal_or_planner_sections(): void
+    {
+        $plannerActor = Actor::factory()->create();
+        $this->publishSurfaces($plannerActor->user, ['planner']);
+
+        $this->actingAs($plannerActor->user)
+            ->get(route('experience.work'))
+            ->assertOk()
+            ->assertSee('Schedule')
+            ->assertSee(route('planner.index'), false)
+            ->assertDontSee('Active work')
+            ->assertDontSee(route('deals.index'), false);
+
+        $dealActor = Actor::factory()->create();
+        $this->publishSurfaces($dealActor->user, ['deals']);
+
+        $this->actingAs($dealActor->user)
+            ->get(route('experience.work'))
+            ->assertOk()
+            ->assertSee('Active work')
+            ->assertSee(route('deals.index'), false)
+            ->assertDontSee('Schedule')
+            ->assertDontSee(route('planner.index'), false);
+    }
+
     public function test_money_route_is_now_the_daily_hub_and_detailed_accounts_remain_reachable(): void
     {
         $actor = Actor::factory()->create();
@@ -110,11 +136,26 @@ class ExperienceHubTest extends TestCase
             ->assertOk()
             ->assertSee('What is outstanding')
             ->assertSee('Accounts & activity')
-            ->assertSee(route('money.accounts'), false);
+            ->assertSee(route('money.accounts'), false)
+            ->assertDontSee(route('accounting.index'), false)
+            ->assertDontSee(route('exchange.index'), false);
 
         $this->actingAs($actor->user)
             ->get(route('money.accounts'))
             ->assertOk();
+    }
+
+    public function test_help_hub_only_shows_published_help_tools(): void
+    {
+        $actor = Actor::factory()->create();
+
+        $this->publishSurfaces($actor->user, ['manual']);
+
+        $this->actingAs($actor->user)
+            ->get(route('experience.help'))
+            ->assertOk()
+            ->assertSee(route('manual'), false)
+            ->assertDontSee(route('system-map'), false);
     }
 
     public function test_content_and_help_are_single_composed_destinations(): void
