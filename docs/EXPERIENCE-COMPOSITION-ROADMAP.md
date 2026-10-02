@@ -96,30 +96,29 @@ Canonical implementation/acceptance status is tracked in
 
 ## Phase 3 — Consolidated entry experiences
 
-Status: **complete as coherence milestone C2; owner browser review remains the product-feel checkpoint**.
+Status: **complete as coherence milestone C2; owner browser review remains a product-feel checkpoint**.
 
 Implemented:
 
-- primary navigation now resolves to goal-oriented hubs rather than subsystem menus;
-- Needs & Offers hub with Mine / Discover / Matches;
-- Work hub combining attention, active Deals and Planner schedule;
-- Organizations hub combining Businesses and Groups while preserving domain distinction;
-- Money as the ordinary financial entry with detailed accounts one level deeper and Accounting / Exchange progressively disclosed;
-- Content hub with My Content / Explore / Create;
-- Help hub combining Manual and System Map;
-- partial-publication behavior characterized so unpublished capabilities do not leak into hubs;
-- existing deep routes retained for compatibility and specialist work.
+- canonical Needs & Offers hub with Mine / Discover / Matches;
+- canonical Work hub composing attention, active Deals, and Planner schedule;
+- canonical Organizations hub composing Businesses and Groups;
+- `/money` is the everyday Money hub; detailed accounts live one level deeper;
+- Accounting and Exchange are advanced/contextual Money tools;
+- canonical Content hub for My Content / Explore / Create;
+- one Help center for Manual and System Map;
+- flat primary navigation points at destinations rather than expandable subsystem groups;
+- publication-aware hub composition and regression tests;
+- existing deep routes and domain authorization remain authoritative.
 
 Acceptance evidence:
 
-- full exact-head CI green;
-- 708 PHPUnit tests / 5720 assertions;
-- Pint, PHPStan, migration/operational smoke, frontend/npm audit and Composer security audit green.
+- implementation SHA `c53e093f3f7d6608e148518c5cebc7ead65b9ef4`;
+- exact-head CI passed Pint, PHPStan, migration/operational smoke, 708 PHPUnit
+  tests with 5720 assertions, frontend/audits, and Composer security audit.
 
-Canonical implementation status is tracked in
-`docs/COHERENCE-FIRST-EXECUTION-ROADMAP.md`.
-
-The next experience milestone is Phase 4 / coherence milestone C3: contextual workflow shells and the standard page contract.
+The next experience milestone is Phase 4 / coherence milestone C3:
+**Contextual workflow shells**.
 
 ## Phase 4 — Contextual workflow shells
 
