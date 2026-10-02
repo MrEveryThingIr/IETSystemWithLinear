@@ -42,7 +42,7 @@
                     <flux:heading size="xl" dir="auto">{{ $nextAction->title }}</flux:heading>
                     <flux:text>{{ $nextAction->summary }}</flux:text>
                 </div>
-                <flux:button :href="$nextAction->url" variant="primary" icon-trailing="arrow-right">
+                <flux:button :href="$nextAction->url" variant="primary">
                     {{ $nextAction->cta }}
                 </flux:button>
             </div>
