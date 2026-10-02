@@ -278,12 +278,14 @@
         <div class="space-y-4 self-start xl:sticky xl:top-6">
             @if ($canPublish)
                 <flux:card class="space-y-4">
-                    <flux:heading>{{ __('ui.content.publish') }}</flux:heading>
+                    <flux:heading>{{ __('studio.publication') }}</flux:heading>
                     @if ($publishBlocked)
                         <flux:callout variant="danger">{{ __('media.publish_blocked_help') }}</flux:callout>
                         @foreach ($publicationIssues as $issue)
                             <div class="text-sm text-red-600" dir="auto">{{ $issue['filename'] }} · {{ $issue['code'] }}</div>
                         @endforeach
+                    @else
+                        <flux:callout variant="success">{{ __('studio.ready_help') }}</flux:callout>
                     @endif
                     @error('publish')<div class="text-sm text-red-600">{{ $message }}</div>@enderror
                 </flux:card>
