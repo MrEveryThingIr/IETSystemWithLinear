@@ -21,11 +21,13 @@ use App\ProfileItemVisibility;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class HomeTodayExperienceTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use PublishesFeatureSurfaces;
 
     protected function setUp(): void
     {
@@ -79,6 +81,97 @@ class HomeTodayExperienceTest extends TestCase
         $this->assertSame($beforeObligations, FinancialObligation::query()->count());
     }
 
+    public function test_today_guides_a_new_user_through_minimal_setup_without_persistent_verification_noise(): void
+    {
+        $actor = Actor::factory()->create();
+        $this->publishSurfaces($actor->user, ['profile', 'market', 'planner', 'business', 'groups', 'content']);
+
+        Livewire::actingAs($actor->user)
+            ->test(Today::class)
+            ->assertSee('Finish your setup')
+            ->assertSee('How should people know you?')
+            ->assertSee('How can people reach you?')
+            ->assertSee('What do you want to do first?')
+            ->assertSee('Recommended next step')
+            ->assertSee('Set my identity')
+            ->assertDontSee('Your email is verified.')
+            ->assertSee('Find or offer something')
+            ->assertSee('Plan something')
+            ->assertSee('Run a business')
+            ->assertSee('Work with a group')
+            ->assertSee('Create content');
+    }
+
+    public function test_today_only_shows_verification_success_for_the_redirect_request_that_flashes_it(): void
+    {
+        $actor = Actor::factory()->create();
+
+        $this->actingAs($actor->user)
+            ->withSession(['email_verified_now' => true])
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Your email is verified.');
+    }
+
+    public function test_today_asks_the_user_to_choose_a_first_goal_instead_of_picking_one_for_them(): void
+    {
+        $actor = Actor::factory()->create();
+        ActorProfile::factory()->create([
+            'actor_id' => $actor->id,
+            'display_name' => 'Choice User',
+        ]);
+        $actor->contactPoints()->create([
+            'kind' => 'mobile',
+            'label' => 'Primary',
+            'value' => '09121234567',
+            'normalized_value' => '+989121234567',
+            'is_primary' => true,
+            'visibility' => 'private',
+        ]);
+
+        $this->publishSurfaces($actor->user, ['profile', 'market', 'planner', 'business', 'groups', 'content']);
+
+        Livewire::actingAs($actor->user)
+            ->test(Today::class)
+            ->assertSee('Choose your first useful action')
+            ->assertSee('Choose a goal')
+            ->assertSee('Find or offer something')
+            ->assertSee('Plan something')
+            ->assertSee('Run a business');
+    }
+
+    public function test_today_hides_setup_checklist_once_minimal_setup_and_first_goal_exist(): void
+    {
+        $actor = Actor::factory()->create();
+        ActorProfile::factory()->create([
+            'actor_id' => $actor->id,
+            'display_name' => 'Ready User',
+        ]);
+        $actor->contactPoints()->create([
+            'kind' => 'mobile',
+            'label' => 'Primary',
+            'value' => '09121234567',
+            'normalized_value' => '+989121234567',
+            'is_primary' => true,
+            'visibility' => 'private',
+        ]);
+
+        $context = app(EnsurePersonalContext::class)->execute($actor->user);
+        Plan::factory()->create([
+            'context_id' => $context->id,
+            'created_by_actor_id' => $actor->id,
+            'title' => 'First meaningful plan',
+            'timezone' => 'UTC',
+        ]);
+
+        $this->publishSurfaces($actor->user, ['profile', 'planner']);
+
+        Livewire::actingAs($actor->user)
+            ->test(Today::class)
+            ->assertDontSee('Finish your setup')
+            ->assertSee('Review your plans');
+    }
+
     public function test_today_distinguishes_waiting_on_me_from_waiting_on_others(): void
     {
         $alice = Actor::factory()->create();
@@ -103,10 +196,11 @@ class HomeTodayExperienceTest extends TestCase
 
         Livewire::actingAs($alice->user)
             ->test(Today::class)
+            ->assertSee('Recommended next step')
             ->assertSee('Bob asks Alice to confirm')
-            ->assertSee('A participant invitation is waiting for your response.')
+            ->assertSee('A proposed Deal is waiting for your response.')
             ->assertSee('Alice waits for Bob')
-            ->assertSee('Another participant still needs to accept the proposed Relationship.');
+            ->assertSee('Another participant still needs to accept the proposed Deal.');
     }
 
     public function test_obligation_summary_keeps_currencies_and_directions_separate(): void
@@ -157,6 +251,15 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('Payable / I owe');
     }
 
+    public function test_getting_started_route_keeps_compatibility_but_lands_on_today_checklist(): void
+    {
+        $actor = Actor::factory()->create();
+
+        $this->actingAs($actor->user)
+            ->get(route('getting-started'))
+            ->assertRedirect(route('dashboard').'#getting-started');
+    }
+
     public function test_dashboard_route_is_the_today_operating_view(): void
     {
         $actor = Actor::factory()->create();
@@ -165,7 +268,7 @@ class HomeTodayExperienceTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Today')
-            ->assertSee('Waiting on me')
+            ->assertSee('Needs my attention')
             ->assertSee('Recent activity');
     }
 }

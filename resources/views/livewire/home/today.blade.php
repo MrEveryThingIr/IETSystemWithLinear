@@ -22,41 +22,93 @@
                         {{ __('home.new_intent') }}
                     </flux:button>
                 @endif
-                <flux:button :href="route('profile.edit')" variant="ghost">
-                    {{ __('ui.navigation.profile') }}
-                </flux:button>
             </div>
         </x-slot:actions>
     </x-app.page-header>
 
-    <flux:callout variant="success">{{ __('ui.dashboard.verified') }}</flux:callout>
+    @if (session('email_verified_now'))
+        <flux:callout variant="success">{{ __('ui.dashboard.verified') }}</flux:callout>
+    @endif
 
     @if (! $hasActor)
         <flux:callout>{{ __('home.actor_setup_pending') }}</flux:callout>
     @endif
 
-    @unless ($officeAlpha)
-        <flux:card class="space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <flux:heading size="lg">{{ __('home.quick_links') }}</flux:heading>
-                    <flux:text>{{ __('home.quick_links_help') }}</flux:text>
+    @if ($nextAction)
+        <flux:card class="space-y-4 border-indigo-200 bg-indigo-50/60 dark:border-indigo-900 dark:bg-indigo-950/20">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="max-w-3xl space-y-2">
+                    <flux:badge color="indigo">{{ __('home.guidance.recommended') }}</flux:badge>
+                    <flux:heading size="xl" dir="auto">{{ $nextAction->title }}</flux:heading>
+                    <flux:text>{{ $nextAction->summary }}</flux:text>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <flux:button :href="route('contexts.personal')" size="sm" variant="ghost">{{ __('ui.context_content.my_content') }}</flux:button>
-                    <flux:button :href="route('manual')" size="sm" variant="ghost">{{ __('ui.navigation.manual') }}</flux:button>
-                    <flux:button :href="route('groups.index')" size="sm" variant="ghost">{{ __('ui.navigation.groups') }}</flux:button>
-                    @can('viewAny', App\Models\Actor::class)
-                        <flux:button :href="route('actors.index')" size="sm" variant="ghost">{{ __('ui.navigation.actors') }}</flux:button>
-                    @endcan
-                </div>
+                <flux:button :href="$nextAction->url" variant="primary">
+                    {{ $nextAction->cta }}
+                </flux:button>
+            </div>
+            <div class="rounded-xl border border-indigo-100 bg-white/70 p-4 text-sm dark:border-indigo-900 dark:bg-zinc-950/40">
+                <div class="font-semibold">{{ __('home.guidance.what_happens_next') }}</div>
+                <div class="mt-1 text-zinc-600 dark:text-zinc-400">{{ $nextAction->consequence }}</div>
             </div>
         </flux:card>
-    @endunless
+    @endif
+
+    @if (! $onboarding['complete'])
+        <flux:card id="getting-started" class="space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <flux:heading size="lg">{{ __('home.onboarding.title') }}</flux:heading>
+                    <flux:text>{{ __('home.onboarding.help') }}</flux:text>
+                </div>
+                <flux:badge>{{ $onboarding['completed'] }}/{{ $onboarding['total'] }}</flux:badge>
+            </div>
+
+            <div class="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                <div class="h-full rounded-full bg-indigo-500 transition-all" style="width: {{ $onboarding['percent'] }}%"></div>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-3">
+                @foreach ($onboarding['steps'] as $step)
+                    <div class="rounded-xl border p-4 {{ $step->complete ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 dark:border-zinc-800' }}">
+                        <div class="flex items-center gap-2">
+                            <flux:badge :color="$step->complete ? 'green' : 'zinc'">
+                                {{ $step->complete ? __('home.onboarding.done') : __('home.onboarding.next') }}
+                            </flux:badge>
+                            <div class="font-semibold">{{ $step->title }}</div>
+                        </div>
+                        <div class="mt-2 text-sm text-zinc-500">{{ $step->summary }}</div>
+                        @unless ($step->complete || ($step->key === 'first_goal' && $firstGoalChoices !== []))
+                            <flux:button :href="$step->url" size="sm" variant="ghost" class="mt-3">
+                                {{ $step->cta }}
+                            </flux:button>
+                        @endunless
+                    </div>
+                @endforeach
+            </div>
+
+            @if ($firstGoalChoices !== [])
+                <div class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                    <div>
+                        <div class="font-semibold">{{ __('home.goals.title') }}</div>
+                        <div class="text-sm text-zinc-500">{{ __('home.goals.help') }}</div>
+                    </div>
+                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                        @foreach ($firstGoalChoices as $goal)
+                            <a href="{{ $goal->url }}" class="rounded-xl border border-zinc-200 p-4 hover:border-indigo-300 hover:bg-indigo-50/50 dark:border-zinc-800 dark:hover:border-indigo-800 dark:hover:bg-indigo-950/20">
+                                <div class="font-semibold">{{ $goal->title }}</div>
+                                <div class="mt-1 text-sm text-zinc-500">{{ $goal->summary }}</div>
+                                <div class="mt-3 text-sm font-medium text-indigo-600 dark:text-indigo-400">{{ $goal->cta }} →</div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </flux:card>
+    @endif
 
     @unless ($officeAlpha)
     <div class="grid gap-6 xl:grid-cols-2">
-        <flux:card class="space-y-4">
+        <flux:card class="order-2 space-y-4">
             <div>
                 <flux:heading size="lg">{{ __('home.today_actions') }}</flux:heading>
                 <flux:text>{{ __('home.today_actions_help') }}</flux:text>
@@ -89,9 +141,14 @@
             </div>
         </flux:card>
 
-        <flux:card class="space-y-4">
+        <flux:card class="order-1 space-y-4">
             <div>
-                <flux:heading size="lg">{{ __('home.waiting_on_me') }}</flux:heading>
+                <div class="flex items-center gap-2">
+                    <flux:heading size="lg">{{ __('home.waiting_on_me') }}</flux:heading>
+                    @if ($attentionCount > 0)
+                        <flux:badge color="amber">{{ $attentionCount }}</flux:badge>
+                    @endif
+                </div>
                 <flux:text>{{ __('home.waiting_on_me_help') }}</flux:text>
             </div>
 
@@ -146,6 +203,18 @@
 
     @endunless
 
+    @unless ($officeAlpha)
+        <details class="group rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
+                <div>
+                    <div class="font-semibold">{{ __('home.more_overview') }}</div>
+                    <div class="mt-1 text-sm text-zinc-500">{{ __('home.more_overview_help') }}</div>
+                </div>
+                <span class="text-sm text-zinc-500 transition-transform group-open:rotate-90">›</span>
+            </summary>
+            <div class="mt-5 space-y-6">
+    @endunless
+
     <div class="{{ $officeAlpha ? 'grid gap-6' : 'grid gap-6 xl:grid-cols-3' }}">
         <flux:card class="space-y-4">
             <div class="flex items-center justify-between gap-3">
@@ -172,7 +241,7 @@
         <flux:card class="space-y-4">
             <div class="flex items-center justify-between gap-3">
                 <flux:heading size="lg">{{ __('home.relationships') }}</flux:heading>
-                <flux:button :href="route('relationships.index')" size="sm" variant="ghost">{{ __('home.open_all') }}</flux:button>
+                <flux:button :href="route('deals.index')" size="sm" variant="ghost">{{ __('home.open_all') }}</flux:button>
             </div>
             <div class="space-y-3">
                 @forelse ($activeRelationships as $relationship)
@@ -211,7 +280,7 @@
                     <flux:heading size="lg">{{ __('home.accounting_today') }}</flux:heading>
                     <flux:text>{{ __('home.accounting_today_help') }}</flux:text>
                 </div>
-                <flux:button :href="route('accounting.index')" size="sm" variant="ghost">{{ __('home.open_accounting') }}</flux:button>
+                <flux:button :href="route('money.index')" size="sm" variant="ghost">{{ __('home.open_accounting') }}</flux:button>
             </div>
 
             <div class="space-y-3">
@@ -271,7 +340,10 @@
         </flux:card>
     </div>
 
-    <flux:card class="space-y-4">
+        </div>
+        </details>
+
+        <flux:card class="space-y-4">
         <div>
             <flux:heading size="lg">{{ __('home.recent_activity') }}</flux:heading>
             <flux:text>{{ __('home.recent_activity_help') }}</flux:text>
@@ -301,6 +373,5 @@
         </div>
     </flux:card>
 
-    <flux:callout>{{ __('home.boundary') }}</flux:callout>
     @endunless
 </section>

@@ -45,12 +45,11 @@ Completed foundations:
 - Business CRM, catalog, immutable listing versions, append-only price versions;
 - Business Context and Business-scoped Planner routines;
 - IET-first Business settlement boundary;
-- exact-head CI acceptance for Business vertical consolidation.
+- exact-head CI acceptance for Business vertical consolidation;
+- C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI.
 
 Still weak:
 
-- Today does not yet behave as a personal operating guide;
-- onboarding is not state-derived and persistent;
 - top-level destinations are grouped but not yet true task-oriented hubs;
 - Needs/Offers, Work, Money and Content still expose overlapping internal entry points;
 - Deal workflow still requires the user to understand Relationship / Proposal /
@@ -65,11 +64,39 @@ Still weak:
 
 ## C1 — Today, onboarding, and Next Action
 
-Priority: **next**.
+Status: **complete on `codex/coherence-c1-today-next-action`**.
 
 Goal: make IET immediately understandable after login.
 
-Implement:
+Implemented:
+
+- Today derives a minimal three-step setup checklist from existing Actor/Profile/contact/activity state;
+- one deterministic recommended next action, with explicit priority and no AI guessing;
+- actions requiring the user outrank optional setup;
+- in-progress/upcoming Planner work is surfaced before low-priority guidance;
+- outstanding money, matches and active work can become the next action when appropriate;
+- first-time users choose a human goal instead of a subsystem;
+- verification-success feedback is transient instead of permanently displayed;
+- `/getting-started` remains compatible but lands on Today's live checklist;
+- secondary summaries are progressively disclosed under “More from my account”;
+- advanced Accounting and kernel terminology are removed from the normal Today flow;
+- EN/FA/AR/ZH guidance copy and regression coverage.
+
+Acceptance evidence:
+
+- full CI green on the completed implementation;
+- 700 PHPUnit tests passed;
+- Pint and PHPStan green;
+- MySQL migration portability green;
+- rollback/reapply, scheduler and queue smoke green;
+- SQLite backup/restore green;
+- frontend build and JavaScript audit green;
+- Composer security audit green;
+- owner browser review remains the product-feel checkpoint, but no C1 engineering work is pending.
+
+The next active milestone is **C2 — Real goal-oriented destination hubs**.
+
+Original implementation intent:
 
 - remove persistent verification-success noise;
 - state-derived Getting Started / setup checklist on Today;
@@ -421,4 +448,4 @@ Until C1–C3 are accepted in the browser:
 - do not prioritize deep specialist functionality over orientation and next-action
   guidance.
 
-The next implementation milestone is **C1 — Today, onboarding, and Next Action**.
+The next implementation milestone is **C2 — Real goal-oriented destination hubs**.
