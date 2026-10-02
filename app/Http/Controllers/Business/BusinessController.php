@@ -103,6 +103,7 @@ class BusinessController extends Controller
         return view('businesses.show', [
             'business' => $business,
             'businessContext' => $context,
+            'routineCount' => $context->plans()->count(),
             'professions' => $professions,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
