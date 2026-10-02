@@ -14,8 +14,7 @@ final class IetReferencePricing
     public function __construct(
         private readonly EnsureMonetaryUnit $units,
         private readonly IetPricing $ietPricing,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{
@@ -216,8 +215,8 @@ final class IetReferencePricing
     }
 
     /**
-     * @param list<int> $numerators
-     * @param list<int> $denominators
+     * @param  list<int>  $numerators
+     * @param  list<int>  $denominators
      */
     private function roundedRatio(array $numerators, array $denominators): int
     {
