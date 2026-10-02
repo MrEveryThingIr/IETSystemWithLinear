@@ -34,9 +34,11 @@
                     {{ __('workflow.group.next_community') }}
                 </flux:button>
             @endif
-            <flux:button :href="route('groups.community', $group)" variant="ghost">
-                {{ __('workflow.group.sections.overview') }}
-            </flux:button>
+            @if ($groupNeedsAttention)
+                <flux:button :href="route('groups.community', $group)" variant="ghost">
+                    {{ __('workflow.group.sections.overview') }}
+                </flux:button>
+            @endif
             <flux:button :href="route('groups.index')" variant="ghost">
                 {{ __('workflow.back') }}
             </flux:button>
