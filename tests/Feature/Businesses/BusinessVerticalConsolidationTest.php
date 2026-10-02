@@ -3,6 +3,7 @@
 namespace Tests\Feature\Businesses;
 
 use App\ContextKind;
+use App\Livewire\Planner\Create as PlannerCreate;
 use App\Models\BusinessContact;
 use App\Models\BusinessPriceVersion;
 use App\Models\MonetaryUnit;
@@ -17,6 +18,7 @@ use App\Services\Contacts\BusinessContactResolver;
 use Database\Seeders\RealEstateBusinessDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Livewire;
 use LogicException;
 use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
@@ -44,6 +46,43 @@ class BusinessVerticalConsolidationTest extends TestCase
         $this->assertSame('IET', $business->defaultMonetaryUnit()->sole()->code);
         $this->assertSame('IET', data_get($business->settings, 'finance.internal_settlement_unit'));
         $this->assertSame('placeholder', data_get($business->settings, 'finance.external_money_gateways'));
+    }
+
+    public function test_business_routine_uses_business_context_and_defaults_expenses_to_iet(): void
+    {
+        $owner = $this->userWithActor();
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Routine Business',
+            'kind' => 'services',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $context = $business->contextBinding()->with('context')->sole()->context;
+
+        Livewire::actingAs($owner)
+            ->withQueryParams(['context' => $context->uuid])
+            ->test(PlannerCreate::class)
+            ->assertSet('contextUuid', $context->uuid)
+            ->call('addExpenseEstimate')
+            ->assertSet('expenseEstimates.0.unit_code', 'IET')
+            ->set('expenseEstimates.0.label', 'Routine material')
+            ->set('expenseEstimates.0.amount', '25')
+            ->set('title', 'Daily business routine')
+            ->set('frequency', 'once')
+            ->set('startsOn', now()->toDateString())
+            ->set('startTime', '12:00')
+            ->set('durationMinutes', 60)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $plan = $context->plans()->sole();
+
+        $this->assertSame('business', $plan->origin_type);
+        $this->assertSame($business->uuid, $plan->origin_uuid);
+        $this->assertSame($context->id, $plan->context_id);
+        $this->assertSame('IET', $plan->expenseEstimates()->sole()->unit_code);
     }
 
     public function test_business_crm_accepts_unregistered_real_world_client(): void
