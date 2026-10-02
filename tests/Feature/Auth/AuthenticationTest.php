@@ -104,7 +104,11 @@ class AuthenticationTest extends TestCase
     public function test_active_verified_account_can_view_dashboard(): void
     {
         $this->withoutVite();
-        $this->actingAs(User::factory()->create())->get('/dashboard')->assertSee('Your email is verified.');
+        $this->actingAs(User::factory()->create())
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Today')
+            ->assertDontSee('Your email is verified.');
     }
 
     public function test_guest_pages_render_and_authenticated_users_are_redirected(): void
