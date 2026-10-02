@@ -24,21 +24,25 @@ class BusinessCategory extends Model
         return ['is_active' => 'boolean', 'sort_order' => 'integer'];
     }
 
+    /** @return BelongsTo<Business, $this> */
     public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class);
     }
 
+    /** @return BelongsTo<BusinessCategory, $this> */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');
     }
 
+    /** @return HasMany<BusinessCategory, $this> */
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order')->orderBy('name');
     }
 
+    /** @return HasMany<BusinessListing, $this> */
     public function listings(): HasMany
     {
         return $this->hasMany(BusinessListing::class, 'business_category_id');
