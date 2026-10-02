@@ -11,9 +11,12 @@ use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Services\Business\BusinessCatalogService;
 use App\Support\BusinessAccess;
+use App\Support\MonetaryUnitCatalog;
+use App\Support\MoneyAmount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BusinessCatalogController extends Controller
@@ -35,6 +38,7 @@ class BusinessCatalogController extends Controller
         return view('businesses.catalog.index', [
             'business' => $business,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
+            'unitCatalog' => MonetaryUnitCatalog::all(),
         ]);
     }
 
@@ -103,6 +107,53 @@ class BusinessCatalogController extends Controller
         );
 
         return back()->with('status', 'Listing draft created.');
+    }
+
+    public function storePrice(
+        Request $request,
+        Business $business,
+        BusinessListing $listing,
+        BusinessCatalogService $catalog,
+    ): RedirectResponse {
+        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
+        abort_unless((int) $listing->business_id === (int) $business->id, 404);
+
+        $data = $request->validate([
+            'unit_code' => ['required', 'string', Rule::in(array_keys(MonetaryUnitCatalog::all()))],
+            'price_type' => ['required', 'string', 'max:48'],
+            'amount' => ['required', 'string', 'max:40'],
+            'basis' => ['nullable', 'string', 'max:80'],
+            'visibility' => ['required', Rule::in(['private', 'members', 'public'])],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $actor = $request->user()?->actor;
+        abort_unless($actor instanceof Actor, 403);
+
+        $unitCode = strtoupper($data['unit_code']);
+        $unit = MonetaryUnitCatalog::get($unitCode);
+
+        try {
+            $amountMinor = MoneyAmount::parse($data['amount'], $unit['exponent']);
+        } catch (\InvalidArgumentException $exception) {
+            throw ValidationException::withMessages([
+                'amount' => $exception->getMessage(),
+            ]);
+        }
+
+        $catalog->addPrice(
+            $listing,
+            $actor,
+            $unitCode,
+            $data['price_type'],
+            $amountMinor,
+            $listing->currentVersion()->first(),
+            filled($data['basis'] ?? null) ? trim((string) $data['basis']) : null,
+            $data['visibility'],
+            filled($data['reason'] ?? null) ? trim((string) $data['reason']) : null,
+        );
+
+        return back()->with('status', 'New price version added.');
     }
 
     public function publish(
