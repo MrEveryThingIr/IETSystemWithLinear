@@ -398,6 +398,11 @@ class BusinessCatalogService
                 $properties,
             );
 
+            $listing->update([
+                'business_contact_id' => $case->business_contact_id,
+                'simple_office_mode' => true,
+            ]);
+
             $version = $listing->currentVersion()->firstOrFail();
 
             $version->propertyDetails()->create([
