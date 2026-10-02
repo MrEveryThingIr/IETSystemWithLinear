@@ -98,7 +98,7 @@ class HomeGuidanceService
                 key: 'first_goal',
                 title: (string) __('home.onboarding.first_goal_title'),
                 summary: (string) __('home.onboarding.first_goal_help'),
-                url: $firstGoalChoices[0]->url ?? route('dashboard'),
+                url: route('dashboard') . '#getting-started',
                 cta: (string) __('home.onboarding.first_goal_cta'),
                 complete: $hasFirstGoal,
             ),
@@ -155,7 +155,7 @@ class HomeGuidanceService
                 kind: 'attention',
                 title: $waiting->title,
                 summary: $waiting->summary ?: (string) __('home.guidance.attention_reason'),
-                consequence: (string) __('home.guidance.consequence.'.$waiting->kind),
+                consequence: (string) __('home.guidance.consequence.' . $waiting->kind),
                 url: $waiting->url,
                 cta: (string) __('home.guidance.review_now'),
             );
@@ -214,6 +214,19 @@ class HomeGuidanceService
             );
         }
 
+        $relationship = $projection['activeRelationships']->first();
+        if ($relationship !== null && $surfaceKeys->contains('deals')) {
+            return new HomeGuidanceItem(
+                key: 'deal:' . $relationship->uuid,
+                kind: 'work',
+                title: $relationship->title ?: $relationship->purposeConcept->displayLabel(),
+                summary: (string) __('home.guidance.active_work_reason'),
+                consequence: (string) __('home.guidance.active_work_consequence'),
+                url: route('relationships.show', $relationship),
+                cta: (string) __('home.guidance.open_work'),
+            );
+        }
+
         $intent = $projection['activeIntents']->first();
         if ($intent !== null && $surfaceKeys->contains('market')) {
             return new HomeGuidanceItem(
@@ -229,30 +242,15 @@ class HomeGuidanceService
             );
         }
 
-        $relationship = $projection['activeRelationships']->first();
-        if ($relationship !== null && $surfaceKeys->contains('deals')) {
-            return new HomeGuidanceItem(
-                key: 'deal:' . $relationship->uuid,
-                kind: 'work',
-                title: $relationship->title ?: $relationship->purposeConcept->displayLabel(),
-                summary: (string) __('home.guidance.active_work_reason'),
-                consequence: (string) __('home.guidance.active_work_consequence'),
-                url: route('relationships.show', $relationship),
-                cta: (string) __('home.guidance.open_work'),
-            );
-        }
-
         if ($firstGoalChoices !== []) {
-            $first = $firstGoalChoices[0];
-
             return new HomeGuidanceItem(
-                key: 'first-goal:' . $first->key,
+                key: 'first-goal:choose',
                 kind: 'start',
                 title: (string) __('home.guidance.start_title'),
                 summary: (string) __('home.guidance.start_reason'),
                 consequence: (string) __('home.guidance.start_consequence'),
-                url: $first->url,
-                cta: $first->cta,
+                url: route('dashboard') . '#getting-started',
+                cta: (string) __('home.onboarding.first_goal_cta'),
             );
         }
 
