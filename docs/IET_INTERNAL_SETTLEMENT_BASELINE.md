@@ -147,6 +147,46 @@ For IET:
 
 Thus a confirmed internal IET Settlement cannot create value from an unfunded debtor.
 
+## Human-facing IET net position
+
+The baseline intentionally distinguishes **economic position** from **funded wallet**.
+
+For a user:
+
+```text
+IET net position
+= funded IET wallet
++ outstanding accepted IET receivables
+- outstanding accepted IET payables
+```
+
+This means an accepted 100 IET service may immediately produce:
+
+- receiver: wallet 0, payable 100, net position **−100 IET**;
+- provider: wallet 0, receivable 100, net position **+100 IET**.
+
+No negative-wallet record is created. The Financial Obligation remains the immutable
+truth about who owes whom.
+
+A debtor may recover economically by providing value rather than depositing cash. If
+they owe 100 IET and later earn an accepted 150 IET receivable, their net internal
+position is +50 IET even before either obligation is settled.
+
+### Internal capacity versus external cash-out
+
+A positive net position is useful for understanding internal capacity and future
+agreements, but an unsettled receivable is not treated as externally funded money.
+
+Cash-out eligibility is therefore capped by actually funded, available IET wallet
+value. This avoids implicitly financing external withdrawals from another user's
+unfunded debt.
+
+The Money hub exposes this distinction directly and points a negative-position user to
+two recovery paths:
+
+1. placeholder Exchange deposit;
+2. publish skills/professions/services/goods and earn IET through accepted work.
+
 ## Money UI
 
 Money remains the only top-level financial entry point in the clean baseline.
