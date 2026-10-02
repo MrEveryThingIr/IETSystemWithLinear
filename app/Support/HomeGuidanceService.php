@@ -249,7 +249,7 @@ class HomeGuidanceService
                 title: (string) __('home.guidance.start_title'),
                 summary: (string) __('home.guidance.start_reason'),
                 consequence: (string) __('home.guidance.start_consequence'),
-                url: route('dashboard') . '#getting-started',
+                url: route('dashboard').'#getting-started',
                 cta: (string) __('home.onboarding.first_goal_cta'),
             );
         }
