@@ -76,6 +76,7 @@ class HomeGuidanceService
         $surfaceKeys = $this->accessibleSurfaceKeys($current);
         $firstGoalChoices = $this->firstGoalChoices($surfaceKeys);
         $hasFirstGoal = $this->hasFirstGoal($actor, $projection);
+        $availableFirstGoalChoices = $hasFirstGoal ? [] : $firstGoalChoices;
 
         $steps = [
             new HomeOnboardingStep(
@@ -121,11 +122,11 @@ class HomeGuidanceService
                 $current,
                 $projection,
                 $steps,
-                $firstGoalChoices,
+                $availableFirstGoalChoices,
                 $surfaceKeys,
             ),
             'attentionCount' => $projection['waitingOnMe']->count(),
-            'firstGoalChoices' => $hasFirstGoal ? [] : $firstGoalChoices,
+            'firstGoalChoices' => $availableFirstGoalChoices,
         ];
     }
 
