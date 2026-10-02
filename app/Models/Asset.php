@@ -144,7 +144,8 @@ class Asset extends Model
                 || $asset->profileImages()->exists()
                 || $asset->submissionResponses()->exists()
                 || $asset->planOccurrences()->exists()
-                || $asset->fulfillments()->exists()) {
+                || $asset->fulfillments()->exists()
+                || $asset->businessListingMedia()->exists()) {
                 throw new LogicException('Referenced Assets are preserved with Content, Profile, and interaction history.');
             }
         });
@@ -241,6 +242,12 @@ class Asset extends Model
         return $this->belongsToMany(Fulfillment::class, 'fulfillment_assets')
             ->withPivot(['uuid', 'added_by_actor_id'])
             ->withTimestamps();
+    }
+
+    /** @return HasMany<BusinessListingMedia, $this> */
+    public function businessListingMedia(): HasMany
+    {
+        return $this->hasMany(BusinessListingMedia::class);
     }
 
     /** @return HasMany<SubmissionResponse, $this> */
