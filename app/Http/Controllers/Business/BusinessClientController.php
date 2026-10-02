@@ -16,7 +16,7 @@ class BusinessClientController extends Controller
 {
     public function index(Request $request, Business $business): View
     {
-        abort_unless(BusinessAccess::canView($request->user(), $business), 403);
+        abort_unless(BusinessAccess::canOperate($request->user(), $business), 403);
 
         $query = $business->businessContacts()
             ->with(['contactPoints', 'addresses'])
