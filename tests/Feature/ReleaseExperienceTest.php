@@ -142,7 +142,7 @@ class ReleaseExperienceTest extends TestCase
             ->actingAs($actor->user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee(route('content.library'), false)
+            ->assertSee(route('experience.content'), false)
             ->assertSee(route('contexts.personal'), false);
 
         $this->actingAs($actor->user)
