@@ -226,7 +226,7 @@ final class BusinessMarketService
             ->first();
     }
 
-    private function cashBasis(string $basis): ?string
+    private function cashBasis(string $basis): string
     {
         $basis = Str::lower($basis);
 
