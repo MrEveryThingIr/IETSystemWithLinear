@@ -203,6 +203,18 @@
 
     @endunless
 
+    @unless ($officeAlpha)
+        <details class="group rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
+                <div>
+                    <div class="font-semibold">{{ __('home.more_overview') }}</div>
+                    <div class="mt-1 text-sm text-zinc-500">{{ __('home.more_overview_help') }}</div>
+                </div>
+                <span class="text-sm text-zinc-500 transition-transform group-open:rotate-90">›</span>
+            </summary>
+            <div class="mt-5 space-y-6">
+    @endunless
+
     <div class="{{ $officeAlpha ? 'grid gap-6' : 'grid gap-6 xl:grid-cols-3' }}">
         <flux:card class="space-y-4">
             <div class="flex items-center justify-between gap-3">
@@ -328,7 +340,10 @@
         </flux:card>
     </div>
 
-    <flux:card class="space-y-4">
+        </div>
+        </details>
+
+        <flux:card class="space-y-4">
         <div>
             <flux:heading size="lg">{{ __('home.recent_activity') }}</flux:heading>
             <flux:text>{{ __('home.recent_activity_help') }}</flux:text>
