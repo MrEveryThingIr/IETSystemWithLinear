@@ -131,6 +131,44 @@ class BusinessVerticalConsolidationTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_business_catalog_price_entry_uses_exact_minor_units(): void
+    {
+        $owner = $this->userWithActor();
+        $this->publishSurfaces($owner, ['business']);
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Priced Catalog',
+            'kind' => 'retail',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $listing = app(BusinessCatalogService::class)->createListing(
+            $business,
+            $owner->actor,
+            'good',
+            ['title' => 'Precision Item'],
+        );
+
+        $this->actingAs($owner)
+            ->post(route('businesses.catalog.listings.prices.store', [$business, $listing]), [
+                'unit_code' => 'USD',
+                'price_type' => 'retail',
+                'amount' => '12.34',
+                'basis' => 'per item',
+                'visibility' => 'public',
+                'reason' => 'Initial price',
+            ])
+            ->assertRedirect();
+
+        $price = BusinessPriceVersion::query()->sole();
+
+        $this->assertSame(1234, $price->amount_minor);
+        $this->assertSame('USD', $price->monetaryUnit->code);
+        $this->assertSame('per item', $price->basis);
+        $this->assertSame('Initial price', $price->reason);
+    }
+
     public function test_listing_publish_freezes_version_and_price_history_is_separate(): void
     {
         $owner = $this->userWithActor();
