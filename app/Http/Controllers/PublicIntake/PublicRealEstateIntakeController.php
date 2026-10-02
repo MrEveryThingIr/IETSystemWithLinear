@@ -124,8 +124,9 @@ class PublicRealEstateIntakeController extends Controller
             }
 
             $locked->forceFill(['preview_viewed_at' => now()])->save();
+            $locked->load(['portal', 'media']);
 
-            return $locked->fresh(['portal', 'media']);
+            return $locked;
         });
 
         return $this->privateView('public-intake.real-estate.preview', [
