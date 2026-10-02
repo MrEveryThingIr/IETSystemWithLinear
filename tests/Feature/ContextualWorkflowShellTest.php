@@ -33,14 +33,14 @@ class ContextualWorkflowShellTest extends TestCase
         $contents = File::get(resource_path('views/components/app/workflow-shell.blade.php'));
 
         foreach ([
-            "workflow.purpose",
-            "workflow.current_state",
-            "workflow.next_action",
-            "workflow.audience",
-            "workflow.durable_result",
-            "workflow.consequence",
-            "workflow.contextual_help",
-            "workflow.advanced",
+            'workflow.purpose',
+            'workflow.current_state',
+            'workflow.next_action',
+            'workflow.audience',
+            'workflow.durable_result',
+            'workflow.consequence',
+            'workflow.contextual_help',
+            'workflow.advanced',
         ] as $key) {
             $this->assertStringContainsString($key, $contents);
         }
