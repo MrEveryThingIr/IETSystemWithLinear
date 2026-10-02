@@ -154,11 +154,6 @@ class CoherenceBaselineBusinessEconomyTest extends TestCase
             );
 
             app(RespondToProposal::class)->execute(
-                $proposal,
-                $buyer->user,
-                ProposalDecisionKind::Accepted,
-            );
-            app(RespondToProposal::class)->execute(
                 $proposal->fresh(),
                 $provider->user,
                 ProposalDecisionKind::Accepted,
@@ -168,7 +163,7 @@ class CoherenceBaselineBusinessEconomyTest extends TestCase
             $contract = app(CreateContractFromProposal::class)->execute(
                 $proposal,
                 $buyer->user,
-                CarbonImmutable::now()->subMinute(),
+                CarbonImmutable::now(),
                 'UTC',
                 serviceTerms: $this->serviceTerms(
                     $buyer,
@@ -423,7 +418,7 @@ class CoherenceBaselineBusinessEconomyTest extends TestCase
             $title,
             [['actor' => $provider, 'role' => 'provider']],
             $title.' for '.$amount.' IET.',
-            now()->subMinute(),
+            now(),
             'UTC',
             creatorRole: 'receiver',
             serviceTerms: $this->serviceTerms(
