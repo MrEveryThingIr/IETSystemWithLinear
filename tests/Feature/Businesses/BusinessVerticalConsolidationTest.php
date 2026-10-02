@@ -82,7 +82,7 @@ class BusinessVerticalConsolidationTest extends TestCase
         $this->assertSame('business', $plan->origin_type);
         $this->assertSame($business->uuid, $plan->origin_uuid);
         $this->assertSame($context->id, $plan->context_id);
-        $this->assertSame('IET', $plan->expenseEstimates()->sole()->unit_code);
+        $this->assertSame('IET', $plan->expenseEstimates()->with('monetaryUnit')->sole()->monetaryUnit->code);
     }
 
     public function test_business_crm_accepts_unregistered_real_world_client(): void
