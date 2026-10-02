@@ -219,12 +219,20 @@ class BusinessCatalogService
             ]);
 
             $locked->update([
-                'business_contact_id' => $listingData['business_contact_id'] ?? null,
-                'business_category_id' => $listingData['business_category_id'] ?? $locked->business_category_id,
+                'business_contact_id' => array_key_exists('business_contact_id', $listingData)
+                    ? $listingData['business_contact_id']
+                    : $locked->business_contact_id,
+                'business_category_id' => array_key_exists('business_category_id', $listingData)
+                    ? $listingData['business_category_id']
+                    : $locked->business_category_id,
                 'visibility' => $listingData['visibility'] ?? $locked->visibility,
                 'availability_status' => $listingData['availability_status'] ?? $locked->availability_status,
-                'available_from' => $listingData['available_from'] ?? $locked->available_from,
-                'available_until' => $listingData['available_until'] ?? $locked->available_until,
+                'available_from' => array_key_exists('available_from', $listingData)
+                    ? $listingData['available_from']
+                    : $locked->available_from,
+                'available_until' => array_key_exists('available_until', $listingData)
+                    ? $listingData['available_until']
+                    : $locked->available_until,
                 'simple_office_mode' => $listingData['simple_office_mode'] ?? $locked->simple_office_mode,
                 'status' => 'draft',
             ]);
