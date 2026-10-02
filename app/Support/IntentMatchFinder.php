@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\ActorProfileIntent;
+use App\Models\Concept;
 use App\Models\User;
 use App\Policies\ActorProfileIntentPolicy;
 use App\ProfileIntentKind;
@@ -353,7 +354,7 @@ class IntentMatchFinder
         return true;
     }
 
-    private function conceptReason(\App\Models\Concept $left, \App\Models\Concept $right): ?string
+    private function conceptReason(Concept $left, Concept $right): ?string
     {
         if ($left->is($right)) {
             return 'concept';
