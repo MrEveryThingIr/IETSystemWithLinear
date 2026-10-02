@@ -257,7 +257,7 @@ class HomeTodayExperienceTest extends TestCase
 
         $this->actingAs($actor->user)
             ->get(route('getting-started'))
-            ->assertRedirect(route('dashboard') . '#getting-started');
+            ->assertRedirect(route('dashboard').'#getting-started');
     }
 
     public function test_dashboard_route_is_the_today_operating_view(): void
