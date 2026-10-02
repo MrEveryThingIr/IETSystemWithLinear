@@ -47,6 +47,27 @@ class BusinessFoundationTest extends TestCase
         $this->assertSame($user->actor->getKey(), $membership->actor_id);
     }
 
+    public function test_business_shell_hides_unpublished_sibling_capabilities(): void
+    {
+        $owner = $this->userWithActor();
+        $this->publishSurfaces($owner, ['business']);
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Focused Business',
+            'kind' => 'services',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $this->withoutVite()
+            ->actingAs($owner)
+            ->get(route('businesses.show', $business))
+            ->assertOk()
+            ->assertDontSee(route('planner.index'), false)
+            ->assertDontSee(route('deals.index'), false)
+            ->assertDontSee(route('money.index'), false);
+    }
+
     public function test_stranger_cannot_view_private_business(): void
     {
         $owner = $this->userWithActor();
