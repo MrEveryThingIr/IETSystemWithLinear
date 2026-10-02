@@ -36,7 +36,7 @@ class ContextPolicy
         return match ($context->kind) {
             ContextKind::Personal => $this->ownsPersonalContext($current, $context),
             ContextKind::Business => ($business = $this->business($context)) instanceof Business
-                && BusinessAccess::canView($current, $business),
+                && BusinessAccess::canOperate($current, $business),
             ContextKind::GroupSpace => ($space = $this->groupSpace($context)) instanceof GroupSpace
                 && $this->spaces->view($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
