@@ -207,56 +207,62 @@ Implemented:
 
 ### M7 — Market integration
 
-Status: **next major domain milestone**.
+Status: **engineering-complete for the coherence baseline**.
 
-- Listing Version → existing Offer;
-- BusinessContact demand → existing Need;
+- exact published ListingVersion → existing canonical Offer Intent;
+- BusinessContact demand → existing canonical Need Intent;
 - no second matching engine;
-- retain exact Listing Version provenance;
-- match Business-managed Need against published Offers;
-- safe synchronization when Listing gets a new version.
+- Business / Listing / exact ListingVersion / client provenance retained;
+- later Listing publication closes superseded Business-generated Offers rather than
+  rewriting historical provenance;
+- Catalog and CRM back-project active market state so publication is visible and
+  reversible from the user's mental model.
 
 ### M8 — Deal integration
 
-Status: **planned after M7**.
+Status: **engineering-complete for the coherence baseline**.
 
 - matched Need/Offer → existing Relationship/Deal;
-- Business dashboard shows open Deals;
-- client and Listing records link to the same canonical Deal.
+- seeded Business scenarios create real canonical Deals;
+- Business projection counts the same Deals instead of Business-specific duplicates;
+- Deal keeps originating Need and matched Offer references.
 
 ### M9 — Proposal / Contract provenance
 
-Status: **planned**.
+Status: **engineering-complete for the coherence baseline**.
 
-- Proposal references exact Listing/Need versions;
-- accepted terms create/use Contract;
-- later Listing edits cannot change historical negotiated terms;
-- Contract preserves monetary-unit and price provenance.
+- Proposal/Contract continue through the existing canonical kernels;
+- Deal-sourced Contract retains Relationship provenance;
+- market Offer metadata pins the immutable ListingVersion that was negotiated;
+- later Listing edits cannot mutate already-published ListingVersions or negotiated
+  Contract history;
+- existing monetary-unit identity remains authoritative.
 
 ### M10 — Business finance and IET settlement
 
-Status: **foundation boundary established and visible in the Business UI**.
+Status: **engineering-complete for the internal-settlement baseline**.
 
-Policy:
+Policy and implementation:
 
-- internal platform settlement defaults to IET;
-- Business routines and contracts may estimate/display external monetary units;
-- actual internal obligation/settlement/accounting remains in authoritative financial kernels;
-- external deposit/cashout gateways are adapters, not another wallet/balance truth;
-- Business Planner expense estimates default to the Business settlement unit;
-- the Business dashboard explicitly marks bank transfer/payment-provider deposit and cashout as placeholders until a real audited provider exists.
-
-Next:
-
-- Business accounting projection from existing ledgers/obligations/settlements;
-- receivables/payables;
-- realized revenue/expense/profit projections;
-- IET deposit/cashout request flow through provider adapters;
-- bank/payment-provider implementations only after provider/security/audit decisions.
+- internal platform settlement defaults to IET where the agreement chooses IET;
+- no second Business balance engine exists;
+- Business finance is a projection over canonical Contracts, FinancialObligations and
+  confirmed Settlements;
+- Business projection shows open receivables/payables and realized
+  revenue/expense/profit in IET;
+- personal Money shows wallet + receivable − payable as net IET position;
+- accepted value can make the receiver negative and provider positive before funding,
+  while immutable obligations still show exactly who owes whom;
+- debt can be covered by placeholder deposit or by later accepted work that creates
+  receivables;
+- cash-out eligibility remains limited to funded wallet value;
+- Exchange remains the adapter boundary for future real providers;
+- real bank/payment-provider execution stays disabled until provider/security/legal
+  and audit decisions are made.
 
 ### M11 — UX hardening and traditional-user acceptance
 
-Status: **ongoing across every milestone**.
+Status: **coherence baseline engineering-complete; next whole-product browser review pending**.
 
 - Persian-first Real Estate office acceptance;
 - large primary actions;
