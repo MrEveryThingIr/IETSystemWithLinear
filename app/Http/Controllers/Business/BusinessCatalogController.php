@@ -34,6 +34,7 @@ class BusinessCatalogController extends Controller
             'listings.prices.monetaryUnit',
             'publicIntakePortals',
             'contextBinding.context',
+            'defaultMonetaryUnit',
         ]);
 
         return view('businesses.catalog.index', [
