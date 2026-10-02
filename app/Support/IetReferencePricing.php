@@ -8,14 +8,14 @@ use App\Models\EconomicInstrument;
 use App\Models\IetValuationQuote;
 use App\Models\MarketQuote;
 use App\Models\MonetaryUnit;
-use InvalidArgumentException;
 
 final class IetReferencePricing
 {
     public function __construct(
         private readonly EnsureMonetaryUnit $units,
         private readonly IetPricing $ietPricing,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array{
