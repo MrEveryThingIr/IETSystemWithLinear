@@ -10,10 +10,6 @@ final class SettlementMethod
             return true;
         }
 
-        return in_array(
-            strtolower(trim($method)),
-            ['iet', 'iet_wallet', 'internal_iet'],
-            true,
-        );
+        return strtolower(trim($method)) !== 'external_cash';
     }
 }
