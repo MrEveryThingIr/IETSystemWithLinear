@@ -13,6 +13,8 @@ use App\Actions\Fulfillments\ReviewFulfillment;
 use App\Actions\Fulfillments\SubmitFulfillment;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
+use App\Actions\Relationships\CreateRelationship;
+use App\Actions\Relationships\RespondToRelationship;
 use App\FulfillmentReviewDecision;
 use App\IetExchangeDirection;
 use App\Models\ActorProfileIntent;
@@ -22,6 +24,7 @@ use App\Models\Contract;
 use App\Models\FinancialObligation;
 use App\Models\IetValuationQuote;
 use App\Models\PlatformAccessGrant;
+use App\Models\Relationship;
 use App\Models\User;
 use App\PlatformRole;
 use App\ProfileIntentExchangePreference;
@@ -141,7 +144,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 $scenario['amount'],
             );
 
-            $this->need(
+            $need = $this->need(
                 $buyer,
                 $scenario['key'],
                 $scenario['concept'],
@@ -150,9 +153,26 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 $scenario['amount'],
             );
 
+            $offer = ActorProfileIntent::query()
+                ->where('kind', ProfileIntentKind::Offer->value)
+                ->where('status', 'active')
+                ->where('metadata->source', 'business_listing_version')
+                ->where('metadata->business_listing_uuid', $listing->uuid)
+                ->latest('id')
+                ->firstOrFail();
+
+            $relationship = $this->deal(
+                $buyer,
+                $provider,
+                $scenario['key'],
+                $need,
+                $offer,
+            );
+
             $obligation = $this->acceptedIetScenario(
                 $buyer,
                 $provider,
+                $relationship,
                 $scenario['key'],
                 $scenario['title'],
                 $scenario['commitment_kind'],
@@ -317,9 +337,45 @@ class CoherenceBaselineDemoSeeder extends Seeder
         return $intent->refresh();
     }
 
+    private function deal(
+        User $buyer,
+        User $provider,
+        string $key,
+        ActorProfileIntent $need,
+        ActorProfileIntent $offer,
+    ): Relationship {
+        $relationship = Relationship::query()
+            ->where('title', 'C5-C7 demo deal '.$key)
+            ->first();
+
+        if (! $relationship instanceof Relationship) {
+            $relationship = app(CreateRelationship::class)->execute(
+                $buyer,
+                $need->concept,
+                'buyer',
+                [[
+                    'actor' => $provider->actor,
+                    'role' => 'provider',
+                ]],
+                originatingIntent: $need,
+                title: 'C5-C7 demo deal '.$key,
+                matchedIntent: $offer,
+            );
+
+            app(RespondToRelationship::class)->execute(
+                $relationship,
+                $provider,
+                true,
+            );
+        }
+
+        return $relationship->fresh();
+    }
+
     private function acceptedIetScenario(
         User $buyer,
         User $provider,
+        Relationship $relationship,
         string $key,
         string $title,
         string $kind,
@@ -338,6 +394,10 @@ class CoherenceBaselineDemoSeeder extends Seeder
             ->where('title', 'C5-C7 demo '.$key)
             ->first();
 
+        if ($contract instanceof Contract && $contract->relationship_id === null) {
+            $contract->forceFill(['relationship_id' => $relationship->id])->save();
+        }
+
         if (! $contract instanceof Contract) {
             $contract = app(CreateDirectContract::class)->execute(
                 $buyer,
@@ -347,6 +407,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 CarbonImmutable::now()->subMinute(),
                 'UTC',
                 creatorRole: 'receiver',
+                relationship: $relationship,
                 serviceTerms: [
                     'employer_username' => $buyer->username,
                     'worker_username' => $provider->username,
