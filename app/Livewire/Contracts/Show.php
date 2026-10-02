@@ -137,8 +137,7 @@ class Show extends Component
     public function proposeCashSettlement(
         ProposeContractSettlementBatch $propose,
         ProposeReferencedContractSettlementBatch $proposeReferenced,
-    ): void
-    {
+    ): void {
         $this->refreshContract();
 
         $this->settlementAmount = LocalizedNumber::decimal(str_replace(',', '', $this->settlementAmount));
