@@ -16,6 +16,7 @@ final class MonetaryUnitCatalog
             'CNY' => ['name' => 'Chinese Yuan', 'exponent' => 2, 'symbol' => '¥'],
             'AED' => ['name' => 'UAE Dirham', 'exponent' => 2, 'symbol' => 'د.إ'],
             'IRR' => ['name' => 'Iranian Rial', 'exponent' => 0, 'symbol' => '﷼'],
+            'IRT' => ['name' => 'Iranian Toman', 'exponent' => 0, 'symbol' => 'تومان'],
         ];
     }
 

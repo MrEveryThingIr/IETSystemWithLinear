@@ -7,6 +7,8 @@ use App\Models\Actor;
 use App\Models\Contract;
 use App\Models\ContractSettlementBatch;
 use App\Models\FinancialObligation;
+use App\Models\IetValuationQuote;
+use App\Models\MarketQuote;
 use App\Models\MonetaryUnit;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -29,6 +31,11 @@ class ProposeContractSettlementBatch
         ?string $reference = null,
         ?string $note = null,
         string $perspective = 'paid',
+        ?MonetaryUnit $referenceUnit = null,
+        ?int $referenceAmountMinor = null,
+        ?int $referenceUsdAmountMinor = null,
+        ?MarketQuote $referenceMarketQuote = null,
+        ?IetValuationQuote $ietValuationQuote = null,
     ): ContractSettlementBatch {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('view', $contract);
@@ -59,6 +66,11 @@ class ProposeContractSettlementBatch
             $reference,
             $note,
             $perspective,
+            $referenceUnit,
+            $referenceAmountMinor,
+            $referenceUsdAmountMinor,
+            $referenceMarketQuote,
+            $ietValuationQuote,
         ): ContractSettlementBatch {
             $lockedContract = Contract::query()->lockForUpdate()->findOrFail($contract->id);
             Gate::forUser($current)->authorize('view', $lockedContract);
@@ -131,8 +143,13 @@ class ProposeContractSettlementBatch
                 'debtor_actor_id' => $debtorActorId,
                 'creditor_actor_id' => $creditorActorId,
                 'monetary_unit_id' => $lockedUnit->id,
+                'reference_monetary_unit_id' => $referenceUnit?->id,
                 'proposed_by_actor_id' => $actor->id,
                 'amount_minor' => $amountMinor,
+                'reference_amount_minor' => $referenceAmountMinor,
+                'reference_usd_amount_minor' => $referenceUsdAmountMinor,
+                'reference_market_quote_id' => $referenceMarketQuote?->id,
+                'iet_valuation_quote_id' => $ietValuationQuote?->id,
                 'method' => $method,
                 'paid_at' => $paidAt->utc(),
                 'reference' => $reference !== '' ? $reference : null,

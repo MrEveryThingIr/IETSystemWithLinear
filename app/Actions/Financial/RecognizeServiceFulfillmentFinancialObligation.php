@@ -14,6 +14,7 @@ class RecognizeServiceFulfillmentFinancialObligation
     public function __construct(
         private readonly RecognizeFulfillmentFinancialObligation $recognize,
         private readonly ServiceCompensation $compensation,
+        private readonly PostFinancialObligationAccounting $postAccounting,
     ) {}
 
     public function execute(Fulfillment $fulfillment, User $user): ?FinancialObligation
@@ -49,7 +50,7 @@ class RecognizeServiceFulfillmentFinancialObligation
             ?? $fulfillment->reviewed_at
             ?? $fulfillment->submitted_at;
 
-        return $this->recognize->execute(
+        $obligation = $this->recognize->execute(
             $fulfillment,
             $current,
             $terms->monetaryUnit->code,
@@ -59,5 +60,13 @@ class RecognizeServiceFulfillmentFinancialObligation
                 .' × '.$terms->unit_rate_minor.' minor units per '.$terms->unit
                 .' under ContractVersion '.$fulfillment->commitment->contractVersion->version.'.',
         );
+
+        if ($terms->monetaryUnit->code === 'IET') {
+            $obligation->loadMissing(['debtor.user', 'creditor.user']);
+            $this->postAccounting->execute($obligation, $obligation->debtor->user);
+            $this->postAccounting->execute($obligation, $obligation->creditor->user);
+        }
+
+        return $obligation;
     }
 }

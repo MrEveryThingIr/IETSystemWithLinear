@@ -12,6 +12,7 @@ use App\Models\Settlement;
 use App\Models\User;
 use App\SettlementStatus;
 use App\Support\IetAvailableBalance;
+use App\Support\SettlementMethod;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -86,10 +87,19 @@ class RespondToSettlement
                 );
 
                 $isIet = $obligation->monetaryUnit->code === 'IET';
+                $usesIetWallet = $isIet && SettlementMethod::usesIetWallet($locked->method);
                 $debtorUser = null;
                 $creditorUser = null;
 
                 if ($isIet) {
+                    $debtorUser = $obligation->debtor->user;
+                    $creditorUser = $obligation->creditor->user;
+
+                    $this->postObligationAccounting->execute($obligation, $debtorUser);
+                    $this->postObligationAccounting->execute($obligation, $creditorUser);
+                }
+
+                if ($usesIetWallet) {
                     $debtorUser = $obligation->debtor->user;
                     $creditorUser = $obligation->creditor->user;
 
@@ -108,8 +118,6 @@ class RespondToSettlement
                         'Debtor has insufficient IET balance for this Settlement.',
                     );
 
-                    $this->postObligationAccounting->execute($obligation, $debtorUser);
-                    $this->postObligationAccounting->execute($obligation, $creditorUser);
                 }
 
                 $locked->confirm($actor, now());

@@ -13,6 +13,7 @@ use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\User;
 use App\PlanScheduleFrequency;
+use App\Support\IetReferencePricing;
 use App\Support\MoneyAmount;
 use App\Support\QuantityAmount;
 use DateTimeZone;
@@ -23,7 +24,10 @@ use InvalidArgumentException;
 
 class ConfigureContractServiceTerms
 {
-    public function __construct(private readonly EnsureMonetaryUnit $monetaryUnits) {}
+    public function __construct(
+        private readonly EnsureMonetaryUnit $monetaryUnits,
+        private readonly IetReferencePricing $referencePricing,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $input
@@ -46,6 +50,31 @@ class ConfigureContractServiceTerms
 
         abort_unless($employer instanceof Actor && $worker instanceof Actor, 422, 'Service employer and worker must be exact ContractVersion parties.');
 
+        $unitRate = (string) ($input['unit_rate'] ?? '');
+        $monetaryUnitCode = (string) ($input['monetary_unit_code'] ?? '');
+        $reference = null;
+
+        if (filled($input['reference_unit_rate'] ?? null) && filled($input['reference_monetary_unit_code'] ?? null)) {
+            $referenceUnit = $this->monetaryUnits->execute((string) $input['reference_monetary_unit_code']);
+
+            try {
+                $referenceAmountMinor = MoneyAmount::parse(
+                    (string) $input['reference_unit_rate'],
+                    (int) $referenceUnit->exponent,
+                );
+            } catch (InvalidArgumentException) {
+                abort(422, 'Reference service unit rate is invalid.');
+            }
+
+            $reference = $this->referencePricing->quote(
+                $referenceUnit->code,
+                $referenceAmountMinor,
+            );
+
+            $unitRate = (string) $reference['iet_amount'];
+            $monetaryUnitCode = 'IET';
+        }
+
         return $this->execute(
             $version,
             $user,
@@ -56,8 +85,8 @@ class ConfigureContractServiceTerms
             (string) ($input['total_quantity'] ?? '1'),
             (string) ($input['quantity_per_occurrence'] ?? '1'),
             (string) ($input['unit'] ?? 'unit'),
-            (string) ($input['unit_rate'] ?? ''),
-            (string) ($input['monetary_unit_code'] ?? ''),
+            $unitRate,
+            $monetaryUnitCode,
             (string) ($input['settlement_cycle'] ?? ContractServiceTerm::SETTLEMENT_PER_FULFILLMENT),
             (int) ($input['payment_due_days'] ?? 0),
             PlanScheduleFrequency::from((string) ($input['plan_frequency'] ?? PlanScheduleFrequency::Once->value)),
@@ -77,6 +106,7 @@ class ConfigureContractServiceTerms
             (string) ($input['timezone'] ?? $version->effective_timezone),
             (bool) ($input['auto_create_plan'] ?? true),
             (bool) ($input['auto_recognize_obligation'] ?? true),
+            $reference,
         );
     }
 
@@ -114,6 +144,7 @@ class ConfigureContractServiceTerms
         ?string $timezone = null,
         bool $autoCreatePlan = true,
         bool $autoRecognizeObligation = true,
+        ?array $referencePricing = null,
     ): ContractServiceTerm {
         $current = $this->currentUser($user);
 
@@ -242,6 +273,7 @@ class ConfigureContractServiceTerms
             $windowAfterMinutes,
             $reminderOffsets,
             $timezone,
+            $referencePricing,
         ): ContractServiceTerm {
             $locked = ContractVersion::query()
                 ->with('parties.acceptance')
@@ -289,12 +321,17 @@ class ConfigureContractServiceTerms
                 'employer_actor_id' => $employer->id,
                 'worker_actor_id' => $worker->id,
                 'monetary_unit_id' => $monetaryUnit->id,
+                'reference_monetary_unit_id' => $referencePricing['reference_unit']->id ?? null,
                 'service_title' => $serviceTitle,
                 'service_kind' => $serviceKind,
                 'total_quantity' => $normalizedTotal,
                 'quantity_per_occurrence' => $normalizedPerOccurrence,
                 'unit' => $unit,
                 'unit_rate_minor' => $unitRateMinor,
+                'reference_unit_rate_minor' => $referencePricing['reference_amount_minor'] ?? null,
+                'reference_usd_amount_minor' => $referencePricing['usd_amount_minor'] ?? null,
+                'reference_market_quote_id' => $referencePricing['market_quote']?->id,
+                'iet_valuation_quote_id' => $referencePricing['iet_quote']?->id,
                 'settlement_cycle' => $settlementCycle,
                 'payment_due_days' => $paymentDueDays,
                 'auto_create_plan' => $autoCreatePlan,
@@ -329,6 +366,11 @@ class ConfigureContractServiceTerms
                     'unit' => $unit,
                     'unit_rate_minor' => $unitRateMinor,
                     'monetary_unit_code' => $monetaryUnit->code,
+                    'reference_monetary_unit_code' => $referencePricing['reference_unit']->code ?? null,
+                    'reference_unit_rate_minor' => $referencePricing['reference_amount_minor'] ?? null,
+                    'reference_usd_amount_minor' => $referencePricing['usd_amount_minor'] ?? null,
+                    'reference_market_quote_uuid' => $referencePricing['market_quote']?->uuid,
+                    'iet_valuation_quote_uuid' => $referencePricing['iet_quote']?->uuid,
                     'settlement_cycle' => $settlementCycle,
                     'plan_frequency' => $planFrequency->value,
                     'timezone' => $timezone,

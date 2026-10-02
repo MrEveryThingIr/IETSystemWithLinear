@@ -69,6 +69,7 @@ class CreateCommitmentPlan
                     'obligor.user',
                     'beneficiary.user',
                     'serviceTerm.monetaryUnit',
+                    'serviceTerm.referenceMonetaryUnit',
                     'planBinding',
                 ])
                 ->lockForUpdate()
@@ -114,6 +115,8 @@ class CreateCommitmentPlan
                     'quantity_per_occurrence' => $locked->serviceTerm?->quantity_per_occurrence,
                     'unit_rate_minor' => $locked->serviceTerm?->unit_rate_minor,
                     'monetary_unit_code' => $locked->serviceTerm?->monetaryUnit?->code,
+                    'reference_unit_rate_minor' => $locked->serviceTerm?->reference_unit_rate_minor,
+                    'reference_monetary_unit_code' => $locked->serviceTerm?->referenceMonetaryUnit?->code,
                 ],
             );
 

@@ -9,6 +9,7 @@ use App\Models\FinancialObligationEvent;
 use App\Models\JournalEntry;
 use App\Models\Settlement;
 use App\Models\User;
+use App\Support\SettlementMethod;
 use Illuminate\Support\Facades\Gate;
 
 class PostSettlementAccounting
@@ -22,9 +23,11 @@ class PostSettlementAccounting
     {
         Gate::forUser($user)->authorize('postAccounting', $settlement);
 
-        $settlement->loadMissing('obligation');
+        $settlement->loadMissing('obligation.monetaryUnit');
         $obligation = $settlement->obligation;
-        $side = $this->accounts->execute($obligation, $user);
+        $externalCashSettlement = $obligation->monetaryUnit->code === 'IET'
+            && ! SettlementMethod::usesIetWallet($settlement->method);
+        $side = $this->accounts->execute($obligation, $user, $externalCashSettlement);
         $actor = $side['actor'];
         $ledger = $side['ledger'];
 

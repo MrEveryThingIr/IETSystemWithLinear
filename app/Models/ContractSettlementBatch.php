@@ -16,8 +16,13 @@ use LogicException;
     'debtor_actor_id',
     'creditor_actor_id',
     'monetary_unit_id',
+    'reference_monetary_unit_id',
     'proposed_by_actor_id',
     'amount_minor',
+    'reference_amount_minor',
+    'reference_usd_amount_minor',
+    'reference_market_quote_id',
+    'iet_valuation_quote_id',
     'method',
     'paid_at',
     'reference',
@@ -67,6 +72,24 @@ class ContractSettlementBatch extends Model
     public function monetaryUnit(): BelongsTo
     {
         return $this->belongsTo(MonetaryUnit::class);
+    }
+
+    /** @return BelongsTo<MonetaryUnit, $this> */
+    public function referenceMonetaryUnit(): BelongsTo
+    {
+        return $this->belongsTo(MonetaryUnit::class, 'reference_monetary_unit_id');
+    }
+
+    /** @return BelongsTo<MarketQuote, $this> */
+    public function referenceMarketQuote(): BelongsTo
+    {
+        return $this->belongsTo(MarketQuote::class, 'reference_market_quote_id');
+    }
+
+    /** @return BelongsTo<IetValuationQuote, $this> */
+    public function ietValuationQuote(): BelongsTo
+    {
+        return $this->belongsTo(IetValuationQuote::class, 'iet_valuation_quote_id');
     }
 
     /** @return BelongsTo<Actor, $this> */
@@ -122,6 +145,8 @@ class ContractSettlementBatch extends Model
     {
         return [
             'amount_minor' => 'integer',
+            'reference_amount_minor' => 'integer',
+            'reference_usd_amount_minor' => 'integer',
             'paid_at' => 'immutable_datetime',
         ];
     }
