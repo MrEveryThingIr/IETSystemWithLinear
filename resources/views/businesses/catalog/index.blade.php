@@ -109,7 +109,7 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                         @foreach($listing->prices->take(4) as $price)
                             <div class="price">
                                 <strong>{{ $price->price_type }}</strong>:
-                                {{ AppSupportMoneyAmount::format((int)$price->amount_minor, (int)$price->monetaryUnit->exponent) }}
+                                {{ \App\Support\MoneyAmount::format((int)$price->amount_minor, (int)$price->monetaryUnit->exponent) }}
                                 {{ $price->monetaryUnit->code }}
                                 @if($price->basis) / {{ $price->basis }} @endif
                                 <span class="badge">{{ $price->visibility }}</span>
