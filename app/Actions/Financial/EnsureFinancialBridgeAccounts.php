@@ -16,7 +16,8 @@ class EnsureFinancialBridgeAccounts
     public function __construct(
         private readonly CreatePersonalLedger $ledgers,
         private readonly CreateLedgerAccount $accounts,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array{
