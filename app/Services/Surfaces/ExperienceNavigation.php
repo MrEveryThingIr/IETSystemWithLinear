@@ -63,6 +63,7 @@ class ExperienceNavigation
             string $key,
             string $labelKey,
             string $icon,
+            string $route,
             array $surfaceKeys,
         ) use ($item): ?array {
             $items = array_values(array_filter(array_map($item, $surfaceKeys)));
@@ -75,20 +76,21 @@ class ExperienceNavigation
                 'key' => $key,
                 'label' => __($labelKey),
                 'icon' => $icon,
-                'route' => $items[0]['route'],
-                'patterns' => array_values(array_unique(array_merge(
-                    ...array_map(fn (array $candidate): array => $candidate['patterns'], $items)
-                ))),
+                'route' => $route,
+                'patterns' => array_values(array_unique([
+                    $route,
+                    ...array_merge(...array_map(fn (array $candidate): array => $candidate['patterns'], $items)),
+                ])),
                 'items' => $items,
             ];
         };
 
         $primary = array_values(array_filter([
-            $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', ['market']),
-            $destination('work', 'experience.navigation.work', 'briefcase', ['deals', 'planner']),
-            $destination('organizations', 'experience.navigation.organizations', 'building-office-2', ['business', 'groups']),
-            $destination('money', 'experience.navigation.money', 'wallet', ['money', 'accounting', 'exchange']),
-            $destination('content', 'experience.navigation.content', 'rectangle-stack', ['content']),
+            $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', 'experience.needs-offers', ['market']),
+            $destination('work', 'experience.navigation.work', 'briefcase', 'experience.work', ['deals', 'planner']),
+            $destination('organizations', 'experience.navigation.organizations', 'building-office-2', 'experience.organizations', ['business', 'groups']),
+            $destination('money', 'experience.navigation.money', 'wallet', 'money.index', ['money', 'accounting', 'exchange']),
+            $destination('content', 'experience.navigation.content', 'rectangle-stack', 'experience.content', ['content']),
         ]));
 
         $account = array_values(array_filter([
@@ -96,10 +98,21 @@ class ExperienceNavigation
             $item('vault'),
         ]));
 
-        $help = array_values(array_filter([
+        $helpItems = array_values(array_filter([
             $item('manual'),
             $item('system-map'),
         ]));
+        $help = $helpItems === [] ? [] : [[
+            'key' => 'help',
+            'label' => __('experience.navigation.help'),
+            'icon' => 'question-mark-circle',
+            'route' => 'experience.help',
+            'patterns' => array_values(array_unique([
+                'experience.help',
+                ...array_merge(...array_map(fn (array $candidate): array => $candidate['patterns'], $helpItems)),
+            ])),
+            'items' => $helpItems,
+        ]];
 
         $labs = array_filter([
             $item('ai'),
