@@ -178,7 +178,9 @@ The next active milestone is **C3 — Contextual workflow shells**.
 
 ## C3 — Standard page contract and contextual workflow shells
 
-Status: **implementation-complete on `codex/coherence-c3-contextual-workflow-shells`; exact-head CI and owner browser acceptance pending**.
+Status: **engineering-complete on `codex/coherence-c3-contextual-workflow-shells`; owner browser/product-feel acceptance pending**.
+
+Verified implementation head: `8a6ea44b45e80ff341d0991cf14d84f2377c5aac` — CI green with **714 tests / 6106 assertions**, Pint, PHPStan, MySQL portability, rollback/reapply + scheduler/queue smoke, SQLite backup/restore, frontend build + npm audit, and Composer security audit.
 
 Goal: every important workflow teaches itself.
 
@@ -192,12 +194,14 @@ Implemented:
   while preserving the existing `DealPipeline`, Relationship, Proposal, Contract,
   Commitment, Fulfillment and FinancialObligation authorities;
 - Business shell derives a deterministic next operating step from existing Business
-  state (contact/location, clients, catalog, Planner routines) and keeps CRM, catalog,
-  Planner, Deal and Money records authoritative;
+  state (contact/location, clients, catalog, Planner routines), keeps CRM, catalog,
+  Planner, Deal and Money records authoritative, and hides unpublished Planner / Deal /
+  Money siblings instead of leaking unavailable capabilities;
 - Group shell prioritizes Community / Spaces / Content and moves governance-oriented
   settings behind a Manage disclosure while keeping urgent review work visible;
-- Content Studio now teaches Write → Structure → Media → Preview → Publish and moves
-  AI, blocks and appearance into Advanced rather than presenting them as required
+- Content Studio now teaches Write → Structure → Media → Preview → Publish, keeps
+  Publish as the single dominant action, makes publication readiness informational, and
+  moves AI, blocks and appearance into Advanced rather than presenting them as required
   starting choices;
 - English, Persian, Arabic and Simplified Chinese workflow copy added without replacing
   the pre-existing Content workflow language keys;
