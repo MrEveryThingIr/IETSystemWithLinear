@@ -198,9 +198,9 @@ class HomeTodayExperienceTest extends TestCase
             ->test(Today::class)
             ->assertSee('Recommended next step')
             ->assertSee('Bob asks Alice to confirm')
-            ->assertSee('A participant invitation is waiting for your response.')
+            ->assertSee('A proposed Deal is waiting for your response.')
             ->assertSee('Alice waits for Bob')
-            ->assertSee('Another participant still needs to accept the proposed Relationship.');
+            ->assertSee('Another participant still needs to accept the proposed Deal.');
     }
 
     public function test_obligation_summary_keeps_currencies_and_directions_separate(): void
