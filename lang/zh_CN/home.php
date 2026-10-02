@@ -8,6 +8,8 @@ return [
     'quick_links_help' => '直接打开您已有权限使用的主要工作区。',
     'new_activity' => '新建活动',
     'new_intent' => '新建需求 / 提供',
+    'more_overview' => '更多账户概览',
+    'more_overview_help' => '需要时可在这里查看需求、进行中的工作、群组和财务摘要。',
     'today_actions' => '今天该做什么？',
     'today_actions_help' => '今天已安排且您有权参与的计划事项。',
     'no_today_actions' => '今天没有已安排事项',
