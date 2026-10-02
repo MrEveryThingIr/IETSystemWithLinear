@@ -1,16 +1,16 @@
 <?php
 
 return [
-    'title' => 'Listing',
-    'editor_title' => 'Listing editor',
-    'editor_help' => 'Complete the commercial record in a simple order. The Listing stays canonical; Content is generated only as its presentation.',
+    'title' => 'Catalog item',
+    'editor_title' => 'Catalog item editor',
+    'editor_help' => 'Complete the commercial record in a simple order, preview exactly what customers may see, then publish when it is ready.',
     'back_catalog' => 'Back to catalog',
     'save' => 'Save draft',
     'preview' => 'Preview as customer',
     'publish' => 'Publish this version',
     'published' => 'Published version',
-    'advanced_content' => 'Open advanced Content Studio',
-    'sync_content' => 'Build / refresh presentation Content',
+    'advanced_content' => 'Open advanced presentation editor',
+    'sync_content' => 'Refresh customer presentation',
     'version' => 'Version :version',
     'history_notice' => 'If the current version is already published, saving creates a new working version and leaves the published history unchanged.',
     'steps' => [
@@ -30,11 +30,11 @@ return [
     ],
     'basics' => [
         'title' => 'Purpose and public identity',
-        'listing_title' => 'Listing title',
+        'listing_title' => 'Public title',
         'short_description' => 'Short introduction',
         'description' => 'Description',
         'category' => 'Category',
-        'visibility' => 'Listing visibility',
+        'visibility' => 'Item visibility',
         'availability' => 'Availability',
         'available_from' => 'Available from',
         'available_until' => 'Available until',
@@ -146,12 +146,12 @@ return [
         'withdrawn' => 'Withdrawn',
     ],
     'messages' => [
-        'created' => 'Listing draft created. Continue the guided editor.',
-        'saved' => 'Listing draft saved.',
+        'created' => 'Draft created. Continue the guided editor.',
+        'saved' => 'Draft saved.',
         'media_added' => 'Media added.',
         'media_updated' => 'Media updated.',
         'media_removed' => 'Media removed from this draft.',
         'presentation_synced' => 'Presentation Content refreshed.',
-        'published' => 'Listing version and its presentation were published and frozen.',
+        'published' => 'This version and its customer presentation were published and frozen.',
     ],
 ];
