@@ -143,7 +143,7 @@ class ReleaseExperienceTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee(route('content.library'), false)
-            ->assertDontSee(route('contexts.personal'), false);
+            ->assertSee(route('contexts.personal'), false);
 
         $this->actingAs($actor->user)
             ->get(route('groups.index'))
