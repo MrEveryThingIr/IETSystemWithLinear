@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\ActivateDueContractVersions;
+use App\Actions\Contracts\CreateDirectContract;
 use App\Actions\Proposals\CreateProposal;
 use App\Actions\Proposals\RespondToProposal;
 use App\ContractStatus;
@@ -73,6 +75,67 @@ class ContractExperienceTest extends TestCase
             Livewire::actingAs($alice->user)
                 ->test(ContractIndex::class)
                 ->assertSee('Workshop paid work');
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_opening_an_overdue_contract_self_reconciles_only_that_contract(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-30 10:00:00 UTC');
+
+        try {
+            $alice = Actor::factory()->create();
+            $bob = Actor::factory()->create();
+
+            $first = app(CreateDirectContract::class)->execute(
+                $alice->user,
+                'First scheduled contract',
+                [['actor' => $bob, 'role' => 'worker']],
+                'First exact terms.',
+                CarbonImmutable::parse('2026-09-30 12:00:00 UTC'),
+                'UTC',
+                creatorRole: 'employer',
+            );
+
+            $second = app(CreateDirectContract::class)->execute(
+                $alice->user,
+                'Second scheduled contract',
+                [['actor' => $bob, 'role' => 'worker']],
+                'Second exact terms.',
+                CarbonImmutable::parse('2026-09-30 12:30:00 UTC'),
+                'UTC',
+                creatorRole: 'employer',
+            );
+
+            $firstVersion = $first->versions()->sole();
+            $secondVersion = $second->versions()->sole();
+
+            app(AcceptContractVersion::class)->execute($firstVersion, $bob->user);
+            app(AcceptContractVersion::class)->execute($secondVersion, $bob->user);
+
+            $this->assertSame(ContractVersionStatus::Accepted, $firstVersion->fresh()->status);
+            $this->assertSame(ContractVersionStatus::Accepted, $secondVersion->fresh()->status);
+            $this->assertSame(ContractStatus::Pending, $first->fresh()->status);
+            $this->assertSame(ContractStatus::Pending, $second->fresh()->status);
+
+            CarbonImmutable::setTestNow('2026-10-02 09:00:00 UTC');
+
+            Livewire::actingAs($alice->user)
+                ->test(ContractShow::class, ['contract' => $first])
+                ->assertSee(__('contracts.status.active'));
+
+            $this->assertSame(ContractStatus::Active, $first->fresh()->status);
+            $this->assertSame(ContractVersionStatus::Active, $firstVersion->fresh()->status);
+            $this->assertSame(ContractStatus::Pending, $second->fresh()->status);
+            $this->assertSame(ContractVersionStatus::Accepted, $secondVersion->fresh()->status);
+
+            Livewire::actingAs($alice->user)
+                ->test(ContractShow::class, ['contract' => $second])
+                ->assertSee(__('contracts.status.active'));
+
+            $this->assertSame(ContractStatus::Active, $second->fresh()->status);
+            $this->assertSame(ContractVersionStatus::Active, $secondVersion->fresh()->status);
         } finally {
             CarbonImmutable::setTestNow();
         }
@@ -190,7 +253,10 @@ class ContractExperienceTest extends TestCase
             $this->assertSame(ContractVersionStatus::Accepted, $versionTwo->fresh()->status);
 
             CarbonImmutable::setTestNow('2026-09-25 08:01:00 UTC');
-            $this->assertSame(1, app(ActivateDueContractVersions::class)->execute());
+
+            Livewire::actingAs($alice->user)
+                ->test(ContractShow::class, ['contract' => $contract])
+                ->assertSee(__('contracts.version_status.active'));
 
             $this->assertSame(ContractVersionStatus::Superseded, $versionOne->fresh()->status);
             $this->assertSame(ContractVersionStatus::Active, $versionTwo->fresh()->status);
