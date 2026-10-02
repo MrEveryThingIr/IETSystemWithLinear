@@ -74,6 +74,7 @@ Implemented:
 - Business gains one reusable Business Context;
 - Planner can create and operate Business-context routines;
 - Business CRM for unregistered real-world clients;
+- public Business identity remains viewable when configured public, while CRM/catalog operations/routines/team/office cases remain member-only;
 - hierarchical Business categories;
 - generic `BusinessListing` model for goods, services, properties, and future vertical types;
 - immutable `BusinessListingVersion`;
@@ -81,7 +82,9 @@ Implemented:
 - structured property extension on Listing Versions;
 - reviewed Real Estate offers can be promoted into generic Business Listings;
 - IET is the default internal settlement unit for newly-created Businesses;
-- external bank/payment integrations are placeholders only;
+- Business Planner expense estimates default to the Business settlement unit (IET by default);
+- catalog price entry uses exact minor-unit parsing and append-only price history;
+- external bank/payment integrations are placeholders only and are shown as non-executable in the Business dashboard;
 - local Real Estate demo bootstrap preserves the requested office UUID/token and seeds a realistic offer/need scenario.
 
 ## Browser acceptance for this milestone
@@ -147,7 +150,7 @@ Next:
 
 ### M4 — Pricing
 
-Status: **foundation complete**.
+Status: **first browser-operable release complete**.
 
 - append-only price versions;
 - price type;
@@ -155,11 +158,12 @@ Status: **foundation complete**.
 - basis;
 - visibility;
 - validity window;
-- change reason.
+- change reason;
+- browser price entry with exact decimal-to-minor conversion;
+- Business default unit preselection.
 
 Next:
 
-- authorized private cost prices;
 - active-price resolver;
 - quotations;
 - derived display of unit prices;
@@ -228,14 +232,16 @@ Status: **planned**.
 
 ### M10 — Business finance and IET settlement
 
-Status: **foundation boundary established**.
+Status: **foundation boundary established and visible in the Business UI**.
 
 Policy:
 
 - internal platform settlement defaults to IET;
 - Business routines and contracts may estimate/display external monetary units;
 - actual internal obligation/settlement/accounting remains in authoritative financial kernels;
-- external deposit/cashout gateways are adapters, not another wallet/balance truth.
+- external deposit/cashout gateways are adapters, not another wallet/balance truth;
+- Business Planner expense estimates default to the Business settlement unit;
+- the Business dashboard explicitly marks bank transfer/payment-provider deposit and cashout as placeholders until a real audited provider exists.
 
 Next:
 
