@@ -174,11 +174,11 @@
                     <div class="item">
                         <strong>موقعیت اقتصادی این کسب‌وکار</strong>
                         <div style="font-size:26px;font-weight:950;margin-top:6px">
-                            {{ AppSupportMoneyAmount::format((int)($economyProjection['iet_net_minor'] ?? 0), 0) }} IET
+                            {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_net_minor'] ?? 0), 0) }} IET
                         </div>
                         <div class="muted" style="margin-top:5px">
-                            طلب {{ AppSupportMoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
-                            · بدهی {{ AppSupportMoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
+                            طلب {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
+                            · بدهی {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
                         </div>
                         <div class="badges" style="margin-top:8px">
                             <span class="badge">{{ $economyProjection['market_intent_count'] ?? 0 }} بازار</span>
