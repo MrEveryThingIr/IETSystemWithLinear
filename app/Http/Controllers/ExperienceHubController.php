@@ -11,6 +11,7 @@ use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\HomeTodayProjection;
+use App\Support\MoneyAmount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -29,9 +30,12 @@ class ExperienceHubController extends Controller
         $actor = $user->actor;
         abort_unless($actor instanceof Actor, 403);
 
-        $mine = ActorProfileIntent::query()
+        $mineQuery = ActorProfileIntent::query()
             ->whereHas('profile', fn ($query) => $query->where('actor_id', $actor->id))
-            ->where('status', ProfileIntentStatus::Active->value)
+            ->where('status', ProfileIntentStatus::Active->value);
+
+        $mineCount = (clone $mineQuery)->count();
+        $mine = $mineQuery
             ->with(['concept.labels'])
             ->latest('updated_at')
             ->limit(6)
@@ -49,7 +53,7 @@ class ExperienceHubController extends Controller
                 [
                     'title' => __('experience.hubs.needs_offers.mine'),
                     'help' => __('experience.hubs.needs_offers.mine_help'),
-                    'count' => $mine->count(),
+                    'count' => $mineCount,
                     'primary' => ['label' => __('experience.hubs.needs_offers.create'), 'href' => route('intents.create')],
                     'secondary' => ['label' => __('experience.hubs.needs_offers.open_all'), 'href' => route('intents.index')],
                     'items' => $mine->map(fn (ActorProfileIntent $intent): array => [
@@ -85,11 +89,21 @@ class ExperienceHubController extends Controller
         $canDeals = $this->access->allows($user, 'deals');
         $canPlanner = $this->access->allows($user, 'planner');
 
-        $attention = $projection['waitingOnMe']->take(5)->map(fn ($item): array => [
-            'title' => $item->title,
-            'meta' => $item->summary,
-            'href' => $item->url,
-        ])->all();
+        $attention = $projection['waitingOnMe']
+            ->filter(fn ($item): bool => $canDeals && in_array($item->kind, [
+                'relationship',
+                'proposal',
+                'contract',
+                'fulfillment',
+                'settlement',
+            ], true))
+            ->take(5)
+            ->map(fn ($item): array => [
+                'title' => $item->title,
+                'meta' => $item->summary,
+                'href' => $item->url,
+            ])
+            ->all();
 
         $activeWork = $canDeals
             ? $projection['activeRelationships']->take(6)->map(fn ($relationship): array => [
@@ -152,7 +166,6 @@ class ExperienceHubController extends Controller
                 ->where('actor_id', $actor->id)
                 ->where('status', 'active')
                 ->latest('id')
-                ->limit(8)
                 ->get()
             : collect();
 
@@ -162,7 +175,6 @@ class ExperienceHubController extends Controller
                 ->where('actor_id', $actor->id)
                 ->where('status', 'active')
                 ->latest('id')
-                ->limit(8)
                 ->get()
             : collect();
 
@@ -173,7 +185,7 @@ class ExperienceHubController extends Controller
                 'count' => $businesses->count(),
                 'primary' => $canBusiness ? ['label' => __('experience.hubs.organizations.open_businesses'), 'href' => route('businesses.index')] : null,
                 'secondary' => $canBusiness ? ['label' => __('experience.hubs.organizations.create_business'), 'href' => route('businesses.create')] : null,
-                'items' => $businesses->map(fn (BusinessMembership $membership): array => [
+                'items' => $businesses->take(8)->map(fn (BusinessMembership $membership): array => [
                     'title' => $membership->business->name,
                     'meta' => $membership->job_title ?: $membership->role,
                     'href' => route('businesses.show', $membership->business),
@@ -185,7 +197,7 @@ class ExperienceHubController extends Controller
                 'help' => __('experience.hubs.organizations.groups_help'),
                 'count' => $groups->count(),
                 'primary' => $canGroups ? ['label' => __('experience.hubs.organizations.open_groups'), 'href' => route('groups.index')] : null,
-                'items' => $groups->map(fn (GroupMembership $membership): array => [
+                'items' => $groups->take(8)->map(fn (GroupMembership $membership): array => [
                     'title' => $membership->group->name,
                     'meta' => __('experience.hubs.organizations.group_member'),
                     'href' => route('groups.show', $membership->group),
@@ -211,29 +223,31 @@ class ExperienceHubController extends Controller
 
         $ledgers = $binding?->context?->ledgers ?? collect();
         $obligations = collect($projection['obligations']);
-        $receivable = (int) $obligations->sum('receivable_outstanding_minor');
-        $payable = (int) $obligations->sum('payable_outstanding_minor');
 
-        $summaryItems = [
-            [
-                'title' => __('experience.hubs.money.receivable'),
-                'meta' => __('experience.hubs.money.minor_units', ['amount' => number_format($receivable)]),
-                'href' => route('money.accounts'),
-            ],
-            [
-                'title' => __('experience.hubs.money.payable'),
-                'meta' => __('experience.hubs.money.minor_units', ['amount' => number_format($payable)]),
-                'href' => route('money.accounts'),
-            ],
-        ];
+        $summaryItems = $obligations->map(fn (array $bucket): array => [
+            'title' => $bucket['code'],
+            'meta' => __('experience.hubs.money.outstanding_line', [
+                'receive' => MoneyAmount::format(
+                    (int) $bucket['receivable_outstanding_minor'],
+                    (int) $bucket['exponent'],
+                ),
+                'pay' => MoneyAmount::format(
+                    (int) $bucket['payable_outstanding_minor'],
+                    (int) $bucket['exponent'],
+                ),
+                'code' => $bucket['code'],
+            ]),
+            'href' => route('money.accounts'),
+        ])->values()->all();
 
         return $this->renderHub('money', [
             [
                 'title' => __('experience.hubs.money.overview'),
                 'help' => __('experience.hubs.money.overview_help'),
-                'count' => $ledgers->count(),
+                'count' => $obligations->count(),
                 'primary' => ['label' => __('experience.hubs.money.open_accounts'), 'href' => route('money.accounts')],
                 'items' => $summaryItems,
+                'empty' => __('experience.hubs.money.outstanding_empty'),
             ],
             [
                 'title' => __('experience.hubs.money.activity'),
