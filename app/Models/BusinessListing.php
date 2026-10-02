@@ -13,9 +13,14 @@ use LogicException;
     'uuid',
     'business_id',
     'business_category_id',
+    'business_contact_id',
     'listing_type',
     'status',
     'visibility',
+    'availability_status',
+    'available_from',
+    'available_until',
+    'simple_office_mode',
     'current_version_id',
     'published_version_id',
 ])]
@@ -51,6 +56,12 @@ class BusinessListing extends Model
         return $this->belongsTo(BusinessCategory::class, 'business_category_id');
     }
 
+    /** @return BelongsTo<BusinessContact, $this> */
+    public function businessContact(): BelongsTo
+    {
+        return $this->belongsTo(BusinessContact::class);
+    }
+
     /** @return HasMany<BusinessListingVersion, $this> */
     public function versions(): HasMany
     {
@@ -73,5 +84,14 @@ class BusinessListing extends Model
     public function prices(): HasMany
     {
         return $this->hasMany(BusinessPriceVersion::class)->orderByDesc('valid_from')->orderByDesc('id');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'available_from' => 'immutable_datetime',
+            'available_until' => 'immutable_datetime',
+            'simple_office_mode' => 'boolean',
+        ];
     }
 }

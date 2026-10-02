@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
@@ -19,6 +20,7 @@ use LogicException;
     'description',
     'structured_data',
     'created_by_actor_id',
+    'presentation_content_id',
     'published_at',
 ])]
 class BusinessListingVersion extends Model
@@ -77,5 +79,17 @@ class BusinessListingVersion extends Model
     public function propertyDetails(): HasOne
     {
         return $this->hasOne(BusinessPropertyDetails::class);
+    }
+
+    /** @return HasMany<BusinessListingMedia, $this> */
+    public function media(): HasMany
+    {
+        return $this->hasMany(BusinessListingMedia::class)->orderBy('position')->orderBy('id');
+    }
+
+    /** @return BelongsTo<SpaceContent, $this> */
+    public function presentationContent(): BelongsTo
+    {
+        return $this->belongsTo(SpaceContent::class, 'presentation_content_id');
     }
 }

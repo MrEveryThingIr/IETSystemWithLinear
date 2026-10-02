@@ -366,6 +366,8 @@ class BusinessVerticalConsolidationTest extends TestCase
 
         $this->assertSame('property', $listing->listing_type);
         $this->assertSame($listing->id, $case->fresh()->business_listing_id);
+        $this->assertSame($contact->id, $listing->business_contact_id);
+        $this->assertTrue($listing->simple_office_mode);
         $this->assertSame('villa', $listing->currentVersion->propertyDetails->property_subtype);
         $this->assertSame('180.00', $listing->currentVersion->propertyDetails->construction_area);
 
