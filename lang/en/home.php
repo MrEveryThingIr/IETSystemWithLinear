@@ -44,7 +44,7 @@ return [
     'outstanding' => 'Outstanding',
     'no_obligations' => 'No recognized financial obligations',
     'recent_activity' => 'Recent activity',
-    'recent_activity_help' => 'Recent authorized timeline entries from your personal, GroupSpace and collaboration Contexts. This is recent history, not an unread-notification system.',
+    'recent_activity_help' => 'A short history of recent work and changes you are allowed to see.',
     'no_recent_activity' => 'No recent authorized activity',
     'boundary' => 'Today is a derived operating view. Acting here always opens the underlying Relationship, Proposal, Contract, Commitment, Settlement, Submission, Planner, Group, Intent, Accounting or Context record that owns the truth.',
         'onboarding' => [
