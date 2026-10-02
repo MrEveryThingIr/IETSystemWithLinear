@@ -30,8 +30,7 @@ class ConfigureContractServiceTerms
     public function __construct(
         private readonly EnsureMonetaryUnit $monetaryUnits,
         private readonly IetReferencePricing $referencePricing,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>  $input
