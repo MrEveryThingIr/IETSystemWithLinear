@@ -73,12 +73,20 @@ future industries. Existing Real Estate URLs remain compatibility/intake channel
 
 ## Phase 2 — Progressive onboarding and Today
 
-Planned after Phase 1 acceptance:
+Status: **implemented as coherence milestone C1; CI and owner browser acceptance pending**.
 
-- state-derived onboarding checklist;
-- remove persistent verification-success noise;
-- derive next-best actions from authoritative records;
-- make Today answer what needs attention now and why.
+Implemented:
+
+- state-derived onboarding checklist on Today;
+- persistent verification-success noise removed;
+- deterministic next-action guidance from authoritative records;
+- attention-first Today composition;
+- first-goal choices for new users;
+- progressive disclosure for secondary summaries;
+- `/getting-started` compatibility redirected to the live Today checklist.
+
+Canonical implementation/acceptance status is tracked in
+`docs/COHERENCE-FIRST-EXECUTION-ROADMAP.md`.
 
 ## Phase 3 — Consolidated entry experiences
 
