@@ -35,7 +35,12 @@ class DailyWorkIetReferenceSettlementTest extends TestCase
 
     public function test_three_reserved_workdays_toman_price_and_partial_cash_payment_keep_both_books_exact(): void
     {
-        CarbonImmutable::setTestNow('2026-10-02 16:00:00 UTC');
+        $contractedAt = CarbonImmutable::now('UTC')->addDay()->setTime(7, 0);
+        $dayX = $contractedAt->addDay()->startOfDay();
+        $dayY = $dayX->addDays(2);
+        $dayZ = $dayX->addDays(4);
+
+        CarbonImmutable::setTestNow($contractedAt);
 
         try {
             $father = Actor::factory()->create();
@@ -97,17 +102,17 @@ class DailyWorkIetReferenceSettlementTest extends TestCase
                     'auto_create_plan' => true,
                     'auto_recognize_obligation' => true,
                     'plan_frequency' => 'selected_dates',
-                    'plan_starts_on' => '2026-10-03',
+                    'plan_starts_on' => $dayX->format('Y-m-d'),
                     'plan_start_time' => '08:00',
                     'plan_duration_minutes' => 540,
                     'plan_interval' => 1,
                     'plan_weekdays' => [],
                     'plan_selected_dates' => [
-                        '2026-10-03',
-                        '2026-10-05',
-                        '2026-10-07',
+                        $dayX->format('Y-m-d'),
+                        $dayY->format('Y-m-d'),
+                        $dayZ->format('Y-m-d'),
                     ],
-                    'plan_ends_on' => '2026-10-07',
+                    'plan_ends_on' => $dayZ->format('Y-m-d'),
                     'plan_occurrence_limit' => 3,
                     'window_before_minutes' => 0,
                     'window_after_minutes' => 0,
@@ -149,9 +154,9 @@ class DailyWorkIetReferenceSettlementTest extends TestCase
             $this->assertCount(3, $occurrences);
 
             $this->assertSame([
-                '2026-10-03 08:00',
-                '2026-10-05 08:00',
-                '2026-10-07 08:00',
+                $dayX->setTime(8, 0)->format('Y-m-d H:i'),
+                $dayY->setTime(8, 0)->format('Y-m-d H:i'),
+                $dayZ->setTime(8, 0)->format('Y-m-d H:i'),
             ], $occurrences->map(
                 fn ($occurrence): string => $occurrence->scheduled_start_at
                     ->setTimezone('UTC')
@@ -214,7 +219,7 @@ class DailyWorkIetReferenceSettlementTest extends TestCase
             $this->assertSame(4_500, $beforeCash['outstanding_minor']);
             $this->assertSame(0, $beforeCash['paid_minor']);
 
-            CarbonImmutable::setTestNow('2026-10-07 18:00:00 UTC');
+            CarbonImmutable::setTestNow($dayZ->setTime(18, 0));
 
             // Worker records: "I received 1,000,000 toman cash".
             $batch = app(ProposeReferencedContractSettlementBatch::class)->execute(
@@ -248,7 +253,7 @@ class DailyWorkIetReferenceSettlementTest extends TestCase
 
             $daily = $summary->dailyForContractUnit($contract, $ietUnit, 'UTC');
             $this->assertCount(3, $daily);
-            $oldest = collect($daily)->firstWhere('date', '2026-10-03');
+            $oldest = collect($daily)->firstWhere('date', $dayX->format('Y-m-d'));
             $this->assertSame(1_000, $oldest['paid_minor']);
             $this->assertSame(500, $oldest['outstanding_minor']);
 
