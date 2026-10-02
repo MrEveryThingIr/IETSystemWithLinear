@@ -244,6 +244,12 @@ return new class extends Migration
         Schema::dropIfExists('business_categories');
         Schema::dropIfExists('business_contexts');
 
+        if (Schema::hasColumn('businesses', 'slug')) {
+            Schema::table('businesses', function (Blueprint $table): void {
+                $table->dropUnique(['slug']);
+            });
+        }
+
         Schema::table('businesses', function (Blueprint $table): void {
             if (Schema::hasColumn('businesses', 'default_monetary_unit_id')) {
                 $table->dropForeign(['default_monetary_unit_id']);
