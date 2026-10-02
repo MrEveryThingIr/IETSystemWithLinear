@@ -109,9 +109,7 @@ jobs:
           fi
 
           printf 'Pint checking %s\n' "${PHP_FILES[@]}"
-          vendor/bin/pint database/seeders/CoherenceBaselineDemoSeeder.php
-          git --no-pager diff -- database/seeders/CoherenceBaselineDemoSeeder.php
-          exit 1
+          vendor/bin/pint --test "${PHP_FILES[@]}"
 
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress
