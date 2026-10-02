@@ -61,16 +61,19 @@ class BusinessListingVersion extends Model
         ];
     }
 
+    /** @return BelongsTo<BusinessListing, $this> */
     public function listing(): BelongsTo
     {
         return $this->belongsTo(BusinessListing::class, 'business_listing_id');
     }
 
+    /** @return BelongsTo<Actor, $this> */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'created_by_actor_id');
     }
 
+    /** @return HasOne<BusinessPropertyDetails, $this> */
     public function propertyDetails(): HasOne
     {
         return $this->hasOne(BusinessPropertyDetails::class);
