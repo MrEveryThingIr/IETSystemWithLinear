@@ -188,6 +188,12 @@ class BusinessTraditionalListingWorkflowTest extends TestCase
             'Asking Sale: 1234.50 USD',
             (string) $activeRevision->payload['price_summary'],
         );
+
+        $this->actingAs($owner)
+            ->get(route('businesses.catalog.listings.edit', [$business, $listing]))
+            ->assertOk()
+            ->assertSee('Open advanced presentation editor')
+            ->assertDontSee('Content Studio');
     }
 
     public function test_editing_a_published_listing_creates_a_new_working_version_and_preserves_published_history(): void
