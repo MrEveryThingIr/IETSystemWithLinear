@@ -26,7 +26,7 @@
         .status{margin:16px 0;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:13px 16px;color:#065f46;font-weight:900}
         .list{display:grid;gap:11px}.item{border:1px solid #dde3ec;border-radius:19px;padding:16px;background:#fbfcfe}
         .badge{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:900;background:#f2f4f7;color:#475467}.owner{background:#fef3c7;color:#92400e}.manager{background:#dbeafe;color:#1d4ed8}.profession{background:#ede9fe;color:#6d28d9}
-        .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+        .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
         .quick-card{border-radius:19px;padding:17px;color:#fff}.q1{background:linear-gradient(135deg,#7c3aed,#a855f7)}.q2{background:linear-gradient(135deg,#059669,#10b981)}.q3{background:linear-gradient(135deg,#ea580c,#f59e0b)}
         .quick-card strong{font-size:18px;display:block}.quick-card span{font-size:13px;opacity:.92}
         .section-form{margin-top:16px;padding:17px;border-radius:18px;background:#f8fafc;border:1px dashed #cbd5e1}
@@ -58,15 +58,19 @@
     </section>
 
     <section class="quick">
-        <a class="quick-card q1" style="text-decoration:none" href="{{ route('businesses.catalog.index',$business) }}">
+        <a class="quick-card q1" style="text-decoration:none" href="{{ route('businesses.clients.index',$business) }}">
+            <strong>👤 مشتریان و مخاطبان</strong>
+            <span>CRM ساده برای افراد واقعی، حتی بدون حساب IET</span>
+        </a>
+        <a class="quick-card q2" style="text-decoration:none" href="{{ route('businesses.catalog.index',$business) }}">
             <strong>🧰 کاتالوگ و ارائه‌ها</strong>
             <span>کالا، خدمت، ملک و قیمت‌ها در یک زیرساخت مشترک</span>
         </a>
-        <a class="quick-card q2" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
+        <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
             <strong>🗓 برنامه‌های کسب‌وکار</strong>
             <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
         </a>
-        <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
+        <a class="quick-card q1" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
             <strong>＋ برنامه کاری جدید</strong>
             <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
         </a>
