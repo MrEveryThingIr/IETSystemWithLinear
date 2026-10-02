@@ -404,7 +404,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 'C5-C7 demo '.$key,
                 [['actor' => $provider->actor, 'role' => 'provider']],
                 $title.' for '.$amount.' IET.',
-                CarbonImmutable::now()->subMinute(),
+                CarbonImmutable::now(),
                 'UTC',
                 creatorRole: 'receiver',
                 relationship: $relationship,
