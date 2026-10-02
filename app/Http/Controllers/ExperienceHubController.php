@@ -229,7 +229,7 @@ class ExperienceHubController extends Controller
             ->where('actor_id', $actor->id)
             ->first();
 
-        $ledgers = $binding?->context?->ledgers ?? collect();
+        $ledgers = $binding?->context->ledgers ?? collect();
         $obligations = collect($projection['obligations']);
 
         $summaryItems = $obligations->map(fn (array $bucket): array => [
@@ -263,7 +263,7 @@ class ExperienceHubController extends Controller
                 'primary' => ['label' => __('experience.hubs.money.record_activity'), 'href' => route('money.accounts')],
                 'items' => $ledgers->take(5)->map(fn ($ledger): array => [
                     'title' => $ledger->name,
-                    'meta' => $ledger->monetaryUnit?->code ?? '',
+                    'meta' => $ledger->monetaryUnit->code,
                     'href' => route('money.accounts', ['ledger' => $ledger->uuid]),
                 ])->all(),
                 'empty' => __('experience.hubs.money.activity_empty'),
@@ -300,7 +300,7 @@ class ExperienceHubController extends Controller
             ->where('actor_id', $actor->id)
             ->first();
 
-        $allContents = $binding?->context?->contents ?? collect();
+        $allContents = $binding?->context->contents ?? collect();
         $contentCount = $allContents->count();
         $contents = $allContents
             ->sortByDesc('updated_at')
