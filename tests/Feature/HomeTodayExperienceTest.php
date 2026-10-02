@@ -94,11 +94,7 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('What do you want to do first?')
             ->assertSee('Recommended next step')
             ->assertSee('Set my identity')
-            ->assertDontSee('Email verified');
-
-        Livewire::withQueryParams([])
-            ->actingAs($actor->user)
-            ->test(Today::class)
+            ->assertDontSee('Email verified')
             ->assertSee('Find or offer something')
             ->assertSee('Plan something')
             ->assertSee('Run a business')
@@ -110,9 +106,10 @@ class HomeTodayExperienceTest extends TestCase
     {
         $actor = Actor::factory()->create();
 
-        Livewire::actingAs($actor->user)
+        $this->actingAs($actor->user)
             ->withSession(['email_verified_now' => true])
-            ->test(Today::class)
+            ->get(route('dashboard'))
+            ->assertOk()
             ->assertSee('Email verified');
     }
 
