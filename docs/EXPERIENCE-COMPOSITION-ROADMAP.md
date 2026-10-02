@@ -73,7 +73,7 @@ future industries. Existing Real Estate URLs remain compatibility/intake channel
 
 ## Phase 2 — Progressive onboarding and Today
 
-Status: **implemented as coherence milestone C1; CI and owner browser acceptance pending**.
+Status: **complete as coherence milestone C1; owner browser review remains a product-feel checkpoint**.
 
 Implemented:
 
