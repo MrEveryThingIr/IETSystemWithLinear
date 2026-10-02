@@ -282,7 +282,7 @@ class Library extends Component
     {
         return match ($context->kind) {
             ContextKind::Personal => __('library.context.personal'),
-            ContextKind::Business => $context->businessBinding?->business?->name
+            ContextKind::Business => $context->businessBinding?->business->name
                 ?? 'Business · '.$context->uuid,
             ContextKind::GroupSpace => trim(implode(' · ', array_filter([
                 $context->groupSpaceBinding?->groupSpace?->group?->name,
