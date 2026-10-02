@@ -10,10 +10,10 @@ use App\Models\Actor;
 use App\Models\ContractEvent;
 use App\Models\ContractServiceTerm;
 use App\Models\ContractVersion;
+use App\Models\ContractVersionParty;
 use App\Models\IetValuationQuote;
 use App\Models\MarketQuote;
 use App\Models\MonetaryUnit;
-use App\Models\ContractVersionParty;
 use App\Models\User;
 use App\PlanScheduleFrequency;
 use App\Support\IetReferencePricing;
@@ -30,7 +30,8 @@ class ConfigureContractServiceTerms
     public function __construct(
         private readonly EnsureMonetaryUnit $monetaryUnits,
         private readonly IetReferencePricing $referencePricing,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array<string, mixed>  $input
