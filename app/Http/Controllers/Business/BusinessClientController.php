@@ -66,7 +66,7 @@ class BusinessClientController extends Controller
             $business,
             $data['display_name'],
             $data['phone'],
-            $data['source'] !== '' ? $data['source'] : 'manual',
+            filled($data['source'] ?? null) ? trim((string) $data['source']) : 'manual',
         );
 
         $contact->update([
