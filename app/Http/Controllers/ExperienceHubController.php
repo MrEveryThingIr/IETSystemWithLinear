@@ -305,7 +305,9 @@ class ExperienceHubController extends Controller
             ->where('actor_id', $actor->id)
             ->first();
 
-        $contents = ($binding?->context?->contents ?? collect())
+        $allContents = $binding?->context?->contents ?? collect();
+        $contentCount = $allContents->count();
+        $contents = $allContents
             ->sortByDesc('updated_at')
             ->take(6)
             ->values();
@@ -314,7 +316,7 @@ class ExperienceHubController extends Controller
             [
                 'title' => __('experience.hubs.content.mine'),
                 'help' => __('experience.hubs.content.mine_help'),
-                'count' => $contents->count(),
+                'count' => $contentCount,
                 'primary' => ['label' => __('experience.hubs.content.open_mine'), 'href' => route('contexts.personal')],
                 'items' => $contents->map(fn ($content): array => [
                     'title' => $content->activeRevision?->title ?: __('ui.content.untitled'),
@@ -343,24 +345,27 @@ class ExperienceHubController extends Controller
         $user = $this->user($request);
         $this->requireAny($user, ['manual', 'system-map']);
 
-        return $this->renderHub('help', [
-            [
+        $sections = [];
+
+        if ($this->access->allows($user, 'manual')) {
+            $sections[] = [
                 'title' => __('experience.hubs.help.learn'),
                 'help' => __('experience.hubs.help.learn_help'),
-                'primary' => $this->access->allows($user, 'manual')
-                    ? ['label' => __('experience.hubs.help.open_manual'), 'href' => route('manual')]
-                    : null,
+                'primary' => ['label' => __('experience.hubs.help.open_manual'), 'href' => route('manual')],
                 'items' => [],
-            ],
-            [
+            ];
+        }
+
+        if ($this->access->allows($user, 'system-map')) {
+            $sections[] = [
                 'title' => __('experience.hubs.help.map'),
                 'help' => __('experience.hubs.help.map_help'),
-                'primary' => $this->access->allows($user, 'system-map')
-                    ? ['label' => __('experience.hubs.help.open_map'), 'href' => route('system-map')]
-                    : null,
+                'primary' => ['label' => __('experience.hubs.help.open_map'), 'href' => route('system-map')],
                 'items' => [],
-            ],
-        ]);
+            ];
+        }
+
+        return $this->renderHub('help', $sections);
     }
 
     /**
