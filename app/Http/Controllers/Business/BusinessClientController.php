@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Business;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Business;
 use App\Models\BusinessContact;
 use App\Services\Business\BusinessMarketService;
@@ -130,10 +131,13 @@ class BusinessClientController extends Controller
             'cash_basis' => ['nullable', Rule::in(['total', 'hour', 'day', 'week', 'month', 'year'])],
         ]);
 
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+
         $intent = $market->publishClientNeed(
             $business,
             $client,
-            $request->user(),
+            $user,
             $data['concept_label'],
             $data,
         );
