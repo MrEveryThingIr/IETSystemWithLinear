@@ -12,7 +12,7 @@ class PublicIntakeAccess
         $portal->loadMissing('business');
 
         return PlatformAdmin::check($user)
-            || ($portal->business !== null && BusinessAccess::canView($user, $portal->business))
+            || ($portal->business !== null && BusinessAccess::canOperate($user, $portal->business))
             || $portal->grants()->where('user_id', $user->getKey())->exists();
     }
 
