@@ -118,7 +118,9 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
     Route::livewire('/email/verify', VerifyEmailNotice::class)->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     Route::livewire('/dashboard', config('release.profile') === 'planning_baseline' ? PlanningWorkspace::class : HomeToday::class)->middleware('verified')->name('dashboard');
-    Route::view('/getting-started', config('release.profile') === 'planning_baseline' ? 'getting-started-baseline' : 'getting-started')->middleware('verified')->name('getting-started');
+    Route::get('/getting-started', fn () => redirect()->to(route('dashboard').'#getting-started'))
+        ->middleware('verified')
+        ->name('getting-started');
 });
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::livewire('/profile', config('release.profile') === 'planning_baseline' ? ProfileBasicManage::class : ProfileManage::class)->name('profile.edit');
