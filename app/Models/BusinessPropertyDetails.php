@@ -75,6 +75,7 @@ class BusinessPropertyDetails extends Model
         ];
     }
 
+    /** @return BelongsTo<BusinessListingVersion, $this> */
     public function listingVersion(): BelongsTo
     {
         return $this->belongsTo(BusinessListingVersion::class, 'business_listing_version_id');
