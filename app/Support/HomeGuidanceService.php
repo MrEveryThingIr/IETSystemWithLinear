@@ -110,7 +110,7 @@ class HomeGuidanceService
         $onboarding = [
             'completed' => $completed,
             'total' => $total,
-            'percent' => $total === 0 ? 100 : (int) round(($completed / $total) * 100),
+            'percent' => (int) round(($completed / $total) * 100),
             'complete' => $completed === $total,
             'steps' => $steps,
         ];
