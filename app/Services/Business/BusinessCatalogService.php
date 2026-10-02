@@ -96,7 +96,7 @@ class BusinessCatalogService
     }
 
     /**
-     * @param array{title:string, short_description?:?string, description?:?string, structured_data?:array<string,mixed>} $versionData
+     * @param  array{title:string, short_description?:?string, description?:?string, structured_data?:array<string,mixed>}  $versionData
      */
     public function reviseListing(
         BusinessListing $listing,
