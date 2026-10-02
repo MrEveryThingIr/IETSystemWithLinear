@@ -77,6 +77,28 @@ class BusinessVerticalConsolidationTest extends TestCase
         $this->assertCount(2, $contact->contactPoints);
     }
 
+    public function test_business_crm_defaults_missing_source_to_manual(): void
+    {
+        $owner = $this->userWithActor();
+        $this->publishSurfaces($owner, ['business']);
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Source Default Business',
+            'kind' => 'services',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($owner)
+            ->post(route('businesses.clients.store', $business), [
+                'display_name' => 'No Source Client',
+                'phone' => '09121111111',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('manual', BusinessContact::query()->sole()->source);
+    }
+
     public function test_public_business_does_not_expose_operating_context_crm_or_catalog_to_strangers(): void
     {
         $owner = $this->userWithActor();
