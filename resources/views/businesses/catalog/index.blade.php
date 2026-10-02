@@ -130,6 +130,18 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                     </div>
                     @if($listing->publishedVersion)
                         <div style="margin-top:13px;color:#047857;font-weight:850">✓ {{ $fa ? 'نسخه منتشرشده' : 'Published version' }} #{{ $listing->publishedVersion->version_number }}</div>
+                        @if($canManage)
+                            <form method="POST" action="{{ route('businesses.catalog.listings.market.store',[$business,$listing]) }}" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1">
+                                @csrf
+                                <label>
+                                    <span>{{ $fa ? 'مفهوم بازار (اختیاری)' : 'Market concept (optional)' }}</span>
+                                    <input name="concept_label" placeholder="{{ $fa ? 'مثلاً ملک مسکونی، بازرسی ابعادی، دریل شارژی' : 'e.g. residential property, dimensional inspection, cordless drill' }}">
+                                </label>
+                                <button class="btn green" style="margin-top:8px">
+                                    {{ $fa ? 'انتشار این نسخه در نیازها و ارائه‌ها' : 'Publish this version to Needs & Offers' }}
+                                </button>
+                            </form>
+                        @endif
                     @endif
                 </article>
             @empty
