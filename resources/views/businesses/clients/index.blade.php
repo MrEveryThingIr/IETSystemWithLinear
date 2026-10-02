@@ -74,7 +74,13 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                         @endforeach
                     </div>
                     @if($canManage && $client->status === 'active')
+                        @php($marketNeed = $marketNeedsByContact->get($client->uuid))
                         <div style="min-width:min(100%,360px)">
+                            @if($marketNeed)
+                                <a class="btn primary" href="{{ route('intents.matches',$marketNeed) }}">
+                                    {{ $fa ? 'نیاز فعال — دیدن تطبیق‌ها' : 'Active Need — review matches' }}
+                                </a>
+                            @else
                             <details>
                                 <summary class="btn primary" style="list-style:none">{{ $fa ? 'ثبت نیاز این مشتری در بازار' : 'Publish a Need for this client' }}</summary>
                                 <form method="POST" action="{{ route('businesses.clients.needs.store',[$business,$client]) }}" style="margin-top:10px;padding:12px;border:1px dashed #cbd5e1;border-radius:14px">
@@ -104,6 +110,7 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                                     <button class="btn primary" style="margin-top:8px">{{ $fa ? 'انتشار نیاز و دیدن تطبیق‌ها' : 'Publish Need & see matches' }}</button>
                                 </form>
                             </details>
+                            @endif
                             <form method="POST" action="{{ route('businesses.clients.archive',[$business,$client]) }}" onsubmit="return confirm('{{ $fa ? 'این مخاطب بایگانی شود؟' : 'Archive this contact?' }}')" style="margin-top:8px">
                                 @csrf @method('PATCH')
                                 <button class="btn danger">{{ $fa ? 'بایگانی' : 'Archive' }}</button>
