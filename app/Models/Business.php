@@ -76,51 +76,61 @@ class Business extends Model
         return 'uuid';
     }
 
+    /** @return BelongsTo<Actor, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(Actor::class, 'owner_actor_id');
     }
 
+    /** @return HasMany<BusinessMembership, $this> */
     public function memberships(): HasMany
     {
         return $this->hasMany(BusinessMembership::class);
     }
 
+    /** @return MorphMany<ContactPoint, $this> */
     public function contactPoints(): MorphMany
     {
         return $this->morphMany(ContactPoint::class, 'contactable');
     }
 
+    /** @return MorphMany<ActorAddress, $this> */
     public function addresses(): MorphMany
     {
         return $this->morphMany(ActorAddress::class, 'addressable');
     }
 
+    /** @return MorphMany<BusinessContact, $this> */
     public function businessContacts(): MorphMany
     {
         return $this->morphMany(BusinessContact::class, 'owner');
     }
 
+    /** @return HasMany<BusinessCategory, $this> */
     public function categories(): HasMany
     {
         return $this->hasMany(BusinessCategory::class)->orderBy('sort_order')->orderBy('name');
     }
 
+    /** @return HasMany<BusinessListing, $this> */
     public function listings(): HasMany
     {
         return $this->hasMany(BusinessListing::class)->latest();
     }
 
+    /** @return HasMany<PublicIntakePortal, $this> */
     public function publicIntakePortals(): HasMany
     {
         return $this->hasMany(PublicIntakePortal::class);
     }
 
+    /** @return HasOne<BusinessContext, $this> */
     public function contextBinding(): HasOne
     {
         return $this->hasOne(BusinessContext::class);
     }
 
+    /** @return BelongsTo<MonetaryUnit, $this> */
     public function defaultMonetaryUnit(): BelongsTo
     {
         return $this->belongsTo(MonetaryUnit::class, 'default_monetary_unit_id');
