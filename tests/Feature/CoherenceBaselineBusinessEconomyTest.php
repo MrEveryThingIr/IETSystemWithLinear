@@ -336,6 +336,56 @@ class CoherenceBaselineBusinessEconomyTest extends TestCase
         $this->assertSame(-$amount, app(IetPosition::class)->forUser($receiver->user)['net_position_minor']);
         $this->assertSame($amount, app(IetPosition::class)->forUser($provider->user)['net_position_minor']);
         $this->assertSame(0, app(IetPosition::class)->forUser($provider->user)['cashout_eligible_minor']);
+
+        $reviewer = Actor::factory()->create();
+        PlatformAccessGrant::factory()->for($reviewer->user)->create([
+            'role' => PlatformRole::Superadmin,
+            'reason' => 'Scenario settlement reviewer.',
+        ]);
+
+        app(PublishIetValuationQuote::class)->execute(
+            $reviewer->user,
+            '0.010000000000000000',
+            'Scenario quote: one IET equals one US cent.',
+        );
+
+        $deposit = app(CreateIetExchangeRequest::class)->execute(
+            $receiver->user,
+            IetExchangeDirection::Deposit,
+            $amount,
+            'SCENARIO-DEPOSIT-'.$kind,
+        );
+        app(ReviewIetExchangeRequest::class)->confirm($deposit, $reviewer->user);
+
+        $this->assertSame(0, app(IetPosition::class)->forUser($receiver->user)['net_position_minor']);
+
+        $settlement = app(ProposeSettlement::class)->execute(
+            $obligation,
+            $receiver->user,
+            $amount,
+            now()->subSecond(),
+            'IET',
+            'SCENARIO-SETTLEMENT-'.$kind,
+        );
+        app(RespondToSettlement::class)->confirm($settlement, $provider->user);
+
+        $settledReceiver = app(IetPosition::class)->forUser($receiver->user);
+        $settledProvider = app(IetPosition::class)->forUser($provider->user);
+
+        $this->assertSame(0, $settledReceiver['net_position_minor']);
+        $this->assertSame(0, $settledReceiver['payable_minor']);
+        $this->assertSame($amount, $settledProvider['wallet_minor']);
+        $this->assertSame($amount, $settledProvider['net_position_minor']);
+        $this->assertSame($amount, $settledProvider['cashout_eligible_minor']);
+
+        $cashout = app(CreateIetExchangeRequest::class)->execute(
+            $provider->user,
+            IetExchangeDirection::Cashout,
+            $amount,
+            'SCENARIO-CASHOUT-'.$kind,
+        );
+
+        $this->assertSame($amount, $cashout->iet_amount);
     }
 
     public function test_debtor_can_earn_more_than_their_debt_and_end_with_a_positive_internal_position(): void
