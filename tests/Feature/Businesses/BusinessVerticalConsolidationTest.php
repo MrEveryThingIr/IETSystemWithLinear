@@ -118,7 +118,9 @@ class BusinessVerticalConsolidationTest extends TestCase
 
         $this->actingAs($stranger)
             ->get(route('businesses.show', $business))
-            ->assertForbidden();
+            ->assertOk()
+            ->assertDontSee('مشتری / مخاطب')
+            ->assertDontSee('برنامه‌های کسب‌وکار');
 
         $this->actingAs($stranger)
             ->get(route('businesses.clients.index', $business))
