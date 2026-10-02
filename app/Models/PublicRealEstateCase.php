@@ -11,6 +11,7 @@ class PublicRealEstateCase extends Model
     protected $fillable = [
         'public_intake_portal_id',
         'business_contact_id',
+        'business_listing_id',
         'reference_code',
         'intent',
         'transaction_mode',
@@ -83,10 +84,19 @@ class PublicRealEstateCase extends Model
         ];
     }
 
-    /** @return BelongsTo<PublicIntakePortal, $this> */
     public function portal(): BelongsTo
     {
         return $this->belongsTo(PublicIntakePortal::class, 'public_intake_portal_id');
+    }
+
+    public function businessContact(): BelongsTo
+    {
+        return $this->belongsTo(BusinessContact::class);
+    }
+
+    public function businessListing(): BelongsTo
+    {
+        return $this->belongsTo(BusinessListing::class);
     }
 
     public function getRouteKeyName(): string
@@ -94,7 +104,6 @@ class PublicRealEstateCase extends Model
         return 'reference_code';
     }
 
-    /** @return HasMany<PublicRealEstateCaseMedia, $this> */
     public function media(): HasMany
     {
         return $this->hasMany(PublicRealEstateCaseMedia::class, 'public_real_estate_case_id')
