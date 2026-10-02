@@ -17,7 +17,8 @@ class HomeGuidanceService
 {
     public function __construct(
         private readonly ExperienceNavigation $navigation,
-    ) {}
+    ) {
+    }
 
     /**
      * @param array{
@@ -147,8 +148,7 @@ class HomeGuidanceService
         array $steps,
         array $firstGoalChoices,
         Collection $surfaceKeys,
-    ): ?HomeGuidanceItem
-    {
+    ): ?HomeGuidanceItem {
         $waiting = $projection['waitingOnMe']->first();
         if ($waiting instanceof HomeActionItem) {
             return new HomeGuidanceItem(
