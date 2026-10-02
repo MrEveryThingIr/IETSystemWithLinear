@@ -38,7 +38,7 @@ class ExperienceHubController extends Controller
 
         $matchItems = $mine->map(fn (ActorProfileIntent $intent): array => [
             'title' => $intent->title ?: $intent->concept->displayLabel(),
-            'meta' => __('experience.hubs.needs_offers.match_item_meta'),
+            'meta' => __('experience.hubs.needs-offers.match_item_meta'),
             'href' => route('intents.matches', $intent),
         ])->all();
 
@@ -46,30 +46,30 @@ class ExperienceHubController extends Controller
             'needs-offers',
             [
                 [
-                    'title' => __('experience.hubs.needs_offers.mine'),
-                    'help' => __('experience.hubs.needs_offers.mine_help'),
+                    'title' => __('experience.hubs.needs-offers.mine'),
+                    'help' => __('experience.hubs.needs-offers.mine_help'),
                     'count' => $mineCount,
-                    'primary' => ['label' => __('experience.hubs.needs_offers.create'), 'href' => route('intents.create')],
-                    'secondary' => ['label' => __('experience.hubs.needs_offers.open_all'), 'href' => route('intents.index')],
+                    'primary' => ['label' => __('experience.hubs.needs-offers.create'), 'href' => route('intents.create')],
+                    'secondary' => ['label' => __('experience.hubs.needs-offers.open_all'), 'href' => route('intents.index')],
                     'items' => $mine->map(fn (ActorProfileIntent $intent): array => [
                         'title' => $intent->title ?: $intent->concept->displayLabel(),
-                        'meta' => __('experience.hubs.needs_offers.kind_'.$intent->kind->value),
+                        'meta' => __('experience.hubs.needs-offers.kind_'.$intent->kind->value),
                         'href' => route('intents.matches', $intent),
                     ])->all(),
-                    'empty' => __('experience.hubs.needs_offers.mine_empty'),
+                    'empty' => __('experience.hubs.needs-offers.mine_empty'),
                 ],
                 [
-                    'title' => __('experience.hubs.needs_offers.discover'),
-                    'help' => __('experience.hubs.needs_offers.discover_help'),
-                    'primary' => ['label' => __('experience.hubs.needs_offers.discover_action'), 'href' => route('intents.index')],
+                    'title' => __('experience.hubs.needs-offers.discover'),
+                    'help' => __('experience.hubs.needs-offers.discover_help'),
+                    'primary' => ['label' => __('experience.hubs.needs-offers.discover_action'), 'href' => route('intents.index')],
                     'items' => [],
                 ],
                 [
-                    'title' => __('experience.hubs.needs_offers.matches'),
-                    'help' => __('experience.hubs.needs_offers.matches_help'),
+                    'title' => __('experience.hubs.needs-offers.matches'),
+                    'help' => __('experience.hubs.needs-offers.matches_help'),
                     'count' => count($matchItems),
                     'items' => $matchItems,
-                    'empty' => __('experience.hubs.needs_offers.matches_empty'),
+                    'empty' => __('experience.hubs.needs-offers.matches_empty'),
                 ],
             ],
         );
