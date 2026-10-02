@@ -118,50 +118,17 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                         @endforeach
                     </div>
 
-                    @if($canManage)
-                        <form class="price-form" method="POST" action="{{ route('businesses.catalog.listings.prices.store',[$business,$listing]) }}">
-                            @csrf
-                            <div class="price-grid">
-                                <label><span>{{ $fa ? 'نوع قیمت' : 'Price type' }}</span>
-                                    <select name="price_type" required>
-                                        <option value="retail">{{ $fa ? 'فروش / خرده‌فروشی' : 'Retail / sale' }}</option>
-                                        <option value="service">{{ $fa ? 'قیمت خدمت' : 'Service price' }}</option>
-                                        <option value="hourly">{{ $fa ? 'ساعتی' : 'Hourly' }}</option>
-                                        <option value="daily">{{ $fa ? 'روزانه' : 'Daily' }}</option>
-                                        <option value="monthly">{{ $fa ? 'ماهانه' : 'Monthly' }}</option>
-                                        <option value="wholesale">{{ $fa ? 'عمده' : 'Wholesale' }}</option>
-                                        <option value="cost">{{ $fa ? 'هزینه داخلی' : 'Internal cost' }}</option>
-                                        <option value="asking">{{ $fa ? 'قیمت پیشنهادی' : 'Asking price' }}</option>
-                                    </select>
-                                </label>
-                                <label><span>{{ $fa ? 'واحد پول' : 'Monetary unit' }}</span>
-                                    <select name="unit_code" required>
-                                        @foreach($unitCatalog as $code => $meta)
-                                            <option value="{{ $code }}" @selected($code === ($business->defaultMonetaryUnit?->code ?? 'IET'))>{{ $code }} — {{ $meta['name'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </label>
-                                <label><span>{{ $fa ? 'مبلغ' : 'Amount' }}</span><input name="amount" required inputmode="decimal" placeholder="0"></label>
-                                <label><span>{{ $fa ? 'مبنای قیمت' : 'Basis' }}</span><input name="basis" maxlength="80" placeholder="{{ $fa ? 'مثلاً هر عدد، هر ساعت، هر مترمربع' : 'per item, per hour, per m²' }}"></label>
-                                <label><span>{{ $fa ? 'نمایش قیمت' : 'Price visibility' }}</span>
-                                    <select name="visibility">
-                                        <option value="members">{{ $fa ? 'اعضای کسب‌وکار' : 'Business members' }}</option>
-                                        <option value="public">{{ $fa ? 'عمومی' : 'Public' }}</option>
-                                        <option value="private">{{ $fa ? 'خصوصی' : 'Private' }}</option>
-                                    </select>
-                                </label>
-                                <label><span>{{ $fa ? 'علت / یادداشت تغییر' : 'Reason / change note' }}</span><input name="reason" maxlength="500"></label>
-                            </div>
-                            <button class="btn light" style="margin-top:9px">{{ $fa ? '＋ ثبت نسخه قیمت جدید' : '+ Add new price version' }}</button>
-                        </form>
-                    @endif
-
-                    @if($canManage && $version && $version->published_at === null)
-                        <form method="POST" action="{{ route('businesses.catalog.listings.publish',[$business,$listing]) }}" style="margin-top:14px">
-                            @csrf
-                            <button class="btn green">{{ $fa ? 'انتشار این نسخه و قفل تاریخچه' : 'Publish and freeze this version' }}</button>
-                        </form>
-                    @elseif($listing->publishedVersion)
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+                        @if($canManage)
+                            <a class="btn primary" href="{{ route('businesses.catalog.listings.edit',[$business,$listing]) }}">
+                                {{ $fa ? 'مدیریت و تکمیل' : 'Manage listing' }}
+                            </a>
+                        @endif
+                        <a class="btn light" href="{{ route('businesses.catalog.listings.preview',[$business,$listing]) }}">
+                            {{ __('business_listing.preview') }}
+                        </a>
+                    </div>
+                    @if($listing->publishedVersion)
                         <div style="margin-top:13px;color:#047857;font-weight:850">✓ {{ $fa ? 'نسخه منتشرشده' : 'Published version' }} #{{ $listing->publishedVersion->version_number }}</div>
                     @endif
                 </article>
