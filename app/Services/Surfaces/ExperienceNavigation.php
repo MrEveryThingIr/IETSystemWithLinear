@@ -86,7 +86,7 @@ class ExperienceNavigation
         $primary = array_values(array_filter([
             $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', ['market']),
             $destination('work', 'experience.navigation.work', 'briefcase', ['deals', 'planner']),
-            $destination('organizations', 'experience.navigation.organizations', 'building-office-2', ['business', 'real-estate', 'groups']),
+            $destination('organizations', 'experience.navigation.organizations', 'building-office-2', ['business', 'groups']),
             $destination('money', 'experience.navigation.money', 'wallet', ['money', 'accounting', 'exchange']),
             $destination('content', 'experience.navigation.content', 'rectangle-stack', ['content']),
         ]));
