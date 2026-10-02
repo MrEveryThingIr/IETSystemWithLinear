@@ -49,7 +49,7 @@ class HomeGuidanceService
         abort_unless($current instanceof User, 403);
 
         $actor = $current->actor;
-        if (! $actor instanceof Actor) {
+        if (($actor instanceof Actor) === false) {
             return [
                 'onboarding' => [
                     'completed' => 0,
@@ -147,7 +147,8 @@ class HomeGuidanceService
         array $steps,
         array $firstGoalChoices,
         Collection $surfaceKeys,
-    ): ?HomeGuidanceItem {
+    ): ?HomeGuidanceItem
+    {
         $waiting = $projection['waitingOnMe']->first();
         if ($waiting instanceof HomeActionItem) {
             return new HomeGuidanceItem(
@@ -183,7 +184,7 @@ class HomeGuidanceService
         }
 
         $setupStep = collect($steps)
-            ->first(fn (HomeOnboardingStep $step): bool => ! $step->complete && $step->key !== 'first_goal');
+            ->first(fn (HomeOnboardingStep $step): bool => $step->complete === false && $step->key !== 'first_goal');
 
         if ($setupStep instanceof HomeOnboardingStep) {
             return new HomeGuidanceItem(
