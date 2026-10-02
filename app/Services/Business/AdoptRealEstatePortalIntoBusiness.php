@@ -78,11 +78,13 @@ class AdoptRealEstatePortalIntoBusiness
                 $this->catalog->ensureCategory($business, $name, $slug, $properties);
             }
 
-            return $business->refresh([
+            $business->load([
                 'contextBinding.context',
                 'categories',
                 'publicIntakePortals',
             ]);
+
+            return $business;
         }, attempts: 3);
     }
 }
