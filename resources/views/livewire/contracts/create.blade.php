@@ -51,20 +51,55 @@
                     </flux:select>
                 </div>
 
-                <div class="grid gap-4 md:grid-cols-4">
+                <div class="grid gap-4 md:grid-cols-3">
                     <flux:input wire:model="serviceTotalQuantity" :label="__('contracts.service.total_quantity')" />
                     <flux:input wire:model="serviceQuantityPerOccurrence" :label="__('contracts.service.quantity_per_occurrence')" />
                     <flux:input wire:model="serviceUnit" :label="__('contracts.service.unit')" maxlength="40" />
-                    <flux:input wire:model="serviceUnitRate" :label="__('contracts.service.unit_rate')" inputmode="decimal" />
                 </div>
 
-                <div class="grid gap-4 md:grid-cols-3">
-                    <flux:select wire:model="serviceMonetaryUnit" :label="__('contracts.service.monetary_unit')">
-                        @foreach ($monetaryUnits as $code => $meta)
-                            <flux:select.option :value="$code">{{ $code }} · {{ $meta['name'] }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
+                <flux:checkbox
+                    wire:model.live="serviceUseReferencePrice"
+                    :label="__('contracts.service.reference_price_toggle')"
+                />
 
+                @if ($serviceUseReferencePrice)
+                    <flux:callout>
+                        {{ __('contracts.service.reference_price_help') }}
+                    </flux:callout>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <flux:input
+                            wire:model="serviceReferenceUnitRate"
+                            :label="__('contracts.service.reference_unit_rate')"
+                            inputmode="decimal"
+                        />
+                        <flux:select
+                            wire:model="serviceReferenceMonetaryUnit"
+                            :label="__('contracts.service.reference_monetary_unit')"
+                        >
+                            @foreach ($monetaryUnits as $code => $meta)
+                                @if ($code !== 'IET')
+                                    <flux:select.option :value="$code">{{ $code }} · {{ $meta['name'] }}</flux:select.option>
+                                @endif
+                            @endforeach
+                        </flux:select>
+                    </div>
+
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300">
+                        {{ __('contracts.service.reference_price_exchange_help') }}
+                    </div>
+                @else
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <flux:input wire:model="serviceUnitRate" :label="__('contracts.service.unit_rate')" inputmode="decimal" />
+                        <flux:select wire:model="serviceMonetaryUnit" :label="__('contracts.service.monetary_unit')">
+                            @foreach ($monetaryUnits as $code => $meta)
+                                <flux:select.option :value="$code">{{ $code }} · {{ $meta['name'] }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+                @endif
+
+                <div class="grid gap-4 md:grid-cols-2">
                     <flux:select wire:model="serviceSettlementCycle" :label="__('contracts.service.settlement_cycle')">
                         <flux:select.option value="per_fulfillment">{{ __('contracts.service.cycles.per_fulfillment') }}</flux:select.option>
                         <flux:select.option value="weekly">{{ __('contracts.service.cycles.weekly') }}</flux:select.option>

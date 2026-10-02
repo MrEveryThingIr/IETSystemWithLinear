@@ -11,6 +11,7 @@ use App\Models\FinancialObligationEvent;
 use App\Models\Settlement;
 use App\Models\User;
 use App\Support\IetAvailableBalance;
+use App\Support\SettlementMethod;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -71,6 +72,7 @@ class ProposeSettlement
 
             if (
                 $locked->monetaryUnit->code === 'IET'
+                && SettlementMethod::usesIetWallet($method)
                 && (int) $locked->debtor_actor_id === (int) $current->actor->id
             ) {
                 $wallet = $this->ietWallets->execute($current);

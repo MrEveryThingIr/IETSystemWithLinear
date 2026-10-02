@@ -28,8 +28,11 @@ class EnsureFinancialBridgeAccounts
      *   settlement_credit: Account
      * }
      */
-    public function execute(FinancialObligation $obligation, User $user): array
-    {
+    public function execute(
+        FinancialObligation $obligation,
+        User $user,
+        bool $externalCashSettlement = false,
+    ): array {
         $current = User::query()->with('actor')->find($user->id);
         abort_unless(
             $current instanceof User
@@ -49,7 +52,15 @@ class EnsureFinancialBridgeAccounts
         abort_unless($isDebtor || $isCreditor, 403);
 
         $ledger = $this->ledgers->execute($current, $obligation->monetaryUnit->code);
-        $cash = $ledger->accounts()->where('system_key', 'cash')->firstOrFail();
+        $cash = $externalCashSettlement
+            ? $this->accounts->execute(
+                $ledger,
+                $current,
+                'External cash equivalent',
+                AccountType::Asset,
+                'external_cash_equivalent',
+            )
+            : $ledger->accounts()->where('system_key', 'cash')->firstOrFail();
 
         if ($isDebtor) {
             $counterparty = $obligation->creditor;

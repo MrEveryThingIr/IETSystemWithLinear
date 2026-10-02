@@ -6,6 +6,7 @@ use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Contracts\ProposeContractAmendment;
 use App\Actions\Financial\ProposeContractSettlementBatch;
+use App\Actions\Financial\ProposeReferencedContractSettlementBatch;
 use App\Actions\Financial\RespondToContractSettlementBatch;
 use App\Models\Actor;
 use App\Models\Commitment;
@@ -16,11 +17,14 @@ use App\Models\FinancialObligation;
 use App\Models\MonetaryUnit;
 use App\Models\User;
 use App\Support\ContractFinancialSummary;
+use App\Support\LocalizedNumber;
+use App\Support\MonetaryUnitCatalog;
 use App\Support\MoneyAmount;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -48,6 +52,12 @@ class Show extends Component
     public string $timezone = 'UTC';
 
     public string $settlementAmount = '';
+
+    public bool $settlementUseReferenceCash = false;
+
+    public string $settlementReferenceCashAmount = '';
+
+    public string $settlementReferenceCashUnit = 'IRT';
 
     public string $settlementPerspective = 'paid';
 
@@ -124,12 +134,39 @@ class Show extends Component
         session()->flash('status', __('contracts.messages.amendment_proposed'));
     }
 
-    public function proposeCashSettlement(ProposeContractSettlementBatch $propose): void
-    {
+    public function proposeCashSettlement(
+        ProposeContractSettlementBatch $propose,
+        ProposeReferencedContractSettlementBatch $proposeReferenced,
+    ): void {
         $this->refreshContract();
 
+        $this->settlementAmount = LocalizedNumber::decimal(str_replace(',', '', $this->settlementAmount));
+        $this->settlementReferenceCashAmount = LocalizedNumber::decimal(
+            str_replace(',', '', $this->settlementReferenceCashAmount),
+        );
+
         $data = $this->validate([
-            'settlementAmount' => ['required', 'string', 'max:40'],
+            'settlementUseReferenceCash' => ['boolean'],
+            'settlementAmount' => [
+                Rule::requiredIf(! $this->settlementUseReferenceCash),
+                'nullable',
+                'string',
+                'max:40',
+            ],
+            'settlementReferenceCashAmount' => [
+                Rule::requiredIf($this->settlementUseReferenceCash),
+                'nullable',
+                'string',
+                'max:40',
+            ],
+            'settlementReferenceCashUnit' => [
+                Rule::requiredIf($this->settlementUseReferenceCash),
+                'nullable',
+                Rule::in(array_values(array_filter(
+                    array_keys(MonetaryUnitCatalog::all()),
+                    fn (string $code): bool => $code !== 'IET',
+                ))),
+            ],
             'settlementPerspective' => ['required', 'in:paid,received'],
             'settlementUnitCode' => ['required', 'string', 'max:16'],
             'settlementPaidAt' => ['required', 'string', 'max:40'],
@@ -137,31 +174,68 @@ class Show extends Component
             'settlementNote' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $unit = MonetaryUnit::query()
-            ->where('code', strtoupper($data['settlementUnitCode']))
-            ->firstOrFail();
+        if ($this->settlementUseReferenceCash) {
+            abort_unless(
+                strtoupper($data['settlementUnitCode']) === 'IET',
+                422,
+                __('financial.settlement_batch.reference_requires_iet'),
+            );
 
-        try {
-            $amountMinor = MoneyAmount::parse($data['settlementAmount'], $unit->exponent);
-        } catch (InvalidArgumentException) {
-            $this->addError('settlementAmount', __('financial.validation.amount'));
+            $referenceMeta = MonetaryUnitCatalog::get($data['settlementReferenceCashUnit']);
 
-            return;
+            try {
+                $referenceAmountMinor = MoneyAmount::parse(
+                    $data['settlementReferenceCashAmount'],
+                    $referenceMeta['exponent'],
+                );
+            } catch (InvalidArgumentException) {
+                $this->addError('settlementReferenceCashAmount', __('financial.validation.amount'));
+
+                return;
+            }
+
+            $proposeReferenced->execute(
+                $this->contract,
+                $this->user(),
+                $data['settlementReferenceCashUnit'],
+                $referenceAmountMinor,
+                $this->settlementInstant(),
+                $data['settlementReference'] !== '' ? $data['settlementReference'] : null,
+                $data['settlementNote'] !== '' ? $data['settlementNote'] : null,
+                $data['settlementPerspective'],
+            );
+        } else {
+            $unit = MonetaryUnit::query()
+                ->where('code', strtoupper($data['settlementUnitCode']))
+                ->firstOrFail();
+
+            try {
+                $amountMinor = MoneyAmount::parse($data['settlementAmount'], $unit->exponent);
+            } catch (InvalidArgumentException) {
+                $this->addError('settlementAmount', __('financial.validation.amount'));
+
+                return;
+            }
+
+            $propose->execute(
+                $this->contract,
+                $this->user(),
+                $unit,
+                $amountMinor,
+                $this->settlementInstant(),
+                $unit->code === 'IET' ? 'IET' : 'cash',
+                $data['settlementReference'] !== '' ? $data['settlementReference'] : null,
+                $data['settlementNote'] !== '' ? $data['settlementNote'] : null,
+                perspective: $data['settlementPerspective'],
+            );
         }
 
-        $propose->execute(
-            $this->contract,
-            $this->user(),
-            $unit,
-            $amountMinor,
-            $this->settlementInstant(),
-            'cash',
-            $data['settlementReference'] !== '' ? $data['settlementReference'] : null,
-            $data['settlementNote'] !== '' ? $data['settlementNote'] : null,
-            perspective: $data['settlementPerspective'],
+        $this->reset(
+            'settlementAmount',
+            'settlementReferenceCashAmount',
+            'settlementReference',
+            'settlementNote',
         );
-
-        $this->reset('settlementAmount', 'settlementReference', 'settlementNote');
         $this->refreshContract();
         session()->flash('status', __('financial.messages.batch_proposed'));
     }
@@ -204,11 +278,17 @@ class Show extends Component
             'serviceTerm.employer.user',
             'serviceTerm.worker.user',
             'serviceTerm.monetaryUnit',
+            'serviceTerm.referenceMonetaryUnit',
+            'serviceTerm.referenceMarketQuote',
+            'serviceTerm.ietValuationQuote',
         ]);
         $activeVersion?->loadMissing([
             'serviceTerm.employer.user',
             'serviceTerm.worker.user',
             'serviceTerm.monetaryUnit',
+            'serviceTerm.referenceMonetaryUnit',
+            'serviceTerm.referenceMarketQuote',
+            'serviceTerm.ietValuationQuote',
             'serviceTerm.commitment.planBinding.plan',
         ]);
 
@@ -225,6 +305,9 @@ class Show extends Component
             ->with([
                 'contractVersion.serviceTerm.monetaryUnit',
                 'serviceTerm.monetaryUnit',
+                'serviceTerm.referenceMonetaryUnit',
+                'serviceTerm.referenceMarketQuote',
+                'serviceTerm.ietValuationQuote',
                 'obligor.user',
                 'beneficiary.user',
                 'planBinding.plan',
@@ -283,6 +366,9 @@ class Show extends Component
                 'debtor.user',
                 'creditor.user',
                 'monetaryUnit',
+                'referenceMonetaryUnit',
+                'referenceMarketQuote',
+                'ietValuationQuote',
                 'proposedBy.user',
                 'settlements.obligation.fulfillment.commitment',
                 'settlements.proposedBy.user',
@@ -325,6 +411,10 @@ class Show extends Component
                 : '';
         }
 
+        if ($this->settlementUnitCode !== 'IET') {
+            $this->settlementUseReferenceCash = false;
+        }
+
         if ($canAmend && $this->amendmentTerms === '' && $activeVersion instanceof ContractVersion) {
             $this->amendmentTitle = $activeVersion->termsRevision->title;
             $this->amendmentSummary = (string) ($activeVersion->termsRevision->payload['summary'] ?? '');
@@ -350,6 +440,8 @@ class Show extends Component
             'payableUnits' => $payableUnits,
             'receivableUnits' => $receivableUnits,
             'settlementUnits' => $settlementUnits,
+            'referenceMonetaryUnits' => collect(MonetaryUnitCatalog::all())
+                ->reject(fn (array $meta, string $code): bool => $code === 'IET'),
         ]);
     }
 

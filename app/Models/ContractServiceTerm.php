@@ -17,12 +17,17 @@ use LogicException;
     'employer_actor_id',
     'worker_actor_id',
     'monetary_unit_id',
+    'reference_monetary_unit_id',
     'service_title',
     'service_kind',
     'total_quantity',
     'quantity_per_occurrence',
     'unit',
     'unit_rate_minor',
+    'reference_unit_rate_minor',
+    'reference_usd_amount_minor',
+    'reference_market_quote_id',
+    'iet_valuation_quote_id',
     'settlement_cycle',
     'payment_due_days',
     'auto_create_plan',
@@ -95,6 +100,24 @@ class ContractServiceTerm extends Model
         return $this->belongsTo(MonetaryUnit::class);
     }
 
+    /** @return BelongsTo<MonetaryUnit, $this> */
+    public function referenceMonetaryUnit(): BelongsTo
+    {
+        return $this->belongsTo(MonetaryUnit::class, 'reference_monetary_unit_id');
+    }
+
+    /** @return BelongsTo<MarketQuote, $this> */
+    public function referenceMarketQuote(): BelongsTo
+    {
+        return $this->belongsTo(MarketQuote::class, 'reference_market_quote_id');
+    }
+
+    /** @return BelongsTo<IetValuationQuote, $this> */
+    public function ietValuationQuote(): BelongsTo
+    {
+        return $this->belongsTo(IetValuationQuote::class, 'iet_valuation_quote_id');
+    }
+
     /** @return HasOne<Commitment, $this> */
     public function commitment(): HasOne
     {
@@ -108,6 +131,8 @@ class ContractServiceTerm extends Model
             'total_quantity' => 'decimal:4',
             'quantity_per_occurrence' => 'decimal:4',
             'unit_rate_minor' => 'integer',
+            'reference_unit_rate_minor' => 'integer',
+            'reference_usd_amount_minor' => 'integer',
             'payment_due_days' => 'integer',
             'auto_create_plan' => 'boolean',
             'auto_recognize_obligation' => 'boolean',

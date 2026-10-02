@@ -95,9 +95,20 @@
                         <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
                             <div class="text-xs text-zinc-500">{{ __('contracts.service.unit_rate') }}</div>
                             <div class="mt-1 font-medium">
-                                {{ AppSupportMoneyAmount::format($displayServiceTerms->unit_rate_minor, $displayServiceTerms->monetaryUnit->exponent) }}
+                                {{ \App\Support\MoneyAmount::format($displayServiceTerms->unit_rate_minor, $displayServiceTerms->monetaryUnit->exponent) }}
                                 {{ $displayServiceTerms->monetaryUnit->code }} / {{ $displayServiceTerms->unit }}
                             </div>
+                            @if ($displayServiceTerms->referenceMonetaryUnit)
+                                <div class="mt-2 text-xs text-zinc-500">
+                                    {{ __('contracts.service.reference_price_snapshot', [
+                                        'amount' => \App\Support\MoneyAmount::format(
+                                            $displayServiceTerms->reference_unit_rate_minor,
+                                            $displayServiceTerms->referenceMonetaryUnit->exponent,
+                                        ),
+                                        'unit' => $displayServiceTerms->referenceMonetaryUnit->code,
+                                    ]) }}
+                                </div>
+                            @endif
                         </div>
                         <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
                             <div class="text-xs text-zinc-500">{{ __('contracts.service.settlement_cycle') }}</div>
@@ -308,12 +319,39 @@
                                     <flux:select.option value="received">{{ __('financial.settlement_batch.received_by_me') }}</flux:select.option>
                                 @endif
                             </flux:select>
-                            <flux:input wire:model="settlementAmount" :label="__('financial.settlement_batch.amount')" inputmode="decimal" />
-                            <flux:select wire:model="settlementUnitCode" :label="__('financial.settlement_batch.unit')">
+                            <flux:select wire:model.live="settlementUnitCode" :label="__('financial.settlement_batch.unit')">
                                 @foreach ($settlementUnits as $settlementUnit)
                                     <flux:select.option :value="$settlementUnit->code">{{ $settlementUnit->code }}</flux:select.option>
                                 @endforeach
                             </flux:select>
+                            <div class="sm:col-span-2 xl:col-span-2">
+                                @if ($settlementUnitCode === 'IET')
+                                    <flux:checkbox
+                                        wire:model.live="settlementUseReferenceCash"
+                                        :label="__('financial.settlement_batch.reference_cash_toggle')"
+                                    />
+                                @endif
+                            </div>
+                            @if ($settlementUseReferenceCash && $settlementUnitCode === 'IET')
+                                <flux:input
+                                    wire:model="settlementReferenceCashAmount"
+                                    :label="__('financial.settlement_batch.reference_amount')"
+                                    inputmode="decimal"
+                                />
+                                <label class="block space-y-1.5">
+                                    <span class="text-sm font-medium">{{ __('financial.settlement_batch.reference_unit') }}</span>
+                                    <select
+                                        wire:model="settlementReferenceCashUnit"
+                                        class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                                    >
+                                        @foreach ($referenceMonetaryUnits as $code => $meta)
+                                            <option value="{{ $code }}">{{ $code }} · {{ $meta['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                            @else
+                                <flux:input wire:model="settlementAmount" :label="__('financial.settlement_batch.amount')" inputmode="decimal" />
+                            @endif
                             <x-app.calendar-datetime-input
                                 model="settlementPaidAt"
                                 :label="__('financial.settlement.paid_at')"
@@ -331,7 +369,11 @@
                         </flux:button>
                     </form>
 
-                    <flux:callout>{{ __('financial.settlement_batch.cash_only') }}</flux:callout>
+                    @if ($settlementUseReferenceCash && $settlementUnitCode === 'IET')
+                        <flux:callout>{{ __('financial.settlement_batch.reference_help') }}</flux:callout>
+                    @else
+                        <flux:callout>{{ __('financial.settlement_batch.cash_only') }}</flux:callout>
+                    @endif
                 </flux:card>
             @endif
 
@@ -348,6 +390,21 @@
                                         {{ \App\Support\MoneyAmount::format($batch->amount_minor, $batch->monetaryUnit->exponent) }}
                                         {{ $batch->monetaryUnit->code }}
                                     </div>
+                                    @if ($batch->referenceMonetaryUnit)
+                                        <div class="mt-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                                            {{ \App\Support\MoneyAmount::format(
+                                                $batch->reference_amount_minor,
+                                                $batch->referenceMonetaryUnit->exponent,
+                                            ) }}
+                                            {{ $batch->referenceMonetaryUnit->code }}
+                                            →
+                                            {{ \App\Support\MoneyAmount::format(
+                                                $batch->amount_minor,
+                                                $batch->monetaryUnit->exponent,
+                                            ) }}
+                                            {{ $batch->monetaryUnit->code }}
+                                        </div>
+                                    @endif
                                     <div class="mt-1 text-xs text-zinc-500">
                                         <x-app.local-datetime :value="$batch->paid_at" />
                                         · {{ $batch->debtor->user?->username }} → {{ $batch->creditor->user?->username }}

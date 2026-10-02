@@ -86,6 +86,12 @@ return [
         'quantity_per_occurrence' => 'مقدار در هر نوبت',
         'unit' => 'واحد خدمت',
         'unit_rate' => 'نرخ توافق‌شده هر واحد',
+        'reference_price_toggle' => 'قیمت با پول بیرونی توافق شده، اما تعهد داخلی با IET ثبت شود',
+        'reference_unit_rate' => 'نرخ مرجع هر واحد',
+        'reference_monetary_unit' => 'پول مرجع',
+        'reference_price_help' => 'برای نمونه «۱٬۵۰۰٬۰۰۰ تومان برای هر روز کاری» را اینجا ثبت کنید. مبلغ بیرونی، نرخ بازار و ارزش‌گذاری IET دقیقاً روی همین نسخه قرارداد ثابت می‌شوند.',
+        'reference_price_exchange_help' => 'پیش از ذخیره، در Exchange باید نرخ فعال پول مرجع به USD وجود داشته باشد (مثلاً IRT/USD). نرخ حاصل IET پس از پذیرش قرارداد تغییر نمی‌کند.',
+        'reference_price_snapshot' => 'قیمت مرجع توافق‌شده: :amount :unit برای هر واحد',
         'monetary_unit' => 'واحد پول',
         'settlement_cycle' => 'دوره تسویه',
         'cycles' => [
