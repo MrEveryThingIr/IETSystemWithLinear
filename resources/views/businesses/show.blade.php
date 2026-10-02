@@ -52,16 +52,50 @@
 
     <section class="stats">
         <div class="stat"><span>اعضای فعال</span><strong>{{ $business->memberships->count() }}</strong></div>
-        <div class="stat"><span>راه‌های تماس</span><strong>{{ $business->contactPoints->count() }}</strong></div>
-        <div class="stat"><span>آدرس‌ها</span><strong>{{ $business->addresses->count() }}</strong></div>
-        <div class="stat"><span>تخصص‌های تیم</span><strong>{{ $business->memberships->flatMap->professions->unique('id')->count() }}</strong></div>
+        <div class="stat"><span>مشتری / مخاطب</span><strong>{{ $business->businessContacts->count() }}</strong></div>
+        <div class="stat"><span>کالا / خدمت / ملک</span><strong>{{ $business->listings->count() }}</strong></div>
+        <div class="stat"><span>برنامه‌های کاری</span><strong>{{ $routineCount }}</strong></div>
     </section>
 
     <section class="quick">
-        <div class="quick-card q1"><strong>👥 تیم من</strong><span>مالک، مدیران، اعضا و تخصص هر نفر</span></div>
-        <div class="quick-card q2"><strong>📍 مکان و تماس</strong><span>شماره‌ها، ایمیل‌ها و شعبه‌ها</span></div>
-        <div class="quick-card q3"><strong>🧰 ارائه‌های من</strong><span>در M3 کالاها و خدمات اینجا اضافه می‌شوند</span></div>
+        <a class="quick-card q1" style="text-decoration:none" href="{{ route('businesses.catalog.index',$business) }}">
+            <strong>🧰 کاتالوگ و ارائه‌ها</strong>
+            <span>کالا، خدمت، ملک و قیمت‌ها در یک زیرساخت مشترک</span>
+        </a>
+        <a class="quick-card q2" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
+            <strong>🗓 برنامه‌های کسب‌وکار</strong>
+            <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
+        </a>
+        <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
+            <strong>＋ برنامه کاری جدید</strong>
+            <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
+        </a>
     </section>
+
+    @if($business->kind === 'real_estate' && $business->publicIntakePortals->isNotEmpty())
+        <section class="panel">
+            <div class="head">
+                <div>
+                    <h2>🏠 کانال تخصصی املاک</h2>
+                    <p>املاک یک قابلیت تخصصی همین کسب‌وکار است؛ پرونده‌های تأییدشده به کاتالوگ عمومی کسب‌وکار ارتقا پیدا می‌کنند.</p>
+                </div>
+            </div>
+            <div class="body">
+                @foreach($business->publicIntakePortals as $portal)
+                    <div class="item row">
+                        <div>
+                            <strong>{{ $portal->title }}</strong>
+                            <div class="muted" style="margin-top:5px">فرم مراجعه‌کننده و دفتر پیگیری موجود حفظ شده‌اند.</div>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">پرونده‌های دفتر</a>
+                            <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show',$portal) }}">فرم عمومی</a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     <section class="panel">
         <div class="head"><div><h2>🏪 مشخصات کسب‌وکار</h2><p>اطلاعات پایه و سطح نمایش</p></div></div>
