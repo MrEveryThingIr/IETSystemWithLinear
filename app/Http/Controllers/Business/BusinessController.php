@@ -73,38 +73,54 @@ class BusinessController extends Controller
         Business $business,
         EnsureBusinessContext $contexts
     ): View {
-        abort_unless(BusinessAccess::canOperate($request->user(), $business), 403);
+        abort_unless(BusinessAccess::canView($request->user(), $business), 403);
 
-        $context = $contexts->execute($business);
+        $canOperate = BusinessAccess::canOperate($request->user(), $business);
+        $business->load(['owner.user']);
 
-        $business->load([
-            'owner.user',
-            'contactPoints',
-            'addresses',
-            'businessContacts.contactPoints',
-            'categories',
-            'listings.currentVersion',
-            'publicIntakePortals',
-            'contextBinding.context',
-            'memberships' => fn ($q) => $q
-                ->with(['actor.user', 'professions.parent'])
-                ->where('status', 'active')
-                ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
-                ->orderBy('id'),
-        ]);
+        if ($canOperate) {
+            $context = $contexts->execute($business);
 
-        $professions = Profession::query()
-            ->with('parent')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+            $business->load([
+                'contactPoints',
+                'addresses',
+                'businessContacts.contactPoints',
+                'categories',
+                'listings.currentVersion',
+                'publicIntakePortals',
+                'contextBinding.context',
+                'memberships' => fn ($q) => $q
+                    ->with(['actor.user', 'professions.parent'])
+                    ->where('status', 'active')
+                    ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
+                    ->orderBy('id'),
+            ]);
+
+            $professions = Profession::query()
+                ->with('parent')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+
+            $routineCount = $context->plans()->count();
+        } else {
+            $context = null;
+            $routineCount = 0;
+            $professions = collect();
+
+            $business->load([
+                'contactPoints' => fn ($query) => $query->where('visibility', 'public'),
+                'addresses' => fn ($query) => $query->where('visibility', 'public'),
+            ]);
+        }
 
         return view('businesses.show', [
             'business' => $business,
             'businessContext' => $context,
-            'routineCount' => $context->plans()->count(),
+            'routineCount' => $routineCount,
             'professions' => $professions,
+            'canOperate' => $canOperate,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
             'kindLabels' => BusinessDirectory::KINDS,
