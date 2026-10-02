@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Business;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\ActorProfileIntent;
 use App\Models\Business;
 use App\Models\BusinessContact;
 use App\Services\Business\BusinessMarketService;
@@ -39,10 +40,20 @@ class BusinessClientController extends Controller
             });
         }
 
+        $marketNeedsByContact = ActorProfileIntent::query()
+            ->where('kind', 'need')
+            ->where('status', 'active')
+            ->where('metadata->source', 'business_contact_need')
+            ->where('metadata->business_uuid', $business->uuid)
+            ->latest('id')
+            ->get()
+            ->keyBy(fn (ActorProfileIntent $intent): string => (string) ($intent->metadata['business_contact_uuid'] ?? ''));
+
         return view('businesses.clients.index', [
             'business' => $business,
             'clients' => $query->paginate(30)->withQueryString(),
             'canManage' => BusinessAccess::canManage($request->user(), $business),
+            'marketNeedsByContact' => $marketNeedsByContact,
         ]);
     }
 
