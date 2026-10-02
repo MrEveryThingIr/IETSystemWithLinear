@@ -394,6 +394,21 @@ class Create extends Component
 
     private function defaultMonetaryUnitCode(): string
     {
+        if ($this->contextUuid !== '') {
+            $context = Context::query()
+                ->with('businessBinding.business.defaultMonetaryUnit')
+                ->where('uuid', $this->contextUuid)
+                ->first();
+
+            $businessCode = $context?->kind === ContextKind::Business
+                ? strtoupper((string) $context->businessBinding?->business?->defaultMonetaryUnit?->code)
+                : '';
+
+            if ($businessCode !== '' && array_key_exists($businessCode, MonetaryUnitCatalog::all())) {
+                return $businessCode;
+            }
+        }
+
         $code = strtoupper((string) ($this->user()->default_monetary_unit_code ?: 'USD'));
 
         return array_key_exists($code, MonetaryUnitCatalog::all())
