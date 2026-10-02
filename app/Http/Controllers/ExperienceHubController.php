@@ -17,11 +17,6 @@ use Illuminate\Http\Request;
 
 class ExperienceHubController extends Controller
 {
-    public function __construct(
-        private readonly FeatureSurfaceAccess $access,
-        private readonly HomeTodayProjection $today,
-    ) {}
-
     public function needsOffers(Request $request): View
     {
         $user = $this->user($request);
@@ -85,9 +80,9 @@ class ExperienceHubController extends Controller
         $user = $this->user($request);
         $this->requireAny($user, ['deals', 'planner']);
 
-        $projection = $this->today->build($user);
-        $canDeals = $this->access->allows($user, 'deals');
-        $canPlanner = $this->access->allows($user, 'planner');
+        $projection = $this->today()->build($user);
+        $canDeals = $this->access()->allows($user, 'deals');
+        $canPlanner = $this->access()->allows($user, 'planner');
 
         $attention = $projection['waitingOnMe']
             ->filter(fn ($item): bool => $canDeals && in_array($item->kind, [
@@ -163,8 +158,8 @@ class ExperienceHubController extends Controller
         $actor = $user->actor;
         abort_unless($actor instanceof Actor, 403);
 
-        $canBusiness = $this->access->allows($user, 'business');
-        $canGroups = $this->access->allows($user, 'groups');
+        $canBusiness = $this->access()->allows($user, 'business');
+        $canGroups = $this->access()->allows($user, 'groups');
 
         $businesses = $canBusiness
             ? BusinessMembership::query()
@@ -225,7 +220,7 @@ class ExperienceHubController extends Controller
         $user = $this->user($request);
         $this->requireAny($user, ['money', 'accounting', 'exchange']);
 
-        $projection = $this->today->build($user);
+        $projection = $this->today()->build($user);
         $actor = $user->actor;
         abort_unless($actor instanceof Actor, 403);
 
@@ -273,16 +268,16 @@ class ExperienceHubController extends Controller
                 ])->all(),
                 'empty' => __('experience.hubs.money.activity_empty'),
             ],
-            ...($this->access->allows($user, 'accounting') || $this->access->allows($user, 'exchange') ? [[
+            ...($this->access()->allows($user, 'accounting') || $this->access()->allows($user, 'exchange') ? [[
                 'title' => __('experience.hubs.money.advanced'),
                 'help' => __('experience.hubs.money.advanced_help'),
                 'items' => array_values(array_filter([
-                    $this->access->allows($user, 'accounting') ? [
+                    $this->access()->allows($user, 'accounting') ? [
                         'title' => __('experience.hubs.money.accounting'),
                         'meta' => __('experience.hubs.money.accounting_help'),
                         'href' => route('accounting.index'),
                     ] : null,
-                    $this->access->allows($user, 'exchange') ? [
+                    $this->access()->allows($user, 'exchange') ? [
                         'title' => __('experience.hubs.money.exchange'),
                         'meta' => __('experience.hubs.money.exchange_help'),
                         'href' => route('exchange.index'),
@@ -347,7 +342,7 @@ class ExperienceHubController extends Controller
 
         $sections = [];
 
-        if ($this->access->allows($user, 'manual')) {
+        if ($this->access()->allows($user, 'manual')) {
             $sections[] = [
                 'title' => __('experience.hubs.help.learn'),
                 'help' => __('experience.hubs.help.learn_help'),
@@ -356,7 +351,7 @@ class ExperienceHubController extends Controller
             ];
         }
 
-        if ($this->access->allows($user, 'system-map')) {
+        if ($this->access()->allows($user, 'system-map')) {
             $sections[] = [
                 'title' => __('experience.hubs.help.map'),
                 'help' => __('experience.hubs.help.map_help'),
@@ -374,7 +369,7 @@ class ExperienceHubController extends Controller
     private function requireAny(User $user, array $surfaceKeys): void
     {
         abort_unless(
-            collect($surfaceKeys)->contains(fn (string $key): bool => $this->access->allows($user, $key)),
+            collect($surfaceKeys)->contains(fn (string $key): bool => $this->access()->allows($user, $key)),
             403,
         );
     }
@@ -390,6 +385,16 @@ class ExperienceHubController extends Controller
             'description' => __('experience.hubs.'.$key.'.description'),
             'sections' => $sections,
         ]);
+    }
+
+    private function access(): FeatureSurfaceAccess
+    {
+        return app(FeatureSurfaceAccess::class);
+    }
+
+    private function today(): HomeTodayProjection
+    {
+        return app(HomeTodayProjection::class);
     }
 
     private function user(Request $request): User
