@@ -8,6 +8,8 @@ return [
     'quick_links_help' => 'Open the main workspaces you already have permission to use.',
     'new_activity' => 'New activity',
     'new_intent' => 'New Need / Offer',
+    'more_overview' => 'More from my account',
+    'more_overview_help' => 'Needs, active work, groups and money summaries are available when you need them.',
     'today_actions' => 'What should I do today?',
     'today_actions_help' => 'Your scheduled occurrences for today where you are an authorized participant.',
     'no_today_actions' => 'Nothing scheduled for today',
