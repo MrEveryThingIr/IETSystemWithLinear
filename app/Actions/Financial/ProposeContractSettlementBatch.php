@@ -52,7 +52,11 @@ class ProposeContractSettlementBatch
         $reference = $reference !== null ? Str::squish($reference) : null;
         $note = trim((string) $note);
 
-        abort_unless($method === 'cash', 422, 'The first release supports cash settlement only.');
+        abort_unless(
+            in_array($method, ['cash', 'IET'], true),
+            422,
+            'Settlement method must be cash or internal IET.',
+        );
         abort_if($reference !== null && mb_strlen($reference) > 255, 422, 'Settlement reference is too long.');
         abort_if(mb_strlen($note) > 5000, 422, 'Settlement note is too long.');
 

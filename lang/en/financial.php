@@ -90,7 +90,7 @@ return [
         'reject' => 'Reject whole payment',
         'rejection_reason' => 'Reason this payment claim is incorrect',
         'rejection_required' => 'A rejection reason is required.',
-        'cash_only' => 'Cash settlement records an actual payment claim. For IET obligations you may enter either IET directly or external cash with a pinned conversion snapshot.',
+        'cash_only' => 'For IET obligations, entering IET directly uses the funded internal wallet. Enable external cash to record Toman/other cash without moving IET wallets.',
         'reference_cash_toggle' => 'Enter this cash payment in external money (for example Toman)',
         'reference_amount' => 'External cash amount',
         'reference_unit' => 'Cash money',

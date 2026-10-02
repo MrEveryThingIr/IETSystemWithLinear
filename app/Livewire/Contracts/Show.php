@@ -224,7 +224,7 @@ class Show extends Component
                 $unit,
                 $amountMinor,
                 $this->settlementInstant(),
-                'cash',
+                $unit->code === 'IET' ? 'IET' : 'cash',
                 $data['settlementReference'] !== '' ? $data['settlementReference'] : null,
                 $data['settlementNote'] !== '' ? $data['settlementNote'] : null,
                 perspective: $data['settlementPerspective'],

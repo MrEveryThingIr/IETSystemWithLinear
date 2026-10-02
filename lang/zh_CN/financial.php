@@ -90,7 +90,7 @@ return [
         'reject' => '拒绝整笔付款',
         'rejection_reason' => '付款声明不正确的原因',
         'rejection_required' => '拒绝时必须填写原因。',
-        'cash_only' => '现金结算记录真实付款声明。对于 IET 债务，可以直接输入 IET，或输入带固定换算快照的外部现金。',
+        'cash_only' => '对于 IET 债务，直接输入 IET 会使用已入账的内部钱包；启用外部现金后，可记录 Toman/其他现金而不移动 IET 钱包。',
         'reference_cash_toggle' => '用外部货币录入这笔现金付款（例如 Toman）',
         'reference_amount' => '外部现金金额',
         'reference_unit' => '现金货币',
