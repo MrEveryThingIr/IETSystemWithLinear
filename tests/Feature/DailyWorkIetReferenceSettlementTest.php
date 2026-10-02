@@ -234,7 +234,7 @@ class DailyWorkIetReferenceSettlementTest extends TestCase
             $this->assertSame('IRT', $batch->referenceMonetaryUnit?->code);
             $this->assertSame($irtQuote->id, $batch->reference_market_quote_id);
             $this->assertSame($ietQuote->id, $batch->iet_valuation_quote_id);
-            $this->assertSame('cash', $batch->method);
+            $this->assertSame('external_cash', $batch->method);
 
             app(RespondToContractSettlementBatch::class)->confirm(
                 $batch,
