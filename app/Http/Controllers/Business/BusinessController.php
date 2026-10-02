@@ -10,6 +10,7 @@ use App\Models\Profession;
 use App\Services\Business\BusinessService;
 use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
+use App\Support\ExternalMoneyGatewayRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -71,7 +72,8 @@ class BusinessController extends Controller
     public function show(
         Request $request,
         Business $business,
-        EnsureBusinessContext $contexts
+        EnsureBusinessContext $contexts,
+        ExternalMoneyGatewayRegistry $externalGateways,
     ): View {
         abort_unless(BusinessAccess::canView($request->user(), $business), 403);
 
@@ -84,6 +86,7 @@ class BusinessController extends Controller
             $business->load([
                 'contactPoints',
                 'addresses',
+                'defaultMonetaryUnit',
                 'businessContacts.contactPoints',
                 'categories',
                 'listings.currentVersion',
@@ -120,6 +123,7 @@ class BusinessController extends Controller
             'businessContext' => $context,
             'routineCount' => $routineCount,
             'professions' => $professions,
+            'externalMoneyGateways' => $canOperate ? $externalGateways->available() : [],
             'canOperate' => $canOperate,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
