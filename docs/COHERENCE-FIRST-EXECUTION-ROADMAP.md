@@ -65,7 +65,7 @@ Still weak:
 
 ## C1 — Today, onboarding, and Next Action
 
-Status: **implemented on `codex/coherence-c1-today-next-action`; CI and owner browser acceptance pending**.
+Status: **complete on `codex/coherence-c1-today-next-action`**.
 
 Goal: make IET immediately understandable after login.
 
@@ -83,11 +83,19 @@ Implemented:
 - advanced Accounting and kernel terminology are removed from the normal Today flow;
 - EN/FA/AR/ZH guidance copy and regression coverage.
 
-Remaining acceptance:
+Acceptance evidence:
 
-- exact-head CI;
-- owner browser review on desktop/mobile and Persian/RTL;
-- revise only where the browser experience still feels busy or unclear.
+- full CI green on the completed implementation;
+- 700 PHPUnit tests passed;
+- Pint and PHPStan green;
+- MySQL migration portability green;
+- rollback/reapply, scheduler and queue smoke green;
+- SQLite backup/restore green;
+- frontend build and JavaScript audit green;
+- Composer security audit green;
+- owner browser review remains the product-feel checkpoint, but no C1 engineering work is pending.
+
+The next active milestone is **C2 — Real goal-oriented destination hubs**.
 
 Original implementation intent:
 
@@ -441,4 +449,4 @@ Until C1–C3 are accepted in the browser:
 - do not prioritize deep specialist functionality over orientation and next-action
   guidance.
 
-The next implementation milestone is **C1 — Today, onboarding, and Next Action**.
+The next implementation milestone is **C2 — Real goal-oriented destination hubs**.
