@@ -85,8 +85,17 @@ Implemented:
 - progressive disclosure for secondary summaries;
 - `/getting-started` compatibility redirected to the live Today checklist.
 
+Acceptance evidence:
+
+- implementation SHA `c5c0e131e9845c8fb9b76c69adb8d2dde1b14359`;
+- exact-head CI passed Pint, PHPStan, migration/operational smoke, 700 PHPUnit tests
+  with 5650 assertions, frontend/audits and Composer security audit.
+
 Canonical implementation/acceptance status is tracked in
 `docs/COHERENCE-FIRST-EXECUTION-ROADMAP.md`.
+
+The next experience milestone is Phase 3 / coherence milestone C2: consolidated,
+goal-oriented destination hubs.
 
 ## Phase 3 — Consolidated entry experiences
 
