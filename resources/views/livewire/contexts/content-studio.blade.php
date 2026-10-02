@@ -4,20 +4,7 @@
     <x-app.page-header
         :title="$currentRevision->title"
         :description="$content->blueprintVersion?->blueprint?->name ?? $content->definition->name"
-    >
-        <x-slot:actions>
-            <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
-                    {{ __('ui.context_content.back') }}
-                </flux:button>
-                @if ($canOpenReader)
-                    <flux:button :href="route('contexts.contents.show', [$context, $content])" variant="ghost">
-                        {{ __('ui.context_content.open_reader') }}
-                    </flux:button>
-                @endif
-            </div>
-        </x-slot:actions>
-    </x-app.page-header>
+    />
 
     @php
         $contentWorkflowState = $content->status === 'archived'
@@ -87,6 +74,11 @@
                     <flux:button :href="route('contexts.contents.appearance', [$context, $content])" size="sm" variant="ghost">
                         {{ __('presentation.title') }}
                     </flux:button>
+                    @if ($canOpenReader)
+                        <flux:button :href="route('contexts.contents.show', [$context, $content])" size="sm" variant="ghost">
+                            {{ __('ui.context_content.open_reader') }}
+                        </flux:button>
+                    @endif
                 </div>
             </x-slot:advanced>
         @endif
@@ -294,9 +286,6 @@
                         @endforeach
                     @endif
                     @error('publish')<div class="text-sm text-red-600">{{ $message }}</div>@enderror
-                    <flux:button wire:click="publish" variant="primary" class="w-full" :disabled="$publishBlocked">
-                        {{ __('ui.content.publish') }}
-                    </flux:button>
                 </flux:card>
             @endif
 
