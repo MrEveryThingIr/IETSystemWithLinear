@@ -88,7 +88,7 @@ return [
         'open_work' => 'Continue work',
         'start_title' => 'Choose your first useful action',
         'start_reason' => 'There is nothing urgent yet. Start with the goal that best matches what you want to accomplish.',
-        'start_consequence' => 'This opens the correct workflow for that goal; you remain in control before anything is published or committed.',
+        'start_consequence' => 'Choose the goal that fits you below. Nothing is created, published or committed until you choose a path and act explicitly.',
         'review_day_title' => 'Review your plans',
         'review_day_reason' => 'Nothing currently requires an urgent decision. Review your planned work and adjust what comes next.',
         'review_day_consequence' => 'Opening Planner only shows your existing schedule; it does not start or complete anything automatically.',
@@ -135,16 +135,16 @@ return [
         'submission' => 'Review',
     ],
     'actions' => [
-        'relationship_waiting' => 'A participant invitation is waiting for your response.',
-        'proposal_waiting' => 'The current Proposal version is waiting for your decision.',
-        'contract_waiting' => 'The proposed Contract version is waiting for your exact acceptance.',
-        'fulfillment_waiting' => 'Submitted Fulfillment is waiting for your review.',
-        'settlement_waiting' => 'A Settlement claim is waiting for your confirmation or rejection.',
+        'relationship_waiting' => 'A proposed Deal is waiting for your response.'
+        'proposal_waiting' => 'The current terms are waiting for your decision.'
+        'contract_waiting' => 'The proposed agreement is waiting for your explicit acceptance.'
+        'fulfillment_waiting' => 'Submitted work or evidence is waiting for your review.'
+        'settlement_waiting' => 'A payment or settlement claim is waiting for your confirmation or rejection.'
         'submission_waiting' => 'A submitted interaction is waiting in a Context you are authorized to review.',
-        'relationship_other' => 'Another participant still needs to accept the proposed Relationship.',
-        'proposal_other' => 'You already decided on the current Proposal version; another required party is pending.',
-        'contract_other' => 'You already accepted the proposed Contract version; another required party is pending.',
-        'fulfillment_other' => 'Your submitted Fulfillment is waiting for beneficiary review.',
-        'settlement_other' => 'Your Settlement claim is waiting for counterparty confirmation.',
+        'relationship_other' => 'Another participant still needs to accept the proposed Deal.'
+        'proposal_other' => 'You already decided on the current terms; another required party is pending.'
+        'contract_other' => 'You already accepted the proposed agreement; another required party is pending.'
+        'fulfillment_other' => 'Your submitted work is waiting for review.'
+        'settlement_other' => 'Your payment or settlement claim is waiting for the other party.'
     ],
 ];
