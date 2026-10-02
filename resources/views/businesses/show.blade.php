@@ -65,12 +65,12 @@
         } elseif ($business->listings->isEmpty()) {
             $businessNextLabel = __('workflow.business.next_catalog');
             $businessNextHref = route('businesses.catalog.index', $business);
-        } elseif ($routineCount === 0 && $businessContext) {
+        } elseif ($canUsePlanner && $routineCount === 0 && $businessContext) {
             $businessNextLabel = __('workflow.business.next_work');
             $businessNextHref = route('planner.create', ['context' => $businessContext->uuid]);
         } else {
             $businessNextLabel = __('workflow.business.next_continue');
-            $businessNextHref = $businessContext
+            $businessNextHref = $canUsePlanner && $businessContext
                 ? route('planner.index', ['context' => $businessContext->uuid])
                 : null;
         }
@@ -105,17 +105,21 @@
 
                 <x-slot:advanced>
                     <div class="flex flex-wrap gap-2">
-                        @if ($businessContext)
+                        @if ($canUsePlanner && $businessContext)
                             <flux:button :href="route('planner.index', ['context' => $businessContext->uuid])" size="sm" variant="ghost">
                                 {{ __('workflow.business.sections.work') }}
                             </flux:button>
                         @endif
-                        <flux:button :href="route('deals.index')" size="sm" variant="ghost">
-                            {{ __('workflow.business.sections.deals') }}
-                        </flux:button>
-                        <flux:button :href="route('money.index')" size="sm" variant="ghost">
-                            {{ __('workflow.business.sections.money') }}
-                        </flux:button>
+                        @if ($canUseDeals)
+                            <flux:button :href="route('deals.index')" size="sm" variant="ghost">
+                                {{ __('workflow.business.sections.deals') }}
+                            </flux:button>
+                        @endif
+                        @if ($canUseMoney)
+                            <flux:button :href="route('money.index')" size="sm" variant="ghost">
+                                {{ __('workflow.business.sections.money') }}
+                            </flux:button>
+                        @endif
                         <flux:button href="#team-settings" size="sm" variant="ghost">
                             {{ __('workflow.business.sections.manage') }}
                         </flux:button>
@@ -144,14 +148,16 @@
             <strong>🧰 کاتالوگ و ارائه‌ها</strong>
             <span>کالا، خدمت، ملک و قیمت‌ها در یک زیرساخت مشترک</span>
         </a>
-        <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
-            <strong>🗓 برنامه‌های کسب‌وکار</strong>
-            <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
-        </a>
-        <a class="quick-card q1" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
-            <strong>＋ برنامه کاری جدید</strong>
-            <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
-        </a>
+        @if($canUsePlanner)
+            <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
+                <strong>🗓 برنامه‌های کسب‌وکار</strong>
+                <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
+            </a>
+            <a class="quick-card q1" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
+                <strong>＋ برنامه کاری جدید</strong>
+                <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
+            </a>
+        @endif
     </section>
     @endif
 
