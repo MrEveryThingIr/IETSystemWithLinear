@@ -31,7 +31,7 @@ class ExperienceCompositionNavigationTest extends TestCase
 
         $this->assertSame(
             ['needs-offers', 'work', 'organizations', 'money', 'content'],
-            array_keys($navigation['primary'])
+            collect($navigation['primary'])->pluck('key')->all()
         );
         $this->assertSame(['deals', 'planner'], collect($primary['work']['items'])->pluck('key')->all());
         $this->assertSame(['business', 'groups'], collect($primary['organizations']['items'])->pluck('key')->all());
