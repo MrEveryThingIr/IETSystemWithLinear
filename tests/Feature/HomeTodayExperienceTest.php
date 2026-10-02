@@ -94,7 +94,7 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('What do you want to do first?')
             ->assertSee('Recommended next step')
             ->assertSee('Set my identity')
-            ->assertDontSee('Email verified')
+            ->assertDontSee('Your email is verified.')
             ->assertSee('Find or offer something')
             ->assertSee('Plan something')
             ->assertSee('Run a business')
@@ -268,7 +268,7 @@ class HomeTodayExperienceTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Today')
-            ->assertSee('Waiting on me')
+            ->assertSee('Needs my attention')
             ->assertSee('Recent activity');
     }
 }
