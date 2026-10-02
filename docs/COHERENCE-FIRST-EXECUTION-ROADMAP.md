@@ -47,7 +47,9 @@ Completed foundations:
 - IET-first Business settlement boundary;
 - exact-head CI acceptance for Business vertical consolidation;
 - C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI;
-- C2 goal-oriented destination hubs are engineering-complete with exact-head CI.
+- C2 goal-oriented destination hubs are engineering-complete with exact-head CI;
+- C3 contextual workflow shells are engineering-complete with exact-head CI;
+- C4 traditional-user Business completion is engineering-complete with exact-head CI.
 
 Still weak:
 
@@ -290,39 +292,72 @@ model or remembering which page owns the next stage.
 
 ## C4 — Traditional-user Business completion
 
-Execute Business roadmap M5 and M6 after the shells are coherent.
+Status: **engineering-complete on `codex/coherence-c4-traditional-business-completion`; owner browser/product-feel acceptance pending**.
 
-### M5 Content / media integration
+Verified implementation head: `e79f71ef4c41ef00860c0b5c64ab6254ed459ee7` — CI green with **720 tests / 6601 assertions**, Pint, PHPStan, MySQL portability, rollback/reapply + scheduler/queue smoke, SQLite backup/restore, frontend build + npm audit, and Composer security audit.
 
-- Listing structured data remains canonical;
-- Asset-backed photos/video/audio;
-- cover/reorder/captions;
-- generated Listing presentation Content;
-- preview/publish;
-- simple Listing editor first, advanced Content Studio optional.
+Goal: execute Business roadmap M5 and M6 without creating another media,
+publishing, property, or workflow kernel.
 
-### M6 Real Estate vertical
+Implemented:
 
-- professional property schema from the Business brief;
-- Persian-number tolerant inputs;
-- wizard:
-  Client
-  → Purpose / transaction
-  → Location
-  → Property
-  → Building / facilities
-  → Price
-  → Media
-  → Preview
-  → Publish;
-- simple-office mode;
-- private vs public fields;
-- lifecycle / availability.
+- canonical Business Listing / immutable ListingVersion remains the commercial source
+  of truth;
+- ordered Asset-backed Listing media supports photos, video/audio-compatible Assets,
+  cover role, captions and public/member/private visibility;
+- public Listing media reuses the existing Content publication-evidence rules, so
+  unresolved rights/readiness cannot silently become published customer media;
+- generated customer presentation reuses the existing Business Context and Content
+  kernel rather than introducing a second publishing engine;
+- simple catalog-item editor is the normal path; the advanced presentation editor is
+  optional and progressively disclosed;
+- customer preview deliberately excludes attached client identity, exact address and
+  private office notes;
+- published ListingVersions remain immutable; later edits create a new working version
+  and preserve prior property/media history;
+- Real Estate property details now cover transaction/location, dimensions, building
+  characteristics, floor/unit details, parking, elevator, storage, balcony,
+  utilities/facilities, deed/usage/occupancy, coordinates and public/private notes;
+- Persian and Arabic digits are normalized for property numerics and price entry;
+- traditional Real Estate flow is composed as
+  Client → Purpose/location → Property → Building/facilities → Price → Media →
+  Preview → Publish;
+- simple-office mode and explicit availability lifecycle are built into the canonical
+  Business Listing;
+- reviewed public Real Estate offers retain their real-world BusinessContact provenance
+  when promoted into a Property catalog item;
+- ordinary UI copy avoids generic Content Studio / internal-kernel terminology;
+- scheduled availability fields remain in the domain model but are intentionally not
+  exposed through native Gregorian browser controls; future editing must use the shared
+  profile-aware temporal fabric;
+- EN / FA / AR / ZH copy and focused regression coverage added.
 
-Browser acceptance:
+Acceptance evidence:
+
+- MySQL migration portability: green;
+- frontend build and JavaScript audit: green;
+- Pint: green;
+- PHPStan: green;
+- rollback/reapply, scheduler and queue smoke: green;
+- SQLite backup/restore: green;
+- PHPUnit: **720 passed / 6601 assertions**;
+- Composer security audit: no vulnerability advisories.
+
+Browser acceptance focus:
+
+- create/open a Real Estate Business catalog property and attach an existing client;
+- enter property dimensions/prices with Persian digits;
+- keep exact address/private notes internal while public area/details appear in preview;
+- attach owned public media, choose a cover, caption/reorder it and preview it;
+- publish the property and optionally open its advanced presentation editor;
+- edit the published property and confirm a new working version is created while the
+  published historical version remains unchanged;
+- confirm public media with unresolved rights blocks publication.
 
 A traditional real-estate office user should be able to register a client and
 property without encountering generic platform terminology.
+
+The next active milestone is **C5 — Complete the Business-to-market-to-deal journey**.
 
 ## C5 — Complete the Business-to-market-to-deal journey
 
