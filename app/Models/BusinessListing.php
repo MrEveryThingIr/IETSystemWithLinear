@@ -39,31 +39,37 @@ class BusinessListing extends Model
         return 'uuid';
     }
 
+    /** @return BelongsTo<Business, $this> */
     public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class);
     }
 
+    /** @return BelongsTo<BusinessCategory, $this> */
     public function category(): BelongsTo
     {
         return $this->belongsTo(BusinessCategory::class, 'business_category_id');
     }
 
+    /** @return HasMany<BusinessListingVersion, $this> */
     public function versions(): HasMany
     {
         return $this->hasMany(BusinessListingVersion::class)->orderByDesc('version_number');
     }
 
+    /** @return BelongsTo<BusinessListingVersion, $this> */
     public function currentVersion(): BelongsTo
     {
         return $this->belongsTo(BusinessListingVersion::class, 'current_version_id');
     }
 
+    /** @return BelongsTo<BusinessListingVersion, $this> */
     public function publishedVersion(): BelongsTo
     {
         return $this->belongsTo(BusinessListingVersion::class, 'published_version_id');
     }
 
+    /** @return HasMany<BusinessPriceVersion, $this> */
     public function prices(): HasMany
     {
         return $this->hasMany(BusinessPriceVersion::class)->orderByDesc('valid_from')->orderByDesc('id');
