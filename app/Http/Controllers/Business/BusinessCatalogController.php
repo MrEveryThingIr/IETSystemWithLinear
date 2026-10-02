@@ -38,6 +38,35 @@ class BusinessCatalogController extends Controller
         ]);
     }
 
+    public function storeCategory(
+        Request $request,
+        Business $business,
+        BusinessCatalogService $catalog,
+    ): RedirectResponse {
+        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:180'],
+            'slug' => ['nullable', 'string', 'max:180'],
+            'parent_id' => ['nullable', 'integer'],
+        ]);
+
+        $parent = null;
+        if (filled($data['parent_id'] ?? null)) {
+            $parent = BusinessCategory::query()->findOrFail((int) $data['parent_id']);
+            abort_unless((int) $parent->business_id === (int) $business->id, 404);
+        }
+
+        $catalog->ensureCategory(
+            $business,
+            $data['name'],
+            filled($data['slug'] ?? null) ? $data['slug'] : $data['name'],
+            $parent,
+        );
+
+        return back()->with('status', 'Catalog category saved.');
+    }
+
     public function store(Request $request, Business $business, BusinessCatalogService $catalog): RedirectResponse
     {
         abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
