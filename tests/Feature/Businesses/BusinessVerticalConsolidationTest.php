@@ -3,9 +3,7 @@
 namespace Tests\Feature\Businesses;
 
 use App\ContextKind;
-use App\Models\Business;
 use App\Models\BusinessContact;
-use App\Models\BusinessListing;
 use App\Models\BusinessPriceVersion;
 use App\Models\MonetaryUnit;
 use App\Models\PublicIntakePortal;
