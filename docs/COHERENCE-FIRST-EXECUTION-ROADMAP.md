@@ -65,11 +65,31 @@ Still weak:
 
 ## C1 — Today, onboarding, and Next Action
 
-Priority: **next**.
+Status: **implemented on `codex/coherence-c1-today-next-action`; CI and owner browser acceptance pending**.
 
 Goal: make IET immediately understandable after login.
 
-Implement:
+Implemented:
+
+- Today derives a minimal three-step setup checklist from existing Actor/Profile/contact/activity state;
+- one deterministic recommended next action, with explicit priority and no AI guessing;
+- actions requiring the user outrank optional setup;
+- in-progress/upcoming Planner work is surfaced before low-priority guidance;
+- outstanding money, matches and active work can become the next action when appropriate;
+- first-time users choose a human goal instead of a subsystem;
+- verification-success feedback is transient instead of permanently displayed;
+- `/getting-started` remains compatible but lands on Today's live checklist;
+- secondary summaries are progressively disclosed under “More from my account”;
+- advanced Accounting and kernel terminology are removed from the normal Today flow;
+- EN/FA/AR/ZH guidance copy and regression coverage.
+
+Remaining acceptance:
+
+- exact-head CI;
+- owner browser review on desktop/mobile and Persian/RTL;
+- revise only where the browser experience still feels busy or unclear.
+
+Original implementation intent:
 
 - remove persistent verification-success noise;
 - state-derived Getting Started / setup checklist on Today;
