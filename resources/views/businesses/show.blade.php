@@ -45,11 +45,14 @@
             </div>
             <div style="text-align:left">
                 <div class="chip">کد {{ $business->code }}</div>
-                <div style="margin-top:8px;font-size:13px;opacity:.9">مالک: {{ $business->owner->user?->username ?? $business->owner->user?->email ?? ('Actor #'.$business->owner->getKey()) }}</div>
+                @if($canOperate)
+                    <div style="margin-top:8px;font-size:13px;opacity:.9">مالک: {{ $business->owner->user?->username ?? $business->owner->user?->email ?? ('Actor #'.$business->owner->getKey()) }}</div>
+                @endif
             </div>
         </div>
     </header>
 
+    @if($canOperate)
     <section class="stats">
         <div class="stat"><span>اعضای فعال</span><strong>{{ $business->memberships->count() }}</strong></div>
         <div class="stat"><span>مشتری / مخاطب</span><strong>{{ $business->businessContacts->count() }}</strong></div>
@@ -75,8 +78,9 @@
             <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
         </a>
     </section>
+    @endif
 
-    @if($business->kind === 'real_estate' && $business->publicIntakePortals->isNotEmpty())
+    @if($canOperate && $business->kind === 'real_estate' && $business->publicIntakePortals->isNotEmpty())
         <section class="panel">
             <div class="head">
                 <div>
@@ -190,6 +194,7 @@
         </div>
     </section>
 
+    @if($canOperate)
     <section class="panel">
         <div class="head">
             <div><h2>👥 اعضای کسب‌وکار</h2><p>عضویت با تخصص فرق دارد؛ گروه همکاری هم بعداً یک لایه جدا باقی می‌ماند.</p></div>
@@ -271,5 +276,6 @@
             @endif
         </div>
     </section>
+    @endif
 </main>
 @endsection
