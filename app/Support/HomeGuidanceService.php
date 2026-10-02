@@ -98,7 +98,7 @@ class HomeGuidanceService
                 key: 'first_goal',
                 title: (string) __('home.onboarding.first_goal_title'),
                 summary: (string) __('home.onboarding.first_goal_help'),
-                url: route('dashboard') . '#getting-started',
+                url: route('dashboard').'#getting-started',
                 cta: (string) __('home.onboarding.first_goal_cta'),
                 complete: $hasFirstGoal,
             ),
@@ -151,11 +151,11 @@ class HomeGuidanceService
         $waiting = $projection['waitingOnMe']->first();
         if ($waiting instanceof HomeActionItem) {
             return new HomeGuidanceItem(
-                key: 'attention:' . $waiting->key,
+                key: 'attention:'.$waiting->key,
                 kind: 'attention',
                 title: $waiting->title,
                 summary: $waiting->summary ?: (string) __('home.guidance.attention_reason'),
-                consequence: (string) __('home.guidance.consequence.' . $waiting->kind),
+                consequence: (string) __('home.guidance.consequence.'.$waiting->kind),
                 url: $waiting->url,
                 cta: (string) __('home.guidance.review_now'),
             );
@@ -170,14 +170,14 @@ class HomeGuidanceService
 
         if ($occurrence instanceof PlanOccurrence) {
             return new HomeGuidanceItem(
-                key: 'occurrence:' . $occurrence->uuid,
+                key: 'occurrence:'.$occurrence->uuid,
                 kind: 'schedule',
                 title: $occurrence->plan->title,
                 summary: $occurrence->status === PlanOccurrenceStatus::InProgress
                     ? (string) __('home.guidance.in_progress_reason')
                     : (string) __('home.guidance.scheduled_reason'),
                 consequence: (string) __('home.guidance.schedule_consequence'),
-                url: route('planner.show', $occurrence->plan) . '#occurrence-' . $occurrence->uuid,
+                url: route('planner.show', $occurrence->plan).'#occurrence-'.$occurrence->uuid,
                 cta: (string) __('home.guidance.open_plan'),
             );
         }
@@ -187,7 +187,7 @@ class HomeGuidanceService
 
         if ($setupStep instanceof HomeOnboardingStep) {
             return new HomeGuidanceItem(
-                key: 'onboarding:' . $setupStep->key,
+                key: 'onboarding:'.$setupStep->key,
                 kind: 'setup',
                 title: $setupStep->title,
                 summary: $setupStep->summary,
@@ -217,7 +217,7 @@ class HomeGuidanceService
         $relationship = $projection['activeRelationships']->first();
         if ($relationship !== null && $surfaceKeys->contains('deals')) {
             return new HomeGuidanceItem(
-                key: 'deal:' . $relationship->uuid,
+                key: 'deal:'.$relationship->uuid,
                 kind: 'work',
                 title: $relationship->title ?: $relationship->purposeConcept->displayLabel(),
                 summary: (string) __('home.guidance.active_work_reason'),
@@ -230,7 +230,7 @@ class HomeGuidanceService
         $intent = $projection['activeIntents']->first();
         if ($intent !== null && $surfaceKeys->contains('market')) {
             return new HomeGuidanceItem(
-                key: 'matches:' . $intent->uuid,
+                key: 'matches:'.$intent->uuid,
                 kind: 'matches',
                 title: (string) __('home.guidance.matches_title', [
                     'title' => $intent->title ?: $intent->concept->displayLabel(),
