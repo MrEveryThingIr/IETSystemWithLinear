@@ -22,7 +22,7 @@ class EnsureBusinessContext
                 ->first();
 
             if ($binding instanceof BusinessContext) {
-                return $binding->context;
+                return Context::query()->findOrFail($binding->context_id);
             }
 
             $context = Context::query()->create([
