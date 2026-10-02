@@ -135,16 +135,16 @@ return [
         'submission' => 'Review',
     ],
     'actions' => [
-        'relationship_waiting' => 'A proposed Deal is waiting for your response.'
-        'proposal_waiting' => 'The current terms are waiting for your decision.'
-        'contract_waiting' => 'The proposed agreement is waiting for your explicit acceptance.'
-        'fulfillment_waiting' => 'Submitted work or evidence is waiting for your review.'
-        'settlement_waiting' => 'A payment or settlement claim is waiting for your confirmation or rejection.'
+        'relationship_waiting' => 'A proposed Deal is waiting for your response.',
+        'proposal_waiting' => 'The current terms are waiting for your decision.',
+        'contract_waiting' => 'The proposed agreement is waiting for your explicit acceptance.',
+        'fulfillment_waiting' => 'Submitted work or evidence is waiting for your review.',
+        'settlement_waiting' => 'A payment or settlement claim is waiting for your confirmation or rejection.',
         'submission_waiting' => 'A submitted interaction is waiting in a Context you are authorized to review.',
-        'relationship_other' => 'Another participant still needs to accept the proposed Deal.'
-        'proposal_other' => 'You already decided on the current terms; another required party is pending.'
-        'contract_other' => 'You already accepted the proposed agreement; another required party is pending.'
-        'fulfillment_other' => 'Your submitted work is waiting for review.'
-        'settlement_other' => 'Your payment or settlement claim is waiting for the other party.'
+        'relationship_other' => 'Another participant still needs to accept the proposed Deal.',
+        'proposal_other' => 'You already decided on the current terms; another required party is pending.',
+        'contract_other' => 'You already accepted the proposed agreement; another required party is pending.',
+        'fulfillment_other' => 'Your submitted work is waiting for review.',
+        'settlement_other' => 'Your payment or settlement claim is waiting for the other party.',
     ],
 ];
