@@ -364,7 +364,7 @@ class ExperienceHubController extends Controller
     }
 
     /**
-     * @param list<string> $surfaceKeys
+     * @param  list<string>  $surfaceKeys
      */
     private function requireAny(User $user, array $surfaceKeys): void
     {
@@ -375,7 +375,7 @@ class ExperienceHubController extends Controller
     }
 
     /**
-     * @param list<array<string, mixed>> $sections
+     * @param  list<array<string, mixed>>  $sections
      */
     private function renderHub(string $key, array $sections): View
     {
