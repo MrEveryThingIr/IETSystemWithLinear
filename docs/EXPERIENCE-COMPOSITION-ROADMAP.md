@@ -124,7 +124,7 @@ The next experience milestone is Phase 4 / coherence milestone C3:
 
 Status: **engineering-complete as coherence milestone C3; owner browser/product-feel acceptance pending**.
 
-Verified implementation head: `8a6ea44b45e80ff341d0991cf14d84f2377c5aac` — **714 tests / 6106 assertions** with the full CI gate green.
+Verified implementation head: `982b2ebd85884793bd064fd55a58c8bef238411e` — **715 tests / 6118 assertions** with the full CI gate green.
 
 Implemented:
 
@@ -135,6 +135,8 @@ Implemented:
 - Group shell with participation first and governance under Manage;
 - Business/organization shell with state-derived next action across clients, catalog,
   work, deals, money and team/settings, while respecting feature-publication boundaries;
+- due accepted Contract versions self-reconcile on Contract use when a local scheduler
+  was not running, without activating unrelated Contracts;
 - existing routes, policies and domain records remain authoritative;
 - C3 regression coverage and EN/FA/AR/ZH workflow copy.
 

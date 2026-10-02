@@ -180,7 +180,7 @@ The next active milestone is **C3 — Contextual workflow shells**.
 
 Status: **engineering-complete on `codex/coherence-c3-contextual-workflow-shells`; owner browser/product-feel acceptance pending**.
 
-Verified implementation head: `8a6ea44b45e80ff341d0991cf14d84f2377c5aac` — CI green with **714 tests / 6106 assertions**, Pint, PHPStan, MySQL portability, rollback/reapply + scheduler/queue smoke, SQLite backup/restore, frontend build + npm audit, and Composer security audit.
+Verified implementation head: `982b2ebd85884793bd064fd55a58c8bef238411e` — CI green with **715 tests / 6118 assertions**, Pint, PHPStan, MySQL portability, rollback/reapply + scheduler/queue smoke, SQLite backup/restore, frontend build + npm audit, and Composer security audit.
 
 Goal: every important workflow teaches itself.
 
@@ -207,6 +207,11 @@ Implemented:
   the pre-existing Content workflow language keys;
 - focused C3 regression coverage added in
   `tests/Feature/ContextualWorkflowShellTest.php`;
+- browser acceptance exposed a temporal-state gap: an accepted ContractVersion could remain
+  “waiting for effective time” after its effective instant when the scheduler was not
+  running locally. Contract pages now reconcile due activation for that Contract on
+  open/Livewire interaction while `contracts:activate-due` remains the background safety
+  net; regression coverage proves unrelated Contracts are not activated by the read;
 - no new migration, workflow-state table or domain kernel introduced.
 
 Every major page should consistently show:
