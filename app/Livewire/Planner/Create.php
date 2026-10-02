@@ -250,6 +250,7 @@ class Create extends Component
         $context = $this->context();
         $context->loadMissing([
             'personalBinding.actor.user',
+            'businessBinding.business',
             'relationshipBinding.relationship.participants.actor.user',
             'relationshipBinding.relationship.purposeConcept.labels',
             'groupSpaceBinding.groupSpace.group',
@@ -267,6 +268,13 @@ class Create extends Component
     /** @return array{list<array{actor: Actor, role: string}>, ?string, ?string} */
     private function provenance(Context $context, User $user): array
     {
+        if ($context->kind === ContextKind::Business) {
+            $business = $context->businessBinding?->business;
+            abort_unless($business instanceof \App\Models\Business, 422);
+
+            return [[], 'business', $business->uuid];
+        }
+
         if ($context->kind !== ContextKind::Relationship) {
             return [[], null, null];
         }
@@ -330,6 +338,8 @@ class Create extends Component
     {
         return match ($context->kind) {
             ContextKind::Personal => (string) __('planner.context.personal'),
+            ContextKind::Business => $context->businessBinding?->business?->name
+                ?? $context->uuid,
             ContextKind::Relationship => (string) __('planner.context.relationship', [
                 'title' => $context->relationshipBinding?->relationship?->title
                     ?: $context->relationshipBinding?->relationship?->purposeConcept?->displayLabel()
