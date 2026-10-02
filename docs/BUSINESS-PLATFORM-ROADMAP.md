@@ -171,36 +171,39 @@ Next:
 
 ### M5 — Content and media integration
 
-Status: **planned**.
+Status: **engineering-complete in C4**.
 
-- Listing structured data remains canonical;
-- generate/update Listing presentation Content;
-- Asset-based photo/video/audio;
-- cover/reorder/caption workflow;
-- preview and publication;
-- simple editor by default, advanced Content Studio by choice.
+Implemented:
+
+- Listing structured data and immutable ListingVersions remain canonical;
+- generated customer presentation uses the existing Business Context + Content kernel;
+- Asset-based media with cover role, ordering, captions and visibility;
+- publication reuses existing media rights/readiness evidence;
+- privacy-safe preview and coordinated Listing/presentation publication;
+- simple editor by default, advanced presentation editor by choice;
+- later Listing edits create a new working version rather than mutating published
+  commercial or presentation history.
 
 ### M6 — Real Estate vertical
 
-Status: **first vertical foundation complete**.
+Status: **traditional-user implementation engineering-complete in C4; owner browser acceptance pending**.
 
-Current:
+Implemented:
 
-- property detail extension;
-- preserved public intake;
-- preserved office case administration;
-- Business adoption;
-- Property Offer → Business Listing promotion;
-- seeded property taxonomy.
-
-Next:
-
-- full professional property schema from the brief;
-- wizard: client → transaction/location → dimensions/building → facilities → prices → media → preview → publish;
-- Persian-number friendly inputs;
+- full professional property extension covering transaction/location, dimensions,
+  building/unit details, facilities, deed/usage/occupancy and public/private notes;
+- preserved public intake and office case administration;
+- Business adoption and Property Offer → Business catalog promotion;
+- promoted cases preserve their BusinessContact provenance;
+- seeded property taxonomy remains reused;
+- guided flow: client → purpose/location → property → building/facilities → price →
+  media → preview → publish;
+- Persian/Arabic-number friendly numeric and price entry;
 - simple-office mode;
-- public/private property fields;
-- property lifecycle and availability.
+- explicit public/private property fields;
+- Listing availability lifecycle;
+- customer preview excludes exact address, client identity and private office notes;
+- no duplicate Real Estate publishing/media kernel was introduced.
 
 ### M7 — Market integration
 
