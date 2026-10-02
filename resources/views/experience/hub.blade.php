@@ -1,3 +1,7 @@
+@extends('layouts.app')
+@section('title', $title)
+
+@section('content')
 <section class="mx-auto max-w-7xl space-y-6">
     <x-app.page-header :title="$title" :description="$description" />
 
@@ -54,3 +58,5 @@
         {{ __('experience.hubs.boundary') }}
     </flux:callout>
 </section>
+
+@endsection
