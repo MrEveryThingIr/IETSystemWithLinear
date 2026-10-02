@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\ContextKind;
 use App\Models\Actor;
+use App\Models\BusinessMembership;
 use App\Models\Context;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -59,8 +60,7 @@ class ContextNotificationRecipients
 
         return $business->memberships
             ->where('status', 'active')
-            ->pluck('actor')
-            ->filter(fn ($actor): bool => $actor instanceof Actor)
+            ->map(fn (BusinessMembership $membership): Actor => $membership->actor)
             ->values();
     }
 
