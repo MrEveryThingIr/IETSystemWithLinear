@@ -224,6 +224,15 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('Payable / I owe');
     }
 
+    public function test_getting_started_route_keeps_compatibility_but_lands_on_today_checklist(): void
+    {
+        $actor = Actor::factory()->create();
+
+        $this->actingAs($actor->user)
+            ->get(route('getting-started'))
+            ->assertRedirect(route('dashboard') . '#getting-started');
+    }
+
     public function test_dashboard_route_is_the_today_operating_view(): void
     {
         $actor = Actor::factory()->create();
