@@ -46,12 +46,11 @@ Completed foundations:
 - Business Context and Business-scoped Planner routines;
 - IET-first Business settlement boundary;
 - exact-head CI acceptance for Business vertical consolidation;
-- C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI.
+- C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI;
+- C2 goal-oriented destination hubs are engineering-complete with exact-head CI.
 
 Still weak:
 
-- top-level destinations are grouped but not yet true task-oriented hubs;
-- Needs/Offers, Work, Money and Content still expose overlapping internal entry points;
 - Deal workflow still requires the user to understand Relationship / Proposal /
   Contract / Commitment / obligation as separate facilities;
 - Business shell is structurally richer but not yet a polished traditional-user journey;
@@ -127,75 +126,55 @@ A new or ordinary user should be able to login and answer within seconds:
 
 ## C2 — Real goal-oriented destination hubs
 
+Status: **engineering-complete on `codex/coherence-c2-goal-oriented-hubs`; owner browser review remains the product-feel checkpoint**.
+
 Goal: the sidebar destinations become actual coherent products rather than labels
 that expand into subsystem links.
 
-Implement five task-oriented hubs plus Today:
+Implemented:
 
-### Needs & Offers
+- primary sidebar is flat and intention-oriented: Today, Needs & Offers, Work,
+  Organizations, Money, Content;
+- Help is one destination rather than separate Manual / System Map entries;
+- Needs & Offers composes Mine / Discover / Matches while preserving intent semantics;
+- Work composes attention, active Deals, and Planner schedule without duplicating
+  workflow state;
+- Organizations composes Businesses and Groups while preserving their distinct
+  domain models;
+- Money is now the simple daily entry at `/money`;
+- detailed personal ledgers remain available at `/money/accounts`;
+- Accounting and Exchange are progressively disclosed as advanced Money tools;
+- outstanding Money summaries remain separated by monetary unit and never add
+  incomparable minor units together;
+- Content composes My Content / Explore / Create;
+- all hubs respect underlying publication grants and hide unpublished sections rather
+  than rendering disabled/empty subsystem cards;
+- existing deep domain routes remain intact;
+- EN / FA / AR / ZH hub copy added;
+- shared hub page contract uses purpose → live summary → primary action → deeper tools;
+- no new persistent workflow-state table or duplicate domain kernel was introduced.
 
-One entry with modes:
+Acceptance evidence:
 
-- Mine;
-- Discover;
-- Matches.
+- implementation SHA `c53e093f3f7d6608e148518c5cebc7ead65b9ef4`;
+- MySQL migration portability: green;
+- frontend build and JavaScript audit: green;
+- Pint: green;
+- PHPStan: green;
+- rollback/reapply, scheduler, and queue smoke: green;
+- SQLite backup/restore: green;
+- PHPUnit: **708 passed / 5720 assertions**;
+- Composer security audit: no vulnerability advisories.
 
-Hide the difference between "Profile intents" and "Market intents" from normal
-navigation while preserving their record semantics.
+Browser acceptance focus:
 
-### Work
+- ordinary sidebar destinations should be one click, without choosing subsystems first;
+- partial publication must never leak unavailable domains into a hub;
+- Persian/Arabic RTL must remain clear;
+- Money should feel simple before Accounting appears;
+- a novice should understand where to go without knowing which IET kernel owns the task.
 
-One entry that composes:
-
-- active Deals;
-- Planner activities;
-- commitments / execution;
-- waiting actions.
-
-A simple user should not choose "Deals or Planner?" before the system explains why.
-
-### Organizations
-
-One entry that composes:
-
-- Businesses;
-- Groups.
-
-A Business is an operating organization.
-A Group remains a governed collaboration/community concept.
-Do not collapse their domain models.
-
-### Money
-
-One simple daily experience:
-
-- balance / accounts;
-- money activity;
-- obligations / receivables / payables;
-- settlement attention.
-
-Accounting becomes Advanced.
-Exchange becomes contextual when deposit/cashout is relevant or explicitly opened.
-
-### Content
-
-One entry with:
-
-- My Content;
-- Explore / Library;
-- Create.
-
-Outline, Blocks, Appearance, Assets and AI become steps/tools inside authoring,
-not peer destinations.
-
-### Help
-
-Manual + System Map + contextual help become one Help center.
-
-Browser acceptance:
-
-A simple user should navigate by intention, not by knowing which IET subsystem owns
-the task.
+The next active milestone is **C3 — Contextual workflow shells**.
 
 ## C3 — Standard page contract and contextual workflow shells
 
@@ -448,4 +427,4 @@ Until C1–C3 are accepted in the browser:
 - do not prioritize deep specialist functionality over orientation and next-action
   guidance.
 
-The next implementation milestone is **C2 — Real goal-oriented destination hubs**.
+The next implementation milestone is **C3 — Standard page contract and contextual workflow shells**.
