@@ -23,7 +23,7 @@ class IntentMatchFinder
     {
         Gate::forUser($user)->authorize('update', $source);
 
-        $source->loadMissing(['concept', 'profile.actor']);
+        $source->loadMissing(['concept.labels', 'profile.actor']);
         abort_unless($source->status === ProfileIntentStatus::Active, 422, 'Only an active Intent can be matched.');
 
         $opposite = $source->kind === ProfileIntentKind::Need
@@ -60,7 +60,7 @@ class IntentMatchFinder
     {
         Gate::forUser($user)->authorize('update', $source);
 
-        $source->loadMissing(['concept', 'profile.actor']);
+        $source->loadMissing(['concept.labels', 'profile.actor']);
         $candidate->loadMissing(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset']);
 
         if ($source->status !== ProfileIntentStatus::Active
@@ -76,10 +76,12 @@ class IntentMatchFinder
 
     private function compare(ActorProfileIntent $source, ActorProfileIntent $candidate): ?IntentMatchResult
     {
-        $sourceConcept = $source->concept->canonical();
-        $candidateConcept = $candidate->concept->canonical();
+        $sourceConcept = $source->concept->canonical()->loadMissing('labels');
+        $candidateConcept = $candidate->concept->canonical()->loadMissing('labels');
 
-        if (! $sourceConcept->is($candidateConcept)) {
+        $conceptReason = $this->conceptReason($sourceConcept, $candidateConcept);
+
+        if ($conceptReason === null) {
             return null;
         }
 
@@ -95,7 +97,7 @@ class IntentMatchFinder
             ? [$source, $candidate]
             : [$candidate, $source];
 
-        $reasons = ['concept'];
+        $reasons = [$conceptReason];
         $aligned = 1;
 
         if ($source->subject_kind === $candidate->subject_kind && $source->subject_kind->value !== 'other') {
@@ -349,6 +351,29 @@ class IntentMatchFinder
         $aligned++;
 
         return true;
+    }
+
+    private function conceptReason(\App\Models\Concept $left, \App\Models\Concept $right): ?string
+    {
+        if ($left->is($right)) {
+            return 'concept';
+        }
+
+        $leftLabels = $left->labels
+            ->pluck('normalized_label')
+            ->filter()
+            ->map(fn ($label): string => mb_strtolower(trim((string) $label)))
+            ->unique();
+
+        $rightLabels = $right->labels
+            ->pluck('normalized_label')
+            ->filter()
+            ->map(fn ($label): string => mb_strtolower(trim((string) $label)))
+            ->unique();
+
+        return $leftLabels->intersect($rightLabels)->isNotEmpty()
+            ? 'concept-label'
+            : null;
     }
 
     private function enumCompatible(string $left, string $right): bool
