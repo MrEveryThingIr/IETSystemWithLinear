@@ -44,7 +44,7 @@ return [
     'outstanding' => '未结',
     'no_obligations' => '没有已确认的财务义务',
     'recent_activity' => '最近活动',
-    'recent_activity_help' => '来自您有权访问空间的近期事件；这是历史记录，不是未读通知系统。',
+    'recent_activity_help' => '你有权查看的近期工作和变更简要记录。',
     'no_recent_activity' => '没有近期可见活动',
     'boundary' => '“今天”只是派生的操作视图。任何操作都会打开真正拥有事实的原始记录。',
         'onboarding' => [
