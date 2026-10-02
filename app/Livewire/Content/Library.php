@@ -95,6 +95,7 @@ class Library extends Component
             ->whereNotNull('active_revision_id')
             ->with([
                 'context.personalBinding.actor.user',
+                'context.businessBinding.business',
                 'context.groupSpaceBinding.groupSpace.group',
                 'context.admissionBinding.admission.group',
                 'context.relationshipBinding.relationship.purposeConcept.labels',
@@ -105,6 +106,7 @@ class Library extends Component
                 'activeRevision.assets',
                 'blueprintVersion.blueprint',
                 'placements.context.personalBinding.actor.user',
+                'placements.context.businessBinding.business',
                 'placements.context.groupSpaceBinding.groupSpace.group',
                 'placements.context.admissionBinding.admission.group',
                 'placements.context.relationshipBinding.relationship.purposeConcept.labels',
@@ -261,6 +263,7 @@ class Library extends Component
         return Context::query()
             ->with([
                 'personalBinding.actor.user',
+                'businessBinding.business',
                 'groupSpaceBinding.groupSpace.group',
                 'admissionBinding.admission.group',
                 'relationshipBinding.relationship.purposeConcept.labels',
@@ -279,6 +282,8 @@ class Library extends Component
     {
         return match ($context->kind) {
             ContextKind::Personal => __('library.context.personal'),
+            ContextKind::Business => $context->businessBinding?->business?->name
+                ?? 'Business · '.$context->uuid,
             ContextKind::GroupSpace => trim(implode(' · ', array_filter([
                 $context->groupSpaceBinding?->groupSpace?->group?->name,
                 $context->groupSpaceBinding?->groupSpace?->name,
