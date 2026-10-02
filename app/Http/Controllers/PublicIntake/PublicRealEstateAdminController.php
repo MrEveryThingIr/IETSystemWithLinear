@@ -16,7 +16,8 @@ class PublicRealEstateAdminController extends Controller
     {
         abort_unless(PublicIntakeAccess::canView($request->user(), $portal), 403);
 
-        $query = $portal->realEstateCases()->latest();
+        $portal->loadMissing('business');
+        $query = $portal->realEstateCases()->with('businessListing.currentVersion')->latest();
 
         if ($request->filled('q')) {
             $term = trim((string) $request->query('q'));
@@ -42,6 +43,8 @@ class PublicRealEstateAdminController extends Controller
 
         return view('public-intake.real-estate.admin.index', [
             'portal' => $portal,
+            'business' => $portal->business,
+            'canManage' => PublicIntakeAccess::canManage($request->user(), $portal),
             'cases' => $cases,
             'stats' => [
                 'total' => $portal->realEstateCases()->count(),
@@ -60,8 +63,12 @@ class PublicRealEstateAdminController extends Controller
         abort_unless(PublicIntakeAccess::canView($request->user(), $portal), 403);
         abort_unless($case->public_intake_portal_id === $portal->getKey(), 404);
 
+        $portal->loadMissing('business');
+        $case->loadMissing('businessListing.currentVersion');
+
         return view('public-intake.real-estate.admin.show', [
             'portal' => $portal,
+            'business' => $portal->business,
             'case' => $case,
             'canManage' => PublicIntakeAccess::canManage($request->user(), $portal),
         ]);
