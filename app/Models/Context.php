@@ -53,6 +53,12 @@ class Context extends Model
         return $this->hasOne(PersonalContext::class);
     }
 
+    /** @return HasOne<BusinessContext, $this> */
+    public function businessBinding(): HasOne
+    {
+        return $this->hasOne(BusinessContext::class);
+    }
+
     /** @return HasOne<GroupSpaceContext, $this> */
     public function groupSpaceBinding(): HasOne
     {
