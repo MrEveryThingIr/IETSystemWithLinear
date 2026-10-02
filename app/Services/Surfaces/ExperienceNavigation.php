@@ -104,7 +104,7 @@ class ExperienceNavigation
         ]));
         $help = $helpItems === [] ? [] : [[
             'key' => 'help',
-            'label' => __('experience.navigation.help'),
+            'label' => __('experience.hubs.help.title'),
             'icon' => 'question-mark-circle',
             'route' => 'experience.help',
             'patterns' => array_values(array_unique([
