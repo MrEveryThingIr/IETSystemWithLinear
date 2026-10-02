@@ -21,6 +21,7 @@ use App\Models\BusinessListing;
 use App\Models\Contract;
 use App\Models\FinancialObligation;
 use App\Models\IetValuationQuote;
+use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\ProfileIntentArrangementKind;
 use App\ProfileIntentExchangePreference;
@@ -28,6 +29,7 @@ use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
+use App\PlatformRole;
 use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessMarketService;
 use App\Services\Business\BusinessService;
@@ -44,6 +46,14 @@ class CoherenceBaselineDemoSeeder extends Seeder
         }
 
         $provider = $this->user('test@example.com', 'testuser');
+
+        if (! $provider->platformAccessGrants()->active()->where('role', PlatformRole::Superadmin->value)->exists()) {
+            PlatformAccessGrant::factory()->for($provider)->create([
+                'role' => PlatformRole::Superadmin,
+                'reason' => 'Local coherence baseline demo superadmin.',
+            ]);
+        }
+
         $this->call(RealEstateBusinessDemoSeeder::class);
 
         $realEstate = Business::query()
@@ -419,7 +429,12 @@ class CoherenceBaselineDemoSeeder extends Seeder
             return;
         }
 
-        if (! IetValuationQuote::query()->exists()) {
+        $latestQuote = IetValuationQuote::query()
+            ->latest('effective_at')
+            ->latest('id')
+            ->first();
+
+        if ((string) $latestQuote?->usd_per_iet !== '0.010000000000000000') {
             app(PublishIetValuationQuote::class)->execute(
                 $provider,
                 '0.010000000000000000',
