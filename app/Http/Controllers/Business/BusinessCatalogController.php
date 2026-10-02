@@ -29,6 +29,7 @@ class BusinessCatalogController extends Controller
             'listings.publishedVersion',
             'listings.prices.monetaryUnit',
             'publicIntakePortals',
+            'contextBinding.context',
         ]);
 
         return view('businesses.catalog.index', [
