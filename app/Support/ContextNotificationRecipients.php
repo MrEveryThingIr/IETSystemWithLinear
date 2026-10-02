@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\ContextKind;
 use App\Models\Actor;
+use App\Models\BusinessMembership;
 use App\Models\Context;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -18,6 +19,7 @@ class ContextNotificationRecipients
 
         $actors = match ($context->kind) {
             ContextKind::Personal => $this->personalActors($context),
+            ContextKind::Business => $this->businessActors($context),
             ContextKind::GroupSpace => $this->groupSpaceActors($context),
             ContextKind::Admission => $this->admissionActors($context),
             ContextKind::Relationship => $this->relationshipActors($context),
@@ -44,6 +46,22 @@ class ContextNotificationRecipients
         $context->loadMissing('personalBinding.actor.user');
 
         return collect([$context->personalBinding?->actor])->filter();
+    }
+
+    /** @return Collection<int, Actor> */
+    private function businessActors(Context $context): Collection
+    {
+        $context->loadMissing('businessBinding.business.memberships.actor.user');
+
+        $business = $context->businessBinding?->business;
+        if ($business === null) {
+            return collect();
+        }
+
+        return $business->memberships
+            ->where('status', 'active')
+            ->map(fn (BusinessMembership $membership): Actor => $membership->actor)
+            ->values();
     }
 
     /** @return Collection<int, Actor> */

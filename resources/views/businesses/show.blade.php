@@ -26,7 +26,7 @@
         .status{margin:16px 0;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:13px 16px;color:#065f46;font-weight:900}
         .list{display:grid;gap:11px}.item{border:1px solid #dde3ec;border-radius:19px;padding:16px;background:#fbfcfe}
         .badge{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:900;background:#f2f4f7;color:#475467}.owner{background:#fef3c7;color:#92400e}.manager{background:#dbeafe;color:#1d4ed8}.profession{background:#ede9fe;color:#6d28d9}
-        .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+        .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
         .quick-card{border-radius:19px;padding:17px;color:#fff}.q1{background:linear-gradient(135deg,#7c3aed,#a855f7)}.q2{background:linear-gradient(135deg,#059669,#10b981)}.q3{background:linear-gradient(135deg,#ea580c,#f59e0b)}
         .quick-card strong{font-size:18px;display:block}.quick-card span{font-size:13px;opacity:.92}
         .section-form{margin-top:16px;padding:17px;border-radius:18px;background:#f8fafc;border:1px dashed #cbd5e1}
@@ -45,23 +45,100 @@
             </div>
             <div style="text-align:left">
                 <div class="chip">کد {{ $business->code }}</div>
-                <div style="margin-top:8px;font-size:13px;opacity:.9">مالک: {{ $business->owner->user?->username ?? $business->owner->user?->email ?? ('Actor #'.$business->owner->getKey()) }}</div>
+                @if($canOperate)
+                    <div style="margin-top:8px;font-size:13px;opacity:.9">مالک: {{ $business->owner->user?->username ?? $business->owner->user?->email ?? ('Actor #'.$business->owner->getKey()) }}</div>
+                @endif
             </div>
         </div>
     </header>
 
+    @if($canOperate)
     <section class="stats">
         <div class="stat"><span>اعضای فعال</span><strong>{{ $business->memberships->count() }}</strong></div>
-        <div class="stat"><span>راه‌های تماس</span><strong>{{ $business->contactPoints->count() }}</strong></div>
-        <div class="stat"><span>آدرس‌ها</span><strong>{{ $business->addresses->count() }}</strong></div>
-        <div class="stat"><span>تخصص‌های تیم</span><strong>{{ $business->memberships->flatMap->professions->unique('id')->count() }}</strong></div>
+        <div class="stat"><span>مشتری / مخاطب</span><strong>{{ $business->businessContacts->count() }}</strong></div>
+        <div class="stat"><span>کالا / خدمت / ملک</span><strong>{{ $business->listings->count() }}</strong></div>
+        <div class="stat"><span>برنامه‌های کاری</span><strong>{{ $routineCount }}</strong></div>
     </section>
 
     <section class="quick">
-        <div class="quick-card q1"><strong>👥 تیم من</strong><span>مالک، مدیران، اعضا و تخصص هر نفر</span></div>
-        <div class="quick-card q2"><strong>📍 مکان و تماس</strong><span>شماره‌ها، ایمیل‌ها و شعبه‌ها</span></div>
-        <div class="quick-card q3"><strong>🧰 ارائه‌های من</strong><span>در M3 کالاها و خدمات اینجا اضافه می‌شوند</span></div>
+        <a class="quick-card q1" style="text-decoration:none" href="{{ route('businesses.clients.index',$business) }}">
+            <strong>👤 مشتریان و مخاطبان</strong>
+            <span>CRM ساده برای افراد واقعی، حتی بدون حساب IET</span>
+        </a>
+        <a class="quick-card q2" style="text-decoration:none" href="{{ route('businesses.catalog.index',$business) }}">
+            <strong>🧰 کاتالوگ و ارائه‌ها</strong>
+            <span>کالا، خدمت، ملک و قیمت‌ها در یک زیرساخت مشترک</span>
+        </a>
+        <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
+            <strong>🗓 برنامه‌های کسب‌وکار</strong>
+            <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
+        </a>
+        <a class="quick-card q1" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
+            <strong>＋ برنامه کاری جدید</strong>
+            <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
+        </a>
     </section>
+    @endif
+
+    @if($canOperate)
+        <section class="panel">
+            <div class="head">
+                <div>
+                    <h2>💰 تسویه و جریان مالی کسب‌وکار</h2>
+                    <p>روال‌های داخلی بر پایه واحد تسویه کسب‌وکار محاسبه می‌شوند؛ اتصال به پول واقعی فقط از طریق درگاه‌های تأییدشده انجام خواهد شد.</p>
+                </div>
+            </div>
+            <div class="body">
+                <div class="grid3">
+                    <div class="item">
+                        <strong>واحد تسویه داخلی</strong>
+                        <div style="font-size:26px;font-weight:950;margin-top:6px">{{ $business->defaultMonetaryUnit?->code ?? 'IET' }}</div>
+                        <div class="muted" style="margin-top:5px">هزینه‌های برنامه‌ریزی Business به‌صورت پیش‌فرض از همین واحد استفاده می‌کنند.</div>
+                    </div>
+                    <div class="item">
+                        <strong>واریز پول واقعی</strong>
+                        <div class="badge" style="margin-top:9px">placeholder</div>
+                        <div class="muted" style="margin-top:5px">هیچ بانک یا پرداخت‌یار واقعی در این مرحله متصل نیست.</div>
+                    </div>
+                    <div class="item">
+                        <strong>برداشت / Cashout</strong>
+                        <div class="badge" style="margin-top:9px">placeholder</div>
+                        <div class="muted" style="margin-top:5px">تا زمان انتخاب Provider، امنیت و حسابرسی، عملیات واقعی انجام نمی‌شود.</div>
+                    </div>
+                </div>
+                <div class="badges" style="margin-top:12px">
+                    @foreach($externalMoneyGateways as $gateway)
+                        <span class="badge">{{ $gateway['label'] }} — {{ $gateway['status'] }}</span>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
+    @if($canOperate && $business->kind === 'real_estate' && $business->publicIntakePortals->isNotEmpty())
+        <section class="panel">
+            <div class="head">
+                <div>
+                    <h2>🏠 کانال تخصصی املاک</h2>
+                    <p>املاک یک قابلیت تخصصی همین کسب‌وکار است؛ پرونده‌های تأییدشده به کاتالوگ عمومی کسب‌وکار ارتقا پیدا می‌کنند.</p>
+                </div>
+            </div>
+            <div class="body">
+                @foreach($business->publicIntakePortals as $portal)
+                    <div class="item row">
+                        <div>
+                            <strong>{{ $portal->title }}</strong>
+                            <div class="muted" style="margin-top:5px">فرم مراجعه‌کننده و دفتر پیگیری موجود حفظ شده‌اند.</div>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">پرونده‌های دفتر</a>
+                            <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show',$portal) }}">فرم عمومی</a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     <section class="panel">
         <div class="head"><div><h2>🏪 مشخصات کسب‌وکار</h2><p>اطلاعات پایه و سطح نمایش</p></div></div>
@@ -152,6 +229,7 @@
         </div>
     </section>
 
+    @if($canOperate)
     <section class="panel">
         <div class="head">
             <div><h2>👥 اعضای کسب‌وکار</h2><p>عضویت با تخصص فرق دارد؛ گروه همکاری هم بعداً یک لایه جدا باقی می‌ماند.</p></div>
@@ -233,5 +311,6 @@
             @endif
         </div>
     </section>
+    @endif
 </main>
 @endsection

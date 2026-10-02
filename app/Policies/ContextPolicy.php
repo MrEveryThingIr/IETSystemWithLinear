@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\ContextKind;
 use App\Models\Actor;
 use App\Models\Admission;
+use App\Models\Business;
 use App\Models\Context;
 use App\Models\Contract;
 use App\Models\GroupSpace;
@@ -12,6 +13,7 @@ use App\Models\Proposal;
 use App\Models\ReferenceContext;
 use App\Models\Relationship;
 use App\Models\User;
+use App\Support\BusinessAccess;
 
 class ContextPolicy
 {
@@ -33,6 +35,8 @@ class ContextPolicy
 
         return match ($context->kind) {
             ContextKind::Personal => $this->ownsPersonalContext($current, $context),
+            ContextKind::Business => ($business = $this->business($context)) instanceof Business
+                && BusinessAccess::canOperate($current, $business),
             ContextKind::GroupSpace => ($space = $this->groupSpace($context)) instanceof GroupSpace
                 && $this->spaces->view($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
@@ -58,6 +62,8 @@ class ContextPolicy
 
         return match ($context->kind) {
             ContextKind::Personal => $this->ownsPersonalContext($current, $context),
+            ContextKind::Business => ($business = $this->business($context)) instanceof Business
+                && BusinessAccess::canOperate($current, $business),
             ContextKind::GroupSpace => ($space = $this->groupSpace($context)) instanceof GroupSpace
                 && $this->spaces->post($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
@@ -93,6 +99,8 @@ class ContextPolicy
 
         return match ($context->kind) {
             ContextKind::Personal => $this->ownsPersonalContext($current, $context),
+            ContextKind::Business => ($business = $this->business($context)) instanceof Business
+                && BusinessAccess::canManage($current, $business),
             ContextKind::GroupSpace => ($space = $this->groupSpace($context)) instanceof GroupSpace
                 && $this->spaces->manage($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
@@ -116,6 +124,8 @@ class ContextPolicy
 
         return match ($context->kind) {
             ContextKind::Personal => $this->ownsPersonalContext($current, $context),
+            ContextKind::Business => ($business = $this->business($context)) instanceof Business
+                && BusinessAccess::canManage($current, $business),
             ContextKind::GroupSpace => ($space = $this->groupSpace($context)) instanceof GroupSpace
                 && $this->spaces->manage($current, $space),
             ContextKind::Admission => ($admission = $this->admission($context)) instanceof Admission
@@ -173,6 +183,13 @@ class ContextPolicy
 
         return $context->personalBinding !== null
             && (int) $context->personalBinding->actor_id === (int) $user->actor?->id;
+    }
+
+    private function business(Context $context): ?Business
+    {
+        $context->loadMissing('businessBinding.business');
+
+        return $context->businessBinding?->business;
     }
 
     private function groupSpace(Context $context): ?GroupSpace

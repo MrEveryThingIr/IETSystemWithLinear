@@ -25,7 +25,18 @@
             <h1 style="font-size:32px;margin:5px 0">{{ $fa ? 'پرونده‌های' : 'Cases for' }} {{ $portal->title }}</h1>
             <p style="color:#64748b;margin:0">{{ $fa ? 'جست‌وجو، فیلتر و پیگیری پرونده‌های ثبت‌شده' : 'Search, filter, and follow submitted cases.' }}</p>
         </div>
-        <a class="re-btn re-light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show', $portal) }}">{{ $fa ? 'باز کردن فرم عمومی' : 'Open public form' }}</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            @if($business)
+                <a class="re-btn re-light" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'باز کردن کسب‌وکار' : 'Open business' }}</a>
+                <a class="re-btn re-light" href="{{ route('businesses.catalog.index',$business) }}">{{ $fa ? 'کاتالوگ کسب‌وکار' : 'Business catalog' }}</a>
+            @elseif($canManage)
+                <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
+                    @csrf
+                    <button class="re-btn re-primary">{{ $fa ? 'انتقال این دفتر به Business' : 'Adopt this office into Business' }}</button>
+                </form>
+            @endif
+            <a class="re-btn re-light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show', $portal) }}">{{ $fa ? 'باز کردن فرم عمومی' : 'Open public form' }}</a>
+        </div>
     </div>
     <section class="re-cards">
         <div class="re-card">{{ $fa ? 'همه پرونده‌ها' : 'All cases' }} <b>{{ number_format($stats['total']) }}</b></div>
@@ -53,7 +64,12 @@
                 <td><b>{{ $case->property_subtype ?: $case->property_class }}</b><br><small style="color:#64748b">{{ $case->public_area ?: '—' }}</small></td>
                 <td>{{ $case->land_area ?: '—' }} m²</td>
                 <td>@if($case->asking_price){{ number_format((float)$case->asking_price) }} {{ $fa ? 'تومان' : 'toman' }}@elseif($case->deposit_amount || $case->monthly_rent_amount){{ $fa ? 'رهن' : 'Deposit' }} {{ number_format((float)($case->deposit_amount ?? 0)) }}<br><small>{{ $fa ? 'اجاره' : 'Rent' }} {{ number_format((float)($case->monthly_rent_amount ?? 0)) }}</small>@else — @endif</td>
-                <td><span class="re-badge">{{ $statusText[$case->status] ?? $case->status }}</span></td>
+                <td>
+                    <span class="re-badge">{{ $statusText[$case->status] ?? $case->status }}</span>
+                    @if($case->businessListing)
+                        <br><small style="color:#047857;font-weight:900">{{ $fa ? 'در کاتالوگ' : 'In catalog' }}</small>
+                    @endif
+                </td>
                 <td><a class="re-btn re-dark" href="{{ route('office.real-estate.show',['portal'=>$portal->uuid,'case'=>$case]) }}">{{ $fa ? 'مشاهده' : 'View' }}</a></td>
             </tr>
         @empty

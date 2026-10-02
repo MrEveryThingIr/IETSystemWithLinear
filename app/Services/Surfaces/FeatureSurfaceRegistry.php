@@ -31,12 +31,18 @@ class FeatureSurfaceRegistry
             ),
             'business' => $this->surface(
                 'Businesses', 'کسب‌وکارها', 'building-storefront', 'business', ['profile'],
-                ['businesses.index'], ['businesses.*']
+                ['businesses.index'], ['businesses.*', 'workspace.real-estate.*']
             ),
-            'real-estate' => $this->surface(
-                'Real Estate', 'دفتر املاک', 'home-modern', 'business', ['business'],
-                ['workspace.real-estate.index'], ['workspace.real-estate.*', 'office.real-estate.*']
-            ),
+            // Compatibility key for historical grants only. Real Estate is a
+            // Business vertical, not an independently publishable facility.
+            'real-estate' => [
+                ...$this->surface(
+                    'Real Estate compatibility', 'سازگاری املاک', 'home-modern', 'business', ['business'],
+                    ['workspace.real-estate.index'], []
+                ),
+                'sidebar' => false,
+                'grantable' => false,
+            ],
             'planner' => $this->surface(
                 'Planner', 'برنامه‌ریز', 'calendar-days', 'execution', ['profile'],
                 ['planner.index'], ['planner.*', 'journeys.*']
@@ -292,9 +298,8 @@ class FeatureSurfaceRegistry
             'groups.community',
             'groups.spaces.show',
 
-            // A portal-specific Real Estate grant is itself the authority for
-            // that private office. The generic Real Estate workspace remains
-            // publication-controlled.
+            // Public-intake office administration is record/domain
+            // authorized by its Business or legacy portal grant.
             'office.real-estate.*',
         ];
     }

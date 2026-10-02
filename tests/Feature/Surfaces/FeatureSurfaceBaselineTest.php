@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Surfaces\FeatureSurfaceGrantService;
 use App\Services\Surfaces\FeatureSurfaceRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class FeatureSurfaceBaselineTest extends TestCase
@@ -36,16 +37,16 @@ class FeatureSurfaceBaselineTest extends TestCase
         );
     }
 
-    public function test_grant_sync_persists_dependency_closure(): void
+    public function test_business_grant_sync_persists_dependency_closure(): void
     {
         $subject = User::factory()->create();
         $actor = User::factory()->create();
 
         $resolved = app(FeatureSurfaceGrantService::class)
-            ->sync($subject, ['real-estate'], $actor);
+            ->sync($subject, ['business'], $actor);
 
         $this->assertEqualsCanonicalizing(
-            ['profile', 'business', 'real-estate'],
+            ['profile', 'business'],
             $resolved
         );
 
@@ -56,6 +57,17 @@ class FeatureSurfaceBaselineTest extends TestCase
                 ->pluck('surface_key')
                 ->all()
         );
+    }
+
+    public function test_real_estate_compatibility_surface_cannot_be_granted_directly(): void
+    {
+        $subject = User::factory()->create();
+        $actor = User::factory()->create();
+
+        $this->expectException(InvalidArgumentException::class);
+
+        app(FeatureSurfaceGrantService::class)
+            ->sync($subject, ['real-estate'], $actor);
     }
 
     public function test_unpublished_profile_is_blocked_by_direct_url(): void
@@ -186,6 +198,6 @@ class FeatureSurfaceBaselineTest extends TestCase
             'publication-control',
             $registry->routeSurface('platform.publication.index')
         );
-        $this->assertSame('real-estate', $registry->routeSurface('workspace.real-estate.index'));
+        $this->assertSame('business', $registry->routeSurface('workspace.real-estate.index'));
     }
 }

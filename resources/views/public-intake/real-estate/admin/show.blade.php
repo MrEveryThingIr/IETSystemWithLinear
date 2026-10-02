@@ -37,7 +37,25 @@
     <a href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}" style="color:#047857;font-weight:900;text-decoration:none">← {{ $fa ? 'بازگشت به دفتر پرونده‌ها' : 'Back to case office' }}</a>
     <div style="display:flex;justify-content:space-between;gap:15px;align-items:end;flex-wrap:wrap;margin:14px 0 20px">
         <div><h1 style="margin:0;font-size:32px">{{ $case->contact_name }}</h1><div style="font-family:monospace;color:#64748b;margin-top:5px">{{ $case->reference_code }}</div></div>
-        @if($canManage)<form method="POST" action="{{ route('office.real-estate.status',['portal'=>$portal->uuid,'case'=>$case]) }}">@csrf @method('PATCH')<select name="status">@foreach($statusText as $v=>$t)<option value="{{ $v }}" @selected($case->status===$v)>{{ $t }}</option>@endforeach</select> <button class="re-btn re-primary">{{ $fa ? 'ذخیره وضعیت' : 'Save status' }}</button></form>@endif
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            @if($business)
+                <a class="re-btn" style="background:#eef2ff;color:#4338ca" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'کسب‌وکار' : 'Business' }}</a>
+                @if($case->businessListing)
+                    <a class="re-btn" style="background:#ecfdf5;color:#047857" href="{{ route('businesses.catalog.index',$business) }}">{{ $fa ? 'مشاهده در کاتالوگ' : 'View in catalog' }}</a>
+                @elseif($canManage && $case->intent === 'offer')
+                    <form method="POST" action="{{ route('businesses.real-estate.cases.promote',[$business,$portal,$case]) }}">
+                        @csrf
+                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'تبدیل به Listing کسب‌وکار' : 'Promote to Business Listing' }}</button>
+                    </form>
+                @endif
+            @elseif($canManage)
+                <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
+                    @csrf
+                    <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'انتقال دفتر به Business' : 'Adopt office into Business' }}</button>
+                </form>
+            @endif
+            @if($canManage)<form method="POST" action="{{ route('office.real-estate.status',['portal'=>$portal->uuid,'case'=>$case]) }}">@csrf @method('PATCH')<select name="status">@foreach($statusText as $v=>$t)<option value="{{ $v }}" @selected($case->status===$v)>{{ $t }}</option>@endforeach</select> <button class="re-btn re-primary">{{ $fa ? 'ذخیره وضعیت' : 'Save status' }}</button></form>@endif
+        </div>
     </div>
     <section class="re-panel"><div class="re-grid">@foreach($items as $title=>$value)@if($value!==null && $value!=='')<div class="re-item"><small>{{ $title }}</small><b>{{ $value }}</b></div>@endif @endforeach</div>@if($case->notes)<div class="re-item" style="margin-top:14px"><small>{{ $fa ? 'توضیحات' : 'Notes' }}</small><b style="white-space:pre-line;line-height:1.9">{{ $case->notes }}</b></div>@endif</section>
     @include('public-intake.real-estate.admin.partials.media')

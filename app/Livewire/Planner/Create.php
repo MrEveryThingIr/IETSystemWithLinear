@@ -9,6 +9,7 @@ use App\Actions\Planner\CreatePlanScheduleRule;
 use App\ContextKind;
 use App\DomainJourneyKind;
 use App\Models\Actor;
+use App\Models\Business;
 use App\Models\Context;
 use App\Models\DomainBlueprintVersion;
 use App\Models\Relationship;
@@ -250,6 +251,7 @@ class Create extends Component
         $context = $this->context();
         $context->loadMissing([
             'personalBinding.actor.user',
+            'businessBinding.business',
             'relationshipBinding.relationship.participants.actor.user',
             'relationshipBinding.relationship.purposeConcept.labels',
             'groupSpaceBinding.groupSpace.group',
@@ -267,6 +269,13 @@ class Create extends Component
     /** @return array{list<array{actor: Actor, role: string}>, ?string, ?string} */
     private function provenance(Context $context, User $user): array
     {
+        if ($context->kind === ContextKind::Business) {
+            $business = $context->businessBinding?->business;
+            abort_unless($business instanceof Business, 422);
+
+            return [[], 'business', $business->uuid];
+        }
+
         if ($context->kind !== ContextKind::Relationship) {
             return [[], null, null];
         }
@@ -330,6 +339,8 @@ class Create extends Component
     {
         return match ($context->kind) {
             ContextKind::Personal => (string) __('planner.context.personal'),
+            ContextKind::Business => $context->businessBinding?->business->name
+                ?? $context->uuid,
             ContextKind::Relationship => (string) __('planner.context.relationship', [
                 'title' => $context->relationshipBinding?->relationship?->title
                     ?: $context->relationshipBinding?->relationship?->purposeConcept?->displayLabel()
@@ -383,6 +394,21 @@ class Create extends Component
 
     private function defaultMonetaryUnitCode(): string
     {
+        if ($this->contextUuid !== '') {
+            $context = Context::query()
+                ->with('businessBinding.business.defaultMonetaryUnit')
+                ->where('uuid', $this->contextUuid)
+                ->first();
+
+            $businessCode = $context?->kind === ContextKind::Business
+                ? strtoupper((string) $context->businessBinding?->business->defaultMonetaryUnit?->code)
+                : '';
+
+            if ($businessCode !== '' && array_key_exists($businessCode, MonetaryUnitCatalog::all())) {
+                return $businessCode;
+            }
+        }
+
         $code = strtoupper((string) ($this->user()->default_monetary_unit_code ?: 'USD'));
 
         return array_key_exists($code, MonetaryUnitCatalog::all())

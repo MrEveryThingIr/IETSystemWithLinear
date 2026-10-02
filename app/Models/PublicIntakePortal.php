@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -11,6 +12,7 @@ class PublicIntakePortal extends Model
     protected $fillable = [
         'uuid',
         'public_token',
+        'business_id',
         'type',
         'title',
         'welcome_heading',
@@ -38,6 +40,12 @@ class PublicIntakePortal extends Model
     public function getRouteKeyName(): string
     {
         return 'public_token';
+    }
+
+    /** @return BelongsTo<Business, $this> */
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(Business::class);
     }
 
     /** @return HasMany<PublicRealEstateCase, $this> */

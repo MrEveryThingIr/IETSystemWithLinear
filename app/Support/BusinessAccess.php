@@ -17,6 +17,11 @@ final class BusinessAccess
         return self::membership($user, $business) !== null;
     }
 
+    public static function canOperate(User $user, Business $business): bool
+    {
+        return self::membership($user, $business) !== null;
+    }
+
     public static function canManage(User $user, Business $business): bool
     {
         if ((int) $business->owner_actor_id === (int) $user->actor?->getKey()) {

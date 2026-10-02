@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PublicIntake\AdoptRealEstatePortalController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateAdminController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateIntakeController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateMediaController;
@@ -30,6 +31,9 @@ Route::middleware('auth')
     ->group(function (): void {
         Route::get('/{portal:uuid}/cases', [PublicRealEstateAdminController::class, 'index'])
             ->name('index');
+
+        Route::post('/{portal:uuid}/adopt-business', AdoptRealEstatePortalController::class)
+            ->name('adopt-business');
 
         Route::get('/{portal:uuid}/cases/{case}', [PublicRealEstateAdminController::class, 'show'])
             ->where('case', 'RE-[A-Z0-9]{10}')

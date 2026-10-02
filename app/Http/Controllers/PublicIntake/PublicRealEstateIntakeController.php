@@ -30,6 +30,7 @@ class PublicRealEstateIntakeController extends Controller
         BusinessContactResolver $contactResolver
     ): SymfonyResponse {
         $this->ensureAvailable($portal);
+        $portal->loadMissing('business');
 
         $data = $request->validated();
         unset(
@@ -42,7 +43,7 @@ class PublicRealEstateIntakeController extends Controller
         );
 
         $businessContact = $contactResolver->resolve(
-            $portal,
+            $portal->business ?? $portal,
             (string) $request->input('contact_name'),
             (string) $request->input('phone'),
             'real_estate_public_intake'
@@ -123,8 +124,9 @@ class PublicRealEstateIntakeController extends Controller
             }
 
             $locked->forceFill(['preview_viewed_at' => now()])->save();
+            $locked->load(['portal', 'media']);
 
-            return $locked->fresh(['portal', 'media']);
+            return $locked;
         });
 
         return $this->privateView('public-intake.real-estate.preview', [

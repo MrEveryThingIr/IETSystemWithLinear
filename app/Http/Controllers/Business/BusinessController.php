@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Business;
 
+use App\Actions\Contexts\EnsureBusinessContext;
 use App\Http\Controllers\Controller;
 use App\Models\Actor;
 use App\Models\Business;
@@ -9,6 +10,7 @@ use App\Models\Profession;
 use App\Services\Business\BusinessService;
 use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
+use App\Support\ExternalMoneyGatewayRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,14 +25,17 @@ class BusinessController extends Controller
         abort_unless($actor instanceof Actor && $actor->status === 'active', 403);
 
         $businesses = Business::query()
-            ->where('owner_actor_id', $actor->getKey())
-            ->orWhereHas('memberships', fn ($q) => $q
-                ->where('actor_id', $actor->getKey())
-                ->where('status', 'active'))
+            ->where(fn ($query) => $query
+                ->where('owner_actor_id', $actor->getKey())
+                ->orWhereHas('memberships', fn ($membership) => $membership
+                    ->where('actor_id', $actor->getKey())
+                    ->where('status', 'active')))
+            ->when($request->filled('kind'), fn ($query) => $query->where('kind', $request->query('kind')))
             ->withCount([
                 'memberships as active_members_count' => fn ($q) => $q->where('status', 'active'),
-                'contactPoints',
-                'addresses',
+                'businessContacts',
+                'listings',
+                'publicIntakePortals',
             ])
             ->latest()
             ->get();
@@ -64,31 +69,62 @@ class BusinessController extends Controller
             ->with('status', 'کسب‌وکار شما ساخته شد. حالا اطلاعات تماس، آدرس و اعضا را کامل کنید.');
     }
 
-    public function show(Request $request, Business $business): View
-    {
+    public function show(
+        Request $request,
+        Business $business,
+        EnsureBusinessContext $contexts,
+        ExternalMoneyGatewayRegistry $externalGateways,
+    ): View {
         abort_unless(BusinessAccess::canView($request->user(), $business), 403);
 
-        $business->load([
-            'owner.user',
-            'contactPoints',
-            'addresses',
-            'memberships' => fn ($q) => $q
-                ->with(['actor.user', 'professions.parent'])
-                ->where('status', 'active')
-                ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
-                ->orderBy('id'),
-        ]);
+        $canOperate = BusinessAccess::canOperate($request->user(), $business);
+        $business->load(['owner.user']);
 
-        $professions = Profession::query()
-            ->with('parent')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        if ($canOperate) {
+            $context = $contexts->execute($business);
+
+            $business->load([
+                'contactPoints',
+                'addresses',
+                'defaultMonetaryUnit',
+                'businessContacts.contactPoints',
+                'categories',
+                'listings.currentVersion',
+                'publicIntakePortals',
+                'contextBinding.context',
+                'memberships' => fn ($q) => $q
+                    ->with(['actor.user', 'professions.parent'])
+                    ->where('status', 'active')
+                    ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
+                    ->orderBy('id'),
+            ]);
+
+            $professions = Profession::query()
+                ->with('parent')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+
+            $routineCount = $context->plans()->count();
+        } else {
+            $context = null;
+            $routineCount = 0;
+            $professions = collect();
+
+            $business->load([
+                'contactPoints' => fn ($query) => $query->where('visibility', 'public'),
+                'addresses' => fn ($query) => $query->where('visibility', 'public'),
+            ]);
+        }
 
         return view('businesses.show', [
             'business' => $business,
+            'businessContext' => $context,
+            'routineCount' => $routineCount,
             'professions' => $professions,
+            'externalMoneyGateways' => $canOperate ? $externalGateways->available() : [],
+            'canOperate' => $canOperate,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
             'kindLabels' => BusinessDirectory::KINDS,
