@@ -46,12 +46,11 @@ Completed foundations:
 - Business Context and Business-scoped Planner routines;
 - IET-first Business settlement boundary;
 - exact-head CI acceptance for Business vertical consolidation;
-- C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI.
+- C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI;
+- C2 goal-oriented destination hubs are engineering-complete with exact-head CI.
 
 Still weak:
 
-- top-level destinations are grouped but not yet true task-oriented hubs;
-- Needs/Offers, Work, Money and Content still expose overlapping internal entry points;
 - Deal workflow still requires the user to understand Relationship / Proposal /
   Contract / Commitment / obligation as separate facilities;
 - Business shell is structurally richer but not yet a polished traditional-user journey;
@@ -127,10 +126,40 @@ A new or ordinary user should be able to login and answer within seconds:
 
 ## C2 — Real goal-oriented destination hubs
 
+Status: **engineering-complete on `codex/coherence-c2-goal-oriented-hubs`; owner browser review remains the product-feel checkpoint**.
+
 Goal: the sidebar destinations become actual coherent products rather than labels
 that expand into subsystem links.
 
-Implement five task-oriented hubs plus Today:
+Implemented:
+
+- the ordinary sidebar now points to one-click goal destinations instead of expandable subsystem choices;
+- Needs & Offers composes Mine / Discover / Matches;
+- Work composes attention, active Deals and Planner schedule while preserving their kernels;
+- Organizations composes Businesses and Groups without collapsing their domain models;
+- Money becomes the daily entry point; detailed accounts remain at `/money/accounts`, while Accounting / Exchange appear only as published advanced tools;
+- Money keeps outstanding amounts separated by monetary unit instead of summing incompatible minor units;
+- Content composes My Content / Explore / Create;
+- Help composes Manual and System Map;
+- unpublished facilities disappear from composed hubs rather than appearing as empty/disabled cards;
+- existing deep routes remain compatible;
+- EN/FA/AR/ZH hub language and regression coverage;
+- no parallel workflow state, market, planner, accounting, wallet, or Content engine introduced.
+
+Acceptance evidence:
+
+- exact implementation head passed full CI;
+- 708 PHPUnit tests / 5720 assertions;
+- Pint and PHPStan green;
+- MySQL migration portability green;
+- rollback/reapply, scheduler and queue smoke green;
+- SQLite backup/restore green;
+- frontend build and JavaScript audit green;
+- Composer security audit reports no vulnerability advisories.
+
+The next active milestone is **C3 — Standard page contract and contextual workflow shells**.
+
+Original implementation intent:
 
 ### Needs & Offers
 
@@ -448,4 +477,4 @@ Until C1–C3 are accepted in the browser:
 - do not prioritize deep specialist functionality over orientation and next-action
   guidance.
 
-The next implementation milestone is **C2 — Real goal-oriented destination hubs**.
+The next implementation milestone is **C3 — Standard page contract and contextual workflow shells**.
