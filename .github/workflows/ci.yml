@@ -108,10 +108,8 @@ jobs:
             exit 0
           fi
 
-          printf 'Pint diagnostic on release files\n'
-          vendor/bin/pint             app/Actions/Contracts/ConfigureContractServiceTerms.php             app/Actions/Financial/EnsureFinancialBridgeAccounts.php             app/Livewire/Contracts/Show.php             app/Support/IetReferencePricing.php
-          git --no-pager diff --             app/Actions/Contracts/ConfigureContractServiceTerms.php             app/Actions/Financial/EnsureFinancialBridgeAccounts.php             app/Livewire/Contracts/Show.php             app/Support/IetReferencePricing.php
-          exit 1
+          printf 'Pint checking %s\n' "${PHP_FILES[@]}"
+          vendor/bin/pint --test "${PHP_FILES[@]}"
 
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress
