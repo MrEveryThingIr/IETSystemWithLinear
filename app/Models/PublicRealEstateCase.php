@@ -84,16 +84,19 @@ class PublicRealEstateCase extends Model
         ];
     }
 
+    /** @return BelongsTo<PublicIntakePortal, $this> */
     public function portal(): BelongsTo
     {
         return $this->belongsTo(PublicIntakePortal::class, 'public_intake_portal_id');
     }
 
+    /** @return BelongsTo<BusinessContact, $this> */
     public function businessContact(): BelongsTo
     {
         return $this->belongsTo(BusinessContact::class);
     }
 
+    /** @return BelongsTo<BusinessListing, $this> */
     public function businessListing(): BelongsTo
     {
         return $this->belongsTo(BusinessListing::class);
@@ -104,6 +107,7 @@ class PublicRealEstateCase extends Model
         return 'reference_code';
     }
 
+    /** @return HasMany<PublicRealEstateCaseMedia, $this> */
     public function media(): HasMany
     {
         return $this->hasMany(PublicRealEstateCaseMedia::class, 'public_real_estate_case_id')
