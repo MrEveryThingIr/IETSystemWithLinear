@@ -101,9 +101,9 @@ class ExperienceNavigation
             $item('system-map'),
         ]));
 
-        $labs = array_values(array_filter([
+        $labs = array_filter([
             $item('ai'),
-        ]));
+        ]);
 
         $adminKeys = ['access-invitations', 'development-origins', 'actors'];
         $admin = array_values(array_filter(array_map($item, $adminKeys)));
