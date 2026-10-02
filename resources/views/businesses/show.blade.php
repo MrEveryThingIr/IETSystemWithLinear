@@ -177,8 +177,13 @@
                             {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_net_minor'] ?? 0), 0) }} IET
                         </div>
                         <div class="muted" style="margin-top:5px">
-                            طلب {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
-                            · بدهی {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
+                            طلب باز {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
+                            · بدهی باز {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
+                        </div>
+                        <div class="muted" style="margin-top:5px">
+                            درآمد تسویه‌شده {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_revenue_minor'] ?? 0), 0) }}
+                            · هزینه تسویه‌شده {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_expense_minor'] ?? 0), 0) }}
+                            · خالص تحقق‌یافته {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_profit_minor'] ?? 0), 0) }} IET
                         </div>
                         <div class="badges" style="margin-top:8px">
                             <span class="badge">{{ $economyProjection['market_intent_count'] ?? 0 }} بازار</span>
