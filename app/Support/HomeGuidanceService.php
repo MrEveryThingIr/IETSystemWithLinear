@@ -17,11 +17,10 @@ class HomeGuidanceService
 {
     public function __construct(
         private readonly ExperienceNavigation $navigation,
-    ) {
-    }
+    ) {}
 
     /**
-     * @param array{
+     * @param  array{
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
@@ -29,7 +28,7 @@ class HomeGuidanceService
      *   activeRelationships: Collection<int, Relationship>,
      *   groupMemberships: Collection<int, GroupMembership>,
      *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>
-     * } $projection
+     * }  $projection
      * @return array{
      *   onboarding: array{completed:int,total:int,percent:int,complete:bool,steps:list<HomeOnboardingStep>},
      *   nextAction: ?HomeGuidanceItem,
@@ -131,16 +130,16 @@ class HomeGuidanceService
     }
 
     /**
-     * @param array{
+     * @param  array{
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
      *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>
-     * } $projection
-     * @param list<HomeOnboardingStep> $steps
-     * @param list<HomeGuidanceItem> $firstGoalChoices
-     * @param Collection<int, string> $surfaceKeys
+     * }  $projection
+     * @param  list<HomeOnboardingStep>  $steps
+     * @param  list<HomeGuidanceItem>  $firstGoalChoices
+     * @param  Collection<int, string>  $surfaceKeys
      */
     private function nextAction(
         User $user,
@@ -271,7 +270,7 @@ class HomeGuidanceService
     }
 
     /**
-     * @param Collection<int, string> $surfaceKeys
+     * @param  Collection<int, string>  $surfaceKeys
      * @return list<HomeGuidanceItem>
      */
     private function firstGoalChoices(Collection $surfaceKeys): array
@@ -342,11 +341,11 @@ class HomeGuidanceService
     }
 
     /**
-     * @param array{
+     * @param  array{
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
      *   groupMemberships: Collection<int, GroupMembership>
-     * } $projection
+     * }  $projection
      */
     private function hasFirstGoal(Actor $actor, array $projection): bool
     {
