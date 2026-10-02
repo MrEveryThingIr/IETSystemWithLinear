@@ -339,7 +339,7 @@ class Create extends Component
     {
         return match ($context->kind) {
             ContextKind::Personal => (string) __('planner.context.personal'),
-            ContextKind::Business => $context->businessBinding?->business?->name
+            ContextKind::Business => $context->businessBinding?->business->name
                 ?? $context->uuid,
             ContextKind::Relationship => (string) __('planner.context.relationship', [
                 'title' => $context->relationshipBinding?->relationship?->title
@@ -401,7 +401,7 @@ class Create extends Component
                 ->first();
 
             $businessCode = $context?->kind === ContextKind::Business
-                ? strtoupper((string) $context->businessBinding?->business?->defaultMonetaryUnit?->code)
+                ? strtoupper((string) $context->businessBinding?->business->defaultMonetaryUnit?->code)
                 : '';
 
             if ($businessCode !== '' && array_key_exists($businessCode, MonetaryUnitCatalog::all())) {
