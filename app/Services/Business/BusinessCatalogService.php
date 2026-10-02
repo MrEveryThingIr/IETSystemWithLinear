@@ -6,6 +6,7 @@ use App\Actions\Accounting\EnsureMonetaryUnit;
 use App\Models\Actor;
 use App\Models\Business;
 use App\Models\BusinessCategory;
+use App\Models\BusinessContact;
 use App\Models\BusinessListing;
 use App\Models\BusinessListingVersion;
 use App\Models\BusinessPriceVersion;
@@ -154,6 +155,169 @@ class BusinessCatalogService
 
             return $lockedListing->fresh(['publishedVersion', 'prices']);
         }, attempts: 3);
+    }
+
+    /**
+     * @param  array{
+     *     business_contact_id?:?int,
+     *     business_category_id?:?int,
+     *     visibility?:string,
+     *     availability_status?:string,
+     *     available_from?:mixed,
+     *     available_until?:mixed,
+     *     simple_office_mode?:bool
+     * }  $listingData
+     * @param  array{
+     *     title:string,
+     *     short_description?:?string,
+     *     description?:?string,
+     *     structured_data?:array<string,mixed>|null
+     * }  $versionData
+     * @param  array<string,mixed>|null  $propertyData
+     */
+    public function saveDraft(
+        BusinessListing $listing,
+        Actor $actor,
+        array $listingData,
+        array $versionData,
+        ?array $propertyData = null,
+    ): BusinessListingVersion {
+        return DB::transaction(function () use (
+            $listing,
+            $actor,
+            $listingData,
+            $versionData,
+            $propertyData,
+        ): BusinessListingVersion {
+            $locked = BusinessListing::query()
+                ->with([
+                    'business.businessContacts',
+                    'currentVersion.propertyDetails',
+                    'currentVersion.media',
+                ])
+                ->lockForUpdate()
+                ->findOrFail($listing->id);
+
+            $title = Str::squish((string) ($versionData['title'] ?? ''));
+            abort_if($title === '' || mb_strlen($title) > 220, 422, 'Listing title is invalid.');
+
+            $this->assertListingRelations($locked, $listingData);
+
+            $version = $locked->currentVersion;
+            abort_unless($version instanceof BusinessListingVersion, 500);
+
+            if ($version->published_at !== null) {
+                $version = $this->cloneVersionForEditing($locked, $version, $actor);
+            }
+
+            $version->update([
+                'title' => $title,
+                'slug' => Str::slug($title),
+                'short_description' => $versionData['short_description'] ?? null,
+                'description' => $versionData['description'] ?? null,
+                'structured_data' => $versionData['structured_data'] ?? $version->structured_data,
+            ]);
+
+            $locked->update([
+                'business_contact_id' => $listingData['business_contact_id'] ?? null,
+                'business_category_id' => $listingData['business_category_id'] ?? $locked->business_category_id,
+                'visibility' => $listingData['visibility'] ?? $locked->visibility,
+                'availability_status' => $listingData['availability_status'] ?? $locked->availability_status,
+                'available_from' => $listingData['available_from'] ?? $locked->available_from,
+                'available_until' => $listingData['available_until'] ?? $locked->available_until,
+                'simple_office_mode' => $listingData['simple_office_mode'] ?? $locked->simple_office_mode,
+                'status' => 'draft',
+            ]);
+
+            if ($locked->listing_type === 'property' && is_array($propertyData)) {
+                $version->propertyDetails()->updateOrCreate([], $propertyData);
+            }
+
+            return $version->fresh([
+                'propertyDetails',
+                'media.asset',
+                'listing.businessContact',
+            ]);
+        }, attempts: 3);
+    }
+
+    private function cloneVersionForEditing(
+        BusinessListing $listing,
+        BusinessListingVersion $source,
+        Actor $actor,
+    ): BusinessListingVersion {
+        $next = ((int) $listing->versions()->max('version_number')) + 1;
+
+        $version = BusinessListingVersion::query()->create([
+            'business_listing_id' => $listing->id,
+            'version_number' => $next,
+            'title' => $source->title,
+            'slug' => $source->slug,
+            'short_description' => $source->short_description,
+            'description' => $source->description,
+            'structured_data' => $source->structured_data,
+            'created_by_actor_id' => $actor->id,
+            'presentation_content_id' => null,
+        ]);
+
+        $source->loadMissing(['propertyDetails', 'media']);
+
+        if ($source->propertyDetails !== null) {
+            $attributes = $source->propertyDetails->getAttributes();
+            unset(
+                $attributes['id'],
+                $attributes['business_listing_version_id'],
+                $attributes['created_at'],
+                $attributes['updated_at'],
+            );
+
+            $version->propertyDetails()->create($attributes);
+        }
+
+        foreach ($source->media as $media) {
+            $version->media()->create([
+                'asset_id' => $media->asset_id,
+                'role' => $media->role,
+                'position' => $media->position,
+                'caption' => $media->caption,
+                'visibility' => $media->visibility,
+                'created_by_actor_id' => $actor->id,
+            ]);
+        }
+
+        $listing->update([
+            'current_version_id' => $version->id,
+            'status' => 'draft',
+        ]);
+
+        return $version;
+    }
+
+    /** @param array<string,mixed> $listingData */
+    private function assertListingRelations(BusinessListing $listing, array $listingData): void
+    {
+        $contactId = $listingData['business_contact_id'] ?? null;
+
+        if ($contactId !== null) {
+            $contact = BusinessContact::query()->findOrFail((int) $contactId);
+            abort_unless(
+                $contact->owner_type === $listing->business->getMorphClass()
+                    && (int) $contact->owner_id === (int) $listing->business_id,
+                404,
+            );
+        }
+
+        $categoryId = $listingData['business_category_id'] ?? null;
+
+        if ($categoryId !== null) {
+            abort_unless(
+                BusinessCategory::query()
+                    ->whereKey((int) $categoryId)
+                    ->where('business_id', $listing->business_id)
+                    ->exists(),
+                404,
+            );
+        }
     }
 
     public function addPrice(
