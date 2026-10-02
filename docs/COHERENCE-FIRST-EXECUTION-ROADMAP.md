@@ -361,7 +361,7 @@ Browser acceptance focus:
 A traditional real-estate office user should be able to register a client and
 property without encountering generic platform terminology.
 
-The next active milestone is **C5 — Complete the Business-to-market-to-deal journey**.
+At C4 closure, the next milestone was **C5 — Complete the Business-to-market-to-deal journey**; C5–C7 are now completed below as part of the same coherence baseline.
 
 ## C5 — Complete the Business-to-market-to-deal journey
 
