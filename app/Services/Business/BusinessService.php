@@ -2,6 +2,7 @@
 
 namespace App\Services\Business;
 
+use App\Actions\Accounting\EnsureMonetaryUnit;
 use App\Actions\Contexts\EnsureBusinessContext;
 use App\Models\Actor;
 use App\Models\Business;
@@ -16,10 +17,20 @@ class BusinessService
 {
     public function __construct(
         private readonly EnsureBusinessContext $businessContexts,
+        private readonly EnsureMonetaryUnit $monetaryUnits,
     ) {}
 
     public function create(Actor $owner, array $data): Business
     {
+        $iet = $this->monetaryUnits->execute('IET');
+        $data['default_monetary_unit_id'] ??= $iet->id;
+        $data['settings'] = array_replace_recursive([
+            'finance' => [
+                'internal_settlement_unit' => 'IET',
+                'external_money_gateways' => 'placeholder',
+            ],
+        ], is_array($data['settings'] ?? null) ? $data['settings'] : []);
+
         $business = DB::transaction(function () use ($owner, $data): Business {
             $business = new Business($data);
             $business->owner()->associate($owner);
