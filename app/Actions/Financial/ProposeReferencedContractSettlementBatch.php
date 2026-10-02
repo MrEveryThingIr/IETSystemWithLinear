@@ -36,7 +36,7 @@ final class ProposeReferencedContractSettlementBatch
             $iet,
             $priced['iet_amount'],
             $paidAt,
-            'cash',
+            'external_cash',
             $reference,
             $note,
             $perspective,
