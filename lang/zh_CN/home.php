@@ -88,7 +88,7 @@ return [
         'open_work' => '继续工作',
         'start_title' => '选择第一个有用的行动',
         'start_reason' => '当前没有紧急事项，请从最符合目标的行动开始。',
-        'start_consequence' => '请在下方选择适合你的目标；在你明确选择并操作之前，不会创建、发布或承诺任何内容。'
+        'start_consequence' => '请在下方选择适合你的目标；在你明确选择并操作之前，不会创建、发布或承诺任何内容。',
         'review_day_title' => '查看你的计划',
         'review_day_reason' => '目前没有紧急决定，请查看计划并安排下一步。',
         'review_day_consequence' => '打开计划器不会自动开始或完成任何事项。',
