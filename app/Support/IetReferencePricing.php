@@ -151,7 +151,7 @@ final class IetReferencePricing
         [$priceNumerator, $priceDenominator] = $this->fraction($price);
 
         $numerators = [$referenceMinor, 100];
-        $denominators = [10 ** $referenceExponent];
+        $denominators = [(int) (10 ** $referenceExponent)];
 
         if ($inverse) {
             $denominators[] = $priceNumerator;
@@ -171,13 +171,13 @@ final class IetReferencePricing
         }
 
         if ($fromExponent < $toExponent) {
-            $factor = 10 ** ($toExponent - $fromExponent);
+            $factor = (int) (10 ** ($toExponent - $fromExponent));
             abort_if($amountMinor > intdiv(PHP_INT_MAX, $factor), 422, 'Reference amount is too large.');
 
             return $amountMinor * $factor;
         }
 
-        $factor = 10 ** ($fromExponent - $toExponent);
+        $factor = (int) (10 ** ($fromExponent - $toExponent));
 
         return intdiv($amountMinor + intdiv($factor, 2), $factor);
     }
@@ -199,7 +199,7 @@ final class IetReferencePricing
         $fraction = rtrim($fraction, '0');
         abort_if(strlen($fraction) > 18, 422, 'Market quote precision exceeds supported internal conversion precision.');
 
-        $denominator = 10 ** strlen($fraction);
+        $denominator = (int) (10 ** strlen($fraction));
         $wholeDigits = ltrim($whole, '0');
         $digits = ($wholeDigits === '' ? '0' : $wholeDigits).$fraction;
         $digits = ltrim($digits, '0');

@@ -10,6 +10,9 @@ use App\Models\Actor;
 use App\Models\ContractEvent;
 use App\Models\ContractServiceTerm;
 use App\Models\ContractVersion;
+use App\Models\IetValuationQuote;
+use App\Models\MarketQuote;
+use App\Models\MonetaryUnit;
 use App\Models\ContractVersionParty;
 use App\Models\User;
 use App\PlanScheduleFrequency;
@@ -114,6 +117,14 @@ class ConfigureContractServiceTerms
      * @param  list<int>  $weekdays
      * @param  list<string>  $selectedDates
      * @param  list<int>  $reminderOffsets
+     * @param  array{
+     *   reference_unit: MonetaryUnit,
+     *   market_quote: ?MarketQuote,
+     *   iet_quote: IetValuationQuote,
+     *   reference_amount_minor: int,
+     *   usd_amount_minor: int,
+     *   iet_amount: int
+     * }|null  $referencePricing
      */
     public function execute(
         ContractVersion $version,
@@ -330,8 +341,8 @@ class ConfigureContractServiceTerms
                 'unit_rate_minor' => $unitRateMinor,
                 'reference_unit_rate_minor' => $referencePricing['reference_amount_minor'] ?? null,
                 'reference_usd_amount_minor' => $referencePricing['usd_amount_minor'] ?? null,
-                'reference_market_quote_id' => $referencePricing['market_quote']?->id,
-                'iet_valuation_quote_id' => $referencePricing['iet_quote']?->id,
+                'reference_market_quote_id' => ($referencePricing['market_quote'] ?? null)?->id,
+                'iet_valuation_quote_id' => ($referencePricing['iet_quote'] ?? null)?->id,
                 'settlement_cycle' => $settlementCycle,
                 'payment_due_days' => $paymentDueDays,
                 'auto_create_plan' => $autoCreatePlan,
@@ -369,8 +380,8 @@ class ConfigureContractServiceTerms
                     'reference_monetary_unit_code' => $referencePricing['reference_unit']->code ?? null,
                     'reference_unit_rate_minor' => $referencePricing['reference_amount_minor'] ?? null,
                     'reference_usd_amount_minor' => $referencePricing['usd_amount_minor'] ?? null,
-                    'reference_market_quote_uuid' => $referencePricing['market_quote']?->uuid,
-                    'iet_valuation_quote_uuid' => $referencePricing['iet_quote']?->uuid,
+                    'reference_market_quote_uuid' => ($referencePricing['market_quote'] ?? null)?->uuid,
+                    'iet_valuation_quote_uuid' => ($referencePricing['iet_quote'] ?? null)?->uuid,
                     'settlement_cycle' => $settlementCycle,
                     'plan_frequency' => $planFrequency->value,
                     'timezone' => $timezone,

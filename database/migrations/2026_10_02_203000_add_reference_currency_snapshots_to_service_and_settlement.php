@@ -42,9 +42,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('contract_settlement_batches', function (Blueprint $table): void {
-            $table->dropForeign('settlement_batches_reference_unit_fk');
-            $table->dropForeign('settlement_batches_reference_quote_fk');
-            $table->dropForeign('settlement_batches_iet_quote_fk');
+            $table->dropForeign(['reference_monetary_unit_id']);
+            $table->dropForeign(['reference_market_quote_id']);
+            $table->dropForeign(['iet_valuation_quote_id']);
             $table->dropColumn([
                 'reference_monetary_unit_id',
                 'reference_amount_minor',
@@ -55,9 +55,9 @@ return new class extends Migration
         });
 
         Schema::table('contract_service_terms', function (Blueprint $table): void {
-            $table->dropForeign('contract_service_terms_reference_unit_fk');
-            $table->dropForeign('contract_service_terms_reference_quote_fk');
-            $table->dropForeign('contract_service_terms_iet_quote_fk');
+            $table->dropForeign(['reference_monetary_unit_id']);
+            $table->dropForeign(['reference_market_quote_id']);
+            $table->dropForeign(['iet_valuation_quote_id']);
             $table->dropColumn([
                 'reference_monetary_unit_id',
                 'reference_unit_rate_minor',

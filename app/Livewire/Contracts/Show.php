@@ -412,6 +412,10 @@ class Show extends Component
                 : '';
         }
 
+        if ($this->settlementUnitCode !== 'IET') {
+            $this->settlementUseReferenceCash = false;
+        }
+
         if ($canAmend && $this->amendmentTerms === '' && $activeVersion instanceof ContractVersion) {
             $this->amendmentTitle = $activeVersion->termsRevision->title;
             $this->amendmentSummary = (string) ($activeVersion->termsRevision->payload['summary'] ?? '');
