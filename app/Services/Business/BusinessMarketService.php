@@ -116,7 +116,7 @@ final class BusinessMarketService
     }
 
     /**
-     * @param array<string,mixed> $input
+     * @param  array<string, mixed>  $input
      */
     public function publishClientNeed(
         Business $business,
