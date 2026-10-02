@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Actions\Contracts\AcceptContractVersion;
-use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Contracts\CreateDirectContract;
 use App\Actions\Proposals\CreateProposal;
 use App\Actions\Proposals\RespondToProposal;
