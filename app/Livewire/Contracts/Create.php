@@ -8,6 +8,7 @@ use App\Models\Contract;
 use App\Models\Proposal;
 use App\Models\User;
 use App\ProposalStatus;
+use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
@@ -50,6 +51,12 @@ class Create extends Component
     public string $serviceUnitRate = '';
 
     public string $serviceMonetaryUnit = 'IRR';
+
+    public bool $serviceUseReferencePrice = false;
+
+    public string $serviceReferenceUnitRate = '';
+
+    public string $serviceReferenceMonetaryUnit = 'IRT';
 
     public string $serviceSettlementCycle = 'weekly';
 
@@ -156,6 +163,11 @@ class Create extends Component
             return null;
         }
 
+        $this->serviceTotalQuantity = LocalizedNumber::decimal(str_replace(',', '', $this->serviceTotalQuantity));
+        $this->serviceQuantityPerOccurrence = LocalizedNumber::decimal(str_replace(',', '', $this->serviceQuantityPerOccurrence));
+        $this->serviceUnitRate = LocalizedNumber::decimal(str_replace(',', '', $this->serviceUnitRate));
+        $this->serviceReferenceUnitRate = LocalizedNumber::decimal(str_replace(',', '', $this->serviceReferenceUnitRate));
+
         $data = $this->validate([
             'serviceEmployerUsername' => ['required', 'string', 'max:255'],
             'serviceWorkerUsername' => ['required', 'string', 'max:255', 'different:serviceEmployerUsername'],
@@ -164,8 +176,32 @@ class Create extends Component
             'serviceTotalQuantity' => ['required', 'regex:/^\d{1,14}(?:\.\d{1,4})?$/'],
             'serviceQuantityPerOccurrence' => ['required', 'regex:/^\d{1,14}(?:\.\d{1,4})?$/'],
             'serviceUnit' => ['required', 'string', 'max:40'],
-            'serviceUnitRate' => ['required', 'string', 'max:40'],
-            'serviceMonetaryUnit' => ['required', Rule::in(array_keys(MonetaryUnitCatalog::all()))],
+            'serviceUseReferencePrice' => ['boolean'],
+            'serviceUnitRate' => [
+                Rule::requiredIf(! $this->serviceUseReferencePrice),
+                'nullable',
+                'string',
+                'max:40',
+            ],
+            'serviceMonetaryUnit' => [
+                Rule::requiredIf(! $this->serviceUseReferencePrice),
+                'nullable',
+                Rule::in(array_keys(MonetaryUnitCatalog::all())),
+            ],
+            'serviceReferenceUnitRate' => [
+                Rule::requiredIf($this->serviceUseReferencePrice),
+                'nullable',
+                'string',
+                'max:40',
+            ],
+            'serviceReferenceMonetaryUnit' => [
+                Rule::requiredIf($this->serviceUseReferencePrice),
+                'nullable',
+                Rule::in(array_values(array_filter(
+                    array_keys(MonetaryUnitCatalog::all()),
+                    fn (string $code): bool => $code !== 'IET',
+                ))),
+            ],
             'serviceSettlementCycle' => ['required', Rule::in(['per_fulfillment', 'weekly', 'monthly', 'contract_end'])],
             'servicePaymentDueDays' => ['required', 'integer', 'min:0', 'max:3650'],
             'serviceFrequency' => ['required', Rule::in(['once', 'daily', 'weekly', 'selected_dates'])],
@@ -212,8 +248,14 @@ class Create extends Component
             'total_quantity' => $data['serviceTotalQuantity'],
             'quantity_per_occurrence' => $data['serviceQuantityPerOccurrence'],
             'unit' => $data['serviceUnit'],
-            'unit_rate' => $data['serviceUnitRate'],
-            'monetary_unit_code' => $data['serviceMonetaryUnit'],
+            'unit_rate' => $this->serviceUseReferencePrice ? '' : $data['serviceUnitRate'],
+            'monetary_unit_code' => $this->serviceUseReferencePrice ? 'IET' : $data['serviceMonetaryUnit'],
+            'reference_unit_rate' => $this->serviceUseReferencePrice
+                ? $data['serviceReferenceUnitRate']
+                : null,
+            'reference_monetary_unit_code' => $this->serviceUseReferencePrice
+                ? $data['serviceReferenceMonetaryUnit']
+                : null,
             'settlement_cycle' => $data['serviceSettlementCycle'],
             'payment_due_days' => $data['servicePaymentDueDays'],
             'auto_create_plan' => $data['serviceAutoCreatePlan'],

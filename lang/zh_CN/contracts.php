@@ -81,6 +81,12 @@ return [
         'quantity_per_occurrence' => '每次数量',
         'unit' => '服务单位',
         'unit_rate' => '约定单价',
+        'reference_price_toggle' => '以外部货币约价，但内部债务以 IET 记录',
+        'reference_unit_rate' => '参考单价',
+        'reference_monetary_unit' => '参考货币',
+        'reference_price_help' => '例如可记录“每个工作日 1,500,000 toman”。外部金额、市场汇率和 IET 估值都会固定到该合同版本。',
+        'reference_price_exchange_help' => '保存前，Exchange 中必须存在参考货币/USD 的有效报价（例如 IRT/USD）。合同接受后，换算出的 IET 单价保持不可变。',
+        'reference_price_snapshot' => '约定参考价格：每单位 :amount :unit',
         'monetary_unit' => '货币单位',
         'settlement_cycle' => '结算周期',
         'cycles' => [

@@ -44,6 +44,21 @@ final class IetMarketQuoteBridge
                 ],
             );
 
+            foreach (['IRR', 'IRT'] as $referenceCode) {
+                $referenceUnit = $this->units->execute($referenceCode);
+
+                EconomicInstrument::query()->firstOrCreate(
+                    ['code' => $referenceCode],
+                    [
+                        'name' => MonetaryUnitCatalog::get($referenceCode)['name'],
+                        'kind' => EconomicInstrumentKind::FiatCurrency,
+                        'monetary_unit_id' => $referenceUnit->id,
+                        'settlement_enabled' => false,
+                        'metadata' => ['system_managed_reference_currency' => true],
+                    ],
+                );
+            }
+
             abort_unless(
                 $iet->kind === EconomicInstrumentKind::InternalUnit
                 && (int) $iet->monetary_unit_id === (int) $ietUnit->id,

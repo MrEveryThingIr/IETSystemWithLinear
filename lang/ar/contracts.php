@@ -81,6 +81,12 @@ return [
         'quantity_per_occurrence' => 'الكمية لكل مرة',
         'unit' => 'وحدة الخدمة',
         'unit_rate' => 'سعر الوحدة المتفق عليه',
+        'reference_price_toggle' => 'السعر متفق عليه بعملة خارجية لكن الالتزام الداخلي يُسجل بـ IET',
+        'reference_unit_rate' => 'سعر الوحدة المرجعي',
+        'reference_monetary_unit' => 'العملة المرجعية',
+        'reference_price_help' => 'استخدم هذا لاتفاق مثل 1,500,000 تومان لكل يوم عمل. يُثبت مبلغ المرجع وسعر السوق وتقييم IET على نسخة العقد نفسها.',
+        'reference_price_exchange_help' => 'قبل الحفظ يجب أن يحتوي Exchange على سعر نشط للعملة المرجعية مقابل USD (مثل IRT/USD). يصبح سعر IET الناتج ثابتًا بعد قبول العقد.',
+        'reference_price_snapshot' => 'السعر المرجعي المتفق عليه: :amount :unit لكل وحدة',
         'monetary_unit' => 'الوحدة النقدية',
         'settlement_cycle' => 'دورة التسوية',
         'cycles' => [
