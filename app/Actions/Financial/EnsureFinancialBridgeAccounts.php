@@ -16,8 +16,7 @@ class EnsureFinancialBridgeAccounts
     public function __construct(
         private readonly CreatePersonalLedger $ledgers,
         private readonly CreateLedgerAccount $accounts,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{
@@ -33,8 +32,7 @@ class EnsureFinancialBridgeAccounts
         FinancialObligation $obligation,
         User $user,
         bool $externalCashSettlement = false,
-    ): array
-    {
+    ): array {
         $current = User::query()->with('actor')->find($user->id);
         abort_unless(
             $current instanceof User
