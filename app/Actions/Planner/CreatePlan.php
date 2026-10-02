@@ -82,6 +82,7 @@ class CreatePlan
 
             abort_unless(in_array($lockedContext->kind, [
                 ContextKind::Personal,
+                ContextKind::Business,
                 ContextKind::GroupSpace,
                 ContextKind::Relationship,
                 ContextKind::Contract,
