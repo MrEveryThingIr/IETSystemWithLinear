@@ -402,6 +402,25 @@ class BusinessVerticalConsolidationTest extends TestCase
         );
     }
 
+    public function test_business_operating_shell_renders_iet_economy_projection(): void
+    {
+        $owner = $this->userWithActor();
+        $this->publishSurfaces($owner, ['business', 'money']);
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Economy Projection Business',
+            'kind' => 'services',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('businesses.show', $business))
+            ->assertOk()
+            ->assertSee('موقعیت اقتصادی این کسب‌وکار')
+            ->assertSee('0 IET');
+    }
+
     private function userWithActor(array $attributes = []): User
     {
         $user = User::factory()->create($attributes);
