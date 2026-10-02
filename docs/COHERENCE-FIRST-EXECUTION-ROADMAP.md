@@ -45,12 +45,11 @@ Completed foundations:
 - Business CRM, catalog, immutable listing versions, append-only price versions;
 - Business Context and Business-scoped Planner routines;
 - IET-first Business settlement boundary;
-- exact-head CI acceptance for Business vertical consolidation.
+- exact-head CI acceptance for Business vertical consolidation;
+- C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI.
 
 Still weak:
 
-- Today does not yet behave as a personal operating guide;
-- onboarding is not state-derived and persistent;
 - top-level destinations are grouped but not yet true task-oriented hubs;
 - Needs/Offers, Work, Money and Content still expose overlapping internal entry points;
 - Deal workflow still requires the user to understand Relationship / Proposal /
