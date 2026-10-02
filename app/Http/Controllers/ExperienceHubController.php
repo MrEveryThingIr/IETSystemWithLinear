@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\BusinessMembership;
 use App\Models\GroupMembership;
@@ -26,7 +27,7 @@ class ExperienceHubController extends Controller
         $this->requireAny($user, ['market']);
 
         $actor = $user->actor;
-        abort_unless($actor, 403);
+        abort_unless($actor instanceof Actor, 403);
 
         $mine = ActorProfileIntent::query()
             ->whereHas('profile', fn ($query) => $query->where('actor_id', $actor->id))
@@ -140,7 +141,7 @@ class ExperienceHubController extends Controller
         $this->requireAny($user, ['business', 'groups']);
 
         $actor = $user->actor;
-        abort_unless($actor, 403);
+        abort_unless($actor instanceof Actor, 403);
 
         $canBusiness = $this->access->allows($user, 'business');
         $canGroups = $this->access->allows($user, 'groups');
@@ -201,7 +202,7 @@ class ExperienceHubController extends Controller
 
         $projection = $this->today->build($user);
         $actor = $user->actor;
-        abort_unless($actor, 403);
+        abort_unless($actor instanceof Actor, 403);
 
         $binding = PersonalContext::query()
             ->with(['context.ledgers.monetaryUnit'])
@@ -270,7 +271,7 @@ class ExperienceHubController extends Controller
         $this->requireAny($user, ['content']);
 
         $actor = $user->actor;
-        abort_unless($actor, 403);
+        abort_unless($actor instanceof Actor, 403);
 
         $binding = PersonalContext::query()
             ->with(['context.contents.activeRevision'])
