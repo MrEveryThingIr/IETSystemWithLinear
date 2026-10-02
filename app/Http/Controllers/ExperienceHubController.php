@@ -288,7 +288,9 @@ class ExperienceHubController extends Controller
                 'primary' => $this->access()->allows($user, 'exchange')
                     ? ['label' => __('experience.hubs.money.deposit_or_cashout'), 'href' => route('exchange.index')]
                     : ['label' => __('experience.hubs.money.offer_to_earn'), 'href' => route('intents.create')],
-                'secondary' => ['label' => __('experience.hubs.money.skills_and_offers'), 'href' => route('profile.professions.index')],
+                'secondary' => $this->access()->allows($user, 'profile')
+                    ? ['label' => __('experience.hubs.money.skills_and_offers'), 'href' => route('profile.professions.index')]
+                    : ['label' => __('experience.hubs.money.offer_to_earn'), 'href' => route('intents.create')],
                 'items' => $ietPositionItems,
             ],
             [
