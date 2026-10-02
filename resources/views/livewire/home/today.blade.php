@@ -280,7 +280,7 @@
                     <flux:heading size="lg">{{ __('home.accounting_today') }}</flux:heading>
                     <flux:text>{{ __('home.accounting_today_help') }}</flux:text>
                 </div>
-                <flux:button :href="route('accounting.index')" size="sm" variant="ghost">{{ __('home.open_accounting') }}</flux:button>
+                <flux:button :href="route('money.index')" size="sm" variant="ghost">{{ __('home.open_accounting') }}</flux:button>
             </div>
 
             <div class="space-y-3">
@@ -373,6 +373,5 @@
         </div>
     </flux:card>
 
-    <flux:callout>{{ __('home.boundary') }}</flux:callout>
     @endunless
 </section>
