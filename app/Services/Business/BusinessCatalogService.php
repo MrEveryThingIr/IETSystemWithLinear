@@ -302,7 +302,8 @@ class BusinessCatalogService
     }
 
     /** @return array{string,int} */
-    private function normalizeLegacyPropertyAmount(string $unit, int $amount): array {
+    private function normalizeLegacyPropertyAmount(string $unit, int $amount): array
+    {
         abort_if($amount < 0, 422);
 
         if (strtolower($unit) === 'toman') {
