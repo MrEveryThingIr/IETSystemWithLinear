@@ -2,6 +2,7 @@
 
 namespace App\Services\Business;
 
+use App\Actions\Contexts\EnsureBusinessContext;
 use App\Models\Actor;
 use App\Models\Business;
 use App\Models\BusinessMembership;
@@ -13,9 +14,13 @@ use Illuminate\Validation\ValidationException;
 
 class BusinessService
 {
+    public function __construct(
+        private readonly EnsureBusinessContext $businessContexts,
+    ) {}
+
     public function create(Actor $owner, array $data): Business
     {
-        return DB::transaction(function () use ($owner, $data): Business {
+        $business = DB::transaction(function () use ($owner, $data): Business {
             $business = new Business($data);
             $business->owner()->associate($owner);
             $business->save();
@@ -29,6 +34,10 @@ class BusinessService
 
             return $business->refresh();
         });
+
+        $this->businessContexts->execute($business);
+
+        return $business->refresh();
     }
 
     public function findActor(string $identifier): Actor
