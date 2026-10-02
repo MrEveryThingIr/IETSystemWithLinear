@@ -306,9 +306,9 @@ class Show extends Component
             ->with([
                 'contractVersion.serviceTerm.monetaryUnit',
                 'serviceTerm.monetaryUnit',
-            'serviceTerm.referenceMonetaryUnit',
-            'serviceTerm.referenceMarketQuote',
-            'serviceTerm.ietValuationQuote',
+                'serviceTerm.referenceMonetaryUnit',
+                'serviceTerm.referenceMarketQuote',
+                'serviceTerm.ietValuationQuote',
                 'obligor.user',
                 'beneficiary.user',
                 'planBinding.plan',
