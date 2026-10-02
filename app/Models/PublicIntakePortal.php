@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -11,6 +12,7 @@ class PublicIntakePortal extends Model
     protected $fillable = [
         'uuid',
         'public_token',
+        'business_id',
         'type',
         'title',
         'welcome_heading',
@@ -40,13 +42,16 @@ class PublicIntakePortal extends Model
         return 'public_token';
     }
 
-    /** @return HasMany<PublicRealEstateCase, $this> */
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(Business::class);
+    }
+
     public function realEstateCases(): HasMany
     {
         return $this->hasMany(PublicRealEstateCase::class, 'public_intake_portal_id');
     }
 
-    /** @return HasMany<PublicIntakePortalGrant, $this> */
     public function grants(): HasMany
     {
         return $this->hasMany(PublicIntakePortalGrant::class, 'public_intake_portal_id');
