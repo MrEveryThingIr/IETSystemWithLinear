@@ -6,6 +6,7 @@ use App\Actions\Business\SyncBusinessListingPresentation;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Actor;
+use App\Models\ActorProfileIntent;
 use App\Models\Business;
 use App\Models\BusinessCategory;
 use App\Models\BusinessListing;
@@ -41,10 +42,20 @@ class BusinessCatalogController extends Controller
             'defaultMonetaryUnit',
         ]);
 
+        $marketOffersByListing = ActorProfileIntent::query()
+            ->where('kind', 'offer')
+            ->where('status', 'active')
+            ->where('metadata->source', 'business_listing_version')
+            ->where('metadata->business_uuid', $business->uuid)
+            ->latest('id')
+            ->get()
+            ->keyBy(fn (ActorProfileIntent $intent): string => (string) ($intent->metadata['business_listing_uuid'] ?? ''));
+
         return view('businesses.catalog.index', [
             'business' => $business,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'unitCatalog' => MonetaryUnitCatalog::all(),
+            'marketOffersByListing' => $marketOffersByListing,
         ]);
     }
 
