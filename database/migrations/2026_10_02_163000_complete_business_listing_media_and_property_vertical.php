@@ -176,6 +176,10 @@ return new class extends Migration
                 $table->dropForeign(['business_contact_id']);
             }
 
+            if (Schema::hasColumn('business_listings', 'availability_status')) {
+                $table->dropIndex(['availability_status']);
+            }
+
             $columns = array_values(array_filter([
                 Schema::hasColumn('business_listings', 'business_contact_id') ? 'business_contact_id' : null,
                 Schema::hasColumn('business_listings', 'availability_status') ? 'availability_status' : null,
