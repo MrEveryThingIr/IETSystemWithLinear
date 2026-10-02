@@ -12,7 +12,6 @@ use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\HomeTodayProjection;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class ExperienceHubController extends Controller
 {
