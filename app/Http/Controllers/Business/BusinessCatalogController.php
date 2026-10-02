@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Business;
 
+use App\Actions\Business\SyncBusinessListingPresentation;
 use App\Http\Controllers\Controller;
 use App\Models\Actor;
 use App\Models\Business;
@@ -11,6 +12,7 @@ use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Services\Business\BusinessCatalogService;
 use App\Support\BusinessAccess;
+use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
 use App\Support\MoneyAmount;
 use Illuminate\Http\RedirectResponse;
@@ -95,7 +97,7 @@ class BusinessCatalogController extends Controller
         $actor = $request->user()?->actor;
         abort_unless($actor instanceof Actor, 403);
 
-        $catalog->createListing(
+        $listing = $catalog->createListing(
             $business,
             $actor,
             $data['listing_type'],
@@ -108,7 +110,13 @@ class BusinessCatalogController extends Controller
             $data['visibility'],
         );
 
-        return back()->with('status', 'Listing draft created.');
+        if ($business->kind === 'real_estate' && $listing->listing_type === 'property') {
+            $listing->update(['simple_office_mode' => true]);
+        }
+
+        return redirect()
+            ->route('businesses.catalog.listings.edit', [$business, $listing])
+            ->with('status', __('business_listing.messages.created'));
     }
 
     public function storePrice(
@@ -136,7 +144,10 @@ class BusinessCatalogController extends Controller
         $unit = MonetaryUnitCatalog::get($unitCode);
 
         try {
-            $amountMinor = MoneyAmount::parse($data['amount'], $unit['exponent']);
+            $amountMinor = MoneyAmount::parse(
+                LocalizedNumber::decimal($data['amount']),
+                $unit['exponent'],
+            );
         } catch (InvalidArgumentException $exception) {
             throw ValidationException::withMessages([
                 'amount' => $exception->getMessage(),
@@ -163,6 +174,7 @@ class BusinessCatalogController extends Controller
         Business $business,
         BusinessListing $listing,
         BusinessCatalogService $catalog,
+        SyncBusinessListingPresentation $presentation,
     ): RedirectResponse {
         abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
         abort_unless((int) $listing->business_id === (int) $business->id, 404);
@@ -171,9 +183,12 @@ class BusinessCatalogController extends Controller
         abort_unless($actor instanceof Actor, 403);
 
         $version = $listing->currentVersion()->firstOrFail();
-        $catalog->publish($listing, $version, $actor);
+        $presentation->execute($listing, $version, $request->user(), publish: true);
+        $catalog->publish($listing, $version->fresh(), $actor);
 
-        return back()->with('status', 'Listing version published and frozen.');
+        return redirect()
+            ->route('businesses.catalog.listings.edit', [$business, $listing])
+            ->with('status', __('business_listing.messages.published'));
     }
 
     public function promoteRealEstateCase(
