@@ -71,7 +71,7 @@ class BusinessVerticalConsolidationTest extends TestCase
             ->set('expenseEstimates.0.amount', '25')
             ->set('title', 'Daily business routine')
             ->set('frequency', 'once')
-            ->set('startsOn', now()->toDateString())
+            ->set('startsOn', now()->addDay()->toDateString())
             ->set('startTime', '12:00')
             ->set('durationMinutes', 60)
             ->call('save')
