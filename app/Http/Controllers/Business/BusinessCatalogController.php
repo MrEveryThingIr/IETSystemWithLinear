@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use InvalidArgumentException;
 
 class BusinessCatalogController extends Controller
 {
@@ -135,7 +136,7 @@ class BusinessCatalogController extends Controller
 
         try {
             $amountMinor = MoneyAmount::parse($data['amount'], $unit['exponent']);
-        } catch (\InvalidArgumentException $exception) {
+        } catch (InvalidArgumentException $exception) {
             throw ValidationException::withMessages([
                 'amount' => $exception->getMessage(),
             ]);
