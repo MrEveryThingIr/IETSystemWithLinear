@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Actions\Accounting\EnsureMonetaryUnit;
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\CreateContractFromProposal;
 use App\Actions\Contracts\CreateDirectContract;
