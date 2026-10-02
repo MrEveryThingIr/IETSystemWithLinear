@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Business\BusinessCatalogController;
+use App\Http\Controllers\Business\BusinessClientController;
 use App\Http\Controllers\Business\BusinessContactController;
 use App\Http\Controllers\Business\BusinessController;
 use App\Http\Controllers\Business\BusinessTeamController;
@@ -16,7 +17,12 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::get('/businesses/{business}', [BusinessController::class, 'show'])->name('businesses.show');
         Route::put('/businesses/{business}', [BusinessController::class, 'update'])->name('businesses.update');
 
+        Route::get('/businesses/{business}/clients', [BusinessClientController::class, 'index'])->name('businesses.clients.index');
+        Route::post('/businesses/{business}/clients', [BusinessClientController::class, 'store'])->name('businesses.clients.store');
+        Route::patch('/businesses/{business}/clients/{client}/archive', [BusinessClientController::class, 'archive'])->name('businesses.clients.archive');
+
         Route::get('/businesses/{business}/catalog', [BusinessCatalogController::class, 'index'])->name('businesses.catalog.index');
+        Route::post('/businesses/{business}/catalog/categories', [BusinessCatalogController::class, 'storeCategory'])->name('businesses.catalog.categories.store');
         Route::post('/businesses/{business}/catalog/listings', [BusinessCatalogController::class, 'store'])->name('businesses.catalog.listings.store');
         Route::post('/businesses/{business}/catalog/listings/{listing}/publish', [BusinessCatalogController::class, 'publish'])->name('businesses.catalog.listings.publish');
         Route::post('/businesses/{business}/real-estate/{portal:uuid}/cases/{case}/promote', [BusinessCatalogController::class, 'promoteRealEstateCase'])
