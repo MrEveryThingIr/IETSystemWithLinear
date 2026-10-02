@@ -21,8 +21,6 @@ use App\Actions\Relationships\RespondToRelationship;
 use App\FulfillmentReviewDecision;
 use App\IetExchangeDirection;
 use App\Models\Actor;
-use App\Models\Business;
-use App\Models\BusinessListing;
 use App\Models\FinancialObligation;
 use App\Models\PlatformAccessGrant;
 use App\ProfileIntentArrangementKind;
