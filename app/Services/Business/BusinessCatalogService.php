@@ -198,7 +198,7 @@ class BusinessCatalogService
                 ->lockForUpdate()
                 ->findOrFail($listing->id);
 
-            $title = Str::squish((string) ($versionData['title'] ?? ''));
+            $title = Str::squish($versionData['title']);
             abort_if($title === '' || mb_strlen($title) > 220, 422, 'Listing title is invalid.');
 
             $this->assertListingRelations($locked, $listingData);
