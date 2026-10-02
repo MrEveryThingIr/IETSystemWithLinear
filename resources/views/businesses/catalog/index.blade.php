@@ -130,7 +130,15 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                     </div>
                     @if($listing->publishedVersion)
                         <div style="margin-top:13px;color:#047857;font-weight:850">✓ {{ $fa ? 'نسخه منتشرشده' : 'Published version' }} #{{ $listing->publishedVersion->version_number }}</div>
-                        @if($canManage)
+                        @php($marketOffer = $marketOffersByListing->get($listing->uuid))
+                        @if($marketOffer)
+                            <div style="margin-top:10px;padding:10px 12px;border-radius:13px;background:#ecfdf5;color:#065f46">
+                                <strong>{{ $fa ? 'در بازار فعال است' : 'Active in Needs & Offers' }}</strong>
+                                <a href="{{ route('intents.matches',$marketOffer) }}" style="margin-inline-start:8px;color:inherit;font-weight:900">
+                                    {{ $fa ? 'دیدن تطبیق‌ها ←' : 'Review matches →' }}
+                                </a>
+                            </div>
+                        @elseif($canManage)
                             <form method="POST" action="{{ route('businesses.catalog.listings.market.store',[$business,$listing]) }}" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1">
                                 @csrf
                                 <label>
