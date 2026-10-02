@@ -205,7 +205,7 @@ class BusinessCatalogService
         $title = trim(implode(' ', array_filter([
             $case->transaction_mode === 'rent' ? 'Rent' : 'Sale',
             $class,
-            $area ? $area.' m²' : null,
+            $area ? $area . ' m²' : null,
             $case->public_area,
         ])));
 
@@ -285,7 +285,7 @@ class BusinessCatalogService
                     $minor,
                     $version,
                     visibility: 'public',
-                    reason: 'Imported from '.$case->reference_code,
+                    reason: 'Imported from ' . $case->reference_code,
                 );
             }
 
