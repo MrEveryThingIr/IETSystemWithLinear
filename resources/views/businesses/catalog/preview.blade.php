@@ -74,7 +74,7 @@
             @foreach($prices as $price)
                 <div style="padding:8px 0;border-top:1px solid #f1f5f9">
                     <strong>{{ $price->price_type }}</strong> ·
-                    {{ AppSupportMoneyAmount::format((int)$price->amount_minor,(int)$price->monetaryUnit->exponent) }}
+                    {{ \App\Support\MoneyAmount::format((int)$price->amount_minor,(int)$price->monetaryUnit->exponent) }}
                     {{ $price->monetaryUnit->code }}
                     @if($price->basis) / {{ $price->basis }} @endif
                 </div>
