@@ -49,17 +49,21 @@ Completed foundations:
 - C1 Today/onboarding/Next Action composition is engineering-complete with exact-head CI;
 - C2 goal-oriented destination hubs are engineering-complete with exact-head CI;
 - C3 contextual workflow shells are engineering-complete with exact-head CI;
-- C4 traditional-user Business completion is engineering-complete with exact-head CI.
+- C4 traditional-user Business completion is engineering-complete with exact-head CI;
+- C5 Business → market → Deal/Contract integration is engineering-complete with exact-head CI;
+- C6 IET position and Business finance projection are engineering-complete with exact-head CI;
+- C7 seeded release baseline and simplification/acceptance harness are engineering-complete with exact-head CI.
 
-Still weak:
+The **C1–C7 coherence-first baseline is complete**. There are no remaining milestones in this pass.
 
-- Deal workflow still requires the user to understand Relationship / Proposal /
-  Contract / Commitment / obligation as separate facilities;
-- Business shell is structurally richer but not yet a polished traditional-user journey;
-- Content authoring remains too fragmented;
-- Group experience remains administration-heavy;
-- cross-domain next action / consequence language is inconsistent;
-- empty states and success transitions do not consistently lead onward.
+Next-review focus, rather than unfinished baseline work:
+
+- browser/product-feel friction that is only visible while using the whole system;
+- reducing page count and repeated controls where workflows still feel fragmented;
+- stronger cross-links and next-action language between Business/client/listing/Deal/Contract/Money;
+- Content and Group simplification discovered from ordinary-user browser sessions;
+- mobile/RTL/keyboard polish and native-quality localized wording;
+- external banking/payment-provider integrations remain intentionally disabled placeholders until a real provider, legal/security model and audit are selected.
 
 # Execution sequence
 
@@ -357,83 +361,118 @@ Browser acceptance focus:
 A traditional real-estate office user should be able to register a client and
 property without encountering generic platform terminology.
 
-The next active milestone is **C5 — Complete the Business-to-market-to-deal journey**.
+At C4 closure, the next milestone was **C5 — Complete the Business-to-market-to-deal journey**; C5–C7 are now completed below as part of the same coherence baseline.
 
 ## C5 — Complete the Business-to-market-to-deal journey
 
-Execute Business roadmap M7–M9.
+Status: **engineering-complete on `codex/coherence-c5-c7-baseline-completion`; owner browser/product-feel acceptance pending**.
 
-### M7 Market integration
+Goal: execute Business roadmap M7–M9 without introducing a second market, Deal,
+Proposal or Contract kernel.
 
-- Listing Version → existing Offer;
-- BusinessContact demand → existing Need;
-- exact version provenance;
-- existing matcher only;
-- safe synchronization when a Listing gets a new version.
+Implemented:
 
-### M8 Deal integration
-
-- match → canonical Deal / Relationship;
-- Business dashboard and client/listing pages show the same Deal;
-- no duplicate deal records.
-
-### M9 Proposal / Contract provenance
-
-- proposal references exact Need/Listing versions;
-- accepted terms feed Contract;
-- later Listing edits never mutate negotiated history;
-- monetary-unit provenance preserved.
+- a published immutable Business ListingVersion can publish into the existing
+  `ActorProfileIntent` market as an Offer;
+- Offer metadata preserves Business UUID, Listing UUID, exact ListingVersion UUID and
+  attached BusinessContact UUID when present;
+- publishing a newer ListingVersion closes the older Business-generated Offer rather
+  than mutating its historical provenance;
+- a BusinessContact/client can publish a canonical Need directly from CRM;
+- Business Catalog projects its active market Offer back into the Listing row;
+- Business CRM projects the active client Need back into the client row;
+- independent actors using the same normalized concept label can match deterministically
+  without silently merging semantic Concepts; subject/arrangement and all normal match
+  constraints still apply;
+- validated matched Intents enter the existing Relationship/Deal pipeline;
+- Deal provenance remains the exact originating Need and matched Offer;
+- accepted ProposalVersion → ContractVersion remains the canonical negotiated-history
+  path and exact ListingVersion provenance remains reachable through the matched Offer;
+- later Listing edits do not rewrite historical Deal/Proposal/Contract provenance;
+- no duplicate Deal or matching record was introduced.
 
 Browser acceptance:
 
-From a Business, the user can publish supply/demand, see a match, open the deal,
-agree terms and continue execution without navigating the internal kernels manually.
+From a Business, publish a Listing Offer or client Need, open matches, start the same
+canonical Deal, agree terms and continue to Contract/work without manually navigating
+kernel-specific pages.
 
 ## C6 — Business finance and IET settlement projection
 
-Execute Business roadmap M10.
+Status: **engineering-complete on `codex/coherence-c5-c7-baseline-completion`; owner browser/product-feel acceptance pending**.
 
-Implement over the existing finance kernels:
+Goal: make the user's and Business's IET economics understandable without inventing a
+mutable negative wallet.
 
-- Business receivables / payables;
-- realized revenue / expense / profit projection;
-- contract/settlement/accounting traceability;
-- IET deposit / cashout request flow via adapters;
-- bank/payment-provider integrations remain disabled placeholders until a real
-  provider, legal/security model and audit are selected.
+Implemented:
 
-Browser acceptance:
-
-The Business Money page explains:
-what is owed, what is settled, what moved in IET, and what can/cannot be cashed out.
+- human-facing IET net position is derived as
+  `funded wallet + outstanding receivables − outstanding payables`;
+- a receiver of accepted value therefore becomes negative immediately while the provider
+  becomes positive immediately, even before wallet funding;
+- debt can be recovered by placeholder deposit or by providing new accepted
+  goods/services/work whose receivable improves the same net position;
+- a user may earn more than an existing debt and become net positive without rewriting
+  either obligation;
+- external cash-out eligibility remains limited to funded, available wallet IET and does
+  not treat an unsettled receivable as external money;
+- Money home shows wallet, receivable, payable, net position, debt/positive state and
+  the deposit/earn/cash-out next actions;
+- Business economy projection derives canonical market count, Deal count, Contract count,
+  open IET receivables/payables, and confirmed-settlement realized revenue/expense/profit;
+- Business operating page exposes that projection instead of requiring ledger knowledge;
+- IET deposit/cash-out continue through the existing reviewed Exchange request lifecycle;
+- real bank/payment-provider integrations remain disabled placeholders.
 
 ## C7 — Release acceptance and simplification pass
 
-Combine Experience Phase 5 and Business M11.
+Status: **engineering-complete on `codex/coherence-c5-c7-baseline-completion`; owner browser/product-feel acceptance pending**.
 
-Personas:
+Implemented:
 
-- invited newcomer;
-- ordinary personal user;
-- traditional Business owner;
-- Business staff member;
-- Group member/manager;
-- reviewer/operator;
-- platform administrator.
+- local/testing-only `CoherenceBaselineDemoSeeder` is idempotent and is loaded by normal
+  local database seeding;
+- the visible demo world contains four Businesses:
+  Safdar Real Estate Office, Atlas Inspection Services, Everyday Tools Store and
+  Bright Home Services;
+- four browser-testable buyer scenarios cover professional service, goods/deliverable,
+  home service and Real Estate brokerage;
+- every seeded scenario has canonical Business Offer + buyer Need + accepted
+  Relationship/Deal + Deal-sourced Contract + accepted work + IET FinancialObligation;
+- the inspection scenario additionally covers placeholder deposit → IET settlement →
+  provider funded wallet/cash-out readiness;
+- automated coverage proves four economic scenario types, exact ListingVersion provenance,
+  debt/credit position, earning beyond debt, settlement, cash-out readiness, repeatable
+  seeding, Business Deal/Contract traceability and realized IET projection;
+- a Business operating-shell render regression protects the visible finance projection;
+- `docs/COHERENCE-BASELINE-ACCEPTANCE.md` provides the exact logins, expected balances,
+  Businesses and browser walkthrough.
 
-Check:
+Verified implementation head:
 
-- English / Persian / Arabic / Chinese;
-- RTL;
-- desktop/mobile;
-- keyboard/focus;
-- empty/error/unauthorized/reload;
-- normal users never see platform administration;
-- no dead-end success screens;
-- no page requires unexplained internal terminology;
-- every main workflow has an obvious next step;
-- exact-SHA CI:
-  PHPUnit, PHPStan, Pint, Blade, migrations, Vite, npm/composer audit.
+`f19f0f11cdb9c477357cb75ad2f575e12aa1789e`
+
+Exact-head CI evidence:
+
+- PHPUnit: **728 passed / 6734 assertions**;
+- Pint: green;
+- PHPStan: green;
+- MySQL migration portability: green;
+- rollback/reapply + scheduler/queue smoke: green;
+- SQLite backup/restore: green;
+- frontend build: green;
+- npm audit: **0 vulnerabilities**;
+- Composer audit: **no security vulnerability advisories**.
+
+### Coherence-pass closure
+
+**C1 through C7 are now engineering-complete. Remaining milestones in this
+coherence-first baseline: 0.**
+
+The next phase is not C8. It is **R1 — second coherence/product-friction review**:
+use the seeded end-to-end stories in the browser, record where ordinary users still
+hesitate or encounter duplicated concepts/pages, then create the next improvement
+roadmap from observed friction rather than adding more kernels.
 
 # Canonical end-to-end acceptance stories
 
@@ -486,14 +525,14 @@ Open Safdar Real Estate Office
 
 # What not to do next
 
-Until C1–C3 are accepted in the browser:
+With C1–C7 complete, the next review still follows these constraints:
 
-- do not add another top-level facility;
-- do not create another standalone vertical;
-- do not expand administration into normal navigation;
-- do not duplicate workflow state;
-- do not build a second market, content, planner, wallet or accounting engine;
-- do not prioritize deep specialist functionality over orientation and next-action
-  guidance.
+- do not add another top-level facility merely to solve a composition problem;
+- do not create another standalone vertical when Business + existing kernels can compose it;
+- do not duplicate workflow state, market, Content, Planner, wallet or Accounting truth;
+- do not treat external deposit/cash-out placeholders as production banking;
+- do not prioritize specialist depth over ordinary-user orientation discovered in browser review.
 
-The next implementation milestone is **C3 — Standard page contract and contextual workflow shells**.
+The next tracked milestone is **R1 — second coherence/product-friction review**.
+Its output should be a fresh evidence-based roadmap derived from the seeded full-system
+browser stories and owner feedback.

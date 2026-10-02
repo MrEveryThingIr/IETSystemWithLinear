@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Business;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActorProfileIntent;
 use App\Models\Business;
 use App\Models\BusinessContact;
+use App\Models\User;
+use App\Services\Business\BusinessMarketService;
 use App\Services\Contacts\BusinessContactResolver;
 use App\Services\Contacts\ContactDirectoryService;
 use App\Support\BusinessAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BusinessClientController extends Controller
@@ -36,10 +40,20 @@ class BusinessClientController extends Controller
             });
         }
 
+        $marketNeedsByContact = ActorProfileIntent::query()
+            ->where('kind', 'need')
+            ->where('status', 'active')
+            ->where('metadata->source', 'business_contact_need')
+            ->where('metadata->business_uuid', $business->uuid)
+            ->latest('id')
+            ->get()
+            ->keyBy(fn (ActorProfileIntent $intent): string => (string) ($intent->metadata['business_contact_uuid'] ?? ''));
+
         return view('businesses.clients.index', [
             'business' => $business,
             'clients' => $query->paginate(30)->withQueryString(),
             'canManage' => BusinessAccess::canManage($request->user(), $business),
+            'marketNeedsByContact' => $marketNeedsByContact,
         ]);
     }
 
@@ -103,6 +117,45 @@ class BusinessClientController extends Controller
         }
 
         return back()->with('status', 'Client/contact saved.');
+    }
+
+    public function publishNeed(
+        Request $request,
+        Business $business,
+        BusinessContact $client,
+        BusinessMarketService $market,
+    ): RedirectResponse {
+        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
+
+        $data = $request->validate([
+            'concept_label' => ['required', 'string', 'max:120'],
+            'title' => ['nullable', 'string', 'max:180'],
+            'description' => ['nullable', 'string', 'max:3000'],
+            'subject_kind' => ['required', Rule::in(['property', 'good', 'service', 'capital', 'collaboration', 'other'])],
+            'arrangement_kind' => ['required', Rule::in(['ownership_transfer', 'temporary_use', 'service', 'financing', 'collaboration', 'other'])],
+            'quantity' => ['nullable', 'numeric', 'gt:0'],
+            'unit' => ['nullable', 'string', 'max:64'],
+            'location_text' => ['nullable', 'string', 'max:255'],
+            'cash_min' => ['nullable', 'numeric', 'min:0'],
+            'cash_max' => ['nullable', 'numeric', 'min:0', 'gte:cash_min'],
+            'currency_code' => ['nullable', 'string', 'size:3'],
+            'cash_basis' => ['nullable', Rule::in(['total', 'hour', 'day', 'week', 'month', 'year'])],
+        ]);
+
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+
+        $intent = $market->publishClientNeed(
+            $business,
+            $client,
+            $user,
+            $data['concept_label'],
+            $data,
+        );
+
+        return redirect()
+            ->route('intents.matches', $intent)
+            ->with('status', __('business_listing.messages.client_need_published'));
     }
 
     public function archive(

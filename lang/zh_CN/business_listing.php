@@ -22,5 +22,7 @@ return [
     'media' => ['title' => '照片、视频和音频', 'help' => '媒体复用 Business Context Asset；只有公开媒体进入客户展示。', 'file' => '媒体文件', 'rights' => '权利状态', 'caption' => '说明', 'visibility' => '可见性', 'cover' => '设为封面', 'position' => '顺序', 'upload' => '添加媒体', 'update' => '更新媒体', 'remove' => '移除', 'empty' => '尚未添加媒体。'],
     'preview_page' => ['label' => '客户预览', 'private_notice' => '此预览不会显示客户身份、精确地址或内部备注。', 'details' => '房产详情', 'price' => '价格', 'media' => '媒体'],
     'availability' => ['available' => '可用', 'reserved' => '已预订', 'under_contract' => '合同处理中', 'unavailable' => '不可用', 'sold' => '已售', 'rented' => '已租', 'withdrawn' => '已撤回'],
-    'messages' => ['created' => '已创建草稿。', 'saved' => '已保存草稿。', 'media_added' => '已添加媒体。', 'media_updated' => '已更新媒体。', 'media_removed' => '已从草稿移除媒体。', 'presentation_synced' => '已刷新展示 Content。', 'published' => '条目版本及其展示已发布并冻结。'],
+    'messages' => [
+        'market_published' => '已发布的目录版本现已成为正式市场 Offer。接下来查看匹配项。',
+        'client_need_published' => '客户 Need 已发布到正式市场。接下来查看匹配 Offer。', 'created' => '已创建草稿。', 'saved' => '已保存草稿。', 'media_added' => '已添加媒体。', 'media_updated' => '已更新媒体。', 'media_removed' => '已从草稿移除媒体。', 'presentation_synced' => '已刷新展示 Content。', 'published' => '条目版本及其展示已发布并冻结。'],
 ];

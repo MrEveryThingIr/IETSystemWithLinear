@@ -20,6 +20,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
 
         Route::get('/businesses/{business}/clients', [BusinessClientController::class, 'index'])->name('businesses.clients.index');
         Route::post('/businesses/{business}/clients', [BusinessClientController::class, 'store'])->name('businesses.clients.store');
+        Route::post('/businesses/{business}/clients/{client}/needs', [BusinessClientController::class, 'publishNeed'])->name('businesses.clients.needs.store');
         Route::patch('/businesses/{business}/clients/{client}/archive', [BusinessClientController::class, 'archive'])->name('businesses.clients.archive');
 
         Route::get('/businesses/{business}/catalog', [BusinessCatalogController::class, 'index'])->name('businesses.catalog.index');
@@ -35,6 +36,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::post('/businesses/{business}/catalog/listings/{listing}/presentation', [BusinessListingController::class, 'syncPresentation'])->name('businesses.catalog.listings.presentation.sync');
         Route::post('/businesses/{business}/catalog/listings/{listing}/prices', [BusinessCatalogController::class, 'storePrice'])->name('businesses.catalog.listings.prices.store');
         Route::post('/businesses/{business}/catalog/listings/{listing}/publish', [BusinessCatalogController::class, 'publish'])->name('businesses.catalog.listings.publish');
+        Route::post('/businesses/{business}/catalog/listings/{listing}/market', [BusinessCatalogController::class, 'publishMarketOffer'])->name('businesses.catalog.listings.market.store');
         Route::post('/businesses/{business}/real-estate/{portal:uuid}/cases/{case}/promote', [BusinessCatalogController::class, 'promoteRealEstateCase'])
             ->name('businesses.real-estate.cases.promote');
 

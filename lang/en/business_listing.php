@@ -146,6 +146,8 @@ return [
         'withdrawn' => 'Withdrawn',
     ],
     'messages' => [
+        'market_published' => 'Published catalog version is now a canonical market Offer. Review its matches next.',
+        'client_need_published' => 'Client Need is now in the canonical market. Review matching Offers next.',
         'created' => 'Draft created. Continue the guided editor.',
         'saved' => 'Draft saved.',
         'media_added' => 'Media added.',

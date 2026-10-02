@@ -11,6 +11,7 @@ use App\Services\Business\BusinessService;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
+use App\Support\BusinessEconomyProjection;
 use App\Support\ExternalMoneyGatewayRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,6 +77,7 @@ class BusinessController extends Controller
         EnsureBusinessContext $contexts,
         ExternalMoneyGatewayRegistry $externalGateways,
         FeatureSurfaceAccess $surfaceAccess,
+        BusinessEconomyProjection $economy,
     ): View {
         abort_unless(BusinessAccess::canView($request->user(), $business), 403);
 
@@ -109,9 +111,11 @@ class BusinessController extends Controller
                 ->get();
 
             $routineCount = $context->plans()->count();
+            $economyProjection = $economy->forBusiness($business);
         } else {
             $context = null;
             $routineCount = 0;
+            $economyProjection = null;
             $professions = collect();
 
             $business->load([
@@ -124,6 +128,7 @@ class BusinessController extends Controller
             'business' => $business,
             'businessContext' => $context,
             'routineCount' => $routineCount,
+            'economyProjection' => $economyProjection,
             'professions' => $professions,
             'externalMoneyGateways' => $canOperate ? $externalGateways->available() : [],
             'canOperate' => $canOperate,

@@ -172,19 +172,34 @@
             <div class="body">
                 <div class="grid3">
                     <div class="item">
+                        <strong>موقعیت اقتصادی این کسب‌وکار</strong>
+                        <div style="font-size:26px;font-weight:950;margin-top:6px">
+                            {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_net_minor'] ?? 0), 0) }} IET
+                        </div>
+                        <div class="muted" style="margin-top:5px">
+                            طلب باز {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
+                            · بدهی باز {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
+                        </div>
+                        <div class="muted" style="margin-top:5px">
+                            درآمد تسویه‌شده {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_revenue_minor'] ?? 0), 0) }}
+                            · هزینه تسویه‌شده {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_expense_minor'] ?? 0), 0) }}
+                            · خالص تحقق‌یافته {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_profit_minor'] ?? 0), 0) }} IET
+                        </div>
+                        <div class="badges" style="margin-top:8px">
+                            <span class="badge">{{ $economyProjection['market_intent_count'] ?? 0 }} بازار</span>
+                            <span class="badge">{{ $economyProjection['deal_count'] ?? 0 }} معامله</span>
+                            <span class="badge">{{ $economyProjection['contract_count'] ?? 0 }} قرارداد</span>
+                        </div>
+                    </div>
+                    <div class="item">
                         <strong>واحد تسویه داخلی</strong>
                         <div style="font-size:26px;font-weight:950;margin-top:6px">{{ $business->defaultMonetaryUnit?->code ?? 'IET' }}</div>
-                        <div class="muted" style="margin-top:5px">هزینه‌های برنامه‌ریزی Business به‌صورت پیش‌فرض از همین واحد استفاده می‌کنند.</div>
+                        <div class="muted" style="margin-top:5px">تعهدات و تسویه‌های داخلی این کسب‌وکار بر پایه واقعیت‌های مالی اصلی محاسبه می‌شوند.</div>
                     </div>
                     <div class="item">
-                        <strong>واریز پول واقعی</strong>
+                        <strong>واریز / برداشت پول واقعی</strong>
                         <div class="badge" style="margin-top:9px">placeholder</div>
                         <div class="muted" style="margin-top:5px">هیچ بانک یا پرداخت‌یار واقعی در این مرحله متصل نیست.</div>
-                    </div>
-                    <div class="item">
-                        <strong>برداشت / Cashout</strong>
-                        <div class="badge" style="margin-top:9px">placeholder</div>
-                        <div class="muted" style="margin-top:5px">تا زمان انتخاب Provider، امنیت و حسابرسی، عملیات واقعی انجام نمی‌شود.</div>
                     </div>
                 </div>
                 <div class="badges" style="margin-top:12px">

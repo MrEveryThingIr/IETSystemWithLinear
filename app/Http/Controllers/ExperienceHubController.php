@@ -11,6 +11,7 @@ use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\HomeTodayProjection;
+use App\Support\IetPosition;
 use App\Support\MoneyAmount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -248,7 +249,50 @@ class ExperienceHubController extends Controller
             'href' => route('money.accounts'),
         ])->values()->all();
 
+        $iet = app(IetPosition::class)->forUser($user);
+        $ietPositionItems = [[
+            'title' => __('experience.hubs.money.iet_position_value', [
+                'amount' => MoneyAmount::format($iet['net_position_minor'], 0),
+            ]),
+            'meta' => __('experience.hubs.money.iet_position_breakdown', [
+                'wallet' => MoneyAmount::format($iet['wallet_minor'], 0),
+                'receive' => MoneyAmount::format($iet['receivable_minor'], 0),
+                'pay' => MoneyAmount::format($iet['payable_minor'], 0),
+                'cashout' => MoneyAmount::format($iet['cashout_eligible_minor'], 0),
+            ]),
+            'href' => route('money.accounts'),
+        ]];
+
+        if ($iet['debt_position_minor'] > 0) {
+            $ietPositionItems[] = [
+                'title' => __('experience.hubs.money.iet_debt_title', [
+                    'amount' => MoneyAmount::format($iet['debt_position_minor'], 0),
+                ]),
+                'meta' => __('experience.hubs.money.iet_debt_help'),
+                'href' => route('intents.create'),
+            ];
+        } elseif ($iet['positive_position_minor'] > 0) {
+            $ietPositionItems[] = [
+                'title' => __('experience.hubs.money.iet_positive_title', [
+                    'amount' => MoneyAmount::format($iet['positive_position_minor'], 0),
+                ]),
+                'meta' => __('experience.hubs.money.iet_positive_help'),
+                'href' => route('intents.index'),
+            ];
+        }
+
         return $this->renderHub('money', [
+            [
+                'title' => __('experience.hubs.money.iet_position'),
+                'help' => __('experience.hubs.money.iet_position_help'),
+                'primary' => $this->access()->allows($user, 'exchange')
+                    ? ['label' => __('experience.hubs.money.deposit_or_cashout'), 'href' => route('exchange.index')]
+                    : ['label' => __('experience.hubs.money.offer_to_earn'), 'href' => route('intents.create')],
+                'secondary' => $this->access()->allows($user, 'profile')
+                    ? ['label' => __('experience.hubs.money.skills_and_offers'), 'href' => route('profile.professions.index')]
+                    : ['label' => __('experience.hubs.money.offer_to_earn'), 'href' => route('intents.create')],
+                'items' => $ietPositionItems,
+            ],
             [
                 'title' => __('experience.hubs.money.overview'),
                 'help' => __('experience.hubs.money.overview_help'),

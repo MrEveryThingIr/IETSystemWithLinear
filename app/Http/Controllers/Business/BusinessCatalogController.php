@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Business;
 use App\Actions\Business\SyncBusinessListingPresentation;
 use App\Http\Controllers\Controller;
 use App\Models\Actor;
+use App\Models\ActorProfileIntent;
 use App\Models\Business;
 use App\Models\BusinessCategory;
 use App\Models\BusinessListing;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
+use App\Models\User;
 use App\Services\Business\BusinessCatalogService;
+use App\Services\Business\BusinessMarketService;
 use App\Support\BusinessAccess;
 use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
@@ -39,10 +42,20 @@ class BusinessCatalogController extends Controller
             'defaultMonetaryUnit',
         ]);
 
+        $marketOffersByListing = ActorProfileIntent::query()
+            ->where('kind', 'offer')
+            ->where('status', 'active')
+            ->where('metadata->source', 'business_listing_version')
+            ->where('metadata->business_uuid', $business->uuid)
+            ->latest('id')
+            ->get()
+            ->keyBy(fn (ActorProfileIntent $intent): string => (string) ($intent->metadata['business_listing_uuid'] ?? ''));
+
         return view('businesses.catalog.index', [
             'business' => $business,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'unitCatalog' => MonetaryUnitCatalog::all(),
+            'marketOffersByListing' => $marketOffersByListing,
         ]);
     }
 
@@ -189,6 +202,34 @@ class BusinessCatalogController extends Controller
         return redirect()
             ->route('businesses.catalog.listings.edit', [$business, $listing])
             ->with('status', __('business_listing.messages.published'));
+    }
+
+    public function publishMarketOffer(
+        Request $request,
+        Business $business,
+        BusinessListing $listing,
+        BusinessMarketService $market,
+    ): RedirectResponse {
+        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
+        abort_unless((int) $listing->business_id === (int) $business->id, 404);
+
+        $data = $request->validate([
+            'concept_label' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+
+        $intent = $market->publishListingOffer(
+            $business,
+            $listing,
+            $user,
+            filled($data['concept_label'] ?? null) ? (string) $data['concept_label'] : null,
+        );
+
+        return redirect()
+            ->route('intents.matches', $intent)
+            ->with('status', __('business_listing.messages.market_published'));
     }
 
     public function promoteRealEstateCase(
