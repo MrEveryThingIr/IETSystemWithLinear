@@ -61,8 +61,19 @@ Expected IET position after the seed:
 - home buyer: **-150 IET net**;
 - property buyer: **-200 IET net**.
 
-The outstanding buyers demonstrate debt. The settled inspection scenario demonstrates
-the complete deposit → internal IET settlement → provider funded-wallet path.
+The outstanding buyers demonstrate debt. Every seeded scenario also has a canonical
+Need + Business Offer + accepted Relationship/Deal + Deal-sourced Contract before
+fulfillment creates the IET obligation. The settled inspection scenario additionally
+demonstrates the complete deposit → internal IET settlement → provider funded-wallet path.
+
+Business projections after seeding include:
+
+- Atlas Inspection Services: one Deal, one Contract, 0 outstanding receivable,
+  **120 IET realized revenue/profit**;
+- Everyday Tools Store: one Deal, one Contract, **80 IET outstanding receivable**;
+- Bright Home Services: one Deal, one Contract, **150 IET outstanding receivable**;
+- Safdar Real Estate Office: one seeded brokerage Deal/Contract with
+  **200 IET outstanding receivable**.
 
 ## What “IET balance” means in this baseline
 
@@ -223,6 +234,7 @@ php artisan test --compact \
 They cover:
 
 - exact ListingVersion provenance through market/Deal/Proposal/Contract;
+- canonical seeded Business Offer → Need → Deal → Contract traceability;
 - independently created equivalent market labels;
 - accepted work creating IET debt/credit positions;
 - four economic scenarios;
@@ -231,7 +243,27 @@ They cover:
 - provider wallet funding;
 - cash-out readiness;
 - earning more than an existing debt;
-- repeatable visible demo seeding.
+- repeatable visible demo seeding;
+- Business receivable and confirmed-settlement realized revenue/profit projection;
+- Business operating-shell rendering of the IET projection.
+
+## Verified remote gate
+
+Verified implementation head:
+
+`f19f0f11cdb9c477357cb75ad2f575e12aa1789e`
+
+Remote CI completed green with:
+
+- **728 tests / 6734 assertions**;
+- Pint green;
+- PHPStan green;
+- MySQL migration portability green;
+- rollback/reapply + scheduler/queue smoke green;
+- SQLite backup/restore green;
+- frontend build green;
+- npm audit: 0 vulnerabilities;
+- Composer: no security vulnerability advisories.
 
 ## Boundary for the next review layer
 
