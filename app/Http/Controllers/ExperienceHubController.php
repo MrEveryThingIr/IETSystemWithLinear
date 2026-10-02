@@ -121,32 +121,38 @@ class ExperienceHubController extends Controller
             ])->all()
             : [];
 
-        return $this->renderHub('work', [
-            [
-                'title' => __('experience.hubs.work.attention'),
-                'help' => __('experience.hubs.work.attention_help'),
-                'count' => count($attention),
-                'items' => $attention,
-                'empty' => __('experience.hubs.work.attention_empty'),
-            ],
-            [
+        $sections = [[
+            'title' => __('experience.hubs.work.attention'),
+            'help' => __('experience.hubs.work.attention_help'),
+            'count' => count($attention),
+            'items' => $attention,
+            'empty' => __('experience.hubs.work.attention_empty'),
+        ]];
+
+        if ($canDeals) {
+            $sections[] = [
                 'title' => __('experience.hubs.work.active'),
                 'help' => __('experience.hubs.work.active_help'),
                 'count' => count($activeWork),
-                'primary' => $canDeals ? ['label' => __('experience.hubs.work.open_deals'), 'href' => route('deals.index')] : null,
+                'primary' => ['label' => __('experience.hubs.work.open_deals'), 'href' => route('deals.index')],
                 'items' => $activeWork,
                 'empty' => __('experience.hubs.work.active_empty'),
-            ],
-            [
+            ];
+        }
+
+        if ($canPlanner) {
+            $sections[] = [
                 'title' => __('experience.hubs.work.schedule'),
                 'help' => __('experience.hubs.work.schedule_help'),
                 'count' => count($schedule),
-                'primary' => $canPlanner ? ['label' => __('experience.hubs.work.open_planner'), 'href' => route('planner.index')] : null,
-                'secondary' => $canPlanner ? ['label' => __('experience.hubs.work.plan_something'), 'href' => route('planner.create')] : null,
+                'primary' => ['label' => __('experience.hubs.work.open_planner'), 'href' => route('planner.index')],
+                'secondary' => ['label' => __('experience.hubs.work.plan_something'), 'href' => route('planner.create')],
                 'items' => $schedule,
                 'empty' => __('experience.hubs.work.schedule_empty'),
-            ],
-        ]);
+            ];
+        }
+
+        return $this->renderHub('work', $sections);
     }
 
     public function organizations(Request $request): View
@@ -178,33 +184,40 @@ class ExperienceHubController extends Controller
                 ->get()
             : collect();
 
-        return $this->renderHub('organizations', [
-            [
+        $sections = [];
+
+        if ($canBusiness) {
+            $sections[] = [
                 'title' => __('experience.hubs.organizations.businesses'),
                 'help' => __('experience.hubs.organizations.businesses_help'),
                 'count' => $businesses->count(),
-                'primary' => $canBusiness ? ['label' => __('experience.hubs.organizations.open_businesses'), 'href' => route('businesses.index')] : null,
-                'secondary' => $canBusiness ? ['label' => __('experience.hubs.organizations.create_business'), 'href' => route('businesses.create')] : null,
+                'primary' => ['label' => __('experience.hubs.organizations.open_businesses'), 'href' => route('businesses.index')],
+                'secondary' => ['label' => __('experience.hubs.organizations.create_business'), 'href' => route('businesses.create')],
                 'items' => $businesses->take(8)->map(fn (BusinessMembership $membership): array => [
                     'title' => $membership->business->name,
                     'meta' => $membership->job_title ?: $membership->role,
                     'href' => route('businesses.show', $membership->business),
                 ])->all(),
                 'empty' => __('experience.hubs.organizations.businesses_empty'),
-            ],
-            [
+            ];
+        }
+
+        if ($canGroups) {
+            $sections[] = [
                 'title' => __('experience.hubs.organizations.groups'),
                 'help' => __('experience.hubs.organizations.groups_help'),
                 'count' => $groups->count(),
-                'primary' => $canGroups ? ['label' => __('experience.hubs.organizations.open_groups'), 'href' => route('groups.index')] : null,
+                'primary' => ['label' => __('experience.hubs.organizations.open_groups'), 'href' => route('groups.index')],
                 'items' => $groups->take(8)->map(fn (GroupMembership $membership): array => [
                     'title' => $membership->group->name,
                     'meta' => __('experience.hubs.organizations.group_member'),
                     'href' => route('groups.show', $membership->group),
                 ])->all(),
                 'empty' => __('experience.hubs.organizations.groups_empty'),
-            ],
-        ]);
+            ];
+        }
+
+        return $this->renderHub('organizations', $sections);
     }
 
     public function money(Request $request): View
@@ -260,7 +273,7 @@ class ExperienceHubController extends Controller
                 ])->all(),
                 'empty' => __('experience.hubs.money.activity_empty'),
             ],
-            [
+            ...($this->access->allows($user, 'accounting') || $this->access->allows($user, 'exchange') ? [[
                 'title' => __('experience.hubs.money.advanced'),
                 'help' => __('experience.hubs.money.advanced_help'),
                 'items' => array_values(array_filter([
@@ -275,7 +288,7 @@ class ExperienceHubController extends Controller
                         'href' => route('exchange.index'),
                     ] : null,
                 ])),
-            ],
+            ]] : []),
         ]);
     }
 
