@@ -135,12 +135,6 @@ class CreateRelationship
                 Gate::forUser($current)->authorize('view', $lockedMatchedIntent);
                 abort_unless($lockedMatchedIntent->status === ProfileIntentStatus::Active, 422, 'Only an active Intent can be matched.');
 
-                $matchedConcept = $lockedMatchedIntent->concept->canonical();
-                abort_unless(
-                    (int) $matchedConcept->id === (int) $canonicalPurpose->id,
-                    422,
-                    'Matched Intent Concept must match the Relationship purpose.',
-                );
                 abort_unless(
                     isset($seen[$lockedMatchedIntent->profile->actor_id]),
                     422,
