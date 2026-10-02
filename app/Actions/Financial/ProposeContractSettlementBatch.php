@@ -53,9 +53,9 @@ class ProposeContractSettlementBatch
         $note = trim((string) $note);
 
         abort_unless(
-            in_array($method, ['cash', 'IET'], true),
+            in_array($method, ['cash', 'external_cash', 'IET'], true),
             422,
-            'Settlement method must be cash or internal IET.',
+            'Settlement method must be cash, external cash, or internal IET.',
         );
         abort_if($reference !== null && mb_strlen($reference) > 255, 422, 'Settlement reference is too long.');
         abort_if(mb_strlen($note) > 5000, 422, 'Settlement note is too long.');
