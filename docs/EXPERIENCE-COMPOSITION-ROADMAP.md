@@ -41,7 +41,7 @@ Implemented:
 - Today remains the operating home;
 - Needs & Offers;
 - Work → Deals / Planner;
-- Organizations → Businesses / Real Estate / Groups;
+- Organizations → Businesses / Groups; Real Estate is a specialized Business vertical, not a peer destination;
 - Money → Personal Money / Accounting / Exchange;
 - Content;
 - Profile and Vault moved to Account & preferences;
@@ -62,6 +62,14 @@ Browser acceptance questions:
 
 Do not proceed with route consolidation based only on aesthetics; first accept the
 navigation mental model.
+
+### Business correction after browser acceptance
+
+The owner correctly rejected Real Estate as a peer navigation destination. The
+canonical Business direction is now tracked in `docs/BUSINESS-PLATFORM-ROADMAP.md`:
+Real Estate is the first specialized Business vertical, while Businesses becomes
+the reusable operating container for shops, services, offices, workshops, and
+future industries. Existing Real Estate URLs remain compatibility/intake channels.
 
 ## Phase 2 — Progressive onboarding and Today
 
