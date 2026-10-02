@@ -47,7 +47,7 @@ return [
     'recent_activity_help' => 'A short history of recent work and changes you are allowed to see.',
     'no_recent_activity' => 'No recent authorized activity',
     'boundary' => 'Today is a derived operating view. Acting here always opens the underlying Relationship, Proposal, Contract, Commitment, Settlement, Submission, Planner, Group, Intent, Accounting or Context record that owns the truth.',
-        'onboarding' => [
+    'onboarding' => [
         'title' => 'Finish your setup',
         'help' => 'Only the essentials are required. You can enrich the rest of your profile later.',
         'done' => 'Done',
