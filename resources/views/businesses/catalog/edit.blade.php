@@ -87,8 +87,6 @@
                         @foreach($availabilityStatuses as $key=>$label)<option value="{{ $key }}" @selected(old('availability_status',$listing->availability_status)===$key)>{{ $label }}</option>@endforeach
                     </select>
                 </label>
-                <label class="field"><span>{{ __('business_listing.basics.available_from') }}</span><input type="datetime-local" name="available_from" value="{{ old('available_from',$listing->available_from?->format('Y-m-d\TH:i')) }}"></label>
-                <label class="field"><span>{{ __('business_listing.basics.available_until') }}</span><input type="datetime-local" name="available_until" value="{{ old('available_until',$listing->available_until?->format('Y-m-d\TH:i')) }}"></label>
             </div>
             <label class="field" style="display:block;margin-top:12px"><span>{{ __('business_listing.basics.short_description') }}</span><input name="short_description" maxlength="500" value="{{ old('short_description',$version?->short_description) }}"></label>
             <label class="field" style="display:block;margin-top:12px"><span>{{ __('business_listing.basics.description') }}</span><textarea name="description" rows="5">{{ old('description',$version?->description) }}</textarea></label>
@@ -191,7 +189,7 @@
         @foreach($currentPrices as $price)
             <div class="price-row">
                 <strong>{{ $price->price_type }}</strong> ·
-                {{ AppSupportMoneyAmount::format((int)$price->amount_minor,(int)$price->monetaryUnit->exponent) }} {{ $price->monetaryUnit->code }}
+                {{ \App\Support\MoneyAmount::format((int)$price->amount_minor,(int)$price->monetaryUnit->exponent) }} {{ $price->monetaryUnit->code }}
                 @if($price->basis) / {{ $price->basis }} @endif
                 <span class="badge">{{ $price->visibility }}</span>
             </div>
