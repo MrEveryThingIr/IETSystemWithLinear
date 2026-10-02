@@ -11,6 +11,7 @@ use App\Models\BusinessListing;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Services\Business\BusinessCatalogService;
+use App\Services\Business\BusinessMarketService;
 use App\Support\BusinessAccess;
 use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
@@ -189,6 +190,31 @@ class BusinessCatalogController extends Controller
         return redirect()
             ->route('businesses.catalog.listings.edit', [$business, $listing])
             ->with('status', __('business_listing.messages.published'));
+    }
+
+    public function publishMarketOffer(
+        Request $request,
+        Business $business,
+        BusinessListing $listing,
+        BusinessMarketService $market,
+    ): RedirectResponse {
+        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
+        abort_unless((int) $listing->business_id === (int) $business->id, 404);
+
+        $data = $request->validate([
+            'concept_label' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $intent = $market->publishListingOffer(
+            $business,
+            $listing,
+            $request->user(),
+            filled($data['concept_label'] ?? null) ? (string) $data['concept_label'] : null,
+        );
+
+        return redirect()
+            ->route('intents.matches', $intent)
+            ->with('status', __('business_listing.messages.market_published'));
     }
 
     public function promoteRealEstateCase(
