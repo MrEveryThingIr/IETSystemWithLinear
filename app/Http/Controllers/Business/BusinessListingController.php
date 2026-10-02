@@ -9,6 +9,7 @@ use App\Models\Asset;
 use App\Models\Business;
 use App\Models\BusinessListing;
 use App\Models\BusinessListingMedia;
+use App\Models\User;
 use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessListingMediaService;
 use App\Support\BusinessAccess;
@@ -16,6 +17,7 @@ use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -223,12 +225,16 @@ class BusinessListingController extends Controller
         ]);
 
         $version = $listing->currentVersion()->firstOrFail();
+        $user = $request->user();
+        $upload = $request->file('media');
+        abort_unless($user instanceof User && $upload instanceof UploadedFile, 403);
+
         $media->attach(
             $business,
             $listing,
             $version,
-            $request->user(),
-            $request->file('media'),
+            $user,
+            $upload,
             $data['rights_status'],
             $data['caption'] ?? null,
             $data['visibility'],
@@ -255,9 +261,12 @@ class BusinessListingController extends Controller
             'cover' => ['nullable', 'boolean'],
         ]);
 
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+
         $media->update(
             $mediaItem,
-            $request->user(),
+            $user,
             (int) $data['position'],
             $data['caption'] ?? null,
             $data['visibility'],
@@ -276,7 +285,9 @@ class BusinessListingController extends Controller
     ): RedirectResponse {
         $this->authorizeManage($request, $business, $listing);
         $this->assertMediaBelongs($listing, $mediaItem);
-        $media->remove($mediaItem, $request->user());
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+        $media->remove($mediaItem, $user);
 
         return back()->with('status', __('business_listing.messages.media_removed'));
     }
@@ -309,7 +320,9 @@ class BusinessListingController extends Controller
     ): RedirectResponse {
         $this->authorizeManage($request, $business, $listing);
         $version = $listing->currentVersion()->firstOrFail();
-        $content = $sync->execute($listing, $version, $request->user());
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+        $content = $sync->execute($listing, $version, $user);
 
         return redirect()
             ->route('contexts.contents.studio', [$business->contextBinding()->with('context')->sole()->context, $content])
