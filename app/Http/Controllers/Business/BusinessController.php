@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Business;
 
+use App\Actions\Contexts\EnsureBusinessContext;
 use App\Http\Controllers\Controller;
 use App\Models\Actor;
 use App\Models\Business;
@@ -23,14 +24,17 @@ class BusinessController extends Controller
         abort_unless($actor instanceof Actor && $actor->status === 'active', 403);
 
         $businesses = Business::query()
-            ->where('owner_actor_id', $actor->getKey())
-            ->orWhereHas('memberships', fn ($q) => $q
-                ->where('actor_id', $actor->getKey())
-                ->where('status', 'active'))
+            ->where(fn ($query) => $query
+                ->where('owner_actor_id', $actor->getKey())
+                ->orWhereHas('memberships', fn ($membership) => $membership
+                    ->where('actor_id', $actor->getKey())
+                    ->where('status', 'active')))
+            ->when($request->filled('kind'), fn ($query) => $query->where('kind', $request->query('kind')))
             ->withCount([
                 'memberships as active_members_count' => fn ($q) => $q->where('status', 'active'),
-                'contactPoints',
-                'addresses',
+                'businessContacts',
+                'listings',
+                'publicIntakePortals',
             ])
             ->latest()
             ->get();
@@ -64,14 +68,24 @@ class BusinessController extends Controller
             ->with('status', 'کسب‌وکار شما ساخته شد. حالا اطلاعات تماس، آدرس و اعضا را کامل کنید.');
     }
 
-    public function show(Request $request, Business $business): View
-    {
+    public function show(
+        Request $request,
+        Business $business,
+        EnsureBusinessContext $contexts
+    ): View {
         abort_unless(BusinessAccess::canView($request->user(), $business), 403);
+
+        $context = $contexts->execute($business);
 
         $business->load([
             'owner.user',
             'contactPoints',
             'addresses',
+            'businessContacts.contactPoints',
+            'categories',
+            'listings.currentVersion',
+            'publicIntakePortals',
+            'contextBinding.context',
             'memberships' => fn ($q) => $q
                 ->with(['actor.user', 'professions.parent'])
                 ->where('status', 'active')
@@ -88,6 +102,7 @@ class BusinessController extends Controller
 
         return view('businesses.show', [
             'business' => $business,
+            'businessContext' => $context,
             'professions' => $professions,
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
