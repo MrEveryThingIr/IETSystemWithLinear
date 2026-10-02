@@ -10,7 +10,6 @@ use App\Models\BusinessCategory;
 use App\Models\BusinessListing;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
-use App\Models\User;
 use App\Services\Business\BusinessCatalogService;
 use App\Support\BusinessAccess;
 use App\Support\LocalizedNumber;
@@ -184,9 +183,7 @@ class BusinessCatalogController extends Controller
         abort_unless($actor instanceof Actor, 403);
 
         $version = $listing->currentVersion()->firstOrFail();
-        $user = $request->user();
-        abort_unless($user instanceof User, 403);
-        $presentation->execute($listing, $version, $user, publish: true);
+        $presentation->execute($listing, $version, $request->user(), publish: true);
         $catalog->publish($listing, $version->fresh(), $actor);
 
         return redirect()
