@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Business;
 
 use App\Actions\Business\SyncBusinessListingPresentation;
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Business;
@@ -12,6 +11,7 @@ use App\Models\BusinessCategory;
 use App\Models\BusinessListing;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
+use App\Models\User;
 use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessMarketService;
 use App\Support\BusinessAccess;
