@@ -3,8 +3,11 @@
 namespace App\Support;
 
 use App\Models\Actor;
+use App\Models\ActorProfileIntent;
+use App\Models\GroupMembership;
 use App\Models\PersonalContext;
 use App\Models\PlanOccurrence;
+use App\Models\Relationship;
 use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\Services\Surfaces\ExperienceNavigation;
@@ -21,10 +24,10 @@ class HomeGuidanceService
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
-     *   activeIntents: Collection,
-     *   activeRelationships: Collection,
-     *   groupMemberships: Collection,
-     *   obligations: Collection
+     *   activeIntents: Collection<int, ActorProfileIntent>,
+     *   activeRelationships: Collection<int, Relationship>,
+     *   groupMemberships: Collection<int, GroupMembership>,
+     *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>
      * } $projection
      * @return array{
      *   onboarding: array{completed:int,total:int,percent:int,complete:bool,steps:list<HomeOnboardingStep>},
@@ -130,9 +133,9 @@ class HomeGuidanceService
      * @param array{
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
-     *   activeIntents: Collection,
-     *   activeRelationships: Collection,
-     *   obligations: Collection
+     *   activeIntents: Collection<int, ActorProfileIntent>,
+     *   activeRelationships: Collection<int, Relationship>,
+     *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>
      * } $projection
      * @param list<HomeOnboardingStep> $steps
      * @param list<HomeGuidanceItem> $firstGoalChoices
@@ -341,9 +344,9 @@ class HomeGuidanceService
 
     /**
      * @param array{
-     *   activeIntents: Collection,
-     *   activeRelationships: Collection,
-     *   groupMemberships: Collection
+     *   activeIntents: Collection<int, ActorProfileIntent>,
+     *   activeRelationships: Collection<int, Relationship>,
+     *   groupMemberships: Collection<int, GroupMembership>
      * } $projection
      */
     private function hasFirstGoal(Actor $actor, array $projection): bool
