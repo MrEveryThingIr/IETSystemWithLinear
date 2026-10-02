@@ -73,7 +73,7 @@ class BusinessController extends Controller
         Business $business,
         EnsureBusinessContext $contexts
     ): View {
-        abort_unless(BusinessAccess::canView($request->user(), $business), 403);
+        abort_unless(BusinessAccess::canOperate($request->user(), $business), 403);
 
         $context = $contexts->execute($business);
 
