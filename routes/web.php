@@ -9,6 +9,7 @@ use App\Http\Controllers\AdmissionContextContentController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\ContentEvidenceReferenceController;
+use App\Http\Controllers\ExperienceHubController;
 use App\Http\Controllers\ContentRevisionController;
 use App\Http\Controllers\ContextConversationAssetController;
 use App\Http\Controllers\GroupInvitationController;
@@ -125,6 +126,12 @@ Route::middleware(['auth', 'account.active'])->group(function (): void {
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::livewire('/profile', config('release.profile') === 'planning_baseline' ? ProfileBasicManage::class : ProfileManage::class)->name('profile.edit');
     Route::livewire('/notifications', NotificationIndex::class)->name('notifications.index');
+    Route::get('/needs-offers', [ExperienceHubController::class, 'needsOffers'])->name('experience.needs-offers');
+    Route::get('/work', [ExperienceHubController::class, 'work'])->name('experience.work');
+    Route::get('/organizations', [ExperienceHubController::class, 'organizations'])->name('experience.organizations');
+    Route::get('/content', [ExperienceHubController::class, 'content'])->name('experience.content');
+    Route::get('/help', [ExperienceHubController::class, 'help'])->name('experience.help');
+
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');
@@ -149,7 +156,8 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
-    Route::livewire('/money', AccountingBasicIndex::class)->name('money.index');
+    Route::get('/money', [ExperienceHubController::class, 'money'])->name('money.index');
+    Route::livewire('/money/accounts', AccountingBasicIndex::class)->name('money.accounts');
     Route::livewire('/accounting', config('release.profile') === 'planning_baseline' ? AccountingBasicIndex::class : AccountingIndex::class)->name('accounting.index');
     Route::livewire('/exchange', ExchangeIndex::class)->name('exchange.index');
     Route::livewire('/vault', VaultIndex::class)->name('vault.index');
