@@ -21,11 +21,13 @@ class BusinessContext extends Model
         });
     }
 
+    /** @return BelongsTo<Context, $this> */
     public function context(): BelongsTo
     {
         return $this->belongsTo(Context::class);
     }
 
+    /** @return BelongsTo<Business, $this> */
     public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class);
