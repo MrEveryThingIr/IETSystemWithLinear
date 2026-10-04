@@ -1,76 +1,86 @@
 # Real Estate Intake integration boundary
 
-This branch intentionally restores Public Real Estate Intake as a first-class,
-independently publishable application surface while preserving the stronger
-domain work added after `feat/public-real-estate-intake`.
+Real Estate is a specialized **Business vertical**. It keeps its focused intake
+and case-management workflow, but it is not a separate top-level product or
+navigation destination.
 
 ## Product boundary
 
-Real Estate Intake is **not** a submenu or compatibility alias of Business.
-
-It is a focused intake/office system:
+The canonical mental model is:
 
 ```
-super-admin publication
-        ↓
-Real Estate Intake workspace
-        ↓
-authorized office portal(s)
-        ↓
+Businesses
+    ↓
+Business: مشاور املاک مهوری
+    ↓
+Real Estate intake channel
+    ↓
 public token intake → private case office
-        ↓
-optional Business bridge
-        ↓
+    ↓
+qualified property offer
+    ↓
 Business Listing / catalog / market
 ```
 
-The Business bridge is optional. A case remains an authoritative Real Estate
-Intake case even when it is later promoted into a Business Listing.
+The Business is the durable identity. Its members, contacts/clients, catalog,
+work context, Deals, Planner links, and financial context stay on the shared
+Business foundation. Real Estate contributes specialized fields, intake,
+case review, private media, and property promotion.
 
 ## Publication and authorization
 
-Two independent checks are intentional:
+Private Real Estate operations use two layers:
 
-1. **Feature publication** — super-admin decides whether an authenticated user
-   can discover/use the Real Estate Intake application surface.
-2. **Portal/domain authorization** — after the surface is published, existing
-   portal grants, linked Business permissions, or super-admin status decide
-   which specific office portal and private cases the user may access.
+1. **Business publication** — super-admin decides whether the account can use
+   the Businesses facility.
+2. **Domain authorization** — Business ownership/membership or the legacy
+   portal grant determines which exact Real Estate office/cases are accessible.
 
-A portal grant therefore cannot bypass feature publication.
+A legacy portal grant cannot bypass Business publication.
 
 The public intake form remains intentionally different: an active portal's
 unguessable public token may be opened by a guest and submitted under the
 existing throttling/privacy rules.
 
-Publication Control itself remains a super-admin-only administrative surface.
-Ordinary users neither receive it through publication grants nor see it in
-navigation, and direct access is rejected.
+Publication Control itself remains super-admin-only.
 
-## Experience choice
+## Compatibility
 
-The public intake form and one-time preview from
-`feat/public-real-estate-intake` were already preserved unchanged in the
-latest branch.
+Historical Real Estate URLs and intake tokens remain valid.
 
-This integration restores the preferred independent office/case experience:
+- `/workspace/real-estate` redirects to Businesses filtered to
+  `kind=real_estate`.
+- Old `real-estate` feature grants are migrated to `business` grants.
+- The `real-estate` surface key remains only as a hidden, non-grantable
+  compatibility definition whose dependency is Business.
+- Existing portals that are not yet linked to a Business can be adopted without
+  changing their public token, case references, contacts, or media.
 
-- dedicated Real Estate workspace;
-- spacious standalone office and case screens;
-- clear route back to the main application;
-- current locale-aware date presentation;
-- current media handling;
-- optional Business adoption/promotion controls without making Business the
-  parent identity of the Real Estate system.
+## Specialized experience preserved
+
+The preferred focused Real Estate workflow remains:
+
+- public property/request intake form;
+- one-time preview;
+- private office case list and filters;
+- case details and private media;
+- status progression;
+- promotion of qualified property offers into the Business catalog.
+
+The difference is conceptual ownership: those screens now say and behave as a
+specialized capability of the owning Business, rather than a parallel system.
 
 ## Acceptance checklist
 
-- Super-admin sees **Publication control**; an ordinary account does not.
-- Super-admin can grant **Real Estate Intake** without granting **Business**.
-- A user with only a portal grant gets 403 on Real Estate office routes.
-- A user with both Real Estate publication and portal authorization can open
-  the dedicated Real Estate workspace and that office.
-- Real Estate appears as its own primary destination, not inside Business.
-- Public token intake still works for an active portal without login.
-- Suspended/unverified accounts are blocked from office administration.
-- Existing optional Business adoption and case-to-listing promotion still work.
+- Super-admin publishes **Businesses**; there is no separately grantable Real
+  Estate facility.
+- Navigation has no standalone Real Estate primary destination.
+- Under Businesses, a real-estate office appears as a normal business, e.g.
+  **Business: مشاور املاک مهوری**.
+- Opening that Business exposes its specialized Real Estate intake channel.
+- A portal-granted user without Business publication gets 403 on private office
+  routes.
+- A Business-published user with exact office authorization can manage cases.
+- Public token intake still works without login.
+- Existing office URLs/cases survive legacy-office adoption into Business.
+- Qualified property offers can still be promoted to Business Listings.

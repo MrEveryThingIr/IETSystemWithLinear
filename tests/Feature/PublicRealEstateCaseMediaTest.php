@@ -57,7 +57,7 @@ class PublicRealEstateCaseMediaTest extends TestCase
         $user = User::factory()->create();
         $portal = PublicIntakePortal::query()->create(['type' => 'real_estate', 'title' => 'دفتر نمونه', 'locale' => 'fa', 'is_active' => true]);
         PublicIntakePortalGrant::query()->create(['public_intake_portal_id' => $portal->getKey(), 'user_id' => $user->getKey(), 'role' => 'viewer']);
-        app(FeatureSurfaceGrantService::class)->sync($user, ['real-estate'], null);
+        app(FeatureSurfaceGrantService::class)->sync($user, ['business'], null);
 
         $case = PublicRealEstateCase::query()->create([
             'public_intake_portal_id' => $portal->getKey(), 'reference_code' => 'RE-MEDIABBBBB', 'intent' => 'offer', 'transaction_mode' => 'sale',

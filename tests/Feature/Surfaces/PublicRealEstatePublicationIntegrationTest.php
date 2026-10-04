@@ -6,6 +6,7 @@ use App\Models\PlatformAccessGrant;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicIntakePortalGrant;
 use App\Models\User;
+use App\Services\Business\AdoptRealEstatePortalIntoBusiness;
 use App\Services\Surfaces\ExperienceNavigation;
 use App\Services\Surfaces\FeatureSurfaceGrantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,15 +16,10 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_portal_grant_does_not_bypass_surface_publication(): void
+    public function test_portal_grant_does_not_bypass_business_publication(): void
     {
         $user = User::factory()->create();
-        $portal = PublicIntakePortal::query()->create([
-            'type' => 'real_estate',
-            'title' => 'دفتر نمونه',
-            'locale' => 'fa',
-            'is_active' => true,
-        ]);
+        $portal = $this->portal('دفتر نمونه');
 
         PublicIntakePortalGrant::query()->create([
             'public_intake_portal_id' => $portal->getKey(),
@@ -36,17 +32,11 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_published_user_with_portal_access_can_use_real_estate_workspace_and_office(): void
+    public function test_business_published_user_with_portal_access_can_use_real_estate_office(): void
     {
         $user = User::factory()->create();
         $user->actor()->create();
-
-        $portal = PublicIntakePortal::query()->create([
-            'type' => 'real_estate',
-            'title' => 'دفتر نمونه',
-            'locale' => 'fa',
-            'is_active' => true,
-        ]);
+        $portal = $this->portal('دفتر نمونه');
 
         PublicIntakePortalGrant::query()->create([
             'public_intake_portal_id' => $portal->getKey(),
@@ -54,54 +44,40 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
             'role' => 'viewer',
         ]);
 
-        app(FeatureSurfaceGrantService::class)
-            ->sync($user, ['real-estate'], null);
+        app(FeatureSurfaceGrantService::class)->sync($user, ['business'], null);
 
         $this->actingAs($user)
             ->get(route('workspace.real-estate.index'))
-            ->assertOk()
-            ->assertSee('دفتر نمونه');
+            ->assertRedirect(route('businesses.index', ['kind' => 'real_estate']));
 
         $this->actingAs($user)
             ->get(route('office.real-estate.index', ['portal' => $portal->uuid]))
             ->assertOk();
     }
 
-    public function test_real_estate_is_a_direct_destination_not_nested_under_business(): void
+    public function test_real_estate_is_inside_businesses_not_a_primary_destination(): void
     {
         $user = User::factory()->create();
         $user->actor()->create();
 
-        app(FeatureSurfaceGrantService::class)
-            ->sync($user, ['real-estate'], null);
+        app(FeatureSurfaceGrantService::class)->sync($user, ['business'], null);
 
         $navigation = app(ExperienceNavigation::class)->for($user);
+        $primary = collect($navigation['primary']);
 
-        $this->assertContains(
-            'real-estate',
-            collect($navigation['primary'])->pluck('key')->all()
-        );
+        $this->assertNotContains('real-estate', $primary->pluck('key')->all());
 
-        $organizations = collect($navigation['primary'])->firstWhere('key', 'organizations');
-        if ($organizations !== null) {
-            $this->assertNotContains(
-                'real-estate',
-                collect($organizations['items'])->pluck('key')->all()
-            );
-        }
+        $organizations = $primary->firstWhere('key', 'organizations');
+        $this->assertNotNull($organizations);
+        $this->assertContains('business', collect($organizations['items'])->pluck('key')->all());
+        $this->assertNotContains('real-estate', collect($organizations['items'])->pluck('key')->all());
     }
 
-    public function test_real_estate_manager_cannot_adopt_into_unpublished_business(): void
+    public function test_real_estate_office_is_presented_through_its_business_identity(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['locale' => 'en']);
         $user->actor()->create();
-
-        $portal = PublicIntakePortal::query()->create([
-            'type' => 'real_estate',
-            'title' => 'دفتر نمونه',
-            'locale' => 'fa',
-            'is_active' => true,
-        ]);
+        $portal = $this->portal('مشاور املاک مهوری');
 
         PublicIntakePortalGrant::query()->create([
             'public_intake_portal_id' => $portal->getKey(),
@@ -109,14 +85,21 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
             'role' => 'manager',
         ]);
 
-        app(FeatureSurfaceGrantService::class)
-            ->sync($user, ['real-estate'], null);
+        app(FeatureSurfaceGrantService::class)->sync($user, ['business'], null);
+        $business = app(AdoptRealEstatePortalIntoBusiness::class)->execute($portal, $user);
+
+        $this->assertSame('real_estate', $business->kind);
+        $this->assertSame('مشاور املاک مهوری', $business->name);
 
         $this->actingAs($user)
-            ->post(route('office.real-estate.adopt-business', ['portal' => $portal->uuid]))
-            ->assertForbidden();
+            ->get(route('businesses.index', ['kind' => 'real_estate']))
+            ->assertOk()
+            ->assertSee('مشاور املاک مهوری');
 
-        $this->assertNull($portal->fresh()->business_id);
+        $this->actingAs($user)
+            ->get(route('office.real-estate.index', ['portal' => $portal->uuid]))
+            ->assertOk()
+            ->assertSee('Business: مشاور املاک مهوری');
     }
 
     public function test_publication_control_is_hidden_and_forbidden_for_ordinary_users(): void
@@ -124,8 +107,7 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
         $user = User::factory()->create();
         $user->actor()->create();
 
-        app(FeatureSurfaceGrantService::class)
-            ->sync($user, ['real-estate'], null);
+        app(FeatureSurfaceGrantService::class)->sync($user, ['business'], null);
 
         $navigation = app(ExperienceNavigation::class)->for($user);
 
@@ -139,22 +121,24 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_superadmin_keeps_publication_control_and_real_estate_access_without_grants(): void
+    public function test_superadmin_sees_businesses_without_a_standalone_real_estate_destination(): void
     {
         $admin = User::factory()->create();
         $admin->actor()->create();
         PlatformAccessGrant::factory()->for($admin)->create();
 
         $navigation = app(ExperienceNavigation::class)->for($admin);
+        $primary = collect($navigation['primary']);
 
         $this->assertContains(
             'publication-control',
             collect($navigation['admin'])->pluck('key')->all()
         );
-        $this->assertContains(
-            'real-estate',
-            collect($navigation['primary'])->pluck('key')->all()
-        );
+        $this->assertNotContains('real-estate', $primary->pluck('key')->all());
+
+        $organizations = $primary->firstWhere('key', 'organizations');
+        $this->assertNotNull($organizations);
+        $this->assertContains('business', collect($organizations['items'])->pluck('key')->all());
 
         $this->actingAs($admin)
             ->get(route('platform.publication.index'))
@@ -163,15 +147,20 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
 
     public function test_active_public_intake_link_remains_public_by_token(): void
     {
-        $portal = PublicIntakePortal::query()->create([
-            'type' => 'real_estate',
-            'title' => 'دفتر نمونه',
-            'locale' => 'fa',
-            'is_active' => true,
-        ]);
+        $portal = $this->portal('دفتر نمونه');
 
         $this->get(route('public.real-estate.show', $portal))
             ->assertOk()
             ->assertSee('دفتر نمونه');
+    }
+
+    private function portal(string $title): PublicIntakePortal
+    {
+        return PublicIntakePortal::query()->create([
+            'type' => 'real_estate',
+            'title' => $title,
+            'locale' => 'fa',
+            'is_active' => true,
+        ]);
     }
 }

@@ -70,7 +70,7 @@ class PublicRealEstateIntakeV2Test extends TestCase
             'role' => 'viewer',
         ]);
 
-        app(FeatureSurfaceGrantService::class)->sync($user, ['real-estate'], null);
+        app(FeatureSurfaceGrantService::class)->sync($user, ['business'], null);
 
         PublicRealEstateCase::query()->create([
             'public_intake_portal_id' => $portal->getKey(),

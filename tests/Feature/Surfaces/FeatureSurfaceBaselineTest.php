@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Surfaces\FeatureSurfaceGrantService;
 use App\Services\Surfaces\FeatureSurfaceRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class FeatureSurfaceBaselineTest extends TestCase
@@ -20,7 +21,7 @@ class FeatureSurfaceBaselineTest extends TestCase
             ->dependencyClosure(['real-estate']);
 
         $this->assertEqualsCanonicalizing(
-            ['profile', 'real-estate'],
+            ['profile', 'business', 'real-estate'],
             $closure
         );
     }
@@ -58,27 +59,15 @@ class FeatureSurfaceBaselineTest extends TestCase
         );
     }
 
-    public function test_real_estate_surface_can_be_granted_independently(): void
+    public function test_real_estate_compatibility_surface_cannot_be_granted_directly(): void
     {
         $subject = User::factory()->create();
         $actor = User::factory()->create();
 
-        $resolved = app(FeatureSurfaceGrantService::class)
+        $this->expectException(InvalidArgumentException::class);
+
+        app(FeatureSurfaceGrantService::class)
             ->sync($subject, ['real-estate'], $actor);
-
-        $this->assertEqualsCanonicalizing(
-            ['profile', 'real-estate'],
-            $resolved
-        );
-
-        $this->assertDatabaseHas('feature_surface_grants', [
-            'user_id' => $subject->getKey(),
-            'surface_key' => 'real-estate',
-        ]);
-        $this->assertDatabaseMissing('feature_surface_grants', [
-            'user_id' => $subject->getKey(),
-            'surface_key' => 'business',
-        ]);
     }
 
     public function test_unpublished_profile_is_blocked_by_direct_url(): void
@@ -206,9 +195,9 @@ class FeatureSurfaceBaselineTest extends TestCase
             'publication-control',
             $registry->routeSurface('platform.publication.index')
         );
-        $this->assertSame('real-estate', $registry->routeSurface('workspace.real-estate.index'));
-        $this->assertSame('real-estate', $registry->routeSurface('office.real-estate.index'));
-        $this->assertSame('real-estate', $registry->routeSurface('office.real-estate.show'));
-        $this->assertSame('real-estate', $registry->routeSurface('office.real-estate.media.stream'));
+        $this->assertSame('business', $registry->routeSurface('workspace.real-estate.index'));
+        $this->assertSame('business', $registry->routeSurface('office.real-estate.index'));
+        $this->assertSame('business', $registry->routeSurface('office.real-estate.show'));
+        $this->assertSame('business', $registry->routeSurface('office.real-estate.media.stream'));
     }
 }
