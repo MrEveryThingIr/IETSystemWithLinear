@@ -134,10 +134,12 @@
 
     @if($canOperate)
     <section class="stats">
-        <div class="stat"><span>{{ __('business.show.stats.members') }}</span><strong>{{ $business->memberships->count() }}</strong></div>
-        <div class="stat"><span>{{ __('business.show.stats.clients') }}</span><strong>{{ $business->businessContacts->count() }}</strong></div>
-        <div class="stat"><span>{{ __('business.show.stats.listings') }}</span><strong>{{ $business->listings->count() }}</strong></div>
-        <div class="stat"><span>{{ __('business.show.stats.routines') }}</span><strong>{{ $routineCount }}</strong></div>
+        <a class="stat" style="text-decoration:none;color:inherit" href="#team-settings"><span>{{ __('business.show.stats.members') }}</span><strong>{{ $business->memberships->count() }}</strong></a>
+        <a class="stat" style="text-decoration:none;color:inherit" href="{{ route('businesses.clients.index', $business) }}"><span>{{ __('business.show.stats.clients') }}</span><strong>{{ $business->businessContacts->count() }}</strong></a>
+        <a class="stat" style="text-decoration:none;color:inherit" href="{{ route('businesses.catalog.index', $business) }}"><span>{{ __('business.show.stats.listings') }}</span><strong>{{ $business->listings->count() }}</strong></a>
+        @if($canUsePlanner)
+            <a class="stat" style="text-decoration:none;color:inherit" href="{{ route('planner.index', ['context' => $businessContext->uuid]) }}"><span>{{ __('business.show.stats.routines') }}</span><strong>{{ $routineCount }}</strong></a>
+        @endif
     </section>
 
     <section class="quick">
