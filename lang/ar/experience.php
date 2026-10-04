@@ -1,6 +1,28 @@
 <?php
 
 return [
+    'surfaces' => [
+        'notifications' => 'الإشعارات',
+        'profile' => 'الملف الشخصي',
+        'market' => 'الاحتياجات والعروض والخدمات',
+        'money' => 'المال الشخصي',
+        'deals' => 'الصفقات',
+        'business' => 'الأنشطة التجارية',
+        'real-estate' => 'العقارات',
+        'planner' => 'المخطط',
+        'accounting' => 'المحاسبة',
+        'exchange' => 'صرافة IET',
+        'vault' => 'الخزنة الخاصة',
+        'content' => 'مكتبة المحتوى',
+        'groups' => 'المجموعات',
+        'ai' => 'مختبر محادثة الذكاء الاصطناعي',
+        'manual' => 'دليل النظام',
+        'system-map' => 'خريطة النظام',
+        'access-invitations' => 'الدعوات والوصول',
+        'development-origins' => 'أصول التطوير',
+        'actors' => 'الجهات الفاعلة',
+        'publication-control' => 'التحكم في النشر',
+    ],
     'navigation' => [
         'needs_offers' => 'الاحتياجات والعروض',
         'work' => 'العمل',
