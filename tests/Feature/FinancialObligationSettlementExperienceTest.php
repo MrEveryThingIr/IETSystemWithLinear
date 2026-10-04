@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Commitments\CreateCommitment;
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\CreateDirectContract;
+use App\Actions\Financial\RecognizeFulfillmentFinancialObligation;
 use App\Actions\Fulfillments\ReviewFulfillment;
 use App\Actions\Fulfillments\SubmitFulfillment;
 use App\CommitmentKind;
@@ -132,6 +133,59 @@ class FinancialObligationSettlementExperienceTest extends TestCase
         }
     }
 
+    public function test_near_now_payment_time_is_clamped_instead_of_failing_as_future(): void
+    {
+        CarbonImmutable::setTestNow('2026-10-04 05:00:30 UTC');
+
+        try {
+            $alice = Actor::factory()->create();
+            $bob = Actor::factory()->create();
+            $alice->user->forceFill(['timezone' => 'UTC'])->save();
+
+            $obligation = $this->recognizedObligation($alice, $bob);
+
+            Livewire::actingAs($alice->user)
+                ->test(FinancialShow::class, ['obligation' => $obligation])
+                ->set('settlementAmount', '1500000')
+                ->set('settlementPaidAt', '2026-10-04T05:01')
+                ->call('proposeSettlement')
+                ->assertHasNoErrors();
+
+            $settlement = Settlement::query()->sole();
+
+            $this->assertSame(
+                '2026-10-04 05:00:30',
+                $settlement->paid_at->utc()->format('Y-m-d H:i:s'),
+            );
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
+    public function test_genuinely_future_payment_time_stays_on_form_as_validation_error(): void
+    {
+        CarbonImmutable::setTestNow('2026-10-04 05:00:00 UTC');
+
+        try {
+            $alice = Actor::factory()->create();
+            $bob = Actor::factory()->create();
+            $alice->user->forceFill(['timezone' => 'UTC'])->save();
+
+            $obligation = $this->recognizedObligation($alice, $bob);
+
+            Livewire::actingAs($alice->user)
+                ->test(FinancialShow::class, ['obligation' => $obligation])
+                ->set('settlementAmount', '1500000')
+                ->set('settlementPaidAt', '2026-10-04T05:10')
+                ->call('proposeSettlement')
+                ->assertHasErrors(['settlementPaidAt']);
+
+            $this->assertDatabaseCount('settlements', 0);
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
     public function test_contract_party_outside_bilateral_obligation_cannot_see_financial_details(): void
     {
         $alice = Actor::factory()->create();
@@ -201,6 +255,26 @@ class FinancialObligationSettlementExperienceTest extends TestCase
 
         $this->assertFalse($carolTimeline->contains(fn ($entry): bool => $entry->kind === 'financial'));
         $this->assertTrue($aliceTimeline->contains(fn ($entry): bool => $entry->kind === 'financial'));
+    }
+
+    private function recognizedObligation(Actor $alice, Actor $bob): FinancialObligation
+    {
+        [, $commitment] = $this->activePaidWorkCommitment($alice, $bob);
+
+        $fulfillment = app(SubmitFulfillment::class)->execute($commitment, $bob->user, 1);
+
+        app(ReviewFulfillment::class)->execute(
+            $fulfillment,
+            $alice->user,
+            FulfillmentReviewDecision::Accepted,
+        );
+
+        return app(RecognizeFulfillmentFinancialObligation::class)->execute(
+            $fulfillment->fresh(),
+            $alice->user,
+            'IRR',
+            1_500_000,
+        );
     }
 
     /**

@@ -46,6 +46,7 @@ return [
         'help' => 'Record a payment claim, then the other party must explicitly confirm or reject it. Confirmation is payment truth; Accounting posting remains a separate per-party action.',
         'amount' => 'Payment amount',
         'paid_at' => 'Paid at',
+        'paid_at_timezone' => 'Times are interpreted in your profile timezone: :timezone.',
         'method' => 'Method',
         'reference' => 'Reference',
         'note' => 'Note',
@@ -119,6 +120,7 @@ return [
     ],
     'validation' => [
         'amount' => 'Enter a positive amount using this monetary unit’s precision.',
+        'paid_at_future' => 'Payment time cannot be in the future. Check the time using your profile timezone (:timezone).',
     ],
     'boundary' => 'Earned, owed, paid, settled and accounting-posted are separate facts. None is inferred from Conversation text, Planner completion, or an editable “balance”.',
 ];

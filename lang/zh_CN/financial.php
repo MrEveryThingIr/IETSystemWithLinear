@@ -46,6 +46,7 @@ return [
         'help' => '先记录付款声明，再由对方明确确认或拒绝。只有确认后付款才成为正式事实；个人记账仍由每一方单独完成。',
         'amount' => '付款金额',
         'paid_at' => '付款时间',
+        'paid_at_timezone' => '时间按你的个人资料时区解释：:timezone。',
         'method' => '付款方式',
         'reference' => '付款参考号',
         'note' => '备注',
@@ -117,6 +118,9 @@ return [
         'settlement_rejected' => '付款声明已明确拒绝。',
         'settlement_accounting_posted' => '您这一侧的已确认结算已记录到个人账本。',
     ],
-    'validation' => ['amount' => '请输入与该货币单位精度一致的正数金额。'],
+    'validation' => [
+        'amount' => '请输入与该货币单位精度一致的正数金额。',
+        'paid_at_future' => '付款时间不能是未来时间。请按个人资料时区（:timezone）检查时间。',
+    ],
     'boundary' => '金额确认、债务、付款、结算和个人记账是不同事实。系统不会从对话、计划完成或可编辑余额中推断这些事实。',
 ];
