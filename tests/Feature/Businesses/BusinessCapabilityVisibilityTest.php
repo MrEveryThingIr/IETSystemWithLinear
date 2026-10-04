@@ -62,6 +62,8 @@ class BusinessCapabilityVisibilityTest extends TestCase
             ->assertOk();
 
         $response
+            ->assertSee(route('businesses.clients.index', $business), false)
+            ->assertSee(route('businesses.catalog.index', $business), false)
             ->assertDontSee(route('planner.index'), false)
             ->assertDontSee(route('deals.index'), false)
             ->assertDontSee(route('money.index'), false)
