@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'business' => 'Business',
+    'default_intro' => 'Welcome. Explore this business and its public offerings.',
+    'about' => 'About us',
+    'contact' => 'Contact',
+    'contact_value' => 'Contact',
+    'location' => 'Location',
+    'catalog' => 'Catalog',
+    'offerings' => 'Our offerings',
+    'view_offerings' => 'View offerings',
+    'view_details' => 'View details',
+    'no_offerings' => 'No public offerings have been published yet.',
+    'untitled' => 'Untitled',
+    'pricing' => 'Pricing',
+    'footer' => 'Official public website of this business.',
+    'types' => [
+        'good' => 'Product',
+        'service' => 'Service',
+        'property' => 'Property',
+        'other' => 'Offering',
+    ],
+    'property' => [
+        'transaction' => 'Transaction',
+        'class' => 'Property type',
+        'area' => 'Built area',
+        'bedrooms' => 'Bedrooms',
+    ],
+    'real_estate' => [
+        'title' => 'Property intake',
+        'heading' => 'Have a property to offer, or are you looking for one?',
+        'help' => 'Send your property or request directly to this office. Your exact address and contact details remain private to authorized office staff.',
+        'submit' => 'Submit property / request',
+    ],
+];
