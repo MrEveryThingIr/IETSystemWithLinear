@@ -151,6 +151,11 @@ return [
             'apply' => 'تطبيق',
             'clear' => 'مسح',
         ],
+        'messages' => [
+            'status_saved' => 'تم حفظ حالة الملف.',
+            'media_added' => 'تمت إضافة وسائط جديدة إلى الملف.',
+            'media_deleted' => 'تمت إزالة الوسائط.',
+        ],
         'statuses' => [
             'new' => 'جديد',
             'contacted' => 'تم التواصل',
