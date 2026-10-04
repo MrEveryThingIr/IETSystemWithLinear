@@ -86,6 +86,7 @@ class BusinessCapabilityVisibilityTest extends TestCase
             ->assertSee(route('money.index'), false)
             ->assertSee(__('business.show.money.title'));
     }
+
     public function test_superadmin_can_see_and_manage_any_business_without_becoming_a_business_member(): void
     {
         $owner = User::factory()->create();

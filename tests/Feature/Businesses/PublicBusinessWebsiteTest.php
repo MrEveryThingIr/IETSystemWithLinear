@@ -3,9 +3,9 @@
 namespace Tests\Feature\Businesses;
 
 use App\Models\User;
-use App\Services\Surfaces\FeatureSurfaceGrantService;
 use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessService;
+use App\Services\Surfaces\FeatureSurfaceGrantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -141,6 +141,7 @@ class PublicBusinessWebsiteTest extends TestCase
         $this->get(route('public.businesses.listings.show', ['business' => $business->slug, 'listing' => $private->uuid]))
             ->assertNotFound();
     }
+
     public function test_every_public_business_exposes_its_standalone_site_prominently_from_the_operator_workspace(): void
     {
         $owner = User::factory()->create(['locale' => 'en']);
