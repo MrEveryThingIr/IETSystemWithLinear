@@ -87,6 +87,7 @@ return [
     'submit' => 'Submit case',
     'submission_hint' => 'This page is only for submitting a case. Visitors never see the office case list.',
     'media' => [
+        'upload_warning' => 'The case was saved, but some media files could not be uploaded completely.',
         'help' => 'Choose photos/videos or record an audio/video explanation here.',
         'images' => 'Image gallery',
         'images_help' => 'Up to 20 images; up to 12 MB each',
