@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'name' => 'Everything',
     'local_motto' => 'Everything for Everyone',
     'english_motto' => 'Everything for Everyone',
     'for_everyone' => 'for Everyone',
