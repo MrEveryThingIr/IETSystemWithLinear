@@ -101,7 +101,7 @@ rollbacks.
 From the extracted release directory:
 
 ```bash
-php artisan optimize:clear
+CACHE_STORE=array php artisan optimize:clear
 php artisan key:generate --force
 php artisan migrate --force
 php artisan iet:bootstrap-superadmin --username=MrEveryThing --email=YOUR_REAL_EMAIL
@@ -213,7 +213,7 @@ Before every later deployment:
 3. upload/extract the new package into a new release directory;
 4. link the new release's `.env` to the persistent `shared/.env`;
 5. link the new release's `storage` to the persistent `shared/storage`;
-6. run `php artisan optimize:clear`;
+6. run `php artisan optimize:clear` (the database already exists on upgrades);
 7. run `php artisan migrate --force`;
 8. run `php artisan optimize`;
 9. switch `current` (or the domain document root) to the new release;
