@@ -114,5 +114,4 @@ class BusinessCapabilityVisibilityTest extends TestCase
             ->assertSee('Independent Owner Business')
             ->assertSee(__('business.show.profile.save'));
     }
-
 }

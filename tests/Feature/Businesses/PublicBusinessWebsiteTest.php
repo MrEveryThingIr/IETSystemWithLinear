@@ -260,5 +260,4 @@ class PublicBusinessWebsiteTest extends TestCase
             ->assertOk()
             ->assertSee('مشاور املاک مهوری');
     }
-
 }
