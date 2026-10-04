@@ -28,6 +28,7 @@ class FreshStartBootstrapTest extends TestCase
         $this->assertSame('active', $user->status);
         $this->assertNotNull($user->email_verified_at);
         $this->assertNotNull($user->actor);
+        $this->assertSame('MrEveryThing', $user->actor->profile?->display_name);
         $this->assertTrue(PlatformAdmin::check($user));
 
         $this->assertDatabaseCount('users', 1);

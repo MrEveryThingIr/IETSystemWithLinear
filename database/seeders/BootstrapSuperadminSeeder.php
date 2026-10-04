@@ -35,7 +35,10 @@ class BootstrapSuperadminSeeder extends Seeder
             'password' => Hash::make($password),
         ])->save();
 
-        $user->actor()->firstOrCreate([]);
+        $actor = $user->actor()->firstOrCreate([]);
+        $actor->profile()->firstOrCreate([], [
+            'display_name' => $username,
+        ]);
 
         if (! $user->platformAccessGrants()
             ->active()
