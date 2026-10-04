@@ -86,45 +86,33 @@ class BusinessController extends Controller
 
         $business->load(['owner.user']);
 
-        if ($canOperate) {
-            $context = $contexts->execute($business);
+        $context = $contexts->execute($business);
 
-            $business->load([
-                'contactPoints',
-                'addresses',
-                'defaultMonetaryUnit',
-                'businessContacts.contactPoints',
-                'categories',
-                'listings.currentVersion',
-                'publicIntakePortals',
-                'contextBinding.context',
-                'memberships' => fn ($q) => $q
-                    ->with(['actor.user', 'professions.parent'])
-                    ->where('status', 'active')
-                    ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
-                    ->orderBy('id'),
-            ]);
+        $business->load([
+            'contactPoints',
+            'addresses',
+            'defaultMonetaryUnit',
+            'businessContacts.contactPoints',
+            'categories',
+            'listings.currentVersion',
+            'publicIntakePortals',
+            'contextBinding.context',
+            'memberships' => fn ($q) => $q
+                ->with(['actor.user', 'professions.parent'])
+                ->where('status', 'active')
+                ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
+                ->orderBy('id'),
+        ]);
 
-            $professions = Profession::query()
-                ->with('parent')
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get();
+        $professions = Profession::query()
+            ->with('parent')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
-            $routineCount = $context->plans()->count();
-            $economyProjection = $economy->forBusiness($business);
-        } else {
-            $context = null;
-            $routineCount = 0;
-            $economyProjection = null;
-            $professions = collect();
-
-            $business->load([
-                'contactPoints' => fn ($query) => $query->where('visibility', 'public'),
-                'addresses' => fn ($query) => $query->where('visibility', 'public'),
-            ]);
-        }
+        $routineCount = $context->plans()->count();
+        $economyProjection = $economy->forBusiness($business);
 
         $canManage = BusinessAccess::canManage($request->user(), $business);
         $canUsePlanner = $surfaceAccess->allows($request->user(), 'planner');
@@ -135,11 +123,11 @@ class BusinessController extends Controller
 
         $businessSectionLinks = array_filter([
             'overview' => route('businesses.show', $business),
-            'clients' => $canOperate ? route('businesses.clients.index', $business) : null,
-            'catalog' => $canOperate ? route('businesses.catalog.index', $business) : null,
-            'work' => $canUsePlanner && $context ? route('planner.index', ['context' => $context->uuid]) : null,
-            'deals' => $canOperate && $canUseDeals ? route('deals.index') : null,
-            'money' => $canOperate && $canUseMoney ? route('money.index') : null,
+            'clients' => route('businesses.clients.index', $business),
+            'catalog' => route('businesses.catalog.index', $business),
+            'work' => $canUsePlanner ? route('planner.index', ['context' => $context->uuid]) : null,
+            'deals' => $canUseDeals ? route('deals.index') : null,
+            'money' => $canUseMoney ? route('money.index') : null,
             'manage' => $canManage ? route('businesses.show', $business).'#team-settings' : null,
         ]);
 
@@ -153,7 +141,7 @@ class BusinessController extends Controller
             'routineCount' => $routineCount,
             'economyProjection' => $economyProjection,
             'professions' => $professions,
-            'externalMoneyGateways' => $canOperate ? $externalGateways->available() : [],
+            'externalMoneyGateways' => $externalGateways->available(),
             'canOperate' => $canOperate,
             'canManage' => $canManage,
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
