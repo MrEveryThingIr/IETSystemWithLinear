@@ -91,6 +91,34 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
         }
     }
 
+    public function test_real_estate_manager_cannot_adopt_into_unpublished_business(): void
+    {
+        $user = User::factory()->create();
+        $user->actor()->create();
+
+        $portal = PublicIntakePortal::query()->create([
+            'type' => 'real_estate',
+            'title' => 'دفتر نمونه',
+            'locale' => 'fa',
+            'is_active' => true,
+        ]);
+
+        PublicIntakePortalGrant::query()->create([
+            'public_intake_portal_id' => $portal->getKey(),
+            'user_id' => $user->getKey(),
+            'role' => 'manager',
+        ]);
+
+        app(FeatureSurfaceGrantService::class)
+            ->sync($user, ['real-estate'], null);
+
+        $this->actingAs($user)
+            ->post(route('office.real-estate.adopt-business', ['portal' => $portal->uuid]))
+            ->assertForbidden();
+
+        $this->assertNull($portal->fresh()->business_id);
+    }
+
     public function test_publication_control_is_hidden_and_forbidden_for_ordinary_users(): void
     {
         $user = User::factory()->create();
