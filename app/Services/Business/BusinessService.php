@@ -25,8 +25,7 @@ class BusinessService
         Actor $owner,
         array $data,
         bool $bootstrapVertical = true,
-    ): Business
-    {
+    ): Business {
         $iet = $this->monetaryUnits->execute('IET');
         $data['default_monetary_unit_id'] ??= $iet->id;
         $data['settings'] = array_replace_recursive([
