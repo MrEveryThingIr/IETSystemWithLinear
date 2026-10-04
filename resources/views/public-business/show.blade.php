@@ -63,7 +63,7 @@
         <div class="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             @forelse($business->listings as $listing)
                 @php($version = $listing->publishedVersion)
-                <a href="{{ route('public.businesses.listings.show', [$business, $listing]) }}" class="group rounded-3xl border border-slate-200 bg-white p-6 text-inherit no-underline shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                <a href="{{ route('public.businesses.listings.show', ['business' => $business->slug, 'listing' => $listing->uuid]) }}" class="group rounded-3xl border border-slate-200 bg-white p-6 text-inherit no-underline shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
                     <div class="flex flex-wrap gap-2">
                         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">{{ __('public_business.types.'.$listing->listing_type) }}</span>
                         @if($listing->category)<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{{ $listing->category->name }}</span>@endif
