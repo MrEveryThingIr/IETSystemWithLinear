@@ -42,13 +42,13 @@
                                     >
                                     <span>
                                         <strong class="text-base">
-                                            {{ __("experience.surfaces.{$surface['key']}") }}
+                                            {{ __('experience.surfaces.'.$surface['key']) }}
                                         </strong>
 
                                         @if($surface['dependencies'])
                                             <span class="mt-2 block text-xs font-semibold text-violet-600">
                                                 {{ __('publication.also_reveals') }}:
-                                                {{ collect($surface['dependencies'])->map(fn ($dependency) => __("experience.surfaces.{$dependency}"))->implode(' · ') }}
+                                                {{ collect($surface['dependencies'])->map(fn ($dependency) => __('experience.surfaces.'.$dependency))->implode(' · ') }}
                                             </span>
                                         @endif
                                     </span>
