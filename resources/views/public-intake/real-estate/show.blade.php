@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex,nofollow,noarchive">
     <title>{{ $business?->name ?? $portal->title }} — {{ $portal->welcome_heading ?: __('public_business.real_estate.heading') }}</title>
     @vite('resources/css/app.css')
+    @fluxAppearance
     <style>
         body{background:#f1f5f9;color:#0f172a;font-family:inherit}
         .wrap{max-width:900px;margin:auto;padding:28px 14px}
@@ -208,5 +209,6 @@
         </form>
     </section>
 </main>
+@fluxScripts
 </body>
 </html>
