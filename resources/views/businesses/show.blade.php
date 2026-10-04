@@ -41,12 +41,12 @@
             <div>
                 <div class="chip">{{ $kindLabels[$business->kind] ?? $business->kind }}</div>
                 <h1>{{ $business->name }}</h1>
-                <p>{{ $business->short_intro ?: 'معرفی کوتاه این کسب‌وکار هنوز کامل نشده است.' }}</p>
+                <p>{{ $business->short_intro ?: __('business.show.missing_intro') }}</p>
             </div>
             <div style="text-align:left">
-                <div class="chip">کد {{ $business->code }}</div>
+                <div class="chip">{{ __('business.show.code') }} {{ $business->code }}</div>
                 @if($canOperate)
-                    <div style="margin-top:8px;font-size:13px;opacity:.9">مالک: {{ $business->owner->user?->username ?? $business->owner->user?->email ?? ('Actor #'.$business->owner->getKey()) }}</div>
+                    <div style="margin-top:8px;font-size:13px;opacity:.9">{{ __('business.show.owner') }}: {{ $business->owner->user?->username ?? $business->owner->user?->email ?? ('Actor #'.$business->owner->getKey()) }}</div>
                 @endif
             </div>
         </div>
@@ -134,29 +134,29 @@
 
     @if($canOperate)
     <section class="stats">
-        <div class="stat"><span>اعضای فعال</span><strong>{{ $business->memberships->count() }}</strong></div>
-        <div class="stat"><span>مشتری / مخاطب</span><strong>{{ $business->businessContacts->count() }}</strong></div>
-        <div class="stat"><span>کالا / خدمت / ملک</span><strong>{{ $business->listings->count() }}</strong></div>
-        <div class="stat"><span>برنامه‌های کاری</span><strong>{{ $routineCount }}</strong></div>
+        <div class="stat"><span>{{ __('business.show.stats.members') }}</span><strong>{{ $business->memberships->count() }}</strong></div>
+        <div class="stat"><span>{{ __('business.show.stats.clients') }}</span><strong>{{ $business->businessContacts->count() }}</strong></div>
+        <div class="stat"><span>{{ __('business.show.stats.listings') }}</span><strong>{{ $business->listings->count() }}</strong></div>
+        <div class="stat"><span>{{ __('business.show.stats.routines') }}</span><strong>{{ $routineCount }}</strong></div>
     </section>
 
     <section class="quick">
         <a class="quick-card q1" style="text-decoration:none" href="{{ route('businesses.clients.index',$business) }}">
-            <strong>👤 مشتریان و مخاطبان</strong>
-            <span>CRM ساده برای افراد واقعی، حتی بدون حساب IET</span>
+            <strong>👤 {{ __('business.show.quick.clients') }}</strong>
+            <span>{{ __('business.show.quick.clients_help') }}</span>
         </a>
         <a class="quick-card q2" style="text-decoration:none" href="{{ route('businesses.catalog.index',$business) }}">
-            <strong>🧰 کاتالوگ و ارائه‌ها</strong>
-            <span>کالا، خدمت، ملک و قیمت‌ها در یک زیرساخت مشترک</span>
+            <strong>🧰 {{ __('business.show.quick.catalog') }}</strong>
+            <span>{{ __('business.show.quick.catalog_help') }}</span>
         </a>
         @if($canUsePlanner)
             <a class="quick-card q3" style="text-decoration:none" href="{{ route('planner.index',['context'=>$businessContext->uuid]) }}">
-                <strong>🗓 برنامه‌های کسب‌وکار</strong>
-                <span>روتین‌ها، تقویم، اجرا و هزینه‌های برنامه‌ریزی‌شده</span>
+                <strong>🗓 {{ __('business.show.quick.planner') }}</strong>
+                <span>{{ __('business.show.quick.planner_help') }}</span>
             </a>
             <a class="quick-card q1" style="text-decoration:none" href="{{ route('planner.create',['context'=>$businessContext->uuid]) }}">
-                <strong>＋ برنامه کاری جدید</strong>
-                <span>برنامه مستقیماً در Context همین کسب‌وکار ساخته می‌شود</span>
+                <strong>＋ {{ __('business.show.quick.new_plan') }}</strong>
+                <span>{{ __('business.show.quick.new_plan_help') }}</span>
             </a>
         @endif
     </section>
@@ -166,41 +166,41 @@
         <section class="panel">
             <div class="head">
                 <div>
-                    <h2>💰 تسویه و جریان مالی کسب‌وکار</h2>
-                    <p>روال‌های داخلی بر پایه واحد تسویه کسب‌وکار محاسبه می‌شوند؛ اتصال به پول واقعی فقط از طریق درگاه‌های تأییدشده انجام خواهد شد.</p>
+                    <h2>💰 {{ __('business.show.money.title') }}</h2>
+                    <p>{{ __('business.show.money.help') }}</p>
                 </div>
             </div>
             <div class="body">
                 <div class="grid3">
                     <div class="item">
-                        <strong>موقعیت اقتصادی این کسب‌وکار</strong>
+                        <strong>{{ __('business.show.money.position') }}</strong>
                         <div style="font-size:26px;font-weight:950;margin-top:6px">
                             {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_net_minor'] ?? 0), 0) }} IET
                         </div>
                         <div class="muted" style="margin-top:5px">
-                            طلب باز {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
-                            · بدهی باز {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
+                            {{ __('business.show.money.receivable') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
+                            · {{ __('business.show.money.payable') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
                         </div>
                         <div class="muted" style="margin-top:5px">
-                            درآمد تسویه‌شده {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_revenue_minor'] ?? 0), 0) }}
-                            · هزینه تسویه‌شده {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_expense_minor'] ?? 0), 0) }}
-                            · خالص تحقق‌یافته {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_profit_minor'] ?? 0), 0) }} IET
+                            {{ __('business.show.money.revenue') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_revenue_minor'] ?? 0), 0) }}
+                            · {{ __('business.show.money.expense') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_expense_minor'] ?? 0), 0) }}
+                            · {{ __('business.show.money.profit') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_profit_minor'] ?? 0), 0) }} IET
                         </div>
                         <div class="badges" style="margin-top:8px">
-                            <span class="badge">{{ $economyProjection['market_intent_count'] ?? 0 }} بازار</span>
-                            <span class="badge">{{ $economyProjection['deal_count'] ?? 0 }} معامله</span>
-                            <span class="badge">{{ $economyProjection['contract_count'] ?? 0 }} قرارداد</span>
+                            <span class="badge">{{ $economyProjection['market_intent_count'] ?? 0 }} {{ __('business.show.money.market') }}</span>
+                            <span class="badge">{{ $economyProjection['deal_count'] ?? 0 }} {{ __('business.show.money.deals') }}</span>
+                            <span class="badge">{{ $economyProjection['contract_count'] ?? 0 }} {{ __('business.show.money.contracts') }}</span>
                         </div>
                     </div>
                     <div class="item">
-                        <strong>واحد تسویه داخلی</strong>
+                        <strong>{{ __('business.show.money.unit') }}</strong>
                         <div style="font-size:26px;font-weight:950;margin-top:6px">{{ $business->defaultMonetaryUnit?->code ?? 'IET' }}</div>
-                        <div class="muted" style="margin-top:5px">تعهدات و تسویه‌های داخلی این کسب‌وکار بر پایه واقعیت‌های مالی اصلی محاسبه می‌شوند.</div>
+                        <div class="muted" style="margin-top:5px">{{ __('business.show.money.unit_help') }}</div>
                     </div>
                     <div class="item">
-                        <strong>واریز / برداشت پول واقعی</strong>
+                        <strong>{{ __('business.show.money.external') }}</strong>
                         <div class="badge" style="margin-top:9px">placeholder</div>
-                        <div class="muted" style="margin-top:5px">هیچ بانک یا پرداخت‌یار واقعی در این مرحله متصل نیست.</div>
+                        <div class="muted" style="margin-top:5px">{{ __('business.show.money.external_help') }}</div>
                     </div>
                 </div>
                 <div class="badges" style="margin-top:12px">
@@ -216,8 +216,8 @@
         <section class="panel">
             <div class="head">
                 <div>
-                    <h2>🏠 کانال تخصصی املاک</h2>
-                    <p>املاک یک قابلیت تخصصی همین کسب‌وکار است؛ پرونده‌های تأییدشده به کاتالوگ عمومی کسب‌وکار ارتقا پیدا می‌کنند.</p>
+                    <h2>🏠 {{ __('business.show.real_estate.title') }}</h2>
+                    <p>{{ __('business.show.real_estate.help') }}</p>
                 </div>
             </div>
             <div class="body">
@@ -225,12 +225,12 @@
                     <div class="item row">
                         <div>
                             <strong>{{ $portal->title }}</strong>
-                            <div class="muted" style="margin-top:5px">فرم مراجعه‌کننده و دفتر پیگیری موجود حفظ شده‌اند.</div>
+                            <div class="muted" style="margin-top:5px">{{ __('business.show.real_estate.preserved') }}</div>
                         </div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap">
-                            <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">پرونده‌های دفتر</a>
+                            <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ __('business.show.real_estate.cases') }}</a>
                             @if($business->visibility === 'public')
-                                <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}">وب‌سایت عمومی</a>
+                                <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}">{{ __('business.show.real_estate.website') }}</a>
                             @endif
                         </div>
                     </div>
@@ -240,40 +240,40 @@
     @endif
 
     <section id="business-profile" class="panel">
-        <div class="head"><div><h2>🏪 مشخصات کسب‌وکار</h2><p>اطلاعات پایه و سطح نمایش</p></div></div>
+        <div class="head"><div><h2>🏪 {{ __('business.show.profile.title') }}</h2><p>{{ __('business.show.profile.help') }}</p></div></div>
         <div class="body">
             @if($canManage)
                 <form method="POST" action="{{ route('businesses.update',$business) }}">
                     @csrf @method('PUT')
                     <div class="grid3">
-                        <label><span>نام</span><input name="name" value="{{ $business->name }}" required></label>
-                        <label><span>نوع</span><select name="kind">@foreach($kindLabels as $v=>$label)<option value="{{ $v }}" @selected($business->kind===$v)>{{ $label }}</option>@endforeach</select></label>
-                        <label><span>نمایش</span><select name="visibility">@foreach($visibilityLabels as $v=>$label)<option value="{{ $v }}" @selected($business->visibility===$v)>{{ $label }}</option>@endforeach</select></label>
-                        <label><span>نام رسمی</span><input name="legal_name" value="{{ $business->legal_name }}"></label>
-                        <label><span>سال تأسیس</span><input type="number" name="founded_year" value="{{ $business->founded_year }}"></label>
-                        <label><span>وضعیت</span><select name="status"><option value="active" @selected($business->status==='active')>فعال</option><option value="paused" @selected($business->status==='paused')>موقتاً متوقف</option></select></label>
+                        <label><span>{{ __('business.show.profile.name') }}</span><input name="name" value="{{ $business->name }}" required></label>
+                        <label><span>{{ __('business.show.profile.type') }}</span><select name="kind">@foreach($kindLabels as $v=>$label)<option value="{{ $v }}" @selected($business->kind===$v)>{{ $label }}</option>@endforeach</select></label>
+                        <label><span>{{ __('business.show.profile.visibility') }}</span><select name="visibility">@foreach($visibilityLabels as $v=>$label)<option value="{{ $v }}" @selected($business->visibility===$v)>{{ $label }}</option>@endforeach</select></label>
+                        <label><span>{{ __('business.show.profile.legal_name') }}</span><input name="legal_name" value="{{ $business->legal_name }}"></label>
+                        <label><span>{{ __('business.show.profile.founded_year') }}</span><input type="number" name="founded_year" value="{{ $business->founded_year }}"></label>
+                        <label><span>{{ __('business.show.profile.status') }}</span><select name="status"><option value="active" @selected($business->status==='active')>{{ __('business.show.profile.active') }}</option><option value="paused" @selected($business->status==='paused')>{{ __('business.show.profile.paused') }}</option></select></label>
                     </div>
-                    <label style="display:block;margin-top:12px"><span>معرفی کوتاه</span><input name="short_intro" value="{{ $business->short_intro }}"></label>
-                    <label style="display:block;margin-top:12px"><span>توضیحات</span><textarea name="description" rows="4">{{ $business->description }}</textarea></label>
-                    <button class="btn primary" style="margin-top:13px">ذخیره مشخصات</button>
+                    <label style="display:block;margin-top:12px"><span>{{ __('business.show.profile.short_intro') }}</span><input name="short_intro" value="{{ $business->short_intro }}"></label>
+                    <label style="display:block;margin-top:12px"><span>{{ __('business.show.profile.description') }}</span><textarea name="description" rows="4">{{ $business->description }}</textarea></label>
+                    <button class="btn primary" style="margin-top:13px">{{ __('business.show.profile.save') }}</button>
                 </form>
             @else
-                <p>{{ $business->description ?: 'توضیح بیشتری ثبت نشده است.' }}</p>
+                <p>{{ $business->description ?: __('business.show.profile.empty_description') }}</p>
             @endif
         </div>
     </section>
 
     <section class="panel">
-        <div class="head"><div><h2>📞 راه‌های ارتباطی کسب‌وکار</h2><p>اطلاعات تماس کسب‌وکار از اطلاعات شخصی اعضا جداست.</p></div></div>
+        <div class="head"><div><h2>📞 {{ __('business.show.contacts.title') }}</h2><p>{{ __('business.show.contacts.help') }}</p></div></div>
         <div class="body">
             <div class="list">
                 @forelse($business->contactPoints as $point)
                     <div class="item row">
                         <div><strong style="font-size:17px">{{ $point->label ?: $point->kind }}</strong><div dir="ltr" style="font-weight:900;margin-top:4px">{{ $point->value }}</div><span class="badge">{{ $point->visibility }}</span></div>
-                        @if($canManage)<form method="POST" action="{{ route('businesses.contacts.destroy',[$business,$point]) }}">@csrf @method('DELETE')<button class="btn danger">حذف</button></form>@endif
+                        @if($canManage)<form method="POST" action="{{ route('businesses.contacts.destroy',[$business,$point]) }}">@csrf @method('DELETE')<button class="btn danger">{{ __('business.show.contacts.delete') }}</button></form>@endif
                     </div>
                 @empty
-                    <div style="color:#667085">هنوز شماره یا ایمیل کسب‌وکار ثبت نشده است.</div>
+                    <div style="color:#667085">{{ __('business.show.contacts.empty') }}</div>
                 @endforelse
             </div>
 
@@ -281,29 +281,29 @@
                 <form class="section-form" method="POST" action="{{ route('businesses.contacts.store',$business) }}">
                     @csrf
                     <div class="grid3">
-                        <label><span>نوع</span><select name="kind"><option value="mobile">موبایل</option><option value="phone">تلفن</option><option value="email">ایمیل</option><option value="website">وب‌سایت</option><option value="whatsapp">واتساپ</option></select></label>
-                        <label><span>عنوان</span><input name="label" placeholder="مثلاً تلفن دفتر"></label>
-                        <label><span>نمایش</span><select name="visibility"><option value="private">خصوصی</option><option value="members">اعضا</option><option value="public">عمومی</option></select></label>
+                        <label><span>{{ __('business.show.profile.type') }}</span><select name="kind"><option value="mobile">موبایل</option><option value="phone">تلفن</option><option value="email">ایمیل</option><option value="website">وب‌سایت</option><option value="whatsapp">واتساپ</option></select></label>
+                        <label><span>{{ __('business.show.contacts.label') }}</span><input name="label" placeholder="{{ __('business.show.contacts.label_placeholder') }}"></label>
+                        <label><span>{{ __('business.show.profile.visibility') }}</span><select name="visibility"><option value="private">خصوصی</option><option value="members">اعضا</option><option value="public">عمومی</option></select></label>
                     </div>
-                    <label style="display:block;margin-top:10px"><span>مقدار</span><input name="value" required></label>
-                    <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input style="width:20px" type="checkbox" name="is_primary" value="1"><span style="margin:0">اصلی باشد</span></label>
-                    <button class="btn green">＋ افزودن تماس</button>
+                    <label style="display:block;margin-top:10px"><span>{{ __('business.show.contacts.value') }}</span><input name="value" required></label>
+                    <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input style="width:20px" type="checkbox" name="is_primary" value="1"><span style="margin:0">{{ __('business.show.contacts.primary') }}</span></label>
+                    <button class="btn green">＋ {{ __('business.show.contacts.add') }}</button>
                 </form>
             @endif
         </div>
     </section>
 
     <section class="panel">
-        <div class="head"><div><h2>📍 مکان‌ها و شعبه‌ها</h2><p>دفتر، شعبه، کارگاه، انبار یا محل پروژه</p></div></div>
+        <div class="head"><div><h2>📍 {{ __('business.show.addresses.title') }}</h2><p>{{ __('business.show.addresses.help') }}</p></div></div>
         <div class="body">
             <div class="list">
                 @forelse($business->addresses as $address)
                     <div class="item row">
                         <div><strong>{{ $address->label ?: $address->type }}</strong><div style="margin-top:4px">{{ collect([$address->province,$address->city,$address->district,$address->street])->filter()->join('، ') }}</div></div>
-                        @if($canManage)<form method="POST" action="{{ route('businesses.addresses.destroy',[$business,$address]) }}">@csrf @method('DELETE')<button class="btn danger">حذف</button></form>@endif
+                        @if($canManage)<form method="POST" action="{{ route('businesses.addresses.destroy',[$business,$address]) }}">@csrf @method('DELETE')<button class="btn danger">{{ __('business.show.addresses.delete') }}</button></form>@endif
                     </div>
                 @empty
-                    <div style="color:#667085">هنوز مکان یا شعبه‌ای ثبت نشده است.</div>
+                    <div style="color:#667085">{{ __('business.show.addresses.empty') }}</div>
                 @endforelse
             </div>
 
@@ -311,18 +311,18 @@
                 <form class="section-form" method="POST" action="{{ route('businesses.addresses.store',$business) }}">
                     @csrf
                     <div class="grid3">
-                        <label><span>نوع</span><select name="type"><option value="work">محل کار</option><option value="branch">شعبه</option><option value="billing">صورتحساب</option><option value="shipping">ارسال</option><option value="project_site">محل پروژه</option><option value="other">سایر</option></select></label>
-                        <label><span>عنوان</span><input name="label" placeholder="مثلاً شعبه مرکزی"></label>
-                        <label><span>نمایش</span><select name="visibility"><option value="private">خصوصی</option><option value="members">اعضا</option><option value="public">عمومی</option></select></label>
-                        <label><span>استان</span><input name="province"></label>
-                        <label><span>شهر *</span><input name="city" required></label>
-                        <label><span>محله</span><input name="district"></label>
-                        <label><span>خیابان</span><input name="street"></label>
-                        <label><span>کوچه</span><input name="alley"></label>
-                        <label><span>پلاک</span><input name="building_no"></label>
+                        <label><span>{{ __('business.show.addresses.type') }}</span><select name="type"><option value="work">{{ __('business.show.addresses.types.work') }}</option><option value="branch">{{ __('business.show.addresses.types.branch') }}</option><option value="billing">{{ __('business.show.addresses.types.billing') }}</option><option value="shipping">{{ __('business.show.addresses.types.shipping') }}</option><option value="project_site">{{ __('business.show.addresses.types.project_site') }}</option><option value="other">{{ __('business.show.addresses.types.other') }}</option></select></label>
+                        <label><span>{{ __('business.show.addresses.label') }}</span><input name="label" placeholder="{{ __('business.show.addresses.label_placeholder') }}"></label>
+                        <label><span>{{ __('business.show.profile.visibility') }}</span><select name="visibility"><option value="private">خصوصی</option><option value="members">اعضا</option><option value="public">عمومی</option></select></label>
+                        <label><span>{{ __('business.show.addresses.province') }}</span><input name="province"></label>
+                        <label><span>{{ __('business.show.addresses.city') }} *</span><input name="city" required></label>
+                        <label><span>{{ __('business.show.addresses.district') }}</span><input name="district"></label>
+                        <label><span>{{ __('business.show.addresses.street') }}</span><input name="street"></label>
+                        <label><span>{{ __('business.show.addresses.alley') }}</span><input name="alley"></label>
+                        <label><span>{{ __('business.show.addresses.building_no') }}</span><input name="building_no"></label>
                     </div>
                     <input type="hidden" name="country_code" value="IR">
-                    <button class="btn green" style="margin-top:12px">＋ افزودن مکان</button>
+                    <button class="btn green" style="margin-top:12px">＋ {{ __('business.show.addresses.add') }}</button>
                 </form>
             @endif
         </div>
@@ -331,8 +331,8 @@
     @if($canOperate)
     <section id="team-settings" class="panel">
         <div class="head">
-            <div><h2>👥 اعضای کسب‌وکار</h2><p>عضویت با تخصص فرق دارد؛ گروه همکاری هم بعداً یک لایه جدا باقی می‌ماند.</p></div>
-            <a class="btn light" href="{{ route('profile.professions.index') }}">تخصص‌های شخصی من</a>
+            <div><h2>👥 {{ __('business.show.team.title') }}</h2><p>{{ __('business.show.team.help') }}</p></div>
+            <a class="btn light" href="{{ route('profile.professions.index') }}">{{ __('business.show.team.my_professions') }}</a>
         </div>
         <div class="body">
             <div class="list">
@@ -348,7 +348,7 @@
                                 </div>
                             </div>
                             @if($canManage && $membership->role !== 'owner')
-                                <form method="POST" action="{{ route('businesses.members.destroy',[$business,$membership]) }}" onsubmit="return confirm('این عضو از تیم فعال خارج شود؟')">@csrf @method('DELETE')<button class="btn danger">خروج از تیم</button></form>
+                                <form method="POST" action="{{ route('businesses.members.destroy',[$business,$membership]) }}" onsubmit="return confirm(@js(__('business.show.team.remove_confirm')))">@csrf @method('DELETE')<button class="btn danger">{{ __('business.show.team.remove') }}</button></form>
                             @endif
                         </div>
 
@@ -356,10 +356,10 @@
                             <form method="POST" action="{{ route('businesses.members.update',[$business,$membership]) }}" class="section-form">
                                 @csrf @method('PUT')
                                 <div class="grid">
-                                    <label><span>نقش مدیریتی</span><select name="role"><option value="member" @selected($membership->role==='member')>عضو</option><option value="manager" @selected($membership->role==='manager')>مدیر</option></select></label>
-                                    <label><span>عنوان کاری</span><input name="job_title" value="{{ $membership->job_title }}" placeholder="مثلاً سرپرست اجرایی"></label>
+                                    <label><span>{{ __('business.show.team.management_role') }}</span><select name="role"><option value="member" @selected($membership->role==='member')>{{ __('business.show.team.member') }}</option><option value="manager" @selected($membership->role==='manager')>{{ __('business.show.team.manager') }}</option></select></label>
+                                    <label><span>{{ __('business.show.team.job_title') }}</span><input name="job_title" value="{{ $membership->job_title }}" placeholder="{{ __('business.show.team.job_title_placeholder') }}"></label>
                                 </div>
-                                <button class="btn light" style="margin-top:10px">ذخیره نقش</button>
+                                <button class="btn light" style="margin-top:10px">{{ __('business.show.team.save_role') }}</button>
                             </form>
                         @endif
 
@@ -367,14 +367,14 @@
                             <form method="POST" action="{{ route('businesses.members.professions.store',[$business,$membership]) }}" class="section-form">
                                 @csrf
                                 <div class="grid">
-                                    <label><span>تخصص در این کسب‌وکار</span><select name="profession_id">
+                                    <label><span>{{ __('business.show.team.profession') }}</span><select name="profession_id">
                                         @foreach($professions as $profession)
                                             <option value="{{ $profession->id }}">{{ $profession->parent ? (($profession->parent->name_fa ?: $profession->parent->name).' ← ') : '' }}{{ $profession->name_fa ?: $profession->name }}</option>
                                         @endforeach
                                     </select></label>
-                                    <label style="display:flex;gap:8px;align-items:end;padding-bottom:10px"><input style="width:20px" type="checkbox" name="is_primary" value="1"><span style="margin:0">تخصص اصلی در این تیم</span></label>
+                                    <label style="display:flex;gap:8px;align-items:end;padding-bottom:10px"><input style="width:20px" type="checkbox" name="is_primary" value="1"><span style="margin:0">{{ __('business.show.team.primary_profession') }}</span></label>
                                 </div>
-                                <button class="btn light">＋ افزودن تخصص</button>
+                                <button class="btn light">＋ {{ __('business.show.team.add_profession') }}</button>
                             </form>
                         @endif
                     </article>
@@ -384,28 +384,28 @@
             @if($canManage)
                 <form class="section-form" method="POST" action="{{ route('businesses.members.store',$business) }}">
                     @csrf
-                    <h3 style="margin-top:0">＋ افزودن کاربر موجود به کسب‌وکار</h3>
+                    <h3 style="margin-top:0">＋ {{ __('business.show.team.add_user') }}</h3>
                     <div class="grid3">
-                        <label><span>ایمیل یا نام کاربری</span><input name="user" required></label>
-                        <label><span>نقش</span><select name="role"><option value="member">عضو</option><option value="manager">مدیر</option></select></label>
-                        <label><span>عنوان کاری</span><input name="job_title" placeholder="مثلاً برق‌کار"></label>
+                        <label><span>{{ __('business.show.team.user') }}</span><input name="user" required></label>
+                        <label><span>{{ __('business.show.team.role') }}</span><select name="role"><option value="member">{{ __('business.show.team.member') }}</option><option value="manager">{{ __('business.show.team.manager') }}</option></select></label>
+                        <label><span>{{ __('business.show.team.job_title') }}</span><input name="job_title" placeholder="{{ __('business.show.team.job_placeholder') }}"></label>
                     </div>
-                    <button class="btn primary" style="margin-top:12px">افزودن عضو</button>
+                    <button class="btn primary" style="margin-top:12px">{{ __('business.show.team.add_member') }}</button>
                 </form>
             @endif
 
             @if($canManageOwnership)
                 <form class="section-form" method="POST" action="{{ route('businesses.transfer-ownership',$business) }}">
                     @csrf
-                    <h3 style="margin-top:0;color:#92400e">انتقال مالکیت</h3>
-                    <p style="color:#667085">فقط به یک عضو فعال منتقل می‌شود. مالک فعلی بعد از انتقال «مدیر» می‌شود تا کسب‌وکار بدون مدیر نماند.</p>
+                    <h3 style="margin-top:0;color:#92400e">{{ __('business.show.team.transfer_title') }}</h3>
+                    <p style="color:#667085">{{ __('business.show.team.transfer_help') }}</p>
                     <select name="actor_id" required>
-                        <option value="">انتخاب مالک جدید...</option>
+                        <option value="">{{ __('business.show.team.select_owner') }}</option>
                         @foreach($business->memberships->where('role','!=','owner') as $candidate)
                             <option value="{{ $candidate->actor_id }}">{{ $candidate->actor->user?->username ?? $candidate->actor->user?->email ?? ('Actor #'.$candidate->actor->getKey()) }}</option>
                         @endforeach
                     </select>
-                    <button class="btn" style="margin-top:10px;background:#b45309;color:#fff" onclick="return confirm('مالکیت منتقل شود؟')">انتقال مالکیت</button>
+                    <button class="btn" style="margin-top:10px;background:#b45309;color:#fff" onclick="return confirm(@js(__('business.show.team.transfer_confirm')))">{{ __('business.show.team.transfer') }}</button>
                 </form>
             @endif
         </div>
