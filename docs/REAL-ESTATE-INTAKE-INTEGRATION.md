@@ -38,9 +38,19 @@ Private Real Estate operations use two layers:
 
 A legacy portal grant cannot bypass Business publication.
 
-The public intake form remains intentionally different: an active portal's
-unguessable public token may be opened by a guest and submitted under the
-existing throttling/privacy rules.
+The public presentation is intentionally separate from the internal platform:
+
+- an active **public** Business has a standalone guest website at `/b/{slug}`;
+- that website contains only the Business identity, its public contacts/locations,
+  published public Listings, and any active specialized intake action;
+- it does not expose IET navigation, Planner, Deals, Money, administration, or
+  other platform concepts to the visitor;
+- a linked Real Estate intake token is guest-reachable only while its owning
+  Business is both active and public;
+- a private or paused Business does not advertise the website/intake and those
+  public routes return 404;
+- intake submission keeps the existing throttling/privacy rules and exact
+  contact/address information stays private to authorized office operators.
 
 Publication Control itself remains super-admin-only.
 
@@ -77,10 +87,15 @@ specialized capability of the owning Business, rather than a parallel system.
 - Navigation has no standalone Real Estate primary destination.
 - Under Businesses, a real-estate office appears as a normal business, e.g.
   **Business: مشاور املاک مهوری**.
-- Opening that Business exposes its specialized Real Estate intake channel.
+- Opening the internal Business workspace exposes its specialized Real Estate
+  office controls to authorized operators; publishing the Business exposes a
+  separate visitor-facing Business website and intake action.
 - A portal-granted user without Business publication gets 403 on private office
   routes.
 - A Business-published user with exact office authorization can manage cases.
-- Public token intake still works without login.
+- After the Business is published, its standalone public website works without
+  login and leads into the Real Estate intake.
+- While the Business is private/inactive, both its public website and linked
+  Real Estate intake are unavailable and are not advertised.
 - Existing office URLs/cases survive legacy-office adoption into Business.
 - Qualified property offers can still be promoted to Business Listings.
