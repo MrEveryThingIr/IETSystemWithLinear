@@ -49,7 +49,7 @@ class FeatureSurfaceAdminController extends Controller
         ]);
         $resolved = $service->sync($user, $validated['surfaces'] ?? [], $request->user());
 
-        return back()->with('status', 'دسترسی‌ها ذخیره شد؛ پیش‌نیازها نیز خودکار اعمال شدند: '.count($resolved).' قابلیت.');
+        return back()->with('status', __('publication.saved', ['count' => count($resolved)]));
     }
 
     public function mode(Request $request): RedirectResponse
@@ -59,7 +59,7 @@ class FeatureSurfaceAdminController extends Controller
         FeatureSurfaceSetting::setValue('enforcement_mode', $mode);
 
         return back()->with('status', $mode === 'strict'
-            ? 'حالت سخت‌گیرانه فعال شد؛ لینک مستقیم بخش‌های پنهان نیز مسدود است.'
-            : 'حالت مشاهده فعال است؛ Workspace پنهان می‌کند اما لینک‌های مستقیم قدیمی هنوز برای مهاجرت کار می‌کنند.');
+            ? __('publication.mode_strict')
+            : __('publication.mode_observe'));
     }
 }
