@@ -48,7 +48,7 @@
                     <div class="mt-4 space-y-3">
                         @foreach($business->addresses as $address)
                             <div class="rounded-2xl bg-slate-50 px-4 py-3 leading-7">
-                                {{ collect([$address->province, $address->city, $address->district, $address->street])->filter()->join('، ') }}
+                                {{ collect([$address->province, $address->city, $address->district, $address->street])->filter()->join(' · ') }}
                             </div>
                         @endforeach
                     </div>
