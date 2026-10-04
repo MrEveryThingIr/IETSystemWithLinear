@@ -45,14 +45,14 @@ class BusinessController extends Controller
 
         return view('businesses.index', [
             'businesses' => $businesses,
-            'kindLabels' => BusinessDirectory::KINDS,
+            'kindLabels' => BusinessDirectory::kindLabels(),
         ]);
     }
 
     public function create(): View
     {
         return view('businesses.create', [
-            'kindLabels' => BusinessDirectory::KINDS,
+            'kindLabels' => BusinessDirectory::kindLabels(),
         ]);
     }
 
@@ -162,9 +162,9 @@ class BusinessController extends Controller
             'canUseMoney' => $canUseMoney,
             'businessSections' => $businessSections,
             'businessSectionLinks' => $businessSectionLinks,
-            'kindLabels' => BusinessDirectory::KINDS,
-            'roleLabels' => BusinessDirectory::ROLES,
-            'visibilityLabels' => BusinessDirectory::VISIBILITIES,
+            'kindLabels' => BusinessDirectory::kindLabels(),
+            'roleLabels' => BusinessDirectory::roleLabels(),
+            'visibilityLabels' => BusinessDirectory::visibilityLabels(),
         ]);
     }
 
