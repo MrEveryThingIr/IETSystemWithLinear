@@ -6,6 +6,7 @@
     'consequence',
     'result',
     'steps' => [],
+    'stepHrefs' => [],
     'currentStep' => null,
     'progressive' => true,
 ])
@@ -32,16 +33,31 @@
                     $isCurrent = $currentStep === $key;
                     $isPast = $progressive && $currentIndex !== false && $index !== false && $index < $currentIndex;
                 @endphp
-                <div
-                    @class([
-                        'rounded-xl border px-3 py-3 text-center text-sm',
-                        'border-zinc-900 bg-zinc-900 font-semibold text-white dark:border-white dark:bg-white dark:text-zinc-950' => $isCurrent,
-                        'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200' => ! $isCurrent && $isPast,
-                        'border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300' => ! $isCurrent && ! $isPast,
-                    ])
-                >
-                    {{ $label }}
-                </div>
+                @php($href = $stepHrefs[$key] ?? null)
+                @if ($href)
+                    <a
+                        href="{{ $href }}"
+                        @class([
+                            'rounded-xl border px-3 py-3 text-center text-sm transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+                            'border-zinc-900 bg-zinc-900 font-semibold text-white dark:border-white dark:bg-white dark:text-zinc-950' => $isCurrent,
+                            'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200' => ! $isCurrent && $isPast,
+                            'border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-zinc-700' => ! $isCurrent && ! $isPast,
+                        ])
+                    >
+                        {{ $label }}
+                    </a>
+                @else
+                    <div
+                        @class([
+                            'rounded-xl border px-3 py-3 text-center text-sm',
+                            'border-zinc-900 bg-zinc-900 font-semibold text-white dark:border-white dark:bg-white dark:text-zinc-950' => $isCurrent,
+                            'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200' => ! $isCurrent && $isPast,
+                            'border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300' => ! $isCurrent && ! $isPast,
+                        ])
+                    >
+                        {{ $label }}
+                    </div>
+                @endif
             @endforeach
         </div>
     @endif

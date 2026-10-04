@@ -73,7 +73,7 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
                             <div class="muted" style="margin-top:6px">{{ collect([$address->city,$address->district,$address->street])->filter()->join('، ') }}</div>
                         @endforeach
                     </div>
-                    @if($canManage && $client->status === 'active')
+                    @if($canManage && $canUseMarket && $client->status === 'active')
                         @php($marketNeed = $marketNeedsByContact->get($client->uuid))
                         <div style="min-width:min(100%,360px)">
                             @if($marketNeed)

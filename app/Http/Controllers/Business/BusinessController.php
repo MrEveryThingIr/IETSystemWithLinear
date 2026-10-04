@@ -125,6 +125,27 @@ class BusinessController extends Controller
             ]);
         }
 
+        $canManage = BusinessAccess::canManage($request->user(), $business);
+        $canUsePlanner = $surfaceAccess->allows($request->user(), 'planner');
+        $canUseDeals = $surfaceAccess->allows($request->user(), 'deals');
+        $canUseMarket = $surfaceAccess->allows($request->user(), 'market');
+        $canUseMoney = collect(['money', 'accounting', 'exchange'])
+            ->contains(fn (string $surface): bool => $surfaceAccess->allows($request->user(), $surface));
+
+        $businessSectionLinks = array_filter([
+            'overview' => route('businesses.show', $business),
+            'clients' => $canOperate ? route('businesses.clients.index', $business) : null,
+            'catalog' => $canOperate ? route('businesses.catalog.index', $business) : null,
+            'work' => $canUsePlanner && $businessContext ? route('planner.index', ['context' => $businessContext->uuid]) : null,
+            'deals' => $canUseDeals ? route('deals.index') : null,
+            'money' => $canUseMoney ? route('money.index') : null,
+            'manage' => $canManage ? route('businesses.show', $business).'#team-settings' : null,
+        ]);
+
+        $businessSections = collect(__('workflow.business.sections'))
+            ->only(array_keys($businessSectionLinks))
+            ->all();
+
         return view('businesses.show', [
             'business' => $business,
             'businessContext' => $context,
@@ -133,12 +154,14 @@ class BusinessController extends Controller
             'professions' => $professions,
             'externalMoneyGateways' => $canOperate ? $externalGateways->available() : [],
             'canOperate' => $canOperate,
-            'canManage' => BusinessAccess::canManage($request->user(), $business),
+            'canManage' => $canManage,
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),
-            'canUsePlanner' => $surfaceAccess->allows($request->user(), 'planner'),
-            'canUseDeals' => $surfaceAccess->allows($request->user(), 'deals'),
-            'canUseMoney' => collect(['money', 'accounting', 'exchange'])
-                ->contains(fn (string $surface): bool => $surfaceAccess->allows($request->user(), $surface)),
+            'canUsePlanner' => $canUsePlanner,
+            'canUseDeals' => $canUseDeals,
+            'canUseMarket' => $canUseMarket,
+            'canUseMoney' => $canUseMoney,
+            'businessSections' => $businessSections,
+            'businessSectionLinks' => $businessSectionLinks,
             'kindLabels' => BusinessDirectory::KINDS,
             'roleLabels' => BusinessDirectory::ROLES,
             'visibilityLabels' => BusinessDirectory::VISIBILITIES,

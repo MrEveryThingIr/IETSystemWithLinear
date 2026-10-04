@@ -84,7 +84,8 @@
             :audience="__('workflow.business.audience')"
             :consequence="__('workflow.business.consequence')"
             :result="__('workflow.business.result')"
-            :steps="__('workflow.business.sections')"
+            :steps="$businessSections"
+            :step-hrefs="$businessSectionLinks"
             current-step="overview"
             :progressive="false"
         >

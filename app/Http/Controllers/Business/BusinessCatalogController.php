@@ -14,6 +14,7 @@ use App\Models\PublicRealEstateCase;
 use App\Models\User;
 use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessMarketService;
+use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
 use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
@@ -27,8 +28,11 @@ use InvalidArgumentException;
 
 class BusinessCatalogController extends Controller
 {
-    public function index(Request $request, Business $business): View
-    {
+    public function index(
+        Request $request,
+        Business $business,
+        FeatureSurfaceAccess $surfaceAccess,
+    ): View {
         abort_unless(BusinessAccess::canOperate($request->user(), $business), 403);
 
         $business->load([
@@ -56,6 +60,8 @@ class BusinessCatalogController extends Controller
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'unitCatalog' => MonetaryUnitCatalog::all(),
             'marketOffersByListing' => $marketOffersByListing,
+            'canUsePlanner' => $surfaceAccess->allows($request->user(), 'planner'),
+            'canUseMarket' => $surfaceAccess->allows($request->user(), 'market'),
         ]);
     }
 
