@@ -25,7 +25,7 @@ class PublicBusinessController extends Controller
             'listings' => fn ($query) => $query
                 ->where('visibility', 'public')
                 ->whereNotNull('published_version_id')
-                ->where('status', 'published')
+                ->where('status', 'active')
                 ->with([
                     'category',
                     'publishedVersion.propertyDetails',
@@ -51,7 +51,7 @@ class PublicBusinessController extends Controller
         abort_unless(
             (int) $listing->business_id === (int) $business->id
             && $listing->visibility === 'public'
-            && $listing->status === 'published'
+            && $listing->status === 'active'
             && $listing->published_version_id !== null,
             404,
         );
