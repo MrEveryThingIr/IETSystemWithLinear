@@ -35,6 +35,10 @@ return [
         'submit' => '创建商家并继续',
         'cancel' => '取消并返回',
     ],
+    'messages' => [
+        'created' => '商家已创建。接下来完善联系方式、地点和团队成员。',
+        'updated' => '商家信息已更新。',
+    ],
     'index' => [
         'title' => '我的商家',
         'kicker' => '商家运营空间',
@@ -51,6 +55,7 @@ return [
         'listings' => '项目',
         'intake_channels' => '接收渠道',
         'open' => '打开商家',
+        'open_website' => '公开网站',
         'catalog' => '目录',
     ],
 ];
