@@ -52,7 +52,7 @@
             <div class="rounded-xl bg-slate-50 p-4">
                 <dt class="text-xs text-slate-500">{{ __('public_real_estate.preview.dimensions') }}</dt>
                 <dd class="mt-1 font-bold">
-                    {{ $case->land_area ?: '—' }} / {{ $case->construction_area ?: '—' }} متر²
+                    {{ $case->land_area ?: '—' }} / {{ $case->construction_area ?: '—' }} {{ __('public_real_estate.preview.square_meter') }}
                 </dd>
             </div>
         </dl>
