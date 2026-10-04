@@ -72,9 +72,9 @@ class EnsureRealEstateBusinessIntake
                         'business_id' => $lockedBusiness->id,
                         'type' => 'real_estate',
                         'title' => $lockedBusiness->name,
-                        'welcome_heading' => 'ثبت ملک یا درخواست ملک',
-                        'welcome_body' => 'اطلاعات ملک یا درخواست خود را ثبت کنید؛ پس از بررسی، دفتر با شما تماس می‌گیرد.',
-                        'success_message' => 'اطلاعات شما با موفقیت ثبت شد. این پیش‌نمایش فقط همین یک بار نمایش داده می‌شود.',
+                        'welcome_heading' => null,
+                        'welcome_body' => null,
+                        'success_message' => null,
                         'locale' => 'fa',
                         'is_active' => true,
                     ]);
