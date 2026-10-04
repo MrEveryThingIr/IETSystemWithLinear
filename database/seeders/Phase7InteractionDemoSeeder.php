@@ -30,8 +30,6 @@ use Illuminate\Database\Seeder;
 
 class Phase7InteractionDemoSeeder extends Seeder
 {
-    private const OWNER_EMAIL = 'test@example.com';
-
     private const LEARNER_EMAIL = 'phase7.learner@example.com';
 
     private const CANDIDATE_EMAIL = 'phase7.candidate@example.com';
@@ -51,7 +49,10 @@ class Phase7InteractionDemoSeeder extends Seeder
         $this->call(DatabaseSeeder::class);
         app(EnsureSystemContentBlueprints::class)->execute();
 
-        $owner = User::query()->with('actor')->where('email', self::OWNER_EMAIL)->firstOrFail();
+        $owner = User::query()
+            ->with('actor')
+            ->where('username', (string) config('bootstrap.superadmin.username', 'MrEveryThing'))
+            ->firstOrFail();
         abort_unless($owner->actor instanceof Actor, 422, 'The local demo owner requires an Actor.');
 
         $learner = $this->demoUser('phase7learner', self::LEARNER_EMAIL, 'en');
@@ -74,7 +75,7 @@ class Phase7InteractionDemoSeeder extends Seeder
         $this->command?->newLine();
         $this->command?->info('Phase 7 interaction demo seeded successfully.');
         $this->command?->line('All demo passwords: password');
-        $this->command?->line('Reviewer/teacher: '.self::OWNER_EMAIL);
+        $this->command?->line('Reviewer/teacher: '.$owner->email);
         $this->command?->line('Learner: '.self::LEARNER_EMAIL);
         $this->command?->line('Candidate (Persian locale): '.self::CANDIDATE_EMAIL);
         $this->command?->newLine();
