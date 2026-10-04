@@ -23,7 +23,7 @@ class RealEstateBusinessFreshStartTest extends TestCase
         $business = app(BusinessService::class)->create($owner->actor, [
             'name' => 'مشاور املاک مهوری',
             'kind' => 'real_estate',
-            'visibility' => 'public',
+            'visibility' => 'private',
             'status' => 'active',
         ]);
 
