@@ -3,10 +3,10 @@
 use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Groups\ManageGroupAgreement;
 use App\Actions\Planner\MaterializePlannerHorizon;
-use App\Support\DuePlanReminderEmitter;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
+use App\Support\DuePlanReminderEmitter;
 use App\Support\NotificationOutboxDispatcher;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -18,7 +18,6 @@ use Illuminate\Support\Str;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-
 
 Artisan::command('iet:bootstrap-superadmin {--username=} {--email=}', function (): int {
     $existingSuperadmin = PlatformAccessGrant::query()
@@ -49,7 +48,7 @@ Artisan::command('iet:bootstrap-superadmin {--username=} {--email=}', function (
     }
 
     if ($password === '' || $password === 'password') {
-        if (! $this->input->isInteractive()) {
+        if ($this->input->isInteractive() === false) {
             $this->error('Set a strong IET_BOOTSTRAP_SUPERADMIN_PASSWORD or run this command interactively.');
 
             return 1;
@@ -58,7 +57,7 @@ Artisan::command('iet:bootstrap-superadmin {--username=} {--email=}', function (
         $password = (string) $this->secret('Choose the initial superadmin password (minimum 12 characters)');
         $confirmation = (string) $this->secret('Confirm the password');
 
-        if (! hash_equals($password, $confirmation)) {
+        if (hash_equals($password, $confirmation) === false) {
             $this->error('The password confirmation did not match.');
 
             return 1;
