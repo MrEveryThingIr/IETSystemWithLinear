@@ -56,7 +56,7 @@ class ExperienceCompositionNavigationTest extends TestCase
         $navigation = app(ExperienceNavigation::class)->for($user);
 
         $primarySurfaceKeys = collect($navigation['primary'])
-            ->flatMap(fn (array $destination) => collect($destination['items'])->pluck('key'))
+            ->flatMap(fn (array $destination) => collect($destination['items'] ?? [$destination])->pluck('key'))
             ->all();
 
         $this->assertNotContains('actors', $primarySurfaceKeys);
