@@ -122,7 +122,7 @@ class BusinessRealEstatePromotionRouteTest extends TestCase
         return $user->refresh();
     }
 
-    public function test_portal_manager_without_business_access_does_not_see_dead_business_or_catalog_actions(): void
+    public function test_portal_manager_without_business_membership_does_not_see_dead_business_or_catalog_actions(): void
     {
         $owner = $this->userWithActor();
         $business = app(BusinessService::class)->create($owner->actor, [
@@ -155,6 +155,7 @@ class BusinessRealEstatePromotionRouteTest extends TestCase
         ]);
 
         $portalManager = $this->userWithActor();
+        $this->publishSurfaces($portalManager, ['business']);
 
         PublicIntakePortalGrant::query()->create([
             'public_intake_portal_id' => $portal->id,

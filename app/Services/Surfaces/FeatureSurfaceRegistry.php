@@ -292,17 +292,6 @@ class FeatureSurfaceRegistry
             // opening it does not reveal the general Planner facility.
             'planner.show',
 
-            // Real Estate office cases are portal-scoped resources. A user may
-            // receive an explicit PublicIntakePortalGrant without being given
-            // the general Business facility. These routes defer to
-            // PublicIntakeAccess plus portal/case ownership checks. The
-            // adopt-business action is intentionally omitted because it has
-            // explicit Business-surface middleware.
-            'office.real-estate.index',
-            'office.real-estate.show',
-            'office.real-estate.status',
-            'office.real-estate.media.*',
-
             // Known group/community/workspace resources are governed by
             // membership and group authorization. The Groups directory
             // itself remains a revealed facility.
