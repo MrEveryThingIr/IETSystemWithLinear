@@ -1,14 +1,9 @@
 @extends('layouts.app')
 
-@section('title', app()->getLocale() === 'fa' ? 'دفتر املاک' : 'Real Estate office')
+@section('title', __('public_real_estate.office.title'))
 
 @section('content')
-@php
-    $fa = app()->getLocale() === 'fa';
-    $statusText = $fa
-        ? ['new'=>'جدید','contacted'=>'تماس گرفته شد','qualified'=>'واجد شرایط','in_progress'=>'در حال پیگیری','closed'=>'بسته‌شده','rejected'=>'ردشده']
-        : ['new'=>'New','contacted'=>'Contacted','qualified'=>'Qualified','in_progress'=>'In progress','closed'=>'Closed','rejected'=>'Rejected'];
-@endphp
+@php($statusText = __('public_real_estate.office.statuses'))
 <style>
     .re-wrap{max-width:1450px;margin:auto;padding:10px 0 28px}.re-crumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.re-crumbs a{color:#047857;font-weight:900;text-decoration:none}.re-top{display:flex;justify-content:space-between;gap:15px;align-items:end;flex-wrap:wrap}
     .re-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0}.re-card,.re-filters,.re-tablebox,.re-bridge{background:#fff;border:1px solid #e2e8f0;border-radius:22px;box-shadow:0 5px 20px rgba(15,23,42,.04)}.re-bridge{padding:16px 18px;margin:18px 0;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.re-bridge p{margin:4px 0 0;color:#64748b;line-height:1.75}.re-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.re-actions form{margin:0}
@@ -20,7 +15,7 @@
 </style>
 <main class="re-wrap">
     <nav class="re-crumbs">
-        <a href="{{ route('businesses.index', ['kind' => 'real_estate']) }}">← {{ $fa ? 'کسب‌وکارها' : 'Businesses' }}</a>
+        <a href="{{ route('businesses.index', ['kind' => 'real_estate']) }}">← {{ __('public_real_estate.office.businesses') }}</a>
         @if($business)
             <span>·</span>
             <a href="{{ route('businesses.show', $business) }}">{{ $business->name }}</a>
@@ -29,12 +24,12 @@
 
     <div class="re-top">
         <div>
-            <div style="color:#047857;font-weight:900">{{ $fa ? 'کسب‌وکار:' : 'Business:' }} {{ $business?->name ?? $portal->title }}</div>
-            <h1 style="font-size:32px;margin:5px 0">{{ $fa ? 'پرونده‌های املاک' : 'Real Estate cases' }}</h1>
-            <p style="color:#64748b;margin:0">{{ $fa ? 'جست‌وجو، فیلتر و پیگیری پرونده‌های ثبت‌شده' : 'Search, filter, and follow submitted cases.' }}</p>
+            <div style="color:#047857;font-weight:900">{{ __('public_real_estate.office.business_prefix') }} {{ $business?->name ?? $portal->title }}</div>
+            <h1 style="font-size:32px;margin:5px 0">{{ __('public_real_estate.office.cases_heading') }}</h1>
+            <p style="color:#64748b;margin:0">{{ __('public_real_estate.office.cases_help') }}</p>
         </div>
         <div class="re-actions">
-            <a class="re-btn re-light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show', $portal) }}">{{ $fa ? 'باز کردن فرم عمومی' : 'Open public form' }}</a>
+            <a class="re-btn re-light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show', $portal) }}">{{ __('public_real_estate.office.open_public_form') }}</a>
         </div>
     </div>
 
@@ -43,64 +38,64 @@
             <div>
                 <strong>
                     {{ $business
-                        ? (($fa ? 'کسب‌وکار: ' : 'Business: ').$business->name)
-                        : ($fa ? 'انتقال دفتر قدیمی به کسب‌وکار' : 'Migrate legacy office into a Business') }}
+                        ? __('public_real_estate.office.bridge_business', ['name' => $business->name])
+                        : __('public_real_estate.office.migrate_title') }}
                 </strong>
                 <p>
                     {{ $business
-                        ? ($fa ? 'فرم ورودی و پرونده‌های املاک یک قابلیت تخصصی همین کسب‌وکار هستند؛ عرضه‌های تأییدشده می‌توانند وارد کاتالوگ همین کسب‌وکار شوند.' : 'The intake form and Real Estate cases are a specialized capability of this Business; qualified offers can be promoted into the same Business catalog.')
-                        : ($fa ? 'این دفتر قدیمی هنوز Business متناظر ندارد. با حفظ آدرس عمومی و همه پرونده‌ها، آن را به یک کسب‌وکار املاک تبدیل کنید.' : 'This legacy office does not yet have a canonical Business. Convert it while preserving its public URL and every existing case.') }}
+                        ? __('public_real_estate.office.bridge_help')
+                        : __('public_real_estate.office.migrate_help') }}
                 </p>
             </div>
             <div class="re-actions">
                 @if($business)
-                    <a class="re-btn re-light" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'باز کردن کسب‌وکار' : 'Open Business' }}</a>
-                    <a class="re-btn re-light" href="{{ route('businesses.catalog.index',$business) }}">{{ $fa ? 'کاتالوگ' : 'Catalog' }}</a>
+                    <a class="re-btn re-light" href="{{ route('businesses.show',$business) }}">{{ __('public_real_estate.office.open_business') }}</a>
+                    <a class="re-btn re-light" href="{{ route('businesses.catalog.index',$business) }}">{{ __('public_real_estate.office.catalog') }}</a>
                 @elseif($canManage)
                     <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
                         @csrf
-                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'ثبت این دفتر به‌عنوان Business' : 'Register this office as a Business' }}</button>
+                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ __('public_real_estate.office.register_business') }}</button>
                     </form>
                 @endif
             </div>
         </section>
     @endif
     <section class="re-cards">
-        <div class="re-card">{{ $fa ? 'همه پرونده‌ها' : 'All cases' }} <b>{{ number_format($stats['total']) }}</b></div>
-        <div class="re-card">{{ $fa ? 'جدید' : 'New' }} <b>{{ number_format($stats['new']) }}</b></div>
-        <div class="re-card">{{ $fa ? 'عرضه ملک' : 'Property offers' }} <b>{{ number_format($stats['offers']) }}</b></div>
-        <div class="re-card">{{ $fa ? 'متقاضی' : 'Property needs' }} <b>{{ number_format($stats['needs']) }}</b></div>
+        <div class="re-card">{{ __('public_real_estate.office.stats.all') }} <b>{{ number_format($stats['total']) }}</b></div>
+        <div class="re-card">{{ __('public_real_estate.office.stats.new') }} <b>{{ number_format($stats['new']) }}</b></div>
+        <div class="re-card">{{ __('public_real_estate.office.stats.offers') }} <b>{{ number_format($stats['offers']) }}</b></div>
+        <div class="re-card">{{ __('public_real_estate.office.stats.needs') }} <b>{{ number_format($stats['needs']) }}</b></div>
     </section>
     <form method="GET" class="re-filters">
         <div class="re-fgrid">
-            <label><span>{{ $fa ? 'جست‌وجو' : 'Search' }}</span><input name="q" value="{{ request('q') }}" placeholder="{{ $fa ? 'نام، تلفن، کد، محله، آدرس...' : 'Name, phone, code, area, address...' }}"></label>
-            <label><span>{{ $fa ? 'نوع پرونده' : 'Case type' }}</span><select name="intent"><option value="">{{ $fa ? 'همه' : 'All' }}</option><option value="offer" @selected(request('intent')==='offer')>{{ $fa ? 'عرضه' : 'Offer' }}</option><option value="need" @selected(request('intent')==='need')>{{ $fa ? 'تقاضا' : 'Need' }}</option></select></label>
-            <label><span>{{ $fa ? 'معامله' : 'Transaction' }}</span><select name="transaction_mode"><option value="">{{ $fa ? 'همه' : 'All' }}</option><option value="sale" @selected(request('transaction_mode')==='sale')>{{ $fa ? 'خرید/فروش' : 'Buy / sell' }}</option><option value="rent" @selected(request('transaction_mode')==='rent')>{{ $fa ? 'رهن/اجاره' : 'Rent / lease' }}</option></select></label>
-            <label><span>{{ $fa ? 'وضعیت' : 'Status' }}</span><select name="status"><option value="">{{ $fa ? 'همه' : 'All' }}</option>@foreach($statusText as $v=>$t)<option value="{{ $v }}" @selected(request('status')===$v)>{{ $t }}</option>@endforeach</select></label>
-            <div style="display:flex;gap:7px"><button class="re-btn re-primary">{{ $fa ? 'اعمال' : 'Apply' }}</button><a class="re-btn re-light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ $fa ? 'پاک' : 'Clear' }}</a></div>
+            <label><span>{{ __('public_real_estate.office.filters.search') }}</span><input name="q" value="{{ request('q') }}" placeholder="{{ __('public_real_estate.office.filters.search_placeholder') }}"></label>
+            <label><span>{{ __('public_real_estate.office.filters.case_type') }}</span><select name="intent"><option value="">{{ __('public_real_estate.office.filters.all') }}</option><option value="offer" @selected(request('intent')==='offer')>{{ __('public_real_estate.office.filters.offer') }}</option><option value="need" @selected(request('intent')==='need')>{{ __('public_real_estate.office.filters.need') }}</option></select></label>
+            <label><span>{{ __('public_real_estate.office.filters.transaction') }}</span><select name="transaction_mode"><option value="">{{ __('public_real_estate.office.filters.all') }}</option><option value="sale" @selected(request('transaction_mode')==='sale')>{{ __('public_real_estate.office.filters.sale') }}</option><option value="rent" @selected(request('transaction_mode')==='rent')>{{ __('public_real_estate.office.filters.rent') }}</option></select></label>
+            <label><span>{{ __('public_real_estate.office.filters.status') }}</span><select name="status"><option value="">{{ __('public_real_estate.office.filters.all') }}</option>@foreach($statusText as $v=>$t)<option value="{{ $v }}" @selected(request('status')===$v)>{{ $t }}</option>@endforeach</select></label>
+            <div style="display:flex;gap:7px"><button class="re-btn re-primary">{{ __('public_real_estate.office.filters.apply') }}</button><a class="re-btn re-light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ __('public_real_estate.office.filters.clear') }}</a></div>
         </div>
     </form>
     <section class="re-tablebox"><div class="re-scroll"><table class="re-table"><thead><tr>
-        <th>{{ $fa ? 'پرونده' : 'Case' }}</th><th>{{ $fa ? 'مراجعه‌کننده' : 'Contact' }}</th><th>{{ $fa ? 'نوع' : 'Type' }}</th><th>{{ $fa ? 'ملک / محدوده' : 'Property / area' }}</th><th>{{ $fa ? 'متراژ' : 'Area' }}</th><th>{{ $fa ? 'قیمت' : 'Price' }}</th><th>{{ $fa ? 'وضعیت' : 'Status' }}</th><th></th>
+        <th>{{ __('public_real_estate.office.table.case') }}</th><th>{{ __('public_real_estate.office.table.contact') }}</th><th>{{ __('public_real_estate.office.table.type') }}</th><th>{{ __('public_real_estate.office.table.property_area') }}</th><th>{{ __('public_real_estate.office.table.area') }}</th><th>{{ __('public_real_estate.office.table.price') }}</th><th>{{ __('public_real_estate.office.filters.status') }}</th><th></th>
     </tr></thead><tbody>
         @forelse($cases as $case)
             <tr>
                 <td><b style="font-family:monospace">{{ $case->reference_code }}</b><br><small style="color:#94a3b8"><x-app.local-datetime :value="$case->created_at" /></small></td>
                 <td><b>{{ $case->contact_name }}</b><br><span dir="ltr" style="color:#64748b">{{ $case->phone }}</span></td>
-                <td><span class="re-badge">{{ $case->intent==='offer' ? ($fa ? 'عرضه' : 'Offer') : ($fa ? 'تقاضا' : 'Need') }}</span><br><small>{{ $case->transaction_mode==='sale' ? ($fa ? 'خرید/فروش' : 'Buy / sell') : ($fa ? 'رهن/اجاره' : 'Rent / lease') }}</small></td>
+                <td><span class="re-badge">{{ $case->intent==='offer' ? __('public_real_estate.office.table.offer') : __('public_real_estate.office.table.need') }}</span><br><small>{{ $case->transaction_mode==='sale' ? __('public_real_estate.office.table.sale') : __('public_real_estate.office.table.rent') }}</small></td>
                 <td><b>{{ $case->property_subtype ?: $case->property_class }}</b><br><small style="color:#64748b">{{ $case->public_area ?: '—' }}</small></td>
                 <td>{{ $case->land_area ?: '—' }} m²</td>
-                <td>@if($case->asking_price){{ number_format((float)$case->asking_price) }} {{ $fa ? 'تومان' : 'toman' }}@elseif($case->deposit_amount || $case->monthly_rent_amount){{ $fa ? 'رهن' : 'Deposit' }} {{ number_format((float)($case->deposit_amount ?? 0)) }}<br><small>{{ $fa ? 'اجاره' : 'Rent' }} {{ number_format((float)($case->monthly_rent_amount ?? 0)) }}</small>@else — @endif</td>
+                <td>@if($case->asking_price){{ number_format((float)$case->asking_price) }} {{ __('public_real_estate.office.table.toman') }}@elseif($case->deposit_amount || $case->monthly_rent_amount){{ __('public_real_estate.office.table.deposit') }} {{ number_format((float)($case->deposit_amount ?? 0)) }}<br><small>{{ __('public_real_estate.office.table.monthly_rent') }} {{ number_format((float)($case->monthly_rent_amount ?? 0)) }}</small>@else — @endif</td>
                 <td>
                     <span class="re-badge">{{ $statusText[$case->status] ?? $case->status }}</span>
                     @if($case->businessListing)
-                        <br><small style="color:#047857;font-weight:900">{{ $fa ? 'در کاتالوگ' : 'In catalog' }}</small>
+                        <br><small style="color:#047857;font-weight:900">{{ __('public_real_estate.office.table.in_catalog') }}</small>
                     @endif
                 </td>
-                <td><a class="re-btn re-dark" href="{{ route('office.real-estate.show',['portal'=>$portal->uuid,'case'=>$case]) }}">{{ $fa ? 'مشاهده' : 'View' }}</a></td>
+                <td><a class="re-btn re-dark" href="{{ route('office.real-estate.show',['portal'=>$portal->uuid,'case'=>$case]) }}">{{ __('public_real_estate.office.table.view') }}</a></td>
             </tr>
         @empty
-            <tr><td colspan="8" style="text-align:center;padding:50px"><b>{{ $fa ? 'پرونده‌ای پیدا نشد' : 'No cases found' }}</b></td></tr>
+            <tr><td colspan="8" style="text-align:center;padding:50px"><b>{{ __('public_real_estate.office.table.empty') }}</b></td></tr>
         @endforelse
     </tbody></table></div>@if($cases->hasPages())<div class="re-pager">{{ $cases->links() }}</div>@endif</section>
 </main>
