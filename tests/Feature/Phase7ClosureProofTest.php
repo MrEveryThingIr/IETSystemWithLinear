@@ -58,7 +58,7 @@ class Phase7ClosureProofTest extends TestCase
     {
         $this->seed(Phase7InteractionDemoSeeder::class);
 
-        $owner = User::query()->where('email', 'test@example.com')->sole();
+        $owner = User::query()->where('username', (string) config('bootstrap.superadmin.username'))->sole();
         $learner = User::query()->where('email', 'phase7.learner@example.com')->sole();
         $exam = $this->contentByTitle('Phase 7 — Laravel Fundamentals Exam');
         $interaction = InteractionDefinition::query()->where('name', 'School exam')->sole();
@@ -167,7 +167,7 @@ class Phase7ClosureProofTest extends TestCase
         Storage::fake('local');
         $this->seed(Phase7InteractionDemoSeeder::class);
 
-        $owner = User::query()->where('email', 'test@example.com')->sole();
+        $owner = User::query()->where('username', (string) config('bootstrap.superadmin.username'))->sole();
         $candidate = User::query()->where('email', 'phase7.candidate@example.com')->sole();
         $candidateActor = $candidate->actor()->firstOrFail();
         $group = Group::query()->where('name', 'Phase 7 Employment Application Lab')->sole();

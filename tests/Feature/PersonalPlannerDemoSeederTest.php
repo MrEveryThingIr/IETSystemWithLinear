@@ -23,8 +23,11 @@ class PersonalPlannerDemoSeederTest extends TestCase
     public function test_demo_seed_covers_personal_planner_states_and_is_idempotent(): void
     {
         $this->seed(DatabaseSeeder::class);
+        $this->seed(PersonalPlannerDemoSeeder::class);
 
-        $user = User::query()->where('email', 'test@example.com')->firstOrFail();
+        $user = User::query()
+            ->where('username', (string) config('bootstrap.superadmin.username'))
+            ->firstOrFail();
         $this->assertNotNull($user->actor);
 
         $plans = Plan::query()
