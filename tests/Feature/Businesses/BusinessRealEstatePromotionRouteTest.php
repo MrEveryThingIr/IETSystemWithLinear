@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Businesses;
 
+use App\Models\BusinessListing;
 use App\Models\PublicIntakePortalGrant;
 use App\Models\PublicRealEstateCase;
 use App\Models\User;
@@ -53,18 +54,51 @@ class BusinessRealEstatePromotionRouteTest extends TestCase
             'preview_token_hash' => hash('sha256', 'route-test'),
         ]);
 
-        $this->actingAs($owner)
-            ->post(route('businesses.real-estate.cases.promote', [$business, $portal, $case]))
-            ->assertRedirect(route('businesses.catalog.index', $business));
+        $response = $this->actingAs($owner)
+            ->post(route('businesses.real-estate.cases.promote', [$business, $portal, $case]));
 
         $case->refresh();
 
         $this->assertNotNull($case->business_listing_id);
-        $this->assertDatabaseHas('business_listings', [
-            'id' => $case->business_listing_id,
-            'business_id' => $business->id,
-            'listing_type' => 'property',
-        ]);
+
+        $listing = BusinessListing::query()
+            ->with('currentVersion')
+            ->findOrFail($case->business_listing_id);
+
+        $response->assertRedirect(route('businesses.catalog.listings.edit', [$business, $listing]));
+
+        $this->assertSame('public', $listing->visibility);
+        $this->assertSame('draft', $listing->status);
+        $this->assertNull($listing->published_version_id);
+
+        $title = $listing->currentVersion->title;
+
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))
+            ->assertOk()
+            ->assertDontSee($title);
+
+        $this->actingAs($owner)
+            ->get(route('businesses.catalog.listings.edit', [$business, $listing]))
+            ->assertOk()
+            ->assertSee(__('business_listing.editor_help'))
+            ->assertSee('owned');
+
+        $this->actingAs($owner)
+            ->post(route('businesses.catalog.listings.publish', [$business, $listing]))
+            ->assertRedirect(route('businesses.catalog.listings.edit', [$business, $listing]));
+
+        $listing->refresh();
+
+        $this->assertSame('active', $listing->status);
+        $this->assertNotNull($listing->published_version_id);
+
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))
+            ->assertOk()
+            ->assertSee($title)
+            ->assertSee(route('public.businesses.listings.show', [
+                'business' => $business->slug,
+                'listing' => $listing->uuid,
+            ]), false);
     }
 
     public function test_promotion_route_still_rejects_a_portal_from_another_business(): void

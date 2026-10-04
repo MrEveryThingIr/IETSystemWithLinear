@@ -249,7 +249,7 @@ return [
     'messages' => [
         'catalog_category_saved' => 'Catalog category saved.',
         'price_version_added' => 'New price version added.',
-        'property_promoted' => 'Property case promoted to Business Listing :uuid.',
+        'property_promoted' => 'Property case promoted to a public-ready catalog draft :uuid. Review it, then publish the version to make it visible on the public Business website.',
         'client_saved' => 'Client/contact saved.',
         'client_archived' => 'Client/contact archived.',
         'contact_added' => 'Business contact channel added.',

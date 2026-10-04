@@ -206,7 +206,7 @@ class BusinessTraditionalListingWorkflowTest extends TestCase
         $business = app(BusinessService::class)->create($owner->actor, [
             'name' => 'Versioned Property Office',
             'kind' => 'real_estate',
-            'visibility' => 'private',
+            'visibility' => 'public',
             'status' => 'active',
         ]);
 
@@ -254,6 +254,15 @@ class BusinessTraditionalListingWorkflowTest extends TestCase
         $this->assertNotNull($published->published_at);
         $this->assertSame(1, $published->media->count());
 
+        $publicUrl = route('public.businesses.listings.show', [
+            'business' => $business->slug,
+            'listing' => $listing->uuid,
+        ]);
+
+        $this->get($publicUrl)
+            ->assertOk()
+            ->assertSee('Original published property');
+
         $this->actingAs($owner)
             ->put(route('businesses.catalog.listings.update', [$business, $listing]), [
                 'title' => 'Revised working property',
@@ -279,6 +288,7 @@ class BusinessTraditionalListingWorkflowTest extends TestCase
         $working = $listing->currentVersion;
         $stillPublished = $listing->publishedVersion;
 
+        $this->assertSame('active', $listing->status);
         $this->assertSame(2, $working->version_number);
         $this->assertNull($working->published_at);
         $this->assertNull($working->presentation_content_id);
@@ -291,6 +301,11 @@ class BusinessTraditionalListingWorkflowTest extends TestCase
         $this->assertSame('100.00', $stillPublished->propertyDetails->construction_area);
         $this->assertSame('Original public note', $stillPublished->propertyDetails->public_notes);
         $this->assertSame(1, $stillPublished->media->count());
+
+        $this->get($publicUrl)
+            ->assertOk()
+            ->assertSee('Original published property')
+            ->assertDontSee('Revised working property');
     }
 
     public function test_public_listing_media_with_unknown_rights_blocks_publication(): void

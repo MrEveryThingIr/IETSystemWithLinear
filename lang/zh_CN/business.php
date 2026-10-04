@@ -244,7 +244,7 @@ return [
     'messages' => [
         'catalog_category_saved' => '目录分类已保存。',
         'price_version_added' => '已添加新的价格版本。',
-        'property_promoted' => '房产案件已转换为商家项目 :uuid。',
+        'property_promoted' => '房产案件已转换为可公开发布的目录草稿 :uuid。请先审核，然后发布该版本，它才会显示在商家的公开网站上。',
         'client_saved' => '客户 / 联系人已保存。',
         'client_archived' => '客户 / 联系人已归档。',
         'contact_added' => '已添加商家联系方式。',

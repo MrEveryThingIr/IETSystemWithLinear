@@ -222,7 +222,7 @@
             <form method="POST" enctype="multipart/form-data" action="{{ route('businesses.catalog.listings.media.store',[$business,$listing]) }}" class="grid3">
                 @csrf
                 <label class="field"><span>{{ __('business_listing.media.file') }}</span><input type="file" name="media" accept="image/*,video/*,audio/*" required></label>
-                <label class="field"><span>{{ __('business_listing.media.rights') }}</span><select name="rights_status">@foreach(AppModelsAsset::RIGHTS_STATUSES as $status)<option value="{{ $status }}" @selected($status==='owned')>{{ $status }}</option>@endforeach</select></label>
+                <label class="field"><span>{{ __('business_listing.media.rights') }}</span><select name="rights_status">@foreach($rightsStatuses as $status)<option value="{{ $status }}" @selected($status==='owned')>{{ $status }}</option>@endforeach</select></label>
                 <label class="field"><span>{{ __('business_listing.media.visibility') }}</span><select name="visibility"><option value="public">public</option><option value="members">members</option><option value="private">private</option></select></label>
                 <label class="field" style="grid-column:span 2"><span>{{ __('business_listing.media.caption') }}</span><input name="caption"></label>
                 <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="cover" value="1"> {{ __('business_listing.media.cover') }}</label>

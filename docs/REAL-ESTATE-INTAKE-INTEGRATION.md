@@ -75,7 +75,8 @@ The preferred focused Real Estate workflow remains:
 - private office case list and filters;
 - case details and private media;
 - status progression;
-- promotion of qualified property offers into the Business catalog.
+- promotion of qualified property offers into a public-ready Business catalog draft;
+- explicit operator preview and publication before that draft appears on the public Business website.
 
 The difference is conceptual ownership: those screens now say and behave as a
 specialized capability of the owning Business, rather than a parallel system.
@@ -98,4 +99,8 @@ specialized capability of the owning Business, rather than a parallel system.
 - While the Business is private/inactive, both its public website and linked
   Real Estate intake are unavailable and are not advertised.
 - Existing office URLs/cases survive legacy-office adoption into Business.
-- Qualified property offers can still be promoted to Business Listings.
+- Qualified property offers are promoted to public-ready Business Listing drafts; the
+  operator reviews the customer preview and explicitly publishes the version before it
+  appears on the public Business website.
+- Editing an already published Listing creates a new working version without taking the
+  previously published version offline.

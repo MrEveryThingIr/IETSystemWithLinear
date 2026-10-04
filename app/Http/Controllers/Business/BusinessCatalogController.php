@@ -255,7 +255,7 @@ class BusinessCatalogController extends Controller
         $listing = $catalog->promoteRealEstateOffer($business, $case, $actor);
 
         return redirect()
-            ->route('businesses.catalog.index', $business)
+            ->route('businesses.catalog.listings.edit', [$business, $listing])
             ->with('status', __('business.messages.property_promoted', ['uuid' => $listing->uuid]));
     }
 }
