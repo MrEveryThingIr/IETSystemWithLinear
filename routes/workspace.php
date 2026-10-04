@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\FeatureSurfaceAdminController;
+use App\Http\Controllers\Workspace\RealEstateWorkspaceController;
 use App\Http\Controllers\Workspace\WorkspaceController;
 use App\Http\Middleware\RequireFeatureSurface;
 use Illuminate\Support\Facades\Route;
@@ -9,8 +10,8 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/workspace', [WorkspaceController::class, 'index'])
         ->name('workspace.index');
 
-    Route::get('/workspace/real-estate', fn () => redirect()->route('businesses.index', ['kind' => 'real_estate']))
-        ->middleware(RequireFeatureSurface::class.':business')
+    Route::get('/workspace/real-estate', [RealEstateWorkspaceController::class, 'index'])
+        ->middleware(RequireFeatureSurface::class.':real-estate')
         ->name('workspace.real-estate.index');
 
     Route::prefix('platform/publication')
