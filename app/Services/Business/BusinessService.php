@@ -18,9 +18,14 @@ class BusinessService
     public function __construct(
         private readonly EnsureBusinessContext $businessContexts,
         private readonly EnsureMonetaryUnit $monetaryUnits,
+        private readonly EnsureRealEstateBusinessIntake $realEstateIntake,
     ) {}
 
-    public function create(Actor $owner, array $data): Business
+    public function create(
+        Actor $owner,
+        array $data,
+        bool $bootstrapVertical = true,
+    ): Business
     {
         $iet = $this->monetaryUnits->execute('IET');
         $data['default_monetary_unit_id'] ??= $iet->id;
@@ -47,6 +52,12 @@ class BusinessService
         });
 
         $this->businessContexts->execute($business);
+
+        $business = $business->refresh();
+
+        if ($bootstrapVertical && $business->kind === 'real_estate') {
+            $this->realEstateIntake->execute($business);
+        }
 
         return $business->refresh();
     }

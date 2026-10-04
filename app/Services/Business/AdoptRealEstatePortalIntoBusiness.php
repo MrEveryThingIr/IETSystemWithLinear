@@ -14,7 +14,7 @@ class AdoptRealEstatePortalIntoBusiness
 {
     public function __construct(
         private readonly BusinessService $businesses,
-        private readonly BusinessCatalogService $catalog,
+        private readonly EnsureRealEstateBusinessIntake $realEstateIntake,
     ) {}
 
     public function execute(PublicIntakePortal $portal, User $user): Business
@@ -53,9 +53,9 @@ class AdoptRealEstatePortalIntoBusiness
                         'simple_office_mode' => true,
                     ],
                 ],
-            ]);
+            ], bootstrapVertical: false);
 
-            $lockedPortal->update(['business_id' => $business->id]);
+            $this->realEstateIntake->execute($business, $lockedPortal);
 
             BusinessContact::query()
                 ->where('owner_type', $lockedPortal->getMorphClass())
@@ -64,19 +64,6 @@ class AdoptRealEstatePortalIntoBusiness
                     'owner_type' => $business->getMorphClass(),
                     'owner_id' => $business->id,
                 ]);
-
-            $properties = $this->catalog->ensureCategory($business, 'Properties', 'properties');
-
-            foreach ([
-                ['Residential', 'residential'],
-                ['Commercial', 'commercial'],
-                ['Office', 'office'],
-                ['Industrial / Warehouse', 'industrial-warehouse'],
-                ['Agricultural / Garden', 'agricultural-garden'],
-                ['Land', 'land'],
-            ] as [$name, $slug]) {
-                $this->catalog->ensureCategory($business, $name, $slug, $properties);
-            }
 
             $business->load([
                 'contextBinding.context',

@@ -8,6 +8,7 @@ use App\Models\Actor;
 use App\Models\Business;
 use App\Models\Profession;
 use App\Services\Business\BusinessService;
+use App\Services\Business\EnsureRealEstateBusinessIntake;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
@@ -146,11 +147,16 @@ class BusinessController extends Controller
 
     public function update(
         Request $request,
-        Business $business
+        Business $business,
+        EnsureRealEstateBusinessIntake $realEstateIntake,
     ): RedirectResponse {
         abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
 
         $business->update($request->validate($this->rules()));
+
+        if ($business->kind === 'real_estate') {
+            $realEstateIntake->execute($business->refresh());
+        }
 
         return back()->with('status', 'اطلاعات کسب‌وکار به‌روزرسانی شد.');
     }
