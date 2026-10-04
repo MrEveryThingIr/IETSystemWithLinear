@@ -147,6 +147,7 @@ return [
             'unit' => 'Internal settlement unit',
             'unit_help' => 'Internal obligations and settlements are calculated from the canonical financial facts.',
             'external' => 'Real-money deposit / withdrawal',
+            'external_status' => 'Not connected',
             'external_help' => 'No real bank or payment provider is connected at this stage.',
         ],
         'real_estate' => [
