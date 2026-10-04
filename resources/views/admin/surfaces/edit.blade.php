@@ -25,7 +25,7 @@
                 @foreach($groups as $group => $surfaces)
                     <section class="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                         <h2 class="mb-4 text-xl font-black">
-                            {{ __("publication.groups.{$group}") }}
+                            {{ __('publication.groups.'.$group) }}
                         </h2>
 
                         <div class="grid gap-3 md:grid-cols-2">
