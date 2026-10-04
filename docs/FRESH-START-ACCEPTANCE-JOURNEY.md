@@ -175,3 +175,30 @@ For every confusing step, capture:
   navigation, terminology, or workflow state.
 
 That evidence should drive the next coherence/redesign milestone.
+
+
+## Public Business website rule
+
+Every active public Business has a first-class standalone public website at
+`/b/{business-slug}`. This is not a public version of the internal Business
+workspace. The visitor should experience the Business as the website itself:
+
+- no Everything application navigation, Planner, Money, Deals, Businesses, or
+  administration chrome;
+- public identity, public contact/location, published listings, and only the
+  Business-owned public actions that are actually available;
+- Real Estate intake uses the Business-scoped
+  `/b/{business-slug}/property-intake` path from the public website;
+- the historical token-based `/office/{token}` intake remains compatible for
+  existing QR codes/links, but it is no longer the canonical link advertised by
+  the Business website;
+- an owner/manager can optionally select other active public Businesses to
+  advertise. Nothing is cross-promoted by default.
+
+Inside the authenticated Business workspace, every public Business exposes a
+prominent **Public website** action. A private/paused Business does not render a
+dead public link; managers instead see publication guidance.
+
+Superadmin has domain-wide Business visibility/management without needing to be
+added as a member of every Business. Ordinary accounts still require both the
+published Business feature surface and the appropriate Business membership/role.

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Business;
 use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\BusinessListing;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class PublicBusinessController extends Controller
@@ -41,6 +42,7 @@ class PublicBusinessController extends Controller
 
         return view('public-business.show', [
             'business' => $business,
+            'featuredBusinesses' => $this->featuredBusinesses($business),
         ]);
     }
 
@@ -56,6 +58,12 @@ class PublicBusinessController extends Controller
             404,
         );
 
+        $business->load([
+            'contactPoints' => fn ($query) => $query->where('visibility', 'public'),
+            'addresses' => fn ($query) => $query->where('visibility', 'public'),
+            'publicIntakePortals' => fn ($query) => $query->where('is_active', true),
+        ]);
+
         $listing->load([
             'category',
             'publishedVersion.propertyDetails',
@@ -69,6 +77,32 @@ class PublicBusinessController extends Controller
             'listing' => $listing,
             'version' => $listing->publishedVersion,
         ]);
+    }
+
+    private function featuredBusinesses(Business $business): Collection
+    {
+        $ids = collect(data_get($business->settings, 'public_site.featured_business_ids', []))
+            ->map(fn ($id): int => (int) $id)
+            ->filter(fn (int $id): bool => $id !== (int) $business->getKey())
+            ->unique()
+            ->take(12)
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $available = Business::query()
+            ->whereIn('id', $ids)
+            ->where('status', 'active')
+            ->where('visibility', 'public')
+            ->get(['id', 'uuid', 'slug', 'name', 'short_intro', 'kind'])
+            ->keyBy('id');
+
+        return $ids
+            ->map(fn (int $id) => $available->get($id))
+            ->filter()
+            ->values();
     }
 
     private function ensurePublic(Business $business): void

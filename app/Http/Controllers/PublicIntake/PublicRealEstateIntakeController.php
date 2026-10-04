@@ -4,6 +4,7 @@ namespace App\Http\Controllers\PublicIntake;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PublicIntake\StorePublicRealEstateIntakeRequest;
+use App\Models\Business;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Services\Contacts\BusinessContactResolver;
@@ -15,6 +16,25 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class PublicRealEstateIntakeController extends Controller
 {
+    public function showForBusiness(Business $business): SymfonyResponse
+    {
+        return $this->show($this->portalForBusiness($business));
+    }
+
+    public function storeForBusiness(
+        StorePublicRealEstateIntakeRequest $request,
+        Business $business,
+        PublicRealEstateCaseMediaStore $mediaStore,
+        BusinessContactResolver $contactResolver,
+    ): SymfonyResponse {
+        return $this->store(
+            $request,
+            $this->portalForBusiness($business),
+            $mediaStore,
+            $contactResolver,
+        );
+    }
+
     public function show(PublicIntakePortal $portal): SymfonyResponse
     {
         $portal->loadMissing('business');
@@ -136,6 +156,26 @@ class PublicRealEstateIntakeController extends Controller
             'case' => $case,
             'portal' => $case->portal,
         ]);
+    }
+
+    private function portalForBusiness(Business $business): PublicIntakePortal
+    {
+        abort_unless(
+            $business->status === 'active'
+            && $business->visibility === 'public'
+            && $business->kind === 'real_estate',
+            404,
+        );
+
+        $portal = $business->publicIntakePortals()
+            ->where('type', 'real_estate')
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->first();
+
+        abort_unless($portal instanceof PublicIntakePortal, 404);
+
+        return $portal;
     }
 
     private function ensureAvailable(PublicIntakePortal $portal): void

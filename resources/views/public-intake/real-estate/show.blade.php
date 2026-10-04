@@ -52,7 +52,9 @@
             <div class="privacy">{{ __('public_real_estate.privacy') }}</div>
         </header>
 
-        <form method="POST" enctype="multipart/form-data" action="{{ route('public.real-estate.store', $portal) }}" class="body">
+        <form method="POST" enctype="multipart/form-data" action="{{ $business
+            ? route('public.businesses.real-estate.store', ['business' => $business->slug])
+            : route('public.real-estate.store', $portal) }}" class="body">
             @csrf
             <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
 

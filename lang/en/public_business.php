@@ -33,4 +33,13 @@ return [
         'help' => 'Send your property or request directly to this office. Your exact address and contact details remain private to authorized office staff.',
         'submit' => 'Submit property / request',
     ],
+    'website_navigation' => 'Website navigation',
+    'home' => 'Home',
+    'nav_offerings' => 'Offerings',
+    'nav_contact' => 'Contact',
+    'nav_intake' => 'Submit property / request',
+    'featured_kicker' => 'Recommended',
+    'featured_heading' => 'Other businesses we recommend',
+    'featured_help' => 'These businesses are shown here because this business chose to introduce them.',
+    'visit_business' => 'Visit website',
 ];

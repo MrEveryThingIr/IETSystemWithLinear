@@ -9,9 +9,17 @@
     @fluxAppearance
 </head>
 <body class="min-h-dvh bg-slate-50 text-slate-950 antialiased">
-    <header class="border-b border-slate-200 bg-white/95 backdrop-blur">
+    @php
+        $businessHome = route('public.businesses.show', ['business' => $business->slug]);
+        $publicPortal = $business->relationLoaded('publicIntakePortals')
+            ? $business->publicIntakePortals->firstWhere('type', 'real_estate')
+            : null;
+        $hasPublicContact = ($business->relationLoaded('contactPoints') && $business->contactPoints->isNotEmpty())
+            || ($business->relationLoaded('addresses') && $business->addresses->isNotEmpty());
+    @endphp
+    <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4 sm:px-6">
-            <a href="{{ route('public.businesses.show', ['business' => $business->slug]) }}" class="flex min-w-0 items-center gap-3 text-inherit no-underline">
+            <a href="{{ $businessHome }}" class="flex min-w-0 items-center gap-3 text-inherit no-underline">
                 <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-emerald-600 to-sky-600 text-lg font-black text-white shadow-sm">
                     {{ mb_substr($business->name, 0, 1) }}
                 </span>
@@ -22,7 +30,19 @@
                     @endif
                 </span>
             </a>
-            <div class="ms-auto"><x-app.locale-switcher /></div>
+
+            <nav class="ms-auto hidden items-center gap-1 lg:flex" aria-label="{{ __('public_business.website_navigation') }}">
+                <a class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 no-underline hover:bg-slate-100 hover:text-slate-950" href="{{ $businessHome }}">{{ __('public_business.home') }}</a>
+                <a class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 no-underline hover:bg-slate-100 hover:text-slate-950" href="{{ $businessHome }}#offerings">{{ __('public_business.nav_offerings') }}</a>
+                @if($hasPublicContact)
+                    <a class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 no-underline hover:bg-slate-100 hover:text-slate-950" href="{{ $businessHome }}#contact">{{ __('public_business.nav_contact') }}</a>
+                @endif
+                @if($publicPortal)
+                    <a class="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-black text-white no-underline hover:bg-emerald-800" href="{{ route('public.businesses.real-estate.show', ['business' => $business->slug]) }}">{{ __('public_business.nav_intake') }}</a>
+                @endif
+            </nav>
+
+            <div class="lg:ms-2"><x-app.locale-switcher /></div>
         </div>
     </header>
     <main>@yield('content')</main>

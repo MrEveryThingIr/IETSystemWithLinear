@@ -30,6 +30,7 @@
         .quick-card{border-radius:19px;padding:17px;color:#fff}.q1{background:linear-gradient(135deg,#7c3aed,#a855f7)}.q2{background:linear-gradient(135deg,#059669,#10b981)}.q3{background:linear-gradient(135deg,#ea580c,#f59e0b)}
         .quick-card strong{font-size:18px;display:block}.quick-card span{font-size:13px;opacity:.92}
         .section-form{margin-top:16px;padding:17px;border-radius:18px;background:#f8fafc;border:1px dashed #cbd5e1}
+        .site-link{display:inline-flex;margin-top:10px;border-radius:14px;padding:10px 14px;background:#fff;color:#0f766e;font-weight:950;text-decoration:none;box-shadow:0 6px 18px rgba(15,23,42,.12)}
         @media(max-width:800px){.stats,.quick,.grid,.grid3{grid-template-columns:1fr}.hero h1{font-size:28px}.body,.head{padding:17px}}
 </style>
 <main class="wrap">
@@ -47,6 +48,9 @@
                 <div class="chip">{{ __('business.show.code') }} {{ $business->code }}</div>
                 @if($canOperate)
                     <div style="margin-top:8px;font-size:13px;opacity:.9">{{ __('business.show.owner') }}: {{ $business->owner->user?->username ?? $business->owner->user?->email ?? ('Actor #'.$business->owner->getKey()) }}</div>
+                @endif
+                @if($publicSiteUrl)
+                    <a class="site-link" target="_blank" rel="noopener" href="{{ $publicSiteUrl }}">🌐 {{ __('business.public_site.open') }}</a>
                 @endif
             </div>
         </div>
@@ -164,6 +168,58 @@
     </section>
     @endif
 
+    @if($canOperate)
+    <section id="public-site" class="panel">
+        <div class="head">
+            <div>
+                <h2>🌐 {{ __('business.public_site.title') }}</h2>
+                <p>{{ __('business.public_site.help') }}</p>
+            </div>
+            @if($publicSiteUrl)
+                <a class="btn green" target="_blank" rel="noopener" href="{{ $publicSiteUrl }}">{{ __('business.public_site.open') }}</a>
+            @else
+                <span class="badge">{{ __('business.public_site.not_live') }}</span>
+            @endif
+        </div>
+        <div class="body">
+            @if($publicSiteUrl)
+                <div class="item">
+                    <strong>{{ __('business.public_site.live') }}</strong>
+                    <div class="muted" style="margin-top:6px;direction:ltr;text-align:left">{{ $publicSiteUrl }}</div>
+                </div>
+            @elseif($canManage)
+                <div class="item">{{ __('business.public_site.publish_help') }}</div>
+            @endif
+
+            @if($canManage)
+                <form class="section-form" method="POST" action="{{ route('businesses.public-site.update', $business) }}">
+                    @csrf @method('PUT')
+                    <h3 style="margin:0">{{ __('business.public_site.featured_title') }}</h3>
+                    <p style="color:#667085;line-height:1.8">{{ __('business.public_site.featured_help') }}</p>
+                    @if($publicSiteCandidates->isNotEmpty())
+                        <div class="grid">
+                            @foreach($publicSiteCandidates as $candidate)
+                                <label class="item" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+                                    <input style="width:auto!important;margin-top:4px" type="checkbox" name="featured_business_ids[]" value="{{ $candidate->id }}" @checked($featuredBusinessIds->contains((int) $candidate->id))>
+                                    <span style="margin:0">
+                                        <strong>{{ $candidate->name }}</strong>
+                                        @if($candidate->short_intro)
+                                            <small style="display:block;color:#667085;margin-top:4px">{{ $candidate->short_intro }}</small>
+                                        @endif
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <button class="btn primary" style="margin-top:12px">{{ __('business.public_site.save') }}</button>
+                    @else
+                        <div class="item">{{ __('business.public_site.no_candidates') }}</div>
+                    @endif
+                </form>
+            @endif
+        </div>
+    </section>
+    @endif
+
     @if($canOperate && $canUseMoney)
         <section class="panel">
             <div class="head">
@@ -231,9 +287,6 @@
                         </div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap">
                             <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ __('business.show.real_estate.cases') }}</a>
-                            @if($business->visibility === 'public')
-                                <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}">{{ __('business.show.real_estate.website') }}</a>
-                            @endif
                         </div>
                     </div>
                 @endforeach

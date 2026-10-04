@@ -10,7 +10,7 @@ final class BusinessAccess
 {
     public static function canView(User $user, Business $business): bool
     {
-        if ($business->visibility === 'public') {
+        if (PlatformAdmin::check($user) || $business->visibility === 'public') {
             return true;
         }
 
@@ -19,17 +19,26 @@ final class BusinessAccess
 
     public static function canOperate(User $user, Business $business): bool
     {
+        if (PlatformAdmin::check($user)) {
+            return true;
+        }
+
         return self::membership($user, $business) !== null;
     }
 
     public static function canManage(User $user, Business $business): bool
     {
+        if (PlatformAdmin::check($user)) {
+            return true;
+        }
+
         if ((int) $business->owner_actor_id === (int) $user->actor?->getKey()) {
             return true;
         }
-        $m = self::membership($user, $business);
 
-        return $m && in_array($m->role, ['owner', 'manager'], true);
+        $membership = self::membership($user, $business);
+
+        return $membership && in_array($membership->role, ['owner', 'manager'], true);
     }
 
     public static function canManageOwnership(User $user, Business $business): bool

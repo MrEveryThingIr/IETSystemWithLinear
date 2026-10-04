@@ -66,3 +66,20 @@ No AI provider, credential, runtime call, or AI-generated autonomous mutation is
 ## Owner handoff
 
 Remote completion ends at one immutable release-candidate SHA with green CI, synchronized acceptance/deployment docs, and an owner browser pass covering visibility/publication, Business public/private boundaries, multilingual rendering, Real Estate intake, and the full invitation-to-interaction journey. The owner then runs the cumulative browser worksheet against a continuing database. Any discovered defect receives a regression test and correction commit before the stable release tag.
+
+
+## Standalone Business website acceptance amendment
+
+Before formal v1 acceptance, verify all of the following:
+
+- every active public Business, regardless of kind, has a discoverable
+  `/b/{slug}` standalone website from its operator workspace;
+- private/paused Businesses render no public-site link that can lead to 404;
+- the public site contains no platform workspace navigation or product chrome;
+- Business-owned Real Estate intake is advertised through
+  `/b/{slug}/property-intake`, while legacy token URLs remain compatible;
+- owner/manager-selected cross-Business recommendations are opt-in and can only
+  expose active public Businesses;
+- Superadmin can inspect/manage any Business without being inserted into that
+  Business's membership table;
+- non-admin users still require publication plus Business role/domain access.

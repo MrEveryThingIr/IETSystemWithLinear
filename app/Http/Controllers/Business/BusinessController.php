@@ -14,6 +14,7 @@ use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
 use App\Support\BusinessEconomyProjection;
 use App\Support\ExternalMoneyGatewayRegistry;
+use App\Support\PlatformAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -27,12 +28,17 @@ class BusinessController extends Controller
         $actor = $user->actor;
         abort_unless($actor instanceof Actor && $actor->status === 'active', 403);
 
-        $businesses = Business::query()
-            ->where(fn ($query) => $query
+        $businessQuery = Business::query();
+
+        if (! PlatformAdmin::check($user)) {
+            $businessQuery->where(fn ($query) => $query
                 ->where('owner_actor_id', $actor->getKey())
                 ->orWhereHas('memberships', fn ($membership) => $membership
                     ->where('actor_id', $actor->getKey())
-                    ->where('status', 'active')))
+                    ->where('status', 'active')));
+        }
+
+        $businesses = $businessQuery
             ->when($request->filled('kind'), fn ($query) => $query->where('kind', $request->query('kind')))
             ->withCount([
                 'memberships as active_members_count' => fn ($q) => $q->where('status', 'active'),
@@ -121,6 +127,25 @@ class BusinessController extends Controller
         $canUseMoney = collect(['money', 'accounting', 'exchange'])
             ->contains(fn (string $surface): bool => $surfaceAccess->allows($request->user(), $surface));
 
+        $publicSiteUrl = $business->status === 'active' && $business->visibility === 'public'
+            ? route('public.businesses.show', ['business' => $business->slug])
+            : null;
+
+        $featuredBusinessIds = collect(data_get($business->settings, 'public_site.featured_business_ids', []))
+            ->map(fn ($id): int => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $publicSiteCandidates = $canManage
+            ? Business::query()
+                ->where('id', '!=', $business->getKey())
+                ->where('status', 'active')
+                ->where('visibility', 'public')
+                ->orderBy('name')
+                ->get(['id', 'uuid', 'slug', 'name', 'short_intro', 'kind'])
+            : collect();
+
         $businessSectionLinks = array_filter([
             'overview' => route('businesses.show', $business),
             'clients' => route('businesses.clients.index', $business),
@@ -149,6 +174,9 @@ class BusinessController extends Controller
             'canUseDeals' => $canUseDeals,
             'canUseMarket' => $canUseMarket,
             'canUseMoney' => $canUseMoney,
+            'publicSiteUrl' => $publicSiteUrl,
+            'featuredBusinessIds' => $featuredBusinessIds,
+            'publicSiteCandidates' => $publicSiteCandidates,
             'businessSections' => $businessSections,
             'businessSectionLinks' => $businessSectionLinks,
             'kindLabels' => BusinessDirectory::kindLabels(),
@@ -171,6 +199,47 @@ class BusinessController extends Controller
         }
 
         return back()->with('status', __('business.messages.updated'));
+    }
+
+    public function updatePublicSite(Request $request, Business $business): RedirectResponse
+    {
+        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
+
+        $data = $request->validate([
+            'featured_business_ids' => ['nullable', 'array', 'max:12'],
+            'featured_business_ids.*' => ['integer', 'distinct', Rule::exists('businesses', 'id')],
+        ]);
+
+        $requestedIds = collect($data['featured_business_ids'] ?? [])
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        $allowedIds = Business::query()
+            ->whereIn('id', $requestedIds)
+            ->where('id', '!=', $business->getKey())
+            ->where('status', 'active')
+            ->where('visibility', 'public')
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        $allowed = array_flip($allowedIds);
+        $featuredIds = $requestedIds
+            ->filter(fn (int $id): bool => isset($allowed[$id]))
+            ->take(12)
+            ->values()
+            ->all();
+
+        $settings = is_array($business->settings) ? $business->settings : [];
+        $settings['public_site'] = array_replace(
+            is_array($settings['public_site'] ?? null) ? $settings['public_site'] : [],
+            ['featured_business_ids' => $featuredIds],
+        );
+
+        $business->update(['settings' => $settings]);
+
+        return back()->with('status', __('business.public_site.saved'));
     }
 
     private function rules(): array

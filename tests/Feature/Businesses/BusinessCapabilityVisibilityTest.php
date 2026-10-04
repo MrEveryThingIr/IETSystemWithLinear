@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Businesses;
 
+use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\Services\Business\BusinessService;
 use App\Services\Surfaces\FeatureSurfaceGrantService;
@@ -85,4 +86,32 @@ class BusinessCapabilityVisibilityTest extends TestCase
             ->assertSee(route('money.index'), false)
             ->assertSee(__('business.show.money.title'));
     }
+    public function test_superadmin_can_see_and_manage_any_business_without_becoming_a_business_member(): void
+    {
+        $owner = User::factory()->create();
+        $owner->actor()->create();
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Independent Owner Business',
+            'kind' => 'services',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $admin = User::factory()->create();
+        $admin->actor()->create();
+        PlatformAccessGrant::factory()->for($admin)->create();
+
+        $this->actingAs($admin)
+            ->get(route('businesses.index'))
+            ->assertOk()
+            ->assertSee('Independent Owner Business');
+
+        $this->actingAs($admin)
+            ->get(route('businesses.show', $business))
+            ->assertOk()
+            ->assertSee('Independent Owner Business')
+            ->assertSee(__('business.show.profile.save'));
+    }
+
 }

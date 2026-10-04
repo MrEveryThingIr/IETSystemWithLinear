@@ -6,12 +6,14 @@
 <section class="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-teal-900 to-sky-900 text-white">
     <div class="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div class="max-w-3xl">
-            <div class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold">{{ __('public_business.business') }}</div>
+            @if($business->legal_name)
+                <div class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold">{{ $business->legal_name }}</div>
+            @endif
             <h1 class="mt-5 text-4xl font-black tracking-tight sm:text-6xl">{{ $business->name }}</h1>
             <p class="mt-5 max-w-2xl text-lg leading-9 text-white/80">{{ $business->short_intro ?: __('public_business.default_intro') }}</p>
             @if($portal)
                 <div class="mt-8 flex flex-wrap gap-3">
-                    <a href="{{ route('public.real-estate.show', $portal) }}" class="rounded-2xl bg-white px-5 py-3 font-black text-emerald-900 no-underline shadow-lg transition hover:-translate-y-0.5">{{ __('public_business.real_estate.submit') }}</a>
+                    <a href="{{ route('public.businesses.real-estate.show', ['business' => $business->slug]) }}" class="rounded-2xl bg-white px-5 py-3 font-black text-emerald-900 no-underline shadow-lg transition hover:-translate-y-0.5">{{ __('public_business.real_estate.submit') }}</a>
                     <a href="#offerings" class="rounded-2xl border border-white/25 bg-white/10 px-5 py-3 font-bold text-white no-underline">{{ __('public_business.view_offerings') }}</a>
                 </div>
             @endif
@@ -21,14 +23,14 @@
 
 <div class="mx-auto max-w-6xl space-y-12 px-4 py-12 sm:px-6">
     @if($business->description)
-        <section>
+        <section id="about">
             <div class="text-sm font-black uppercase tracking-[0.16em] text-emerald-700">{{ __('public_business.about') }}</div>
             <div class="mt-4 max-w-4xl whitespace-pre-line text-lg leading-9 text-slate-700">{{ $business->description }}</div>
         </section>
     @endif
 
     @if($business->contactPoints->isNotEmpty() || $business->addresses->isNotEmpty())
-        <section class="grid gap-5 lg:grid-cols-2">
+        <section id="contact" class="grid gap-5 lg:grid-cols-2">
             @if($business->contactPoints->isNotEmpty())
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-xl font-black">{{ __('public_business.contact') }}</h2>
@@ -78,6 +80,25 @@
         </div>
     </section>
 
+    @if($featuredBusinesses->isNotEmpty())
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm lg:p-10">
+            <div class="text-sm font-black uppercase tracking-[0.16em] text-sky-700">{{ __('public_business.featured_kicker') }}</div>
+            <h2 class="mt-2 text-3xl font-black">{{ __('public_business.featured_heading') }}</h2>
+            <p class="mt-3 max-w-3xl leading-8 text-slate-600">{{ __('public_business.featured_help') }}</p>
+            <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                @foreach($featuredBusinesses as $featuredBusiness)
+                    <a href="{{ route('public.businesses.show', ['business' => $featuredBusiness->slug]) }}" class="rounded-3xl border border-slate-200 bg-slate-50 p-5 text-inherit no-underline transition hover:-translate-y-1 hover:bg-white hover:shadow-lg">
+                        <div class="text-lg font-black">{{ $featuredBusiness->name }}</div>
+                        @if($featuredBusiness->short_intro)
+                            <p class="mt-2 line-clamp-3 text-sm leading-7 text-slate-600">{{ $featuredBusiness->short_intro }}</p>
+                        @endif
+                        <div class="mt-4 text-sm font-black text-sky-700">{{ __('public_business.visit_business') }} ←</div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     @if($portal)
         <section class="rounded-[2rem] bg-emerald-700 p-7 text-white shadow-xl lg:p-10">
             <div class="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -86,7 +107,7 @@
                     <h2 class="mt-2 text-3xl font-black">{{ __('public_business.real_estate.heading') }}</h2>
                     <p class="mt-3 max-w-3xl leading-8 text-emerald-50/90">{{ __('public_business.real_estate.help') }}</p>
                 </div>
-                <a href="{{ route('public.real-estate.show', $portal) }}" class="rounded-2xl bg-white px-5 py-3 text-center font-black text-emerald-800 no-underline">{{ __('public_business.real_estate.submit') }}</a>
+                <a href="{{ route('public.businesses.real-estate.show', ['business' => $business->slug]) }}" class="rounded-2xl bg-white px-5 py-3 text-center font-black text-emerald-800 no-underline">{{ __('public_business.real_estate.submit') }}</a>
             </div>
         </section>
     @endif

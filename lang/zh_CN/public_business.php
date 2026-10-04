@@ -33,4 +33,13 @@ return [
         'help' => '直接向本门店提交房产或需求。详细地址和联系方式仅供获授权的门店人员查看。',
         'submit' => '提交房产 / 需求',
     ],
+    'website_navigation' => '网站导航',
+    'home' => '首页',
+    'nav_offerings' => '产品与服务',
+    'nav_contact' => '联系我们',
+    'nav_intake' => '提交房产 / 需求',
+    'featured_kicker' => '推荐',
+    'featured_heading' => '我们推荐的其他企业',
+    'featured_help' => '这些企业由当前企业自主选择并在此推荐。',
+    'visit_business' => '访问网站',
 ];

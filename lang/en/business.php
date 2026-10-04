@@ -285,4 +285,17 @@ return [
         'open_website' => 'Public website',
         'catalog' => 'Catalog',
     ],
+    'public_site' => [
+        'title' => 'Public website',
+        'help' => 'This is this Business’s standalone public website. Visitors see this Business, not the wider Everything workspace.',
+        'live' => 'The public website is live.',
+        'not_live' => 'The public website is not published.',
+        'open' => 'Open public website',
+        'publish_help' => 'Set this Business to active and public in its profile before exposing it. Until then, no public website link is rendered.',
+        'featured_title' => 'Advertise other businesses',
+        'featured_help' => 'Optionally recommend selected active public Businesses inside this Business’s standalone website.',
+        'save' => 'Save public website settings',
+        'no_candidates' => 'There are no other active public Businesses available to advertise.',
+        'saved' => 'Public website settings saved.',
+    ],
 ];
