@@ -85,11 +85,24 @@ class ExperienceNavigation
             ];
         };
 
+        $standaloneDestination = function (string $surfaceKey) use ($item): ?array {
+            $surface = $item($surfaceKey);
+
+            if ($surface === null) {
+                return null;
+            }
+
+            return [
+                ...$surface,
+                'items' => [$surface],
+            ];
+        };
+
         $primary = array_values(array_filter([
             $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', 'experience.needs-offers', ['market']),
             $destination('work', 'experience.navigation.work', 'briefcase', 'experience.work', ['deals', 'planner']),
             $destination('organizations', 'experience.navigation.organizations', 'building-office-2', 'experience.organizations', ['business', 'groups']),
-            $item('real-estate'),
+            $standaloneDestination('real-estate'),
             $destination('money', 'experience.navigation.money', 'wallet', 'money.index', ['money', 'accounting', 'exchange']),
             $destination('content', 'experience.navigation.content', 'rectangle-stack', 'experience.content', ['content']),
         ]));
