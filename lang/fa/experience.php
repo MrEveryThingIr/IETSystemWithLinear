@@ -1,6 +1,28 @@
 <?php
 
 return [
+    'surfaces' => [
+        'notifications' => 'اعلان‌ها',
+        'profile' => 'پروفایل',
+        'market' => 'نیازها، ارائه‌ها و خدمات',
+        'money' => 'پول شخصی',
+        'deals' => 'معامله‌ها',
+        'business' => 'کسب‌وکارها',
+        'real-estate' => 'املاک',
+        'planner' => 'برنامه‌ریز',
+        'accounting' => 'حسابداری',
+        'exchange' => 'صرافی IET',
+        'vault' => 'خزانه خصوصی',
+        'content' => 'کتابخانه محتوا',
+        'groups' => 'گروه‌ها',
+        'ai' => 'آزمایشگاه گفت‌وگوی هوش مصنوعی',
+        'manual' => 'راهنمای سیستم',
+        'system-map' => 'نقشه سیستم',
+        'access-invitations' => 'دعوت و دسترسی',
+        'development-origins' => 'مبدأهای توسعه',
+        'actors' => 'کنشگران',
+        'publication-control' => 'انتشار قابلیت‌ها',
+    ],
     'navigation' => [
         'needs_offers' => 'نیازها و ارائه‌ها',
         'work' => 'کار',
