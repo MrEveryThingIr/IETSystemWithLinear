@@ -37,13 +37,16 @@ the Superadmin platform role.
    - name: **مشاور املاک مهوری**
    - kind: **دفتر املاک / real_estate**
    - visibility: private
-4. Open the Business.
+4. Open the Business and complete the internal profile/contact/location setup.
+5. When the office is actually ready for visitors, change visibility to **public**.
 
 Expected result:
 
 - the Business is the canonical identity;
 - a **کانال تخصصی املاک** section already exists;
-- a public intake URL and a private case-office URL exist immediately;
+- the specialized intake channel and private case-office are provisioned immediately;
+- while the Business is private, its public website and guest intake URL return 404 and are not advertised;
+- after the Business is published, its standalone public website exposes the Real Estate intake action;
 - property catalog categories are provisioned automatically;
 - Real Estate does not appear as a separate top-level application.
 
@@ -66,7 +69,7 @@ php artisan real-estate:intake-portal <business-uuid-or-code-or-slug>
 
 ## Journey 2 — a real-world seller does not need an account
 
-Open the Business public intake URL in a private/incognito browser.
+After publishing the Business, open its standalone public website in a private/incognito browser and enter the Real Estate intake from there.
 
 Scenario: **Ali**, a property owner, offers a residential property for sale.
 
