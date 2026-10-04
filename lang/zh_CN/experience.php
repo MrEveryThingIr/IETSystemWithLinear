@@ -1,6 +1,28 @@
 <?php
 
 return [
+    'surfaces' => [
+        'notifications' => '通知',
+        'profile' => '个人资料',
+        'market' => '需求、供给与服务',
+        'money' => '个人财务',
+        'deals' => '交易',
+        'business' => '商家',
+        'real-estate' => '房产',
+        'planner' => '计划器',
+        'accounting' => '会计',
+        'exchange' => 'IET 兑换',
+        'vault' => '私人保险库',
+        'content' => '内容库',
+        'groups' => '群组',
+        'ai' => 'AI 对话实验室',
+        'manual' => '系统手册',
+        'system-map' => '系统地图',
+        'access-invitations' => '邀请与访问',
+        'development-origins' => '开发来源',
+        'actors' => '参与者',
+        'publication-control' => '发布控制',
+    ],
     'navigation' => [
         'needs_offers' => '需求与提供',
         'work' => '工作',
