@@ -59,6 +59,14 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Production optimization smoke
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          php artisan optimize
+          php artisan optimize:clear
+          rm -f .env
+
       - name: Assemble runtime-only package
         shell: bash
         run: |
