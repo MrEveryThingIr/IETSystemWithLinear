@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    @if($business || $canManage)
+    @if($canUseBusiness && ($business || $canManage))
         <section class="bridge">
             <div>
                 <strong>{{ $fa ? 'اتصال اختیاری به کسب‌وکار' : 'Optional Business bridge' }}</strong>
