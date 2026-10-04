@@ -52,7 +52,6 @@ class PublicBusinessWebsiteTest extends TestCase
         $this->get(route('public.businesses.show', ['business' => $business->slug]))->assertNotFound();
     }
 
-
     public function test_private_real_estate_business_does_not_expose_its_public_intake_channel(): void
     {
         $owner = User::factory()->create();
