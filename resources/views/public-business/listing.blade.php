@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
-    <a href="{{ route('public.businesses.show', $business) }}" class="font-bold text-emerald-700 no-underline">← {{ $business->name }}</a>
+    <a href="{{ route('public.businesses.show', ['business' => $business->slug]) }}" class="font-bold text-emerald-700 no-underline">← {{ $business->name }}</a>
     <article class="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
         <div class="flex flex-wrap gap-2">
             <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold">{{ __('public_business.types.'.$listing->listing_type) }}</span>
