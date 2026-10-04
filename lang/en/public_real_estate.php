@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'welcome_body' => 'Tell this office about the property you want to offer or the property you are looking for. The office will review the information and contact you directly.',
     'privacy' => 'Your contact details and exact address are not public. They are kept only for office follow-up and authorized staff.',
     'fix_errors' => 'Please correct the following items:',
     'select' => 'Select',
@@ -134,6 +135,7 @@ return [
         'media' => 'Submitted media',
         'media_summary' => ':images images, :videos videos, and :audios audio files were attached. For privacy, files are not downloadable from the public link.',
         'one_time' => 'This preview can only be viewed once. For security, refreshing the page will not show it again.',
+        'square_meter' => 'm²',
         'back_business' => 'Back to business website',
     ],
     'validation' => [
