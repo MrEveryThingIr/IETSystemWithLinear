@@ -121,7 +121,7 @@ class BusinessClientController extends Controller
             ]);
         }
 
-        return back()->with('status', 'Client/contact saved.');
+        return back()->with('status', __('business.messages.client_saved'));
     }
 
     public function publishNeed(
@@ -177,6 +177,6 @@ class BusinessClientController extends Controller
 
         $client->update(['status' => 'inactive']);
 
-        return back()->with('status', 'Client/contact archived.');
+        return back()->with('status', __('business.messages.client_archived'));
     }
 }
