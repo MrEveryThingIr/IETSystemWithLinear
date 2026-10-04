@@ -40,7 +40,6 @@ class PublicRealEstateIntakeV2Test extends TestCase
         $this->assertNull($case->built_year);
     }
 
-
     public function test_one_time_preview_does_not_render_a_locale_action_that_would_reopen_consumed_preview(): void
     {
         $owner = User::factory()->create();
