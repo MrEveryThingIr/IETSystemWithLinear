@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow,noarchive">
-    <title>{{ $business?->name ?? $portal->title }} — {{ $portal->welcome_heading ?: $portal->title }}</title>
+    <title>{{ $business?->name ?? $portal->title }} — {{ $portal->welcome_heading ?: __('public_business.real_estate.heading') }}</title>
     @vite('resources/css/app.css')
     <style>
         body{background:#f1f5f9;color:#0f172a;font-family:inherit}
@@ -47,9 +47,7 @@
         <header class="hero">
             <div style="display:inline-block;background:#047857;color:#fff;border-radius:999px;padding:6px 13px;font-weight:800;font-size:13px">{{ $business?->name ?? $portal->title }}</div>
             <h1>{{ $portal->welcome_heading ?: __('public_business.real_estate.heading') }}</h1>
-            @if($portal->welcome_body)
-                <p style="line-height:1.9;color:#475569">{{ $portal->welcome_body }}</p>
-            @endif
+            <p style="line-height:1.9;color:#475569">{{ $portal->welcome_body ?: __('public_real_estate.welcome_body') }}</p>
             <div class="privacy">{{ __('public_real_estate.privacy') }}</div>
         </header>
 
