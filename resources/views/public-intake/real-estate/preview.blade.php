@@ -10,9 +10,8 @@
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
 <main class="mx-auto max-w-2xl px-4 py-10">
     @if($portal?->business)
-        <div class="mb-4 flex items-center justify-between gap-3">
+        <div class="mb-4">
             <a href="{{ route('public.businesses.show', ['business' => $portal->business->slug]) }}" class="font-bold text-emerald-700 no-underline">← {{ __('public_real_estate.preview.back_business') }}</a>
-            <x-app.locale-switcher />
         </div>
     @endif
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-10">
