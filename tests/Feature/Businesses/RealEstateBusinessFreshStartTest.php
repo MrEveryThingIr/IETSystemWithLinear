@@ -42,6 +42,12 @@ class RealEstateBusinessFreshStartTest extends TestCase
             $business->categories()->pluck('slug')->all(),
         );
 
+        $this->withoutVite()
+            ->get(route('public.real-estate.show', $portal))
+            ->assertNotFound();
+
+        $business->update(['visibility' => 'public']);
+
         $response = $this->withoutVite()->get(route('public.real-estate.show', $portal));
         $response->assertOk();
 
