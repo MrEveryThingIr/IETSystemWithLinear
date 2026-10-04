@@ -151,6 +151,11 @@ return [
             'apply' => 'اعمال',
             'clear' => 'پاک کردن',
         ],
+        'messages' => [
+            'status_saved' => 'وضعیت پرونده ذخیره شد.',
+            'media_added' => 'رسانه‌های جدید به پرونده اضافه شدند.',
+            'media_deleted' => 'رسانه حذف شد.',
+        ],
         'statuses' => [
             'new' => 'جدید',
             'contacted' => 'تماس گرفته شد',
