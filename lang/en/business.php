@@ -35,6 +35,10 @@ return [
         'submit' => 'Create business and continue',
         'cancel' => 'Cancel and go back',
     ],
+    'messages' => [
+        'created' => 'Business created. Complete its contact details, locations, and team next.',
+        'updated' => 'Business information updated.',
+    ],
     'index' => [
         'title' => 'My businesses',
         'kicker' => 'Business operating space',
@@ -51,6 +55,7 @@ return [
         'listings' => 'Listings',
         'intake_channels' => 'Intake channels',
         'open' => 'Open business',
+        'open_website' => 'Public website',
         'catalog' => 'Catalog',
     ],
 ];
