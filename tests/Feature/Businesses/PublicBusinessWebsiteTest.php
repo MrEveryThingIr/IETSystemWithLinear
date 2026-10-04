@@ -52,6 +52,59 @@ class PublicBusinessWebsiteTest extends TestCase
         $this->get(route('public.businesses.show', ['business' => $business->slug]))->assertNotFound();
     }
 
+
+    public function test_private_real_estate_business_does_not_expose_its_public_intake_channel(): void
+    {
+        $owner = User::factory()->create();
+        $owner->actor()->create();
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'مشاور املاک خصوصی',
+            'kind' => 'real_estate',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $portal = $business->publicIntakePortals()->sole();
+
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))
+            ->assertNotFound();
+
+        $this->get(route('public.real-estate.show', $portal))
+            ->assertNotFound();
+    }
+
+    public function test_public_real_estate_intake_uses_the_selected_locale_without_platform_chrome(): void
+    {
+        $owner = User::factory()->create();
+        $owner->actor()->create();
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'مشاور املاک مهوری',
+            'kind' => 'real_estate',
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $portal = $business->publicIntakePortals()->sole();
+
+        foreach ([
+            'en' => 'Have a property to offer, or are you looking for one?',
+            'fa' => 'ملکی برای ارائه دارید یا به دنبال ملک هستید؟',
+            'ar' => 'هل لديك عقار للعرض أم تبحث عن عقار؟',
+            'zh_CN' => '您有房产要提供，还是正在寻找房产？',
+        ] as $locale => $heading) {
+            $this->withSession(['locale' => $locale])
+                ->get(route('public.real-estate.show', $portal))
+                ->assertOk()
+                ->assertSee('مشاور املاک مهوری')
+                ->assertSee($heading)
+                ->assertDontSee(route('dashboard'), false)
+                ->assertDontSee(route('businesses.index'), false)
+                ->assertDontSee(route('planner.index'), false);
+        }
+    }
+
     public function test_public_site_only_exposes_published_public_listings(): void
     {
         $owner = User::factory()->create();
