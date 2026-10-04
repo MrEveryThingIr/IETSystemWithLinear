@@ -39,21 +39,43 @@ deployment.
 
 ## 3. Upload layout
 
-A recommended layout is:
+A recommended layout keeps releases immutable and user data persistent:
 
 ```
-/home/account/apps/everything/current/   <- extracted package
-/home/account/public_html/               <- domain document root mapped to current/public
+/home/account/apps/everything/
+├── releases/
+│   └── 1.0.0/                 <- extracted application package
+├── shared/
+│   ├── .env                   <- permanent production environment
+│   └── storage/               <- permanent uploads, private media, logs/cache
+└── current -> releases/1.0.0  <- active release
 ```
+
+Inside each release, replace its packaged `storage/` directory with a symlink
+to `../../shared/storage`, and link `.env` to `../../shared/.env`.
+This is important: Business media and private uploads must not disappear when
+you switch to a newer release directory.
+
+If your host does not allow symlinks, use a single persistent application
+directory and update code in place only after taking a database + storage
+backup. Do not delete/replace the existing `storage/app` directory during an
+upgrade.
 
 If the hosting panel supports custom document roots, point the domain directly
-to `/home/account/apps/everything/current/public`.
+to:
 
-Keep releases outside the public web root whenever possible.
+```
+/home/account/apps/everything/current/public
+```
+
+Keep releases and the shared directory outside the public web root whenever
+possible.
 
 ## 4. Production environment
 
-Copy `production.env.example` to `.env` and edit the copy.
+On the first deployment copy `production.env.example` to
+`/home/account/apps/everything/shared/.env`, edit it there, and link the
+active release's `.env` to that shared file.
 
 Do not copy the local development `.env` wholesale. Production must at least
 set:
@@ -152,7 +174,8 @@ be enabled later without blocking normal page operation.
 The application uses verified accounts. `MAIL_MAILER=log` is a development
 setting and does not deliver verification/invitation mail. Configure the host's
 SMTP server or another supported transactional mail service before inviting
-real users.
+real users. Leave `MAIL_SCHEME=null` unless your provider explicitly requires
+a scheme value; use the provider's documented SMTP host, port and credentials.
 
 ## 10. Smoke test after deployment
 
@@ -187,13 +210,15 @@ Before every later deployment:
 
 1. back up the MySQL database and uploaded/private storage;
 2. keep the previous release directory;
-3. upload/extract the new package into a new directory;
-4. copy/reuse the existing production `.env`;
-5. run `php artisan optimize:clear`;
-6. run `php artisan migrate --force`;
-7. run `php artisan optimize`;
-8. switch the document-root/symlink to the new release;
-9. smoke-test `/up` and login.
+3. upload/extract the new package into a new release directory;
+4. link the new release's `.env` to the persistent `shared/.env`;
+5. link the new release's `storage` to the persistent `shared/storage`;
+6. run `php artisan optimize:clear`;
+7. run `php artisan migrate --force`;
+8. run `php artisan optimize`;
+9. switch `current` (or the domain document root) to the new release;
+10. run `php artisan schedule:interrupt` after the switch;
+11. smoke-test `/up`, login, public Business pages, mail and uploads.
 
 Application rollback is then a directory/symlink switch. Database rollback is
 not automatically safe after schema/data migrations, which is why a database
