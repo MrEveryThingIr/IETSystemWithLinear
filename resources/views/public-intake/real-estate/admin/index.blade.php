@@ -1,127 +1,97 @@
 @extends('layouts.app')
 
-@section('title', app()->getLocale() === 'fa' ? 'دفتر پرونده‌ها' : 'Case office')
+@section('title', app()->getLocale() === 'fa' ? 'دفتر املاک' : 'Real Estate office')
 
 @section('content')
 @php
-        $fa = app()->getLocale() === 'fa';
-        $statusText = $fa
-            ? ['new'=>'جدید','contacted'=>'تماس گرفته شد','qualified'=>'واجد شرایط','in_progress'=>'در حال پیگیری','closed'=>'بسته‌شده','rejected'=>'ردشده']
-            : ['new'=>'New','contacted'=>'Contacted','qualified'=>'Qualified','in_progress'=>'In progress','closed'=>'Closed','rejected'=>'Rejected'];
-    @endphp
+    $fa = app()->getLocale() === 'fa';
+    $statusText = $fa
+        ? ['new'=>'جدید','contacted'=>'تماس گرفته شد','qualified'=>'واجد شرایط','in_progress'=>'در حال پیگیری','closed'=>'بسته‌شده','rejected'=>'ردشده']
+        : ['new'=>'New','contacted'=>'Contacted','qualified'=>'Qualified','in_progress'=>'In progress','closed'=>'Closed','rejected'=>'Rejected'];
+@endphp
 <style>
-        *{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:#0f172a;font-family:inherit}
-        .wrap{max-width:1450px;margin:auto;padding:28px 16px 60px}
-        .crumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.crumbs a{color:#047857;font-weight:900;text-decoration:none}
-        .top{display:flex;justify-content:space-between;gap:18px;align-items:end;flex-wrap:wrap}
-        .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.actions form{margin:0}
-        .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0}
-        .card,.filters,.tablebox,.bridge{background:#fff;border:1px solid #e2e8f0;border-radius:22px;box-shadow:0 5px 20px rgba(15,23,42,.04)}
-        .card{padding:18px}.card b{font-size:30px;display:block;margin-top:7px}
-        .bridge{padding:16px 18px;margin:18px 0;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
-        .bridge p{margin:4px 0 0;color:#64748b;line-height:1.75}
-        .filters{padding:18px;margin-bottom:18px}.fgrid{display:grid;grid-template-columns:2fr repeat(3,1fr) auto;gap:10px;align-items:end}
-        input,select{width:100%;border:1.5px solid #94a3b8!important;background:white!important;color:#0f172a!important;border-radius:12px;padding:11px 12px}
-        label span{display:block;font-size:13px;font-weight:800;margin-bottom:6px;color:#475569}
-        button,.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block}
-        .primary{background:#047857;color:#fff}.dark{background:#0f172a;color:#fff}.light{background:#fff;color:#334155;border:1px solid #cbd5e1}.indigo{background:#4f46e5;color:#fff}
-        .tablebox{overflow:hidden}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1050px}
-        th{background:#f8fafc;text-align:start;font-size:12px;color:#475569;padding:14px;border-bottom:1px solid #e2e8f0}
-        td{padding:14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}tr:hover td{background:#f0fdf4}
-        .badge{display:inline-block;border-radius:999px;padding:5px 10px;background:#f1f5f9;font-size:12px;font-weight:800}.pager{padding:16px}
-        @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.fgrid{grid-template-columns:1fr 1fr}}
-        @media(max-width:600px){.cards,.fgrid{grid-template-columns:1fr}}
-    </style>
-<main class="wrap">
-    <nav class="crumbs">
+    .re-wrap{max-width:1450px;margin:auto;padding:10px 0 28px}.re-crumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.re-crumbs a{color:#047857;font-weight:900;text-decoration:none}.re-top{display:flex;justify-content:space-between;gap:15px;align-items:end;flex-wrap:wrap}
+    .re-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0}.re-card,.re-filters,.re-tablebox,.re-bridge{background:#fff;border:1px solid #e2e8f0;border-radius:22px;box-shadow:0 5px 20px rgba(15,23,42,.04)}.re-bridge{padding:16px 18px;margin:18px 0;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.re-bridge p{margin:4px 0 0;color:#64748b;line-height:1.75}.re-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.re-actions form{margin:0}
+    .dark .re-card,.dark .re-filters,.dark .re-tablebox,.dark .re-bridge{background:#18181b;border-color:#3f3f46}.re-card{padding:18px}.re-card b{font-size:30px;display:block;margin-top:7px}.re-filters{padding:18px;margin-bottom:18px}
+    .re-fgrid{display:grid;grid-template-columns:2fr repeat(3,1fr) auto;gap:10px;align-items:end}.re-filters input,.re-filters select{width:100%;box-sizing:border-box;border:1.5px solid #94a3b8!important;background:white!important;color:#0f172a!important;border-radius:12px;padding:11px 12px}
+    .re-filters label span{display:block;font-size:13px;font-weight:800;margin-bottom:6px;color:#475569}.re-btn{border:0;border-radius:12px;padding:11px 16px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block}.re-primary{background:#047857;color:#fff}.re-dark{background:#0f172a;color:#fff}.re-light{background:#fff;color:#334155;border:1px solid #cbd5e1}
+    .re-tablebox{overflow:hidden}.re-scroll{overflow:auto}.re-table{width:100%;border-collapse:collapse;min-width:1050px}.re-table th{background:#f8fafc;text-align:start;font-size:12px;color:#475569;padding:14px;border-bottom:1px solid #e2e8f0}.re-table td{padding:14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}.re-table tr:hover td{background:#f0fdf4;color:#0f172a}.re-badge{display:inline-block;border-radius:999px;padding:5px 10px;background:#f1f5f9;color:#0f172a;font-size:12px;font-weight:800}.re-pager{padding:16px}
+    @media(max-width:900px){.re-cards{grid-template-columns:repeat(2,1fr)}.re-fgrid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.re-cards,.re-fgrid{grid-template-columns:1fr}}
+</style>
+<main class="re-wrap">
+    <nav class="re-crumbs">
         <a href="{{ route('workspace.real-estate.index') }}">← {{ $fa ? 'املاک من' : 'My Real Estate' }}</a>
         <span>·</span>
         <a href="{{ route('dashboard') }}">{{ $fa ? 'فضای اصلی' : 'Main workspace' }}</a>
     </nav>
 
-    <div class="top">
+    <div class="re-top">
         <div>
             <div style="color:#047857;font-weight:900">{{ $fa ? 'دفتر املاک' : 'Real Estate office' }}</div>
             <h1 style="font-size:32px;margin:5px 0">{{ $fa ? 'پرونده‌های' : 'Cases for' }} {{ $portal->title }}</h1>
             <p style="color:#64748b;margin:0">{{ $fa ? 'جست‌وجو، فیلتر و پیگیری پرونده‌های ثبت‌شده' : 'Search, filter, and follow submitted cases.' }}</p>
         </div>
-        <div class="actions">
-            <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show', $portal) }}">{{ $fa ? 'باز کردن فرم عمومی' : 'Open public form' }}</a>
+        <div class="re-actions">
+            <a class="re-btn re-light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show', $portal) }}">{{ $fa ? 'باز کردن فرم عمومی' : 'Open public form' }}</a>
         </div>
     </div>
 
     @if($canUseBusiness && ($business || $canManage))
-        <section class="bridge">
+        <section class="re-bridge">
             <div>
                 <strong>{{ $fa ? 'اتصال اختیاری به کسب‌وکار' : 'Optional Business bridge' }}</strong>
-                <p>{{ $fa ? 'این دفتر املاک یک سیستم مستقل می‌ماند. در صورت نیاز می‌توانید پرونده‌های مناسب را بعداً وارد کاتالوگ کسب‌وکار کنید.' : 'This Real Estate office remains an independent system. When useful, selected cases can later be promoted into the Business catalog.' }}</p>
+                <p>{{ $fa ? 'این دفتر املاک یک سامانه مستقل می‌ماند. در صورت نیاز می‌توانید پرونده‌های مناسب را بعداً وارد کاتالوگ کسب‌وکار کنید.' : 'This Real Estate office remains an independent system. When useful, selected cases can later be promoted into the Business catalog.' }}</p>
             </div>
-            <div class="actions">
+            <div class="re-actions">
                 @if($business)
-                    <a class="btn light" href="{{ route('businesses.show', $business) }}">{{ $fa ? 'کسب‌وکار مرتبط' : 'Linked business' }}</a>
-                    <a class="btn light" href="{{ route('businesses.catalog.index', $business) }}">{{ $fa ? 'کاتالوگ' : 'Catalog' }}</a>
+                    <a class="re-btn re-light" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'کسب‌وکار مرتبط' : 'Linked business' }}</a>
+                    <a class="re-btn re-light" href="{{ route('businesses.catalog.index',$business) }}">{{ $fa ? 'کاتالوگ' : 'Catalog' }}</a>
                 @elseif($canManage)
                     <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
                         @csrf
-                        <button class="btn indigo">{{ $fa ? 'اتصال اختیاری به Business' : 'Optionally connect to Business' }}</button>
+                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'اتصال اختیاری به Business' : 'Optionally connect to Business' }}</button>
                     </form>
                 @endif
             </div>
         </section>
     @endif
-
-    <section class="cards">
-        <div class="card">{{ $fa ? 'همه پرونده‌ها' : 'All cases' }} <b>{{ number_format($stats['total']) }}</b></div>
-        <div class="card">{{ $fa ? 'جدید' : 'New' }} <b>{{ number_format($stats['new']) }}</b></div>
-        <div class="card">{{ $fa ? 'عرضه ملک' : 'Property offers' }} <b>{{ number_format($stats['offers']) }}</b></div>
-        <div class="card">{{ $fa ? 'متقاضی' : 'Property needs' }} <b>{{ number_format($stats['needs']) }}</b></div>
+    <section class="re-cards">
+        <div class="re-card">{{ $fa ? 'همه پرونده‌ها' : 'All cases' }} <b>{{ number_format($stats['total']) }}</b></div>
+        <div class="re-card">{{ $fa ? 'جدید' : 'New' }} <b>{{ number_format($stats['new']) }}</b></div>
+        <div class="re-card">{{ $fa ? 'عرضه ملک' : 'Property offers' }} <b>{{ number_format($stats['offers']) }}</b></div>
+        <div class="re-card">{{ $fa ? 'متقاضی' : 'Property needs' }} <b>{{ number_format($stats['needs']) }}</b></div>
     </section>
-
-    <form method="GET" class="filters">
-        <div class="fgrid">
+    <form method="GET" class="re-filters">
+        <div class="re-fgrid">
             <label><span>{{ $fa ? 'جست‌وجو' : 'Search' }}</span><input name="q" value="{{ request('q') }}" placeholder="{{ $fa ? 'نام، تلفن، کد، محله، آدرس...' : 'Name, phone, code, area, address...' }}"></label>
             <label><span>{{ $fa ? 'نوع پرونده' : 'Case type' }}</span><select name="intent"><option value="">{{ $fa ? 'همه' : 'All' }}</option><option value="offer" @selected(request('intent')==='offer')>{{ $fa ? 'عرضه' : 'Offer' }}</option><option value="need" @selected(request('intent')==='need')>{{ $fa ? 'تقاضا' : 'Need' }}</option></select></label>
             <label><span>{{ $fa ? 'معامله' : 'Transaction' }}</span><select name="transaction_mode"><option value="">{{ $fa ? 'همه' : 'All' }}</option><option value="sale" @selected(request('transaction_mode')==='sale')>{{ $fa ? 'خرید/فروش' : 'Buy / sell' }}</option><option value="rent" @selected(request('transaction_mode')==='rent')>{{ $fa ? 'رهن/اجاره' : 'Rent / lease' }}</option></select></label>
             <label><span>{{ $fa ? 'وضعیت' : 'Status' }}</span><select name="status"><option value="">{{ $fa ? 'همه' : 'All' }}</option>@foreach($statusText as $v=>$t)<option value="{{ $v }}" @selected(request('status')===$v)>{{ $t }}</option>@endforeach</select></label>
-            <div style="display:flex;gap:7px"><button class="primary">{{ $fa ? 'اعمال' : 'Apply' }}</button><a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ $fa ? 'پاک' : 'Clear' }}</a></div>
+            <div style="display:flex;gap:7px"><button class="re-btn re-primary">{{ $fa ? 'اعمال' : 'Apply' }}</button><a class="re-btn re-light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ $fa ? 'پاک' : 'Clear' }}</a></div>
         </div>
     </form>
-
-    <section class="tablebox">
-        <div class="scroll">
-            <table>
-                <thead><tr>
-                    <th>{{ $fa ? 'پرونده' : 'Case' }}</th><th>{{ $fa ? 'مراجعه‌کننده' : 'Contact' }}</th><th>{{ $fa ? 'نوع' : 'Type' }}</th><th>{{ $fa ? 'ملک / محدوده' : 'Property / area' }}</th><th>{{ $fa ? 'متراژ' : 'Area' }}</th><th>{{ $fa ? 'قیمت' : 'Price' }}</th><th>{{ $fa ? 'وضعیت' : 'Status' }}</th><th></th>
-                </tr></thead>
-                <tbody>
-                @forelse($cases as $case)
-                    <tr>
-                        <td><b style="font-family:monospace">{{ $case->reference_code }}</b><br><small style="color:#94a3b8"><x-app.local-datetime :value="$case->created_at" /></small></td>
-                        <td><b>{{ $case->contact_name }}</b><br><span dir="ltr" style="color:#64748b">{{ $case->phone }}</span></td>
-                        <td><span class="badge">{{ $case->intent==='offer' ? ($fa ? 'عرضه' : 'Offer') : ($fa ? 'تقاضا' : 'Need') }}</span><br><small>{{ $case->transaction_mode==='sale' ? ($fa ? 'خرید/فروش' : 'Buy / sell') : ($fa ? 'رهن/اجاره' : 'Rent / lease') }}</small></td>
-                        <td><b>{{ $case->property_subtype ?: $case->property_class }}</b><br><small style="color:#64748b">{{ $case->public_area ?: '—' }}</small></td>
-                        <td>{{ $case->land_area ?: '—' }} m²</td>
-                        <td>
-                            @if($case->asking_price)
-                                {{ number_format((float)$case->asking_price) }} {{ $fa ? 'تومان' : 'toman' }}
-                            @elseif($case->deposit_amount || $case->monthly_rent_amount)
-                                {{ $fa ? 'رهن' : 'Deposit' }} {{ number_format((float)($case->deposit_amount ?? 0)) }}<br>
-                                <small>{{ $fa ? 'اجاره' : 'Rent' }} {{ number_format((float)($case->monthly_rent_amount ?? 0)) }}</small>
-                            @else — @endif
-                        </td>
-                        <td>
-                            <span class="badge">{{ $statusText[$case->status] ?? $case->status }}</span>
-                            @if($case->businessListing)<br><small style="color:#047857;font-weight:900">{{ $fa ? 'در کاتالوگ کسب‌وکار' : 'In Business catalog' }}</small>@endif
-                        </td>
-                        <td><a class="btn dark" href="{{ route('office.real-estate.show',['portal'=>$portal->uuid,'case'=>$case]) }}">{{ $fa ? 'مشاهده' : 'View' }}</a></td>
-                    </tr>
-                @empty
-                    <tr><td colspan="8" style="text-align:center;padding:50px"><b>{{ $fa ? 'پرونده‌ای پیدا نشد' : 'No cases found' }}</b></td></tr>
-                @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($cases->hasPages())<div class="pager">{{ $cases->links() }}</div>@endif
-    </section>
+    <section class="re-tablebox"><div class="re-scroll"><table class="re-table"><thead><tr>
+        <th>{{ $fa ? 'پرونده' : 'Case' }}</th><th>{{ $fa ? 'مراجعه‌کننده' : 'Contact' }}</th><th>{{ $fa ? 'نوع' : 'Type' }}</th><th>{{ $fa ? 'ملک / محدوده' : 'Property / area' }}</th><th>{{ $fa ? 'متراژ' : 'Area' }}</th><th>{{ $fa ? 'قیمت' : 'Price' }}</th><th>{{ $fa ? 'وضعیت' : 'Status' }}</th><th></th>
+    </tr></thead><tbody>
+        @forelse($cases as $case)
+            <tr>
+                <td><b style="font-family:monospace">{{ $case->reference_code }}</b><br><small style="color:#94a3b8"><x-app.local-datetime :value="$case->created_at" /></small></td>
+                <td><b>{{ $case->contact_name }}</b><br><span dir="ltr" style="color:#64748b">{{ $case->phone }}</span></td>
+                <td><span class="re-badge">{{ $case->intent==='offer' ? ($fa ? 'عرضه' : 'Offer') : ($fa ? 'تقاضا' : 'Need') }}</span><br><small>{{ $case->transaction_mode==='sale' ? ($fa ? 'خرید/فروش' : 'Buy / sell') : ($fa ? 'رهن/اجاره' : 'Rent / lease') }}</small></td>
+                <td><b>{{ $case->property_subtype ?: $case->property_class }}</b><br><small style="color:#64748b">{{ $case->public_area ?: '—' }}</small></td>
+                <td>{{ $case->land_area ?: '—' }} m²</td>
+                <td>@if($case->asking_price){{ number_format((float)$case->asking_price) }} {{ $fa ? 'تومان' : 'toman' }}@elseif($case->deposit_amount || $case->monthly_rent_amount){{ $fa ? 'رهن' : 'Deposit' }} {{ number_format((float)($case->deposit_amount ?? 0)) }}<br><small>{{ $fa ? 'اجاره' : 'Rent' }} {{ number_format((float)($case->monthly_rent_amount ?? 0)) }}</small>@else — @endif</td>
+                <td>
+                    <span class="re-badge">{{ $statusText[$case->status] ?? $case->status }}</span>
+                    @if($case->businessListing)
+                        <br><small style="color:#047857;font-weight:900">{{ $fa ? 'در کاتالوگ' : 'In catalog' }}</small>
+                    @endif
+                </td>
+                <td><a class="re-btn re-dark" href="{{ route('office.real-estate.show',['portal'=>$portal->uuid,'case'=>$case]) }}">{{ $fa ? 'مشاهده' : 'View' }}</a></td>
+            </tr>
+        @empty
+            <tr><td colspan="8" style="text-align:center;padding:50px"><b>{{ $fa ? 'پرونده‌ای پیدا نشد' : 'No cases found' }}</b></td></tr>
+        @endforelse
+    </tbody></table></div>@if($cases->hasPages())<div class="re-pager">{{ $cases->links() }}</div>@endif</section>
 </main>
 @endsection
