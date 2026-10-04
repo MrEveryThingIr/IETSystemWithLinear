@@ -47,18 +47,17 @@ jobs:
           npm ci
           npm audit --audit-level=high
 
-      - name: Build frontend
-        run: npm run build
-
       - name: Install production PHP dependencies
         run: |
-          rm -rf vendor
           composer install \
             --no-dev \
             --no-interaction \
             --prefer-dist \
             --no-progress \
             --optimize-autoloader
+
+      - name: Build frontend
+        run: npm run build
 
       - name: Assemble runtime-only package
         shell: bash
