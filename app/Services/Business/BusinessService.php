@@ -75,13 +75,13 @@ class BusinessService
 
         if (! $user || $user->status !== 'active' || $user->email_verified_at === null) {
             throw ValidationException::withMessages([
-                'user' => 'کاربر فعال و تأییدشده‌ای با این ایمیل یا نام کاربری پیدا نشد.',
+                'user' => __('business.validation.user_not_found'),
             ]);
         }
 
         if (! $user->actor instanceof Actor || $user->actor->status !== 'active') {
             throw ValidationException::withMessages([
-                'user' => 'این حساب، هویت کنشگر فعال ندارد.',
+                'user' => __('business.validation.actor_inactive'),
             ]);
         }
 
@@ -96,7 +96,7 @@ class BusinessService
     ): BusinessMembership {
         if ($role === 'owner') {
             throw ValidationException::withMessages([
-                'role' => 'برای تغییر مالک از عملیات انتقال مالکیت استفاده کنید.',
+                'role' => __('business.validation.owner_role_via_transfer'),
             ]);
         }
 
@@ -121,7 +121,7 @@ class BusinessService
 
         if ($membership->role === 'owner') {
             throw ValidationException::withMessages([
-                'role' => 'نقش مالک فقط از طریق انتقال مالکیت تغییر می‌کند.',
+                'role' => __('business.validation.owner_role_locked'),
             ]);
         }
 
@@ -141,7 +141,7 @@ class BusinessService
 
         if ($membership->role === 'owner') {
             throw ValidationException::withMessages([
-                'member' => 'مالک کسب‌وکار را نمی‌توان حذف کرد. ابتدا مالکیت را منتقل کنید.',
+                'member' => __('business.validation.owner_remove_forbidden'),
             ]);
         }
 
@@ -179,13 +179,13 @@ class BusinessService
     ): Business {
         if ((int) $business->owner_actor_id !== (int) $currentOwner->getKey()) {
             throw ValidationException::withMessages([
-                'owner' => 'فقط مالک فعلی می‌تواند مالکیت را منتقل کند.',
+                'owner' => __('business.validation.only_owner_transfer'),
             ]);
         }
 
         if ((int) $currentOwner->getKey() === (int) $newOwner->getKey()) {
             throw ValidationException::withMessages([
-                'owner' => 'مالک جدید باید شخص دیگری باشد.',
+                'owner' => __('business.validation.new_owner_different'),
             ]);
         }
 
@@ -198,7 +198,7 @@ class BusinessService
 
             if ((int) $locked->owner_actor_id !== (int) $currentOwner->getKey()) {
                 throw ValidationException::withMessages([
-                    'owner' => 'مالکیت در همین لحظه تغییر کرده است؛ صفحه را تازه کنید.',
+                    'owner' => __('business.validation.ownership_changed'),
                 ]);
             }
 
@@ -214,7 +214,7 @@ class BusinessService
 
             if (! $newMembership || $newMembership->status !== 'active') {
                 throw ValidationException::withMessages([
-                    'owner' => 'مالک جدید باید ابتدا عضو فعال این کسب‌وکار باشد.',
+                    'owner' => __('business.validation.new_owner_active_member'),
                 ]);
             }
 
