@@ -63,7 +63,7 @@ class PublicBusinessController extends Controller
 
         return response()->file(Storage::disk('local')->path($video['storage_key']), [
             'Content-Type' => $video['mime_type'],
-            'Cache-Control' => 'public, max-age=3600',
+            'Cache-Control' => 'no-store, private',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }

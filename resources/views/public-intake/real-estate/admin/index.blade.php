@@ -14,13 +14,17 @@
     @media(max-width:900px){.re-cards{grid-template-columns:repeat(2,1fr)}.re-fgrid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.re-cards,.re-fgrid{grid-template-columns:1fr}}
 </style>
 <main class="re-wrap">
-    <nav class="re-crumbs">
-        <a href="{{ route('businesses.index', ['kind' => 'real_estate']) }}">← {{ __('public_real_estate.office.businesses') }}</a>
-        @if($business)
-            <span>·</span>
-            <a href="{{ route('businesses.show', $business) }}">{{ $business->name }}</a>
-        @endif
-    </nav>
+    @if($canUseBusinessSurface || ($business && $canOperateBusiness))
+        <nav class="re-crumbs">
+            @if($canUseBusinessSurface)
+                <a href="{{ route('businesses.index', ['kind' => 'real_estate']) }}">← {{ __('public_real_estate.office.businesses') }}</a>
+            @endif
+            @if($business && $canOperateBusiness)
+                @if($canUseBusinessSurface)<span>·</span>@endif
+                <a href="{{ route('businesses.show', $business) }}">{{ $business->name }}</a>
+            @endif
+        </nav>
+    @endif
 
     <div class="re-top">
         <div>
@@ -48,10 +52,10 @@
                 </p>
             </div>
             <div class="re-actions">
-                @if($business)
+                @if($business && $canOperateBusiness)
                     <a class="re-btn re-light" href="{{ route('businesses.show',$business) }}">{{ __('public_real_estate.office.open_business') }}</a>
                     <a class="re-btn re-light" href="{{ route('businesses.catalog.index',$business) }}">{{ __('public_real_estate.office.catalog') }}</a>
-                @elseif($canManage)
+                @elseif(! $business && $canManage && $canUseBusinessSurface)
                     <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
                         @csrf
                         <button class="re-btn" style="background:#4f46e5;color:#fff">{{ __('public_real_estate.office.register_business') }}</button>

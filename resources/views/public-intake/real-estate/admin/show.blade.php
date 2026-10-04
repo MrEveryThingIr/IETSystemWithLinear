@@ -75,16 +75,18 @@
             </div>
             <div class="re-actions">
                 @if($business)
-                    <a class="re-btn" style="background:#fff;color:#4338ca;border:1px solid #c7d2fe" href="{{ route('businesses.show',$business) }}">{{ __('public_real_estate.office.case.open_business') }}</a>
-                    @if($case->businessListing)
+                    @if($canOperateBusiness)
+                        <a class="re-btn" style="background:#fff;color:#4338ca;border:1px solid #c7d2fe" href="{{ route('businesses.show',$business) }}">{{ __('public_real_estate.office.case.open_business') }}</a>
+                    @endif
+                    @if($case->businessListing && $canOperateBusiness)
                         <a class="re-btn" style="background:#ecfdf5;color:#047857" href="{{ route('businesses.catalog.index',$business) }}">{{ __('public_real_estate.office.case.view_catalog') }}</a>
-                    @elseif($canManage && $case->intent === 'offer')
+                    @elseif(! $case->businessListing && $canManageBusiness && $case->intent === 'offer')
                         <form method="POST" action="{{ route('businesses.real-estate.cases.promote',[$business,$portal,$case]) }}">
                             @csrf
                             <button class="re-btn" style="background:#4f46e5;color:#fff">{{ __('public_real_estate.office.case.add_catalog') }}</button>
                         </form>
                     @endif
-                @elseif($canManage)
+                @elseif($canManage && $canUseBusinessSurface)
                     <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
                         @csrf
                         <button class="re-btn" style="background:#4f46e5;color:#fff">{{ __('public_real_estate.office.case.register_business') }}</button>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Businesses;
 
+use App\Models\PublicIntakePortalGrant;
 use App\Models\PublicRealEstateCase;
 use App\Models\User;
 use App\Services\Business\BusinessService;
@@ -119,5 +120,55 @@ class BusinessRealEstatePromotionRouteTest extends TestCase
         $user->actor()->create();
 
         return $user->refresh();
+    }
+    public function test_portal_manager_without_business_access_does_not_see_dead_business_or_catalog_actions(): void
+    {
+        $owner = $this->userWithActor();
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Private Office Workspace',
+            'kind' => 'real_estate',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $portal = $business->publicIntakePortals()->sole();
+        $contact = app(BusinessContactResolver::class)->resolve(
+            $business,
+            'Portal Client',
+            '09123334444',
+            'portal_manager_visibility_test',
+        );
+
+        $case = PublicRealEstateCase::query()->create([
+            'public_intake_portal_id' => $portal->id,
+            'business_contact_id' => $contact->id,
+            'reference_code' => 'RE-PORTALMGR1',
+            'intent' => 'offer',
+            'transaction_mode' => 'sale',
+            'contact_name' => 'Portal Client',
+            'phone' => '09123334444',
+            'property_class' => 'residential',
+            'price_unit' => 'toman',
+            'status' => 'qualified',
+            'preview_token_hash' => hash('sha256', 'portal-manager'),
+        ]);
+
+        $portalManager = $this->userWithActor();
+
+        PublicIntakePortalGrant::query()->create([
+            'public_intake_portal_id' => $portal->id,
+            'user_id' => $portalManager->id,
+            'role' => 'manager',
+        ]);
+
+        $response = $this->actingAs($portalManager)
+            ->get(route('office.real-estate.show', ['portal' => $portal->uuid, 'case' => $case]))
+            ->assertOk();
+
+        $response
+            ->assertSee(route('office.real-estate.status', ['portal' => $portal->uuid, 'case' => $case]), false)
+            ->assertDontSee(route('businesses.show', $business), false)
+            ->assertDontSee(route('businesses.catalog.index', $business), false)
+            ->assertDontSee(route('businesses.real-estate.cases.promote', [$business, $portal, $case]), false);
     }
 }

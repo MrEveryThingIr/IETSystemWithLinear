@@ -5,6 +5,8 @@ namespace App\Http\Controllers\PublicIntake;
 use App\Http\Controllers\Controller;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
+use App\Services\Surfaces\FeatureSurfaceAccess;
+use App\Support\BusinessAccess;
 use App\Support\PublicIntakeAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,11 +14,20 @@ use Illuminate\View\View;
 
 class PublicRealEstateAdminController extends Controller
 {
-    public function index(Request $request, PublicIntakePortal $portal): View
-    {
+    public function index(
+        Request $request,
+        PublicIntakePortal $portal,
+        FeatureSurfaceAccess $surfaceAccess,
+    ): View {
         abort_unless(PublicIntakeAccess::canView($request->user(), $portal), 403);
 
         $portal->loadMissing('business');
+        $business = $portal->business;
+        $canUseBusinessSurface = $surfaceAccess->allows($request->user(), 'business');
+        $canOperateBusiness = $business !== null
+            && $canUseBusinessSurface
+            && BusinessAccess::canOperate($request->user(), $business);
+
         $query = $portal->realEstateCases()->with('businessListing.currentVersion')->latest();
 
         if ($request->filled('q')) {
@@ -43,8 +54,10 @@ class PublicRealEstateAdminController extends Controller
 
         return view('public-intake.real-estate.admin.index', [
             'portal' => $portal,
-            'business' => $portal->business,
+            'business' => $business,
             'canManage' => PublicIntakeAccess::canManage($request->user(), $portal),
+            'canUseBusinessSurface' => $canUseBusinessSurface,
+            'canOperateBusiness' => $canOperateBusiness,
             'cases' => $cases,
             'stats' => [
                 'total' => $portal->realEstateCases()->count(),
@@ -58,7 +71,8 @@ class PublicRealEstateAdminController extends Controller
     public function show(
         Request $request,
         PublicIntakePortal $portal,
-        PublicRealEstateCase $case
+        PublicRealEstateCase $case,
+        FeatureSurfaceAccess $surfaceAccess,
     ): View {
         abort_unless(PublicIntakeAccess::canView($request->user(), $portal), 403);
         abort_unless($case->public_intake_portal_id === $portal->getKey(), 404);
@@ -66,11 +80,23 @@ class PublicRealEstateAdminController extends Controller
         $portal->loadMissing('business');
         $case->loadMissing('businessListing.currentVersion');
 
+        $business = $portal->business;
+        $canUseBusinessSurface = $surfaceAccess->allows($request->user(), 'business');
+        $canOperateBusiness = $business !== null
+            && $canUseBusinessSurface
+            && BusinessAccess::canOperate($request->user(), $business);
+        $canManageBusiness = $business !== null
+            && $canUseBusinessSurface
+            && BusinessAccess::canManage($request->user(), $business);
+
         return view('public-intake.real-estate.admin.show', [
             'portal' => $portal,
-            'business' => $portal->business,
+            'business' => $business,
             'case' => $case,
             'canManage' => PublicIntakeAccess::canManage($request->user(), $portal),
+            'canUseBusinessSurface' => $canUseBusinessSurface,
+            'canOperateBusiness' => $canOperateBusiness,
+            'canManageBusiness' => $canManageBusiness,
         ]);
     }
 
