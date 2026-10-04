@@ -147,6 +147,11 @@ return [
             'apply' => 'Apply',
             'clear' => 'Clear',
         ],
+        'messages' => [
+            'status_saved' => 'Case status saved.',
+            'media_added' => 'New media added to the case.',
+            'media_deleted' => 'Media removed.',
+        ],
         'statuses' => [
             'new' => 'New',
             'contacted' => 'Contacted',
