@@ -313,7 +313,7 @@
                     <div class="grid3">
                         <label><span>{{ __('business.show.addresses.type') }}</span><select name="type"><option value="work">{{ __('business.show.addresses.types.work') }}</option><option value="branch">{{ __('business.show.addresses.types.branch') }}</option><option value="billing">{{ __('business.show.addresses.types.billing') }}</option><option value="shipping">{{ __('business.show.addresses.types.shipping') }}</option><option value="project_site">{{ __('business.show.addresses.types.project_site') }}</option><option value="other">{{ __('business.show.addresses.types.other') }}</option></select></label>
                         <label><span>{{ __('business.show.addresses.label') }}</span><input name="label" placeholder="{{ __('business.show.addresses.label_placeholder') }}"></label>
-                        <label><span>{{ __('business.show.profile.visibility') }}</span><select name="visibility"><option value="private">خصوصی</option><option value="members">اعضا</option><option value="public">عمومی</option></select></label>
+                        <label><span>{{ __('business.show.addresses.visibility') }}</span><select name="visibility">@foreach($visibilityLabels as $v=>$label)<option value="{{ $v }}">{{ $label }}</option>@endforeach</select></label>
                         <label><span>{{ __('business.show.addresses.province') }}</span><input name="province"></label>
                         <label><span>{{ __('business.show.addresses.city') }} *</span><input name="city" required></label>
                         <label><span>{{ __('business.show.addresses.district') }}</span><input name="district"></label>
