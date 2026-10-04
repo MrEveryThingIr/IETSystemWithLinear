@@ -97,7 +97,7 @@ class PublicRealEstateIntakeController extends Controller
             return redirect()->route('public.real-estate.preview', [
                 'case' => $case,
                 'token' => $previewToken,
-            ])->with('media_warning', 'پرونده ثبت شد، اما بارگذاری بخشی از رسانه‌ها کامل نشد.');
+            ])->with('media_warning', __('public_real_estate.media.upload_warning'));
         }
 
         return redirect()->route('public.real-estate.preview', [
