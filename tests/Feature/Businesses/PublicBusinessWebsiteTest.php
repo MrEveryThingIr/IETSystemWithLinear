@@ -25,7 +25,7 @@ class PublicBusinessWebsiteTest extends TestCase
             'short_intro' => 'مشاور شما برای خرید، فروش، رهن و اجاره.',
         ]);
 
-        $response = $this->get(route('public.businesses.show', $business));
+        $response = $this->get(route('public.businesses.show', ['business' => $business->slug]));
 
         $response
             ->assertOk()
@@ -49,7 +49,7 @@ class PublicBusinessWebsiteTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->get(route('public.businesses.show', $business))->assertNotFound();
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))->assertNotFound();
     }
 
     public function test_public_site_only_exposes_published_public_listings(): void
@@ -76,16 +76,16 @@ class PublicBusinessWebsiteTest extends TestCase
         ], visibility: 'private');
         $catalog->publish($private, $private->currentVersion()->firstOrFail(), $owner->actor);
 
-        $this->get(route('public.businesses.show', $business))
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))
             ->assertOk()
             ->assertSee('Public item')
             ->assertDontSee('Private item');
 
-        $this->get(route('public.businesses.listings.show', [$business, $public]))
+        $this->get(route('public.businesses.listings.show', ['business' => $business->slug, 'listing' => $public->uuid]))
             ->assertOk()
             ->assertSee('Public item');
 
-        $this->get(route('public.businesses.listings.show', [$business, $private]))
+        $this->get(route('public.businesses.listings.show', ['business' => $business->slug, 'listing' => $private->uuid]))
             ->assertNotFound();
     }
 }
