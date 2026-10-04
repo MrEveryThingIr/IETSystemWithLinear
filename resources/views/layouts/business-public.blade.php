@@ -11,7 +11,7 @@
 <body class="min-h-dvh bg-slate-50 text-slate-950 antialiased">
     <header class="border-b border-slate-200 bg-white/95 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4 sm:px-6">
-            <a href="{{ route('public.businesses.show', $business) }}" class="flex min-w-0 items-center gap-3 text-inherit no-underline">
+            <a href="{{ route('public.businesses.show', ['business' => $business->slug]) }}" class="flex min-w-0 items-center gap-3 text-inherit no-underline">
                 <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-emerald-600 to-sky-600 text-lg font-black text-white shadow-sm">
                     {{ mb_substr($business->name, 0, 1) }}
                 </span>
