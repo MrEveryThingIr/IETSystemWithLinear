@@ -59,7 +59,17 @@
                     'usage_type'=>__('business_listing.property.usage_type'),
                 ] as $key=>$label)
                     @if($p->{$key} !== null && $p->{$key} !== '')
-                        <div class="fact"><div class="muted" style="font-size:12px">{{ $label }}</div><strong>{{ $p->{$key} }}</strong></div>
+                        @php
+                            $value = $p->{$key};
+                            if ($key === 'transaction_mode' && in_array($value, ['sale', 'rent', 'sale_or_rent'], true)) {
+                                $value = __('business_listing.property.'.$value);
+                            } elseif ($key === 'property_class' && in_array($value, ['residential', 'commercial', 'office', 'land', 'industrial', 'agricultural', 'mixed', 'other'], true)) {
+                                $value = __('business_listing.property.classes.'.$value);
+                            } elseif ($key === 'building_condition' && in_array($value, ['new', 'excellent', 'good', 'renovated', 'needs_renovation', 'old', 'teardown'], true)) {
+                                $value = __('business_listing.property.conditions.'.$value);
+                            }
+                        @endphp
+                        <div class="fact"><div class="muted" style="font-size:12px">{{ $label }}</div><strong>{{ $value }}</strong></div>
                     @endif
                 @endforeach
             </div>
