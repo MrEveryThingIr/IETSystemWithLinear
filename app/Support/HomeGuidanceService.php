@@ -378,9 +378,7 @@ class HomeGuidanceService
         $navigation = $this->navigation->for($user);
 
         return collect($navigation['primary'])
-            ->flatMap(
-                fn (array $destination): Collection => collect($destination['items'] ?? [$destination])->pluck('key')
-            )
+            ->flatMap(fn (array $destination): Collection => collect($destination['items'])->pluck('key'))
             ->merge(collect($navigation['account'])->pluck('key'))
             ->merge(collect($navigation['help'])->pluck('key'))
             ->merge(collect($navigation['labs'])->pluck('key'))
