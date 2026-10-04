@@ -42,27 +42,35 @@
         </div>
     </div>
 
-    @if($canUseBusiness && ($business || $canManage))
+    @if($business || $canManage)
         <section class="re-bridge">
             <div>
-                <strong>{{ $fa ? 'پل اختیاری به کسب‌وکار' : 'Optional Business bridge' }}</strong>
-                <div style="color:#475569;margin-top:4px">{{ $fa ? 'پرونده املاک مستقل می‌ماند؛ فقط در صورت نیاز آن را به کاتالوگ کسب‌وکار ارتقا دهید.' : 'The Real Estate case remains independent; promote it to the Business catalog only when useful.' }}</div>
+                <strong>
+                    {{ $business
+                        ? (($fa ? 'کسب‌وکار: ' : 'Business: ').$business->name)
+                        : ($fa ? 'دفتر قدیمی هنوز Business ندارد' : 'Legacy office is not yet a Business') }}
+                </strong>
+                <div style="color:#475569;margin-top:4px">
+                    {{ $business
+                        ? ($fa ? 'این پرونده بخشی از کانال تخصصی املاک همین کسب‌وکار است؛ عرضه‌های مناسب می‌توانند به Listing کاتالوگ کسب‌وکار تبدیل شوند.' : 'This case belongs to this Business’s specialized Real Estate channel; suitable offers can be promoted to a Business catalog Listing.')
+                        : ($fa ? 'برای یکپارچه‌کردن دفتر، مشتریان و کاتالوگ، ابتدا این دفتر را با حفظ پرونده‌ها به Business تبدیل کنید.' : 'To unify the office, clients, and catalog, first migrate this legacy office into a Business without changing its cases.') }}
+                </div>
             </div>
             <div class="re-actions">
                 @if($business)
-                    <a class="re-btn" style="background:#fff;color:#4338ca;border:1px solid #c7d2fe" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'کسب‌وکار' : 'Business' }}</a>
+                    <a class="re-btn" style="background:#fff;color:#4338ca;border:1px solid #c7d2fe" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'باز کردن Business' : 'Open Business' }}</a>
                     @if($case->businessListing)
                         <a class="re-btn" style="background:#ecfdf5;color:#047857" href="{{ route('businesses.catalog.index',$business) }}">{{ $fa ? 'مشاهده در کاتالوگ' : 'View in catalog' }}</a>
                     @elseif($canManage && $case->intent === 'offer')
                         <form method="POST" action="{{ route('businesses.real-estate.cases.promote',[$business,$portal,$case]) }}">
                             @csrf
-                            <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'تبدیل به Listing کسب‌وکار' : 'Promote to Business Listing' }}</button>
+                            <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'افزودن به کاتالوگ کسب‌وکار' : 'Add to Business catalog' }}</button>
                         </form>
                     @endif
                 @elseif($canManage)
                     <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
                         @csrf
-                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'اتصال اختیاری دفتر به Business' : 'Optionally connect office to Business' }}</button>
+                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'ثبت دفتر به‌عنوان Business' : 'Register office as a Business' }}</button>
                     </form>
                 @endif
             </div>

@@ -20,15 +20,17 @@
 </style>
 <main class="re-wrap">
     <nav class="re-crumbs">
-        <a href="{{ route('workspace.real-estate.index') }}">← {{ $fa ? 'املاک من' : 'My Real Estate' }}</a>
-        <span>·</span>
-        <a href="{{ route('dashboard') }}">{{ $fa ? 'فضای اصلی' : 'Main workspace' }}</a>
+        <a href="{{ route('businesses.index', ['kind' => 'real_estate']) }}">← {{ $fa ? 'کسب‌وکارها' : 'Businesses' }}</a>
+        @if($business)
+            <span>·</span>
+            <a href="{{ route('businesses.show', $business) }}">{{ $business->name }}</a>
+        @endif
     </nav>
 
     <div class="re-top">
         <div>
-            <div style="color:#047857;font-weight:900">{{ $fa ? 'دفتر املاک' : 'Real Estate office' }}</div>
-            <h1 style="font-size:32px;margin:5px 0">{{ $fa ? 'پرونده‌های' : 'Cases for' }} {{ $portal->title }}</h1>
+            <div style="color:#047857;font-weight:900">{{ $fa ? 'کسب‌وکار:' : 'Business:' }} {{ $business?->name ?? $portal->title }}</div>
+            <h1 style="font-size:32px;margin:5px 0">{{ $fa ? 'پرونده‌های املاک' : 'Real Estate cases' }}</h1>
             <p style="color:#64748b;margin:0">{{ $fa ? 'جست‌وجو، فیلتر و پیگیری پرونده‌های ثبت‌شده' : 'Search, filter, and follow submitted cases.' }}</p>
         </div>
         <div class="re-actions">
@@ -36,20 +38,28 @@
         </div>
     </div>
 
-    @if($canUseBusiness && ($business || $canManage))
+    @if($business || $canManage)
         <section class="re-bridge">
             <div>
-                <strong>{{ $fa ? 'اتصال اختیاری به کسب‌وکار' : 'Optional Business bridge' }}</strong>
-                <p>{{ $fa ? 'این دفتر املاک یک سامانه مستقل می‌ماند. در صورت نیاز می‌توانید پرونده‌های مناسب را بعداً وارد کاتالوگ کسب‌وکار کنید.' : 'This Real Estate office remains an independent system. When useful, selected cases can later be promoted into the Business catalog.' }}</p>
+                <strong>
+                    {{ $business
+                        ? (($fa ? 'کسب‌وکار: ' : 'Business: ').$business->name)
+                        : ($fa ? 'انتقال دفتر قدیمی به کسب‌وکار' : 'Migrate legacy office into a Business') }}
+                </strong>
+                <p>
+                    {{ $business
+                        ? ($fa ? 'فرم ورودی و پرونده‌های املاک یک قابلیت تخصصی همین کسب‌وکار هستند؛ عرضه‌های تأییدشده می‌توانند وارد کاتالوگ همین کسب‌وکار شوند.' : 'The intake form and Real Estate cases are a specialized capability of this Business; qualified offers can be promoted into the same Business catalog.')
+                        : ($fa ? 'این دفتر قدیمی هنوز Business متناظر ندارد. با حفظ آدرس عمومی و همه پرونده‌ها، آن را به یک کسب‌وکار املاک تبدیل کنید.' : 'This legacy office does not yet have a canonical Business. Convert it while preserving its public URL and every existing case.') }}
+                </p>
             </div>
             <div class="re-actions">
                 @if($business)
-                    <a class="re-btn re-light" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'کسب‌وکار مرتبط' : 'Linked business' }}</a>
+                    <a class="re-btn re-light" href="{{ route('businesses.show',$business) }}">{{ $fa ? 'باز کردن کسب‌وکار' : 'Open Business' }}</a>
                     <a class="re-btn re-light" href="{{ route('businesses.catalog.index',$business) }}">{{ $fa ? 'کاتالوگ' : 'Catalog' }}</a>
                 @elseif($canManage)
                     <form method="POST" action="{{ route('office.real-estate.adopt-business',['portal'=>$portal->uuid]) }}">
                         @csrf
-                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'اتصال اختیاری به Business' : 'Optionally connect to Business' }}</button>
+                        <button class="re-btn" style="background:#4f46e5;color:#fff">{{ $fa ? 'ثبت این دفتر به‌عنوان Business' : 'Register this office as a Business' }}</button>
                     </form>
                 @endif
             </div>

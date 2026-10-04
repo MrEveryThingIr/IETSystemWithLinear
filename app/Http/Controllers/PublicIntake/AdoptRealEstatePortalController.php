@@ -22,6 +22,6 @@ class AdoptRealEstatePortalController extends Controller
 
         return redirect()
             ->route('businesses.show', $business)
-            ->with('status', 'دفتر املاک با حفظ آدرس‌ها و پرونده‌های قبلی به زیرساخت Business منتقل شد.');
+            ->with('status', 'دفتر املاک با حفظ آدرس‌ها و پرونده‌های قبلی به‌عنوان یک Business ثبت شد.');
     }
 }

@@ -31,7 +31,6 @@
                                     'identity' => 'هویت',
                                     'market' => 'بازار',
                                     'business' => 'کسب‌وکار',
-                                    'specialized' => 'سامانه‌های تخصصی',
                                     'collaboration' => 'همکاری',
                                     'execution' => 'اجرا و برنامه‌ریزی',
                                     'content' => 'محتوا',

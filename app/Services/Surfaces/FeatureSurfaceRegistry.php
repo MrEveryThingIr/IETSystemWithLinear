@@ -31,15 +31,19 @@ class FeatureSurfaceRegistry
             ),
             'business' => $this->surface(
                 'Businesses', 'کسب‌وکارها', 'building-storefront', 'business', ['profile'],
-                ['businesses.index'], ['businesses.*']
+                ['businesses.index'], ['businesses.*', 'workspace.real-estate.*', 'office.real-estate.*']
             ),
-            // Real Estate Intake is intentionally its own publishable surface.
-            // It may bridge cases into Business later, but publication of the
-            // intake workspace remains independently controlled by super-admin.
-            'real-estate' => $this->surface(
-                'Real Estate Intake', 'پذیرش املاک', 'home-modern', 'specialized', ['profile'],
-                ['workspace.real-estate.index'], ['workspace.real-estate.*', 'office.real-estate.*']
-            ),
+            // Compatibility key for historical grants/routes only. Real Estate
+            // is a specialized Business vertical, not a separately published
+            // top-level facility.
+            'real-estate' => [
+                ...$this->surface(
+                    'Real Estate compatibility', 'سازگاری املاک', 'home-modern', 'business', ['business'],
+                    ['workspace.real-estate.index'], []
+                ),
+                'sidebar' => false,
+                'grantable' => false,
+            ],
             'planner' => $this->surface(
                 'Planner', 'برنامه‌ریز', 'calendar-days', 'execution', ['profile'],
                 ['planner.index'], ['planner.*', 'journeys.*']
