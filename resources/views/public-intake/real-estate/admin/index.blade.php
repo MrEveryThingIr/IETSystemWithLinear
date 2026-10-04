@@ -1,17 +1,15 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'fa' ? 'rtl' : 'ltr' }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    @php
+@extends('layouts.app')
+
+@section('title', app()->getLocale() === 'fa' ? 'دفتر پرونده‌ها' : 'Case office')
+
+@section('content')
+@php
         $fa = app()->getLocale() === 'fa';
         $statusText = $fa
             ? ['new'=>'جدید','contacted'=>'تماس گرفته شد','qualified'=>'واجد شرایط','in_progress'=>'در حال پیگیری','closed'=>'بسته‌شده','rejected'=>'ردشده']
             : ['new'=>'New','contacted'=>'Contacted','qualified'=>'Qualified','in_progress'=>'In progress','closed'=>'Closed','rejected'=>'Rejected'];
     @endphp
-    <title>{{ $fa ? 'دفتر پرونده‌ها' : 'Case office' }} — {{ $portal->title }}</title>
-    @vite('resources/css/app.css')
-    <style>
+<style>
         *{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:#0f172a;font-family:inherit}
         .wrap{max-width:1450px;margin:auto;padding:28px 16px 60px}
         .crumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.crumbs a{color:#047857;font-weight:900;text-decoration:none}
@@ -34,8 +32,6 @@
         @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.fgrid{grid-template-columns:1fr 1fr}}
         @media(max-width:600px){.cards,.fgrid{grid-template-columns:1fr}}
     </style>
-</head>
-<body>
 <main class="wrap">
     <nav class="crumbs">
         <a href="{{ route('workspace.real-estate.index') }}">← {{ $fa ? 'املاک من' : 'My Real Estate' }}</a>
@@ -128,5 +124,4 @@
         @if($cases->hasPages())<div class="pager">{{ $cases->links() }}</div>@endif
     </section>
 </main>
-</body>
-</html>
+@endsection
