@@ -9,3 +9,19 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+/.agents export-ignore
+/.ai export-ignore
+/Development-CodexReports export-ignore
+/docs export-ignore
+/tests export-ignore
+/AGENTS.md export-ignore
+/CLAUDE.md export-ignore
+/boost.json export-ignore
+/phpstan.neon export-ignore
+/phpunit.xml export-ignore
+/.editorconfig export-ignore
+/.npmrc export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore
+/vite.config.js export-ignore
+

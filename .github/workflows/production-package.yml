@@ -1,0 +1,111 @@
+name: Build production package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version label
+        required: false
+        default: v1.0.0
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: PHP 8.4 production package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, curl, intl, pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Validate locked dependencies
+        run: |
+          composer validate --strict
+          composer audit --locked --no-interaction
+          npm ci
+          npm audit --audit-level=high
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Install production PHP dependencies
+        run: |
+          rm -rf vendor
+          composer install \
+            --no-dev \
+            --no-interaction \
+            --prefer-dist \
+            --no-progress \
+            --optimize-autoloader
+
+      - name: Assemble runtime-only package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ github.event.inputs.version }}"
+          if [[ -z "$VERSION" ]]; then
+            VERSION="$GITHUB_REF_NAME"
+          fi
+          SAFE_VERSION="$(printf '%s' "$VERSION" | tr -cd 'A-Za-z0-9._-')"
+          PACKAGE="iet-${SAFE_VERSION}"
+          ROOT="dist/${PACKAGE}"
+
+          mkdir -p "$ROOT"
+
+          cp artisan composer.json composer.lock "$ROOT/"
+          cp deploy/production.env.example "$ROOT/production.env.example"
+
+          cp -a app bootstrap config database lang public resources routes storage vendor "$ROOT/"
+
+          rm -rf \
+            "$ROOT/public/hot" \
+            "$ROOT/public/storage" \
+            "$ROOT/storage/logs/"* \
+            "$ROOT/storage/framework/cache/data/"* \
+            "$ROOT/storage/framework/sessions/"* \
+            "$ROOT/storage/framework/views/"*
+
+          test -f "$ROOT/public/index.php"
+          test -f "$ROOT/public/build/manifest.json"
+          test -f "$ROOT/vendor/autoload.php"
+          test -f "$ROOT/artisan"
+
+          (
+            cd dist
+            zip -qr "../${PACKAGE}.zip" "$PACKAGE"
+          )
+
+          sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
+
+          echo "PACKAGE_NAME=${PACKAGE}" >> "$GITHUB_ENV"
+
+      - name: Upload production package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: |
+            ${{ env.PACKAGE_NAME }}.zip
+            ${{ env.PACKAGE_NAME }}.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
