@@ -64,7 +64,7 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
           php artisan optimize
-          php artisan optimize:clear
+          CACHE_STORE=array php artisan optimize:clear
           rm -f .env
 
       - name: Assemble runtime-only package
