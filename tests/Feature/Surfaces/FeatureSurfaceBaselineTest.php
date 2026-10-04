@@ -175,6 +175,13 @@ class FeatureSurfaceBaselineTest extends TestCase
 
             'planner.show',
 
+            'office.real-estate.index',
+            'office.real-estate.show',
+            'office.real-estate.status',
+            'office.real-estate.media.store',
+            'office.real-estate.media.stream',
+            'office.real-estate.media.destroy',
+
             'groups.show',
             'groups.community',
             'groups.spaces.show',
@@ -196,8 +203,6 @@ class FeatureSurfaceBaselineTest extends TestCase
             $registry->routeSurface('platform.publication.index')
         );
         $this->assertSame('business', $registry->routeSurface('workspace.real-estate.index'));
-        $this->assertSame('business', $registry->routeSurface('office.real-estate.index'));
-        $this->assertSame('business', $registry->routeSurface('office.real-estate.show'));
-        $this->assertSame('business', $registry->routeSurface('office.real-estate.media.stream'));
+        $this->assertSame('business', $registry->routeSurface('office.real-estate.adopt-business'));
     }
 }
