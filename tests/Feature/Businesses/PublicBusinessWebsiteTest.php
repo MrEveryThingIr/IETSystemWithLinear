@@ -262,6 +262,7 @@ class PublicBusinessWebsiteTest extends TestCase
             ->assertOk()
             ->assertSee('مشاور املاک مهوری');
     }
+
     public function test_owner_can_add_replace_and_remove_an_optional_public_intro_video(): void
     {
         Storage::fake('local');
@@ -346,5 +347,4 @@ class PublicBusinessWebsiteTest extends TestCase
         $this->get(route('public.businesses.intro-video', ['business' => $business->slug]))
             ->assertNotFound();
     }
-
 }
