@@ -12,25 +12,25 @@
 </style>
 
 <section class="section">
-    <h2>۶) عکس، صدا و ویدئو <span style="font-size:13px;color:#64748b;font-weight:600">(اختیاری)</span></h2>
-    <p class="hint">چند عکس/ویدئو انتخاب کنید یا همین‌جا توضیح صوتی و ویدئو ضبط کنید.</p>
+    <h2>{{ __('public_real_estate.sections.media') }} <span style="font-size:13px;color:#64748b;font-weight:600">({{ __('public_real_estate.optional') }})</span></h2>
+    <p class="hint">{{ __('public_real_estate.media.help') }}</p>
 
     <div class="grid">
-        <label><span>گالری تصاویر</span>
+        <label><span>{{ __('public_real_estate.media.images') }}</span>
             <input id="imagesInput" type="file" name="images[]" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple>
-            <small class="hint">حداکثر ۲۰ تصویر؛ هر تصویر تا ۱۲MB</small>
+            <small class="hint">{{ __('public_real_estate.media.images_help') }}</small>
         </label>
-        <label><span>ویدئو از دستگاه</span>
+        <label><span>{{ __('public_real_estate.media.videos') }}</span>
             <input type="file" name="videos[]" accept="video/mp4,video/webm,video/quicktime" multiple>
-            <small class="hint">حداکثر ۶ ویدئو؛ هر ویدئو تا ۱۰۰MB</small>
+            <small class="hint">{{ __('public_real_estate.media.videos_help') }}</small>
         </label>
-        <label><span>فایل صوتی</span>
+        <label><span>{{ __('public_real_estate.media.audios') }}</span>
             <input type="file" name="audios[]" accept="audio/*" multiple>
-            <small class="hint">حداکثر ۶ فایل؛ هر فایل تا ۲۵MB</small>
+            <small class="hint">{{ __('public_real_estate.media.audios_help') }}</small>
         </label>
-        <label><span>فیلم مستقیم با دوربین گوشی</span>
+        <label><span>{{ __('public_real_estate.media.camera_video') }}</span>
             <input type="file" name="videos[]" accept="video/*" capture="environment">
-            <small class="hint">راه جایگزین ساده برای مرورگرهایی که ضبط درون‌صفحه‌ای ندارند.</small>
+            <small class="hint">{{ __('public_real_estate.media.camera_video_help') }}</small>
         </label>
     </div>
 
@@ -38,12 +38,12 @@
 
     <div class="recorder-grid">
         <div class="recorder">
-            <strong>🎙 ضبط توضیح صوتی</strong>
-            <p class="hint">برای توضیح مالک/مراجعه‌کننده درباره ملک.</p>
+            <strong>🎙 {{ __('public_real_estate.media.audio_record') }}</strong>
+            <p class="hint">{{ __('public_real_estate.media.audio_help') }}</p>
             <div class="recorder-actions">
-                <button type="button" class="record-btn" id="startAudio">شروع ضبط صدا</button>
-                <button type="button" class="stop-btn" id="stopAudio" disabled>پایان ضبط</button>
-                <button type="button" class="remove-btn" id="removeAudio" hidden>حذف ضبط</button>
+                <button type="button" class="record-btn" id="startAudio">{{ __('public_real_estate.media.start_audio') }}</button>
+                <button type="button" class="stop-btn" id="stopAudio" disabled>{{ __('public_real_estate.media.stop_audio') }}</button>
+                <button type="button" class="remove-btn" id="removeAudio" hidden>{{ __('public_real_estate.media.remove') }}</button>
             </div>
             <audio id="audioPreview" controls hidden style="width:100%;margin-top:10px"></audio>
             <input id="recordedAudio" type="file" name="recorded_audio" hidden>
@@ -51,12 +51,12 @@
         </div>
 
         <div class="recorder">
-            <strong>🎥 ضبط ویدئو</strong>
-            <p class="hint">مثلاً یک فیلم کوتاه از ملک یا توضیح مراجعه‌کننده.</p>
+            <strong>🎥 {{ __('public_real_estate.media.video_record') }}</strong>
+            <p class="hint">{{ __('public_real_estate.media.video_help') }}</p>
             <div class="recorder-actions">
-                <button type="button" class="record-btn" id="startVideo">شروع ضبط ویدئو</button>
-                <button type="button" class="stop-btn" id="stopVideo" disabled>پایان ضبط</button>
-                <button type="button" class="remove-btn" id="removeVideo" hidden>حذف ضبط</button>
+                <button type="button" class="record-btn" id="startVideo">{{ __('public_real_estate.media.start_video') }}</button>
+                <button type="button" class="stop-btn" id="stopVideo" disabled>{{ __('public_real_estate.media.stop_video') }}</button>
+                <button type="button" class="remove-btn" id="removeVideo" hidden>{{ __('public_real_estate.media.remove') }}</button>
             </div>
             <video id="videoLive" playsinline muted hidden style="width:100%;margin-top:10px;border-radius:14px;background:#000"></video>
             <video id="videoPreview" controls playsinline hidden style="width:100%;margin-top:10px;border-radius:14px;background:#000"></video>
@@ -100,14 +100,14 @@
             ar.ondataavailable=e=>{if(e.data.size) ac.push(e.data)};
             ar.onstop=()=>{
                 const blob=new Blob(ac,{type:ar.mimeType||'audio/webm'}); attachBlob(aInput,blob,'recorded-audio.webm');
-                aPreview.src=URL.createObjectURL(blob); aPreview.hidden=false; aRemove.hidden=false; aState.textContent='ضبط صدا آماده ارسال است.';
+                aPreview.src=URL.createObjectURL(blob); aPreview.hidden=false; aRemove.hidden=false; aState.textContent=@js(__('public_real_estate.media.audio_ready'));
                 as?.getTracks().forEach(t=>t.stop());
             };
-            ar.start(); aStart.disabled=true; aStop.disabled=false; aState.textContent='در حال ضبط صدا...';
-        } catch(e) { aState.textContent='مرورگر اجازه میکروفن نداد یا از ضبط پشتیبانی نمی‌کند.'; }
+            ar.start(); aStart.disabled=true; aStop.disabled=false; aState.textContent=@js(__('public_real_estate.media.audio_recording'));
+        } catch(e) { aState.textContent=@js(__('public_real_estate.media.audio_denied')); }
     });
     aStop?.addEventListener('click',()=>{if(ar?.state==='recording') ar.stop(); aStart.disabled=false; aStop.disabled=true});
-    aRemove?.addEventListener('click',()=>{clearFile(aInput);aPreview.removeAttribute('src');aPreview.load();aPreview.hidden=true;aRemove.hidden=true;aState.textContent='ضبط حذف شد.'});
+    aRemove?.addEventListener('click',()=>{clearFile(aInput);aPreview.removeAttribute('src');aPreview.load();aPreview.hidden=true;aRemove.hidden=true;aState.textContent=@js(__('public_real_estate.media.audio_removed'))});
 
     let vr, vs, vc=[];
     const vStart=document.getElementById('startVideo'),vStop=document.getElementById('stopVideo'),vRemove=document.getElementById('removeVideo');
@@ -122,17 +122,17 @@
             vr.onstop=()=>{
                 const blob=new Blob(vc,{type:vr.mimeType||'video/webm'});attachBlob(vInput,blob,'recorded-video.webm');
                 vPreview.src=URL.createObjectURL(blob);vPreview.hidden=false;vRemove.hidden=false;vLive.hidden=true;vLive.srcObject=null;
-                vState.textContent='ضبط ویدئو آماده ارسال است.';vs?.getTracks().forEach(t=>t.stop());
+                vState.textContent=@js(__('public_real_estate.media.video_ready'));vs?.getTracks().forEach(t=>t.stop());
             };
-            vr.start();vStart.disabled=true;vStop.disabled=false;vState.textContent='در حال ضبط ویدئو...';
-        } catch(e){vState.textContent='مرورگر اجازه دوربین/میکروفن نداد یا از ضبط پشتیبانی نمی‌کند.'}
+            vr.start();vStart.disabled=true;vStop.disabled=false;vState.textContent=@js(__('public_real_estate.media.video_recording'));
+        } catch(e){vState.textContent=@js(__('public_real_estate.media.video_denied'))}
     });
     vStop?.addEventListener('click',()=>{if(vr?.state==='recording')vr.stop();vStart.disabled=false;vStop.disabled=true});
-    vRemove?.addEventListener('click',()=>{clearFile(vInput);vPreview.removeAttribute('src');vPreview.load();vPreview.hidden=true;vRemove.hidden=true;vState.textContent='ضبط حذف شد.'});
+    vRemove?.addEventListener('click',()=>{clearFile(vInput);vPreview.removeAttribute('src');vPreview.load();vPreview.hidden=true;vRemove.hidden=true;vState.textContent=@js(__('public_real_estate.media.video_removed'))});
 
     document.querySelector('form')?.addEventListener('submit',e=>{
         if(ar?.state==='recording'||vr?.state==='recording'){
-            e.preventDefault(); alert('ابتدا ضبط صدا/ویدئو را متوقف کنید، سپس پرونده را ثبت کنید.');
+            e.preventDefault(); alert(@js(__('public_real_estate.media.stop_before_submit')));
         }
     });
 })();
