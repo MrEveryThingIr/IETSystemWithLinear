@@ -46,7 +46,7 @@ class PersonalPlannerDemoSeeder extends Seeder
 
         $user = User::query()
             ->with('actor')
-            ->where('email', 'test@example.com')
+            ->where('username', (string) config('bootstrap.superadmin.username', 'MrEveryThing'))
             ->first();
 
         if (! $user instanceof User || $user->actor === null) {
