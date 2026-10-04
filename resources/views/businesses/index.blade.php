@@ -57,7 +57,7 @@
                         <a class="btn btn-primary" href="{{ route('businesses.show',$business) }}">{{ __('business.index.open') }}</a>
                         <a class="btn btn-light" href="{{ route('businesses.catalog.index',$business) }}">{{ __('business.index.catalog') }}</a>
                         @if($business->visibility === 'public')
-                            <a class="btn btn-light" target="_blank" rel="noopener" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}">{{ __('public_business.footer') }}</a>
+                            <a class="btn btn-light" target="_blank" rel="noopener" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}">{{ __('business.index.open_website') }}</a>
                         @endif
                     </div>
                 </article>
