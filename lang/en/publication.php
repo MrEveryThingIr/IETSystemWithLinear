@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'title' => 'Publication control',
+    'superadmin' => 'IET · Super Admin',
+    'intro' => 'Normal users only see workflows explicitly published to them. Required workflow dependencies are published automatically.',
+    'strict_on' => 'Publication enforcement is always on',
+    'users' => 'Users',
+    'facilities' => 'facilities',
+    'configure' => 'Configure',
+    'user_title' => 'User publication',
+    'all_users' => 'All users',
+    'also_reveals' => 'Also reveals',
+    'save' => 'Save publication',
+    'saved' => 'Publication saved; dependencies were applied automatically: :count capabilities.',
+    'mode_strict' => 'Strict mode is active; direct links to hidden capabilities are also blocked.',
+    'mode_observe' => 'Observe mode is active; Workspace hides capabilities while legacy direct links remain available for migration.',
+    'groups' => [
+        'core' => 'Core',
+        'identity' => 'Identity',
+        'market' => 'Market',
+        'business' => 'Business',
+        'collaboration' => 'Collaboration',
+        'execution' => 'Execution & planning',
+        'content' => 'Content',
+        'finance' => 'Finance',
+        'intelligence' => 'Intelligence',
+        'help' => 'Help',
+        'platform' => 'Platform administration',
+        'tools' => 'Tools',
+    ],
+];

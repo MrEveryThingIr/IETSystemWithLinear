@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'title' => '发布控制',
+    'superadmin' => 'IET · 超级管理员',
+    'intro' => '普通用户只会看到明确发布给自己的工作流；所需依赖能力会自动一并发布。',
+    'strict_on' => '发布权限始终强制执行',
+    'users' => '用户',
+    'facilities' => '项能力',
+    'configure' => '配置发布',
+    'user_title' => '用户能力发布',
+    'all_users' => '全部用户',
+    'also_reveals' => '同时开放',
+    'save' => '保存发布设置',
+    'saved' => '发布设置已保存，并自动应用依赖项：:count 项能力。',
+    'mode_strict' => '严格模式已启用；指向隐藏能力的直接链接也会被阻止。',
+    'mode_observe' => '观察模式已启用；工作区会隐藏能力，但旧的直接链接暂时仍可用于迁移。',
+    'groups' => [
+        'core' => '核心',
+        'identity' => '身份',
+        'market' => '市场',
+        'business' => '商家',
+        'collaboration' => '协作',
+        'execution' => '执行与计划',
+        'content' => '内容',
+        'finance' => '财务',
+        'intelligence' => '智能',
+        'help' => '帮助',
+        'platform' => '平台管理',
+        'tools' => '工具',
+    ],
+];
