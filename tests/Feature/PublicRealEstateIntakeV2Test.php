@@ -6,6 +6,8 @@ use App\Models\PublicIntakePortal;
 use App\Models\PublicIntakePortalGrant;
 use App\Models\PublicRealEstateCase;
 use App\Models\User;
+use App\Services\Business\BusinessService;
+use App\Services\Surfaces\FeatureSurfaceGrantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -38,6 +40,48 @@ class PublicRealEstateIntakeV2Test extends TestCase
         $this->assertNull($case->built_year);
     }
 
+    public function test_one_time_preview_does_not_render_a_locale_action_that_would_reopen_consumed_preview(): void
+    {
+        $owner = User::factory()->create();
+        $owner->actor()->create();
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'مشاور املاک مهوری',
+            'kind' => 'real_estate',
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $portal = $business->publicIntakePortals()->sole();
+        $token = 'preview-token';
+
+        $case = PublicRealEstateCase::query()->create([
+            'public_intake_portal_id' => $portal->getKey(),
+            'reference_code' => 'RE-PREVIEW123',
+            'intent' => 'offer',
+            'transaction_mode' => 'sale',
+            'contact_name' => 'علی نمونه',
+            'phone' => '09121234567',
+            'property_class' => 'residential',
+            'status' => 'new',
+            'preview_token_hash' => hash('sha256', $token),
+            'preview_expires_at' => now()->addMinutes(15),
+        ]);
+
+        $this->get(route('public.real-estate.preview', [
+            'case' => $case,
+            'token' => $token,
+        ]))
+            ->assertOk()
+            ->assertSee(route('public.businesses.show', ['business' => $business->slug]), false)
+            ->assertDontSee(route('locale.update'), false);
+
+        $this->get(route('public.real-estate.preview', [
+            'case' => $case,
+            'token' => $token,
+        ]))->assertNotFound();
+    }
+
     public function test_ungranted_authenticated_user_cannot_see_office_list(): void
     {
         $user = User::factory()->create();
@@ -53,7 +97,7 @@ class PublicRealEstateIntakeV2Test extends TestCase
             ->assertForbidden();
     }
 
-    public function test_granted_user_can_see_office_list(): void
+    public function test_published_and_portal_granted_user_can_see_office_list(): void
     {
         $user = User::factory()->create();
         $portal = PublicIntakePortal::query()->create([
@@ -68,6 +112,8 @@ class PublicRealEstateIntakeV2Test extends TestCase
             'user_id' => $user->getKey(),
             'role' => 'viewer',
         ]);
+
+        app(FeatureSurfaceGrantService::class)->sync($user, ['business'], null);
 
         PublicRealEstateCase::query()->create([
             'public_intake_portal_id' => $portal->getKey(),

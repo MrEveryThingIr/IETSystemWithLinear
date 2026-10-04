@@ -22,7 +22,8 @@
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+        <main class="mx-auto w-full max-w-5xl space-y-8 px-4 py-8 sm:px-6 sm:py-12">
+            <x-app.brand-banner compact />
             {{ $slot ?? '' }}
         </main>
 

@@ -21,12 +21,23 @@ The release candidate must preserve the cumulative automated and manual proof fo
 9. Structured interaction → Submission → authorized Evaluation.
 10. Conversation/Timeline → durable Notifications; realtime is transport only.
 11. Home/Today composes authoritative records without creating parallel truth.
+12. Businesses provide a private operating workspace plus a separate public website boundary; Real Estate is a specialized Business vertical, not a top-level parallel application.
+13. A public Real Estate Business can receive a guest property/need intake through its branded public website without exposing platform navigation or private office data.
 
 ## Publication hardening
 
 Before the immutable candidate is handed to the owner:
 
 - no known authorization-before-pagination defect;
+- **invisible-if-unavailable rule:** a user must never be shown a navigation item, button, link, form control, card, or Business feature block for an unpublished/unauthorized capability merely to receive a 403/404 after clicking it;
+- public Business pages must never expose private platform navigation, internal Business operations, private contacts/addresses, unpublished Listings, office cases, Planner, Deals, Money, or administration;
+- internal `/businesses/{business}` workspaces are operator/member surfaces; public discovery uses the dedicated `/b/{slug}` Business website;
+- Real Estate remains under Businesses, with the established intake field contract, private office/case workflow, media, one-time preview, and promotion into the Business catalog;
+- a private/inactive Business must not expose its linked public Real Estate intake channel;
+- one-time preview pages must not render actions that become invalid once that preview is consumed;
+- Business and Real Estate release views use translation catalogs rather than Persian/English binary branches or hard-coded language-specific UI copy; English, Persian, Arabic, and Simplified Chinese catalogs remain structurally available;
+- public/landing presentation carries the Everything brand promise (Everything for Everyone / همه چیز برای همه) and identifies the platform as the work-and-capital sharing system while individual Business public sites remain branded as that Business rather than the wider platform;
+- authenticated chrome presents the live time/context treatment as a distinct ambient bar rather than mixing it into ordinary navigation;
 - reserved-email Access Invitations are single-use;
 - Intent create → highlight → manage is coherent;
 - the Profile editor can manage the same subject/arrangement/value facets created by the guided Intent journey;
@@ -54,4 +65,39 @@ No AI provider, credential, runtime call, or AI-generated autonomous mutation is
 
 ## Owner handoff
 
-Remote completion ends at one immutable release-candidate SHA with green CI and synchronized acceptance/deployment docs. The owner then runs the cumulative browser worksheet against a continuing database. Any discovered defect receives a regression test and correction commit before the stable release tag.
+Remote completion ends at one immutable release-candidate SHA with green CI, synchronized acceptance/deployment docs, and an owner browser pass covering visibility/publication, Business public/private boundaries, multilingual rendering, Real Estate intake, and the full invitation-to-interaction journey. The owner then runs the cumulative browser worksheet against a continuing database. Any discovered defect receives a regression test and correction commit before the stable release tag.
+
+
+## Standalone Business website acceptance amendment
+
+Before formal v1 acceptance, verify all of the following:
+
+- every active public Business, regardless of kind, has a discoverable
+  `/b/{slug}` standalone website from its operator workspace;
+- private/paused Businesses render no public-site link that can lead to 404;
+- the public site contains no platform workspace navigation or product chrome;
+- Business-owned Real Estate intake is advertised through
+  `/b/{slug}/property-intake`, while legacy token URLs remain compatible;
+- owner/manager-selected cross-Business recommendations are opt-in and can only
+  expose active public Businesses;
+- Superadmin can inspect/manage any Business without being inserted into that
+  Business's membership table;
+- non-admin users still require publication plus Business role/domain access.
+
+
+## Business public-site media and Real Estate promotion amendment
+
+Before release acceptance:
+
+- an owner/manager can optionally upload one MP4/WebM/MOV introduction video
+  (maximum 50 MB) for a Business public landing page;
+- no video player or public media URL is rendered when no valid file exists;
+- the stored file is not directly public: it is streamed only through the
+  active/public Business route;
+- private or paused Businesses return 404 for that video route;
+- replacing/removing an introduction video deletes the superseded stored file;
+- the Public Website settings form remains saveable even when there are no
+  other public Businesses available for cross-promotion;
+- the Business-owned Real Estate case → catalog promotion route successfully
+  binds the portal/case and still rejects a portal belonging to another
+  Business.

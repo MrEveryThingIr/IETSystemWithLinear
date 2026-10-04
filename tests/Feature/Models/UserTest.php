@@ -134,7 +134,9 @@ class UserTest extends TestCase
         $this->seed();
 
         $this->assertDatabaseHas('users', [
-            'username' => 'testuser', 'email' => 'test@example.com', 'status' => 'active',
+            'username' => 'MrEveryThing',
+            'email' => 'mreverything@example.test',
+            'status' => 'active',
         ]);
     }
 }

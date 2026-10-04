@@ -1,6 +1,28 @@
 <?php
 
 return [
+    'surfaces' => [
+        'notifications' => 'Notifications',
+        'profile' => 'Profile',
+        'market' => 'Needs, offers & services',
+        'money' => 'Personal money',
+        'deals' => 'Deals',
+        'business' => 'Businesses',
+        'real-estate' => 'Real Estate',
+        'planner' => 'Planner',
+        'accounting' => 'Accounting',
+        'exchange' => 'IET Exchange',
+        'vault' => 'Private vault',
+        'content' => 'Content Library',
+        'groups' => 'Groups',
+        'ai' => 'AI Chat Lab',
+        'manual' => 'System Manual',
+        'system-map' => 'System Map',
+        'access-invitations' => 'Access invitations',
+        'development-origins' => 'Development Origins',
+        'actors' => 'Actors',
+        'publication-control' => 'Publication control',
+    ],
     'navigation' => [
         'needs_offers' => 'Needs & Offers',
         'work' => 'Work',

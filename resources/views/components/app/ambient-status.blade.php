@@ -6,7 +6,7 @@
 @endphp
 
 <iet-ambient-status
-    class="hidden min-w-0 max-w-xl items-center gap-3 lg:flex"
+    class="flex min-w-0 flex-1 items-center gap-3"
     data-locale="{{ $locale }}"
     data-calendar="{{ $calendar }}"
     data-timezone="{{ $timezone }}"
@@ -16,8 +16,8 @@
         <time class="block font-medium text-zinc-600 dark:text-zinc-300" data-ambient-clock></time>
         <span class="block text-[0.65rem] text-zinc-500" data-ambient-equivalent hidden></span>
     </span>
-    <span class="text-zinc-300 dark:text-zinc-700" aria-hidden="true">·</span>
-    <span class="min-w-0 truncate text-xs text-zinc-500" data-ambient-message aria-live="polite"></span>
+    <span class="text-indigo-200 dark:text-indigo-800" aria-hidden="true">·</span>
+    <span class="hidden min-w-0 truncate text-xs font-medium text-zinc-500 sm:inline dark:text-zinc-400" data-ambient-message aria-live="polite"></span>
     <span hidden data-ambient-source>{{ __('ui.ambient.messages.plan') }}</span>
     <span hidden data-ambient-source>{{ __('ui.ambient.messages.record') }}</span>
     <span hidden data-ambient-source>{{ __('ui.ambient.messages.review') }}</span>

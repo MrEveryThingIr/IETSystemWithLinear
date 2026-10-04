@@ -50,9 +50,7 @@ class ExperienceNavigation
 
             return [
                 'key' => $key,
-                'label' => app()->getLocale() === 'fa'
-                    ? ($surface['label_fa'] ?? $surface['label'])
-                    : $surface['label'],
+                'label' => __("experience.surfaces.{$key}"),
                 'icon' => $surface['icon'],
                 'route' => $this->registry->entryRoute($key),
                 'patterns' => $surface['route_patterns'],
@@ -125,9 +123,7 @@ class ExperienceNavigation
             $surface = $this->registry->get('publication-control');
             $admin[] = [
                 'key' => 'publication-control',
-                'label' => app()->getLocale() === 'fa'
-                    ? ($surface['label_fa'] ?? $surface['label'])
-                    : $surface['label'],
+                'label' => __('experience.surfaces.publication-control'),
                 'icon' => $surface['icon'],
                 'route' => $this->registry->entryRoute('publication-control'),
                 'patterns' => $surface['route_patterns'],

@@ -14,6 +14,7 @@ use App\Models\PublicRealEstateCase;
 use App\Models\User;
 use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessMarketService;
+use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
 use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
@@ -27,8 +28,11 @@ use InvalidArgumentException;
 
 class BusinessCatalogController extends Controller
 {
-    public function index(Request $request, Business $business): View
-    {
+    public function index(
+        Request $request,
+        Business $business,
+        FeatureSurfaceAccess $surfaceAccess,
+    ): View {
         abort_unless(BusinessAccess::canOperate($request->user(), $business), 403);
 
         $business->load([
@@ -56,6 +60,8 @@ class BusinessCatalogController extends Controller
             'canManage' => BusinessAccess::canManage($request->user(), $business),
             'unitCatalog' => MonetaryUnitCatalog::all(),
             'marketOffersByListing' => $marketOffersByListing,
+            'canUsePlanner' => $surfaceAccess->allows($request->user(), 'planner'),
+            'canUseMarket' => $surfaceAccess->allows($request->user(), 'market'),
         ]);
     }
 
@@ -85,7 +91,7 @@ class BusinessCatalogController extends Controller
             $parent,
         );
 
-        return back()->with('status', 'Catalog category saved.');
+        return back()->with('status', __('business.messages.catalog_category_saved'));
     }
 
     public function store(Request $request, Business $business, BusinessCatalogService $catalog): RedirectResponse
@@ -179,7 +185,7 @@ class BusinessCatalogController extends Controller
             filled($data['reason'] ?? null) ? trim((string) $data['reason']) : null,
         );
 
-        return back()->with('status', 'New price version added.');
+        return back()->with('status', __('business.messages.price_version_added'));
     }
 
     public function publish(
@@ -249,7 +255,7 @@ class BusinessCatalogController extends Controller
         $listing = $catalog->promoteRealEstateOffer($business, $case, $actor);
 
         return redirect()
-            ->route('businesses.catalog.index', $business)
-            ->with('status', 'Property case promoted to Business Listing '.$listing->uuid.'.');
+            ->route('businesses.catalog.listings.edit', [$business, $listing])
+            ->with('status', __('business.messages.property_promoted', ['uuid' => $listing->uuid]));
     }
 }

@@ -157,9 +157,13 @@ class BusinessVerticalConsolidationTest extends TestCase
 
         $this->actingAs($stranger)
             ->get(route('businesses.show', $business))
+            ->assertForbidden();
+
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))
             ->assertOk()
-            ->assertDontSee('مشتری / مخاطب')
-            ->assertDontSee('برنامه‌های کسب‌وکار');
+            ->assertSee('Public Identity, Private Operations')
+            ->assertDontSee(route('businesses.clients.index', $business), false)
+            ->assertDontSee(route('businesses.catalog.index', $business), false);
 
         $this->actingAs($stranger)
             ->get(route('businesses.clients.index', $business))
@@ -417,7 +421,7 @@ class BusinessVerticalConsolidationTest extends TestCase
         $this->actingAs($owner)
             ->get(route('businesses.show', $business))
             ->assertOk()
-            ->assertSee('موقعیت اقتصادی این کسب‌وکار')
+            ->assertSee(__('business.show.money.position'))
             ->assertSee('0 IET');
     }
 

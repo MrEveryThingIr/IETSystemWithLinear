@@ -12,7 +12,6 @@
     <flux:text class="min-w-0 truncate font-medium text-zinc-900 dark:text-white">{{ $title }}</flux:text>
     <flux:spacer />
     @unless (config('release.profile') === 'planning_baseline')
-        <x-app.ambient-status />
         <flux:button :href="route('manual', ['topic' => $manualTopic])" variant="ghost" size="sm" icon="question-mark-circle">
             <span class="hidden sm:inline">{{ __('ui.navigation.help') }}</span>
         </flux:button>

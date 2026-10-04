@@ -98,7 +98,12 @@
                     <form wire:submit="proposeSettlement" class="space-y-4">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <flux:input wire:model="settlementAmount" :label="__('financial.settlement.amount')" />
-                            <x-app.calendar-datetime-input model="settlementPaidAt" :label="__('financial.settlement.paid_at')" />
+                            <div>
+                                <x-app.calendar-datetime-input model="settlementPaidAt" :label="__('financial.settlement.paid_at')" />
+                                <p class="mt-1 text-xs text-zinc-500">
+                                    {{ __('financial.settlement.paid_at_timezone', ['timezone' => $timezone]) }}
+                                </p>
+                            </div>
                             <flux:input wire:model="settlementMethod" :label="__('financial.settlement.method')" maxlength="80" />
                             <flux:input wire:model="settlementReference" :label="__('financial.settlement.reference')" maxlength="255" />
                         </div>

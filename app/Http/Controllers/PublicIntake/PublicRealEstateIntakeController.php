@@ -4,6 +4,7 @@ namespace App\Http\Controllers\PublicIntake;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PublicIntake\StorePublicRealEstateIntakeRequest;
+use App\Models\Business;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Services\Contacts\BusinessContactResolver;
@@ -15,12 +16,34 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class PublicRealEstateIntakeController extends Controller
 {
+    public function showForBusiness(Business $business): SymfonyResponse
+    {
+        return $this->show($this->portalForBusiness($business));
+    }
+
+    public function storeForBusiness(
+        StorePublicRealEstateIntakeRequest $request,
+        Business $business,
+        PublicRealEstateCaseMediaStore $mediaStore,
+        BusinessContactResolver $contactResolver,
+    ): SymfonyResponse {
+        return $this->store(
+            $request,
+            $this->portalForBusiness($business),
+            $mediaStore,
+            $contactResolver,
+        );
+    }
+
     public function show(PublicIntakePortal $portal): SymfonyResponse
     {
+        $portal->loadMissing('business');
         $this->ensureAvailable($portal);
-        app()->setLocale($portal->locale ?: 'fa');
 
-        return $this->privateView('public-intake.real-estate.show', ['portal' => $portal]);
+        return $this->privateView('public-intake.real-estate.show', [
+            'portal' => $portal,
+            'business' => $portal->business,
+        ]);
     }
 
     public function store(
@@ -94,7 +117,7 @@ class PublicRealEstateIntakeController extends Controller
             return redirect()->route('public.real-estate.preview', [
                 'case' => $case,
                 'token' => $previewToken,
-            ])->with('media_warning', 'پرونده ثبت شد، اما بارگذاری بخشی از رسانه‌ها کامل نشد.');
+            ])->with('media_warning', __('public_real_estate.media.upload_warning'));
         }
 
         return redirect()->route('public.real-estate.preview', [
@@ -135,9 +158,39 @@ class PublicRealEstateIntakeController extends Controller
         ]);
     }
 
+    private function portalForBusiness(Business $business): PublicIntakePortal
+    {
+        abort_unless(
+            $business->status === 'active'
+            && $business->visibility === 'public'
+            && $business->kind === 'real_estate',
+            404,
+        );
+
+        $portal = $business->publicIntakePortals()
+            ->where('type', 'real_estate')
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->first();
+
+        abort_unless($portal instanceof PublicIntakePortal, 404);
+
+        return $portal;
+    }
+
     private function ensureAvailable(PublicIntakePortal $portal): void
     {
+        $portal->loadMissing('business');
+
         abort_unless($portal->is_active && $portal->type === 'real_estate', 404);
+
+        if ($portal->business !== null) {
+            abort_unless(
+                $portal->business->status === 'active'
+                && $portal->business->visibility === 'public',
+                404,
+            );
+        }
     }
 
     private function makeReferenceCode(): string

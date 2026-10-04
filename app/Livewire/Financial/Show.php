@@ -72,6 +72,27 @@ class Show extends Component
         $amountMinor = $this->parseAmount($this->settlementAmount);
         $paidAt = $this->paidInstant();
 
+        if (! $paidAt instanceof CarbonImmutable) {
+            return;
+        }
+
+        $now = CarbonImmutable::now('UTC');
+
+        if ($paidAt->greaterThan($now->addMinute())) {
+            $this->addError('settlementPaidAt', __('financial.validation.paid_at_future', [
+                'timezone' => TemporalPreferences::timezoneFor($this->user()),
+            ]));
+
+            return;
+        }
+
+        // The picker stores minute precision while the server clock has
+        // seconds. Clamp tiny client/server clock skew to the actual instant,
+        // while ProposeSettlement keeps the strict no-future domain invariant.
+        if ($paidAt->isFuture()) {
+            $paidAt = $now;
+        }
+
         $propose->execute(
             $this->obligation,
             $this->user(),
@@ -218,7 +239,7 @@ class Show extends Component
         return $amount;
     }
 
-    private function paidInstant(): CarbonImmutable
+    private function paidInstant(): ?CarbonImmutable
     {
         try {
             return CarbonImmutable::parse(
@@ -229,7 +250,8 @@ class Show extends Component
             $this->addError('settlementPaidAt', __('validation.date', [
                 'attribute' => __('financial.settlement.paid_at'),
             ]));
-            abort(422, 'Invalid Settlement paid time.');
+
+            return null;
         }
     }
 

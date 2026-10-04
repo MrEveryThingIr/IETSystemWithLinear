@@ -9,8 +9,10 @@
 </head>
 <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     <div class="fixed end-4 top-4 z-10"><x-app.locale-switcher /></div>
-    <main class="mx-auto flex min-h-dvh max-w-3xl items-center px-4 py-10 sm:px-6">
-        <flux:card class="w-full space-y-6">
+    <main class="mx-auto flex min-h-dvh max-w-5xl items-center px-4 py-10 sm:px-6">
+        <div class="w-full space-y-6">
+            <x-app.brand-banner />
+            <flux:card class="w-full space-y-6">
             <div class="space-y-3">
                 <flux:badge color="indigo">{{ __('access.root.invitation_only') }}</flux:badge>
                 <flux:heading size="xl">{{ config('app.name') }}</flux:heading>
@@ -24,7 +26,8 @@
                 @endauth
                 <flux:button disabled variant="ghost" class="w-full">{{ __('access.root.registration_by_invitation') }}</flux:button>
             </div>
-        </flux:card>
+            </flux:card>
+        </div>
     </main>
     @fluxScripts
 </body>

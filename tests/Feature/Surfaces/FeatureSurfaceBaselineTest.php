@@ -179,9 +179,6 @@ class FeatureSurfaceBaselineTest extends TestCase
             'groups.community',
             'groups.spaces.show',
 
-            'office.real-estate.index',
-            'office.real-estate.show',
-            'office.real-estate.media.stream',
         ] as $routeName) {
             $this->assertNull(
                 $registry->routeSurface($routeName),
@@ -199,5 +196,8 @@ class FeatureSurfaceBaselineTest extends TestCase
             $registry->routeSurface('platform.publication.index')
         );
         $this->assertSame('business', $registry->routeSurface('workspace.real-estate.index'));
+        $this->assertSame('business', $registry->routeSurface('office.real-estate.index'));
+        $this->assertSame('business', $registry->routeSurface('office.real-estate.show'));
+        $this->assertSame('business', $registry->routeSurface('office.real-estate.media.stream'));
     }
 }

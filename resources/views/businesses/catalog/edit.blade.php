@@ -114,7 +114,7 @@
                     <label class="field"><span>{{ __('business_listing.property.property_class') }}</span>
                         <select name="property_class">
                             <option value="">—</option>
-                            @foreach(['residential','commercial','office','land','industrial','agricultural','mixed','other'] as $class)<option value="{{ $class }}" @selected(old('property_class',$p?->property_class)===$class)>{{ $class }}</option>@endforeach
+                            @foreach(['residential','commercial','office','land','industrial','agricultural','mixed','other'] as $class)<option value="{{ $class }}" @selected(old('property_class',$p?->property_class)===$class)>{{ __('business_listing.property.classes.'.$class) }}</option>@endforeach
                         </select>
                     </label>
                     <label class="field"><span>{{ __('business_listing.property.property_subtype') }}</span><input name="property_subtype" value="{{ old('property_subtype',$p?->property_subtype) }}"></label>
@@ -129,10 +129,10 @@
                         <label class="field"><span>{{ __('business_listing.property.'.$key) }}</span><input name="{{ $name }}" inputmode="decimal" value="{{ old($name,$p?->{$name}) }}"></label>
                     @endforeach
                     <label class="field"><span>{{ __('business_listing.property.built_year_calendar') }}</span>
-                        <select name="built_year_calendar"><option value="">—</option><option value="jalali" @selected(old('built_year_calendar',$p?->built_year_calendar)==='jalali')>Jalali</option><option value="gregorian" @selected(old('built_year_calendar',$p?->built_year_calendar)==='gregorian')>Gregorian</option></select>
+                        <select name="built_year_calendar"><option value="">—</option><option value="jalali" @selected(old('built_year_calendar',$p?->built_year_calendar)==='jalali')>{{ __('business_listing.property.calendars.jalali') }}</option><option value="gregorian" @selected(old('built_year_calendar',$p?->built_year_calendar)==='gregorian')>{{ __('business_listing.property.calendars.gregorian') }}</option></select>
                     </label>
                     <label class="field"><span>{{ __('business_listing.property.building_condition') }}</span>
-                        <select name="building_condition"><option value="">—</option>@foreach(['new','excellent','good','renovated','needs_renovation','old','teardown'] as $v)<option value="{{ $v }}" @selected(old('building_condition',$p?->building_condition)===$v)>{{ $v }}</option>@endforeach</select>
+                        <select name="building_condition"><option value="">—</option>@foreach(['new','excellent','good','renovated','needs_renovation','old','teardown'] as $v)<option value="{{ $v }}" @selected(old('building_condition',$p?->building_condition)===$v)>{{ __('business_listing.property.conditions.'.$v) }}</option>@endforeach</select>
                     </label>
                     @foreach(['orientation','deed_type','usage_type','occupancy_status'] as $name)
                         <label class="field"><span>{{ __('business_listing.property.'.$name) }}</span><input name="{{ $name }}" value="{{ old($name,$p?->{$name}) }}"></label>
@@ -222,7 +222,7 @@
             <form method="POST" enctype="multipart/form-data" action="{{ route('businesses.catalog.listings.media.store',[$business,$listing]) }}" class="grid3">
                 @csrf
                 <label class="field"><span>{{ __('business_listing.media.file') }}</span><input type="file" name="media" accept="image/*,video/*,audio/*" required></label>
-                <label class="field"><span>{{ __('business_listing.media.rights') }}</span><select name="rights_status">@foreach(AppModelsAsset::RIGHTS_STATUSES as $status)<option value="{{ $status }}" @selected($status==='owned')>{{ $status }}</option>@endforeach</select></label>
+                <label class="field"><span>{{ __('business_listing.media.rights') }}</span><select name="rights_status">@foreach($rightsStatuses as $status)<option value="{{ $status }}" @selected($status==='owned')>{{ $status }}</option>@endforeach</select></label>
                 <label class="field"><span>{{ __('business_listing.media.visibility') }}</span><select name="visibility"><option value="public">public</option><option value="members">members</option><option value="private">private</option></select></label>
                 <label class="field" style="grid-column:span 2"><span>{{ __('business_listing.media.caption') }}</span><input name="caption"></label>
                 <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="cover" value="1"> {{ __('business_listing.media.cover') }}</label>

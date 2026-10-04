@@ -31,10 +31,11 @@ class FeatureSurfaceRegistry
             ),
             'business' => $this->surface(
                 'Businesses', 'کسب‌وکارها', 'building-storefront', 'business', ['profile'],
-                ['businesses.index'], ['businesses.*', 'workspace.real-estate.*']
+                ['businesses.index'], ['businesses.*', 'workspace.real-estate.*', 'office.real-estate.*']
             ),
-            // Compatibility key for historical grants only. Real Estate is a
-            // Business vertical, not an independently publishable facility.
+            // Compatibility key for historical grants/routes only. Real Estate
+            // is a specialized Business vertical, not a separately published
+            // top-level facility.
             'real-estate' => [
                 ...$this->surface(
                     'Real Estate compatibility', 'سازگاری املاک', 'home-modern', 'business', ['business'],
@@ -298,9 +299,6 @@ class FeatureSurfaceRegistry
             'groups.community',
             'groups.spaces.show',
 
-            // Public-intake office administration is record/domain
-            // authorized by its Business or legacy portal grant.
-            'office.real-estate.*',
         ];
     }
 

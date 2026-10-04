@@ -8,6 +8,22 @@
         ->where('business_listing_version_id', $version->id)
         ->where('visibility', 'public')
         ->values();
+
+    $displayPropertyValue = static function (string $key, mixed $value): mixed {
+        if ($key === 'transaction_mode' && in_array($value, ['sale', 'rent', 'sale_or_rent'], true)) {
+            return __('business_listing.property.'.$value);
+        }
+
+        if ($key === 'property_class' && in_array($value, ['residential', 'commercial', 'office', 'land', 'industrial', 'agricultural', 'mixed', 'other'], true)) {
+            return __('business_listing.property.classes.'.$value);
+        }
+
+        if ($key === 'building_condition' && in_array($value, ['new', 'excellent', 'good', 'renovated', 'needs_renovation', 'old', 'teardown'], true)) {
+            return __('business_listing.property.conditions.'.$value);
+        }
+
+        return $value;
+    };
 @endphp
 <style>
 .pv{max-width:1040px;margin:auto;padding:26px 16px 70px}.hero{background:#fff;border:1px solid #e2e8f0;border-radius:28px;overflow:hidden}.cover{height:360px;background:#0f172a}.cover img,.cover video{width:100%;height:100%;object-fit:cover}.body{padding:26px}.body h1{font-size:34px;margin:8px 0}.muted{color:#64748b;line-height:1.8}.badge{display:inline-flex;padding:6px 10px;border-radius:999px;background:#f1f5f9;font-size:12px;font-weight:850;margin:2px}.panel{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:20px;margin-top:16px}.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.fact{background:#f8fafc;border-radius:14px;padding:12px}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.gallery img,.gallery video{width:100%;height:190px;object-fit:cover;border-radius:16px;background:#0f172a}.notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:14px;padding:12px}.btn{display:inline-flex;padding:10px 14px;border-radius:13px;border:1px solid #cbd5e1;text-decoration:none;font-weight:850;color:#334155;background:#fff}@media(max-width:760px){.facts{grid-template-columns:1fr}.cover{height:240px}}
@@ -59,7 +75,7 @@
                     'usage_type'=>__('business_listing.property.usage_type'),
                 ] as $key=>$label)
                     @if($p->{$key} !== null && $p->{$key} !== '')
-                        <div class="fact"><div class="muted" style="font-size:12px">{{ $label }}</div><strong>{{ $p->{$key} }}</strong></div>
+                        <div class="fact"><div class="muted" style="font-size:12px">{{ $label }}</div><strong>{{ $displayPropertyValue($key, $p->{$key}) }}</strong></div>
                     @endif
                 @endforeach
             </div>

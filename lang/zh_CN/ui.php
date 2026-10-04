@@ -4,6 +4,7 @@ return [
     'language' => '语言',
     'account' => '账户',
     'ambient' => [
+        'label' => '时间与节奏',
         'messages' => [
             'plan' => '规划下一项有用行动，并让原始记录保持权威。',
             'record' => '记录真实发生的事情，而不是系统仅仅推断的内容。',

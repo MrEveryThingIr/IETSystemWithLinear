@@ -123,7 +123,7 @@ class BusinessCatalogService
 
             $locked->update([
                 'current_version_id' => $version->id,
-                'status' => 'draft',
+                'status' => $locked->published_version_id !== null ? 'active' : 'draft',
             ]);
 
             return $version;
@@ -234,7 +234,7 @@ class BusinessCatalogService
                     ? $listingData['available_until']
                     : $locked->available_until,
                 'simple_office_mode' => $listingData['simple_office_mode'] ?? $locked->simple_office_mode,
-                'status' => 'draft',
+                'status' => $locked->published_version_id !== null ? 'active' : 'draft',
             ]);
 
             if ($locked->listing_type === 'property' && is_array($propertyData)) {
@@ -295,7 +295,7 @@ class BusinessCatalogService
 
         $listing->update([
             'current_version_id' => $version->id,
-            'status' => 'draft',
+            'status' => $listing->published_version_id !== null ? 'active' : 'draft',
         ]);
 
         return $version;
@@ -396,6 +396,7 @@ class BusinessCatalogService
                     ],
                 ],
                 $properties,
+                visibility: 'public',
             );
 
             $listing->update([

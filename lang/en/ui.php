@@ -4,6 +4,7 @@ return [
     'language' => 'Language',
     'account' => 'Account',
     'ambient' => [
+        'label' => 'Time & rhythm',
         'messages' => [
             'plan' => 'Plan the next useful step; keep the source record authoritative.',
             'record' => 'Record what happened, not what the system merely inferred.',

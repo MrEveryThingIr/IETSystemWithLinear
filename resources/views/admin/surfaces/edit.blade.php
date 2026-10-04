@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', app()->getLocale() === 'fa' ? 'انتشار برای کاربر' : 'User publication')
+@section('title', __('publication.user_title'))
 
 @section('content')
 <div class="mx-auto max-w-6xl space-y-5">
@@ -11,7 +11,7 @@
 
         <div>
             <a class="text-sm font-bold text-indigo-600" href="{{ route('platform.publication.index') }}">
-                ← {{ app()->getLocale() === 'fa' ? 'همه کاربران' : 'All users' }}
+                ← {{ __('publication.all_users') }}
             </a>
             <h1 class="mt-2 text-3xl font-black">{{ $subject->username ?: $subject->email }}</h1>
             <div class="mt-1 text-zinc-500" dir="ltr">{{ $subject->email }}</div>
@@ -25,21 +25,7 @@
                 @foreach($groups as $group => $surfaces)
                     <section class="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                         <h2 class="mb-4 text-xl font-black">
-                            {{ app()->getLocale() === 'fa'
-                                ? ([
-                                    'core' => 'هسته',
-                                    'identity' => 'هویت',
-                                    'market' => 'بازار',
-                                    'business' => 'کسب‌وکار',
-                                    'collaboration' => 'همکاری',
-                                    'execution' => 'اجرا و برنامه‌ریزی',
-                                    'content' => 'محتوا',
-                                    'finance' => 'مالی',
-                                    'intelligence' => 'هوشمندی',
-                                    'help' => 'راهنما',
-                                    'platform' => 'مدیریت پلتفرم',
-                                ][$group] ?? $group)
-                                : \Illuminate\Support\Str::headline($group) }}
+                            {{ __('publication.groups.'.$group) }}
                         </h2>
 
                         <div class="grid gap-3 md:grid-cols-2">
@@ -56,15 +42,13 @@
                                     >
                                     <span>
                                         <strong class="text-base">
-                                            {{ app()->getLocale() === 'fa'
-                                                ? ($surface['label_fa'] ?? $surface['label'])
-                                                : $surface['label'] }}
+                                            {{ __('experience.surfaces.'.$surface['key']) }}
                                         </strong>
 
                                         @if($surface['dependencies'])
                                             <span class="mt-2 block text-xs font-semibold text-violet-600">
-                                                {{ app()->getLocale() === 'fa' ? 'همراه با' : 'Also reveals' }}:
-                                                {{ implode(' · ', $surface['dependencies']) }}
+                                                {{ __('publication.also_reveals') }}:
+                                                {{ collect($surface['dependencies'])->map(fn ($dependency) => __('experience.surfaces.'.$dependency))->implode(' · ') }}
                                             </span>
                                         @endif
                                     </span>
@@ -77,7 +61,7 @@
 
             <div class="sticky bottom-3 mt-5 rounded-2xl border border-zinc-200 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95">
                 <button class="rounded-xl bg-indigo-600 px-5 py-3 text-base font-black text-white hover:bg-indigo-700">
-                    {{ app()->getLocale() === 'fa' ? 'ذخیره انتشار' : 'Save publication' }}
+                    {{ __('publication.save') }}
                 </button>
             </div>
         </form>

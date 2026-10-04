@@ -30,7 +30,7 @@ class BusinessContactController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
         ]));
 
-        return back()->with('status', 'راه ارتباطی کسب‌وکار اضافه شد.');
+        return back()->with('status', __('business.messages.contact_added'));
     }
 
     public function destroyContact(
@@ -43,7 +43,7 @@ class BusinessContactController extends Controller
 
         $directory->deleteContactPoint($business, $contactPoint);
 
-        return back()->with('status', 'راه ارتباطی حذف شد.');
+        return back()->with('status', __('business.messages.contact_deleted'));
     }
 
     public function storeAddress(
@@ -69,7 +69,7 @@ class BusinessContactController extends Controller
             'is_primary' => ['nullable', 'boolean'],
         ]));
 
-        return back()->with('status', 'آدرس کسب‌وکار اضافه شد.');
+        return back()->with('status', __('business.messages.address_added'));
     }
 
     public function destroyAddress(
@@ -82,6 +82,6 @@ class BusinessContactController extends Controller
 
         $directory->deleteAddress($business, $address);
 
-        return back()->with('status', 'آدرس حذف شد.');
+        return back()->with('status', __('business.messages.address_deleted'));
     }
 }

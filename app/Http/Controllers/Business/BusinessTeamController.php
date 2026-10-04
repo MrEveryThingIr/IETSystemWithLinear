@@ -37,7 +37,7 @@ class BusinessTeamController extends Controller
             $data['job_title'] ?? null
         );
 
-        return back()->with('status', 'عضو به کسب‌وکار اضافه شد.');
+        return back()->with('status', __('business.messages.member_added'));
     }
 
     public function update(
@@ -53,7 +53,7 @@ class BusinessTeamController extends Controller
             'job_title' => ['nullable', 'string', 'max:160'],
         ]));
 
-        return back()->with('status', 'نقش عضو به‌روزرسانی شد.');
+        return back()->with('status', __('business.messages.member_updated'));
     }
 
     public function destroy(
@@ -66,7 +66,7 @@ class BusinessTeamController extends Controller
 
         $service->removeMember($business, $membership);
 
-        return back()->with('status', 'عضو از تیم فعال خارج شد.');
+        return back()->with('status', __('business.messages.member_removed'));
     }
 
     public function assignProfession(
@@ -91,7 +91,7 @@ class BusinessTeamController extends Controller
             (bool) ($data['is_primary'] ?? false)
         );
 
-        return back()->with('status', 'تخصص عضو ثبت شد.');
+        return back()->with('status', __('business.messages.profession_added'));
     }
 
     public function removeProfession(
@@ -105,7 +105,7 @@ class BusinessTeamController extends Controller
 
         $membership->professions()->detach($profession->getKey());
 
-        return back()->with('status', 'تخصص عضو از این کسب‌وکار حذف شد.');
+        return back()->with('status', __('business.messages.profession_removed'));
     }
 
     public function transferOwnership(
@@ -130,6 +130,6 @@ class BusinessTeamController extends Controller
             $newOwner
         );
 
-        return back()->with('status', 'مالکیت کسب‌وکار با موفقیت منتقل شد.');
+        return back()->with('status', __('business.messages.ownership_transferred'));
     }
 }

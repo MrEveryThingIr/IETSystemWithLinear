@@ -4,6 +4,7 @@ use App\Http\Controllers\PublicIntake\AdoptRealEstatePortalController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateAdminController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateIntakeController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateMediaController;
+use App\Http\Middleware\RequireFeatureSurface;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('office')
@@ -25,7 +26,7 @@ Route::prefix('office')
             ->name('store');
     });
 
-Route::middleware('auth')
+Route::middleware(['auth', 'account.active', 'verified'])
     ->prefix('office-admin')
     ->name('office.real-estate.')
     ->group(function (): void {
@@ -33,6 +34,7 @@ Route::middleware('auth')
             ->name('index');
 
         Route::post('/{portal:uuid}/adopt-business', AdoptRealEstatePortalController::class)
+            ->middleware(RequireFeatureSurface::class.':business')
             ->name('adopt-business');
 
         Route::get('/{portal:uuid}/cases/{case}', [PublicRealEstateAdminController::class, 'show'])

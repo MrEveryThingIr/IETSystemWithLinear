@@ -46,6 +46,7 @@ class BusinessListingController extends Controller
             'version' => $listing->currentVersion,
             'unitCatalog' => MonetaryUnitCatalog::all(),
             'availabilityStatuses' => $this->availabilityStatuses(),
+            'rightsStatuses' => Asset::RIGHTS_STATUSES,
         ]);
     }
 

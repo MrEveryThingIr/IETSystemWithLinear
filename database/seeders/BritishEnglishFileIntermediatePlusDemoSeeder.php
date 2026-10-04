@@ -24,12 +24,6 @@ use Illuminate\Database\Seeder;
 
 class BritishEnglishFileIntermediatePlusDemoSeeder extends Seeder
 {
-    private const OWNER_ID = 1;
-
-    private const OWNER_USERNAME = 'testuser';
-
-    private const OWNER_EMAIL = 'test@example.com';
-
     private const GROUP_NAME = 'British English File Study';
 
     private const SPACE_NAME = 'Intermediate Plus';
@@ -48,14 +42,15 @@ class BritishEnglishFileIntermediatePlusDemoSeeder extends Seeder
 
         $this->call(DatabaseSeeder::class);
 
-        $user = User::query()->with('actor')->find(self::OWNER_ID);
+        $user = User::query()
+            ->with('actor')
+            ->where('username', (string) config('bootstrap.superadmin.username', 'MrEveryThing'))
+            ->first();
+
         abort_unless(
-            $user instanceof User
-            && $user->username === self::OWNER_USERNAME
-            && $user->email === self::OWNER_EMAIL
-            && $user->actor instanceof Actor,
+            $user instanceof User && $user->actor instanceof Actor,
             422,
-            'Demo seeding expects user #1 to be testuser <test@example.com>. Run DatabaseSeeder on a clean local database first.',
+            'Demo seeding expects the configured bootstrap superadmin with an Actor. Run DatabaseSeeder first.',
         );
 
         $actor = $user->actor;

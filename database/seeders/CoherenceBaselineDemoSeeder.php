@@ -46,7 +46,12 @@ class CoherenceBaselineDemoSeeder extends Seeder
             return;
         }
 
-        $provider = $this->user('test@example.com', 'testuser');
+        $this->call(BootstrapSuperadminSeeder::class);
+
+        $provider = User::query()
+            ->with('actor')
+            ->where('username', (string) config('bootstrap.superadmin.username', 'MrEveryThing'))
+            ->firstOrFail();
 
         if (! $provider->platformAccessGrants()->active()->where('role', PlatformRole::Superadmin->value)->exists()) {
             PlatformAccessGrant::factory()->for($provider)->create([
@@ -113,7 +118,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
             ],
             [
                 'key' => 'real-estate-brokerage',
-                'business' => $realEstate?->name ?? 'Safdar Real Estate Office',
+                'business' => $realEstate?->name ?? 'مشاور املاک مهوری',
                 'kind' => 'real_estate',
                 'listing_type' => 'service',
                 'title' => 'Property brokerage service',

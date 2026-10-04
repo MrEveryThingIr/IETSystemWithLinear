@@ -14,11 +14,14 @@ class SystemManualSeeder extends Seeder
             return;
         }
 
-        $owner = User::query()->where('email', 'test@example.com')->first()
-            ?? User::factory()->create([
-                'username' => 'testuser',
-                'email' => 'test@example.com',
-            ]);
+        $username = (string) config('bootstrap.superadmin.username', 'MrEveryThing');
+
+        $owner = User::query()->where('username', $username)->first();
+
+        if (! $owner instanceof User) {
+            $this->call(BootstrapSuperadminSeeder::class);
+            $owner = User::query()->where('username', $username)->firstOrFail();
+        }
 
         $owner->actor()->firstOrCreate([]);
 
@@ -27,6 +30,6 @@ class SystemManualSeeder extends Seeder
         $this->command?->info('IET System Manual materialized as normal versioned Content.');
         $this->command?->line('Manual library: '.route('contexts.contents.index', $manual['context']));
         $this->command?->line('Manual reader: '.route('contexts.contents.show', [$manual['context'], $manual['root']]));
-        $this->command?->line('All active verified users may read/annotate; test@example.com manages the official editions.');
+        $this->command?->line('All active verified users may read/annotate; '.$owner->email.' manages the official editions.');
     }
 }

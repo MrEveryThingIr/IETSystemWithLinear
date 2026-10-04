@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Business\BusinessMarketService;
 use App\Services\Contacts\BusinessContactResolver;
 use App\Services\Contacts\ContactDirectoryService;
+use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,8 +19,11 @@ use Illuminate\View\View;
 
 class BusinessClientController extends Controller
 {
-    public function index(Request $request, Business $business): View
-    {
+    public function index(
+        Request $request,
+        Business $business,
+        FeatureSurfaceAccess $surfaceAccess,
+    ): View {
         abort_unless(BusinessAccess::canOperate($request->user(), $business), 403);
 
         $query = $business->businessContacts()
@@ -53,6 +57,7 @@ class BusinessClientController extends Controller
             'business' => $business,
             'clients' => $query->paginate(30)->withQueryString(),
             'canManage' => BusinessAccess::canManage($request->user(), $business),
+            'canUseMarket' => $surfaceAccess->allows($request->user(), 'market'),
             'marketNeedsByContact' => $marketNeedsByContact,
         ]);
     }
@@ -116,7 +121,7 @@ class BusinessClientController extends Controller
             ]);
         }
 
-        return back()->with('status', 'Client/contact saved.');
+        return back()->with('status', __('business.messages.client_saved'));
     }
 
     public function publishNeed(
@@ -172,6 +177,6 @@ class BusinessClientController extends Controller
 
         $client->update(['status' => 'inactive']);
 
-        return back()->with('status', 'Client/contact archived.');
+        return back()->with('status', __('business.messages.client_archived'));
     }
 }
