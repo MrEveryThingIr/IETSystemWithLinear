@@ -21,14 +21,14 @@ class CoherenceBaselineDemoSeederTest extends TestCase
         $this->seed(CoherenceBaselineDemoSeeder::class);
         $this->seed(CoherenceBaselineDemoSeeder::class);
 
-        $provider = User::query()->where('email', 'test@example.com')->sole();
+        $provider = User::query()->where('username', (string) config('bootstrap.superadmin.username'))->sole();
 
         $names = Business::query()
             ->where('owner_actor_id', $provider->actor->id)
             ->pluck('name')
             ->all();
 
-        $this->assertContains('Safdar Real Estate Office', $names);
+        $this->assertContains('مشاور املاک مهوری', $names);
         $this->assertContains('Atlas Inspection Services', $names);
         $this->assertContains('Everyday Tools Store', $names);
         $this->assertContains('Bright Home Services', $names);

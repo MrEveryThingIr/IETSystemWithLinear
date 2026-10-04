@@ -110,7 +110,7 @@ class ActorTest extends TestCase
     {
         $this->seed();
 
-        $user = User::query()->where('email', 'test@example.com')->firstOrFail();
+        $user = User::query()->where('username', (string) config('bootstrap.superadmin.username'))->firstOrFail();
 
         $this->assertTrue($user->actor->user->is($user));
     }
