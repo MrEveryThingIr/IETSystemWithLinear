@@ -5,10 +5,16 @@ use App\Http\Controllers\Business\BusinessClientController;
 use App\Http\Controllers\Business\BusinessContactController;
 use App\Http\Controllers\Business\BusinessController;
 use App\Http\Controllers\Business\BusinessListingController;
+use App\Http\Controllers\Business\PublicBusinessController;
 use App\Http\Controllers\Business\BusinessTeamController;
 use App\Http\Controllers\Profile\ProfessionProfileController;
 use App\Http\Middleware\RequireFeatureSurface;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/b/{business:slug}', [PublicBusinessController::class, 'show'])
+    ->name('public.businesses.show');
+Route::get('/b/{business:slug}/listings/{listing:uuid}', [PublicBusinessController::class, 'listing'])
+    ->name('public.businesses.listings.show');
 
 Route::middleware(['auth', 'account.active', 'verified'])->group(function (): void {
     Route::middleware(RequireFeatureSurface::class.':business')->group(function (): void {
