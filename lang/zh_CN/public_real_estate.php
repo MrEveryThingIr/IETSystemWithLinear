@@ -151,6 +151,11 @@ return [
             'apply' => '应用',
             'clear' => '清除',
         ],
+        'messages' => [
+            'status_saved' => '案件状态已保存。',
+            'media_added' => '已向案件添加新媒体。',
+            'media_deleted' => '媒体已删除。',
+        ],
         'statuses' => [
             'new' => '新建',
             'contacted' => '已联系',
