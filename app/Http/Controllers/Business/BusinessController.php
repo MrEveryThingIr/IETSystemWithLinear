@@ -53,6 +53,7 @@ class BusinessController extends Controller
     {
         return view('businesses.create', [
             'kindLabels' => BusinessDirectory::kindLabels(),
+            'visibilityLabels' => BusinessDirectory::visibilityLabels(),
         ]);
     }
 
@@ -69,7 +70,7 @@ class BusinessController extends Controller
 
         return redirect()
             ->route('businesses.show', $business)
-            ->with('status', 'کسب‌وکار شما ساخته شد. حالا اطلاعات تماس، آدرس و اعضا را کامل کنید.');
+            ->with('status', __('business.messages.created'));
     }
 
     public function show(
@@ -136,7 +137,7 @@ class BusinessController extends Controller
             'overview' => route('businesses.show', $business),
             'clients' => $canOperate ? route('businesses.clients.index', $business) : null,
             'catalog' => $canOperate ? route('businesses.catalog.index', $business) : null,
-            'work' => $canUsePlanner && $businessContext ? route('planner.index', ['context' => $businessContext->uuid]) : null,
+            'work' => $canUsePlanner && $context ? route('planner.index', ['context' => $context->uuid]) : null,
             'deals' => $canUseDeals ? route('deals.index') : null,
             'money' => $canUseMoney ? route('money.index') : null,
             'manage' => $canManage ? route('businesses.show', $business).'#team-settings' : null,
@@ -181,7 +182,7 @@ class BusinessController extends Controller
             $realEstateIntake->execute($business->refresh());
         }
 
-        return back()->with('status', 'اطلاعات کسب‌وکار به‌روزرسانی شد.');
+        return back()->with('status', __('business.messages.updated'));
     }
 
     private function rules(): array
