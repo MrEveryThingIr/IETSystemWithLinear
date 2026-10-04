@@ -17,7 +17,11 @@ use App\Support\ExternalMoneyGatewayRegistry;
 use App\Support\PlatformAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BusinessController extends Controller
@@ -137,6 +141,9 @@ class BusinessController extends Controller
             ->unique()
             ->values();
 
+        $introVideo = data_get($business->settings, 'public_site.intro_video');
+        $introVideo = is_array($introVideo) ? $introVideo : null;
+
         $publicSiteCandidates = $canManage
             ? Business::query()
                 ->where('id', '!=', $business->getKey())
@@ -176,6 +183,7 @@ class BusinessController extends Controller
             'canUseMoney' => $canUseMoney,
             'publicSiteUrl' => $publicSiteUrl,
             'featuredBusinessIds' => $featuredBusinessIds,
+            'introVideo' => $introVideo,
             'publicSiteCandidates' => $publicSiteCandidates,
             'businessSections' => $businessSections,
             'businessSectionLinks' => $businessSectionLinks,
@@ -208,6 +216,13 @@ class BusinessController extends Controller
         $data = $request->validate([
             'featured_business_ids' => ['nullable', 'array', 'max:12'],
             'featured_business_ids.*' => ['integer', 'distinct', Rule::exists('businesses', 'id')],
+            'intro_video' => [
+                'nullable',
+                'file',
+                'mimetypes:video/mp4,video/webm,video/quicktime',
+                'max:51200',
+            ],
+            'remove_intro_video' => ['nullable', 'boolean'],
         ]);
 
         $requestedIds = collect($data['featured_business_ids'] ?? [])
@@ -232,12 +247,81 @@ class BusinessController extends Controller
             ->all();
 
         $settings = is_array($business->settings) ? $business->settings : [];
-        $settings['public_site'] = array_replace(
-            is_array($settings['public_site'] ?? null) ? $settings['public_site'] : [],
-            ['featured_business_ids' => $featuredIds],
-        );
+        $publicSite = is_array($settings['public_site'] ?? null)
+            ? $settings['public_site']
+            : [];
 
+        $previousVideo = is_array($publicSite['intro_video'] ?? null)
+            ? $publicSite['intro_video']
+            : null;
+        $nextVideo = $previousVideo;
+
+        $upload = $request->file('intro_video');
+
+        if ($upload instanceof UploadedFile) {
+            $mimeType = (string) $upload->getMimeType();
+            $extension = match ($mimeType) {
+                'video/mp4' => 'mp4',
+                'video/webm' => 'webm',
+                'video/quicktime' => 'mov',
+                default => null,
+            };
+
+            if ($extension === null) {
+                throw ValidationException::withMessages([
+                    'intro_video' => __('business.public_site.video_invalid'),
+                ]);
+            }
+
+            $storedPath = $upload->storeAs(
+                'business-public/'.$business->uuid.'/intro',
+                Str::uuid().'.'.$extension,
+                'local',
+            );
+
+            if (! is_string($storedPath) || $storedPath === '') {
+                throw ValidationException::withMessages([
+                    'intro_video' => __('business.public_site.video_upload_failed'),
+                ]);
+            }
+
+            $nextVideo = [
+                'disk' => 'local',
+                'storage_key' => $storedPath,
+                'mime_type' => $mimeType,
+                'original_name' => $upload->getClientOriginalName(),
+                'size' => $upload->getSize(),
+            ];
+        } elseif ($request->boolean('remove_intro_video')) {
+            $nextVideo = null;
+        }
+
+        $publicSite['featured_business_ids'] = $featuredIds;
+
+        if ($nextVideo !== null) {
+            $publicSite['intro_video'] = $nextVideo;
+        } else {
+            unset($publicSite['intro_video']);
+        }
+
+        $settings['public_site'] = $publicSite;
         $business->update(['settings' => $settings]);
+
+        $previousKey = is_array($previousVideo)
+            ? ($previousVideo['storage_key'] ?? null)
+            : null;
+        $nextKey = is_array($nextVideo)
+            ? ($nextVideo['storage_key'] ?? null)
+            : null;
+        $safePrefix = 'business-public/'.$business->uuid.'/intro/';
+
+        if (
+            is_string($previousKey)
+            && $previousKey !== $nextKey
+            && str_starts_with($previousKey, $safePrefix)
+        ) {
+            Storage::disk('local')->delete($previousKey);
+        }
 
         return back()->with('status', __('business.public_site.saved'));
     }

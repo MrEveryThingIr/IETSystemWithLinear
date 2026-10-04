@@ -38,6 +38,8 @@ return [
     'nav_offerings' => 'Offerings',
     'nav_contact' => 'Contact',
     'nav_intake' => 'Submit property / request',
+    'intro_video_label' => 'Meet us',
+    'intro_video_fallback' => 'Your browser cannot play this introduction video.',
     'featured_kicker' => 'Recommended',
     'featured_heading' => 'Other businesses we recommend',
     'featured_help' => 'These businesses are shown here because this business chose to introduce them.',

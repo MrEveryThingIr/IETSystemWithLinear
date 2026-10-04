@@ -192,9 +192,31 @@
             @endif
 
             @if($canManage)
-                <form class="section-form" method="POST" action="{{ route('businesses.public-site.update', $business) }}">
+                <form class="section-form" method="POST" enctype="multipart/form-data" action="{{ route('businesses.public-site.update', $business) }}">
                     @csrf @method('PUT')
-                    <h3 style="margin:0">{{ __('business.public_site.featured_title') }}</h3>
+
+                    <h3 style="margin:0">{{ __('business.public_site.intro_video_title') }}</h3>
+                    <p style="color:#667085;line-height:1.8">{{ __('business.public_site.intro_video_help') }}</p>
+                    @if($introVideo)
+                        <div class="item" style="margin-bottom:12px">
+                            <strong>{{ __('business.public_site.intro_video_current') }}</strong>
+                            <div class="muted" style="margin-top:5px">{{ $introVideo['original_name'] ?? __('business.public_site.intro_video_file') }}</div>
+                            @if($publicSiteUrl)
+                                <a class="btn light" style="margin-top:9px" target="_blank" rel="noopener" href="{{ route('public.businesses.intro-video', ['business' => $business->slug]) }}">{{ __('business.public_site.intro_video_preview') }}</a>
+                            @endif
+                            <label style="display:flex;gap:8px;align-items:center;margin-top:10px">
+                                <input style="width:auto!important" type="checkbox" name="remove_intro_video" value="1">
+                                <span style="margin:0">{{ __('business.public_site.intro_video_remove') }}</span>
+                            </label>
+                        </div>
+                    @endif
+                    <label>
+                        <span>{{ $introVideo ? __('business.public_site.intro_video_replace') : __('business.public_site.intro_video_upload') }}</span>
+                        <input type="file" name="intro_video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov">
+                    </label>
+                    <div class="muted" style="margin-top:6px">{{ __('business.public_site.intro_video_limit') }}</div>
+
+                    <h3 style="margin:18px 0 0">{{ __('business.public_site.featured_title') }}</h3>
                     <p style="color:#667085;line-height:1.8">{{ __('business.public_site.featured_help') }}</p>
                     @if($publicSiteCandidates->isNotEmpty())
                         <div class="grid">
@@ -210,10 +232,10 @@
                                 </label>
                             @endforeach
                         </div>
-                        <button class="btn primary" style="margin-top:12px">{{ __('business.public_site.save') }}</button>
                     @else
                         <div class="item">{{ __('business.public_site.no_candidates') }}</div>
                     @endif
+                    <button class="btn primary" style="margin-top:12px">{{ __('business.public_site.save') }}</button>
                 </form>
             @endif
         </div>

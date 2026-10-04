@@ -38,6 +38,8 @@ return [
     'nav_offerings' => 'العروض',
     'nav_contact' => 'اتصل بنا',
     'nav_intake' => 'إرسال عقار / طلب',
+    'intro_video_label' => 'تعرّف إلينا',
+    'intro_video_fallback' => 'لا يستطيع متصفحك تشغيل هذا الفيديو التعريفي.',
     'featured_kicker' => 'نوصي به',
     'featured_heading' => 'أنشطة أخرى نوصي بها',
     'featured_help' => 'تظهر هذه الأنشطة هنا لأن هذا النشاط اختار التعريف بها.',

@@ -7,6 +7,8 @@ use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessService;
 use App\Services\Surfaces\FeatureSurfaceGrantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PublicBusinessWebsiteTest extends TestCase
@@ -260,4 +262,89 @@ class PublicBusinessWebsiteTest extends TestCase
             ->assertOk()
             ->assertSee('مشاور املاک مهوری');
     }
+    public function test_owner_can_add_replace_and_remove_an_optional_public_intro_video(): void
+    {
+        Storage::fake('local');
+
+        $owner = User::factory()->create(['locale' => 'en']);
+        $owner->actor()->create();
+        app(FeatureSurfaceGrantService::class)->sync($owner, ['business'], null);
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Video Business',
+            'kind' => 'services',
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $upload = UploadedFile::fake()->create('hello.mp4', 1024, 'video/mp4');
+
+        $this->actingAs($owner)
+            ->post(route('businesses.public-site.update', $business), [
+                '_method' => 'PUT',
+                'intro_video' => $upload,
+            ])
+            ->assertRedirect();
+
+        $business->refresh();
+        $storedKey = data_get($business->settings, 'public_site.intro_video.storage_key');
+
+        $this->assertIsString($storedKey);
+        Storage::disk('local')->assertExists($storedKey);
+
+        $videoUrl = route('public.businesses.intro-video', ['business' => $business->slug]);
+
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))
+            ->assertOk()
+            ->assertSee($videoUrl, false)
+            ->assertSee(__('public_business.intro_video_label'));
+
+        $this->get($videoUrl)
+            ->assertOk()
+            ->assertHeader('Content-Type', 'video/mp4');
+
+        $this->actingAs($owner)
+            ->put(route('businesses.public-site.update', $business), [
+                'remove_intro_video' => '1',
+            ])
+            ->assertRedirect();
+
+        $business->refresh();
+
+        $this->assertNull(data_get($business->settings, 'public_site.intro_video'));
+        Storage::disk('local')->assertMissing($storedKey);
+
+        $this->get(route('public.businesses.show', ['business' => $business->slug]))
+            ->assertOk()
+            ->assertDontSee($videoUrl, false);
+
+        $this->get($videoUrl)->assertNotFound();
+    }
+
+    public function test_private_business_does_not_expose_a_stored_intro_video_route(): void
+    {
+        Storage::fake('local');
+
+        $owner = User::factory()->create(['locale' => 'en']);
+        $owner->actor()->create();
+        app(FeatureSurfaceGrantService::class)->sync($owner, ['business'], null);
+
+        $business = app(BusinessService::class)->create($owner->actor, [
+            'name' => 'Private Video Business',
+            'kind' => 'services',
+            'visibility' => 'private',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($owner)
+            ->post(route('businesses.public-site.update', $business), [
+                '_method' => 'PUT',
+                'intro_video' => UploadedFile::fake()->create('private.mp4', 512, 'video/mp4'),
+            ])
+            ->assertRedirect();
+
+        $this->get(route('public.businesses.intro-video', ['business' => $business->slug]))
+            ->assertNotFound();
+    }
+
 }

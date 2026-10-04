@@ -202,3 +202,30 @@ dead public link; managers instead see publication guidance.
 Superadmin has domain-wide Business visibility/management without needing to be
 added as a member of every Business. Ordinary accounts still require both the
 published Business feature surface and the appropriate Business membership/role.
+
+
+### Business introduction video
+
+An owner or Business manager may optionally upload one introduction video from
+the Business workspace → **Public website** settings. Supported formats are MP4,
+WebM, and MOV, up to 50 MB.
+
+The file is stored privately and is only streamed through the Business public
+site while that Business is both active and public. The public landing hero
+renders no video player at all when no valid video is configured. Replacing or
+removing the video cleans up the previous stored file.
+
+Browser acceptance should verify upload, playback, replacement/removal, and that
+the video URL returns 404 again when the Business becomes private or paused.
+
+### Real Estate promotion route integrity
+
+The Business-owned promotion route deliberately disables Laravel's guessed
+nested scoped binding for the `{portal:uuid}` parameter. The domain checks in
+the controller remain authoritative and verify both:
+
+- the portal belongs to the selected Business; and
+- the case belongs to that portal.
+
+This prevents Laravel from guessing a nonexistent `Business::portals()`
+relationship while still rejecting cross-Business portal/case combinations.

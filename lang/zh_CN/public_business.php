@@ -38,6 +38,8 @@ return [
     'nav_offerings' => '产品与服务',
     'nav_contact' => '联系我们',
     'nav_intake' => '提交房产 / 需求',
+    'intro_video_label' => '认识我们',
+    'intro_video_fallback' => '您的浏览器无法播放此介绍视频。',
     'featured_kicker' => '推荐',
     'featured_heading' => '我们推荐的其他企业',
     'featured_help' => '这些企业由当前企业自主选择并在此推荐。',

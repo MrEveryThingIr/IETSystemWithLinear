@@ -83,3 +83,21 @@ Before formal v1 acceptance, verify all of the following:
 - Superadmin can inspect/manage any Business without being inserted into that
   Business's membership table;
 - non-admin users still require publication plus Business role/domain access.
+
+
+## Business public-site media and Real Estate promotion amendment
+
+Before release acceptance:
+
+- an owner/manager can optionally upload one MP4/WebM/MOV introduction video
+  (maximum 50 MB) for a Business public landing page;
+- no video player or public media URL is rendered when no valid file exists;
+- the stored file is not directly public: it is streamed only through the
+  active/public Business route;
+- private or paused Businesses return 404 for that video route;
+- replacing/removing an introduction video deletes the superseded stored file;
+- the Public Website settings form remains saveable even when there are no
+  other public Businesses available for cross-promotion;
+- the Business-owned Real Estate case → catalog promotion route successfully
+  binds the portal/case and still rejects a portal belonging to another
+  Business.

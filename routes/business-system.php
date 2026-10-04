@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/b/{business:slug}', [PublicBusinessController::class, 'show'])
     ->name('public.businesses.show');
+Route::get('/b/{business:slug}/intro-video', [PublicBusinessController::class, 'introVideo'])
+    ->name('public.businesses.intro-video');
 Route::get('/b/{business:slug}/listings/{listing:uuid}', [PublicBusinessController::class, 'listing'])
     ->name('public.businesses.listings.show');
 Route::get('/b/{business:slug}/property-intake', [PublicRealEstateIntakeController::class, 'showForBusiness'])
@@ -52,6 +54,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::post('/businesses/{business}/catalog/listings/{listing}/publish', [BusinessCatalogController::class, 'publish'])->name('businesses.catalog.listings.publish');
         Route::post('/businesses/{business}/catalog/listings/{listing}/market', [BusinessCatalogController::class, 'publishMarketOffer'])->name('businesses.catalog.listings.market.store');
         Route::post('/businesses/{business}/real-estate/{portal:uuid}/cases/{case}/promote', [BusinessCatalogController::class, 'promoteRealEstateCase'])
+            ->withoutScopedBindings()
             ->name('businesses.real-estate.cases.promote');
 
         Route::post('/businesses/{business}/contacts', [BusinessContactController::class, 'storeContact'])->name('businesses.contacts.store');

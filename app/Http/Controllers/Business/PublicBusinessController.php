@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\BusinessListing;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PublicBusinessController extends Controller
 {
@@ -40,9 +42,29 @@ class PublicBusinessController extends Controller
                 ->orderBy('id'),
         ]);
 
+        $introVideo = $this->introVideoMetadata($business);
+
         return view('public-business.show', [
             'business' => $business,
             'featuredBusinesses' => $this->featuredBusinesses($business),
+            'introVideoUrl' => $introVideo
+                ? route('public.businesses.intro-video', ['business' => $business->slug])
+                : null,
+            'introVideoMime' => $introVideo['mime_type'] ?? null,
+        ]);
+    }
+
+    public function introVideo(Business $business): BinaryFileResponse
+    {
+        $this->ensurePublic($business);
+
+        $video = $this->introVideoMetadata($business);
+        abort_unless($video !== null, 404);
+
+        return response()->file(Storage::disk('local')->path($video['storage_key']), [
+            'Content-Type' => $video['mime_type'],
+            'Cache-Control' => 'public, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
@@ -77,6 +99,37 @@ class PublicBusinessController extends Controller
             'listing' => $listing,
             'version' => $listing->publishedVersion,
         ]);
+    }
+
+    /** @return array{storage_key:string,mime_type:string}|null */
+    private function introVideoMetadata(Business $business): ?array
+    {
+        $video = data_get($business->settings, 'public_site.intro_video');
+
+        if (! is_array($video)) {
+            return null;
+        }
+
+        $disk = $video['disk'] ?? null;
+        $storageKey = $video['storage_key'] ?? null;
+        $mimeType = $video['mime_type'] ?? null;
+        $safePrefix = 'business-public/'.$business->uuid.'/intro/';
+
+        if (
+            $disk !== 'local'
+            || ! is_string($storageKey)
+            || ! str_starts_with($storageKey, $safePrefix)
+            || ! is_string($mimeType)
+            || ! in_array($mimeType, ['video/mp4', 'video/webm', 'video/quicktime'], true)
+            || ! Storage::disk('local')->exists($storageKey)
+        ) {
+            return null;
+        }
+
+        return [
+            'storage_key' => $storageKey,
+            'mime_type' => $mimeType,
+        ];
     }
 
     private function featuredBusinesses(Business $business): Collection

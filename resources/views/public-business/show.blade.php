@@ -5,6 +5,7 @@
 @php($portal = $business->publicIntakePortals->firstWhere('type', 'real_estate'))
 <section class="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-teal-900 to-sky-900 text-white">
     <div class="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <div class="{{ $introVideoUrl ? 'grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)] lg:items-center' : '' }}">
         <div class="max-w-3xl">
             @if($business->legal_name)
                 <div class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold">{{ $business->legal_name }}</div>
@@ -17,6 +18,16 @@
                     <a href="#offerings" class="rounded-2xl border border-white/25 bg-white/10 px-5 py-3 font-bold text-white no-underline">{{ __('public_business.view_offerings') }}</a>
                 </div>
             @endif
+        </div>
+        @if($introVideoUrl)
+            <div class="overflow-hidden rounded-[2rem] border border-white/15 bg-black/25 p-2 shadow-2xl">
+                <div class="mb-2 px-2 pt-1 text-xs font-black uppercase tracking-[0.14em] text-white/70">{{ __('public_business.intro_video_label') }}</div>
+                <video class="aspect-video w-full rounded-[1.5rem] bg-black object-contain" controls playsinline preload="metadata">
+                    <source src="{{ $introVideoUrl }}" @if($introVideoMime) type="{{ $introVideoMime }}" @endif>
+                    {{ __('public_business.intro_video_fallback') }}
+                </video>
+            </div>
+        @endif
         </div>
     </div>
 </section>
