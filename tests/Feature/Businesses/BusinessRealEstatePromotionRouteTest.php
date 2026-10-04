@@ -121,6 +121,7 @@ class BusinessRealEstatePromotionRouteTest extends TestCase
 
         return $user->refresh();
     }
+
     public function test_portal_manager_without_business_access_does_not_see_dead_business_or_catalog_actions(): void
     {
         $owner = $this->userWithActor();
