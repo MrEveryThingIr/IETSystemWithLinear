@@ -146,14 +146,14 @@ class StorePublicRealEstateIntakeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'contact_name.required' => 'لطفاً نام مراجعه‌کننده را وارد کنید.',
-            'phone.required' => 'لطفاً شماره تماس را وارد کنید.',
-            'phone.regex' => 'فرمت شماره تماس معتبر نیست.',
-            'intent.required' => 'لطفاً مشخص کنید ملک/درخواست را ارائه می‌کنید یا متقاضی هستید.',
-            'transaction_mode.required' => 'لطفاً نوع معامله را مشخص کنید.',
-            'property_class.required' => 'لطفاً نوع ملک را مشخص کنید.',
-            'built_year.min' => 'سال ساخت را کامل وارد کنید؛ مثلاً ۱۳۷۰. اگر منظورتان سن بناست، آن را در «سن تقریبی بنا» وارد کنید.',
-            'website.max' => 'درخواست نامعتبر است.',
+            'contact_name.required' => __('public_real_estate.validation.contact_name_required'),
+            'phone.required' => __('public_real_estate.validation.phone_required'),
+            'phone.regex' => __('public_real_estate.validation.phone_regex'),
+            'intent.required' => __('public_real_estate.validation.intent_required'),
+            'transaction_mode.required' => __('public_real_estate.validation.transaction_required'),
+            'property_class.required' => __('public_real_estate.validation.property_class_required'),
+            'built_year.min' => __('public_real_estate.validation.built_year_min'),
+            'website.max' => __('public_real_estate.validation.invalid_request'),
         ];
     }
 
