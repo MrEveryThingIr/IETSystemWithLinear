@@ -91,7 +91,7 @@ class BusinessCatalogController extends Controller
             $parent,
         );
 
-        return back()->with('status', 'Catalog category saved.');
+        return back()->with('status', __('business.messages.catalog_category_saved'));
     }
 
     public function store(Request $request, Business $business, BusinessCatalogService $catalog): RedirectResponse
@@ -185,7 +185,7 @@ class BusinessCatalogController extends Controller
             filled($data['reason'] ?? null) ? trim((string) $data['reason']) : null,
         );
 
-        return back()->with('status', 'New price version added.');
+        return back()->with('status', __('business.messages.price_version_added'));
     }
 
     public function publish(
