@@ -162,7 +162,7 @@
     </section>
     @endif
 
-    @if($canOperate)
+    @if($canOperate && $canUseMoney)
         <section class="panel">
             <div class="head">
                 <div>
@@ -199,7 +199,7 @@
                     </div>
                     <div class="item">
                         <strong>{{ __('business.show.money.external') }}</strong>
-                        <div class="badge" style="margin-top:9px">placeholder</div>
+                        <div class="badge" style="margin-top:9px">{{ __('business.show.money.external_status') }}</div>
                         <div class="muted" style="margin-top:5px">{{ __('business.show.money.external_help') }}</div>
                     </div>
                 </div>
