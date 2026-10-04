@@ -142,6 +142,7 @@ return [
             'unit' => '内部结算单位',
             'unit_help' => '内部义务与结算依据系统中的核心财务事实计算。',
             'external' => '真实资金存入 / 提取',
+            'external_status' => '未连接',
             'external_help' => '当前阶段尚未接入真实银行或支付服务商。',
         ],
         'real_estate' => [
