@@ -25,7 +25,7 @@ Route::prefix('office')
             ->name('store');
     });
 
-Route::middleware('auth')
+Route::middleware(['auth', 'account.active', 'verified'])
     ->prefix('office-admin')
     ->name('office.real-estate.')
     ->group(function (): void {
