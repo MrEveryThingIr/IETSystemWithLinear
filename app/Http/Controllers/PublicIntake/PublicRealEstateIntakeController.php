@@ -17,10 +17,13 @@ class PublicRealEstateIntakeController extends Controller
 {
     public function show(PublicIntakePortal $portal): SymfonyResponse
     {
+        $portal->loadMissing('business');
         $this->ensureAvailable($portal);
-        app()->setLocale($portal->locale ?: 'fa');
 
-        return $this->privateView('public-intake.real-estate.show', ['portal' => $portal]);
+        return $this->privateView('public-intake.real-estate.show', [
+            'portal' => $portal,
+            'business' => $portal->business,
+        ]);
     }
 
     public function store(
@@ -137,7 +140,17 @@ class PublicRealEstateIntakeController extends Controller
 
     private function ensureAvailable(PublicIntakePortal $portal): void
     {
+        $portal->loadMissing('business');
+
         abort_unless($portal->is_active && $portal->type === 'real_estate', 404);
+
+        if ($portal->business !== null) {
+            abort_unless(
+                $portal->business->status === 'active'
+                && $portal->business->visibility === 'public',
+                404,
+            );
+        }
     }
 
     private function makeReferenceCode(): string
