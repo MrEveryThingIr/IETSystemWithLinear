@@ -281,9 +281,9 @@
                 <form class="section-form" method="POST" action="{{ route('businesses.contacts.store',$business) }}">
                     @csrf
                     <div class="grid3">
-                        <label><span>{{ __('business.show.profile.type') }}</span><select name="kind"><option value="mobile">موبایل</option><option value="phone">تلفن</option><option value="email">ایمیل</option><option value="website">وب‌سایت</option><option value="whatsapp">واتساپ</option></select></label>
+                        <label><span>{{ __('business.show.contacts.type') }}</span><select name="kind"><option value="mobile">{{ __('business.show.contacts.kinds.mobile') }}</option><option value="phone">{{ __('business.show.contacts.kinds.phone') }}</option><option value="email">{{ __('business.show.contacts.kinds.email') }}</option><option value="website">{{ __('business.show.contacts.kinds.website') }}</option><option value="whatsapp">{{ __('business.show.contacts.kinds.whatsapp') }}</option></select></label>
                         <label><span>{{ __('business.show.contacts.label') }}</span><input name="label" placeholder="{{ __('business.show.contacts.label_placeholder') }}"></label>
-                        <label><span>{{ __('business.show.profile.visibility') }}</span><select name="visibility"><option value="private">خصوصی</option><option value="members">اعضا</option><option value="public">عمومی</option></select></label>
+                        <label><span>{{ __('business.show.contacts.visibility') }}</span><select name="visibility">@foreach($visibilityLabels as $v=>$label)<option value="{{ $v }}">{{ $label }}</option>@endforeach</select></label>
                     </div>
                     <label style="display:block;margin-top:10px"><span>{{ __('business.show.contacts.value') }}</span><input name="value" required></label>
                     <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input style="width:20px" type="checkbox" name="is_primary" value="1"><span style="margin:0">{{ __('business.show.contacts.primary') }}</span></label>
@@ -299,7 +299,7 @@
             <div class="list">
                 @forelse($business->addresses as $address)
                     <div class="item row">
-                        <div><strong>{{ $address->label ?: $address->type }}</strong><div style="margin-top:4px">{{ collect([$address->province,$address->city,$address->district,$address->street])->filter()->join('، ') }}</div></div>
+                        <div><strong>{{ $address->label ?: $address->type }}</strong><div style="margin-top:4px">{{ collect([$address->province,$address->city,$address->district,$address->street])->filter()->join(' · ') }}</div></div>
                         @if($canManage)<form method="POST" action="{{ route('businesses.addresses.destroy',[$business,$address]) }}">@csrf @method('DELETE')<button class="btn danger">{{ __('business.show.addresses.delete') }}</button></form>@endif
                     </div>
                 @empty
