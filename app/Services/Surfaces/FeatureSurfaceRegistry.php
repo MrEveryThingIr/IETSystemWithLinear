@@ -33,16 +33,13 @@ class FeatureSurfaceRegistry
                 'Businesses', 'کسب‌وکارها', 'building-storefront', 'business', ['profile'],
                 ['businesses.index'], ['businesses.*', 'workspace.real-estate.*']
             ),
-            // Compatibility key for historical grants only. Real Estate is a
-            // Business vertical, not an independently publishable facility.
-            'real-estate' => [
-                ...$this->surface(
-                    'Real Estate compatibility', 'سازگاری املاک', 'home-modern', 'business', ['business'],
-                    ['workspace.real-estate.index'], []
-                ),
-                'sidebar' => false,
-                'grantable' => false,
-            ],
+            // Real Estate Intake is intentionally its own publishable surface.
+            // It may bridge cases into Business later, but publication of the
+            // intake workspace remains independently controlled by super-admin.
+            'real-estate' => $this->surface(
+                'Real Estate Intake', 'پذیرش املاک', 'home-modern', 'specialized', ['profile'],
+                ['workspace.real-estate.index'], ['workspace.real-estate.*', 'office.real-estate.*']
+            ),
             'planner' => $this->surface(
                 'Planner', 'برنامه‌ریز', 'calendar-days', 'execution', ['profile'],
                 ['planner.index'], ['planner.*', 'journeys.*']
@@ -298,9 +295,6 @@ class FeatureSurfaceRegistry
             'groups.community',
             'groups.spaces.show',
 
-            // Public-intake office administration is record/domain
-            // authorized by its Business or legacy portal grant.
-            'office.real-estate.*',
         ];
     }
 
