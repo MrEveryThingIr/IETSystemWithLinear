@@ -54,6 +54,16 @@ building age, condition, bedrooms, cabinet/ceiling/heating/cooling/floor/yard,
 parking details, roof, toilet facilities, sale/deposit/rent pricing, images,
 videos, recorded media, and notes.
 
+### CLI compatibility
+
+The historical `real-estate:intake-portal` command can no longer create a
+parallel/orphan Real Estate system. If needed, it now requires an existing
+Real Estate Business and only ensures that Business's canonical intake channel:
+
+```bash
+php artisan real-estate:intake-portal <business-uuid-or-code-or-slug>
+```
+
 ## Journey 2 — a real-world seller does not need an account
 
 Open the Business public intake URL in a private/incognito browser.

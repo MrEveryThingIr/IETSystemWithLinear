@@ -2,37 +2,65 @@
 
 namespace App\Console\Commands;
 
-use App\Models\PublicIntakePortal;
+use App\Models\Business;
+use App\Services\Business\EnsureRealEstateBusinessIntake;
 use Illuminate\Console\Command;
 
 class CreatePublicRealEstatePortal extends Command
 {
     protected $signature = 'real-estate:intake-portal
-                            {--title=دفتر املاک : Public title}
-                            {--welcome=اطلاعات ملک یا درخواست خود را ثبت کنید؛ پس از ثبت، دفتر با شما تماس می‌گیرد. : Welcome text}
-                            {--locale=fa : Portal locale}';
+                            {business : Real Estate Business UUID, code, or slug}
+                            {--welcome= : Optional public welcome text override}
+                            {--locale= : Optional portal locale override}';
 
-    protected $description = 'Create an opaque public real-estate intake portal suitable for a QR code';
+    protected $description = 'Ensure the canonical public Real Estate intake channel for an existing Business';
 
-    public function handle(): int
+    public function handle(EnsureRealEstateBusinessIntake $intake): int
     {
-        $portal = PublicIntakePortal::query()->create([
-            'type' => 'real_estate',
-            'title' => (string) $this->option('title'),
-            'welcome_heading' => 'ثبت ملک و درخواست',
-            'welcome_body' => (string) $this->option('welcome'),
-            'success_message' => 'اطلاعات شما با موفقیت ثبت شد. این پیش‌نمایش فقط همین یک بار نمایش داده می‌شود.',
-            'locale' => (string) $this->option('locale'),
-            'is_active' => true,
-        ]);
+        $identifier = trim((string) $this->argument('business'));
+
+        $business = Business::query()
+            ->where('uuid', $identifier)
+            ->orWhere('code', $identifier)
+            ->orWhere('slug', $identifier)
+            ->first();
+
+        if (! $business instanceof Business) {
+            $this->error('Business not found. Pass its UUID, code, or slug.');
+
+            return self::FAILURE;
+        }
+
+        if ($business->kind !== 'real_estate') {
+            $this->error('This command only applies to a Business whose kind is real_estate.');
+
+            return self::FAILURE;
+        }
+
+        $portal = $intake->execute($business);
+
+        $updates = [];
+
+        if ($this->option('welcome') !== null) {
+            $updates['welcome_body'] = (string) $this->option('welcome');
+        }
+
+        if ($this->option('locale') !== null) {
+            $updates['locale'] = (string) $this->option('locale');
+        }
+
+        if ($updates !== []) {
+            $portal->update($updates);
+            $portal->refresh();
+        }
 
         $this->newLine();
-        $this->info('Public intake portal created.');
-        $this->line('Title: '.$portal->title);
+        $this->info('Business Real Estate intake channel is ready.');
+        $this->line('Business: '.$business->name);
         $this->line('URL: '.route('public.real-estate.show', $portal));
         $this->line('Token: '.$portal->public_token);
         $this->newLine();
-        $this->warn('Keep the URL unlisted. Put this URL behind the office QR code.');
+        $this->warn('The intake channel belongs to this Business; this command never creates an orphan Real Estate system.');
 
         return self::SUCCESS;
     }
