@@ -229,7 +229,9 @@
                         </div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap">
                             <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">پرونده‌های دفتر</a>
-                            <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show',$portal) }}">فرم عمومی</a>
+                            @if($business->visibility === 'public')
+                                <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.businesses.show',$business) }}">وب‌سایت عمومی</a>
+                            @endif
                         </div>
                     </div>
                 @endforeach

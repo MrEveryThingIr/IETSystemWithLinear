@@ -167,7 +167,9 @@ label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,
             @foreach($business->publicIntakePortals as $portal)
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
                     <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ $fa ? 'پرونده‌های دفتر' : 'Office cases' }}</a>
-                    <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.real-estate.show',$portal) }}">{{ $fa ? 'فرم عمومی' : 'Public intake form' }}</a>
+                    @if($business->visibility === 'public')
+                        <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.businesses.show',$business) }}">{{ $fa ? 'وب‌سایت عمومی' : 'Public website' }}</a>
+                    @endif
                 </div>
             @endforeach
         </section>
