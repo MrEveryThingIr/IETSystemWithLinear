@@ -153,7 +153,7 @@
 
                 <label style="display:block;margin-top:16px"><span>{{ __('public_real_estate.building.condition') }}</span>
                     <select name="building_condition">
-                        <option value="">انتخاب کنید</option>
+                        <option value="">{{ __('public_real_estate.select') }}</option>
                         <option value="new" @selected(old('building_condition')==='new')>{{ __('public_real_estate.building.conditions.new') }}</option>
                         <option value="excellent" @selected(old('building_condition')==='excellent')>{{ __('public_real_estate.building.conditions.excellent') }}</option>
                         <option value="good" @selected(old('building_condition')==='good')>{{ __('public_real_estate.building.conditions.good') }}</option>
