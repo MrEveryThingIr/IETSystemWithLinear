@@ -10,7 +10,7 @@
             {{ __('brand.platform') }}
         </div>
         <h1 @class(['mt-4 font-black tracking-tight', 'text-3xl sm:text-4xl' => $compact, 'text-4xl sm:text-6xl' => ! $compact])>
-            <span class="bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-transparent">Everything</span>
+            <span class="bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-transparent">{{ __('brand.name') }}</span>
             <span class="ms-2 text-white">{{ __('brand.for_everyone') }}</span>
         </h1>
         <p @class(['mt-3 font-bold text-indigo-100', 'text-lg' => $compact, 'text-xl sm:text-2xl' => ! $compact])>
