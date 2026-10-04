@@ -82,13 +82,14 @@ Artisan::command('iet:bootstrap-superadmin {--username=} {--email=}', function (
     }
 
     DB::transaction(function () use ($username, $email, $password): void {
-        $user = User::query()->create([
+        $user = new User;
+        $user->forceFill([
             'username' => $username,
             'email' => $email,
             'email_verified_at' => now(),
             'status' => 'active',
             'password' => Hash::make($password),
-        ]);
+        ])->save();
 
         $actor = $user->actor()->create();
         $actor->profile()->create([
