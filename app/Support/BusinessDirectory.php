@@ -26,4 +26,22 @@ final class BusinessDirectory
         'members' => 'اعضای مجموعه',
         'public' => 'عمومی',
     ];
+
+    /** @return array<string, string> */
+    public static function kindLabels(): array
+    {
+        return __('business.kinds');
+    }
+
+    /** @return array<string, string> */
+    public static function roleLabels(): array
+    {
+        return __('business.roles');
+    }
+
+    /** @return array<string, string> */
+    public static function visibilityLabels(): array
+    {
+        return __('business.visibilities');
+    }
 }
