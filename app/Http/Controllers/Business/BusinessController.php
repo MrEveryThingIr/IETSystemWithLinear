@@ -81,9 +81,9 @@ class BusinessController extends Controller
         FeatureSurfaceAccess $surfaceAccess,
         BusinessEconomyProjection $economy,
     ): View {
-        abort_unless(BusinessAccess::canView($request->user(), $business), 403);
-
         $canOperate = BusinessAccess::canOperate($request->user(), $business);
+        abort_unless($canOperate, 403);
+
         $business->load(['owner.user']);
 
         if ($canOperate) {
@@ -138,8 +138,8 @@ class BusinessController extends Controller
             'clients' => $canOperate ? route('businesses.clients.index', $business) : null,
             'catalog' => $canOperate ? route('businesses.catalog.index', $business) : null,
             'work' => $canUsePlanner && $context ? route('planner.index', ['context' => $context->uuid]) : null,
-            'deals' => $canUseDeals ? route('deals.index') : null,
-            'money' => $canUseMoney ? route('money.index') : null,
+            'deals' => $canOperate && $canUseDeals ? route('deals.index') : null,
+            'money' => $canOperate && $canUseMoney ? route('money.index') : null,
             'manage' => $canManage ? route('businesses.show', $business).'#team-settings' : null,
         ]);
 
