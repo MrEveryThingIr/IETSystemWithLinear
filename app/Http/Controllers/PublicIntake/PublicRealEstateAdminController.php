@@ -5,6 +5,7 @@ namespace App\Http\Controllers\PublicIntake;
 use App\Http\Controllers\Controller;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
+use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\PublicIntakeAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,8 +13,11 @@ use Illuminate\View\View;
 
 class PublicRealEstateAdminController extends Controller
 {
-    public function index(Request $request, PublicIntakePortal $portal): View
-    {
+    public function index(
+        Request $request,
+        PublicIntakePortal $portal,
+        FeatureSurfaceAccess $surfaceAccess
+    ): View {
         abort_unless(PublicIntakeAccess::canView($request->user(), $portal), 403);
 
         $portal->loadMissing('business');
@@ -45,6 +49,7 @@ class PublicRealEstateAdminController extends Controller
             'portal' => $portal,
             'business' => $portal->business,
             'canManage' => PublicIntakeAccess::canManage($request->user(), $portal),
+            'canUseBusiness' => $surfaceAccess->allows($request->user(), 'business'),
             'cases' => $cases,
             'stats' => [
                 'total' => $portal->realEstateCases()->count(),
@@ -58,7 +63,8 @@ class PublicRealEstateAdminController extends Controller
     public function show(
         Request $request,
         PublicIntakePortal $portal,
-        PublicRealEstateCase $case
+        PublicRealEstateCase $case,
+        FeatureSurfaceAccess $surfaceAccess
     ): View {
         abort_unless(PublicIntakeAccess::canView($request->user(), $portal), 403);
         abort_unless($case->public_intake_portal_id === $portal->getKey(), 404);
@@ -71,6 +77,7 @@ class PublicRealEstateAdminController extends Controller
             'business' => $portal->business,
             'case' => $case,
             'canManage' => PublicIntakeAccess::canManage($request->user(), $portal),
+            'canUseBusiness' => $surfaceAccess->allows($request->user(), 'business'),
         ]);
     }
 
