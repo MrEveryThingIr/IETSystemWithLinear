@@ -6,6 +6,7 @@ use App\Models\PublicIntakePortal;
 use App\Models\PublicIntakePortalGrant;
 use App\Models\PublicRealEstateCase;
 use App\Models\User;
+use App\Services\Surfaces\FeatureSurfaceGrantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -53,7 +54,7 @@ class PublicRealEstateIntakeV2Test extends TestCase
             ->assertForbidden();
     }
 
-    public function test_granted_user_can_see_office_list(): void
+    public function test_published_and_portal_granted_user_can_see_office_list(): void
     {
         $user = User::factory()->create();
         $portal = PublicIntakePortal::query()->create([
@@ -68,6 +69,8 @@ class PublicRealEstateIntakeV2Test extends TestCase
             'user_id' => $user->getKey(),
             'role' => 'viewer',
         ]);
+
+        app(FeatureSurfaceGrantService::class)->sync($user, ['real-estate'], null);
 
         PublicRealEstateCase::query()->create([
             'public_intake_portal_id' => $portal->getKey(),
