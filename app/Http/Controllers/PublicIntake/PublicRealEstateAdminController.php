@@ -88,6 +88,6 @@ class PublicRealEstateAdminController extends Controller
 
         $case->update($data);
 
-        return back()->with('status', 'وضعیت پرونده ذخیره شد.');
+        return back()->with('status', __('public_real_estate.office.messages.status_saved'));
     }
 }
