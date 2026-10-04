@@ -85,5 +85,6 @@
         </div>
     </section>
 
+    <livewire:profile.account-email />
     <livewire:profile.temporal-preferences />
 </section>

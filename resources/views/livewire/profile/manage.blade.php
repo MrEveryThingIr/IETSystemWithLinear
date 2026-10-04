@@ -260,6 +260,7 @@
         </div>
     </div>
 
+    <livewire:profile.account-email />
     <livewire:profile.temporal-preferences />
     <livewire:profile.sharing :profile="$profile" />
     <livewire:profile.semantics :profile="$profile" />
