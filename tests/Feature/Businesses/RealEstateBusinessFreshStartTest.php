@@ -52,7 +52,7 @@ class RealEstateBusinessFreshStartTest extends TestCase
         $this->actingAs($owner)
             ->get(route('businesses.show', $business))
             ->assertOk()
-            ->assertSee('کانال تخصصی املاک')
+            ->assertSee(__('business.show.real_estate.title'))
             ->assertSee('مشاور املاک مهوری')
             ->assertSee(route('office.real-estate.index', ['portal' => $portal->uuid]), false);
     }
