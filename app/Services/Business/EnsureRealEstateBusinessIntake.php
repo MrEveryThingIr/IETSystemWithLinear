@@ -19,7 +19,7 @@ class EnsureRealEstateBusinessIntake
     ): PublicIntakePortal {
         if ($business->kind !== 'real_estate') {
             throw ValidationException::withMessages([
-                'business' => 'Real Estate intake can only be provisioned for a real-estate Business.',
+                'business' => __('business.validation.real_estate_business_only'),
             ]);
         }
 
@@ -46,13 +46,13 @@ class EnsureRealEstateBusinessIntake
 
                 if ($portal->type !== 'real_estate') {
                     throw ValidationException::withMessages([
-                        'portal' => 'Only a Real Estate intake portal can be attached to a Real Estate Business.',
+                        'portal' => __('business.validation.real_estate_portal_only'),
                     ]);
                 }
 
                 if ($portal->business_id !== null && (int) $portal->business_id !== (int) $lockedBusiness->id) {
                     throw ValidationException::withMessages([
-                        'portal' => 'This intake portal already belongs to another Business.',
+                        'portal' => __('business.validation.portal_owned_elsewhere'),
                     ]);
                 }
 
