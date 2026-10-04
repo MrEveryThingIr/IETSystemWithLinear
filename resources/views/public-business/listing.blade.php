@@ -16,8 +16,12 @@
             @php($property = $version->propertyDetails)
             <section class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach([
-                    __('public_business.property.transaction') => $property->transaction_mode,
-                    __('public_business.property.class') => $property->property_class,
+                    __('public_business.property.transaction') => in_array($property->transaction_mode, ['sale', 'rent', 'sale_or_rent'], true)
+                        ? __('business_listing.property.'.$property->transaction_mode)
+                        : $property->transaction_mode,
+                    __('public_business.property.class') => in_array($property->property_class, ['residential', 'commercial', 'office', 'land', 'industrial', 'agricultural', 'mixed', 'other'], true)
+                        ? __('business_listing.property.classes.'.$property->property_class)
+                        : $property->property_class,
                     __('public_business.property.area') => $property->construction_area ? $property->construction_area.' m²' : null,
                     __('public_business.property.bedrooms') => $property->bedrooms,
                 ] as $label => $value)
