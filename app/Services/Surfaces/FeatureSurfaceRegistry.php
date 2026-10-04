@@ -31,7 +31,7 @@ class FeatureSurfaceRegistry
             ),
             'business' => $this->surface(
                 'Businesses', 'کسب‌وکارها', 'building-storefront', 'business', ['profile'],
-                ['businesses.index'], ['businesses.*', 'workspace.real-estate.*']
+                ['businesses.index'], ['businesses.*']
             ),
             // Real Estate Intake is intentionally its own publishable surface.
             // It may bridge cases into Business later, but publication of the
