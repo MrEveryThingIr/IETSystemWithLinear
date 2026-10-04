@@ -58,7 +58,7 @@ class PublicRealEstateIntakeV2Test extends TestCase
 
         $case = PublicRealEstateCase::query()->create([
             'public_intake_portal_id' => $portal->getKey(),
-            'reference_code' => 'RE-PREVIEW1234',
+            'reference_code' => 'RE-PREVIEW123',
             'intent' => 'offer',
             'transaction_mode' => 'sale',
             'contact_name' => 'علی نمونه',
