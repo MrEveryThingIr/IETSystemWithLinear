@@ -257,7 +257,7 @@ return [
         'profession_added' => '成员职业已保存。',
         'profession_removed' => '成员职业已从此商家移除。',
         'ownership_transferred' => '商家所有权已成功转移。',
-        'real_estate_adopted' => '房产门店已登记为商家，同时保留原有地址和案件。'
+        'real_estate_adopted' => '房产门店已登记为商家，同时保留原有地址和案件。',
         'created' => '商家已创建。接下来完善联系方式、地点和团队成员。',
         'updated' => '商家信息已更新。',
     ],
