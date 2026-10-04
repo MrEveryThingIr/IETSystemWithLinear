@@ -36,7 +36,7 @@ class RealEstateBusinessDemoSeeder extends Seeder
                 'uuid' => self::PORTAL_UUID,
                 'public_token' => self::PUBLIC_TOKEN,
                 'type' => 'real_estate',
-                'title' => 'Safdar Real Estate Office',
+                'title' => 'مشاور املاک مهوری',
                 'welcome_heading' => 'ثبت ملک یا درخواست ملک',
                 'welcome_body' => 'اطلاعات اولیه را ثبت کنید؛ دفتر پس از بررسی با شما تماس می‌گیرد.',
                 'success_message' => 'اطلاعات شما با موفقیت برای دفتر ارسال شد.',
@@ -157,7 +157,7 @@ class RealEstateBusinessDemoSeeder extends Seeder
 
         $existing = User::query()
             ->with('actor')
-            ->where('email', 'test@example.com')
+            ->where('username', (string) config('bootstrap.superadmin.username', 'MrEveryThing'))
             ->first();
 
         if ($existing instanceof User && $existing->actor !== null) {
