@@ -43,7 +43,7 @@ class PublicRealEstateMediaController extends Controller
             $mediaStore->storeUploaded($case, $file, 'audio');
         }
 
-        return back()->with('status', 'رسانه‌های جدید به پرونده اضافه شدند.');
+        return back()->with('status', __('public_real_estate.office.messages.media_added'));
     }
 
     public function stream(
@@ -77,6 +77,6 @@ class PublicRealEstateMediaController extends Controller
 
         $mediaStore->delete($media);
 
-        return back()->with('status', 'رسانه حذف شد.');
+        return back()->with('status', __('public_real_estate.office.messages.media_deleted'));
     }
 }
