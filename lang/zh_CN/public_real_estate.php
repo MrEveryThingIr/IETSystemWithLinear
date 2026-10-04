@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'welcome_body' => '填写您要提供的房产，或您正在寻找的房产信息。门店审核后会直接与您联系跟进。',
     'privacy' => '您的联系方式和详细地址不会公开，仅供门店跟进及获授权人员使用。',
     'fix_errors' => '请修正以下内容：',
     'select' => '请选择',
@@ -138,6 +139,7 @@ return [
         'media' => '已提交媒体',
         'media_summary' => '已附加 :images 张图片、:videos 个视频和 :audios 个音频文件。为保护隐私，无法通过公开链接下载这些文件。',
         'one_time' => '此预览只能查看一次。为保护信息安全，刷新页面后将不会再次显示。',
+        'square_meter' => 'm²',
         'back_business' => '返回商家网站',
     ],
     'validation' => [
