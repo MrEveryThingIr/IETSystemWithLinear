@@ -39,6 +39,8 @@ class RegistrationTest extends TestCase
             'group_id' => $group->id,
             'invited_by_actor_id' => $owner->id,
             'email' => $email,
+            // Open links must explicitly allow new accounts.
+            'allows_registration' => $email === null,
             'token' => 'registration-invitation-'.str()->random(8),
             'expires_at' => now()->addDay(),
             'max_uses' => 1,

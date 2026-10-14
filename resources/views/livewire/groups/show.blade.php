@@ -100,6 +100,19 @@
                 </div>
             </summary>
             <div class="mt-5 space-y-6">
+                <x-app.workflow-shell
+                    :purpose="__('workflow.group.purpose')"
+                    :state="__('workflow.group.state')"
+                    :next-action="$groupNeedsAttention ? __('workflow.group.next_review') : __('workflow.group.next_community')"
+                    :audience="__('workflow.group.audience')"
+                    :consequence="__('workflow.group.consequence')"
+                    :result="__('workflow.group.result')"
+                    :steps="__('workflow.group.sections')"
+                    current-step="manage"
+                    :progressive="false"
+                >
+                    <x-slot:help>{{ __('workflow.group.help') }}</x-slot:help>
+                </x-app.workflow-shell>
                 <div class="flex flex-wrap gap-2">
                     @can('manageAgreements', $group)
                         <flux:button :href="route('groups.agreements', $group)" size="sm" variant="ghost">{{ __('ui.groups.agreements') }}</flux:button>
