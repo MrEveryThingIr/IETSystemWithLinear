@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\PortableForeignKey;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -211,14 +212,14 @@ return new class extends Migration
     {
         if (Schema::hasColumn('public_real_estate_cases', 'business_listing_id')) {
             Schema::table('public_real_estate_cases', function (Blueprint $table): void {
-                $table->dropForeign('real_estate_case_listing_fk');
+                PortableForeignKey::drop($table, 'real_estate_case_listing_fk', ['business_listing_id']);
                 $table->dropColumn('business_listing_id');
             });
         }
 
         if (Schema::hasColumn('public_intake_portals', 'business_id')) {
             Schema::table('public_intake_portals', function (Blueprint $table): void {
-                $table->dropForeign('public_intake_business_fk');
+                PortableForeignKey::drop($table, 'public_intake_business_fk', ['business_id']);
                 $table->dropColumn('business_id');
             });
         }
@@ -229,11 +230,11 @@ return new class extends Migration
         if (Schema::hasTable('business_listings')) {
             Schema::table('business_listings', function (Blueprint $table): void {
                 if (Schema::hasColumn('business_listings', 'current_version_id')) {
-                    $table->dropForeign('business_listing_current_version_fk');
+                    PortableForeignKey::drop($table, 'business_listing_current_version_fk', ['current_version_id']);
                     $table->dropColumn('current_version_id');
                 }
                 if (Schema::hasColumn('business_listings', 'published_version_id')) {
-                    $table->dropForeign('business_listing_published_version_fk');
+                    PortableForeignKey::drop($table, 'business_listing_published_version_fk', ['published_version_id']);
                     $table->dropColumn('published_version_id');
                 }
             });
@@ -252,7 +253,7 @@ return new class extends Migration
 
         Schema::table('businesses', function (Blueprint $table): void {
             if (Schema::hasColumn('businesses', 'default_monetary_unit_id')) {
-                $table->dropForeign('business_default_unit_fk');
+                PortableForeignKey::drop($table, 'business_default_unit_fk', ['default_monetary_unit_id']);
             }
 
             $columns = array_filter([

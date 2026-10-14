@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\PortableForeignKey;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -100,7 +101,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('settlements', function (Blueprint $table): void {
-            $table->dropForeign('settlements_batch_fk');
+            PortableForeignKey::drop($table, 'settlements_batch_fk', ['contract_settlement_batch_id']);
             $table->dropIndex('settlements_batch_index');
             $table->dropColumn('contract_settlement_batch_id');
         });
@@ -108,7 +109,7 @@ return new class extends Migration
         Schema::dropIfExists('contract_settlement_batches');
 
         Schema::table('commitments', function (Blueprint $table): void {
-            $table->dropForeign('commitments_service_term_fk');
+            PortableForeignKey::drop($table, 'commitments_service_term_fk', ['contract_service_term_id']);
             $table->dropUnique(['contract_service_term_id']);
             $table->dropColumn('contract_service_term_id');
         });

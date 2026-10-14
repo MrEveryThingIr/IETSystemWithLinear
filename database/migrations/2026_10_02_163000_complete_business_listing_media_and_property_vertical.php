@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\PortableForeignKey;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -166,14 +167,14 @@ return new class extends Migration
 
         if (Schema::hasColumn('business_listing_versions', 'presentation_content_id')) {
             Schema::table('business_listing_versions', function (Blueprint $table): void {
-                $table->dropForeign('business_listing_presentation_content_fk');
+                PortableForeignKey::drop($table, 'business_listing_presentation_content_fk', ['presentation_content_id']);
                 $table->dropColumn('presentation_content_id');
             });
         }
 
         Schema::table('business_listings', function (Blueprint $table): void {
             if (Schema::hasColumn('business_listings', 'business_contact_id')) {
-                $table->dropForeign('business_listing_contact_fk');
+                PortableForeignKey::drop($table, 'business_listing_contact_fk', ['business_contact_id']);
             }
 
             if (Schema::hasColumn('business_listings', 'availability_status')) {
