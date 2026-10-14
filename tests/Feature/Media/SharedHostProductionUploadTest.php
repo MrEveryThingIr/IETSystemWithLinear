@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Media;
 
+use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Contexts\EnsurePersonalContext;
+use App\Actions\Planner\AttachPlanOccurrenceEvidence;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
 use App\Actions\Profile\EnsureActorProfile;
 use App\Actions\Profile\UploadActorProfileImage;
-use App\Livewire\Planner\Show as PlannerShow;
 use App\Models\Actor;
-use App\Models\Asset;
 use App\Models\BusinessListingMedia;
 use App\Models\User;
 use App\PlanScheduleFrequency;
@@ -17,12 +17,10 @@ use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessService;
 use App\Support\MediaScannerPolicy;
 use Carbon\CarbonImmutable;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Livewire;
 use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
@@ -96,19 +94,25 @@ class SharedHostProductionUploadTest extends TestCase
         );
         $occurrence = $rule->occurrences()->sole();
 
-        Livewire::actingAs($actor->user)
-            ->test(PlannerShow::class, ['plan' => $plan])
-            ->call('chooseEvidenceOccurrence', $occurrence->id)
-            ->set('evidenceUpload', UploadedFile::fake()->create('proof.txt', 1, 'text/plain'))
-            ->set('evidenceUploadRightsStatus', 'owned')
-            ->call('attachEvidence')
-            ->assertHasNoErrors();
+        // The same actions the Planner page runs, executed with APP_ENV=production
+        // so the upload goes through ProcessAssetMedia on the sync queue.
+        $asset = app(CreateContextAsset::class)->execute(
+            $context,
+            $actor->user,
+            UploadedFile::fake()->create('proof.txt', 1, 'text/plain'),
+            'owned',
+        );
+        app(AttachPlanOccurrenceEvidence::class)->execute($occurrence, $actor->user, [$asset->id], []);
 
-        $asset = Asset::query()->where('context_id', $context->id)->where('original_filename', 'proof.txt')->sole();
+        $asset->refresh();
         $this->assertSame('unavailable', $asset->scan_status);
         $this->assertSame('ready', $asset->processing_status);
         $this->assertNotNull($asset->readiness_verified_at);
         $this->assertTrue($asset->isReadyForPublication());
+        $this->assertDatabaseHas('plan_occurrence_assets', [
+            'plan_occurrence_id' => $occurrence->id,
+            'asset_id' => $asset->id,
+        ]);
     }
 
     public function test_production_business_listing_media_upload_completes_without_proc_open(): void
@@ -132,9 +136,11 @@ class SharedHostProductionUploadTest extends TestCase
             visibility: 'public',
         );
 
-        $this->withoutMiddleware(ValidateCsrfToken::class)
-            ->actingAs($owner)
+        // Production enforces CSRF; send a real session token like a browser would.
+        $this->actingAs($owner)
+            ->withSession(['_token' => 'shared-host-token'])
             ->post(route('businesses.catalog.listings.media.store', [$business, $listing]), [
+                '_token' => 'shared-host-token',
                 'media' => UploadedFile::fake()->image('front.jpg', 900, 600),
                 'rights_status' => 'owned',
                 'caption' => 'Front view',
