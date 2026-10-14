@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Groups;
 
+use App\Actions\Conversations\ReviseConversationMessage;
 use App\Actions\Groups\PostGroupSpaceMessage;
 use App\Models\Context;
 use App\Models\Conversation;
@@ -26,6 +27,13 @@ class SpaceChat extends Component
     public string $message = '';
 
     public ?int $replyToMessageId = null;
+
+    /** Shown inside the group home instead of as its own page. */
+    public bool $embedded = false;
+
+    public ?int $editingMessageId = null;
+
+    public string $editingBody = '';
 
     public function replyTo(int $messageId): void
     {
@@ -52,8 +60,9 @@ class SpaceChat extends Component
         $this->replyToMessageId = null;
     }
 
-    public function mount(Group $group, GroupSpace $space): void
+    public function mount(Group $group, GroupSpace $space, bool $embedded = false): void
     {
+        $this->embedded = $embedded;
         abort_unless((int) $space->group_id === (int) $group->id, 404);
         abort_unless($space->kind === 'chat', 404);
 
@@ -74,6 +83,35 @@ class SpaceChat extends Component
 
         $this->reset('message');
         $this->replyToMessageId = null;
+    }
+
+    public function startEditing(int $messageId): void
+    {
+        $message = $this->ownMessage($messageId);
+        $this->editingMessageId = $message->id;
+        $this->editingBody = $message->currentBody();
+    }
+
+    public function cancelEditing(): void
+    {
+        $this->reset('editingMessageId', 'editingBody');
+    }
+
+    public function saveEdit(ReviseConversationMessage $revise): void
+    {
+        abort_unless($this->editingMessageId !== null, 422);
+        $data = $this->validate(['editingBody' => ['required', 'string', 'max:4000']]);
+        $revise->edit($this->ownMessage($this->editingMessageId), $this->user(), $data['editingBody']);
+        $this->cancelEditing();
+    }
+
+    public function deleteMessage(int $messageId, ReviseConversationMessage $revise): void
+    {
+        $revise->delete($this->ownMessage($messageId), $this->user());
+
+        if ($this->editingMessageId === $messageId) {
+            $this->cancelEditing();
+        }
     }
 
     public function render(): View
@@ -97,7 +135,7 @@ class SpaceChat extends Component
 
         $messages = $conversation instanceof Conversation
             ? $conversation->messages()
-                ->with(['author.user', 'replyTo.author.user'])
+                ->with(['author.user', 'latestRevision', 'replyTo.author.user', 'replyTo.latestRevision'])
                 ->latest('id')
                 ->limit(100)
                 ->get()
@@ -117,6 +155,23 @@ class SpaceChat extends Component
         }
 
         return view('livewire.groups.space-chat', compact('messages', 'replyToMessage'));
+    }
+
+    private function ownMessage(int $messageId): ConversationMessage
+    {
+        $user = $this->user();
+        $context = $this->context();
+        Gate::forUser($user)->authorize('view', $context);
+
+        /** @var ConversationMessage $message */
+        $message = ConversationMessage::query()
+            ->with('latestRevision')
+            ->whereKey($messageId)
+            ->whereHas('conversation', fn ($query) => $query->where('context_id', $context->id)->where('key', 'main'))
+            ->firstOrFail();
+        abort_unless((int) $message->author_actor_id === (int) $user->actor?->id, 403);
+
+        return $message;
     }
 
     private function context(): Context

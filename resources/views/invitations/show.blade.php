@@ -22,7 +22,7 @@
                     </flux:text>
                 </div>
 
-                <flux:callout>{{ __('ui.invitation.joining_steps') }}</flux:callout>
+                <flux:callout>{{ $invitation->admitsDirectly() ? __('classroom.invite.direct_steps') : __('ui.invitation.joining_steps') }}</flux:callout>
 
                 <div class="grid gap-3 rounded-xl bg-zinc-100 p-4 text-sm dark:bg-zinc-800 sm:grid-cols-2">
                     <div>
@@ -60,7 +60,7 @@
                 @elseif (auth()->check() && auth()->user()->hasVerifiedEmail())
                     <form method="POST" action="{{ route('invitations.accept', ['token' => $token]) }}">
                         @csrf
-                        <flux:button type="submit" variant="primary" class="w-full">{{ __('ui.invitation.continue_to_admission') }}</flux:button>
+                        <flux:button type="submit" variant="primary" class="w-full">{{ $invitation->admitsDirectly() ? __('classroom.invite.join_now', ['group' => $invitation->group->name]) : __('ui.invitation.continue_to_admission') }}</flux:button>
                     </form>
                 @elseif (auth()->check())
                     <div class="space-y-3">
@@ -72,7 +72,13 @@
                         <flux:button href="{{ route('invitations.login', ['token' => $token]) }}" variant="primary" class="w-full">
                             {{ __('ui.invitation.login_and_continue') }}
                         </flux:button>
-                        <flux:text class="text-center text-sm">{{ __('access.group_existing_account_required') }}</flux:text>
+                        @if ($invitation->allows_registration)
+                            <flux:button href="{{ route('invitations.register', ['token' => $token]) }}" variant="ghost" class="w-full">
+                                {{ __('classroom.invite.create_account_and_join') }}
+                            </flux:button>
+                        @else
+                            <flux:text class="text-center text-sm">{{ __('access.group_existing_account_required') }}</flux:text>
+                        @endif
                     </div>
                 @endif
             </flux:card>

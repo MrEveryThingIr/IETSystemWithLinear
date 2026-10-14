@@ -9,7 +9,7 @@ class ContentInteractionSettings
 {
     /**
      * @param  array<string, mixed>|null  $settings
-     * @return array{annotations: bool, reactions: bool, default_annotation_visibility: string}
+     * @return array{annotations: bool, reactions: bool, default_annotation_visibility: string, role_rules?: array<int, array{kinds: list<string>, endorse: bool}>}
      */
     public function normalize(?array $settings): array
     {
@@ -21,14 +21,61 @@ class ContentInteractionSettings
             $visibility = SpaceContentAnnotation::VISIBILITY_PRIVATE;
         }
 
-        return [
+        $normalized = [
             'annotations' => (bool) ($settings['annotations'] ?? true),
             'reactions' => (bool) ($settings['reactions'] ?? true),
             'default_annotation_visibility' => $visibility,
         ];
+
+        $roleRules = $this->normalizeRoleRules($settings['role_rules'] ?? null);
+        if ($roleRules !== []) {
+            $normalized['role_rules'] = $roleRules;
+        }
+
+        return $normalized;
     }
 
-    /** @return array{annotations: bool, reactions: bool, default_annotation_visibility: string} */
+    /**
+     * Per group role: which annotation kinds its members may add and whether
+     * they may endorse answers. No rules means everyone may use every kind.
+     *
+     * @return array<int, array{kinds: list<string>, endorse: bool}>
+     */
+    public function normalizeRoleRules(mixed $rules): array
+    {
+        if (! is_array($rules)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($rules as $roleId => $rule) {
+            if (! is_numeric($roleId) || (int) $roleId < 1 || ! is_array($rule)) {
+                continue;
+            }
+
+            $kinds = array_values(array_intersect(
+                SpaceContentAnnotation::KINDS,
+                array_map('strval', is_array($rule['kinds'] ?? null) ? $rule['kinds'] : []),
+            ));
+
+            $normalized[(int) $roleId] = [
+                'kinds' => $kinds,
+                'endorse' => (bool) ($rule['endorse'] ?? false),
+            ];
+        }
+
+        ksort($normalized);
+
+        return $normalized;
+    }
+
+    /** @return array<int, array{kinds: list<string>, endorse: bool}> */
+    public function roleRules(SpaceContent $content): array
+    {
+        return $this->for($content)['role_rules'] ?? [];
+    }
+
+    /** @return array{annotations: bool, reactions: bool, default_annotation_visibility: string, role_rules?: array<int, array{kinds: list<string>, endorse: bool}>} */
     public function for(SpaceContent $content): array
     {
         $settings = $content->interaction_settings;

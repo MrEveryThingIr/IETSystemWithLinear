@@ -19,6 +19,15 @@ All commands below use `$PHP` for `/usr/local/php-8.4/bin/php` and are run
 from inside the release directory (for example
 `/home/imeveryt/domains/imeverything.ir/app/releases/1.0.1`).
 
+## Release notes
+
+- **v1.1.0** — classroom-ready groups: join links, inviting people by name,
+  a simpler group home with chat, editable chat messages, per-role rules on
+  content and answer endorsements. Three additive migrations; upgrade an
+  existing v1.0.1 database with the ordinary upgrade in section 5c.
+- **v1.0.1** — shared-host compatibility (InnoDB, DATETIME domain times,
+  scanner-less uploads, in-process scheduler, release manifest).
+
 ## 1. Shared-host compatibility built into the code
 
 | Host limitation | What the application does |
@@ -35,14 +44,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.0.1`, so the package is
-   `iet-v1.0.1`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.1.0`, so the package is
+   `iet-v1.1.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.0.1`. It contains:
-   - `iet-v1.0.1.zip` — the runtime package (root directory `iet-v1.0.1/`)
-   - `iet-v1.0.1.zip.sha256` — checksum of the ZIP
-   - `iet-v1.0.1.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.0.1.zip.sha256`.
+3. Download the artifact `iet-v1.1.0`. It contains:
+   - `iet-v1.1.0.zip` — the runtime package (root directory `iet-v1.1.0/`)
+   - `iet-v1.1.0.zip.sha256` — checksum of the ZIP
+   - `iet-v1.1.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.1.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,

@@ -33,6 +33,7 @@ class Register extends Component
     public function mount(string $token, RedeemGroupInvitation $redemption): void
     {
         $invitation = $redemption->preview($token);
+        abort_unless($invitation->permitsRegistration(), 404);
         $this->invitationToken = $token;
         $this->groupName = $invitation->group->name;
         $this->targetEmailHint = $invitation->maskedEmail();

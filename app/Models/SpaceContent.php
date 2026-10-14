@@ -26,6 +26,7 @@ use LogicException;
     'draft_revision_id',
     'published_at',
     'archived_at',
+    'pinned_at',
 ])]
 class SpaceContent extends Model
 {
@@ -44,6 +45,7 @@ class SpaceContent extends Model
             'interaction_settings' => 'array',
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
+            'pinned_at' => 'datetime',
         ];
     }
 

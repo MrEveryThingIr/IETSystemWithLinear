@@ -15,6 +15,8 @@ use App\Models\Admission;
 use App\Models\Group;
 use App\Models\GroupMembership;
 use App\Models\GroupRoleChangeRequest;
+use App\Models\GroupSpace;
+use App\Models\SpaceContent;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -186,6 +188,18 @@ class Show extends Component
         session()->flash('status', __('ui.messages.ownership_transfer_requested'));
     }
 
+    /** Pin a published item to the top of the group home, e.g. a "start here" guide. */
+    public function togglePin(int $contentId): void
+    {
+        Gate::authorize('manageSpaces', $this->group);
+        $context = $this->homeSpace(request()->user())?->contextBinding?->context;
+        abort_unless($context !== null, 404);
+
+        /** @var SpaceContent $content */
+        $content = $context->contents()->where('status', 'published')->findOrFail($contentId);
+        $content->update(['pinned_at' => $content->pinned_at === null ? now() : null]);
+    }
+
     public function render(GroupRoleProvisioner $groupRoles): View
     {
         Gate::authorize('view', $this->group);
@@ -228,6 +242,24 @@ class Show extends Component
             fn (GroupPermission $permission): array => [$permission->value => __('ui.permissions.'.$permission->value)],
         );
         $timezones = timezone_identifiers_list();
+        $user = request()->user();
+        $homeSpace = $this->homeSpace($user);
+        $homeContext = $homeSpace?->contextBinding?->context;
+        $publishedContent = $homeContext !== null
+            ? $homeContext->contents()
+                ->where('status', 'published')
+                ->with('activeRevision')
+                ->orderByRaw('CASE WHEN pinned_at IS NULL THEN 1 ELSE 0 END')
+                ->orderByDesc('pinned_at')
+                ->latest('published_at')
+                ->limit(12)
+                ->get()
+                ->filter(fn (SpaceContent $content): bool => Gate::forUser($user)->allows('view', $content))
+                ->values()
+            : collect();
+        $pinnedContent = $publishedContent->filter(fn (SpaceContent $content): bool => $content->pinned_at !== null)->values();
+        $recentContent = $publishedContent->filter(fn (SpaceContent $content): bool => $content->pinned_at === null)->take(6)->values();
+        $canManageAnything = $canManageGroup || $canManageRoles || $canManageMembers || $canApproveRoleChanges || $canTransferOwnership || $admissions->isNotEmpty();
 
         return view('livewire.groups.show', compact(
             'memberships',
@@ -243,7 +275,29 @@ class Show extends Component
             'canManageMembers',
             'canApproveRoleChanges',
             'canTransferOwnership',
+            'canManageAnything',
+            'homeSpace',
+            'homeContext',
+            'pinnedContent',
+            'recentContent',
         ));
+    }
+
+    /** The default chat space the viewer can open: the group's living room. */
+    private function homeSpace(?User $user): ?GroupSpace
+    {
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        return $this->group->spaces()
+            ->with('contextBinding.context')
+            ->where('status', 'active')
+            ->where('kind', 'chat')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get()
+            ->first(fn (GroupSpace $space): bool => Gate::forUser($user)->allows('view', $space));
     }
 
     private function actor(): Actor

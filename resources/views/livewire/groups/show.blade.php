@@ -1,73 +1,23 @@
 <section class="space-y-6">
+    @php
+        $groupNeedsAttention = ($canApproveRoleChanges && $pendingRequests->isNotEmpty()) || $admissions->isNotEmpty();
+        $activeMembers = $memberships->where('status', 'active');
+    @endphp
+
     <x-app.page-header :title="$group->name" :description="$group->description ?: __('ui.groups.no_description')">
         <x-slot:actions>
+            @can('createInvitation', $group)
+                <flux:button :href="route('groups.invitations', $group)" variant="primary" icon="user-plus">{{ __('classroom.group.invite') }}</flux:button>
+            @endcan
+            @if ($canManageAnything)
+                <flux:button href="#group-manage" variant="ghost" icon="cog-6-tooth">
+                    {{ __('classroom.group.manage') }}
+                    @if ($groupNeedsAttention)<flux:badge color="amber" size="sm">!</flux:badge>@endif
+                </flux:button>
+            @endif
             <flux:button :href="route('groups.index')" variant="ghost">{{ __('ui.common.all_groups') }}</flux:button>
         </x-slot:actions>
     </x-app.page-header>
-
-    @php
-        $groupNeedsAttention = ($canApproveRoleChanges && $pendingRequests->isNotEmpty())
-            || ($admissions->isNotEmpty());
-        $groupNextLabel = $groupNeedsAttention
-            ? __('workflow.group.next_review')
-            : __('workflow.group.next_community');
-    @endphp
-
-    <x-app.workflow-shell
-        :purpose="__('workflow.group.purpose')"
-        :state="__('workflow.group.state')"
-        :next-action="$groupNextLabel"
-        :audience="__('workflow.group.audience')"
-        :consequence="__('workflow.group.consequence')"
-        :result="__('workflow.group.result')"
-        :steps="__('workflow.group.sections')"
-        current-step="overview"
-        :progressive="false"
-    >
-        <x-slot:actions>
-            @if ($groupNeedsAttention)
-                <flux:button href="#group-manage" variant="primary">
-                    {{ __('workflow.group.next_review') }}
-                </flux:button>
-            @else
-                <flux:button :href="route('groups.community', $group)" variant="primary">
-                    {{ __('workflow.group.next_community') }}
-                </flux:button>
-            @endif
-            @if ($groupNeedsAttention)
-                <flux:button :href="route('groups.community', $group)" variant="ghost">
-                    {{ __('workflow.group.sections.overview') }}
-                </flux:button>
-            @endif
-            <flux:button :href="route('groups.index')" variant="ghost">
-                {{ __('workflow.back') }}
-            </flux:button>
-        </x-slot:actions>
-
-        <x-slot:help>{{ __('workflow.group.help') }}</x-slot:help>
-
-        <x-slot:advanced>
-            <div class="flex flex-wrap gap-2">
-                @can('manageAgreements', $group)
-                    <flux:button :href="route('groups.agreements', $group)" size="sm" variant="ghost">
-                        {{ __('ui.groups.agreements') }}
-                    </flux:button>
-                @endcan
-                @can('createInvitation', $group)
-                    <flux:button :href="route('groups.invitations', $group)" size="sm" variant="ghost">
-                        {{ __('ui.groups.invitations') }}
-                    </flux:button>
-                @endcan
-                @if ($canManageGroup || $canManageRoles || $canManageMembers || $canTransferOwnership)
-                    <flux:button href="#group-manage" size="sm" variant="ghost">
-                        {{ __('workflow.group.sections.manage') }}
-                    </flux:button>
-                @endif
-            </div>
-        </x-slot:advanced>
-    </x-app.workflow-shell>
-
-    <x-app.group-space-tabs :group="$group" />
 
     @if (session('status'))
         <flux:callout variant="success" class="break-all">{{ session('status') }}</flux:callout>
@@ -75,6 +25,71 @@
     @if (session('error'))
         <flux:callout variant="danger" class="break-all">{{ session('error') }}</flux:callout>
     @endif
+
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="min-w-0 space-y-6 lg:col-span-2">
+            @if ($pinnedContent->isNotEmpty() && $homeContext)
+                @foreach ($pinnedContent as $pinned)
+                    <flux:card wire:key="pinned-{{ $pinned->id }}" class="space-y-3 border-indigo-200 bg-indigo-50/60 dark:border-indigo-900 dark:bg-indigo-950/40">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <flux:badge color="indigo" size="sm">{{ __('classroom.group.start_here') }}</flux:badge>
+                                <flux:heading size="lg" class="mt-2">{{ $pinned->activeRevision?->title ?? __('classroom.group.untitled') }}</flux:heading>
+                            </div>
+                            @can('manageSpaces', $group)
+                                <flux:button size="sm" variant="ghost" wire:click="togglePin({{ $pinned->id }})">{{ __('classroom.group.unpin') }}</flux:button>
+                            @endcan
+                        </div>
+                        <flux:button :href="route('contexts.contents.show', [$homeContext, $pinned])" variant="primary" icon="play-circle">{{ __('classroom.group.open_guide') }}</flux:button>
+                    </flux:card>
+                @endforeach
+            @endif
+
+            @if ($homeSpace)
+                <livewire:groups.space-chat :group="$group" :space="$homeSpace" :embedded="true" :key="'home-chat-'.$homeSpace->id" />
+            @else
+                <x-app.empty-state :title="__('classroom.group.no_chat')" :description="__('classroom.group.no_chat_help')" />
+            @endif
+        </div>
+
+        <aside class="min-w-0 space-y-6">
+            <flux:card class="space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <flux:heading size="lg">{{ __('classroom.group.content') }}</flux:heading>
+                    @if ($homeContext)
+                        <flux:button :href="route('contexts.contents.index', $homeContext)" size="sm" variant="ghost">{{ __('classroom.group.all_content') }}</flux:button>
+                    @endif
+                </div>
+                @forelse ($recentContent as $item)
+                    <div wire:key="content-{{ $item->id }}" class="flex items-center justify-between gap-2">
+                        <a href="{{ route('contexts.contents.show', [$homeContext, $item]) }}" class="min-w-0 truncate text-sm font-medium text-indigo-700 hover:underline dark:text-indigo-300">{{ $item->activeRevision?->title ?? __('classroom.group.untitled') }}</a>
+                        @can('manageSpaces', $group)
+                            <button type="button" wire:click="togglePin({{ $item->id }})" class="shrink-0 text-xs text-zinc-500 underline underline-offset-2">{{ __('classroom.group.pin') }}</button>
+                        @endcan
+                    </div>
+                @empty
+                    <flux:text class="text-sm">{{ __('classroom.group.no_content') }}</flux:text>
+                @endforelse
+            </flux:card>
+
+            <flux:card class="space-y-3">
+                <flux:heading size="lg">{{ __('classroom.group.members', ['count' => $activeMembers->count()]) }}</flux:heading>
+                <ul class="space-y-2">
+                    @foreach ($activeMembers->take(12) as $membership)
+                        <li wire:key="home-member-{{ $membership->id }}" class="flex items-center justify-between gap-2">
+                            <x-app.actor-identity :actor="$membership->actor" size="sm" />
+                            <flux:text class="truncate text-xs">{{ $roles[$membership->id] }}</flux:text>
+                        </li>
+                    @endforeach
+                </ul>
+                @if ($activeMembers->count() > 12)
+                    <a href="#group-members" class="text-sm underline underline-offset-2">{{ __('classroom.group.all_members') }}</a>
+                @endif
+            </flux:card>
+
+            <x-app.group-space-tabs :group="$group" />
+        </aside>
+    </div>
 
     @if ($canManageGroup || $canManageRoles || $canManageMembers || $canApproveRoleChanges || $canTransferOwnership || $admissions->isNotEmpty())
         <details id="group-manage" class="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950" @if($groupNeedsAttention) open @endif>
@@ -85,6 +100,28 @@
                 </div>
             </summary>
             <div class="mt-5 space-y-6">
+                <x-app.workflow-shell
+                    :purpose="__('workflow.group.purpose')"
+                    :state="__('workflow.group.state')"
+                    :next-action="$groupNeedsAttention ? __('workflow.group.next_review') : __('workflow.group.next_community')"
+                    :audience="__('workflow.group.audience')"
+                    :consequence="__('workflow.group.consequence')"
+                    :result="__('workflow.group.result')"
+                    :steps="__('workflow.group.sections')"
+                    current-step="manage"
+                    :progressive="false"
+                >
+                    <x-slot:help>{{ __('workflow.group.help') }}</x-slot:help>
+                </x-app.workflow-shell>
+                <div class="flex flex-wrap gap-2">
+                    @can('manageAgreements', $group)
+                        <flux:button :href="route('groups.agreements', $group)" size="sm" variant="ghost">{{ __('ui.groups.agreements') }}</flux:button>
+                    @endcan
+                    @can('createInvitation', $group)
+                        <flux:button :href="route('groups.invitations', $group)" size="sm" variant="ghost">{{ __('ui.groups.invitations') }}</flux:button>
+                    @endcan
+                    <flux:button :href="route('groups.community', $group)" size="sm" variant="ghost">{{ __('community.community') }}</flux:button>
+                </div>
     @if ($canManageGroup)
         <flux:card class="space-y-4">
             <flux:heading size="lg">{{ __('ui.groups.settings') }}</flux:heading>
@@ -163,8 +200,9 @@
         </details>
     @endif
 
-    <flux:card class="space-y-4">
-        <flux:heading size="lg">{{ __('ui.groups.members') }}</flux:heading>
+    <details id="group-members" class="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <summary class="cursor-pointer"><flux:heading size="lg" class="inline">{{ __('ui.groups.members') }}</flux:heading></summary>
+    <flux:card class="mt-4 space-y-4">
         <div class="space-y-3">
             @foreach ($memberships as $membership)
                 <div class="flex flex-col gap-3 border-b border-zinc-200 pb-3 last:border-0 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
@@ -186,6 +224,7 @@
             @endforeach
         </div>
     </flux:card>
+    </details>
 
     @if ($canApproveRoleChanges && $pendingRequests->isNotEmpty())
         <flux:card class="space-y-4">
