@@ -45,8 +45,11 @@ jobs:
       - name: Fix npm advisories in the lockfile
         shell: bash
         run: |
-          set -euo pipefail
-          npm audit fix --package-lock-only
+          set -eEuo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
+          trap 'msg="$(tail -n 80 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
+          npm audit fix --package-lock-only || true
+          git diff --stat
           npm ci
           npm audit --audit-level=high
           npm run build
@@ -59,3 +62,4 @@ jobs:
           git commit -m "build: update npm lockfile for shell-quote and source-map-js advisories" \
             -m "GHSA-pqg4-j6r4-53mv (shell-quote, critical) and GHSA-68fv-2mgg-jv7q (source-map-js, high), via npm audit fix --package-lock-only."
           git push origin "HEAD:${GITHUB_REF_NAME}"
+# retrigger 1
