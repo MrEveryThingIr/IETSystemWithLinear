@@ -47,7 +47,7 @@ return new class extends Migration
             $table->json('authoring')->nullable();
             $table->foreignId('created_by_actor_id')->nullable();
             $table->char('content_hash', 64);
-            $table->timestamp('published_at')->nullable();
+            $table->dateTime('published_at')->nullable();
             $table->timestamps();
 
             $table->foreign('content_blueprint_id', 'cbv_blueprint_fk')->references('id')->on('content_blueprints')->restrictOnDelete();

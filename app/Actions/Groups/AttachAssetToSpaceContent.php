@@ -9,6 +9,7 @@ use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContextScope;
+use App\Support\MediaLimits;
 use App\Support\SpaceContentRevisionComposition;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +36,7 @@ class AttachAssetToSpaceContent
         abort_if($caption !== null && mb_strlen($caption) > 1000, 422, 'Media caption may not exceed 1000 characters.');
 
         $size = $upload->getSize();
-        abort_unless(is_int($size) && $size > 0 && $size <= 12 * 1024 * 1024, 422, 'Media must be between 1 byte and 12 MB.');
+        abort_unless(is_int($size) && $size > 0 && $size <= MediaLimits::kilobytes('asset') * 1024, 422, 'Media must be between 1 byte and '.MediaLimits::kilobytes('asset').' KB.');
 
         $mime = (string) $upload->getMimeType();
         abort_unless(Asset::supportsMime($mime), 422, 'This media type is not supported.');

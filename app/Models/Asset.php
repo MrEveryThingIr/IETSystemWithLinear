@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\ContextScope;
+use App\Support\MediaScannerPolicy;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -164,11 +165,22 @@ class Asset extends Model
     public function isReadyForPublication(): bool
     {
         $scanReady = $this->scan_status === 'clean'
-            || (app()->environment(['local', 'testing']) && $this->scan_status === 'unavailable');
+            || ($this->scan_status === 'unavailable' && self::unscannedAssetsAllowed());
 
         return $scanReady
             && $this->processing_status === 'ready'
             && $this->readiness_verified_at !== null;
+    }
+
+    /**
+     * Unscanned (scan_status=unavailable) Assets are usable only when the scanner
+     * policy does not require a scan, or in local/testing development where
+     * uploads skip the pipeline. Unavailable is never treated as clean.
+     */
+    public static function unscannedAssetsAllowed(): bool
+    {
+        return app()->environment(['local', 'testing'])
+            || app(MediaScannerPolicy::class)->allowsUnscannedAssets();
     }
 
     public function mediaKind(): string

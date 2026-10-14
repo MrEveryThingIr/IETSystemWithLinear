@@ -87,8 +87,8 @@ return new class extends Migration
             $table->string('user_agent', 500)->nullable();
 
             $table->char('preview_token_hash', 64);
-            $table->timestamp('preview_expires_at')->nullable();
-            $table->timestamp('preview_viewed_at')->nullable();
+            $table->dateTime('preview_expires_at')->nullable();
+            $table->dateTime('preview_viewed_at')->nullable();
 
             $table->timestamps();
 

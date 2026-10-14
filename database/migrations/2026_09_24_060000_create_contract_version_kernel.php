@@ -46,14 +46,14 @@ return new class extends Migration
             $table->foreignId('proposed_by_actor_id')
                 ->constrained('actors')->restrictOnDelete();
             $table->string('status', 24)->default('proposed');
-            $table->timestamp('effective_from');
+            $table->dateTime('effective_from');
             $table->string('effective_timezone', 64);
-            $table->timestamp('effective_until')->nullable();
+            $table->dateTime('effective_until')->nullable();
             $table->string('note', 1000)->nullable();
-            $table->timestamp('proposed_at');
-            $table->timestamp('accepted_at')->nullable();
-            $table->timestamp('activated_at')->nullable();
-            $table->timestamp('superseded_at')->nullable();
+            $table->dateTime('proposed_at');
+            $table->dateTime('accepted_at')->nullable();
+            $table->dateTime('activated_at')->nullable();
+            $table->dateTime('superseded_at')->nullable();
             $table->timestamps();
 
             $table->unique(['contract_id', 'version']);
@@ -83,7 +83,7 @@ return new class extends Migration
                 ->constrained('contract_version_parties')->restrictOnDelete();
             $table->foreignId('accepted_by_user_id')
                 ->constrained('users')->restrictOnDelete();
-            $table->timestamp('accepted_at');
+            $table->dateTime('accepted_at');
             $table->timestamps();
         });
 

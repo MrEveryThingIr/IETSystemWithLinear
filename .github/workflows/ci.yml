@@ -74,17 +74,39 @@ jobs:
           DB_DATABASE: iet_ci
           DB_USERNAME: root
           DB_PASSWORD: root
+        shell: bash
         run: |
+          set -eEo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
+          trap 'msg="$(tail -n 60 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
           php artisan config:clear
           php artisan migrate:fresh --force --no-interaction
           php artisan migrate:status
+
+          NON_INNODB="$(mysql -h127.0.0.1 -P3306 -uroot -proot -N -B -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='iet_ci' AND table_type='BASE TABLE' AND engine <> 'InnoDB'")"
+          echo "Non-InnoDB tables: ${NON_INNODB}"
+          test "$NON_INNODB" = "0"
+
+          php artisan migrate:rollback --step=32 --force --no-interaction
+          php artisan migrate --force --no-interaction
+          MIGRATIONS="$(mysql -h127.0.0.1 -P3306 -uroot -proot -N -B -e "SELECT COUNT(*) FROM iet_ci.migrations")"
+          echo "::notice title=MySQL 8.4 portability::migrate:fresh OK; ${MIGRATIONS} migrations; non-InnoDB tables: ${NON_INNODB}; rollback --step=32 and reapply OK"
           php artisan config:clear
 
       - name: Install JavaScript dependencies
         run: npm ci
 
       - name: Audit JavaScript dependencies
-        run: npm audit --audit-level=high
+        shell: bash
+        run: |
+          if ! npm audit --audit-level=high > "$RUNNER_TEMP/npm-audit.log" 2>&1; then
+            cat "$RUNNER_TEMP/npm-audit.log"
+          echo "npm audit (--audit-level=high): $(grep -E 'found|vulnerabilit' "$RUNNER_TEMP/npm-audit.log" | tail -n 1)" >> "$RUNNER_TEMP/evidence.txt"
+            msg="$(head -n 120 "$RUNNER_TEMP/npm-audit.log" | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            echo "::error title=npm audit::${msg}"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/npm-audit.log"
 
       - name: Build frontend
         run: npm run build
@@ -105,17 +127,36 @@ jobs:
 
           if (( ${#PHP_FILES[@]} == 0 )); then
             echo "No changed PHP files require Pint verification."
+            echo "Pint --test: no changed PHP files" >> "$RUNNER_TEMP/evidence.txt"
             exit 0
           fi
 
           printf 'Pint checking %s\n' "${PHP_FILES[@]}"
-          vendor/bin/pint --test "${PHP_FILES[@]}"
+          if ! vendor/bin/pint --test -v "${PHP_FILES[@]}" > "$RUNNER_TEMP/pint.log" 2>&1; then
+            cat "$RUNNER_TEMP/pint.log"
+          echo "Pint --test: ${#PHP_FILES[@]} changed PHP files checked, $(grep -Eio '(pass|fail)[^.]*' "$RUNNER_TEMP/pint.log" | tail -n 1)" >> "$RUNNER_TEMP/evidence.txt"
+            msg="$(tail -n 80 "$RUNNER_TEMP/pint.log" | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            echo "::error title=Pint::${msg}"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/pint.log"
 
       - name: Static analysis
-        run: vendor/bin/phpstan analyse --no-progress
+        shell: bash
+        run: |
+          set -eEo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
+          trap 'msg="$(tail -n 80 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
+          vendor/bin/phpstan analyse --no-progress --error-format=github
+          vendor/bin/phpstan analyse --no-progress > "$RUNNER_TEMP/phpstan.log" 2>&1
+          echo "::notice title=PHPStan::$(grep -E 'OK|errors' "$RUNNER_TEMP/phpstan.log" | tail -n 1)"
 
       - name: Phase 7 rollback/reapply, scheduler, and queue smoke
+        shell: bash
         run: |
+          set -eEo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
+          trap 'msg="$(tail -n 80 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
           php artisan migrate:status
           php artisan migrate:rollback --step=3 --force
           php artisan migrate --force
@@ -123,6 +164,9 @@ jobs:
           php artisan schedule:list
           php artisan reverb:start --help
           php artisan schedule:run
+          IET_SCHEDULE_IN_PROCESS=true php artisan schedule:list
+          IET_SCHEDULE_IN_PROCESS=true php artisan schedule:run
+          php artisan about
           php artisan queue:work database --stop-when-empty --tries=1 --timeout=30
           php artisan queue:failed
 
@@ -141,7 +185,145 @@ jobs:
           DB_DATABASE=/tmp/iet-ci-restored.sqlite php artisan migrate:status
 
       - name: Test
-        run: php artisan test --compact
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! php artisan test --compact --log-junit "$RUNNER_TEMP/junit.xml"; then
+            python3 - "$RUNNER_TEMP/junit.xml" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          count = 0
+          for case in root.iter('testcase'):
+              for problem in list(case.findall('failure')) + list(case.findall('error')):
+                  count += 1
+                  if count > 20:
+                      break
+                  text = (problem.text or problem.get('message') or '')[:1800]
+                  text = text.replace('%', '%25').replace('\r', '').replace('\n', '%0A')
+                  print(f"::error title={case.get('class')}::{case.get('name')}%0A{text}")
+          print(f"::error title=Test failures::{count} failing tests")
+          PY
+            exit 1
+          fi
+          python3 - "$RUNNER_TEMP/junit.xml" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          suite = root if root.tag == 'testsuite' else root.find('testsuite')
+          a = suite.attrib
+          print(f"::notice title=Tests::{a.get('tests')} tests, {a.get('assertions')} assertions, {a.get('failures')} failures, {a.get('errors')} errors, {a.get('skipped')} skipped, {a.get('time')}s")
+          PY
 
       - name: Composer security audit
-        run: composer audit --locked --no-interaction
+        shell: bash
+        run: |
+          composer audit --locked --no-interaction 2>&1 | tee "$RUNNER_TEMP/composer-audit.log"
+          echo "::notice title=composer audit::$(tail -n 2 "$RUNNER_TEMP/composer-audit.log" | tr '\n' ' ')"
+
+      - name: CI evidence
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/evidence.txt" ]]; then
+            while IFS= read -r line; do
+              echo "::notice title=Evidence::${line}"
+            done < "$RUNNER_TEMP/evidence.txt"
+          fi
+
+  legacy-mariadb-portability:
+    name: Shared-host MariaDB (MyISAM default, legacy TIMESTAMP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Start legacy-mode MariaDB
+        run: |
+          # Reproduces the shared host: MyISAM as the server default engine and
+          # explicit_defaults_for_timestamp=OFF with strict zero-date checks.
+          docker run -d --name legacy-db \
+            -e MARIADB_ROOT_PASSWORD=root \
+            -e MARIADB_DATABASE=iet_legacy \
+            -p 3307:3306 \
+            mariadb:10.6 \
+            --default-storage-engine=MyISAM \
+            --explicit-defaults-for-timestamp=0 \
+            --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION \
+            --character-set-server=utf8mb4 \
+            --collation-server=utf8mb4_unicode_ci
+
+          for attempt in $(seq 1 60); do
+            if docker exec legacy-db mariadb -uroot -proot -e 'SELECT 1' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+
+          docker exec legacy-db mariadb -uroot -proot -N -B -e \
+            "SELECT @@version, @@default_storage_engine, @@explicit_defaults_for_timestamp, @@sql_mode"
+
+          # The gate is only meaningful if the server really is in legacy mode.
+          test "$(docker exec legacy-db mariadb -uroot -proot -N -B -e 'SELECT @@default_storage_engine')" = "MyISAM"
+          test "$(docker exec legacy-db mariadb -uroot -proot -N -B -e 'SELECT @@explicit_defaults_for_timestamp')" = "0"
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, curl, intl, pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Fresh install, InnoDB and DATETIME assertions, rollback/reapply
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3307
+          DB_DATABASE: iet_legacy
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          DB_ENGINE: InnoDB
+        shell: bash
+        run: |
+          set -eEuo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
+          trap 'msg="$(tail -n 60 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+          # Documented first-install order: the database cache table does not exist yet.
+          CACHE_STORE=array php artisan optimize:clear
+          php artisan migrate:fresh --force --no-interaction
+          php artisan migrate:status
+
+          q() { docker exec legacy-db mariadb -uroot -proot -N -B iet_legacy -e "$1"; }
+
+          NON_INNODB="$(q "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='iet_legacy' AND table_type='BASE TABLE' AND engine <> 'InnoDB'")"
+          echo "Non-InnoDB tables: ${NON_INNODB}"
+          test "$NON_INNODB" = "0"
+
+          q "SELECT table_name, column_name, data_type, is_nullable, IFNULL(column_default, 'NULL'), extra FROM information_schema.columns WHERE table_schema='iet_legacy' AND data_type='timestamp' ORDER BY table_name, column_name"
+
+          # Application-controlled domain times are DATETIME without implicit defaults.
+          for pair in contract_versions.proposed_at contract_versions.effective_from fulfillments.submitted_at; do
+            TYPE="$(q "SELECT data_type FROM information_schema.columns WHERE table_schema='iet_legacy' AND CONCAT(table_name,'.',column_name)='${pair}'")"
+            echo "${pair}: ${TYPE}"
+            test "$TYPE" = "datetime"
+          done
+
+          # No TIMESTAMP column may carry an implicit ON UPDATE CURRENT_TIMESTAMP.
+          ON_UPDATE="$(q "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='iet_legacy' AND extra LIKE '%on update%'")"
+          echo "Columns with ON UPDATE: ${ON_UPDATE}"
+          test "$ON_UPDATE" = "0"
+
+          php artisan migrate:rollback --step=32 --force --no-interaction
+          php artisan migrate --force --no-interaction
+          php artisan migrate:status
+          CACHE_STORE=database php artisan optimize:clear
+          MIGRATIONS="$(q "SELECT COUNT(*) FROM migrations")"
+          SERVER="$(q "SELECT CONCAT(@@version, ' default-engine=', @@default_storage_engine, ' explicit_defaults_for_timestamp=', @@explicit_defaults_for_timestamp)")"
+          echo "::notice title=Legacy MariaDB portability::${SERVER}; migrate:fresh OK; ${MIGRATIONS} migrations; non-InnoDB tables: ${NON_INNODB}; ON UPDATE columns: ${ON_UPDATE}; domain times DATETIME; rollback --step=32 and reapply OK"

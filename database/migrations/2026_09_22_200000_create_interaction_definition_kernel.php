@@ -45,7 +45,7 @@ return new class extends Migration
             $table->foreignId('space_content_revision_id')->nullable();
             $table->foreignId('created_by_actor_id')->nullable();
             $table->char('content_hash', 64);
-            $table->timestamp('published_at')->nullable();
+            $table->dateTime('published_at')->nullable();
             $table->timestamps();
 
             $table->foreign('interaction_definition_id', 'interaction_version_definition_fk')

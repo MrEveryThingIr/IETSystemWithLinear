@@ -6,7 +6,7 @@ on:
       version:
         description: Package version label
         required: false
-        default: v1.0.0
+        default: v1.0.1
   push:
     branches:
       - release/formal-v1-production
@@ -73,8 +73,18 @@ jobs:
           set -euo pipefail
 
           VERSION="${{ github.event.inputs.version }}"
+          TEMPLATE_VERSION="$(sed -n 's/^APP_VERSION=//p' deploy/production.env.example | tr -d '[:space:]')"
           if [[ -z "$VERSION" ]]; then
-            VERSION="$GITHUB_REF_NAME"
+            if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+              VERSION="$GITHUB_REF_NAME"
+            else
+              # Branch pushes package the canonical version declared in the
+              # production environment template (APP_VERSION).
+              VERSION="v${TEMPLATE_VERSION}"
+            fi
+          fi
+          if [[ "${VERSION#v}" != "$TEMPLATE_VERSION" ]]; then
+            echo "::warning title=Version mismatch::Package ${VERSION} differs from APP_VERSION=${TEMPLATE_VERSION} in deploy/production.env.example"
           fi
           SAFE_VERSION="$(printf '%s' "$VERSION" | tr -cd 'A-Za-z0-9._-')"
           PACKAGE="iet-${SAFE_VERSION}"
@@ -86,6 +96,67 @@ jobs:
           cp deploy/production.env.example "$ROOT/production.env.example"
 
           cp -a app bootstrap config database lang public resources routes storage vendor "$ROOT/"
+
+          PHP_RUNTIME="$(php -r 'echo PHP_VERSION;')"
+          BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          APP_VERSION="${SAFE_VERSION#v}"
+          COMPOSER_LOCK_SHA256="$(sha256sum composer.lock | cut -d' ' -f1)"
+          NPM_LOCK_SHA256="$(sha256sum package-lock.json | cut -d' ' -f1)"
+          VITE_MANIFEST_SHA256="$(sha256sum public/build/manifest.json | cut -d' ' -f1)"
+
+          # Non-secret provenance: proves which GitHub source a host release runs.
+          jq -n \
+            --arg package "$PACKAGE" \
+            --arg package_version "$SAFE_VERSION" \
+            --arg application_version "$APP_VERSION" \
+            --arg git_commit "$GITHUB_SHA" \
+            --arg git_ref "$GITHUB_REF" \
+            --arg git_ref_name "$GITHUB_REF_NAME" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg workflow_run_id "$GITHUB_RUN_ID" \
+            --arg workflow_run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg workflow_run_url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --arg built_at "$BUILT_AT" \
+            --arg php_target "8.4" \
+            --arg php_build_version "$PHP_RUNTIME" \
+            --arg node_build_version "$(node --version)" \
+            --arg composer_lock_sha256 "$COMPOSER_LOCK_SHA256" \
+            --arg package_lock_sha256 "$NPM_LOCK_SHA256" \
+            --arg vite_manifest_sha256 "$VITE_MANIFEST_SHA256" \
+            '{
+              schema: 1,
+              package: $package,
+              package_version: $package_version,
+              application_version: $application_version,
+              source: {
+                repository: $repository,
+                git_commit: $git_commit,
+                git_ref: $git_ref,
+                git_ref_name: $git_ref_name
+              },
+              build: {
+                built_at: $built_at,
+                workflow_run_id: $workflow_run_id,
+                workflow_run_attempt: $workflow_run_attempt,
+                workflow_run_url: $workflow_run_url,
+                php_target: $php_target,
+                php_build_version: $php_build_version,
+                node_build_version: $node_build_version,
+                composer_dev_dependencies: false
+              },
+              integrity: {
+                composer_lock_sha256: $composer_lock_sha256,
+                package_lock_sha256: $package_lock_sha256,
+                vite_manifest_sha256: $vite_manifest_sha256
+              }
+            }' > "$ROOT/release-manifest.json"
+
+          cp "$ROOT/release-manifest.json" "${PACKAGE}.release-manifest.json"
+
+          if grep -Eiq 'APP_KEY=base64|password|secret|token' "$ROOT/release-manifest.json"; then
+            echo "release-manifest.json must not contain secrets" >&2
+            exit 1
+          fi
 
           rm -rf \
             "$ROOT/public/hot" \
@@ -99,6 +170,12 @@ jobs:
           test -f "$ROOT/public/build/manifest.json"
           test -f "$ROOT/vendor/autoload.php"
           test -f "$ROOT/artisan"
+          test -f "$ROOT/release-manifest.json"
+          test -f "$ROOT/production.env.example"
+          test ! -e "$ROOT/.env"
+          grep -q '^DB_ENGINE=InnoDB$' "$ROOT/production.env.example"
+          grep -q '^MEDIA_SCANNER_ENABLED=false$' "$ROOT/production.env.example"
+          grep -Eq '^APP_KEY=$' "$ROOT/production.env.example"
 
           (
             cd dist
@@ -106,6 +183,18 @@ jobs:
           )
 
           sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
+
+          {
+            echo "### Production package ${PACKAGE}"
+            echo
+            echo "- Source commit: \`${GITHUB_SHA}\` (${GITHUB_REF})"
+            echo "- Package root directory: \`${PACKAGE}/\`"
+            echo "- SHA-256: \`$(cut -d' ' -f1 "${PACKAGE}.zip.sha256")\`"
+            echo
+            echo '```json'
+            cat "${PACKAGE}.release-manifest.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
           echo "PACKAGE_NAME=${PACKAGE}" >> "$GITHUB_ENV"
 
@@ -116,5 +205,6 @@ jobs:
           path: |
             ${{ env.PACKAGE_NAME }}.zip
             ${{ env.PACKAGE_NAME }}.zip.sha256
+            ${{ env.PACKAGE_NAME }}.release-manifest.json
           if-no-files-found: error
           retention-days: 30

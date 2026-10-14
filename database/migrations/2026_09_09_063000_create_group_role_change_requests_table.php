@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('requested_role_id')->constrained('roles')->cascadeOnDelete();
             $table->string('status')->default('pending');
             $table->foreignId('reviewed_by_actor_id')->nullable()->constrained('actors')->nullOnDelete();
-            $table->timestamp('reviewed_at')->nullable();
+            $table->dateTime('reviewed_at')->nullable();
             $table->timestamps();
 
             $table->index(['group_id', 'status']);

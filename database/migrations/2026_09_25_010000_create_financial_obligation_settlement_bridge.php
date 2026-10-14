@@ -35,10 +35,10 @@ return new class extends Migration
                 ->constrained('monetary_units')->restrictOnDelete();
             $table->unsignedBigInteger('amount_minor');
             $table->string('description', 500)->nullable();
-            $table->timestamp('due_at')->nullable();
+            $table->dateTime('due_at')->nullable();
             $table->foreignId('recognized_by_actor_id')
                 ->constrained('actors')->restrictOnDelete();
-            $table->timestamp('recognized_at');
+            $table->dateTime('recognized_at');
             $table->timestamps();
 
             $table->index(['contract_version_id', 'monetary_unit_id'], 'financial_obligations_contract_unit_index');
@@ -52,7 +52,7 @@ return new class extends Migration
             $table->foreignId('financial_obligation_id')
                 ->constrained('financial_obligations')->restrictOnDelete();
             $table->unsignedBigInteger('amount_minor');
-            $table->timestamp('paid_at');
+            $table->dateTime('paid_at');
             $table->string('method', 80)->nullable();
             $table->string('reference', 255)->nullable();
             $table->text('note')->nullable();
@@ -61,11 +61,11 @@ return new class extends Migration
             $table->string('status', 32)->default('pending_confirmation');
             $table->foreignId('confirmed_by_actor_id')->nullable()
                 ->constrained('actors')->restrictOnDelete();
-            $table->timestamp('confirmed_at')->nullable();
+            $table->dateTime('confirmed_at')->nullable();
             $table->foreignId('rejected_by_actor_id')->nullable()
                 ->constrained('actors')->restrictOnDelete();
             $table->text('rejection_note')->nullable();
-            $table->timestamp('rejected_at')->nullable();
+            $table->dateTime('rejected_at')->nullable();
             $table->timestamps();
 
             $table->index(['financial_obligation_id', 'status'], 'settlements_obligation_status_index');

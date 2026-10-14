@@ -406,6 +406,10 @@ class SpaceContentPublicationEvidence
             return 'development_exempt';
         }
 
+        if ($asset->scan_status === 'unavailable' && app(MediaScannerPolicy::class)->allowsUnscannedAssets()) {
+            return 'unscanned_permitted';
+        }
+
         return null;
     }
 

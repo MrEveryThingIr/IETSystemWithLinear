@@ -14,6 +14,7 @@ use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
 use App\Support\BusinessEconomyProjection;
 use App\Support\ExternalMoneyGatewayRegistry;
+use App\Support\MediaLimits;
 use App\Support\PlatformAdmin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -220,7 +221,7 @@ class BusinessController extends Controller
                 'nullable',
                 'file',
                 'mimetypes:video/mp4,video/webm,video/quicktime',
-                'max:51200',
+                MediaLimits::rule('business_intro_video'),
             ],
             'remove_intro_video' => ['nullable', 'boolean'],
         ]);

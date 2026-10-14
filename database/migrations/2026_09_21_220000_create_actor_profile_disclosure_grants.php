@@ -15,8 +15,8 @@ return new class extends Migration
             $table->foreignId('grantee_actor_id')->constrained('actors')->restrictOnDelete();
             $table->foreignId('created_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->string('purpose', 180)->nullable();
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamp('revoked_at')->nullable();
+            $table->dateTime('expires_at')->nullable();
+            $table->dateTime('revoked_at')->nullable();
             $table->timestamps();
 
             $table->index(['actor_profile_id', 'revoked_at', 'expires_at'], 'profile_disclosures_owner_active_index');

@@ -45,8 +45,8 @@ return new class extends Migration
                     $table->foreignId('group_agreement_id')->nullable()->after('group_agreement_version_id')->constrained()->restrictOnDelete();
                     $table->unsignedInteger('version_number')->nullable()->after('group_agreement_id');
                     $table->string('hash_algorithm', 20)->default('sha256')->after('evidence_hash');
-                    $table->timestamp('version_effective_from')->nullable()->after('hash_algorithm');
-                    $table->timestamp('version_effective_until')->nullable()->after('version_effective_from');
+                    $table->dateTime('version_effective_from')->nullable()->after('hash_algorithm');
+                    $table->dateTime('version_effective_until')->nullable()->after('version_effective_from');
                     $table->boolean('required_for_admission')->nullable()->after('version_effective_until');
                     $table->boolean('reacceptance_required')->nullable()->after('required_for_admission');
                     $table->foreignId('represented_actor_id')->nullable()->after('accepted_by_actor_id')->constrained('actors')->restrictOnDelete();

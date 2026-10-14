@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('to_status', 20);
             $table->text('reason')->nullable();
             $table->json('metadata')->nullable();
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
 
             $table->index(['group_id', 'created_at']);
             $table->index(['group_membership_id', 'created_at']);

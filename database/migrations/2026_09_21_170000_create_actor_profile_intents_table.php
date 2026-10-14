@@ -35,7 +35,7 @@ return new class extends Migration
             $table->string('visibility', 32)->default('inherited');
             $table->string('status', 24)->default('active');
             $table->foreignId('created_by_actor_id')->constrained('actors')->restrictOnDelete();
-            $table->timestamp('closed_at')->nullable();
+            $table->dateTime('closed_at')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
 

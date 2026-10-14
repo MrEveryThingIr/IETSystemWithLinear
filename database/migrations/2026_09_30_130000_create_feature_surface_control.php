@@ -14,7 +14,7 @@ return new class extends Migration
                 $t->foreignId('user_id')->constrained('users')->cascadeOnDelete();
                 $t->string('surface_key', 120)->index();
                 $t->foreignId('granted_by_user_id')->nullable()->constrained('users')->nullOnDelete();
-                $t->timestamp('granted_at')->nullable();
+                $t->dateTime('granted_at')->nullable();
                 $t->timestamps();
                 $t->unique(['user_id', 'surface_key']);
             });

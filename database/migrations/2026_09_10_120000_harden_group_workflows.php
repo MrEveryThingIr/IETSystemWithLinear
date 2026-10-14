@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('group_role_change_requests', function (Blueprint $table): void {
-            $table->timestamp('review_locked_at')->nullable()->after('reviewed_at');
+            $table->dateTime('review_locked_at')->nullable()->after('reviewed_at');
             $table->index(['group_id', 'membership_id', 'status']);
         });
         Schema::table('group_invitations', function (Blueprint $table): void {

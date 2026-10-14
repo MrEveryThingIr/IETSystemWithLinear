@@ -12,9 +12,12 @@ use App\Models\ProposalEvent;
 use App\Models\RelationshipEvent;
 use App\Models\Submission;
 use App\Support\DomainNotificationProjector;
+use App\Support\MediaScannerPolicy;
+use App\Support\ReleaseManifest;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -33,6 +36,20 @@ class AppServiceProvider extends ServiceProvider
         Log::shareContext([
             'app_version' => (string) config('app.version', 'unknown'),
         ]);
+
+        // `php artisan about --only=release` proves which GitHub build is running.
+        AboutCommand::add('Release', fn (): array => ReleaseManifest::aboutRows());
+        AboutCommand::add('Media scanner', function (): array {
+            $policy = app(MediaScannerPolicy::class);
+
+            return [
+                'Enabled' => $policy->enabled() ? 'yes' : 'no',
+                'Required' => $policy->required() ? 'yes' : 'no',
+                'Process execution (proc_open)' => $policy->enabled()
+                    ? ($policy->processExecutionAvailable() ? 'available' : 'unavailable')
+                    : 'not needed',
+            ];
+        });
 
         RateLimiter::for('invitation-acceptance', function (Request $request): Limit {
             $identity = (string) ($request->user()?->getAuthIdentifier() ?? $request->ip());

@@ -23,9 +23,9 @@ return new class extends Migration
             $table->char('request_hash', 64);
             $table->json('proposal')->nullable();
             $table->text('error')->nullable();
-            $table->timestamp('planned_at')->nullable();
+            $table->dateTime('planned_at')->nullable();
             $table->foreignId('applied_revision_id')->nullable()->constrained('space_content_revisions')->restrictOnDelete();
-            $table->timestamp('applied_at')->nullable();
+            $table->dateTime('applied_at')->nullable();
             $table->timestamps();
 
             $table->index(['space_content_id', 'status', 'id']);

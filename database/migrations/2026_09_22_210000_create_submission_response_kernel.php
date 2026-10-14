@@ -20,8 +20,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('evidence_schema_version')->nullable();
             $table->char('evidence_hash', 64)->nullable();
             $table->longText('canonical_evidence')->nullable();
-            $table->timestamp('submitted_at')->nullable();
-            $table->timestamp('withdrawn_at')->nullable();
+            $table->dateTime('submitted_at')->nullable();
+            $table->dateTime('withdrawn_at')->nullable();
             $table->timestamps();
 
             $table->foreign('context_id', 'submission_context_fk')

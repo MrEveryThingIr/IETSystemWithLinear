@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('position')->default(0);
             $table->foreignId('child_revision_id')->nullable();
             $table->char('child_manifest_hash', 64)->nullable();
-            $table->timestamp('sealed_at')->nullable();
+            $table->dateTime('sealed_at')->nullable();
             $table->timestamps();
 
             $table->foreign('parent_revision_id', 'scrr_parent_rev_fk')

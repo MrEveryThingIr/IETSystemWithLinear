@@ -61,7 +61,7 @@ return new class extends Migration
             $table->foreignId('correction_of_entry_id')->nullable()
                 ->constrained('journal_entries')->restrictOnDelete();
             $table->foreignId('created_by_actor_id')->constrained('actors')->restrictOnDelete();
-            $table->timestamp('posted_at');
+            $table->dateTime('posted_at');
             $table->timestamps();
 
             $table->unique('reverses_entry_id', 'journal_entries_reverses_unique');

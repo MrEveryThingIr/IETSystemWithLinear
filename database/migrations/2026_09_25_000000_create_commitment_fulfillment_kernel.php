@@ -24,8 +24,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('quantity', 18, 4);
             $table->string('unit', 40);
-            $table->timestamp('due_start_at')->nullable();
-            $table->timestamp('due_end_at')->nullable();
+            $table->dateTime('due_start_at')->nullable();
+            $table->dateTime('due_end_at')->nullable();
             $table->string('status', 24)->default('active');
             $table->timestamps();
 
@@ -73,13 +73,13 @@ return new class extends Migration
                 ->constrained('actors')->restrictOnDelete();
             $table->decimal('quantity', 18, 4);
             $table->string('unit', 40);
-            $table->timestamp('actual_start_at')->nullable();
-            $table->timestamp('actual_end_at')->nullable();
+            $table->dateTime('actual_start_at')->nullable();
+            $table->dateTime('actual_end_at')->nullable();
             $table->unsignedInteger('duration_minutes')->nullable();
             $table->text('notes')->nullable();
             $table->string('status', 32)->default('submitted');
-            $table->timestamp('submitted_at');
-            $table->timestamp('reviewed_at')->nullable();
+            $table->dateTime('submitted_at');
+            $table->dateTime('reviewed_at')->nullable();
             $table->timestamps();
 
             $table->index(['commitment_id', 'status'], 'fulfillments_commitment_status_index');
@@ -129,7 +129,7 @@ return new class extends Migration
                 ->constrained('actors')->restrictOnDelete();
             $table->string('decision', 40);
             $table->text('note')->nullable();
-            $table->timestamp('reviewed_at');
+            $table->dateTime('reviewed_at');
             $table->timestamps();
         });
 
@@ -147,8 +147,8 @@ return new class extends Migration
                 ->constrained('actors')->restrictOnDelete();
             $table->string('resolution_status', 32)->nullable();
             $table->text('resolution_note')->nullable();
-            $table->timestamp('opened_at');
-            $table->timestamp('resolved_at')->nullable();
+            $table->dateTime('opened_at');
+            $table->dateTime('resolved_at')->nullable();
             $table->timestamps();
         });
     }

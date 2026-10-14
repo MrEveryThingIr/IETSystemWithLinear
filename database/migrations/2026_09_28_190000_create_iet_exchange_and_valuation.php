@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('policy_version', 80)->default('manual-v1');
             $table->json('factors')->nullable();
             $table->text('rationale')->nullable();
-            $table->timestamp('effective_at');
+            $table->dateTime('effective_at');
             $table->foreignId('published_by_user_id')->nullable()
                 ->constrained('users')->restrictOnDelete();
             $table->timestamps();
@@ -39,7 +39,7 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->foreignId('reviewed_by_user_id')->nullable()
                 ->constrained('users')->restrictOnDelete();
-            $table->timestamp('reviewed_at')->nullable();
+            $table->dateTime('reviewed_at')->nullable();
             $table->text('review_note')->nullable();
             $table->foreignId('journal_entry_id')->nullable()
                 ->constrained('journal_entries')->restrictOnDelete();

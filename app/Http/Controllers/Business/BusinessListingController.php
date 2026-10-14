@@ -14,6 +14,7 @@ use App\Services\Business\BusinessCatalogService;
 use App\Services\Business\BusinessListingMediaService;
 use App\Support\BusinessAccess;
 use App\Support\LocalizedNumber;
+use App\Support\MediaLimits;
 use App\Support\MonetaryUnitCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -218,7 +219,7 @@ class BusinessListingController extends Controller
         $this->authorizeManage($request, $business, $listing);
 
         $data = $request->validate([
-            'media' => ['required', 'file', 'max:12288'],
+            'media' => ['required', 'file', MediaLimits::rule('asset')],
             'rights_status' => ['required', Rule::in(Asset::RIGHTS_STATUSES)],
             'caption' => ['nullable', 'string', 'max:1000'],
             'visibility' => ['required', Rule::in(['private', 'members', 'public'])],

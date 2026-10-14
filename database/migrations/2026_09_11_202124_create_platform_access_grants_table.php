@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->string('role', 50);
             $table->foreignId('granted_by_user_id')->nullable()->constrained('users')->restrictOnDelete();
-            $table->timestamp('granted_at');
+            $table->dateTime('granted_at');
             $table->foreignId('revoked_by_user_id')->nullable()->constrained('users')->restrictOnDelete();
-            $table->timestamp('revoked_at')->nullable();
+            $table->dateTime('revoked_at')->nullable();
             $table->text('reason');
             $table->uuid('correlation_id')->unique();
             $table->timestamps();

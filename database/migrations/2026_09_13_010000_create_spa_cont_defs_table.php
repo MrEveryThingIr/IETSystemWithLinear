@@ -33,7 +33,7 @@ return new class extends Migration
             $table->json('display')->nullable();
             $table->foreignId('created_by_actor_id');
             $table->char('content_hash', 64);
-            $table->timestamp('published_at')->nullable();
+            $table->dateTime('published_at')->nullable();
             $table->timestamps();
 
             $table->foreign('space_content_definition_id', 'scdv_definition_fk')->references('id')->on('space_content_definitions')->restrictOnDelete();
@@ -49,8 +49,8 @@ return new class extends Migration
             $table->foreignId('author_actor_id');
             $table->string('status', 20)->default('draft');
             $table->unsignedInteger('current_revision')->default(1);
-            $table->timestamp('published_at')->nullable();
-            $table->timestamp('archived_at')->nullable();
+            $table->dateTime('published_at')->nullable();
+            $table->dateTime('archived_at')->nullable();
             $table->timestamps();
 
             $table->foreign('group_space_id', 'sc_space_fk')->references('id')->on('group_spaces')->restrictOnDelete();
