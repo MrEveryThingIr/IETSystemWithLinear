@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\PublicIntake;
 
+use App\Support\MediaLimits;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -129,16 +130,16 @@ class StorePublicRealEstateIntakeRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:5000'],
 
             'images' => ['nullable', 'array', 'max:20'],
-            'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,heic,heif', 'max:12288'],
+            'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,heic,heif', MediaLimits::rule('real_estate_image')],
 
             'videos' => ['nullable', 'array', 'max:6'],
-            'videos.*' => ['file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:102400'],
+            'videos.*' => ['file', 'mimetypes:video/mp4,video/webm,video/quicktime', MediaLimits::rule('real_estate_video')],
 
             'audios' => ['nullable', 'array', 'max:6'],
-            'audios.*' => ['file', 'mimetypes:audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,video/webm', 'max:25600'],
+            'audios.*' => ['file', 'mimetypes:audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,video/webm', MediaLimits::rule('real_estate_audio')],
 
-            'recorded_audio' => ['nullable', 'file', 'mimetypes:audio/webm,audio/ogg,audio/mp4,video/webm', 'max:25600'],
-            'recorded_video' => ['nullable', 'file', 'mimetypes:video/webm,video/mp4,video/quicktime', 'max:102400'],
+            'recorded_audio' => ['nullable', 'file', 'mimetypes:audio/webm,audio/ogg,audio/mp4,video/webm', MediaLimits::rule('real_estate_audio')],
+            'recorded_video' => ['nullable', 'file', 'mimetypes:video/webm,video/mp4,video/quicktime', MediaLimits::rule('real_estate_video')],
 
         ];
     }

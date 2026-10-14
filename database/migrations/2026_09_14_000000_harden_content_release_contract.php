@@ -38,11 +38,11 @@ return new class extends Migration
 
         Schema::table('assets', function (Blueprint $table): void {
             $table->text('scan_error')->nullable()->after('scan_status');
-            $table->timestamp('scan_attempted_at')->nullable()->after('scan_error');
-            $table->timestamp('scan_completed_at')->nullable()->after('scan_attempted_at');
+            $table->dateTime('scan_attempted_at')->nullable()->after('scan_error');
+            $table->dateTime('scan_completed_at')->nullable()->after('scan_attempted_at');
             $table->text('processing_error')->nullable()->after('processing_status');
-            $table->timestamp('processing_completed_at')->nullable()->after('processing_error');
-            $table->timestamp('readiness_verified_at')->nullable()->after('processing_completed_at');
+            $table->dateTime('processing_completed_at')->nullable()->after('processing_error');
+            $table->dateTime('readiness_verified_at')->nullable()->after('processing_completed_at');
             $table->index(['scan_status', 'processing_status'], 'asset_readiness_ix');
         });
 
@@ -56,7 +56,7 @@ return new class extends Migration
             $table->string('to_status', 32);
             $table->string('reason', 1000);
             $table->json('metadata')->nullable();
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
 
             $table->foreign('space_content_id', 'scle_content_fk')
                 ->references('id')->on('space_contents')->restrictOnDelete();

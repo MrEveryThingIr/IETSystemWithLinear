@@ -78,6 +78,13 @@ jobs:
           php artisan config:clear
           php artisan migrate:fresh --force --no-interaction
           php artisan migrate:status
+
+          NON_INNODB="$(mysql -h127.0.0.1 -P3306 -uroot -proot -N -B -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='iet_ci' AND table_type='BASE TABLE' AND engine <> 'InnoDB'")"
+          echo "Non-InnoDB tables: ${NON_INNODB}"
+          test "$NON_INNODB" = "0"
+
+          php artisan migrate:rollback --step=32 --force --no-interaction
+          php artisan migrate --force --no-interaction
           php artisan config:clear
 
       - name: Install JavaScript dependencies
@@ -123,6 +130,9 @@ jobs:
           php artisan schedule:list
           php artisan reverb:start --help
           php artisan schedule:run
+          IET_SCHEDULE_IN_PROCESS=true php artisan schedule:list
+          IET_SCHEDULE_IN_PROCESS=true php artisan schedule:run
+          php artisan about
           php artisan queue:work database --stop-when-empty --tries=1 --timeout=30
           php artisan queue:failed
 
@@ -145,3 +155,97 @@ jobs:
 
       - name: Composer security audit
         run: composer audit --locked --no-interaction
+
+  legacy-mariadb-portability:
+    name: Shared-host MariaDB (MyISAM default, legacy TIMESTAMP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Start legacy-mode MariaDB
+        run: |
+          # Reproduces the shared host: MyISAM as the server default engine and
+          # explicit_defaults_for_timestamp=OFF with strict zero-date checks.
+          docker run -d --name legacy-db \
+            -e MARIADB_ROOT_PASSWORD=root \
+            -e MARIADB_DATABASE=iet_legacy \
+            -p 3307:3306 \
+            mariadb:10.6 \
+            --default-storage-engine=MyISAM \
+            --explicit-defaults-for-timestamp=0 \
+            --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION \
+            --character-set-server=utf8mb4 \
+            --collation-server=utf8mb4_unicode_ci
+
+          for attempt in $(seq 1 60); do
+            if docker exec legacy-db mariadb -uroot -proot -e 'SELECT 1' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+
+          docker exec legacy-db mariadb -uroot -proot -N -B -e \
+            "SELECT @@version, @@default_storage_engine, @@explicit_defaults_for_timestamp, @@sql_mode"
+
+          # The gate is only meaningful if the server really is in legacy mode.
+          test "$(docker exec legacy-db mariadb -uroot -proot -N -B -e 'SELECT @@default_storage_engine')" = "MyISAM"
+          test "$(docker exec legacy-db mariadb -uroot -proot -N -B -e 'SELECT @@explicit_defaults_for_timestamp')" = "0"
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, curl, intl, pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Fresh install, InnoDB and DATETIME assertions, rollback/reapply
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3307
+          DB_DATABASE: iet_legacy
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          DB_ENGINE: InnoDB
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+          # Documented first-install order: the database cache table does not exist yet.
+          CACHE_STORE=array php artisan optimize:clear
+          php artisan migrate:fresh --force --no-interaction
+          php artisan migrate:status
+
+          q() { docker exec legacy-db mariadb -uroot -proot -N -B iet_legacy -e "$1"; }
+
+          NON_INNODB="$(q "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='iet_legacy' AND table_type='BASE TABLE' AND engine <> 'InnoDB'")"
+          echo "Non-InnoDB tables: ${NON_INNODB}"
+          test "$NON_INNODB" = "0"
+
+          q "SELECT table_name, column_name, data_type, is_nullable, IFNULL(column_default, 'NULL'), extra FROM information_schema.columns WHERE table_schema='iet_legacy' AND data_type='timestamp' ORDER BY table_name, column_name"
+
+          # Application-controlled domain times are DATETIME without implicit defaults.
+          for pair in contract_versions.proposed_at contract_versions.effective_from fulfillments.submitted_at; do
+            TYPE="$(q "SELECT data_type FROM information_schema.columns WHERE table_schema='iet_legacy' AND CONCAT(table_name,'.',column_name)='${pair}'")"
+            echo "${pair}: ${TYPE}"
+            test "$TYPE" = "datetime"
+          done
+
+          # No TIMESTAMP column may carry an implicit ON UPDATE CURRENT_TIMESTAMP.
+          ON_UPDATE="$(q "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='iet_legacy' AND extra LIKE '%on update%'")"
+          echo "Columns with ON UPDATE: ${ON_UPDATE}"
+          test "$ON_UPDATE" = "0"
+
+          php artisan migrate:rollback --step=32 --force --no-interaction
+          php artisan migrate --force --no-interaction
+          php artisan migrate:status
+          CACHE_STORE=database php artisan optimize:clear

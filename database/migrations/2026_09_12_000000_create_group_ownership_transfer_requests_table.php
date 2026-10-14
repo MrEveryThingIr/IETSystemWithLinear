@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('to_membership_id')->constrained('group_memberships')->restrictOnDelete();
             $table->string('status', 16)->default('pending');
             $table->unsignedBigInteger('pending_group_id')->nullable()->unique();
-            $table->timestamp('responded_at')->nullable();
+            $table->dateTime('responded_at')->nullable();
             $table->timestamps();
             $table->index(['to_membership_id', 'status']);
         });

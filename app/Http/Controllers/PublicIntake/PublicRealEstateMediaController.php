@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PublicIntakePortal;
 use App\Models\PublicRealEstateCase;
 use App\Models\PublicRealEstateCaseMedia;
+use App\Support\MediaLimits;
 use App\Support\PublicIntakeAccess;
 use App\Support\PublicRealEstateCaseMediaStore;
 use Illuminate\Http\RedirectResponse;
@@ -26,11 +27,11 @@ class PublicRealEstateMediaController extends Controller
 
         $request->validate([
             'images' => ['nullable', 'array', 'max:20'],
-            'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,heic,heif', 'max:12288'],
+            'images.*' => ['file', 'mimes:jpg,jpeg,png,webp,heic,heif', MediaLimits::rule('real_estate_image')],
             'videos' => ['nullable', 'array', 'max:6'],
-            'videos.*' => ['file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:102400'],
+            'videos.*' => ['file', 'mimetypes:video/mp4,video/webm,video/quicktime', MediaLimits::rule('real_estate_video')],
             'audios' => ['nullable', 'array', 'max:6'],
-            'audios.*' => ['file', 'mimetypes:audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,video/webm', 'max:25600'],
+            'audios.*' => ['file', 'mimetypes:audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,video/webm', MediaLimits::rule('real_estate_audio')],
         ]);
 
         foreach ($request->file('images', []) as $file) {

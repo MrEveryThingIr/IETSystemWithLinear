@@ -20,8 +20,8 @@ return new class extends Migration
             $table->decimal('confidence', 5, 4)->nullable();
             $table->string('source', 32)->default('manual');
             $table->string('visibility', 32)->default('inherited');
-            $table->timestamp('valid_from')->nullable();
-            $table->timestamp('valid_until')->nullable();
+            $table->dateTime('valid_from')->nullable();
+            $table->dateTime('valid_until')->nullable();
             $table->foreignId('created_by_actor_id')->nullable()->constrained('actors')->restrictOnDelete();
             $table->json('metadata')->nullable();
             $table->timestamps();

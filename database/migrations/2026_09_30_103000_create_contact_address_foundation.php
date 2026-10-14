@@ -22,7 +22,7 @@ return new class extends Migration
 
                 $table->boolean('is_primary')->default(false)->index();
                 $table->boolean('is_verified')->default(false)->index();
-                $table->timestamp('verified_at')->nullable();
+                $table->dateTime('verified_at')->nullable();
 
                 $table->string('visibility', 20)->default('private')->index();
                 $table->string('notes', 500)->nullable();
@@ -94,7 +94,7 @@ return new class extends Migration
                 // When an anonymous contact later becomes a registered actor/user.
                 $table->string('claimed_by_type', 120)->nullable();
                 $table->unsignedBigInteger('claimed_by_id')->nullable();
-                $table->timestamp('claimed_at')->nullable();
+                $table->dateTime('claimed_at')->nullable();
 
                 $table->text('notes')->nullable();
                 $table->timestamps();

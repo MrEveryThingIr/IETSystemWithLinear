@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('originating_intent_id')->nullable()->constrained('actor_profile_intents')->restrictOnDelete();
             $table->foreignId('created_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->string('status', 24)->default('proposed');
-            $table->timestamp('activated_at')->nullable();
-            $table->timestamp('ended_at')->nullable();
-            $table->timestamp('cancelled_at')->nullable();
+            $table->dateTime('activated_at')->nullable();
+            $table->dateTime('ended_at')->nullable();
+            $table->dateTime('cancelled_at')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
 
@@ -35,10 +35,10 @@ return new class extends Migration
             $table->string('status', 24)->default('invited');
             $table->boolean('can_manage')->default(false);
             $table->foreignId('invited_by_actor_id')->constrained('actors')->restrictOnDelete();
-            $table->timestamp('invited_at');
-            $table->timestamp('joined_at')->nullable();
-            $table->timestamp('declined_at')->nullable();
-            $table->timestamp('left_at')->nullable();
+            $table->dateTime('invited_at');
+            $table->dateTime('joined_at')->nullable();
+            $table->dateTime('declined_at')->nullable();
+            $table->dateTime('left_at')->nullable();
             $table->timestamps();
 
             $table->unique(['relationship_id', 'actor_id'], 'relationship_participants_unique');

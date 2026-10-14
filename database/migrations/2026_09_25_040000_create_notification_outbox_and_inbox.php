@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('type');
             $table->morphs('notifiable');
             $table->text('data');
-            $table->timestamp('read_at')->nullable();
+            $table->dateTime('read_at')->nullable();
             $table->timestamps();
 
             $table->index(['notifiable_type', 'notifiable_id', 'read_at']);
@@ -29,9 +29,9 @@ return new class extends Migration
             $table->string('subject_type', 120)->nullable();
             $table->uuid('subject_uuid')->nullable();
             $table->json('data');
-            $table->timestamp('requested_at');
-            $table->timestamp('dispatched_at')->nullable();
-            $table->timestamp('discarded_at')->nullable();
+            $table->dateTime('requested_at');
+            $table->dateTime('dispatched_at')->nullable();
+            $table->dateTime('discarded_at')->nullable();
             $table->string('discard_reason', 255)->nullable();
             $table->timestamps();
 

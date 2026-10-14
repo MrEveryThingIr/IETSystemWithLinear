@@ -8,6 +8,8 @@ use App\Models\User;
 use App\PlatformRole;
 use App\Support\DuePlanReminderEmitter;
 use App\Support\NotificationOutboxDispatcher;
+use App\Support\ScheduledArtisan;
+use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -138,32 +140,32 @@ Schedule::call(fn () => app(ManageGroupAgreement::class)->activateDue())
     ->everyMinute()
     ->withoutOverlapping();
 
-Schedule::command('queue:prune-failed --hours=168')
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'queue:prune-failed --hours=168')
     ->name('queue:prune-failed')
     ->dailyAt('02:10')
     ->withoutOverlapping();
 
-Schedule::command('queue:prune-batches --hours=168 --unfinished=168 --cancelled=168')
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'queue:prune-batches --hours=168 --unfinished=168 --cancelled=168')
     ->name('queue:prune-batches')
     ->dailyAt('02:20')
     ->withoutOverlapping();
 
-Schedule::command('planner:materialize --days=120')
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'planner:materialize --days=120')
     ->name('planner:materialize')
     ->dailyAt('00:05')
     ->withoutOverlapping();
 
-Schedule::command('contracts:activate-due')
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'contracts:activate-due')
     ->name('contracts:activate-due')
     ->everyMinute()
     ->withoutOverlapping();
 
-Schedule::command('notifications:dispatch-outbox --limit=500')
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'notifications:dispatch-outbox --limit=500')
     ->name('notifications:dispatch-outbox')
     ->everyMinute()
     ->withoutOverlapping();
 
-Schedule::command('notifications:emit-due-reminders --limit=500')
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'notifications:emit-due-reminders --limit=500')
     ->name('notifications:emit-due-reminders')
     ->everyMinute()
     ->withoutOverlapping();

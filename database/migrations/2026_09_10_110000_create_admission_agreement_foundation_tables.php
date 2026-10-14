@@ -14,10 +14,10 @@ return new class extends Migration
             $table->foreignId('candidate_actor_id')->constrained('actors')->restrictOnDelete();
             $table->foreignId('source_invitation_id')->nullable()->constrained('group_invitations')->nullOnDelete();
             $table->string('status')->default('draft');
-            $table->timestamp('submitted_at')->nullable();
-            $table->timestamp('approved_at')->nullable();
-            $table->timestamp('rejected_at')->nullable();
-            $table->timestamp('cancelled_at')->nullable();
+            $table->dateTime('submitted_at')->nullable();
+            $table->dateTime('approved_at')->nullable();
+            $table->dateTime('rejected_at')->nullable();
+            $table->dateTime('cancelled_at')->nullable();
             $table->text('decision_note')->nullable();
             $table->timestamps();
             $table->unique(['group_id', 'candidate_actor_id']);
@@ -38,8 +38,8 @@ return new class extends Migration
             $table->unsignedInteger('version');
             $table->longText('content');
             $table->string('status')->default('draft');
-            $table->timestamp('effective_from')->nullable();
-            $table->timestamp('effective_until')->nullable();
+            $table->dateTime('effective_from')->nullable();
+            $table->dateTime('effective_until')->nullable();
             $table->foreignId('created_by_actor_id')->nullable()->constrained('actors')->nullOnDelete();
             $table->timestamps();
             $table->unique(['group_agreement_id', 'version']);
@@ -54,7 +54,7 @@ return new class extends Migration
             $table->foreignId('admission_id')->constrained()->cascadeOnDelete();
             $table->foreignId('group_agreement_version_id')->constrained()->cascadeOnDelete();
             $table->foreignId('accepted_by_actor_id')->constrained('actors')->restrictOnDelete();
-            $table->timestamp('accepted_at');
+            $table->dateTime('accepted_at');
             $table->string('evidence_hash', 64)->nullable();
             $table->timestamps();
             $table->unique(

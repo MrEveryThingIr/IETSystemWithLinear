@@ -33,7 +33,7 @@ return new class extends Migration
                 ->references('id')->on('plan_prerequisites')->restrictOnDelete();
             $table->foreign('completed_by_actor_id', 'popc_completed_actor_fk')
                 ->references('id')->on('actors')->restrictOnDelete();
-            $table->timestamp('completed_at')->nullable();
+            $table->dateTime('completed_at')->nullable();
             $table->timestamps();
 
             $table->unique(
@@ -67,7 +67,7 @@ return new class extends Migration
             $table->string('label', 180);
             $table->unsignedBigInteger('amount_minor');
             $table->string('note', 500)->nullable();
-            $table->timestamp('occurred_at');
+            $table->dateTime('occurred_at');
             $table->timestamps();
 
             $table->index(['plan_occurrence_id', 'occurred_at'], 'plan_occurrence_expenses_occurrence_time_index');

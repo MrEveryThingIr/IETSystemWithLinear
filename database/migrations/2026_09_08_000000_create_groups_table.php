@@ -33,8 +33,8 @@ return new class extends Migration
             $table->foreignId('invited_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->string('email')->nullable();
             $table->string('token')->unique();
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamp('accepted_at')->nullable();
+            $table->dateTime('expires_at')->nullable();
+            $table->dateTime('accepted_at')->nullable();
             $table->foreignId('accepted_by_actor_id')->nullable()->constrained('actors')->nullOnDelete();
             $table->timestamps();
         });

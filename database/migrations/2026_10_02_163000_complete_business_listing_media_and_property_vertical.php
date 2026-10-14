@@ -20,11 +20,11 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('business_listings', 'available_from')) {
-                $table->timestamp('available_from')->nullable();
+                $table->dateTime('available_from')->nullable();
             }
 
             if (! Schema::hasColumn('business_listings', 'available_until')) {
-                $table->timestamp('available_until')->nullable();
+                $table->dateTime('available_until')->nullable();
             }
 
             if (! Schema::hasColumn('business_listings', 'simple_office_mode')) {

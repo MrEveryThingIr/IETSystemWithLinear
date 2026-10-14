@@ -10,6 +10,7 @@ use App\Actions\Profile\UploadActorProfileImage;
 use App\Models\ActorProfile;
 use App\Models\User;
 use App\Support\Localization;
+use App\Support\MediaLimits;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
@@ -81,7 +82,7 @@ class BasicManage extends Component
                 'required',
                 'file',
                 'mimetypes:image/jpeg,image/png,image/webp,image/avif',
-                'max:8192',
+                MediaLimits::rule('profile_image'),
             ],
         ]);
 

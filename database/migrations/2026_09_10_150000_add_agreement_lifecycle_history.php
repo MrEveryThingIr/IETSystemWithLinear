@@ -15,9 +15,9 @@ return new class extends Migration
             $table->text('decision_note')->nullable()->after('rationale');
             $table->boolean('reacceptance_required')->default(true)->after('status');
             $table->foreignId('approved_by_actor_id')->nullable()->after('created_by_actor_id')->constrained('actors')->nullOnDelete();
-            $table->timestamp('approved_at')->nullable();
-            $table->timestamp('published_at')->nullable();
-            $table->timestamp('activated_at')->nullable();
+            $table->dateTime('approved_at')->nullable();
+            $table->dateTime('published_at')->nullable();
+            $table->dateTime('activated_at')->nullable();
             $table->foreignId('superseded_by_version_id')->nullable()->constrained('group_agreement_versions')->nullOnDelete();
             $table->index(['group_agreement_id', 'status']);
         });

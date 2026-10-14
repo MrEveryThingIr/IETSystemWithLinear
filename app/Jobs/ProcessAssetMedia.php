@@ -7,6 +7,7 @@ use App\Support\AssetMediaPipeline;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Throwable;
 
 class ProcessAssetMedia implements ShouldQueue
 {
@@ -37,6 +38,25 @@ class ProcessAssetMedia implements ShouldQueue
             return;
         }
 
-        $pipeline->process($asset);
+        try {
+            $pipeline->process($asset);
+        } catch (Throwable $exception) {
+            // The pipeline has already recorded the failure on the Asset. On a
+            // synchronous queue (shared hosting) rethrowing would turn the
+            // user's upload request into an HTTP 500, and there is no worker
+            // to retry anyway, so report it and let the Asset show "failed".
+            if ($this->runsSynchronously()) {
+                report($exception);
+
+                return;
+            }
+
+            throw $exception;
+        }
+    }
+
+    private function runsSynchronously(): bool
+    {
+        return $this->job === null || $this->job->getConnectionName() === 'sync';
     }
 }

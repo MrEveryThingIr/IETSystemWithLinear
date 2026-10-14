@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Models\Context;
 use App\Models\User;
 use App\Support\ContextScope;
+use App\Support\MediaLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -31,7 +32,7 @@ class CreateContextAsset
         $altText = $this->optionalText($altText, 1000, 'Alternative text');
 
         $size = $upload->getSize();
-        abort_unless(is_int($size) && $size > 0 && $size <= 12 * 1024 * 1024, 422, 'Media must be between 1 byte and 12 MB.');
+        abort_unless(is_int($size) && $size > 0 && $size <= MediaLimits::kilobytes('asset') * 1024, 422, 'Media must be between 1 byte and '.MediaLimits::kilobytes('asset').' KB.');
 
         $mime = (string) $upload->getMimeType();
         abort_unless(Asset::supportsMime($mime), 422, 'This media type is not supported.');

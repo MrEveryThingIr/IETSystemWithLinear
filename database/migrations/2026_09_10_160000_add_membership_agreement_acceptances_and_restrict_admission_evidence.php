@@ -26,7 +26,7 @@ return new class extends Migration
                 indexName: 'membership_acceptances_version_id_foreign',
             )->restrictOnDelete();
             $table->foreignId('accepted_by_actor_id')->constrained('actors')->restrictOnDelete();
-            $table->timestamp('accepted_at');
+            $table->dateTime('accepted_at');
             $table->string('evidence_hash', 64)->nullable();
             $table->timestamps();
             $table->unique(

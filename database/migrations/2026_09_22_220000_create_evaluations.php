@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('evidence_schema_version')->nullable();
             $table->char('evidence_hash', 64)->nullable();
             $table->longText('canonical_evidence')->nullable();
-            $table->timestamp('finalized_at')->nullable();
+            $table->dateTime('finalized_at')->nullable();
             $table->timestamps();
 
             $table->foreign('submission_id', 'evaluation_submission_fk')

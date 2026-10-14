@@ -15,6 +15,7 @@ use App\Models\InteractionDefinitionVersion;
 use App\Models\Submission;
 use App\Models\User;
 use App\Support\InteractionResponseTypeRegistry;
+use App\Support\MediaLimits;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
@@ -175,7 +176,7 @@ class SubmissionCard extends Component
                 $upload = $this->assetUploads[$key] ?? null;
                 if ($upload instanceof UploadedFile) {
                     $this->validate([
-                        'assetUploads.'.$key => ['file', 'max:12288'],
+                        'assetUploads.'.$key => ['file', MediaLimits::rule('asset')],
                         'assetRights.'.$key => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
                     ]);
 

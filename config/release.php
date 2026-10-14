@@ -15,4 +15,16 @@ return [
     |
     */
     'profile' => env('IET_RELEASE_PROFILE', 'full'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scheduler process model
+    |--------------------------------------------------------------------------
+    |
+    | Scheduled Artisan commands normally run as child processes, which needs
+    | proc_open(). "auto" runs them inside schedule:run when process execution
+    | is unavailable (shared hosting). true/false force either behaviour.
+    |
+    */
+    'schedule_in_process' => env('IET_SCHEDULE_IN_PROCESS', 'auto'),
 ];

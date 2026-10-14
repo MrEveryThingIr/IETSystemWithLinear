@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('pending_key')->nullable()->unique();
             $table->text('reason')->nullable();
             $table->foreignId('reviewed_by_user_id')->nullable()->constrained('users')->restrictOnDelete();
-            $table->timestamp('reviewed_at')->nullable();
+            $table->dateTime('reviewed_at')->nullable();
             $table->text('review_note')->nullable();
             $table->uuid('correlation_id')->unique();
             $table->timestamps();

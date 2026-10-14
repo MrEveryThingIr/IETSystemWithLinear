@@ -48,8 +48,8 @@ return new class extends Migration
                 $table->string('job_title', 160)->nullable();
                 $table->string('status', 24)->default('active')->index();
 
-                $table->timestamp('joined_at')->nullable();
-                $table->timestamp('ended_at')->nullable();
+                $table->dateTime('joined_at')->nullable();
+                $table->dateTime('ended_at')->nullable();
 
                 $table->timestamps();
 

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->char('baseline_commit_sha', 40)->nullable();
             $table->char('result_commit_sha', 40)->nullable();
             $table->json('repository_paths');
-            $table->timestamp('occurred_at')->nullable();
+            $table->dateTime('occurred_at')->nullable();
             $table->timestamps();
 
             $table->index(['phase_key', 'id']);

@@ -9,6 +9,8 @@ use RuntimeException;
 
 class AssetMediaPipeline
 {
+    public function __construct(private readonly MediaScannerPolicy $policy) {}
+
     public function process(Asset $asset): Asset
     {
         $asset = Asset::query()->findOrFail($asset->id);
@@ -23,6 +25,76 @@ class AssetMediaPipeline
             return $asset;
         }
 
+        if (! $this->policy->canScan()) {
+            return $this->completeWithoutScanner($asset);
+        }
+
+        return $this->scan($asset);
+    }
+
+    /**
+     * Scanner-less path: never starts a process, never marks the file clean.
+     * The stored file's SHA-256 is still verified against the Asset identity.
+     * All outcomes are recorded on the Asset; nothing is thrown, so a
+     * synchronous queue cannot turn an upload into a server error.
+     */
+    private function completeWithoutScanner(Asset $asset): Asset
+    {
+        if ($asset->scan_status === 'unavailable'
+            && $asset->processing_status === 'ready'
+            && $asset->readiness_verified_at !== null
+            && $this->policy->allowsUnscannedAssets()) {
+            return $asset;
+        }
+
+        $reason = (string) $this->policy->unavailableReason();
+
+        if (! $this->storedFileMatchesIdentity($asset)) {
+            $asset->update([
+                'scan_status' => 'unavailable',
+                'scan_error' => $reason,
+                'scan_attempted_at' => null,
+                'scan_completed_at' => null,
+                'processing_status' => 'failed',
+                'processing_error' => 'Stored media is missing or no longer matches its immutable Asset identity.',
+                'processing_completed_at' => null,
+                'readiness_verified_at' => null,
+            ]);
+
+            return $asset->refresh();
+        }
+
+        if (! $this->policy->allowsUnscannedAssets()) {
+            $asset->update([
+                'scan_status' => 'unavailable',
+                'scan_error' => $reason,
+                'scan_attempted_at' => null,
+                'scan_completed_at' => null,
+                'processing_status' => 'failed',
+                'processing_error' => 'A malware scan is required before this media can be used, and no scanner is available.',
+                'processing_completed_at' => null,
+                'readiness_verified_at' => null,
+            ]);
+
+            return $asset->refresh();
+        }
+
+        $asset->update([
+            'scan_status' => 'unavailable',
+            'scan_error' => $reason,
+            'scan_attempted_at' => null,
+            'scan_completed_at' => null,
+            'processing_status' => 'ready',
+            'processing_error' => null,
+            'processing_completed_at' => now(),
+            'readiness_verified_at' => now(),
+        ]);
+
+        return $asset->refresh();
+    }
+
+    private function scan(Asset $asset): Asset
+    {
         $asset->update([
             'scan_status' => 'scanning',
             'scan_error' => null,
@@ -32,16 +104,13 @@ class AssetMediaPipeline
             'readiness_verified_at' => null,
         ]);
 
-        $temporaryPath = $this->temporaryCopy($asset);
+        $temporaryPath = null;
 
         try {
-            $binary = trim((string) config('media.scanner.binary', 'clamscan'));
-            if ($binary === '') {
-                throw new RuntimeException('No media scanner binary is configured.');
-            }
+            $temporaryPath = $this->temporaryCopy($asset);
 
-            $result = Process::timeout((int) config('media.scanner.timeout', 120))
-                ->run([$binary, '--no-summary', $temporaryPath]);
+            $result = Process::timeout($this->policy->timeout())
+                ->run([$this->policy->binary(), '--no-summary', $temporaryPath]);
 
             if ($result->exitCode() === 1) {
                 $asset->update([
@@ -85,7 +154,9 @@ class AssetMediaPipeline
 
             throw $exception;
         } finally {
-            @unlink($temporaryPath);
+            if (is_string($temporaryPath)) {
+                @unlink($temporaryPath);
+            }
         }
     }
 
@@ -99,6 +170,24 @@ class AssetMediaPipeline
         ]);
 
         return $asset->refresh();
+    }
+
+    private function storedFileMatchesIdentity(Asset $asset): bool
+    {
+        $stream = Storage::disk($asset->disk)->readStream($asset->storage_key);
+        if (! is_resource($stream)) {
+            return false;
+        }
+
+        $context = hash_init('sha256');
+
+        try {
+            hash_update_stream($context, $stream);
+        } finally {
+            fclose($stream);
+        }
+
+        return hash_equals($asset->sha256, hash_final($context));
     }
 
     private function temporaryCopy(Asset $asset): string

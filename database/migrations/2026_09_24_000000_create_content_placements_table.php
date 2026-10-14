@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('space_content_id')->constrained('space_contents')->restrictOnDelete();
             $table->foreignId('placed_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->string('status', 16)->default('active');
-            $table->timestamp('removed_at')->nullable();
+            $table->dateTime('removed_at')->nullable();
             $table->foreignId('removed_by_actor_id')->nullable()->constrained('actors')->restrictOnDelete();
             $table->timestamps();
 

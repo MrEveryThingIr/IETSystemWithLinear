@@ -21,6 +21,7 @@ use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContentInteractionSettings;
+use App\Support\MediaLimits;
 use App\Support\SpaceContentPublishedOutline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
@@ -488,7 +489,7 @@ class ContentShow extends Component
             'annotationKind' => ['required', Rule::in($allowedKinds)],
             'annotationVisibility' => ['required', Rule::in(SpaceContentAnnotation::VISIBILITIES)],
             'annotationBody' => ['nullable', 'string', 'max:5000'],
-            'annotationUpload' => ['nullable', 'file', 'max:12288'],
+            'annotationUpload' => ['nullable', 'file', MediaLimits::rule('asset')],
             'annotationRightsStatus' => ['required', Rule::in(Asset::RIGHTS_STATUSES)],
             'annotationCaption' => ['nullable', 'string', 'max:1000'],
         ]);

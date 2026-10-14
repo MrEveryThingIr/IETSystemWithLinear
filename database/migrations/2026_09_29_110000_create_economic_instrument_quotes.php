@@ -51,9 +51,9 @@ return new class extends Migration
             $table->foreignId('quote_source_id')
                 ->constrained('quote_sources')->restrictOnDelete();
             $table->string('source_reference', 255)->nullable();
-            $table->timestamp('observed_at');
-            $table->timestamp('effective_at');
-            $table->timestamp('expires_at')->nullable();
+            $table->dateTime('observed_at');
+            $table->dateTime('effective_at');
+            $table->dateTime('expires_at')->nullable();
             $table->unsignedSmallInteger('confidence_bps')->nullable();
             $table->foreignId('published_by_user_id')->nullable()
                 ->constrained('users')->restrictOnDelete();

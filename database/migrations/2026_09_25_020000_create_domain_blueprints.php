@@ -36,7 +36,7 @@ return new class extends Migration
             $table->foreignId('created_by_actor_id')->nullable()
                 ->constrained('actors')->restrictOnDelete();
             $table->char('content_hash', 64);
-            $table->timestamp('published_at')->nullable();
+            $table->dateTime('published_at')->nullable();
             $table->timestamps();
 
             $table->unique(['domain_blueprint_id', 'version']);

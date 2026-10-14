@@ -90,7 +90,7 @@ return new class extends Migration
                 $table->longText('description')->nullable();
                 $table->json('structured_data')->nullable();
                 $table->foreignId('created_by_actor_id');
-                $table->timestamp('published_at')->nullable()->index();
+                $table->dateTime('published_at')->nullable()->index();
                 $table->timestamps();
 
                 $table->foreign('business_listing_id', 'business_listing_version_listing_fk')
@@ -125,8 +125,8 @@ return new class extends Migration
                 $table->bigInteger('amount_minor');
                 $table->string('basis', 80)->nullable();
                 $table->string('visibility', 20)->default('members')->index();
-                $table->timestamp('valid_from')->index();
-                $table->timestamp('valid_until')->nullable();
+                $table->dateTime('valid_from')->index();
+                $table->dateTime('valid_until')->nullable();
                 $table->foreignId('created_by_actor_id');
                 $table->string('reason', 500)->nullable();
                 $table->timestamps();

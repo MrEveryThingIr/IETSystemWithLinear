@@ -1,225 +1,270 @@
 # Formal v1 production deployment
 
-This branch is the production-release preparation line for the first formal
-Everything deployment. The authoritative application source remains testable,
-but the host should receive the generated runtime ZIP rather than a normal Git
-clone.
+This document is the canonical procedure for the formal production line
+(`release/formal-v1-production`) on the current host:
 
-## Why a package instead of cloning the repository
+- Netafraz shared hosting / DirectAdmin, domain `https://imeverything.ir`
+- no SSH, no Composer, no npm/Node on the host
+- hosting support runs exact PHP/Artisan commands on request
+- PHP 8.4 for web and CLI; CLI binary: `/usr/local/php-8.4/bin/php`
+- `proc_open()` disabled, no Supervisor / persistent processes
+- MySQL/MariaDB server with a MyISAM default engine and legacy TIMESTAMP defaults
 
-A normal clone transfers Git history and development-only material but still
-does not contain two required runtime outputs: `vendor/` and
-`public/build/`. The production-package workflow creates both and then ships
-only runtime files. It deliberately excludes tests, docs, AI-agent rules,
-development reports, Node modules, frontend source tooling and the Git history.
+**Rule: never patch PHP source on the host.** Every compatibility fix lives in
+GitHub, and the host only ever receives a ZIP built by the *Build production
+package* GitHub Action. If something fails on the host, fix it in GitHub and
+build a new package.
 
-## 1. Host requirements
+All commands below use `$PHP` for `/usr/local/php-8.4/bin/php` and are run
+from inside the release directory (for example
+`/home/imeveryt/domains/imeverything.ir/app/releases/1.0.1`).
 
-Use PHP 8.4 when available (the release is CI-certified on PHP 8.4) with at
-least: mbstring, DOM/XML, fileinfo, cURL, Intl, OpenSSL and PDO MySQL. MySQL 8
-is the certified database family.
+## 1. Shared-host compatibility built into the code
 
-The host must provide a safe way to run PHP CLI commands during deployment
-(SSH, a control-panel terminal, or an equivalent non-public command runner).
-Never expose a web route that runs migrations or Artisan commands.
+| Host limitation | What the application does |
+| --- | --- |
+| Default engine MyISAM ("Specified key was too long; max key length is 1000 bytes") | MySQL/MariaDB connections create every table with `DB_ENGINE` (default `InnoDB`). |
+| Legacy TIMESTAMP defaults ("Invalid default value for 'proposed_at'") | Application/domain times are `DATETIME` columns with no implicit defaults. Only Laravel's nullable `timestamps()` and explicit `useCurrent()` bookkeeping columns stay `TIMESTAMP`. CI runs a fresh install on MariaDB 10.6 with `default-storage-engine=MyISAM` and `explicit_defaults_for_timestamp=0`. |
+| No `proc_open` → media uploads returned HTTP 500 | With `MEDIA_SCANNER_ENABLED=false` no process is ever started. Uploads are stored privately, their SHA-256 is verified, and they are recorded as `scan_status=unavailable` (never `clean`). With `MEDIA_SCANNER_REQUIRED=false` they become usable; with `true` they stay unusable. Scanner failures on a `sync` queue are recorded on the Asset and never turn the upload into a 500. |
+| No `proc_open` → scheduled commands could not start | `schedule:run` detects that child processes are unavailable and runs the scheduled Artisan commands inside its own process (`IET_SCHEDULE_IN_PROCESS=auto`). |
+| No queue worker | `QUEUE_CONNECTION=sync`. |
+| No WebSocket process | `BROADCAST_CONNECTION=log`. |
+| Cache table missing on first install | First install clears caches with `CACHE_STORE=array` (section 6). |
 
-The domain document root must point to the Laravel `public/` directory. Do
-not point the web server at the project root because that risks exposing
-`.env`, source and storage files.
+## 2. Build the runtime package (GitHub)
 
-## 2. Build the runtime ZIP
+1. In GitHub Actions open **Build production package**.
+2. **Run workflow** on branch `release/formal-v1-production` with version `v1.0.1`.
+3. Download the artifact `iet-v1.0.1`. It contains:
+   - `iet-v1.0.1.zip` — the runtime package (root directory `iet-v1.0.1/`)
+   - `iet-v1.0.1.zip.sha256` — checksum of the ZIP
+   - `iet-v1.0.1.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.0.1.zip.sha256`.
 
-From GitHub Actions choose **Build production package**, run it from
-`release/formal-v1-production`, and use version `v1.0.0`.
+The package contains `vendor/` (production dependencies only),
+`public/build/manifest.json`, `artisan`, the application code, migrations,
+config, `production.env.example` and `release-manifest.json`. Composer and
+npm are not needed on the host.
 
-Download the resulting artifact and verify the SHA-256 checksum before upload.
-The ZIP already contains production Composer dependencies and built Vite
-assets; Node and Composer are therefore not required on the host for ordinary
-deployment.
+### Release manifest
 
-## 3. Upload layout
+`release-manifest.json` sits in the package root and contains no secrets:
 
-A recommended layout keeps releases immutable and user data persistent:
+```json
+{
+  "schema": 1,
+  "package": "iet-v1.0.1",
+  "package_version": "v1.0.1",
+  "application_version": "1.0.1",
+  "source": {
+    "repository": "MrEveryThingIr/IETSystemWithLinear",
+    "git_commit": "<40-character commit SHA>",
+    "git_ref": "refs/heads/release/formal-v1-production",
+    "git_ref_name": "release/formal-v1-production"
+  },
+  "build": {
+    "built_at": "<UTC ISO-8601>",
+    "workflow_run_id": "<GitHub Actions run id>",
+    "workflow_run_attempt": "1",
+    "workflow_run_url": "https://github.com/.../actions/runs/<id>",
+    "php_target": "8.4",
+    "php_build_version": "8.4.x",
+    "node_build_version": "v22.x",
+    "composer_dev_dependencies": false
+  },
+  "integrity": {
+    "composer_lock_sha256": "...",
+    "package_lock_sha256": "...",
+    "vite_manifest_sha256": "..."
+  }
+}
+```
+
+On the host, `$PHP artisan about` shows a **Release** section (package,
+commit, ref, build time, workflow run) and a **Media scanner** section. Compare
+the commit with the GitHub branch HEAD and the workflow run that produced the
+artifact.
+
+## 3. Directory layout
 
 ```
-/home/account/apps/everything/
+/home/imeveryt/domains/imeverything.ir/app/
 ├── releases/
-│   └── 1.0.0/                 <- extracted application package
+│   ├── 1.0.0/
+│   └── 1.0.1/              <- extracted iet-v1.0.1/ contents
 ├── shared/
-│   ├── .env                   <- permanent production environment
-│   └── storage/               <- permanent uploads, private media, logs/cache
-└── current -> releases/1.0.0  <- active release
+│   ├── .env                <- the ONE production environment file
+│   └── storage/            <- persistent: private media, logs, sessions, cache
+└── current -> releases/1.0.1
 ```
 
-Inside each release, replace its packaged `storage/` directory with a symlink
-to `../../shared/storage`, and link `.env` to `../../shared/.env`.
-This is important: Business media and private uploads must not disappear when
-you switch to a newer release directory.
+- **`.env` is copied**, not linked: this host does not allow symlinks to
+  hidden files. Copy `shared/.env` into every new release directory. Edit only
+  `shared/.env`, then copy it again into the active release.
+- **`storage` is a symlink**: in each release, delete the packaged `storage/`
+  directory and create `storage -> ../../shared/storage`. All private media
+  (profile images, content/context assets, planner evidence, submission files,
+  business listing media and intro videos, public real-estate images/audio/video)
+  is written to `storage/app/private` on the `local` disk, so it survives
+  release switches. Nothing uses the `public` disk; `storage:link` is not needed.
+- The domain document root points to `current/public`.
+- `storage/` and `bootstrap/cache/` must be writable by the PHP user.
 
-If your host does not allow symlinks, use a single persistent application
-directory and update code in place only after taking a database + storage
-backup. Do not delete/replace the existing `storage/app` directory during an
-upgrade.
+## 4. Production `.env`
 
-If the hosting panel supports custom document roots, point the domain directly
-to:
+Start from `production.env.example`. The shared-host baseline is:
 
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://imeverything.ir
+APP_VERSION=1.0.1
+IET_RELEASE_PROFILE=full
+IET_SEED_DEMO_DATA=false
+
+DB_CONNECTION=mysql
+DB_ENGINE=InnoDB
+
+SESSION_DRIVER=database
+SESSION_SECURE_COOKIE=true
+
+CACHE_STORE=database
+
+QUEUE_CONNECTION=sync
+QUEUE_AFTER_COMMIT=true
+
+BROADCAST_CONNECTION=log
+
+FILESYSTEM_DISK=local
+
+MEDIA_SCANNER_ENABLED=false
+MEDIA_SCANNER_REQUIRED=false
+
+MAIL_MAILER=smtp
 ```
-/home/account/apps/everything/current/public
-```
 
-Keep releases and the shared directory outside the public web root whenever
-possible.
+plus the real database credentials, SMTP credentials and the permanent
+`APP_KEY`. Never commit the real `.env`.
 
-## 4. Production environment
+### APP_KEY is permanent
 
-On the first deployment copy `production.env.example` to
-`/home/account/apps/everything/shared/.env`, edit it there, and link the
-active release's `.env` to that shared file.
+- `APP_KEY` is generated **once**, on the very first installation, and is
+  already set in the existing production `shared/.env`.
+- **Never run `key:generate` again** — not for upgrades, not for rollbacks,
+  not for a new release directory. A new key logs every user out and makes
+  encrypted data unreadable.
+- Every release receives a copy of the same `shared/.env`, therefore the same
+  key.
 
-Do not copy the local development `.env` wholesale. Production must at least
-set:
+### Upload limits
 
-- `APP_ENV=production`
-- `APP_DEBUG=false`
-- `APP_URL=https://your-real-domain`
-- one permanent `APP_KEY`
-- MySQL host/database/user/password
-- `SESSION_SECURE_COOKIE=true` after HTTPS is working
-- a real SMTP mail transport
-- `IET_RELEASE_PROFILE=full`
-- `IET_SEED_DEMO_DATA=false`
+Application limits (kilobytes, `config/media.php`): profile images 8192,
+general assets 12288, business intro video 51200, real-estate images 12288,
+audio 25600, video 102400. Each can be lowered with
+`MEDIA_LIMIT_*_KB`. Validation always uses the lower of the application limit
+and the host's `upload_max_filesize` / `post_max_size`, so a host with smaller
+limits shows a normal validation message instead of an error page.
 
-For ordinary shared hosting use `QUEUE_CONNECTION=sync` initially. This keeps
-notifications from becoming stuck when no persistent worker exists.
+## 5. Commands to send to hosting support
 
-Do not regenerate `APP_KEY` on later deploys. It must survive upgrades and
-rollbacks.
+Always give support the exact commands with the full PHP binary and the full
+release path.
 
-## 5. First boot
-
-From the extracted release directory:
+### 5a. First installation (empty database only)
 
 ```bash
-CACHE_STORE=array php artisan optimize:clear
-php artisan key:generate --force
-php artisan migrate --force
-php artisan iet:bootstrap-superadmin --username=MrEveryThing --email=YOUR_REAL_EMAIL
-php artisan storage:link
-php artisan optimize
+cd /home/imeveryt/domains/imeverything.ir/app/releases/1.0.1
+CACHE_STORE=array /usr/local/php-8.4/bin/php artisan optimize:clear
+/usr/local/php-8.4/bin/php artisan migrate --force
+/usr/local/php-8.4/bin/php artisan iet:bootstrap-superadmin --username=MrEveryThing --email=YOUR_REAL_EMAIL
+/usr/local/php-8.4/bin/php artisan optimize
 ```
 
-Run `key:generate` only on the first deployment. On every later deployment,
-reuse the existing `.env` and existing APP_KEY.
+> **The first command MUST be prefixed with `CACHE_STORE=array`.**
+> `CACHE_STORE=database` reads the `cache` table, which does not exist until
+> `migrate` has run, so a plain `optimize:clear` fails on an empty database.
+> After migrations have run, `CACHE_STORE=database` (as set in `.env`) is
+> correct, and plain `optimize:clear` works.
 
-The superadmin command is intentionally one-time and idempotent: once an active
-platform superadmin exists it makes no change. If the bootstrap password is not
-present in the environment, the command asks for it interactively without
-placing it in shell history. Remove any temporary
-`IET_BOOTSTRAP_SUPERADMIN_PASSWORD` value from `.env` immediately after
-bootstrap.
+`key:generate` is **not** in this list because the production `APP_KEY`
+already exists. Only a brand-new site with an empty `APP_KEY` would run
+`key:generate --force` once, before anything else.
 
-Do **not** run `migrate:fresh` or production seeders on a live database.
+### 5b. Re-installing the pre-production database for v1.0.1
 
-## 6. Writable directories
+The first v1.0.0 attempt ran migrations that were hand-edited on the host.
+Because the site still has **no real production data**, the clean way to make
+the database match GitHub exactly is to rebuild it once with the v1.0.1
+migrations. This **deletes all tables and data**; take a database backup first
+and only do it while there is no real data:
 
-The PHP/FPM user must be able to write:
-
+```bash
+cd /home/imeveryt/domains/imeverything.ir/app/releases/1.0.1
+CACHE_STORE=array /usr/local/php-8.4/bin/php artisan optimize:clear
+CACHE_STORE=array /usr/local/php-8.4/bin/php artisan migrate:fresh --force
+/usr/local/php-8.4/bin/php artisan iet:bootstrap-superadmin --username=MrEveryThing --email=YOUR_REAL_EMAIL
+/usr/local/php-8.4/bin/php artisan optimize
 ```
-storage/
-bootstrap/cache/
-```
 
-Do not make the whole application world-writable. Prefer the hosting account
-owner/web-server group and the minimum permissions supported by the provider.
+Never run `migrate:fresh` once real users or data exist.
 
-## 7. Scheduler
+### 5c. Ordinary upgrade (existing database, real data)
 
-The product has minute-level scheduled work for agreements, due contracts,
-notifications and reminders. Add exactly one cron entry:
+1. Back up the database and `shared/storage`.
+2. Extract the new package into a new `releases/<version>/` directory.
+3. Copy `shared/.env` into it; replace its `storage/` with the
+   `../../shared/storage` symlink.
+4. Run:
+
+   ```bash
+   cd /home/imeveryt/domains/imeverything.ir/app/releases/<version>
+   /usr/local/php-8.4/bin/php artisan optimize:clear
+   /usr/local/php-8.4/bin/php artisan migrate --force
+   /usr/local/php-8.4/bin/php artisan optimize
+   ```
+
+5. Switch `current` to the new release.
+6. Run `/usr/local/php-8.4/bin/php artisan schedule:interrupt`.
+7. Smoke-test (section 7).
+
+### 5d. Rollback
+
+Switch `current` back to the previous release directory and run
+`optimize:clear` + `optimize` there. That is an application rollback only:
+if the newer release ran migrations, restore the database backup taken in
+step 1 of the upgrade.
+
+## 6. Scheduler
+
+One cron entry in DirectAdmin:
 
 ```cron
-* * * * * cd /home/account/apps/everything/current && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /home/imeveryt/domains/imeverything.ir/app/current && /usr/local/php-8.4/bin/php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Adjust the PHP binary and path to the host.
+Without `proc_open`, `schedule:run` runs the scheduled Artisan commands in its
+own process (`IET_SCHEDULE_IN_PROCESS=auto`, the default). No queue worker is
+required with `QUEUE_CONNECTION=sync`.
 
-With `QUEUE_CONNECTION=sync`, no queue worker is required for the first
-release.
-
-If you later switch to `QUEUE_CONNECTION=database`, run a persistent worker
-or a frequent host job that consumes both queues:
+## 7. Smoke test after activation
 
 ```bash
-php artisan queue:work database --queue=notifications,default --tries=3 --timeout=60
+/usr/local/php-8.4/bin/php artisan about
+/usr/local/php-8.4/bin/php artisan migrate:status
+/usr/local/php-8.4/bin/php artisan schedule:list
 ```
 
-On shared hosting without Supervisor, a once-per-minute cron can use
-`--stop-when-empty`.
+In `about`, confirm the Release commit matches GitHub and that Media scanner
+shows `Enabled: no`, `Required: no`. Then in the browser:
 
-## 8. Realtime / Reverb
+1. `https://imeverything.ir/up` is healthy; HTTPS and login work.
+2. Superadmin login works.
+3. Upload a profile image and see it displayed (no HTTP 500).
+4. Upload a file to content, planner evidence and a business listing.
+5. Public Real Estate intake submits with images.
+6. A public Business page `/b/{slug}` works in a private window.
+7. A real verification/invitation email arrives.
+8. The scheduler runs (check `storage/logs`).
 
-The first shared-host release should keep:
-
-```
-BROADCAST_CONNECTION=log
-```
-
-unless the provider explicitly supports a continuously running Reverb/WebSocket
-process and the required public port/proxy configuration. Realtime delivery can
-be enabled later without blocking normal page operation.
-
-## 9. Mail is not optional for formal publication
-
-The application uses verified accounts. `MAIL_MAILER=log` is a development
-setting and does not deliver verification/invitation mail. Configure the host's
-SMTP server or another supported transactional mail service before inviting
-real users. Leave `MAIL_SCHEME=null` unless your provider explicitly requires
-a scheme value; use the provider's documented SMTP host, port and credentials.
-
-## 10. Smoke test after deployment
-
-Run:
-
-```bash
-php artisan about
-php artisan migrate:status
-php artisan schedule:list
-php artisan config:show app
-```
-
-Then verify in the browser:
-
-1. `https://your-domain/up` is healthy.
-2. HTTPS stays enabled and login works.
-3. Superadmin login works.
-4. The public landing page renders its Vite assets.
-5. A standalone public Business page `/b/{slug}` works in an incognito window.
-6. Public Real Estate intake submits successfully.
-7. Promote a case to a catalog draft, preview it, publish it, and verify it
-   appears publicly.
-8. Upload/view a Business introduction video.
-9. Send a real verification/invitation email.
-10. Confirm the scheduler is executing in the hosting control panel/logs.
-
-Only after this smoke test should the release be tagged `v1.0.0`.
-
-## 11. Upgrades and rollback
-
-Before every later deployment:
-
-1. back up the MySQL database and uploaded/private storage;
-2. keep the previous release directory;
-3. upload/extract the new package into a new release directory;
-4. link the new release's `.env` to the persistent `shared/.env`;
-5. link the new release's `storage` to the persistent `shared/storage`;
-6. run `php artisan optimize:clear` (the database already exists on upgrades);
-7. run `php artisan migrate --force`;
-8. run `php artisan optimize`;
-9. switch `current` (or the domain document root) to the new release;
-10. run `php artisan schedule:interrupt` after the switch;
-11. smoke-test `/up`, login, public Business pages, mail and uploads.
-
-Application rollback is then a directory/symlink switch. Database rollback is
-not automatically safe after schema/data migrations, which is why a database
-backup is mandatory before upgrading.
+Only after this real-host browser acceptance should the release be tagged
+`v1.0.1`.

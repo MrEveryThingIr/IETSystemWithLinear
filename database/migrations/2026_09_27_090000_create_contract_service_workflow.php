@@ -69,7 +69,7 @@ return new class extends Migration
             $table->foreignId('proposed_by_actor_id');
             $table->unsignedBigInteger('amount_minor');
             $table->string('method', 32)->default('cash');
-            $table->timestamp('paid_at');
+            $table->dateTime('paid_at');
             $table->string('reference', 255)->nullable();
             $table->text('note')->nullable();
             $table->timestamps();

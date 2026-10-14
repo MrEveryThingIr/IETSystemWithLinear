@@ -15,6 +15,7 @@ use App\Models\Context;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\MediaLimits;
 use App\Support\SpaceContentPublicationEvidence;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
@@ -92,7 +93,7 @@ class ContentStudio extends Component
     public function attachAsset(AttachAssetToSpaceContent $attach): void
     {
         $this->validate([
-            'assetUpload' => ['required', 'file', 'max:12288'],
+            'assetUpload' => ['required', 'file', MediaLimits::rule('asset')],
             'assetRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
             'assetCaption' => ['nullable', 'string', 'max:1000'],
         ]);

@@ -49,7 +49,7 @@ return new class extends Migration
                 ->constrained('space_content_revisions')->restrictOnDelete();
             $table->foreignId('proposed_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->string('note', 1000)->nullable();
-            $table->timestamp('proposed_at');
+            $table->dateTime('proposed_at');
             $table->timestamps();
 
             $table->unique(['proposal_id', 'version']);
@@ -63,7 +63,7 @@ return new class extends Migration
             $table->string('decision', 32);
             $table->string('note', 2000)->nullable();
             $table->foreignId('decided_by_user_id')->constrained('users')->restrictOnDelete();
-            $table->timestamp('decided_at');
+            $table->dateTime('decided_at');
             $table->timestamps();
 
             $table->unique(['proposal_version_id', 'proposal_party_id']);

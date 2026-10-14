@@ -16,6 +16,7 @@ use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\MediaLimits;
 use App\Support\SpaceContentFieldRegistry;
 use App\Support\SpaceContentPublicationEvidence;
 use Illuminate\Contracts\View\View;
@@ -95,7 +96,7 @@ class SpaceContentShow extends Component
     public function attachAsset(AttachAssetToSpaceContent $attachAsset): void
     {
         $this->validate([
-            'assetUpload' => ['required', 'file', 'max:12288'],
+            'assetUpload' => ['required', 'file', MediaLimits::rule('asset')],
             'assetRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
             'assetCaption' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -118,7 +119,7 @@ class SpaceContentShow extends Component
     public function attachRecordedAsset(AttachAssetToSpaceContent $attachAsset): void
     {
         $this->validate([
-            'assetUpload' => ['required', 'file', 'max:12288'],
+            'assetUpload' => ['required', 'file', MediaLimits::rule('asset')],
             'recordingCaption' => ['nullable', 'string', 'max:1000'],
         ]);
         abort_unless($this->assetUpload instanceof UploadedFile, 422);

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('admissions', function (Blueprint $table): void {
-            $table->timestamp('finalized_at')->nullable()->after('approved_at');
+            $table->dateTime('finalized_at')->nullable()->after('approved_at');
         });
     }
 

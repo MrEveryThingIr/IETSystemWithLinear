@@ -8,6 +8,7 @@ use App\Models\ActorProfile;
 use App\Models\ActorProfileImage;
 use App\Models\Asset;
 use App\Models\User;
+use App\Support\MediaLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -32,7 +33,7 @@ class UploadActorProfileImage
         Gate::forUser($user)->authorize('update', $profile);
 
         $size = $upload->getSize();
-        abort_unless(is_int($size) && $size > 0 && $size <= 8 * 1024 * 1024, 422, 'Profile image must be between 1 byte and 8 MB.');
+        abort_unless(is_int($size) && $size > 0 && $size <= MediaLimits::kilobytes('profile_image') * 1024, 422, 'Profile image must be between 1 byte and '.MediaLimits::kilobytes('profile_image').' KB.');
 
         $mime = (string) $upload->getMimeType();
         abort_unless(in_array($mime, self::MIME_TYPES, true), 422, 'Profile image must be JPEG, PNG, WebP, or AVIF.');

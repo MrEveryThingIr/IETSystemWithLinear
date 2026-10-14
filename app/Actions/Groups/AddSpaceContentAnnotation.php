@@ -12,6 +12,7 @@ use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContentInteractionSettings;
 use App\Support\ContextScope;
+use App\Support\MediaLimits;
 use App\Support\SpaceContentAnnotationAnchors;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -208,7 +209,7 @@ class AddSpaceContentAnnotation
         abort_unless($this->interactions->annotationsEnabled($preflight), 422, 'Annotations are disabled for this Content.');
 
         $size = $upload->getSize();
-        abort_unless(is_int($size) && $size > 0 && $size <= 12 * 1024 * 1024, 422, 'Media must be between 1 byte and 12 MB.');
+        abort_unless(is_int($size) && $size > 0 && $size <= MediaLimits::kilobytes('asset') * 1024, 422, 'Media must be between 1 byte and '.MediaLimits::kilobytes('asset').' KB.');
         $mime = (string) $upload->getMimeType();
         abort_unless(Asset::supportsMime($mime), 422, 'This media type is not supported.');
 

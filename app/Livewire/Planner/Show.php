@@ -20,6 +20,7 @@ use App\Models\Relationship;
 use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanStatus;
+use App\Support\MediaLimits;
 use App\Support\MonetaryUnitCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
@@ -173,7 +174,7 @@ class Show extends Component
             'assetIds.*' => ['integer'],
             'evidenceReferenceIds' => ['array', 'max:20'],
             'evidenceReferenceIds.*' => ['integer'],
-            'evidenceUpload' => ['nullable', 'file', 'max:12288'],
+            'evidenceUpload' => ['nullable', 'file', MediaLimits::rule('asset')],
             'evidenceUploadRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
         ]);
 

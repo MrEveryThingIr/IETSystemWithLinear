@@ -11,14 +11,14 @@ return new class extends Migration
         Schema::table('group_invitations', function (Blueprint $table): void {
             $table->unsignedInteger('max_uses')->nullable()->after('expires_at');
             $table->unsignedInteger('uses_count')->default(0)->after('max_uses');
-            $table->timestamp('revoked_at')->nullable()->after('uses_count');
+            $table->dateTime('revoked_at')->nullable()->after('uses_count');
         });
 
         Schema::create('group_invitation_acceptances', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('group_invitation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('accepted_by_actor_id')->constrained('actors')->restrictOnDelete();
-            $table->timestamp('accepted_at');
+            $table->dateTime('accepted_at');
             $table->timestamps();
             $table->unique(['group_invitation_id', 'accepted_by_actor_id'], 'invitation_actor_unique');
         });
