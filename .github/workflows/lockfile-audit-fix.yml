@@ -52,7 +52,6 @@ jobs:
           git diff --stat
           npm ci
           npm audit --audit-level=high
-          npm run build
           msg="$(git diff --stat | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
           echo "::notice title=lockfile diff::${msg}"
 
@@ -62,4 +61,4 @@ jobs:
           git commit -m "build: update npm lockfile for shell-quote and source-map-js advisories" \
             -m "GHSA-pqg4-j6r4-53mv (shell-quote, critical) and GHSA-68fv-2mgg-jv7q (source-map-js, high), via npm audit fix --package-lock-only."
           git push origin "HEAD:${GITHUB_REF_NAME}"
-# retrigger 1
+# retrigger 2
