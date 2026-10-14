@@ -196,6 +196,10 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+          # Machine-readable provenance, also visible through the check-run API.
+          echo "::notice title=Package::root=${PACKAGE}/ zip=${PACKAGE}.zip sha256=$(cut -d' ' -f1 "${PACKAGE}.zip.sha256") commit=${GITHUB_SHA}"
+          echo "::notice title=release-manifest.json::$(jq -c . "${PACKAGE}.release-manifest.json")"
+
           echo "PACKAGE_NAME=${PACKAGE}" >> "$GITHUB_ENV"
 
       - name: Upload production package
