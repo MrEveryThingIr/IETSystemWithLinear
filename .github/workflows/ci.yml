@@ -145,7 +145,11 @@ jobs:
           vendor/bin/phpstan analyse --no-progress --error-format=github
 
       - name: Phase 7 rollback/reapply, scheduler, and queue smoke
+        shell: bash
         run: |
+          set -eEo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
+          trap 'msg="$(tail -n 80 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
           php artisan migrate:status
           php artisan migrate:rollback --step=3 --force
           php artisan migrate --force
