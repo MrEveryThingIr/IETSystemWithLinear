@@ -216,18 +216,21 @@ class AccessInvitationJourneyTest extends TestCase
             null,
         );
 
+        $unverified = Actor::factory()->create();
+        $unverified->user->forceFill(['username' => 'pending_person', 'email_verified_at' => null])->save();
+
         Livewire::actingAs($owner->user)
             ->test(GroupInvitations::class, ['group' => $group])
-            ->set('email', 'not-registered@example.com')
-            ->call('create')
-            ->assertHasErrors('email');
+            ->set('search', 'pending_person')
+            ->assertSee(__('classroom.invite.no_matches'));
 
         $existing = Actor::factory()->create();
+        $existing->user->forceFill(['username' => 'verified_person'])->save();
 
         Livewire::actingAs($owner->user)
             ->test(GroupInvitations::class, ['group' => $group])
-            ->set('email', $existing->user->email)
-            ->call('create')
+            ->set('search', 'verified_person')
+            ->call('invitePerson', $existing->user->id)
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('group_invitations', [

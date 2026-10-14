@@ -19,6 +19,7 @@ class RegisterInvitedUser
     {
         return DB::transaction(function () use ($input, $invitationToken): User {
             $invitation = $this->redeemInvitation->preview($invitationToken);
+            abort_unless($invitation->permitsRegistration(), 404);
             if ($invitation->email !== null && strcasecmp($invitation->email, (string) ($input['email'] ?? '')) !== 0) {
                 throw ValidationException::withMessages(['email' => __('ui.messages.invitation_email_mismatch')]);
             }

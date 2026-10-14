@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Groups\CompleteJoinLinkAdmission;
 use App\Actions\Groups\RedeemGroupInvitation;
 use App\Models\Actor;
 use App\Models\Admission;
@@ -37,7 +38,7 @@ class GroupInvitationController
             ->withHeaders(['Cache-Control' => 'private, no-store', 'Referrer-Policy' => 'no-referrer']);
     }
 
-    public function accept(Request $request, string $token, RedeemGroupInvitation $redemption): RedirectResponse
+    public function accept(Request $request, string $token, RedeemGroupInvitation $redemption, CompleteJoinLinkAdmission $joinLink): RedirectResponse
     {
         $user = $request->user();
         abort_unless($user instanceof User, 403);
@@ -51,6 +52,10 @@ class GroupInvitationController
         }
 
         $admission = $redemption->execute($token, $user->actor, $user->email);
+
+        if ($joinLink->complete($admission) !== null) {
+            return to_route('groups.show', $admission->group_id)->with('status', __('classroom.invite.joined', ['group' => $invitation->group->name]));
+        }
 
         return to_route('admissions.show', $admission)->with('status', __('ui.messages.admission_created'));
     }

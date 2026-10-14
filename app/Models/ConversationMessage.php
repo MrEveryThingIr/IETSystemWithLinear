@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -43,6 +45,40 @@ class ConversationMessage extends Model
     public function getRouteKeyName(): string
     {
         return 'uuid';
+    }
+
+    /** @return HasMany<ConversationMessageRevision, $this> */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(ConversationMessageRevision::class);
+    }
+
+    /** @return HasOne<ConversationMessageRevision, $this> */
+    public function latestRevision(): HasOne
+    {
+        return $this->hasOne(ConversationMessageRevision::class)->latestOfMany();
+    }
+
+    /** The text readers see: the latest edit, or the original body. */
+    public function currentBody(): string
+    {
+        $revision = $this->latestRevision;
+
+        if ($revision instanceof ConversationMessageRevision && $revision->kind === ConversationMessageRevision::KIND_EDIT) {
+            return (string) $revision->body;
+        }
+
+        return (string) $this->body;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->latestRevision?->kind === ConversationMessageRevision::KIND_DELETE;
+    }
+
+    public function isEdited(): bool
+    {
+        return $this->latestRevision?->kind === ConversationMessageRevision::KIND_EDIT;
     }
 
     /** @return BelongsTo<Conversation, $this> */

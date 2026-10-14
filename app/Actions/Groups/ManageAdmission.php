@@ -85,6 +85,11 @@ class ManageAdmission
             }
             $locked->transitionTo($status, $actor, $note);
         });
+
+        if ($status === 'submitted') {
+            // Join links admit directly once the candidate has accepted any agreements.
+            app(CompleteJoinLinkAdmission::class)->complete($admission);
+        }
     }
 
     public function review(Admission $admission, Actor $reviewer, string $status, ?string $note = null): void

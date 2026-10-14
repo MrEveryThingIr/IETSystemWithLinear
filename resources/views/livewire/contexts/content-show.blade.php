@@ -570,7 +570,7 @@
                                         </div>
                                     @endforeach
 
-                                    @if ($canAnnotate)
+                                    @if ($canAnnotate && in_array($annotation->kind === 'question' ? 'answer' : 'reply', $canReplyKinds, true))
                                         <button type="button" data-reply-annotation="{{ $annotation->uuid }}" class="text-sm font-medium underline underline-offset-4" style="color: var(--content-accent)">
                                             {{ $annotation->kind === 'question' ? __('interactions.answer') : __('interactions.reply') }}
                                         </button>
@@ -590,6 +590,19 @@
                                                     @if ($reply->body)
                                                         <div class="whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $reply->body }}</div>
                                                     @endif
+                                                    @php($viewerEndorsed = $reply->endorsements->contains('actor_id', auth()->user()?->actor?->id))
+                                                    @if ($reply->endorsements->isNotEmpty() || $canEndorse)
+                                                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                                                            @if ($reply->endorsements->isNotEmpty())
+                                                                <flux:badge color="green" size="sm" icon="check-badge">{{ __('classroom.roles.endorsed_by', ['names' => $reply->endorsements->map(fn ($endorsement) => $endorsement->actor?->user?->username)->filter()->join(', ')]) }}</flux:badge>
+                                                            @endif
+                                                            @if ($canEndorse && $canInteract)
+                                                                <button type="button" wire:click="toggleEndorsement('{{ $reply->uuid }}')" class="font-medium underline underline-offset-4" style="color: var(--content-accent)">
+                                                                    {{ $viewerEndorsed ? __('classroom.roles.withdraw_endorsement') : __('classroom.roles.endorse') }}
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
@@ -605,6 +618,47 @@
         </article>
 
         <aside class="space-y-4 self-start xl:sticky xl:top-6">
+            @if ($roleRulesGroup)
+                <flux:card class="space-y-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <flux:heading>{{ __('classroom.roles.title') }}</flux:heading>
+                            <flux:text class="text-sm">{{ $roleRulesActive ? __('classroom.roles.active_help') : __('classroom.roles.open_help') }}</flux:text>
+                        </div>
+                        @unless ($editingRoleRules)
+                            <flux:button size="sm" variant="ghost" wire:click="openRoleRules">{{ __('classroom.roles.edit') }}</flux:button>
+                        @endunless
+                    </div>
+                    @if ($editingRoleRules)
+                        <form wire:submit="saveRoleRules" class="space-y-4">
+                            @foreach ($roleRulesRoles as $role)
+                                <fieldset wire:key="role-rule-{{ $role->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                                    <legend class="px-1 text-sm font-semibold">{{ $role->name }}</legend>
+                                    <div class="grid grid-cols-2 gap-1">
+                                        @foreach (\App\Models\SpaceContentAnnotation::KINDS as $kind)
+                                            <label class="flex items-center gap-2 text-sm">
+                                                <input type="checkbox" wire:model="roleRules.{{ $role->id }}.kinds" value="{{ $kind }}" class="rounded border-zinc-300">
+                                                {{ __('interactions.kind.'.$kind) }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    <label class="flex items-center gap-2 text-sm font-medium">
+                                        <input type="checkbox" wire:model="roleRules.{{ $role->id }}.endorse" class="rounded border-zinc-300">
+                                        {{ __('classroom.roles.can_endorse') }}
+                                    </label>
+                                </fieldset>
+                            @endforeach
+                            <div class="flex flex-wrap gap-2">
+                                <flux:button type="submit" size="sm" variant="primary">{{ __('classroom.roles.save') }}</flux:button>
+                                <flux:button type="button" size="sm" variant="ghost" wire:click="$set('editingRoleRules', false)">{{ __('classroom.roles.cancel') }}</flux:button>
+                                @if ($roleRulesActive)
+                                    <flux:button type="button" size="sm" variant="danger" wire:click="clearRoleRules">{{ __('classroom.roles.clear') }}</flux:button>
+                                @endif
+                            </div>
+                        </form>
+                    @endif
+                </flux:card>
+            @endif
             @if ($canAnnotate)
                 <flux:card class="space-y-3">
                     <div>

@@ -162,6 +162,12 @@ class SpaceContentAnnotation extends Model
             ->orderBy('id');
     }
 
+    /** @return HasMany<SpaceContentAnnotationEndorsement, $this> */
+    public function endorsements(): HasMany
+    {
+        return $this->hasMany(SpaceContentAnnotationEndorsement::class, 'annotation_id');
+    }
+
     /** @return BelongsTo<Actor, $this> */
     public function author(): BelongsTo
     {

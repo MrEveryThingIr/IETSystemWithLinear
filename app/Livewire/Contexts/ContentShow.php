@@ -4,6 +4,9 @@ namespace App\Livewire\Contexts;
 
 use App\Actions\Content\CreateContentEvidenceReference;
 use App\Actions\Content\RecordContentAnnotationDisposition;
+use App\Actions\Content\ToggleAnnotationEndorsement;
+use App\Actions\Content\UpdateContentRoleRules;
+use App\Actions\Groups\GroupRoleProvisioner;
 use App\Actions\Groups\AddSpaceContentAnnotation;
 use App\Actions\Groups\ToggleSpaceContentReaction;
 use App\ContentEvidenceTarget;
@@ -21,6 +24,7 @@ use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContentInteractionSettings;
+use App\Support\ContentRolePolicy;
 use App\Support\MediaLimits;
 use App\Support\SpaceContentPublishedOutline;
 use Illuminate\Contracts\View\View;
@@ -78,6 +82,12 @@ class ContentShow extends Component
     public string $replyBody = '';
 
     public string $replyKind = SpaceContentAnnotation::KIND_REPLY;
+
+    /** Author's per-role rules editor: role id => {kinds: list<string>, endorse: bool} */
+    public bool $editingRoleRules = false;
+
+    /** @var array<int|string, array{kinds?: list<string>, endorse?: bool}> */
+    public array $roleRules = [];
 
     public bool $annotationComposerOpen = false;
 
@@ -479,11 +489,54 @@ class ContentShow extends Component
         ])->all();
     }
 
+    public function openRoleRules(ContentInteractionSettings $settings, GroupRoleProvisioner $roles, ContentRolePolicy $policy): void
+    {
+        Gate::forUser($this->user())->authorize('update', $this->content);
+        $group = $policy->group($this->content);
+        abort_unless($group !== null, 422);
+
+        $existing = $settings->roleRules($this->content);
+        $this->roleRules = [];
+        foreach ($roles->roles($group) as $role) {
+            $this->roleRules[(int) $role->id] = $existing[(int) $role->id]
+                ?? ['kinds' => SpaceContentAnnotation::KINDS, 'endorse' => false];
+        }
+        $this->editingRoleRules = true;
+    }
+
+    public function saveRoleRules(UpdateContentRoleRules $update): void
+    {
+        $this->content = $update->execute($this->content, $this->user(), $this->roleRules);
+        $this->editingRoleRules = false;
+        session()->flash('status', __('classroom.roles.saved'));
+    }
+
+    public function clearRoleRules(UpdateContentRoleRules $update): void
+    {
+        $this->content = $update->execute($this->content, $this->user(), []);
+        $this->roleRules = [];
+        $this->editingRoleRules = false;
+        session()->flash('status', __('classroom.roles.cleared'));
+    }
+
+    public function toggleEndorsement(string $annotationUuid, ToggleAnnotationEndorsement $toggle): void
+    {
+        $annotation = SpaceContentAnnotation::query()
+            ->where('uuid', $annotationUuid)
+            ->where('space_content_id', $this->content->id)
+            ->firstOrFail();
+        $toggle->execute($annotation, $this->user());
+    }
+
     public function postAnnotation(AddSpaceContentAnnotation $add): void
     {
         $allowedKinds = $this->annotationParentUuid !== null
             ? SpaceContentAnnotation::CHILD_KINDS
             : SpaceContentAnnotation::TOP_LEVEL_KINDS;
+        $allowedKinds = array_values(array_intersect(
+            $allowedKinds,
+            app(ContentRolePolicy::class)->allowedKinds($this->content, $this->user()),
+        ));
 
         $this->validate([
             'annotationKind' => ['required', Rule::in($allowedKinds)],
@@ -728,6 +781,7 @@ class ContentShow extends Component
                 'replies.author.user',
                 'replies.anchors',
                 'replies.assets',
+                'replies.endorsements.actor.user',
             ])
             ->orderBy('created_at')
             ->orderBy('id')
@@ -749,9 +803,23 @@ class ContentShow extends Component
             ->values();
 
         $reactionTypes = SpaceContentReaction::TYPES;
-        $annotationKinds = $this->annotationParentUuid !== null
-            ? SpaceContentAnnotation::CHILD_KINDS
-            : SpaceContentAnnotation::TOP_LEVEL_KINDS;
+        $rolePolicy = app(ContentRolePolicy::class);
+        $viewerKinds = $rolePolicy->allowedKinds($current, $user);
+        $annotationKinds = array_values(array_intersect(
+            $this->annotationParentUuid !== null
+                ? SpaceContentAnnotation::CHILD_KINDS
+                : SpaceContentAnnotation::TOP_LEVEL_KINDS,
+            $viewerKinds,
+        ));
+        if ($annotationKinds !== [] && ! in_array($this->annotationKind, $annotationKinds, true)) {
+            $this->annotationKind = $annotationKinds[0];
+        }
+        $canAnnotate = $canAnnotate && $annotationKinds !== [];
+        $canReplyKinds = array_values(array_intersect(SpaceContentAnnotation::CHILD_KINDS, $viewerKinds));
+        $canEndorse = $rolePolicy->canEndorse($current, $user);
+        $roleRulesGroup = $canResolveFeedback ? $rolePolicy->group($current) : null;
+        $roleRulesRoles = $roleRulesGroup !== null ? app(GroupRoleProvisioner::class)->roles($roleRulesGroup) : collect();
+        $roleRulesActive = $rolePolicy->isRestricted($current);
         $annotationVisibilities = SpaceContentAnnotation::VISIBILITIES;
         $rightsStatuses = Asset::RIGHTS_STATUSES;
 
@@ -793,6 +861,11 @@ class ContentShow extends Component
             'reactionTypes',
             'annotations',
             'annotationKinds',
+            'canReplyKinds',
+            'canEndorse',
+            'roleRulesGroup',
+            'roleRulesRoles',
+            'roleRulesActive',
             'annotationVisibilities',
             'rightsStatuses',
             'rangeMarkers',

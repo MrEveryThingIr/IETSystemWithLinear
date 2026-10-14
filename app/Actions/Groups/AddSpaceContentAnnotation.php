@@ -11,6 +11,7 @@ use App\Models\SpaceContentAnnotationAnchor;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContentInteractionSettings;
+use App\Support\ContentRolePolicy;
 use App\Support\ContextScope;
 use App\Support\MediaLimits;
 use App\Support\SpaceContentAnnotationAnchors;
@@ -76,6 +77,11 @@ class AddSpaceContentAnnotation
                 $current = SpaceContent::query()->with(['context', 'space'])->lockForUpdate()->findOrFail($content->id);
                 Gate::forUser($user)->authorize('interact', $current);
                 abort_unless($this->interactions->annotationsEnabled($current), 422, 'Annotations are disabled for this Content.');
+                abort_unless(
+                    app(ContentRolePolicy::class)->mayUseKind($current, $user, $kind),
+                    403,
+                    'Your role in this group cannot add this kind of note here.',
+                );
 
                 abort_unless(
                     $current->active_revision_id !== null

@@ -241,6 +241,16 @@ class GroupRoleProvisioner
         });
     }
 
+    /** @return list<int> ids of the roles this actor holds in the group */
+    public function roleIds(Actor $actor, Group $group): array
+    {
+        return $this->withinGroup($group, function () use ($actor): array {
+            $this->forget($actor);
+
+            return $actor->roles()->pluck('id')->map(fn ($id): int => (int) $id)->values()->all();
+        });
+    }
+
     /** @deprecated Render roleNames() because contextual roles are additive. */
     public function roleName(Actor $actor, Group $group): ?string
     {
