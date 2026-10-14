@@ -8,6 +8,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Process;
 use Tests\TestCase;
+use Throwable;
 
 class SchedulerInProcessTest extends TestCase
 {
@@ -56,7 +57,7 @@ class SchedulerInProcessTest extends TestCase
 
         $event = ScheduledArtisan::register(new Schedule, 'migrate:status --database=missing-connection');
 
-        $this->expectException(\Throwable::class);
+        $this->expectException(Throwable::class);
         $event->run($this->app);
     }
 }

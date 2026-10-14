@@ -20,7 +20,7 @@ class DatabasePortabilityTest extends TestCase
      * @var list<string>
      */
     private const ALLOWED_TIMESTAMP_DECLARATIONS = [
-        "\$table->timestamp('created_at')->useCurrent()",
+        '$table->timestamp(\'created_at\')->useCurrent()',
     ];
 
     public function test_mysql_and_mariadb_connections_default_to_innodb(): void

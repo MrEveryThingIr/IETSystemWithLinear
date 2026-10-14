@@ -6,6 +6,7 @@ use App\Models\Asset;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Throwable;
 
 class AssetMediaPipeline
 {
@@ -142,7 +143,7 @@ class AssetMediaPipeline
             ]);
 
             return $this->finishProcessing($asset->refresh());
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $asset->update([
                 'scan_status' => 'failed',
                 'scan_error' => mb_substr($exception->getMessage(), 0, 2000),

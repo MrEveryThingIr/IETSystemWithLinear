@@ -100,7 +100,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('settlements', function (Blueprint $table): void {
-            $table->dropForeign(['contract_settlement_batch_id']);
+            $table->dropForeign('settlements_batch_fk');
             $table->dropIndex('settlements_batch_index');
             $table->dropColumn('contract_settlement_batch_id');
         });
@@ -108,7 +108,7 @@ return new class extends Migration
         Schema::dropIfExists('contract_settlement_batches');
 
         Schema::table('commitments', function (Blueprint $table): void {
-            $table->dropForeign(['contract_service_term_id']);
+            $table->dropForeign('commitments_service_term_fk');
             $table->dropUnique(['contract_service_term_id']);
             $table->dropColumn('contract_service_term_id');
         });
