@@ -89,6 +89,8 @@ jobs:
 
           php artisan migrate:rollback --step=32 --force --no-interaction
           php artisan migrate --force --no-interaction
+          MIGRATIONS="$(mysql -h127.0.0.1 -P3306 -uroot -proot -N -B -e "SELECT COUNT(*) FROM iet_ci.migrations")"
+          echo "::notice title=MySQL 8.4 portability::migrate:fresh OK; ${MIGRATIONS} migrations; non-InnoDB tables: ${NON_INNODB}; rollback --step=32 and reapply OK"
           php artisan config:clear
 
       - name: Install JavaScript dependencies
@@ -99,6 +101,7 @@ jobs:
         run: |
           if ! npm audit --audit-level=high > "$RUNNER_TEMP/npm-audit.log" 2>&1; then
             cat "$RUNNER_TEMP/npm-audit.log"
+          echo "::notice title=npm audit::$(tail -n 3 "$RUNNER_TEMP/npm-audit.log" | tr '\n' ' ')"
             msg="$(head -n 120 "$RUNNER_TEMP/npm-audit.log" | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
             echo "::error title=npm audit::${msg}"
             exit 1
@@ -130,6 +133,7 @@ jobs:
           printf 'Pint checking %s\n' "${PHP_FILES[@]}"
           if ! vendor/bin/pint --test -v "${PHP_FILES[@]}" > "$RUNNER_TEMP/pint.log" 2>&1; then
             cat "$RUNNER_TEMP/pint.log"
+          echo "::notice title=Pint::${#PHP_FILES[@]} changed PHP files checked: $(grep -Eo '(PASS|FAIL).*' "$RUNNER_TEMP/pint.log" | tail -n 1)"
             msg="$(tail -n 80 "$RUNNER_TEMP/pint.log" | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
             echo "::error title=Pint::${msg}"
             exit 1
@@ -143,6 +147,8 @@ jobs:
           exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
           trap 'msg="$(tail -n 80 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
           vendor/bin/phpstan analyse --no-progress --error-format=github
+          vendor/bin/phpstan analyse --no-progress > "$RUNNER_TEMP/phpstan.log" 2>&1
+          echo "::notice title=PHPStan::$(grep -E 'OK|errors' "$RUNNER_TEMP/phpstan.log" | tail -n 1)"
 
       - name: Phase 7 rollback/reapply, scheduler, and queue smoke
         shell: bash
@@ -198,9 +204,19 @@ jobs:
           PY
             exit 1
           fi
+          python3 - "$RUNNER_TEMP/junit.xml" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          suite = root if root.tag == 'testsuite' else root.find('testsuite')
+          a = suite.attrib
+          print(f"::notice title=Tests::{a.get('tests')} tests, {a.get('assertions')} assertions, {a.get('failures')} failures, {a.get('errors')} errors, {a.get('skipped')} skipped, {a.get('time')}s")
+          PY
 
       - name: Composer security audit
-        run: composer audit --locked --no-interaction
+        shell: bash
+        run: |
+          composer audit --locked --no-interaction 2>&1 | tee "$RUNNER_TEMP/composer-audit.log"
+          echo "::notice title=composer audit::$(tail -n 2 "$RUNNER_TEMP/composer-audit.log" | tr '\n' ' ')"
 
   legacy-mariadb-portability:
     name: Shared-host MariaDB (MyISAM default, legacy TIMESTAMP)
@@ -297,3 +313,6 @@ jobs:
           php artisan migrate --force --no-interaction
           php artisan migrate:status
           CACHE_STORE=database php artisan optimize:clear
+          MIGRATIONS="$(q "SELECT COUNT(*) FROM migrations")"
+          SERVER="$(q "SELECT CONCAT(@@version, ' default-engine=', @@default_storage_engine, ' explicit_defaults_for_timestamp=', @@explicit_defaults_for_timestamp)")"
+          echo "::notice title=Legacy MariaDB portability::${SERVER}; migrate:fresh OK; ${MIGRATIONS} migrations; non-InnoDB tables: ${NON_INNODB}; ON UPDATE columns: ${ON_UPDATE}; domain times DATETIME; rollback --step=32 and reapply OK"

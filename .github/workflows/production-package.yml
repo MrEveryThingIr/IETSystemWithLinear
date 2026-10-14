@@ -73,8 +73,18 @@ jobs:
           set -euo pipefail
 
           VERSION="${{ github.event.inputs.version }}"
+          TEMPLATE_VERSION="$(sed -n 's/^APP_VERSION=//p' deploy/production.env.example | tr -d '[:space:]')"
           if [[ -z "$VERSION" ]]; then
-            VERSION="$GITHUB_REF_NAME"
+            if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+              VERSION="$GITHUB_REF_NAME"
+            else
+              # Branch pushes package the canonical version declared in the
+              # production environment template (APP_VERSION).
+              VERSION="v${TEMPLATE_VERSION}"
+            fi
+          fi
+          if [[ "${VERSION#v}" != "$TEMPLATE_VERSION" ]]; then
+            echo "::warning title=Version mismatch::Package ${VERSION} differs from APP_VERSION=${TEMPLATE_VERSION} in deploy/production.env.example"
           fi
           SAFE_VERSION="$(printf '%s' "$VERSION" | tr -cd 'A-Za-z0-9._-')"
           PACKAGE="iet-${SAFE_VERSION}"

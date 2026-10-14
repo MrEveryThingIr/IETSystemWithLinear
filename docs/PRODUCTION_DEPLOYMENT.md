@@ -33,8 +33,11 @@ from inside the release directory (for example
 
 ## 2. Build the runtime package (GitHub)
 
-1. In GitHub Actions open **Build production package**.
-2. **Run workflow** on branch `release/formal-v1-production` with version `v1.0.1`.
+1. Every push to `release/formal-v1-production` runs **Build production
+   package** automatically. The package version comes from `APP_VERSION` in
+   `deploy/production.env.example` (currently `1.0.1`, so the package is
+   `iet-v1.0.1`). A manual run with an explicit version is also possible.
+2. Open that run for the exact commit you want to deploy.
 3. Download the artifact `iet-v1.0.1`. It contains:
    - `iet-v1.0.1.zip` — the runtime package (root directory `iet-v1.0.1/`)
    - `iet-v1.0.1.zip.sha256` — checksum of the ZIP
