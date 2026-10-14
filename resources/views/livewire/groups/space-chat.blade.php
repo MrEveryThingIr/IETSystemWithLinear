@@ -25,7 +25,9 @@
 
         <div wire:poll.5s @class(['flex-1 space-y-4 overflow-y-auto', 'max-h-[30rem]' => $embedded])>
             @forelse ($messages as $chatMessage)
-                @php($isMine = (int) $chatMessage->author_actor_id === (int) auth()->user()?->actor?->id)
+                @php
+                    $isMine = (int) $chatMessage->author_actor_id === (int) auth()->user()?->actor?->id;
+                @endphp
                 <div wire:key="space-message-{{ $chatMessage->id }}" class="group/message space-y-1">
                     <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                         <flux:text class="font-semibold">

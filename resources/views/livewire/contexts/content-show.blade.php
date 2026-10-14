@@ -590,7 +590,9 @@
                                                     @if ($reply->body)
                                                         <div class="whitespace-pre-wrap break-words text-sm leading-6" dir="auto">{{ $reply->body }}</div>
                                                     @endif
-                                                    @php($viewerEndorsed = $reply->endorsements->contains('actor_id', auth()->user()?->actor?->id))
+                                                    @php
+                                                        $viewerEndorsed = $reply->endorsements->contains('actor_id', auth()->user()?->actor?->id);
+                                                    @endphp
                                                     @if ($reply->endorsements->isNotEmpty() || $canEndorse)
                                                         <div class="flex flex-wrap items-center gap-2 text-xs">
                                                             @if ($reply->endorsements->isNotEmpty())

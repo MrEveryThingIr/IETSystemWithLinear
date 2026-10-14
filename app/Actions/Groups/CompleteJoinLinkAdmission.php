@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\DB;
 class CompleteJoinLinkAdmission
 {
     public function __construct(
-        private readonly ManageAdmission $admissions,
         private readonly FinalizeAdmission $finalize,
         private readonly GroupRoleProvisioner $roles,
     ) {}
@@ -45,8 +44,9 @@ class CompleteJoinLinkAdmission
                     return null;
                 }
 
-                $this->admissions->candidateTransition($admission, $candidate, 'submitted', 'Joined through a group join link.');
-                $admission->refresh();
+                // No agreements to accept, so the candidate's submission is the
+                // join itself (recorded directly to avoid re-entering this action).
+                $admission->transitionTo('submitted', $candidate, 'Joined through a group join link.');
             }
 
             if ($admission->status === 'submitted') {
