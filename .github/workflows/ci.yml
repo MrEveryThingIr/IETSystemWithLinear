@@ -180,10 +180,24 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          set -eEo pipefail
-          exec > >(tee -a "$RUNNER_TEMP/step.log") 2>&1
-          trap 'msg="$(tail -n 80 "$RUNNER_TEMP/step.log" | sed -e "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"; echo "::error title=Step failed (line $LINENO)::${msg}"' ERR
-          php artisan test --compact
+          set -o pipefail
+          if ! php artisan test --compact --log-junit "$RUNNER_TEMP/junit.xml"; then
+            python3 - "$RUNNER_TEMP/junit.xml" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          count = 0
+          for case in root.iter('testcase'):
+              for problem in list(case.findall('failure')) + list(case.findall('error')):
+                  count += 1
+                  if count > 20:
+                      break
+                  text = (problem.text or problem.get('message') or '')[:1800]
+                  text = text.replace('%', '%25').replace('\r', '').replace('\n', '%0A')
+                  print(f"::error title={case.get('class')}::{case.get('name')}%0A{text}")
+          print(f"::error title=Test failures::{count} failing tests")
+          PY
+            exit 1
+          fi
 
       - name: Composer security audit
         run: composer audit --locked --no-interaction
