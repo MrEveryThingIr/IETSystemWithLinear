@@ -177,7 +177,8 @@ class Invitations extends Component
             ->whereIn('status', ['active', 'suspended'])
             ->pluck('actor_id');
 
-        $like = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
+        // Portable LIKE escaping (SQLite has no default escape character).
+        $like = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search);
 
         return User::query()
             ->with('actor.profile')
@@ -186,8 +187,8 @@ class Invitations extends Component
             ->whereKeyNot((int) auth()->id())
             ->whereHas('actor', fn ($query) => $query->whereNotIn('id', $memberActorIds))
             ->where(function ($query) use ($like): void {
-                $query->where('username', 'like', $like.'%')
-                    ->orWhereHas('actor.profile', fn ($profile) => $profile->where('display_name', 'like', '%'.$like.'%'));
+                $query->whereRaw("username LIKE ? ESCAPE '!'", [$like.'%'])
+                    ->orWhereHas('actor.profile', fn ($profile) => $profile->whereRaw("display_name LIKE ? ESCAPE '!'", ['%'.$like.'%']));
             })
             ->orderBy('username')
             ->limit(8)
