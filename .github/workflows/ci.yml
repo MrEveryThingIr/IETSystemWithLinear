@@ -101,7 +101,7 @@ jobs:
         run: |
           if ! npm audit --audit-level=high > "$RUNNER_TEMP/npm-audit.log" 2>&1; then
             cat "$RUNNER_TEMP/npm-audit.log"
-          echo "::notice title=npm audit::$(tail -n 3 "$RUNNER_TEMP/npm-audit.log" | tr '\n' ' ')"
+          echo "npm audit (--audit-level=high): $(grep -E 'found|vulnerabilit' "$RUNNER_TEMP/npm-audit.log" | tail -n 1)" >> "$RUNNER_TEMP/evidence.txt"
             msg="$(head -n 120 "$RUNNER_TEMP/npm-audit.log" | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
             echo "::error title=npm audit::${msg}"
             exit 1
@@ -127,13 +127,14 @@ jobs:
 
           if (( ${#PHP_FILES[@]} == 0 )); then
             echo "No changed PHP files require Pint verification."
+            echo "Pint --test: no changed PHP files" >> "$RUNNER_TEMP/evidence.txt"
             exit 0
           fi
 
           printf 'Pint checking %s\n' "${PHP_FILES[@]}"
           if ! vendor/bin/pint --test -v "${PHP_FILES[@]}" > "$RUNNER_TEMP/pint.log" 2>&1; then
             cat "$RUNNER_TEMP/pint.log"
-          echo "::notice title=Pint::${#PHP_FILES[@]} changed PHP files checked: $(grep -Eo '(PASS|FAIL).*' "$RUNNER_TEMP/pint.log" | tail -n 1)"
+          echo "Pint --test: ${#PHP_FILES[@]} changed PHP files checked, $(grep -Eio '(pass|fail)[^.]*' "$RUNNER_TEMP/pint.log" | tail -n 1)" >> "$RUNNER_TEMP/evidence.txt"
             msg="$(tail -n 80 "$RUNNER_TEMP/pint.log" | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
             echo "::error title=Pint::${msg}"
             exit 1
@@ -217,6 +218,16 @@ jobs:
         run: |
           composer audit --locked --no-interaction 2>&1 | tee "$RUNNER_TEMP/composer-audit.log"
           echo "::notice title=composer audit::$(tail -n 2 "$RUNNER_TEMP/composer-audit.log" | tr '\n' ' ')"
+
+      - name: CI evidence
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/evidence.txt" ]]; then
+            while IFS= read -r line; do
+              echo "::notice title=Evidence::${line}"
+            done < "$RUNNER_TEMP/evidence.txt"
+          fi
 
   legacy-mariadb-portability:
     name: Shared-host MariaDB (MyISAM default, legacy TIMESTAMP)
