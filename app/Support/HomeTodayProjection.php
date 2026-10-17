@@ -159,7 +159,7 @@ class HomeTodayProjection
     {
         $inProgress = $occurrences
             ->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at->lte($now)
-                && ($occurrence->scheduled_end_at === null || $occurrence->scheduled_end_at->gt($now)))
+                && $occurrence->scheduled_end_at->gt($now))
             ->values();
         $upcoming = $occurrences
             ->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at->gt($now))

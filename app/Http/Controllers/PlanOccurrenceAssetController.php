@@ -8,8 +8,10 @@ use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\Support\AssetHttpResponse;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
@@ -42,17 +44,21 @@ class PlanOccurrenceAssetController extends Controller
     {
         $this->authorizeAsset($request, $plan, $occurrence, $asset);
 
-        $link = $occurrence->assets()->whereKey($asset->id)->firstOrFail();
-        $addedBy = Actor::query()
-            ->with(['user', 'profile'])
-            ->find($link->pivot->added_by_actor_id);
+        $link = DB::table('plan_occurrence_assets')
+            ->where('plan_occurrence_id', $occurrence->id)
+            ->where('asset_id', $asset->id)
+            ->first(['added_by_actor_id', 'created_at']);
+        abort_if($link === null, 404);
+        $addedBy = $link->added_by_actor_id !== null
+            ? Actor::query()->with(['user', 'profile'])->find($link->added_by_actor_id)
+            : null;
 
         return view('planner.evidence', [
             'plan' => $plan,
             'occurrence' => $occurrence,
             'asset' => $asset,
             'addedBy' => $addedBy,
-            'attachedAt' => $link->pivot->created_at,
+            'attachedAt' => $link->created_at !== null ? CarbonImmutable::parse($link->created_at, 'UTC') : null,
             'inlineUrl' => route('planner.occurrences.assets.show', [$plan, $occurrence, $asset]),
             'downloadUrl' => route('planner.occurrences.assets.download', [$plan, $occurrence, $asset]),
         ]);
