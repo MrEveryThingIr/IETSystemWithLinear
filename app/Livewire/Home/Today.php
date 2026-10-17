@@ -14,6 +14,14 @@ use Livewire\Component;
 #[Title('Today')]
 class Today extends Component
 {
+    /** Today renders a bounded preview; the full day is only rendered on request. */
+    public bool $showFullSchedule = false;
+
+    public function toggleFullSchedule(): void
+    {
+        $this->showFullSchedule = ! $this->showFullSchedule;
+    }
+
     public function render(
         HomeTodayProjection $projection,
         HomeGuidanceService $guidance,

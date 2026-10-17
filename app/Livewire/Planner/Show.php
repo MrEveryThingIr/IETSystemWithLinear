@@ -324,6 +324,15 @@ class Show extends Component
                 ->get()
             : collect();
 
+        $evidenceActorIds = $plan->occurrences
+            ->flatMap(fn (PlanOccurrence $occurrence) => $occurrence->assets->pluck('pivot.added_by_actor_id'))
+            ->filter()
+            ->unique()
+            ->values();
+        $evidenceActors = $evidenceActorIds->isEmpty()
+            ? collect()
+            : Actor::query()->with(['user', 'profile'])->whereIn('id', $evidenceActorIds)->get()->keyBy('id');
+
         $originRelationship = $plan->origin_type === 'relationship' && $plan->origin_uuid !== null
             ? Relationship::query()->where('uuid', $plan->origin_uuid)->first()
             : null;
@@ -337,6 +346,7 @@ class Show extends Component
             'canUploadEvidence' => $canUploadEvidence,
             'availableAssets' => $canParticipate ? $plan->context->assets : collect(),
             'availableEvidenceReferences' => $references,
+            'evidenceActors' => $evidenceActors,
             'assetRightsStatuses' => Asset::RIGHTS_STATUSES,
             'originRelationship' => $originRelationship,
             'originCommitment' => $originCommitment,

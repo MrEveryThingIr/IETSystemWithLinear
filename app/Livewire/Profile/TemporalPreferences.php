@@ -26,7 +26,24 @@ class TemporalPreferences extends Component
 
     public string $defaultMonetaryUnitCode = 'USD';
 
+    public string $gregorianEquivalentMode = 'hover';
+
+    /** @deprecated Boolean compatibility input; mirrors $gregorianEquivalentMode. */
     public bool $showGregorianEquivalent = true;
+
+    public function updatedShowGregorianEquivalent(bool $value): void
+    {
+        if (! $value) {
+            $this->gregorianEquivalentMode = 'hidden';
+        } elseif ($this->gregorianEquivalentMode === 'hidden') {
+            $this->gregorianEquivalentMode = 'hover';
+        }
+    }
+
+    public function updatedGregorianEquivalentMode(string $value): void
+    {
+        $this->showGregorianEquivalent = $value !== 'hidden';
+    }
 
     public bool $editorOpen = false;
 
@@ -102,7 +119,7 @@ class TemporalPreferences extends Component
             'dateFormat' => ['required', Rule::in(['long', 'medium', 'numeric'])],
             'timeFormat' => ['required', Rule::in(['24h', '12h'])],
             'defaultMonetaryUnitCode' => ['required', Rule::in(array_keys(MonetaryUnitCatalog::all()))],
-            'showGregorianEquivalent' => ['boolean'],
+            'gregorianEquivalentMode' => ['required', Rule::in(TemporalPreferenceResolver::GREGORIAN_EQUIVALENT_MODES)],
         ]);
 
         $user->timezone = $data['timezone'];
@@ -113,7 +130,8 @@ class TemporalPreferences extends Component
         $user->date_display_format = $data['dateFormat'];
         $user->time_display_format = $data['timeFormat'];
         $user->default_monetary_unit_code = $data['defaultMonetaryUnitCode'];
-        $user->show_gregorian_equivalent = $data['showGregorianEquivalent'];
+        $user->gregorian_equivalent_mode = $data['gregorianEquivalentMode'];
+        $user->show_gregorian_equivalent = $data['gregorianEquivalentMode'] !== 'hidden';
         $user->save();
 
         $this->dispatch('temporal-preferences-updated');
@@ -129,7 +147,8 @@ class TemporalPreferences extends Component
         $this->dateFormat = TemporalPreferenceResolver::dateFormatFor($user);
         $this->timeFormat = TemporalPreferenceResolver::timeFormatFor($user);
         $this->defaultMonetaryUnitCode = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
-        $this->showGregorianEquivalent = TemporalPreferenceResolver::showGregorianEquivalentFor($user);
+        $this->gregorianEquivalentMode = TemporalPreferenceResolver::gregorianEquivalentModeFor($user);
+        $this->showGregorianEquivalent = $this->gregorianEquivalentMode !== 'hidden';
     }
 
     public function render(): View

@@ -157,7 +157,6 @@ function localizedDateTime(value, locale, calendar, timezone, seconds = false, d
         timeZone: timezone || 'UTC',
         ...dateFormatOptions(dateFormat),
         ...timeFormatOptions(timeFormat, seconds),
-        timeZoneName: 'short',
     }).format(date);
 }
 
@@ -697,4 +696,41 @@ document.addEventListener('livewire:navigated', () => localizeTemporal());
 document.addEventListener('livewire:init', () => {
     window.Livewire?.hook('morph.updated', ({el}) => requestAnimationFrame(() => localizeTemporal(el)));
     window.Livewire?.on('temporal-preferences-updated', () => window.location.reload());
+});
+
+// Gregorian/timezone popovers open on hover and keyboard focus via CSS. Touch
+// screens have no hover, so a tap toggles the popover explicitly; tapping
+// elsewhere or pressing Escape closes it. Delegated, so it survives morphs.
+function closeTemporalPopovers(except = null) {
+    document.querySelectorAll('[data-temporal-popover-trigger][data-temporal-open]').forEach((trigger) => {
+        if (trigger !== except) {
+            trigger.removeAttribute('data-temporal-open');
+        }
+    });
+}
+
+document.addEventListener('click', (event) => {
+    const trigger = event.target instanceof Element
+        ? event.target.closest('[data-temporal-popover-trigger]')
+        : null;
+
+    if (!trigger) {
+        closeTemporalPopovers();
+
+        return;
+    }
+
+    // Inside a link the first tap reveals the details instead of navigating.
+    if (!trigger.hasAttribute('data-temporal-open') && trigger.closest('a') && window.matchMedia('(hover: none)').matches) {
+        event.preventDefault();
+    }
+
+    closeTemporalPopovers(trigger);
+    trigger.toggleAttribute('data-temporal-open');
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeTemporalPopovers();
+    }
 });

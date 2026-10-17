@@ -228,11 +228,36 @@
                             @endif
 
                             @if ($occurrence->assets->isNotEmpty() || $occurrence->evidenceReferences->isNotEmpty())
-                                <div class="mt-4 grid gap-2 sm:grid-cols-2">
+                                <div class="mt-4 grid gap-3 sm:grid-cols-2">
                                     @foreach ($occurrence->assets as $asset)
-                                        <div class="rounded-lg bg-zinc-50 p-3 text-xs dark:bg-zinc-900" wire:key="occurrence-asset-{{ $occurrence->id }}-{{ $asset->id }}">
-                                            {{ $asset->original_filename }}
-                                        </div>
+                                        @php
+                                            $evidenceUrl = route('planner.occurrences.evidence.show', [$plan, $occurrence, $asset]);
+                                            $evidenceInlineUrl = route('planner.occurrences.assets.show', [$plan, $occurrence, $asset]);
+                                            $evidenceDownloadUrl = route('planner.occurrences.assets.download', [$plan, $occurrence, $asset]);
+                                            $evidenceActor = $evidenceActors->get($asset->pivot->added_by_actor_id);
+                                        @endphp
+                                        <article class="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950" wire:key="occurrence-asset-{{ $occurrence->id }}-{{ $asset->id }}" data-occurrence-evidence="{{ $asset->uuid }}">
+                                            <x-media.asset-preview :asset="$asset" :inline-url="$evidenceInlineUrl" :download-url="$evidenceDownloadUrl" compact />
+                                            <div class="space-y-2 p-3">
+                                                <div class="break-all text-sm font-medium" dir="auto">{{ $asset->original_filename }}</div>
+                                                <div class="flex flex-wrap items-center gap-x-1 text-xs text-zinc-500">
+                                                    @if ($evidenceActor)
+                                                        <span>{{ __('media.evidence.added_by', ['name' => $evidenceActor->profile?->display_name ?: ($evidenceActor->user?->username ?? '—')]) }}</span>
+                                                        <span>·</span>
+                                                    @endif
+                                                    @if ($asset->pivot->created_at)
+                                                        <x-app.local-time :value="$asset->pivot->created_at" />
+                                                    @endif
+                                                </div>
+                                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                                    <flux:badge size="sm">{{ __('media.rights.'.$asset->rights_status) }}</flux:badge>
+                                                    <div class="flex gap-1">
+                                                        <flux:button :href="$evidenceUrl" size="sm" variant="primary">{{ __('media.evidence.open') }}</flux:button>
+                                                        <flux:button :href="$evidenceDownloadUrl" size="sm" variant="ghost" icon="arrow-down-tray" :aria-label="__('media.download')" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </article>
                                     @endforeach
                                     @foreach ($occurrence->evidenceReferences as $reference)
                                         <a href="{{ route('content-evidence.show', $reference) }}" class="rounded-lg bg-zinc-50 p-3 text-xs hover:underline dark:bg-zinc-900" wire:key="occurrence-reference-{{ $occurrence->id }}-{{ $reference->id }}">

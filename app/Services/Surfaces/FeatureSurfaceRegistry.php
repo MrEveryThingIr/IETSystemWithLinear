@@ -291,6 +291,10 @@ class FeatureSurfaceRegistry
             // A known plan remains governed by plan/context authorization;
             // opening it does not reveal the general Planner facility.
             'planner.show',
+            // Evidence attached to a known plan follows the same rule: the
+            // occurrence/asset chain and plan authorization decide access.
+            'planner.occurrences.assets.*',
+            'planner.occurrences.evidence.*',
 
             // Known group/community/workspace resources are governed by
             // membership and group authorization. The Groups directory

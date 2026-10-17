@@ -42,4 +42,18 @@ return [
         'private_study_only' => 'فقط استفاده شخصی',
         'unknown' => 'نامشخص / بررسی‌نشده',
     ],
+    'preview' => [
+        'open_document' => 'باز کردن سند',
+    ],
+    'evidence' => [
+        'added_by' => 'افزوده‌شده توسط :name',
+        'open' => 'مشاهدهٔ مدرک',
+        'kicker' => 'مدرک برنامه',
+        'attached_by' => 'پیوست‌شده توسط',
+        'attached_at' => 'زمان پیوست',
+        'file' => 'فایل',
+        'provenance' => 'جزئیات و منشأ',
+        'asset_id' => 'شناسهٔ فایل',
+        'occurrence_id' => 'شناسهٔ نوبت',
+    ],
 ];

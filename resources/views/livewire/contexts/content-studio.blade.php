@@ -171,19 +171,7 @@
                                 || in_array($asset->processing_status, ['failed', 'pending'], true);
                         @endphp
                         <div wire:key="context-studio-asset-{{ $asset->uuid }}" class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-                            @switch($asset->mediaKind())
-                                @case('image')
-                                    <img src="{{ $assetUrl }}" alt="{{ $asset->alt_text ?: ($caption ?: $asset->original_filename) }}" class="max-h-80 w-auto rounded-lg object-contain" />
-                                    @break
-                                @case('audio')
-                                    <audio controls preload="metadata" class="w-full" src="{{ $assetUrl }}"></audio>
-                                    @break
-                                @case('video')
-                                    <video controls preload="metadata" class="max-h-96 w-full rounded-lg bg-black" src="{{ $assetUrl }}"></video>
-                                    @break
-                                @default
-                                    <a href="{{ $assetUrl }}" target="_blank" rel="noopener" class="block break-all rounded-lg bg-zinc-50 p-4 font-medium dark:bg-zinc-900" dir="auto">{{ $asset->original_filename }} ↗</a>
-                            @endswitch
+                            <x-media.asset-preview :asset="$asset" :inline-url="$assetUrl" :download-url="$downloadUrl" compact />
 
                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                 <div class="min-w-0 space-y-2">

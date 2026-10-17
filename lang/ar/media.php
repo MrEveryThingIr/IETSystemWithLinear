@@ -42,4 +42,18 @@ return [
         'private_study_only' => 'للدراسة الخاصة فقط',
         'unknown' => 'مجهول / غير مؤكد',
     ],
+    'preview' => [
+        'open_document' => 'فتح المستند',
+    ],
+    'evidence' => [
+        'added_by' => 'أضافه :name',
+        'open' => 'عرض الدليل',
+        'kicker' => 'دليل الخطة',
+        'attached_by' => 'أرفقه',
+        'attached_at' => 'وقت الإرفاق',
+        'file' => 'الملف',
+        'provenance' => 'التفاصيل والمصدر',
+        'asset_id' => 'معرّف الملف',
+        'occurrence_id' => 'معرّف الموعد',
+    ],
 ];

@@ -33,6 +33,12 @@ use Illuminate\Support\Facades\Gate;
 
 class HomeTodayProjection
 {
+    /** How many of today's occurrences are scanned for the projection. */
+    public const OCCURRENCE_SCAN_LIMIT = 250;
+
+    /** How many schedule rows Today renders directly; the rest are summarized. */
+    public const SCHEDULE_PREVIEW_LIMIT = 6;
+
     public function __construct(
         private readonly AccountingSummary $accounting,
         private readonly ContextTimeline $timeline,
@@ -44,6 +50,11 @@ class HomeTodayProjection
      *   today: string,
      *   todayDisplay: string,
      *   todayOccurrences: Collection<int, PlanOccurrence>,
+     *   todayOccurrenceCount: int,
+     *   todayOccurrencesTruncated: bool,
+     *   todayOccurrencePreview: Collection<int, PlanOccurrence>,
+     *   nextOccurrence: ?PlanOccurrence,
+     *   inProgressOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
@@ -62,7 +73,7 @@ class HomeTodayProjection
         $timezone = TemporalPreferences::timezoneFor($current);
         $now = CarbonImmutable::now($timezone);
         $today = $now->toDateString();
-        $todayDisplay = TemporalCalendar::dateLabelWithEquivalent($now, $current, $timezone);
+        $todayDisplay = TemporalCalendar::dateLabel($now, $current, $timezone);
 
         if (! $current->actor instanceof Actor) {
             return $this->emptyProjection($timezone, $today, $todayDisplay);
@@ -70,17 +81,19 @@ class HomeTodayProjection
 
         $actor = $current->actor;
 
-        $todayOccurrences = PlanOccurrence::query()
+        $fetchedOccurrences = PlanOccurrence::query()
             ->with(['plan.context', 'plan.participants.actor.user'])
             ->whereBetween('scheduled_start_at', [
                 $now->startOfDay()->utc(),
                 $now->endOfDay()->utc(),
             ])
             ->orderBy('scheduled_start_at')
-            ->limit(250)
-            ->get()
+            ->limit(self::OCCURRENCE_SCAN_LIMIT)
+            ->get();
+        $todayOccurrences = $fetchedOccurrences
             ->filter(fn (PlanOccurrence $occurrence): bool => Gate::forUser($current)->allows('participate', $occurrence->plan))
             ->values();
+        $schedule = $this->scheduleSummary($todayOccurrences, $now);
 
         $activeIntents = ActorProfileIntent::query()
             ->where('status', ProfileIntentStatus::Active->value)
@@ -117,6 +130,9 @@ class HomeTodayProjection
             'today' => $today,
             'todayDisplay' => $todayDisplay,
             'todayOccurrences' => $todayOccurrences,
+            'todayOccurrenceCount' => $todayOccurrences->count(),
+            'todayOccurrencesTruncated' => $fetchedOccurrences->count() >= self::OCCURRENCE_SCAN_LIMIT,
+            ...$schedule,
             'waitingOnMe' => $this->waitingOnMe($current, $actor),
             'waitingOnOthers' => $this->waitingOnOthers($current, $actor),
             'activeIntents' => $activeIntents,
@@ -129,11 +145,55 @@ class HomeTodayProjection
     }
 
     /**
+     * Today shows a bounded window of the schedule: whatever is running now,
+     * then what comes next, backfilled with the most recent earlier items.
+     *
+     * @param  Collection<int, PlanOccurrence>  $occurrences
+     * @return array{
+     *   todayOccurrencePreview: Collection<int, PlanOccurrence>,
+     *   nextOccurrence: ?PlanOccurrence,
+     *   inProgressOccurrences: Collection<int, PlanOccurrence>
+     * }
+     */
+    private function scheduleSummary(Collection $occurrences, CarbonImmutable $now): array
+    {
+        $inProgress = $occurrences
+            ->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at->lte($now)
+                && ($occurrence->scheduled_end_at === null || $occurrence->scheduled_end_at->gt($now)))
+            ->values();
+        $upcoming = $occurrences
+            ->filter(fn (PlanOccurrence $occurrence): bool => $occurrence->scheduled_start_at->gt($now))
+            ->values();
+        $earlier = $occurrences
+            ->reject(fn (PlanOccurrence $occurrence): bool => $inProgress->contains($occurrence) || $upcoming->contains($occurrence))
+            ->values();
+
+        $preview = $inProgress->concat($upcoming)->take(self::SCHEDULE_PREVIEW_LIMIT);
+        $room = self::SCHEDULE_PREVIEW_LIMIT - $preview->count();
+        if ($room > 0) {
+            $preview = $earlier->slice(-$room)->concat($preview);
+        }
+
+        return [
+            'todayOccurrencePreview' => $preview
+                ->sortBy(fn (PlanOccurrence $occurrence): int => $occurrence->scheduled_start_at->getTimestamp())
+                ->values(),
+            'nextOccurrence' => $upcoming->first(),
+            'inProgressOccurrences' => $inProgress,
+        ];
+    }
+
+    /**
      * @return array{
      *   timezone: string,
      *   today: string,
      *   todayDisplay: string,
      *   todayOccurrences: Collection<int, PlanOccurrence>,
+     *   todayOccurrenceCount: int,
+     *   todayOccurrencesTruncated: bool,
+     *   todayOccurrencePreview: Collection<int, PlanOccurrence>,
+     *   nextOccurrence: ?PlanOccurrence,
+     *   inProgressOccurrences: Collection<int, PlanOccurrence>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
@@ -151,6 +211,11 @@ class HomeTodayProjection
             'today' => $today,
             'todayDisplay' => $todayDisplay,
             'todayOccurrences' => collect(),
+            'todayOccurrenceCount' => 0,
+            'todayOccurrencesTruncated' => false,
+            'todayOccurrencePreview' => collect(),
+            'nextOccurrence' => null,
+            'inProgressOccurrences' => collect(),
             'waitingOnMe' => collect(),
             'waitingOnOthers' => collect(),
             'activeIntents' => collect(),

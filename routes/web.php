@@ -17,6 +17,7 @@ use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\SpaceContentAssetController;
+use App\Http\Controllers\PlanOccurrenceAssetController;
 use App\Http\Controllers\SubmissionAssetController;
 use App\Http\Controllers\SystemManualController;
 use App\Livewire\Accounting\BasicIndex as AccountingBasicIndex;
@@ -156,6 +157,12 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
+    Route::get('/planner/{plan}/occurrences/{occurrence}/assets/{asset}', [PlanOccurrenceAssetController::class, 'show'])
+        ->name('planner.occurrences.assets.show');
+    Route::get('/planner/{plan}/occurrences/{occurrence}/assets/{asset}/download', [PlanOccurrenceAssetController::class, 'download'])
+        ->name('planner.occurrences.assets.download');
+    Route::get('/planner/{plan}/occurrences/{occurrence}/evidence/{asset}', [PlanOccurrenceAssetController::class, 'evidence'])
+        ->name('planner.occurrences.evidence.show');
     Route::get('/money', [ExperienceHubController::class, 'money'])->name('money.index');
     Route::livewire('/money/accounts', AccountingBasicIndex::class)->name('money.accounts');
     Route::livewire('/accounting', config('release.profile') === 'planning_baseline' ? AccountingBasicIndex::class : AccountingIndex::class)->name('accounting.index');
