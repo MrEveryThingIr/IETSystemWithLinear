@@ -35,7 +35,7 @@
             <audio controls preload="metadata" class="{{ $mediaClass ?? 'w-full' }}" src="{{ $inlineUrl }}"></audio>
             @break
         @case('video')
-            <video controls preload="metadata" playsinline class="{{ $mediaClass ?? ($compact ? 'aspect-video w-full rounded-lg bg-black' : 'max-h-[42rem] w-full rounded-lg bg-black') }}" src="{{ $inlineUrl }}"></video>
+            <video controls preload="metadata" playsinline class="{{ $mediaClass ?? ($compact ? 'h-44 w-full rounded-lg bg-black object-contain' : 'max-h-[42rem] w-full rounded-lg bg-black') }}" src="{{ $inlineUrl }}"></video>
             @break
         @case('pdf')
             @if ($compact)
