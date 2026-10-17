@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\CalendarSystem;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use DateTimeZone;
 use Throwable;
 
@@ -80,7 +81,7 @@ class TemporalPreferences
     /** "Asia/Tehran (UTC+03:30)" — for tooltips and details, not ordinary labels. */
     public static function timezoneDescription(string $timezone, ?\DateTimeInterface $at = null): string
     {
-        $offset = \Carbon\CarbonImmutable::instance($at ?? now())->setTimezone($timezone)->format('P');
+        $offset = CarbonImmutable::instance($at ?? now())->setTimezone($timezone)->format('P');
 
         return $timezone.' (UTC'.$offset.')';
     }

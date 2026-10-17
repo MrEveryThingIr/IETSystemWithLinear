@@ -12,12 +12,14 @@ use App\Models\Asset;
 use App\Models\Context;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
+use App\Models\SpaceContent;
 use App\PlanScheduleFrequency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
 class PlannerEvidencePresentationTest extends TestCase
@@ -90,7 +92,7 @@ class PlannerEvidencePresentationTest extends TestCase
             ->get(route('planner.occurrences.assets.download', [$plan, $occurrence, $asset]));
         $download->assertOk();
         $this->assertStringContainsString('attachment', (string) $download->headers->get('Content-Disposition'));
-        $this->assertInstanceOf(\Symfony\Component\HttpFoundation\BinaryFileResponse::class, $download->baseResponse);
+        $this->assertInstanceOf(BinaryFileResponse::class, $download->baseResponse);
         $this->assertSame('video-bytes', $download->baseResponse->getFile()->getContent());
     }
 
@@ -102,13 +104,13 @@ class PlannerEvidencePresentationTest extends TestCase
         app(AttachPlanOccurrenceEvidence::class)->execute($occurrence, $actor->user, assetIds: [$asset->id]);
 
         $assets = Asset::query()->count();
-        $contents = \App\Models\SpaceContent::query()->count();
+        $contents = SpaceContent::query()->count();
 
         $this->actingAs($actor->user)->get(route('planner.occurrences.evidence.show', [$plan, $occurrence, $asset]))->assertOk();
         $this->actingAs($actor->user)->get(route('planner.occurrences.assets.show', [$plan, $occurrence, $asset]))->assertOk();
 
         $this->assertSame($assets, Asset::query()->count());
-        $this->assertSame($contents, \App\Models\SpaceContent::query()->count());
+        $this->assertSame($contents, SpaceContent::query()->count());
     }
 
     /** @return array{Actor, Plan, PlanOccurrence} */
