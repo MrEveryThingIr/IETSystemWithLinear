@@ -1,34 +1,7 @@
 @php
-    $presentation = is_array($revision->presentation) ? $revision->presentation : [];
-    $readerBackground = $presentation['background'] ?? '#fafafa';
-    $readerSurface = $presentation['surface'] ?? '#ffffff';
-    $readerText = $presentation['text'] ?? '#18181b';
-    $readerMuted = $presentation['muted'] ?? '#71717a';
-    $readerAccent = $presentation['accent'] ?? '#2563eb';
-    $readerBorder = $presentation['border'] ?? '#e4e4e7';
-    $contentWidthClass = match ($presentation['content_width'] ?? 'reading') {
-        'narrow' => 'max-w-2xl',
-        'wide' => 'max-w-5xl',
-        'full' => 'max-w-none',
-        default => 'max-w-3xl',
-    };
-    $fontClass = match ($presentation['font_scale'] ?? 'comfortable') {
-        'compact' => 'text-[0.98rem] leading-7',
-        'large' => 'text-[1.12rem] leading-9',
-        default => 'text-[1.05rem] leading-8',
-    };
-    $radiusClass = match ($presentation['radius'] ?? 'rounded') {
-        'none' => 'rounded-none',
-        'soft' => 'rounded-lg',
-        default => 'rounded-2xl',
-    };
-    $headingClass = match ($presentation['heading_style'] ?? 'plain') {
-        'serif' => 'font-serif tracking-tight',
-        'display' => 'font-black tracking-tight',
-        default => 'font-semibold tracking-tight',
-    };
-    $mediaStyle = $presentation['media_style'] ?? 'card';
-    $fieldStyles = is_array($presentation['field_styles'] ?? null) ? $presentation['field_styles'] : [];
+    extract(\App\Support\ContentReaderStyle::variables($revision));
+    $assetUrlFor = fn ($asset) => route('contexts.contents.assets.show', [$context, $content, $asset]);
+    $downloadUrlFor = fn ($asset) => route('contexts.contents.assets.download', [$context, $content, $asset]);
     $blocks = $revision->composition_mode === \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS
         ? $revision->blocks()->get()
         : collect();
@@ -63,8 +36,8 @@
     <div id="annotation-marker-payload-{{ $content->uuid }}" class="hidden" data-marker-payload='@json($rangeMarkers)'></div>
 
     <div class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 pt-4">
-        <flux:button :href="route('contexts.contents.index', $context)" variant="ghost" size="sm">
-            ← {{ __('reader.back_to_library') }}
+        <flux:button :href="route('experience.content')" variant="ghost" size="sm" icon="arrow-left" class="rtl:[&_svg]:rotate-180">
+            {{ __('reader.back_to_content') }}
         </flux:button>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -75,30 +48,56 @@
                     :label="__('interactions.anchor.entire_edition')"
                 />
             @endif
-            @if ($revision->hasVerifiableManifest())
-                <flux:button :href="route('contexts.contents.revisions.show', [$context, $content, $revision])" variant="ghost" size="sm">
-                    {{ __('reader.revision_permalink') }}
+            @php
+                $canCreateEvidence = $canEnterStudio && ! $previewingDraft && ! ($legacyEvidence || $viewingEvidenceReferenceUuid || $viewingRevisionUuid);
+            @endphp
+            @if ($revision->hasVerifiableManifest() || $canCreateEvidence)
+                <flux:dropdown position="bottom" align="end">
+                    <flux:button variant="ghost" size="sm" icon="information-circle" data-reader-details>{{ __('reader.details') }}</flux:button>
+                    <flux:menu class="min-w-60">
+                        @if ($revision->hasVerifiableManifest())
+                            <flux:menu.item icon="link" :href="route('contexts.contents.revisions.show', [$context, $content, $revision])">{{ __('reader.revision_permalink') }}</flux:menu.item>
+                        @endif
+                        @if ($canCreateEvidence)
+                            <flux:menu.item icon="check-badge" wire:click="createRevisionEvidence">{{ __('ui.context_content.create_evidence_reference') }}</flux:menu.item>
+                        @endif
+                    </flux:menu>
+                </flux:dropdown>
+            @endif
+            @if ($canShareOutside && ! $previewingDraft)
+                <flux:button x-on:click="$dispatch('open-drawer', 'share')" variant="ghost" size="sm" icon="share" data-reader-share>
+                    {{ __('public_content.share.button') }}
+                    @if ($content->public_access === \App\Models\SpaceContent::ACCESS_PUBLIC)
+                        <flux:badge size="sm" color="green" class="ms-1">{{ __('public_content.workspace_badge') }}</flux:badge>
+                    @endif
                 </flux:button>
             @endif
             @if ($canEnterStudio)
-                @unless ($legacyEvidence || $viewingEvidenceReferenceUuid || $viewingRevisionUuid)
-                    <flux:button wire:click="createRevisionEvidence" variant="ghost" size="sm">
-                        {{ __('ui.context_content.create_evidence_reference') }}
-                    </flux:button>
-                @endunless
                 <flux:button :href="route('contexts.contents.studio', [$context, $content])" variant="primary" size="sm">
-                    {{ __('reader.edit_in_studio') }}
+                    {{ $previewingDraft ? __('reader.back_to_editor') : __('reader.edit_in_studio') }}
                 </flux:button>
             @endif
         </div>
     </div>
+
+    @if ($previewingDraft)
+        <div class="mx-auto w-full max-w-7xl">
+            <flux:callout variant="warning" data-reader-draft-preview>
+                <div class="font-medium">{{ __('reader.draft_preview_title') }}</div>
+                <div class="mt-1 text-sm">{{ __('reader.draft_preview_help') }}</div>
+            </flux:callout>
+        </div>
+    @endif
 
     @if ($viewingEvidenceReferenceUuid)
         <div class="mx-auto w-full max-w-7xl">
             <flux:callout variant="info">
                 <div class="font-medium">{{ __('ui.context_content.historical_evidence') }}</div>
                 <div class="mt-1 text-sm">{{ __('ui.context_content.historical_evidence_help') }}</div>
-                <div class="mt-2 break-all font-mono text-xs">{{ $viewingEvidenceReferenceUuid }}</div>
+                <details class="mt-2 text-xs">
+                    <summary class="cursor-pointer">{{ __('reader.provenance') }}</summary>
+                    <div class="mt-1 break-all font-mono">{{ $viewingEvidenceReferenceUuid }}</div>
+                </details>
             </flux:callout>
         </div>
     @endif
@@ -108,7 +107,10 @@
             <flux:callout variant="info">
                 <div class="font-medium">{{ __('reader.fixed_edition_title') }}</div>
                 <div class="mt-1 text-sm">{{ __('reader.fixed_edition_help') }}</div>
-                <div class="mt-2 break-all font-mono text-xs">{{ $viewingRevisionUuid }}</div>
+                <details class="mt-2 text-xs">
+                    <summary class="cursor-pointer">{{ __('reader.provenance') }}</summary>
+                    <div class="mt-1 break-all font-mono">{{ $viewingRevisionUuid }}</div>
+                </details>
             </flux:callout>
         </div>
     @endif
@@ -117,12 +119,15 @@
         <div class="mx-auto w-full max-w-7xl">
             <flux:callout variant="success">
                 {{ __('ui.context_content.evidence_reference_created') }}
-                <span class="font-mono">{{ $evidenceReferenceUuid }}</span>
+                <details class="mt-2 text-xs">
+                    <summary class="cursor-pointer">{{ __('reader.provenance') }}</summary>
+                    <div class="mt-1 break-all font-mono">{{ $evidenceReferenceUuid }}</div>
+                </details>
             </flux:callout>
         </div>
     @endif
 
-    @if ($legacyEvidence)
+    @if ($legacyEvidence && ! $previewingDraft)
         <div class="mx-auto w-full max-w-7xl">
             <flux:callout variant="warning">
                 <div class="font-medium">{{ __('reader.legacy_title') }}</div>
@@ -139,285 +144,50 @@
 
     <div class="mx-auto grid w-full max-w-7xl gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <article class="min-w-0">
-            <header class="mx-auto {{ $contentWidthClass }} border-b pb-6" style="border-color: var(--content-border)">
-                <div class="mb-3 flex flex-wrap items-center gap-2 text-sm" style="color: var(--content-muted)">
-                    <x-app.actor-identity :actor="$content->author" size="xs" />
-                    <span aria-hidden="true">·</span>
-                    <span>{{ __('reader.published_label') }} @if ($readerPublishedAt)<x-app.local-datetime :value="$readerPublishedAt" />@else — @endif</span>
-                    @unless ($legacyEvidence)
-                        <flux:badge size="sm">{{ __('reader.verified_edition') }}</flux:badge>
-                    @endunless
-                    <flux:badge size="sm">{{ __('presentation.preset.'.$revision->render_template_key) }}</flux:badge>
-                </div>
+            <header class="mx-auto {{ $contentWidthClass }} border-b pb-6" style="border-color: var(--content-border)" data-reader-header>
+                @if ($courseNavigation)
+                    <a href="{{ $courseNavigation['parent']['url'] }}" class="mb-3 inline-flex items-center gap-1 text-sm font-medium hover:underline" style="color: var(--content-accent)" data-reader-course>
+                        <span dir="auto">{{ $courseNavigation['parent']['title'] }}</span>
+                        <span style="color: var(--content-muted)">· {{ __('reader.position_of', ['position' => $courseNavigation['position'], 'total' => $courseNavigation['total']]) }}</span>
+                    </a>
+                @endif
 
                 <h1 class="text-3xl sm:text-4xl {{ $headingClass }}" dir="auto">{{ $revision->title }}</h1>
-                <div class="mt-3 text-sm" style="color: var(--content-muted)" dir="auto">{{ $content->definition->name }}</div>
+
+                <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" style="color: var(--content-muted)">
+                    <x-app.actor-identity :actor="$content->author" size="xs" />
+                    @if ($readerPublishedAt && ! $previewingDraft)
+                        <span aria-hidden="true">·</span>
+                        <x-app.local-date :value="\Carbon\CarbonImmutable::parse($readerPublishedAt)->setTimezone(\App\Support\TemporalPreferences::timezoneFor(auth()->user()))" />
+                    @endif
+                    <span aria-hidden="true">·</span>
+                    <span dir="auto" data-reader-place>{{ $placeLabel }}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{{ $kindLabel }}</span>
+                </div>
+
+                @if ($canEnterStudio)
+                    <details class="mt-3 text-xs" style="color: var(--content-muted)" data-reader-provenance>
+                        <summary class="cursor-pointer select-none">{{ __('reader.provenance') }}</summary>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            @unless ($legacyEvidence)
+                                <flux:badge size="sm">{{ __('reader.verified_edition') }}</flux:badge>
+                            @endunless
+                            <flux:badge size="sm">{{ __('presentation.preset.'.$revision->render_template_key) }}</flux:badge>
+                            <span>{{ __('ui.content.revision_number', ['revision' => $revision->revision]) }}</span>
+                            @if ($readerPublishedAt)
+                                <span>· {{ __('reader.published_label') }} <x-app.local-datetime :value="$readerPublishedAt" /></span>
+                            @endif
+                        </div>
+                        @if ($revision->manifest_hash)
+                            <div class="mt-1 break-all font-mono">manifest: {{ $revision->manifest_hash }}</div>
+                        @endif
+                    </details>
+                @endif
             </header>
 
             <div class="mx-auto mt-8 {{ $contentWidthClass }} space-y-7">
-                @if ($revision->composition_mode === \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS && $blocks->isNotEmpty())
-                    @foreach ($blocks as $block)
-                        @php
-                            $blockStyle = is_array($block->style) ? $block->style : [];
-                            $blockData = is_array($block->data) ? $block->data : [];
-                            $blockTextColor = $blockStyle['text_color'] ?? null;
-                            $blockBgColor = $blockStyle['background_color'] ?? null;
-                            $blockAccent = $blockStyle['accent_color'] ?? $readerAccent;
-                            $alignment = match ($blockStyle['alignment'] ?? 'start') {
-                                'center' => 'text-center',
-                                'end' => 'text-end',
-                                default => 'text-start',
-                            };
-                            $emphasisClass = match ($blockStyle['emphasis'] ?? 'normal') {
-                                'muted' => 'opacity-70',
-                                'strong' => 'font-semibold',
-                                'callout' => 'border-s-4 ps-4 py-2',
-                                default => '',
-                            };
-                            $blockInlineStyle = collect([
-                                $blockTextColor ? 'color: '.$blockTextColor : null,
-                                $blockBgColor ? 'background: '.$blockBgColor.'; padding: 1rem' : null,
-                                ($blockStyle['emphasis'] ?? null) === 'callout' ? 'border-color: '.$blockAccent : null,
-                            ])->filter()->implode('; ');
-                            $blockMarkers = $blockMarkerUuids[$block->uuid] ?? [];
-                        @endphp
-
-                        <section
-                            wire:key="reader-block-{{ $block->uuid }}"
-                            class="group relative {{ $alignment }} {{ $emphasisClass }} {{ $radiusClass }}"
-                            style="{{ $blockInlineStyle }}"
-                            data-annotation-target="block"
-                            data-target-type="block"
-                            data-target-uuid="{{ $block->uuid }}"
-                            data-target-label="{{ __('blocks.type.'.$block->type) }}"
-                        >
-                            @switch($block->type)
-                                @case('paragraph')
-                                    <div
-                                        class="whitespace-pre-wrap break-words {{ $fontClass }}"
-                                        dir="auto"
-                                        data-annotation-text
-                                        data-anchor-target="block"
-                                        data-target-uuid="{{ $block->uuid }}"
-                                        data-anchor-base="0"
-                                    >{{ $blockData['text'] ?? '' }}</div>
-                                    @break
-                                @case('heading')
-                                    @php $level = (int) ($blockData['level'] ?? 2); @endphp
-                                    @if ($level === 4)
-                                        <h4 class="text-lg {{ $headingClass }}" dir="auto" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="0">{{ $blockData['text'] ?? '' }}</h4>
-                                    @elseif ($level === 3)
-                                        <h3 class="text-xl {{ $headingClass }}" dir="auto" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="0">{{ $blockData['text'] ?? '' }}</h3>
-                                    @else
-                                        <h2 class="text-2xl {{ $headingClass }}" dir="auto" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="0">{{ $blockData['text'] ?? '' }}</h2>
-                                    @endif
-                                    @break
-                                @case('quote')
-                                    @php $quoteText = (string) ($blockData['text'] ?? ''); @endphp
-                                    <blockquote class="border-s-4 ps-5 text-lg italic" style="border-color: var(--content-accent)" dir="auto">
-                                        <div class="whitespace-pre-wrap" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="0">{{ $quoteText }}</div>
-                                        @if (! empty($blockData['attribution']))
-                                            <footer class="mt-2 text-sm not-italic" style="color: var(--content-muted)" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="{{ mb_strlen($quoteText) + 1 }}">{{ $blockData['attribution'] }}</footer>
-                                        @endif
-                                    </blockquote>
-                                    @break
-                                @case('list')
-                                    @php $listBase = 0; @endphp
-                                    @if ($blockData['ordered'] ?? false)
-                                        <ol class="list-decimal space-y-2 ps-6 {{ $fontClass }}" dir="auto">
-                                            @foreach (($blockData['items'] ?? []) as $item)
-                                                <li data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="{{ $listBase }}">{{ $item }}</li>
-                                                @php $listBase += mb_strlen((string) $item) + 1; @endphp
-                                            @endforeach
-                                        </ol>
-                                    @else
-                                        <ul class="list-disc space-y-2 ps-6 {{ $fontClass }}" dir="auto">
-                                            @foreach (($blockData['items'] ?? []) as $item)
-                                                <li data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="{{ $listBase }}">{{ $item }}</li>
-                                                @php $listBase += mb_strlen((string) $item) + 1; @endphp
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                    @break
-                                @case('callout')
-                                    @php
-                                        $toneClass = match ($blockData['tone'] ?? 'info') {
-                                            'success' => 'border-emerald-300 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20',
-                                            'warning' => 'border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20',
-                                            'danger' => 'border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950/20',
-                                            default => 'border-blue-300 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20',
-                                        };
-                                    @endphp
-                                    <div class="rounded-xl border p-4 {{ $toneClass }} whitespace-pre-wrap {{ $fontClass }}" dir="auto" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="0">{{ $blockData['text'] ?? '' }}</div>
-                                    @break
-                                @case('divider')
-                                    <hr style="border-color: var(--content-border)" />
-                                    @break
-                                @case('field')
-                                    @php
-                                        $fieldKey = $blockData['field_key'] ?? '';
-                                        $field = collect($definitionVersion->schema['fields'])->firstWhere('key', $fieldKey);
-                                        $value = $revision->payload[$fieldKey] ?? null;
-                                        if (($field['type'] ?? null) === 'boolean') {
-                                            $value = $value ? __('ui.content.yes') : __('ui.content.no');
-                                        } elseif (($field['type'] ?? null) === 'select' && $value !== null) {
-                                            $match = collect($field['options'] ?? [])->firstWhere('value', $value);
-                                            $value = $match['label'] ?? $value;
-                                        }
-                                        $fieldMarkers = $fieldMarkerUuids[$fieldKey] ?? [];
-                                    @endphp
-                                    @if ($value !== null && $value !== '')
-                                        <div id="field-{{ $fieldKey }}" class="group/field relative scroll-mt-24 space-y-2" data-annotation-target="field" data-target-type="field" data-field-key="{{ $fieldKey }}" data-target-label="{{ $blockData['label'] ?? $field['label'] ?? $fieldKey }}">
-                                            <div class="flex items-start justify-between gap-2">
-                                                <div class="text-xs font-semibold uppercase tracking-wide" style="color: var(--content-muted)" dir="auto">{{ $blockData['label'] ?? $field['label'] ?? $fieldKey }}</div>
-                                                @if ($canAnnotate)
-                                                    <x-app.annotation-target-menu target-type="field" :field-key="$fieldKey" :label="$blockData['label'] ?? $field['label'] ?? $fieldKey" :marker-uuids="$fieldMarkers" />
-                                                @endif
-                                            </div>
-                                            <div
-                                                class="whitespace-pre-wrap break-words {{ $fontClass }}"
-                                                dir="auto"
-                                                @if (($field['type'] ?? null) !== 'boolean')
-                                                    data-annotation-text data-anchor-target="field" data-field-key="{{ $fieldKey }}" data-anchor-base="0"
-                                                @endif
-                                            >{{ $value }}</div>
-                                        </div>
-                                    @endif
-                                    @break
-                                @case('image')
-                                @case('audio')
-                                @case('video')
-                                @case('file')
-                                    @php
-                                        $placementUuid = (string) ($blockData['asset_placement_uuid'] ?? '');
-                                        $asset = $mediaByPlacement->get($placementUuid);
-                                        $assetMarkers = $assetMarkerUuids[$placementUuid] ?? [];
-                                    @endphp
-                                    @if ($asset)
-                                        @php
-                                            $assetUrl = route('contexts.contents.assets.show', [$context, $content, $asset]);
-                                            $downloadUrl = route('contexts.contents.assets.download', [$context, $content, $asset]);
-                                        @endphp
-                                        <figure class="group/media relative space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-target-type="asset" data-target-uuid="{{ $placementUuid }}" data-target-label="{{ $blockData['caption'] ?? $asset->original_filename }}">
-                                            <div class="absolute end-2 top-2 z-10 opacity-0 transition group-hover/media:opacity-100 group-focus-within/media:opacity-100">
-                                                @if ($canAnnotate)
-                                                    <x-app.annotation-target-menu target-type="asset" :target-uuid="$placementUuid" :label="$blockData['caption'] ?? $asset->original_filename" :marker-uuids="$assetMarkers" />
-                                                @endif
-                                            </div>
-                                            @if ($block->type === 'image')
-                                                <img src="{{ $assetUrl }}" alt="{{ $asset->alt_text ?: ($blockData['caption'] ?? $asset->original_filename) }}" class="mx-auto max-h-[42rem] w-auto {{ $radiusClass }} object-contain" loading="lazy" />
-                                            @elseif ($block->type === 'audio')
-                                                <audio controls preload="metadata" class="w-full" src="{{ $assetUrl }}"></audio>
-                                            @elseif ($block->type === 'video')
-                                                <video controls preload="metadata" class="max-h-[42rem] w-full {{ $radiusClass }} bg-black" src="{{ $assetUrl }}"></video>
-                                            @else
-                                                <a href="{{ $downloadUrl }}" class="block p-4 font-medium" dir="auto">{{ __('reader.download') }} · {{ $asset->original_filename }}</a>
-                                            @endif
-                                            @if (! empty($blockData['caption']))
-                                                <figcaption class="text-sm" style="color: var(--content-muted)" dir="auto" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="0">{{ $blockData['caption'] }}</figcaption>
-                                            @endif
-                                        </figure>
-                                    @endif
-                                    @break
-                            @endswitch
-
-                            @if ($canAnnotate && ! in_array($block->type, ['divider', 'field', 'image', 'audio', 'video', 'file'], true))
-                                <div class="absolute -end-10 top-0 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                                    <x-app.annotation-target-menu target-type="block" :target-uuid="$block->uuid" :label="__('blocks.type.'.$block->type)" :marker-uuids="$blockMarkers" />
-                                </div>
-                            @endif
-                        </section>
-                    @endforeach
-                @else
-                    @forelse ($definitionVersion->schema['fields'] as $field)
-                        @php
-                            $value = $revision->payload[$field['key']] ?? null;
-                            if ($field['type'] === 'boolean') {
-                                $displayValue = $value ? __('ui.content.yes') : __('ui.content.no');
-                            } elseif ($field['type'] === 'select' && $value !== null) {
-                                $match = collect($field['options'])->firstWhere('value', $value);
-                                $displayValue = $match['label'] ?? $value;
-                            } else {
-                                $displayValue = $value;
-                            }
-                            $fieldStyle = is_array($fieldStyles[$field['key']] ?? null) ? $fieldStyles[$field['key']] : [];
-                            $fieldInline = collect([
-                                ! empty($fieldStyle['text_color']) ? 'color: '.$fieldStyle['text_color'] : null,
-                                ! empty($fieldStyle['background_color']) ? 'background: '.$fieldStyle['background_color'].'; padding: 1rem' : null,
-                            ])->filter()->implode('; ');
-                            $fieldMarkers = $fieldMarkerUuids[$field['key']] ?? [];
-                        @endphp
-
-                        @if ($displayValue !== null && $displayValue !== '')
-                            <section
-                                id="field-{{ $field['key'] }}"
-                                class="group relative scroll-mt-24 space-y-2 {{ ($fieldStyle['emphasis'] ?? null) === 'callout' ? 'border-s-4 ps-4' : '' }} {{ ($fieldStyle['emphasis'] ?? null) === 'strong' ? 'font-semibold' : '' }} {{ ($fieldStyle['emphasis'] ?? null) === 'muted' ? 'opacity-70' : '' }} {{ $radiusClass }}"
-                                style="{{ $fieldInline }}; {{ ($fieldStyle['emphasis'] ?? null) === 'callout' ? 'border-color: '.($fieldStyle['accent_color'] ?? $readerAccent) : '' }}"
-                                data-annotation-target="field"
-                                data-target-type="field"
-                                data-field-key="{{ $field['key'] }}"
-                                data-target-label="{{ $field['label'] }}"
-                            >
-                                <div class="flex items-start justify-between gap-2">
-                                    <h2 class="text-sm font-semibold uppercase tracking-wide" style="color: var(--content-muted)" dir="auto">{{ $field['label'] }}</h2>
-                                    @if ($canAnnotate)
-                                        <x-app.annotation-target-menu target-type="field" :field-key="$field['key']" :label="$field['label']" :marker-uuids="$fieldMarkers" />
-                                    @endif
-                                </div>
-                                <div
-                                    class="whitespace-pre-wrap break-words {{ $fontClass }}"
-                                    dir="auto"
-                                    @if ($field['type'] !== 'boolean')
-                                        data-annotation-text data-anchor-target="field" data-field-key="{{ $field['key'] }}" data-anchor-base="0"
-                                    @endif
-                                >{{ $displayValue }}</div>
-                            </section>
-                        @endif
-                    @empty
-                        <flux:text>{{ __('reader.no_body') }}</flux:text>
-                    @endforelse
-                @endif
-
-                @if ($revision->assets->isNotEmpty() && $revision->composition_mode !== \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS)
-                    <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)">
-                        <h2 class="text-xl {{ $headingClass }}">{{ __('reader.media') }}</h2>
-                        @foreach ($revision->assets as $asset)
-                            @php
-                                $assetUrl = route('contexts.contents.assets.show', [$context, $content, $asset]);
-                                $downloadUrl = route('contexts.contents.assets.download', [$context, $content, $asset]);
-                                $caption = $asset->pivot->caption;
-                                $placementUuid = (string) $asset->pivot->uuid;
-                                $assetMarkers = $assetMarkerUuids[$placementUuid] ?? [];
-                            @endphp
-                            <figure class="group relative space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 sm:p-4 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-target-type="asset" data-target-uuid="{{ $placementUuid }}" data-target-label="{{ $caption ?: $asset->original_filename }}">
-                                <div class="absolute end-2 top-2 z-10 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                                    @if ($canAnnotate)
-                                        <x-app.annotation-target-menu target-type="asset" :target-uuid="$placementUuid" :label="$caption ?: $asset->original_filename" :marker-uuids="$assetMarkers" />
-                                    @endif
-                                </div>
-                                @switch($asset->mediaKind())
-                                    @case('image')
-                                        <img src="{{ $assetUrl }}" alt="{{ $asset->alt_text ?: ($caption ?: $asset->original_filename) }}" class="mx-auto max-h-[42rem] w-auto {{ $radiusClass }} object-contain" loading="lazy" />
-                                        @break
-                                    @case('audio')
-                                        <audio controls preload="metadata" class="w-full" src="{{ $assetUrl }}"></audio>
-                                        @break
-                                    @case('video')
-                                        <video controls preload="metadata" class="max-h-[42rem] w-full {{ $radiusClass }} bg-black" src="{{ $assetUrl }}"></video>
-                                        @break
-                                    @case('pdf')
-                                        <a href="{{ $assetUrl }}" target="_blank" rel="noopener" class="block p-5 font-medium" dir="auto">{{ $asset->original_filename }} ↗</a>
-                                        @break
-                                    @default
-                                        <a href="{{ $downloadUrl }}" class="block p-5 font-medium" dir="auto">{{ __('reader.download') }} · {{ $asset->original_filename }}</a>
-                                @endswitch
-                                @if ($caption)
-                                    <figcaption class="text-sm leading-6" style="color: var(--content-muted)" dir="auto">{{ $caption }}</figcaption>
-                                @endif
-                            </figure>
-                        @endforeach
-                    </section>
-                @endif
+                @include('content.partials.reader-body')
 
                 @if ($interactionDefinitions->isNotEmpty())
                     <section class="space-y-4 border-t pt-7" style="border-color: var(--content-border)" id="structured-interactions">
@@ -442,6 +212,27 @@
                             @endforeach
                         </div>
                     </section>
+                @endif
+
+                @if ($courseNavigation && ($courseNavigation['previous'] || $courseNavigation['next']))
+                    <nav class="grid gap-3 border-t pt-6 sm:grid-cols-2" style="border-color: var(--content-border)" aria-label="{{ __('reader.course_navigation') }}" data-reader-course-nav>
+                        <div>
+                            @if ($courseNavigation['previous'])
+                                <a href="{{ $courseNavigation['previous']['url'] }}" class="block rounded-xl border p-3 hover:opacity-80" style="border-color: var(--content-border)">
+                                    <span class="block text-xs" style="color: var(--content-muted)">← {{ __('reader.previous') }}</span>
+                                    <span class="block font-medium" dir="auto">{{ $courseNavigation['previous']['title'] }}</span>
+                                </a>
+                            @endif
+                        </div>
+                        <div>
+                            @if ($courseNavigation['next'])
+                                <a href="{{ $courseNavigation['next']['url'] }}" class="block rounded-xl border p-3 text-end hover:opacity-80" style="border-color: var(--content-border)">
+                                    <span class="block text-xs" style="color: var(--content-muted)">{{ __('reader.next') }} →</span>
+                                    <span class="block font-medium" dir="auto">{{ $courseNavigation['next']['title'] }}</span>
+                                </a>
+                            @endif
+                        </div>
+                    </nav>
                 @endif
 
                 <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)" id="discussion">
@@ -881,6 +672,11 @@
                 @endforeach
             </div>
         </aside>
+    @endif
+    @if ($canShareOutside)
+        <x-app.drawer name="share" :title="__('public_content.share.title')" width="sm:max-w-lg">
+            <livewire:content.share-panel :content="$content" :key="'share-panel-'.$content->uuid" />
+        </x-app.drawer>
     @endif
 </section>
 

@@ -2,7 +2,7 @@
 
 return [
     'title' => '今天',
-    'welcome' => '欢迎，:name。:date · :timezone。这里的内容都来自 IET 中已有的权威记录。',
+    'welcome' => '欢迎，:name。:date。先处理需要你关注的事项，再继续今天的安排。',
     'actor_setup_pending' => '您的账户已完成验证，但系统中的参与身份尚未准备好。账户设置仍可使用，身份建立完成后会显示主要操作工具。',
     'quick_links' => '快捷入口',
     'quick_links_help' => '直接打开您已有权限使用的主要工作区。',
@@ -146,5 +146,18 @@ return [
         'contract_other' => '您已接受合同版本；另一位必需方仍未回应。',
         'fulfillment_other' => '您提交的履约正在等待受益方审核。',
         'settlement_other' => '您提出的结算正在等待对方确认。',
+    ],
+    'schedule' => [
+        'now' => '进行中',
+        'next' => '下一项',
+        'in_progress' => '进行中',
+        'running_count' => ':count 项活动进行中',
+        'starts_in' => ':time后开始',
+        'open' => '打开',
+        'activities' => ':count 项活动',
+        'more_today' => '今天还有 :count 项',
+        'show_less' => '收起',
+        'open_planner' => '打开计划',
+        'more_items' => '还有 :count 项',
     ],
 ];

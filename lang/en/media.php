@@ -42,4 +42,24 @@ return [
         'private_study_only' => 'Private study only',
         'unknown' => 'Unknown / not confirmed',
     ],
+    'preview' => [
+        'open_document' => 'Open document',
+    ],
+    'evidence' => [
+        'added_by' => 'Added by :name',
+        'open' => 'Open evidence',
+        'kicker' => 'Plan evidence',
+        'attached_by' => 'Attached by',
+        'attached_at' => 'Attached at',
+        'file' => 'File',
+        'provenance' => 'Details & provenance',
+        'asset_id' => 'Asset ID',
+        'occurrence_id' => 'Occurrence ID',
+    ],
+    'player' => [
+        'speed' => 'Speed',
+        'captions_on' => 'Captions on',
+        'captions_off' => 'Captions off',
+        'keyboard_help' => 'Space play/pause · ←/→ 5 s · J/L 10 s · F fullscreen · C captions',
+    ],
 ];

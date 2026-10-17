@@ -9,7 +9,7 @@
 </head>
 <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     <div class="fixed end-4 top-4 z-10"><x-app.locale-switcher /></div>
-    <main class="mx-auto flex min-h-dvh max-w-5xl items-center px-4 py-10 sm:px-6">
+    <main class="mx-auto flex min-h-dvh max-w-5xl {{ empty($publicCards) ? 'items-center' : 'items-start' }} px-4 py-10 sm:px-6">
         <div class="w-full space-y-6">
             <x-app.brand-banner />
             <flux:card class="w-full space-y-6">
@@ -27,6 +27,23 @@
                 <flux:button disabled variant="ghost" class="w-full">{{ __('access.root.registration_by_invitation') }}</flux:button>
             </div>
             </flux:card>
+
+            @if (! empty($publicCards))
+                <section class="space-y-4" data-home-public>
+                    <div class="flex items-end justify-between gap-3">
+                        <div>
+                            <h2 class="text-xl font-semibold tracking-tight">{{ __('public_content.home.title') }}</h2>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('public_content.home.help') }}</p>
+                        </div>
+                        <flux:button :href="route('public-content.index')" size="sm" variant="ghost" icon-trailing="arrow-right" class="shrink-0 rtl:[&_svg]:rotate-180">{{ __('public_content.home.all') }}</flux:button>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach ($publicCards as $card)
+                            <x-public-content.card :card="$card" />
+                        @endforeach
+                    </div>
+                </section>
+            @endif
         </div>
     </main>
     @fluxScripts

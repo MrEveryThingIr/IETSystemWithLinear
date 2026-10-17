@@ -28,6 +28,7 @@ class AttachAssetToSpaceContent
         UploadedFile $upload,
         string $rightsStatus,
         ?string $caption = null,
+        ?int $maxBytes = null,
     ): SpaceContent {
         abort_unless(in_array($rightsStatus, Asset::RIGHTS_STATUSES, true), 422, 'Choose a valid media rights status.');
 
@@ -35,11 +36,15 @@ class AttachAssetToSpaceContent
         $caption = $caption === '' ? null : $caption;
         abort_if($caption !== null && mb_strlen($caption) > 1000, 422, 'Media caption may not exceed 1000 characters.');
 
-        $size = $upload->getSize();
-        abort_unless(is_int($size) && $size > 0 && $size <= MediaLimits::kilobytes('asset') * 1024, 422, 'Media must be between 1 byte and '.MediaLimits::kilobytes('asset').' KB.');
-
         $mime = (string) $upload->getMimeType();
         abort_unless(Asset::supportsMime($mime), 422, 'This media type is not supported.');
+
+        // Content media is limited per type (image, document, audio, video).
+        // Files assembled by the resumable uploader never passed through one
+        // PHP request, so that path supplies its own, larger, ceiling.
+        $limitBytes = $maxBytes ?? MediaLimits::kilobytes(MediaLimits::contentKindForMime($mime)) * 1024;
+        $size = $upload->getSize();
+        abort_unless(is_int($size) && $size > 0 && $size <= $limitBytes, 422, 'Media must be between 1 byte and '.intdiv($limitBytes, 1024).' KB.');
 
         $preflight = SpaceContent::query()->with(['context', 'space'])->findOrFail($content->id);
         Gate::forUser($user)->authorize('update', $preflight);

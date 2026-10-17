@@ -39,6 +39,33 @@ return [
     | produces a normal validation error instead of a server error.
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Resumable uploads (large audio and video)
+    |--------------------------------------------------------------------------
+    |
+    | Lesson video and long audio are uploaded in chunks, each one small enough
+    | for the host's PHP upload limits, so file size is not limited by
+    | post_max_size. chunk_kb is lowered automatically below the host limit.
+    |
+    */
+    'resumable' => [
+        'chunk_kb' => (int) env('MEDIA_RESUMABLE_CHUNK_KB', 4096),
+        'max_video_kb' => (int) env('MEDIA_RESUMABLE_MAX_VIDEO_KB', 1048576),
+        'max_audio_kb' => (int) env('MEDIA_RESUMABLE_MAX_AUDIO_KB', 512000),
+        'session_hours' => (int) env('MEDIA_RESUMABLE_SESSION_HOURS', 48),
+        'max_open_sessions' => (int) env('MEDIA_RESUMABLE_MAX_OPEN_SESSIONS', 5),
+    ],
+
+    /*
+    | Video processing implementation (App\Contracts\Media\VideoProcessor).
+    | "local" works on shared hosting: no transcoding, browser-measured
+    | metadata and poster, byte-range streaming of the original file.
+    */
+    'video' => [
+        'processor' => env('MEDIA_VIDEO_PROCESSOR', 'local'),
+    ],
+
     'limits' => [
         'profile_image' => (int) env('MEDIA_LIMIT_PROFILE_IMAGE_KB', 8192),
         'asset' => (int) env('MEDIA_LIMIT_ASSET_KB', 12288),
@@ -46,5 +73,13 @@ return [
         'real_estate_image' => (int) env('MEDIA_LIMIT_REAL_ESTATE_IMAGE_KB', 12288),
         'real_estate_audio' => (int) env('MEDIA_LIMIT_REAL_ESTATE_AUDIO_KB', 25600),
         'real_estate_video' => (int) env('MEDIA_LIMIT_REAL_ESTATE_VIDEO_KB', 102400),
+
+        // Content Studio limits per media type. Uploads still pass through
+        // PHP, so the effective limit is capped by the host limits; larger
+        // video uses the resumable upload path instead.
+        'content_image' => (int) env('MEDIA_LIMIT_CONTENT_IMAGE_KB', 15360),
+        'content_document' => (int) env('MEDIA_LIMIT_CONTENT_DOCUMENT_KB', 25600),
+        'content_audio' => (int) env('MEDIA_LIMIT_CONTENT_AUDIO_KB', 51200),
+        'content_video' => (int) env('MEDIA_LIMIT_CONTENT_VIDEO_KB', 102400),
     ],
 ];

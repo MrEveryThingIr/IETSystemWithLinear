@@ -139,17 +139,24 @@
                 <p class="text-xs leading-5 text-zinc-500">{{ __('ui.profile.temporal.default_currency_help') }}</p>
             </div>
 
-            <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950/60">
-                <input
-                    type="checkbox"
-                    wire:model="showGregorianEquivalent"
-                    class="mt-1 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400 dark:border-zinc-700"
-                >
-                <span>
-                    <span class="block text-sm font-medium">{{ __('ui.profile.temporal.show_gregorian_equivalent') }}</span>
-                    <span class="mt-1 block text-xs leading-5 text-zinc-500">{{ __('ui.profile.temporal.show_gregorian_equivalent_help') }}</span>
-                </span>
-            </label>
+            <fieldset class="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950/60">
+                <legend class="px-1 text-sm font-medium">{{ __('ui.profile.temporal.show_gregorian_equivalent') }}</legend>
+                <p class="text-xs leading-5 text-zinc-500">{{ __('ui.profile.temporal.show_gregorian_equivalent_help') }}</p>
+                <div class="grid gap-2 sm:grid-cols-3">
+                    @foreach (\App\Support\TemporalPreferences::GREGORIAN_EQUIVALENT_MODES as $mode)
+                        <label class="flex cursor-pointer items-start gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-sm has-[:checked]:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:has-[:checked]:border-zinc-200">
+                            <input type="radio" wire:model="gregorianEquivalentMode" value="{{ $mode }}" class="mt-0.5" />
+                            <span>
+                                <span class="block font-medium">{{ __('ui.profile.temporal.equivalent_modes.'.$mode) }}</span>
+                                <span class="mt-0.5 block text-xs text-zinc-500">{{ __('ui.profile.temporal.equivalent_modes_help.'.$mode) }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+                @error('gregorianEquivalentMode')
+                    <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </fieldset>
 
             <div class="flex flex-col-reverse gap-2 border-t border-zinc-200 pt-4 lg:col-span-2 sm:flex-row sm:justify-end dark:border-zinc-800">
                 <flux:button type="button" wire:click="cancelEditor" variant="ghost" class="w-full sm:w-auto">

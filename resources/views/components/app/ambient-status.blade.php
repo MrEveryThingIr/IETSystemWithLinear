@@ -11,6 +11,7 @@
     data-calendar="{{ $calendar }}"
     data-timezone="{{ $timezone }}"
     data-equivalent-label="{{ __('ui.profile.temporal.gregorian_equivalent') }}"
+    data-show-equivalent="{{ \App\Support\TemporalPreferences::inlineGregorianEquivalentFor($user) ? 'true' : 'false' }}"
 >
     <span class="shrink-0 text-xs tabular-nums">
         <time class="block font-medium text-zinc-600 dark:text-zinc-300" data-ambient-clock></time>

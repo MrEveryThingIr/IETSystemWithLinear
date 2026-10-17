@@ -27,16 +27,27 @@ use LogicException;
     'published_at',
     'archived_at',
     'pinned_at',
+    'public_access',
+    'public_since',
 ])]
 class SpaceContent extends Model
 {
     use HasFactory;
+
+    /** Only the author chooses this; see App\Actions\Content\SetContentPublicAccess. */
+    public const ACCESS_PRIVATE = 'private';
+
+    public const ACCESS_PUBLIC = 'public';
+
+    /** @var list<string> */
+    public const PUBLIC_ACCESS_VALUES = [self::ACCESS_PRIVATE, self::ACCESS_PUBLIC];
 
     private bool $applyingLifecycle = false;
 
     protected $attributes = [
         'status' => 'draft',
         'current_revision' => 1,
+        'public_access' => self::ACCESS_PRIVATE,
     ];
 
     protected function casts(): array
@@ -46,6 +57,7 @@ class SpaceContent extends Model
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
             'pinned_at' => 'datetime',
+            'public_since' => 'datetime',
         ];
     }
 
@@ -145,6 +157,20 @@ class SpaceContent extends Model
         } finally {
             $this->applyingLifecycle = false;
         }
+    }
+
+    /** Readable by anyone on the web right now (published edition only). */
+    public function isPubliclyReadable(): bool
+    {
+        return $this->public_access === self::ACCESS_PUBLIC
+            && $this->status === 'published'
+            && $this->active_revision_id !== null;
+    }
+
+    /** @return HasMany<ContentInvitation, $this> */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(ContentInvitation::class, 'space_content_id');
     }
 
     /** @return BelongsTo<Context, $this> */

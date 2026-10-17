@@ -174,6 +174,9 @@ class FeatureSurfaceBaselineTest extends TestCase
             'financial-obligations.show',
 
             'planner.show',
+            'planner.occurrences.assets.show',
+            'planner.occurrences.assets.download',
+            'planner.occurrences.evidence.show',
 
             'groups.show',
             'groups.community',

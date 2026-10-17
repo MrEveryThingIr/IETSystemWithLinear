@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Today',
-    'welcome' => 'Welcome, :name. :date · :timezone. Start with what needs your attention, then continue your day.',
+    'welcome' => 'Welcome, :name. :date. Start with what needs your attention, then continue your day.',
     'actor_setup_pending' => 'Your account is verified, but your participant identity is not ready yet. Account settings remain available; operating tools appear after identity setup is complete.',
     'quick_links' => 'Quick links',
     'quick_links_help' => 'Open the main workspaces you already have permission to use.',
@@ -146,5 +146,18 @@ return [
         'contract_other' => 'You already accepted the proposed agreement; another required party is pending.',
         'fulfillment_other' => 'Your submitted work is waiting for review.',
         'settlement_other' => 'Your payment or settlement claim is waiting for the other party.',
+    ],
+    'schedule' => [
+        'now' => 'Now',
+        'next' => 'Next',
+        'in_progress' => 'In progress',
+        'running_count' => ':count activities in progress',
+        'starts_in' => 'starts in :time',
+        'open' => 'Open',
+        'activities' => ':count activities',
+        'more_today' => '+ :count more today',
+        'show_less' => 'Show less',
+        'open_planner' => 'Open Planner',
+        'more_items' => '+ :count more',
     ],
 ];

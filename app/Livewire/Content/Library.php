@@ -6,13 +6,13 @@ use App\Actions\Content\PlacePublishedContent;
 use App\Actions\Content\RemoveContentPlacement;
 use App\ConceptAssertionSubject;
 use App\ConceptAssertionVisibility;
-use App\ContextKind;
 use App\Models\ConceptAssertion;
 use App\Models\ContentPlacement;
 use App\Models\Context;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\ContextPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -280,40 +280,7 @@ class Library extends Component
 
     private function contextLabel(Context $context): string
     {
-        return match ($context->kind) {
-            ContextKind::Personal => __('library.context.personal'),
-            ContextKind::Business => $context->businessBinding?->business->name
-                ?? 'Business · '.$context->uuid,
-            ContextKind::GroupSpace => trim(implode(' · ', array_filter([
-                $context->groupSpaceBinding?->groupSpace?->group?->name,
-                $context->groupSpaceBinding?->groupSpace?->name,
-            ]))) ?: __('library.context.group_space'),
-            ContextKind::Admission => __('library.context.admission', [
-                'group' => $context->admissionBinding?->admission?->group->name ?? '#'.$context->admissionBinding?->admission_id,
-            ]),
-            ContextKind::Relationship => $this->relationshipContextLabel($context),
-            ContextKind::Negotiation => __('library.context.negotiation', [
-                'title' => $context->proposalBinding?->proposal->title ?? '#'.$context->uuid,
-            ]),
-            ContextKind::Contract => __('library.context.contract', [
-                'title' => $context->contractBinding?->contract->title ?? '#'.$context->uuid,
-            ]),
-            ContextKind::Reference => __('library.context.reference', [
-                'key' => $context->referenceBinding->key ?? $context->uuid,
-            ]),
-            ContextKind::System => 'System',
-        };
-    }
-
-    private function relationshipContextLabel(Context $context): string
-    {
-        $relationship = $context->relationshipBinding?->relationship;
-
-        return __('library.context.relationship', [
-            'title' => $relationship?->title
-                ?: $relationship?->purposeConcept?->displayLabel()
-                ?: '#'.$context->uuid,
-        ]);
+        return app(ContextPresenter::class)->label($context);
     }
 
     private function user(): User

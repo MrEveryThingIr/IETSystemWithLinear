@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\CalendarSystem;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use DateTimeZone;
 use Throwable;
 
@@ -44,9 +45,45 @@ class TemporalPreferences
         return in_array($value, ['24h', '12h'], true) ? $value : '24h';
     }
 
+    /** @var list<string> */
+    public const GREGORIAN_EQUIVALENT_MODES = ['hidden', 'hover', 'inline'];
+
+    /**
+     * How the Gregorian equivalent of a non-Gregorian date is presented.
+     * Default is "hover": available on demand, never a permanent second line.
+     */
+    public static function gregorianEquivalentModeFor(?User $user): string
+    {
+        if (! $user instanceof User) {
+            return 'hover';
+        }
+
+        $mode = $user->gregorian_equivalent_mode;
+        if (in_array($mode, self::GREGORIAN_EQUIVALENT_MODES, true)) {
+            return $mode;
+        }
+
+        return $user->show_gregorian_equivalent === false ? 'hidden' : 'hover';
+    }
+
+    /** Whether the Gregorian equivalent is available at all (hover or inline). */
     public static function showGregorianEquivalentFor(?User $user): bool
     {
-        return ! ($user instanceof User) || $user->show_gregorian_equivalent !== false;
+        return self::gregorianEquivalentModeFor($user) !== 'hidden';
+    }
+
+    /** Whether the Gregorian equivalent is printed permanently beside the value. */
+    public static function inlineGregorianEquivalentFor(?User $user): bool
+    {
+        return self::gregorianEquivalentModeFor($user) === 'inline';
+    }
+
+    /** "Asia/Tehran (UTC+03:30)" — for tooltips and details, not ordinary labels. */
+    public static function timezoneDescription(string $timezone, ?\DateTimeInterface $at = null): string
+    {
+        $offset = CarbonImmutable::instance($at ?? now())->setTimezone($timezone)->format('P');
+
+        return $timezone.' (UTC'.$offset.')';
     }
 
     public static function validTimezone(?string $timezone): bool

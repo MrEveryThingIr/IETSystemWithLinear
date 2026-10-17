@@ -118,7 +118,8 @@ class TemporalCalendar
     ): string {
         $timezone ??= TemporalPreferences::timezoneFor($user);
         $timePattern = self::timePattern($user, $seconds);
-        $pattern = self::datePattern($user).', '.$timePattern.' z';
+        // The timezone shapes the value; it is not printed beside every timestamp.
+        $pattern = self::datePattern($user).', '.$timePattern;
 
         return self::format($date, $user, $timezone, $pattern, calendar: $calendar);
     }
@@ -133,7 +134,7 @@ class TemporalCalendar
 
         if (
             TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian
-            || ! TemporalPreferences::showGregorianEquivalentFor($user)
+            || ! TemporalPreferences::inlineGregorianEquivalentFor($user)
         ) {
             return $primary;
         }
@@ -153,7 +154,7 @@ class TemporalCalendar
 
         if (
             TemporalPreferences::calendarFor($user) === CalendarSystem::Gregorian
-            || ! TemporalPreferences::showGregorianEquivalentFor($user)
+            || ! TemporalPreferences::inlineGregorianEquivalentFor($user)
         ) {
             return $primary;
         }

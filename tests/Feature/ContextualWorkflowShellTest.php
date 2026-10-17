@@ -14,7 +14,8 @@ class ContextualWorkflowShellTest extends TestCase
             'livewire/relationships/show.blade.php',
             'businesses/show.blade.php',
             'livewire/groups/show.blade.php',
-            'livewire/contexts/content-studio.blade.php',
+            // The Content Studio (v2) is a single authoring workspace with its
+            // own top bar; its contract is covered by ContentStudioInformationArchitectureTest.
         ];
 
         foreach ($views as $view) {
@@ -71,10 +72,12 @@ class ContextualWorkflowShellTest extends TestCase
 
         $this->assertStringContainsString('id="group-manage"', $group);
         $this->assertStringContainsString('<details id="group-manage"', $group);
-        $this->assertStringContainsString('<x-slot:advanced>', $content);
-        $this->assertStringContainsString("route('contexts.contents.ai'", $content);
+        // Content power tools are panels and a "more" menu, not permanent sections.
+        $this->assertStringContainsString('<x-app.drawer name="ai"', $content);
+        $this->assertStringContainsString('<x-app.drawer name="appearance"', $content);
+        $this->assertStringContainsString('<x-app.drawer name="history"', $content);
+        $this->assertStringContainsString('<flux:dropdown', $content);
         $this->assertStringContainsString("route('contexts.contents.blocks'", $content);
-        $this->assertStringContainsString("route('contexts.contents.appearance'", $content);
     }
 
     public function test_c3_workflow_copy_has_locale_parity(): void

@@ -7,6 +7,7 @@ use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
 use App\Support\DuePlanReminderEmitter;
+use App\Support\Media\ResumableUploads;
 use App\Support\NotificationOutboxDispatcher;
 use App\Support\ScheduledArtisan;
 use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
@@ -148,6 +149,16 @@ ScheduledArtisan::register(app(ConsoleSchedule::class), 'queue:prune-failed --ho
 ScheduledArtisan::register(app(ConsoleSchedule::class), 'queue:prune-batches --hours=168 --unfinished=168 --cancelled=168')
     ->name('queue:prune-batches')
     ->dailyAt('02:20')
+    ->withoutOverlapping();
+
+Artisan::command('media:prune-upload-sessions', function () {
+    $count = app(ResumableUploads::class)->prune();
+    $this->info("Expired {$count} abandoned upload sessions.");
+})->purpose('Expire abandoned resumable uploads and delete their partial files');
+
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'media:prune-upload-sessions')
+    ->name('media:prune-upload-sessions')
+    ->hourly()
     ->withoutOverlapping();
 
 ScheduledArtisan::register(app(ConsoleSchedule::class), 'planner:materialize --days=120')

@@ -8,7 +8,7 @@
 
     <x-app.page-header
         :title="__('home.title')"
-        :description="__('home.welcome', ['name' => $homeName, 'date' => $todayDisplay, 'timezone' => $timezone])"
+        :description="__('home.welcome', ['name' => $homeName, 'date' => $todayDisplay])"
     >
         <x-slot:actions>
             <div class="flex flex-wrap gap-2">
@@ -108,37 +108,97 @@
 
     @unless ($officeAlpha)
     <div class="grid gap-6 xl:grid-cols-2">
-        <flux:card class="order-2 space-y-4">
-            <div>
-                <flux:heading size="lg">{{ __('home.today_actions') }}</flux:heading>
-                <flux:text>{{ __('home.today_actions_help') }}</flux:text>
+        <flux:card class="order-2 space-y-4" data-today-schedule>
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <flux:heading size="lg">{{ __('home.today_actions') }}</flux:heading>
+                        @if ($todayOccurrenceCount > 0)
+                            <flux:badge size="sm" data-today-count>{{ $todayOccurrencesTruncated ? $todayOccurrenceCount.'+' : $todayOccurrenceCount }}</flux:badge>
+                        @endif
+                    </div>
+                    <flux:text>{{ __('home.today_actions_help') }}</flux:text>
+                </div>
+                <flux:button :href="route('planner.index')" size="sm" variant="ghost">{{ __('home.open_all') }}</flux:button>
             </div>
 
-            <div class="space-y-3">
-                @forelse ($todayOccurrences as $occurrence)
-                    <a
-                        href="{{ route('planner.show', $occurrence->plan).'#occurrence-'.$occurrence->uuid }}"
-                        class="block rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-                    >
-                        <div class="flex flex-wrap items-start justify-between gap-3">
-                            <div>
-                                <div class="font-semibold" dir="auto">{{ $occurrence->plan->title }}</div>
-                                @if ($occurrence->plan->description)
-                                    <div class="mt-1 line-clamp-2 text-sm text-zinc-500" dir="auto">{{ $occurrence->plan->description }}</div>
-                                @endif
-                            </div>
-                            <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+            @php
+                $focusOccurrence = $inProgressOccurrences->first() ?? $nextOccurrence;
+            @endphp
+            @if ($focusOccurrence)
+                @php
+                    $focusRunning = $inProgressOccurrences->isNotEmpty();
+                    $focusRelative = $focusOccurrence->scheduled_start_at
+                        ->locale(app()->getLocale())
+                        ->diffForHumans(now(), \Carbon\CarbonInterface::DIFF_ABSOLUTE);
+                @endphp
+                <a
+                    href="{{ route('planner.show', $focusOccurrence->plan).'#occurrence-'.$focusOccurrence->uuid }}"
+                    class="flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 hover:bg-indigo-50 dark:border-indigo-900 dark:bg-indigo-950/20"
+                    data-today-focus
+                >
+                    <div class="min-w-0">
+                        <div class="text-xs font-medium uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                            {{ $focusRunning ? __('home.schedule.now') : __('home.schedule.next') }}
                         </div>
-                        <div class="mt-2 text-sm text-zinc-500">
-                            <x-app.local-time :value="$occurrence->scheduled_start_at" />
-                            →
-                            <x-app.local-time :value="$occurrence->scheduled_end_at" />
+                        <div class="truncate font-semibold" dir="auto">{{ $focusOccurrence->plan->title }}</div>
+                        <div class="text-xs text-zinc-600 dark:text-zinc-400">
+                            <x-app.local-time :value="$focusOccurrence->scheduled_start_at" />
+                            ·
+                            @if ($focusRunning && $inProgressOccurrences->count() > 1)
+                                {{ __('home.schedule.running_count', ['count' => $inProgressOccurrences->count()]) }}
+                            @elseif ($focusRunning)
+                                {{ __('home.schedule.in_progress') }}
+                            @else
+                                {{ __('home.schedule.starts_in', ['time' => $focusRelative]) }}
+                            @endif
                         </div>
-                    </a>
-                @empty
-                    <x-app.empty-state :title="__('home.no_today_actions')" :description="__('home.no_today_actions_help')" />
-                @endforelse
-            </div>
+                    </div>
+                    <span class="shrink-0 text-sm font-medium text-indigo-700 dark:text-indigo-300">{{ __('home.schedule.open') }} →</span>
+                </a>
+            @endif
+
+            @php
+                $scheduleRows = ($showFullSchedule ? $todayOccurrences : $todayOccurrencePreview)
+                    ->groupBy(fn ($occurrence) => $occurrence->scheduled_start_at->getTimestamp());
+                $hiddenCount = max(0, $todayOccurrenceCount - $todayOccurrencePreview->count());
+            @endphp
+
+            @if ($todayOccurrenceCount === 0)
+                <x-app.empty-state :title="__('home.no_today_actions')" :description="__('home.no_today_actions_help')" />
+            @else
+                <ul @class(['divide-y divide-zinc-100 dark:divide-zinc-800', 'max-h-96 overflow-y-auto' => $showFullSchedule]) data-today-schedule-list>
+                    @foreach ($scheduleRows as $slot => $slotOccurrences)
+                        @if ($slotOccurrences->count() > 1)
+                            <li wire:key="today-slot-{{ $slot }}">
+                                <details class="group">
+                                    <summary class="flex cursor-pointer list-none items-center gap-3 py-2 text-sm">
+                                        <x-app.local-time :value="$slotOccurrences->first()->scheduled_start_at" class="w-14 shrink-0 tabular-nums text-zinc-500" />
+                                        <span class="flex-1 font-medium">{{ __('home.schedule.activities', ['count' => $slotOccurrences->count()]) }}</span>
+                                        <span class="text-zinc-400 transition-transform group-open:rotate-90">›</span>
+                                    </summary>
+                                    <ul class="mb-2 ms-14 space-y-1 border-s border-zinc-200 ps-3 dark:border-zinc-800">
+                                        @foreach ($slotOccurrences as $occurrence)
+                                            @include('livewire.home.partials.today-schedule-row', ['occurrence' => $occurrence, 'nested' => true])
+                                        @endforeach
+                                    </ul>
+                                </details>
+                            </li>
+                        @else
+                            @include('livewire.home.partials.today-schedule-row', ['occurrence' => $slotOccurrences->first(), 'nested' => false])
+                        @endif
+                    @endforeach
+                </ul>
+
+                @if ($hiddenCount > 0 || $showFullSchedule)
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+                        <flux:button wire:click="toggleFullSchedule" size="sm" variant="ghost" data-today-more>
+                            {{ $showFullSchedule ? __('home.schedule.show_less') : __('home.schedule.more_today', ['count' => $hiddenCount]) }}
+                        </flux:button>
+                        <flux:button :href="route('planner.index')" size="sm" variant="ghost">{{ __('home.schedule.open_planner') }}</flux:button>
+                    </div>
+                @endif
+            @endif
         </flux:card>
 
         <flux:card class="order-1 space-y-4">
@@ -153,7 +213,7 @@
             </div>
 
             <div class="space-y-3">
-                @forelse ($waitingOnMe as $item)
+                @forelse ($waitingOnMe->take(5) as $item)
                     <a
                         href="{{ $item->url }}"
                         class="block rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
@@ -169,6 +229,18 @@
                 @empty
                     <x-app.empty-state :title="__('home.nothing_waiting_on_me')" />
                 @endforelse
+                @if ($waitingOnMe->count() > 5)
+                    <details class="group" data-today-overflow="waitingOnMe">
+                        <summary class="cursor-pointer list-none text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                            {{ __('home.schedule.more_items', ['count' => $waitingOnMe->count() - 5]) }}
+                        </summary>
+                        <ul class="mt-2 divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
+                            @foreach ($waitingOnMe->skip(5) as $overflowItem)
+                                <li><a href="{{ $overflowItem->url }}" class="flex items-center gap-2 py-2 hover:underline"><span class="truncate" dir="auto">{{ __('home.action_kind.'.$overflowItem->kind) }} · {{ $overflowItem->title }}</span></a></li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
             </div>
         </flux:card>
     </div>
@@ -180,7 +252,7 @@
         </div>
 
         <div class="grid gap-3 md:grid-cols-2">
-            @forelse ($waitingOnOthers as $item)
+            @forelse ($waitingOnOthers->take(4) as $item)
                 <a
                     href="{{ $item->url }}"
                     class="rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
@@ -198,6 +270,18 @@
                     <x-app.empty-state :title="__('home.nothing_waiting_on_others')" />
                 </div>
             @endforelse
+                @if ($waitingOnOthers->count() > 4)
+                    <details class="group md:col-span-2" data-today-overflow="waitingOnOthers">
+                        <summary class="cursor-pointer list-none text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                            {{ __('home.schedule.more_items', ['count' => $waitingOnOthers->count() - 4]) }}
+                        </summary>
+                        <ul class="mt-2 divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
+                            @foreach ($waitingOnOthers->skip(4) as $overflowItem)
+                                <li><a href="{{ $overflowItem->url }}" class="flex items-center gap-2 py-2 hover:underline"><span class="truncate" dir="auto">{{ __('home.action_kind.'.$overflowItem->kind) }} · {{ $overflowItem->title }}</span></a></li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
         </div>
     </flux:card>
 
@@ -350,7 +434,7 @@
         </div>
 
         <div class="space-y-3">
-            @forelse ($recentActivity as $entry)
+            @forelse ($recentActivity->take(6) as $entry)
                 <a href="{{ $entry->url }}" class="block rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div>
@@ -370,6 +454,18 @@
             @empty
                 <x-app.empty-state :title="__('home.no_recent_activity')" />
             @endforelse
+                @if ($recentActivity->count() > 6)
+                    <details class="group" data-today-overflow="recentActivity">
+                        <summary class="cursor-pointer list-none text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                            {{ __('home.schedule.more_items', ['count' => $recentActivity->count() - 6]) }}
+                        </summary>
+                        <ul class="mt-2 divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
+                            @foreach ($recentActivity->skip(6) as $overflowItem)
+                                <li><a href="{{ $overflowItem->url }}" class="flex items-center gap-2 py-2 hover:underline"><span class="truncate" dir="auto">{{ $overflowItem->title }}</span></a></li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
         </div>
     </flux:card>
 
