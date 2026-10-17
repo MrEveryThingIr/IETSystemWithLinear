@@ -12,6 +12,9 @@
     'caption' => null,
     'compact' => false,
     'mediaClass' => null,
+    'poster' => null,
+    'tracks' => [],
+    'durationMs' => null,
 ])
 
 @php
@@ -32,10 +35,18 @@
             />
             @break
         @case('audio')
-            <audio controls preload="metadata" class="{{ $mediaClass ?? 'w-full' }}" src="{{ $inlineUrl }}"></audio>
+            @if ($compact)
+                <audio controls preload="metadata" class="{{ $mediaClass ?? 'w-full' }}" src="{{ $inlineUrl }}"></audio>
+            @else
+                <x-media.video-player :src="$inlineUrl" :tracks="$tracks" :duration-ms="$durationMs" :media-class="$mediaClass" audio />
+            @endif
             @break
         @case('video')
-            <video controls preload="metadata" playsinline class="{{ $mediaClass ?? ($compact ? 'h-44 w-full rounded-lg bg-black object-contain' : 'max-h-[42rem] w-full rounded-lg bg-black') }}" src="{{ $inlineUrl }}"></video>
+            @if ($compact)
+                <video controls preload="metadata" playsinline class="{{ $mediaClass ?? 'h-44 w-full rounded-lg bg-black object-contain' }}" src="{{ $inlineUrl }}" @if ($poster) poster="{{ $poster }}" @endif></video>
+            @else
+                <x-media.video-player :src="$inlineUrl" :poster="$poster" :tracks="$tracks" :duration-ms="$durationMs" :media-class="$mediaClass" />
+            @endif
             @break
         @case('pdf')
             @if ($compact)

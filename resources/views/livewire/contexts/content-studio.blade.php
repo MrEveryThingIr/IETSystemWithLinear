@@ -235,7 +235,7 @@
                                             $blockAsset = $mediaByUuid->get($block['data']['asset_uuid'] ?? '');
                                         @endphp
                                         @if ($blockAsset)
-                                            <x-media.asset-preview :asset="$blockAsset" :inline-url="$assetUrl($blockAsset)" :download-url="$assetDownloadUrl($blockAsset)" />
+                                            <x-media.asset-preview :asset="$blockAsset" :inline-url="$assetUrl($blockAsset)" :download-url="$assetDownloadUrl($blockAsset)" :poster="$mediaExtras[$blockAsset->id]['poster'] ?? null" :tracks="$mediaExtras[$blockAsset->id]['tracks'] ?? []" :duration-ms="$mediaExtras[$blockAsset->id]['duration_ms'] ?? null" />
                                         @else
                                             <div class="rounded-lg bg-zinc-50 p-3 text-sm text-zinc-500 dark:bg-zinc-800" dir="auto">{{ $block['data']['filename'] ?? __('studio_ui.missing_media') }}</div>
                                         @endif
@@ -327,8 +327,16 @@
                             $placedInDocument = $isBlocks && collect($blocks)->contains(fn ($block) => ($block['data']['asset_uuid'] ?? null) === $asset->uuid);
                         @endphp
                         <div wire:key="studio-media-{{ $asset->uuid }}" class="space-y-2 rounded-xl border border-zinc-200 p-2 dark:border-zinc-800">
-                            <x-media.asset-preview :asset="$asset" :inline-url="$assetUrl($asset)" :download-url="$assetDownloadUrl($asset)" compact />
+                            <x-media.asset-preview :asset="$asset" :inline-url="$assetUrl($asset)" :download-url="$assetDownloadUrl($asset)" :poster="$mediaExtras[$asset->id]['poster'] ?? null" compact />
                             <div class="truncate text-xs font-medium" dir="auto" title="{{ $asset->original_filename }}">{{ $asset->original_filename }}</div>
+                            @if (isset($mediaExtras[$asset->id]))
+                                <div class="flex flex-wrap items-center gap-x-2 text-xs text-zinc-500">
+                                    @if ($mediaExtras[$asset->id]['duration_ms'])
+                                        <span>{{ gmdate($mediaExtras[$asset->id]['duration_ms'] >= 3600000 ? 'G:i:s' : 'i:s', intdiv($mediaExtras[$asset->id]['duration_ms'], 1000)) }}</span>
+                                    @endif
+                                    <span>{{ trans_choice('studio_ui.captions.count', count($mediaExtras[$asset->id]['tracks']), ['count' => count($mediaExtras[$asset->id]['tracks'])]) }}</span>
+                                </div>
+                            @endif
                             @if ($issue)
                                 <div class="text-xs text-amber-700 dark:text-amber-300">{{ __('studio.issue.'.$issue['code']) }}</div>
                             @endif
@@ -340,6 +348,9 @@
                                 </flux:select>
                                 @error('assetRights.'.$asset->id)<div class="text-xs text-red-600">{{ $message }}</div>@enderror
                                 <div class="flex flex-wrap gap-1">
+                                    @if (isset($mediaExtras[$asset->id]))
+                                        <flux:button wire:click="openCaptions({{ $asset->id }})" size="xs" variant="ghost" icon="language" data-studio-captions>{{ __('studio_ui.captions.manage') }}</flux:button>
+                                    @endif
                                     @unless ($placedInDocument)
                                         <flux:button wire:click="addExistingMediaBlock('{{ $asset->uuid }}')" size="xs" variant="ghost">{{ __('studio_ui.place_in_document') }}</flux:button>
                                     @endunless
@@ -363,7 +374,42 @@
     {{-- Add media --}}
     @if ($canUpdate)
         <x-app.dialog :show="$mediaDialogOpen" close="closeMediaDialog" :title="__('studio_ui.media_dialog.'.($insertKind !== '' ? $insertKind : 'any'))">
-            @include('livewire.contexts.partials.studio-upload', ['insertKind' => $insertKind, 'uploadLimits' => $uploadLimits, 'rightsStatuses' => $rightsStatuses])
+            @include('livewire.contexts.partials.studio-upload', ['insertKind' => $insertKind, 'uploadLimits' => $uploadLimits, 'rightsStatuses' => $rightsStatuses, 'resumable' => $resumable])
+        </x-app.dialog>
+    @endif
+
+    {{-- Captions for a video or audio --}}
+    @if ($canUpdate && $captionAsset)
+        <x-app.dialog :show="true" close="closeCaptions" :title="__('studio_ui.captions.title')" size="sm">
+            <div class="space-y-4" data-studio-captions-dialog>
+                <p class="truncate text-sm font-medium" dir="auto">{{ $captionAsset->original_filename }}</p>
+                @php
+                    $captionTracks = $mediaExtras[$captionAsset->id]['tracks'] ?? [];
+                @endphp
+                @if ($captionTracks !== [])
+                    <ul class="space-y-2 text-sm">
+                        @foreach ($captionTracks as $track)
+                            <li class="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-700">
+                                <span dir="auto">{{ $track['label'] }} <span class="text-xs text-zinc-500">({{ $track['language'] }})</span></span>
+                                <flux:button wire:click="removeCaptions('{{ $track['uuid'] }}')" wire:confirm="{{ __('studio_ui.captions.remove_confirm') }}" size="xs" variant="ghost" class="text-red-600">{{ __('media.remove') }}</flux:button>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+                <div class="space-y-3 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                    <p class="text-xs text-zinc-500">{{ __('studio_ui.captions.help') }}</p>
+                    <input type="file" wire:model="captionUpload" accept=".vtt,.srt,text/vtt" class="block w-full text-sm" data-caption-input />
+                    @error('captionUpload')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+                    <div class="grid grid-cols-2 gap-3">
+                        <flux:input wire:model="captionLanguage" :label="__('studio_ui.captions.language')" maxlength="16" dir="ltr" />
+                        <flux:input wire:model="captionLabel" :label="__('studio_ui.captions.label')" maxlength="120" />
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <flux:button wire:click="closeCaptions" variant="ghost">{{ __('studio.cancel') }}</flux:button>
+                        <flux:button wire:click="addCaptions" variant="primary" wire:loading.attr="disabled" wire:target="captionUpload,addCaptions">{{ __('studio_ui.captions.add') }}</flux:button>
+                    </div>
+                </div>
+            </div>
         </x-app.dialog>
     @endif
 

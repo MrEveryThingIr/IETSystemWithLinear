@@ -1,3 +1,4 @@
 import './temporal';
+import './media-upload';
 import './realtime';
 import './system-map';

@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Actor;
 use App\Models\Asset;
+use App\Models\AssetMediaTrack;
+use App\Models\AssetMediaVariant;
 use App\Models\Context;
 use App\Models\Group;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentAnnotation;
 use App\Models\User;
+use App\Support\AssetHttpResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class SpaceContentAssetController extends Controller
 {
@@ -24,19 +27,10 @@ class SpaceContentAssetController extends Controller
         GroupSpace $space,
         SpaceContent $content,
         Asset $asset,
-    ): StreamedResponse {
+    ): Response {
         $this->authorizeAsset($request, $group, $space, $content, $asset);
 
-        return Storage::disk($asset->disk)->response(
-            $asset->storage_key,
-            $asset->original_filename,
-            [
-                'Content-Type' => $asset->mime_type,
-                'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'private, no-store',
-            ],
-            'inline',
-        );
+        return AssetHttpResponse::inline($asset);
     }
 
     public function download(
@@ -45,18 +39,10 @@ class SpaceContentAssetController extends Controller
         GroupSpace $space,
         SpaceContent $content,
         Asset $asset,
-    ): StreamedResponse {
+    ): Response {
         $this->authorizeAsset($request, $group, $space, $content, $asset);
 
-        return Storage::disk($asset->disk)->download(
-            $asset->storage_key,
-            $asset->original_filename,
-            [
-                'Content-Type' => $asset->mime_type,
-                'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'private, no-store',
-            ],
-        );
+        return AssetHttpResponse::download($asset);
     }
 
     public function showContext(
@@ -64,19 +50,10 @@ class SpaceContentAssetController extends Controller
         Context $context,
         SpaceContent $content,
         Asset $asset,
-    ): StreamedResponse {
+    ): Response {
         $this->authorizeContextAsset($request, $context, $content, $asset);
 
-        return Storage::disk($asset->disk)->response(
-            $asset->storage_key,
-            $asset->original_filename,
-            [
-                'Content-Type' => $asset->mime_type,
-                'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'private, no-store',
-            ],
-            'inline',
-        );
+        return AssetHttpResponse::inline($asset);
     }
 
     public function downloadContext(
@@ -84,18 +61,49 @@ class SpaceContentAssetController extends Controller
         Context $context,
         SpaceContent $content,
         Asset $asset,
-    ): StreamedResponse {
+    ): Response {
         $this->authorizeContextAsset($request, $context, $content, $asset);
 
-        return Storage::disk($asset->disk)->download(
-            $asset->storage_key,
-            $asset->original_filename,
-            [
-                'Content-Type' => $asset->mime_type,
-                'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'private, no-store',
-            ],
-        );
+        return AssetHttpResponse::download($asset);
+    }
+
+    /** A derivative of a Content asset (for example the video poster frame). */
+    public function variantContext(
+        Request $request,
+        Context $context,
+        SpaceContent $content,
+        Asset $asset,
+        AssetMediaVariant $variant,
+    ): Response {
+        abort_unless((int) $variant->asset_id === (int) $asset->id && $variant->storage_key !== null, 404);
+        $this->authorizeContextAsset($request, $context, $content, $asset);
+        abort_unless(Storage::disk((string) $variant->disk)->exists($variant->storage_key), 404);
+
+        return Storage::disk((string) $variant->disk)->response($variant->storage_key, null, [
+            'Content-Type' => (string) $variant->mime_type,
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
+    }
+
+    /** A WebVTT captions track of a Content audio/video asset. */
+    public function trackContext(
+        Request $request,
+        Context $context,
+        SpaceContent $content,
+        Asset $asset,
+        AssetMediaTrack $track,
+    ): Response {
+        abort_unless((int) $track->asset_id === (int) $asset->id, 404);
+        $this->authorizeContextAsset($request, $context, $content, $asset);
+        abort_unless(Storage::disk($track->disk)->exists($track->storage_key), 404);
+
+        return Storage::disk($track->disk)->response($track->storage_key, null, [
+            'Content-Type' => 'text/vtt; charset=utf-8',
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'; sandbox",
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     private function authorizeContextAsset(

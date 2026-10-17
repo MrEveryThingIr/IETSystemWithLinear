@@ -56,4 +56,10 @@ return [
         'asset_id' => '资源 ID',
         'occurrence_id' => '事项 ID',
     ],
+    'player' => [
+        'speed' => '速度',
+        'captions_on' => '字幕开',
+        'captions_off' => '字幕关',
+        'keyboard_help' => '空格 播放/暂停 · ←/→ 5 秒 · J/L 10 秒 · F 全屏 · C 字幕',
+    ],
 ];

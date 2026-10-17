@@ -11,13 +11,18 @@ use App\Actions\Groups\RetryAssetMediaProcessing;
 use App\Actions\Groups\ReviseSpaceContent;
 use App\Actions\Groups\UpdateAssetRightsStatus;
 use App\Actions\Groups\UpdateSpaceContentBlocks;
+use App\Models\Actor;
 use App\Models\Asset;
+use App\Models\AssetMediaTrack;
 use App\Models\Context;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentBlock;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContextPresenter;
+use App\Support\Media\CaptionTracks;
+use App\Support\Media\MediaPresentation;
+use App\Support\Media\ResumableUploads;
 use App\Support\MediaLimits;
 use App\Support\SpaceContentPublicationEvidence;
 use Illuminate\Contracts\View\View;
@@ -82,6 +87,15 @@ class ContentStudio extends Component
     public string $insertKind = '';
 
     public bool $mediaDialogOpen = false;
+
+    /** Video/audio Asset whose captions are being managed. */
+    public ?int $captionAssetId = null;
+
+    public mixed $captionUpload = null;
+
+    public string $captionLanguage = '';
+
+    public string $captionLabel = '';
 
     public bool $publishPanelOpen = false;
 
@@ -286,6 +300,84 @@ class ContentStudio extends Component
         $this->closeMediaDialog();
         $this->resetErrorBag('publish');
         session()->flash('status', __('media.attached'));
+    }
+
+    /**
+     * A resumable (chunked) upload finished and attached its Asset to the
+     * draft. Place it in the document like a direct upload.
+     */
+    public function placeUploadedAsset(
+        string $assetUuid,
+        ReviseSpaceContent $revise,
+        UpdateSpaceContentBlocks $updateBlocks,
+    ): void {
+        $revision = $this->editableRevision();
+        $asset = $revision->assets()->where('assets.uuid', $assetUuid)->first();
+        abort_unless($asset instanceof Asset, 404);
+
+        $placeInDocument = $this->insertKind !== '' || $this->compositionMode === SpaceContentRevision::COMPOSITION_BLOCKS;
+        if (! $this->isDirty()) {
+            $this->reloadFromDraft();
+        }
+
+        $alreadyPlaced = collect($this->blocks)->contains(fn (array $block): bool => ($block['data']['asset_uuid'] ?? null) === $asset->uuid);
+        if ($placeInDocument && ! $alreadyPlaced) {
+            $caption = (string) DB::table('space_content_revision_assets')
+                ->where('space_content_revision_id', $revision->id)
+                ->where('asset_id', $asset->id)
+                ->value('caption');
+            $this->ensureBlockDocument();
+            $this->blocks[] = $this->mediaBlock($asset, $caption);
+        }
+
+        $this->persistDraft($revise, $updateBlocks);
+        $this->closeMediaDialog();
+        $this->resetErrorBag('publish');
+        session()->flash('status', __('media.attached'));
+    }
+
+    public function openCaptions(int $assetId): void
+    {
+        $asset = $this->asset($assetId);
+        abort_unless(in_array($asset->mediaKind(), ['video', 'audio'], true), 422);
+        $this->captionAssetId = $asset->id;
+        $this->captionLanguage = $this->captionLanguage !== '' ? $this->captionLanguage : (string) (request()->user()?->locale ?: app()->getLocale());
+        $this->reset('captionUpload', 'captionLabel');
+        $this->resetErrorBag(['captionUpload', 'captionLanguage', 'captionLabel']);
+    }
+
+    public function closeCaptions(): void
+    {
+        $this->captionAssetId = null;
+        $this->reset('captionUpload', 'captionLabel');
+    }
+
+    public function addCaptions(CaptionTracks $tracks): void
+    {
+        Gate::forUser($this->user())->authorize('update', $this->content);
+        abort_unless($this->captionAssetId !== null, 422);
+        $this->validate([
+            'captionUpload' => ['required', 'file', 'max:512', 'extensions:vtt,srt'],
+            'captionLanguage' => ['required', 'string', 'max:16'],
+            'captionLabel' => ['nullable', 'string', 'max:120'],
+        ]);
+        abort_unless($this->captionUpload instanceof UploadedFile, 422);
+
+        $asset = $this->editableRevision()->assets()->whereKey($this->captionAssetId)->first();
+        abort_unless($asset instanceof Asset, 404);
+
+        $tracks->store($asset, $this->captionUpload, $this->captionLanguage, $this->captionLabel, $this->actor());
+        $this->reset('captionUpload', 'captionLabel');
+        session()->flash('status', __('studio_ui.captions.added'));
+    }
+
+    public function removeCaptions(string $trackUuid, CaptionTracks $tracks): void
+    {
+        Gate::forUser($this->user())->authorize('update', $this->content);
+        $track = AssetMediaTrack::query()->where('uuid', $trackUuid)->firstOrFail();
+        abort_unless($this->editableRevision()->assets()->whereKey($track->asset_id)->exists(), 404);
+        $tracks->remove($track);
+        session()->flash('status', __('studio_ui.captions.removed'));
     }
 
     public function updateAssetRights(
@@ -520,6 +612,14 @@ class ContentStudio extends Component
             'placeAudience' => $presenter->audience($this->context),
             'kindLabel' => $current->blueprintVersion->blueprint->name ?? $current->definition->name,
             'uploadLimits' => MediaLimits::contentBytes(),
+            'resumable' => [
+                'limits' => ['video' => ResumableUploads::maxBytes('video'), 'audio' => ResumableUploads::maxBytes('audio')],
+                'createUrl' => route('contexts.contents.uploads.store', [$this->context, $current]),
+                'statusUrl' => route('contexts.contents.uploads.show', ['session' => '__SESSION__']),
+                'contentUuid' => $current->uuid,
+            ],
+            'mediaExtras' => MediaPresentation::forAssets($mediaAssets, $this->context, $current),
+            'captionAsset' => $this->captionAssetId !== null ? $mediaAssets->firstWhere('id', $this->captionAssetId) : null,
             'hasOutline' => (bool) ($current->blueprintVersion?->authoring['outline'] ?? true),
         ])->title($currentRevision->title);
     }
@@ -778,6 +878,14 @@ class ContentStudio extends Component
         return Asset::query()
             ->where('context_id', $this->context->id)
             ->findOrFail($assetId);
+    }
+
+    private function actor(): Actor
+    {
+        $user = User::query()->with('actor')->find($this->user()->id);
+        abort_unless($user instanceof User && $user->actor instanceof Actor, 403);
+
+        return $user->actor;
     }
 
     private function user(): User

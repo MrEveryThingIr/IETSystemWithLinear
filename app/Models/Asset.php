@@ -256,6 +256,18 @@ class Asset extends Model
             ->withTimestamps();
     }
 
+    /** @return HasMany<AssetMediaVariant, $this> */
+    public function variants(): HasMany
+    {
+        return $this->hasMany(AssetMediaVariant::class);
+    }
+
+    /** @return HasMany<AssetMediaTrack, $this> */
+    public function tracks(): HasMany
+    {
+        return $this->hasMany(AssetMediaTrack::class)->orderByDesc('is_default')->orderBy('id');
+    }
+
     /** @return HasMany<BusinessListingMedia, $this> */
     public function businessListingMedia(): HasMany
     {
