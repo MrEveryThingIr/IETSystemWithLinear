@@ -374,6 +374,7 @@ return [
         'changelog' => '查看更新日志',
     ],
     'common' => [
+        'close' => '关闭',
         'back_to_group' => '返回群组',
         'all_groups' => '所有群组',
         'save' => '保存',

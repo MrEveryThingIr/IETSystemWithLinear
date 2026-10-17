@@ -331,54 +331,6 @@ class ExperienceHubController extends Controller
         ]);
     }
 
-    public function content(Request $request): View
-    {
-        $user = $this->user($request);
-        $this->requireAny($user, ['content']);
-
-        $actor = $user->actor;
-        abort_unless($actor instanceof Actor, 403);
-
-        $binding = PersonalContext::query()
-            ->with(['context.contents.activeRevision'])
-            ->where('actor_id', $actor->id)
-            ->first();
-
-        $allContents = $binding?->context->contents ?? collect();
-        $contentCount = $allContents->count();
-        $contents = $allContents
-            ->sortByDesc('updated_at')
-            ->take(6)
-            ->values();
-
-        return $this->renderHub('content', [
-            [
-                'title' => __('experience.hubs.content.mine'),
-                'help' => __('experience.hubs.content.mine_help'),
-                'count' => $contentCount,
-                'primary' => ['label' => __('experience.hubs.content.open_mine'), 'href' => route('contexts.personal')],
-                'items' => $contents->map(fn ($content): array => [
-                    'title' => $content->activeRevision?->title ?: __('ui.content.untitled'),
-                    'meta' => __('experience.hubs.content.status_'.$content->status),
-                    'href' => route('contexts.contents.show', [$content->context, $content]),
-                ])->all(),
-                'empty' => __('experience.hubs.content.mine_empty'),
-            ],
-            [
-                'title' => __('experience.hubs.content.explore'),
-                'help' => __('experience.hubs.content.explore_help'),
-                'primary' => ['label' => __('experience.hubs.content.open_library'), 'href' => route('content.library')],
-                'items' => [],
-            ],
-            [
-                'title' => __('experience.hubs.content.create'),
-                'help' => __('experience.hubs.content.create_help'),
-                'primary' => ['label' => __('experience.hubs.content.create_action'), 'href' => route('contexts.personal')],
-                'items' => [],
-            ],
-        ]);
-    }
-
     public function help(Request $request): View
     {
         $user = $this->user($request);

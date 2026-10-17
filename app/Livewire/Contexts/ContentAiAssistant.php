@@ -29,6 +29,9 @@ class ContentAiAssistant extends Component
 
     public ?string $assistantError = null;
 
+    /** Rendered as a panel inside the Studio instead of a full page. */
+    public bool $embedded = false;
+
     public function mount(Context $context, SpaceContent $content): void
     {
         abort_unless((int) $content->context_id === (int) $context->id, 404);
@@ -84,6 +87,7 @@ class ContentAiAssistant extends Component
         $this->content = $this->content->refresh();
         $this->selectedRunUuid = null;
         $this->assistantError = null;
+        $this->dispatch('content-revised');
         session()->flash('status', __('ai.applied'));
     }
 

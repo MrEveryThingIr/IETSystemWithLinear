@@ -1,4 +1,5 @@
-<section class="mx-auto max-w-5xl space-y-6">
+<section @class(['space-y-5' => $embedded, 'mx-auto max-w-5xl space-y-6' => ! $embedded])>
+    @unless ($embedded)
     <x-app.flash-message />
 
     <x-app.page-header
@@ -16,12 +17,13 @@
             </div>
         </x-slot:actions>
     </x-app.page-header>
+    @endunless
 
     <flux:callout>
         {{ __('ai.safety_note') }}
     </flux:callout>
 
-    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div @class(['space-y-5' => $embedded, 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]' => ! $embedded])>
         <div class="space-y-6">
             <flux:card class="space-y-4">
                 <div>
@@ -32,7 +34,7 @@
                 <flux:textarea
                     wire:model="prompt"
                     :label="__('ai.prompt')"
-                    rows="7"
+                    :rows="$embedded ? 4 : 7"
                     maxlength="8000"
                     :placeholder="__('ai.prompt_placeholder')"
                 />

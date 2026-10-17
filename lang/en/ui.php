@@ -379,6 +379,7 @@ return [
         'changelog' => 'View changelog',
     ],
     'common' => [
+        'close' => 'Close',
         'back_to_group' => 'Back to group',
         'all_groups' => 'All groups',
         'save' => 'Save',

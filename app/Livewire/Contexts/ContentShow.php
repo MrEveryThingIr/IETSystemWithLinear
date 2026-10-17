@@ -23,8 +23,10 @@ use App\Models\SpaceContentAnnotationDisposition;
 use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\ContentCourseNavigation;
 use App\Support\ContentInteractionSettings;
 use App\Support\ContentRolePolicy;
+use App\Support\ContextPresenter;
 use App\Support\MediaLimits;
 use App\Support\SpaceContentPublishedOutline;
 use Illuminate\Contracts\View\View;
@@ -74,6 +76,9 @@ class ContentShow extends Component
     public ?string $viewingEvidenceReferenceUuid = null;
 
     public ?string $viewingRevisionUuid = null;
+
+    /** An editor is previewing the unpublished draft (read-only, no interactions). */
+    public bool $previewingDraft = false;
 
     public string $commentBody = '';
 
@@ -133,6 +138,14 @@ class ContentShow extends Component
         Gate::forUser($user)->authorize('view', $content);
 
         $revision = $this->evidenceRevision($context, $content);
+
+        if (! $revision instanceof SpaceContentRevision
+            && request()->query('preview') === 'draft'
+            && Gate::forUser($user)->allows('revisions', $content)
+            && $content->draftRevisionRecord() instanceof SpaceContentRevision) {
+            $this->previewingDraft = true;
+            $revision = $content->draftRevisionRecord();
+        }
 
         if (! $revision instanceof SpaceContentRevision) {
             $revision = $content->activeRevisionRecord();
@@ -707,13 +720,19 @@ class ContentShow extends Component
     {
         $user = $this->user();
         $current = SpaceContent::query()
-            ->with(['author.user', 'definition', 'activeRevision'])
+            ->with(['author.user', 'definition', 'activeRevision', 'blueprintVersion.blueprint'])
             ->findOrFail($this->content->id);
         abort_unless((int) $current->context_id === (int) $this->context->id, 404);
         Gate::forUser($user)->authorize('view', $current);
         $this->content = $current;
 
         $revision = $this->evidenceRevision($this->context, $current);
+
+        if (! $revision instanceof SpaceContentRevision && $this->previewingDraft) {
+            $draft = Gate::forUser($user)->allows('revisions', $current) ? $current->draftRevisionRecord() : null;
+            $this->previewingDraft = $draft instanceof SpaceContentRevision;
+            $revision = $draft;
+        }
 
         if (! $revision instanceof SpaceContentRevision) {
             $revision = $current->activeRevision;
@@ -844,7 +863,17 @@ class ContentShow extends Component
                 ->values();
         }
 
+        $this->context->loadMissing(ContextPresenter::RELATIONS);
+        $placeLabel = app(ContextPresenter::class)->label($this->context);
+        $courseNavigation = $this->viewingEvidenceReferenceUuid === null && $this->viewingRevisionUuid === null
+            ? app(ContentCourseNavigation::class)->for($current, $user)
+            : null;
+        $kindLabel = $current->blueprintVersion->blueprint->name ?? $current->definition->name;
+
         return view('livewire.contexts.content-show', compact(
+            'placeLabel',
+            'courseNavigation',
+            'kindLabel',
             'revision',
             'definitionVersion',
             'outline',

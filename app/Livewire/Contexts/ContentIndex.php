@@ -14,6 +14,7 @@ use App\Models\SpaceContentDefinitionVersion;
 use App\Models\Submission;
 use App\Models\User;
 use App\Support\ContentBlueprintCatalog;
+use App\Support\ContextPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -249,7 +250,13 @@ class ContentIndex extends Component
                 ->count()
             : 0;
 
+        $current->loadMissing(ContextPresenter::RELATIONS);
+        $placeLabel = app(ContextPresenter::class)->label($current);
+        $placeAudience = app(ContextPresenter::class)->audience($current);
+
         return view('livewire.contexts.content-index', compact(
+            'placeLabel',
+            'placeAudience',
             'blueprints',
             'selectedBlueprint',
             'selectedBlueprintVersion',

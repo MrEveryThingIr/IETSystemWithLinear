@@ -2,8 +2,8 @@
     <x-app.flash-message />
 
     <x-app.page-header
-        :title="__('ui.context_content.title')"
-        :description="__('ui.context_content.help')"
+        :title="$placeLabel"
+        :description="$placeAudience.' · '.__('ui.context_content.help')"
     >
         <x-slot:actions>
             @if ($canReviewInteractions)
@@ -12,8 +12,11 @@
                 </flux:button>
             @endif
             @if ($canCreate && ! $creatorOpen)
-                <flux:button wire:click="openCreator" variant="primary" class="w-full sm:w-auto">
+                <flux:button wire:click="openCreator" variant="ghost" class="w-full sm:w-auto">
                     {{ __('ui.context_content.create_with_blueprint') }}
+                </flux:button>
+                <flux:button wire:click="$dispatch('open-content-create')" variant="primary" icon="plus" class="w-full sm:w-auto" data-content-create>
+                    {{ __('content_workspace.create_button') }}
                 </flux:button>
             @endif
         </x-slot:actions>
@@ -261,5 +264,8 @@
                 @endif
             </div>
         </details>
+    @endif
+    @if ($canCreate)
+        <livewire:content.create-content :fixed-context-uuid="$context->uuid" />
     @endif
 </section>

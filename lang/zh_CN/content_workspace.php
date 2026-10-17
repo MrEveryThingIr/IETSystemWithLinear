@@ -1,0 +1,83 @@
+<?php
+
+return [
+    'title' => '内容',
+    'help' => '你写的和能阅读的一切，都在这里。',
+    'browse_library' => '浏览资料库',
+    'create_button' => '新建',
+    'search_placeholder' => '搜索内容…',
+    'place_filter' => '位置',
+    'all_places' => '所有位置',
+    'place_tools' => '此位置的模板和设置',
+    'views_label' => '内容视图',
+    'views' => [
+        'all' => '全部',
+        'drafts' => '草稿',
+        'published' => '已发布',
+        'shared' => '与我共享',
+        'learning' => '课程与学习',
+        'archived' => '已归档',
+    ],
+    'empty_filtered' => '没有符合这些筛选条件的内容。',
+    'clear_filters' => '清除筛选',
+    'empty_title' => '这里还没有内容',
+    'empty_help' => '从一条笔记、一篇文章或一节课开始。发布前它保持私密。',
+    'state' => [
+        'draft' => '草稿',
+        'published' => '已发布',
+        'published_changes' => '已发布 · 有未发布的更改',
+        'archived' => '已归档',
+    ],
+    'edited' => '编辑于',
+    'open_editor' => '编辑',
+    'read' => '阅读',
+    'show_archived' => '显示已归档（:count）',
+    'back_to_all' => '返回全部内容',
+    'context' => [
+        'business' => '企业',
+        'untitled' => '未命名',
+        'system' => '系统',
+    ],
+    'audience' => [
+        'personal' => '只有你能看到',
+        'business' => '企业团队可见',
+        'group' => '群组成员可见',
+        'admission' => '此录取中的人员可见',
+        'participants' => '参与者可见',
+        'everyone_signed_in' => '所有已登录用户可见',
+    ],
+    'kinds' => [
+        'note' => [
+            'name' => '笔记',
+            'help' => '简短笔记、日记或感想。',
+        ],
+        'article' => [
+            'name' => '文章',
+            'help' => '带摘要和正文的较长内容。',
+        ],
+        'lesson' => [
+            'name' => '课',
+            'help' => '包含目标、正文、媒体和练习的教学单元。',
+        ],
+        'course' => [
+            'name' => '课程',
+            'help' => '按顺序组织课和单元。',
+        ],
+        'evidence' => [
+            'name' => '证明 / 工作样本',
+            'help' => '工作证明：做了什么、何时以及结果。',
+        ],
+    ],
+    'create' => [
+        'title' => '新建',
+        'help' => '你要创建什么？',
+        'more_templates' => '更多模板和自定义类型',
+        'title_label' => '标题',
+        'where' => '所在位置',
+        'audience_when_published' => '发布后：:audience。',
+        'private_until_published' => '发布前它是私密草稿。',
+        'back' => '返回',
+        'submit' => '创建并打开',
+        'kind_unavailable_here' => '所选位置不提供此类型。',
+    ],
+];
