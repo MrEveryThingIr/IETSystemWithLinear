@@ -17,9 +17,11 @@ final class MediaPresentation
 {
     /**
      * @param  Collection<int, Asset>  $assets
+     * @param  (callable(Asset, AssetMediaVariant): string)|null  $posterUrl  route builder for guests
+     * @param  (callable(Asset, AssetMediaTrack): string)|null  $trackUrl  route builder for guests
      * @return array<int, array{poster: string|null, tracks: list<array{src: string, label: string, language: string, default: bool, uuid: string}>, duration_ms: int|null}>
      */
-    public static function forAssets(Collection $assets, Context $context, SpaceContent $content): array
+    public static function forAssets(Collection $assets, Context $context, SpaceContent $content, ?callable $posterUrl = null, ?callable $trackUrl = null): array
     {
         $media = $assets->filter(fn (Asset $asset): bool => in_array($asset->mediaKind(), ['video', 'audio'], true));
         if ($media->isEmpty()) {
@@ -38,11 +40,11 @@ final class MediaPresentation
 
             $extras[$asset->id] = [
                 'poster' => $poster instanceof AssetMediaVariant
-                    ? route('contexts.contents.assets.variants.show', [$context, $content, $asset, $poster])
+                    ? ($posterUrl !== null ? $posterUrl($asset, $poster) : route('contexts.contents.assets.variants.show', [$context, $content, $asset, $poster]))
                     : null,
                 'tracks' => $tracks->get($asset->id, collect())
                     ->map(fn (AssetMediaTrack $track): array => [
-                        'src' => route('contexts.contents.assets.tracks.show', [$context, $content, $asset, $track]),
+                        'src' => $trackUrl !== null ? $trackUrl($asset, $track) : route('contexts.contents.assets.tracks.show', [$context, $content, $asset, $track]),
                         'label' => $track->label,
                         'language' => $track->language,
                         'default' => $track->is_default,

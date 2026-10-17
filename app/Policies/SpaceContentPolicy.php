@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\ContextKind;
 use App\Models\Actor;
 use App\Models\ContentPlacement;
 use App\Models\GroupSpace;
@@ -81,6 +82,55 @@ class SpaceContentPolicy
     public function revisions(User $user, SpaceContent $content): bool
     {
         return $this->canReadPrivate($user, $content);
+    }
+
+    /**
+     * Open published Content to guests (public page or invitation links).
+     *
+     * Only the author decides. In a personal place that is enough; in a group
+     * or business the author must also be someone who manages that place's
+     * Content, because the place's members did not agree to a public audience.
+     * Admissions, negotiations, contracts and system places are never opened.
+     */
+    public function share(User $user, SpaceContent $content): bool
+    {
+        if ($content->status !== 'published' || ! $content->activeRevisionRecord() instanceof SpaceContentRevision) {
+            return false;
+        }
+
+        $content->loadMissing('context');
+        if (! in_array($content->context->kind, [ContextKind::Personal, ContextKind::GroupSpace, ContextKind::Business], true)) {
+            return false;
+        }
+
+        if (! $this->isAuthor($user, $content) || ! $this->contexts->view($user, $content->context)) {
+            return false;
+        }
+
+        return $content->context->kind === ContextKind::Personal
+            ? $this->contexts->createContent($user, $content->context)
+            : $this->contexts->manageContent($user, $content->context);
+    }
+
+    /** See who was invited, revoke links and close public access (author or place managers). */
+    public function manageSharing(User $user, SpaceContent $content): bool
+    {
+        $content->loadMissing('context');
+
+        if (! $this->contexts->view($user, $content->context)) {
+            return false;
+        }
+
+        return $this->isAuthor($user, $content) || $this->contexts->manageContent($user, $content->context);
+    }
+
+    private function isAuthor(User $user, SpaceContent $content): bool
+    {
+        $current = User::query()->with('actor')->find($user->id);
+
+        return $current instanceof User
+            && $current->actor instanceof Actor
+            && (int) $content->author_actor_id === (int) $current->actor->id;
     }
 
     private function canReadThroughPlacement(User $user, SpaceContent $content): bool

@@ -168,6 +168,7 @@ class Workspace extends Component
             'type' => $kind !== null ? __('content_workspace.kinds.'.$kind.'.name') : ($blueprint->name ?? $content->definition->name),
             'place' => $context instanceof Context ? $presenter->label($context) : null,
             'state' => $state,
+            'is_public' => $content->public_access === SpaceContent::ACCESS_PUBLIC && $content->status === 'published',
             'updated_at' => $content->updated_at?->copy()->setTimezone(TemporalPreferences::timezoneFor($this->user())),
             'author' => (int) $content->author_actor_id !== (int) $actor->id ? $content->author : null,
             'cover_url' => $cover !== null && $context instanceof Context

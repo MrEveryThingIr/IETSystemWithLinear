@@ -91,6 +91,9 @@
                                 };
                             @endphp
                             <flux:badge size="sm" :color="$stateColor">{{ __('content_workspace.state.'.$item['state']) }}</flux:badge>
+                            @if ($item['is_public'] ?? false)
+                                <flux:badge size="sm" color="green" icon="globe-alt" data-workspace-public>{{ __('public_content.workspace_badge') }}</flux:badge>
+                            @endif
                             @if ($item['cover_url'])
                                 <span class="text-zinc-500">{{ $item['type'] }}</span>
                             @endif

@@ -13,6 +13,8 @@ use App\Http\Controllers\ContentRevisionController;
 use App\Http\Controllers\ContextConversationAssetController;
 use App\Http\Controllers\ExperienceHubController;
 use App\Http\Controllers\GroupInvitationController;
+use App\Http\Controllers\GuestContentController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MediaUploadSessionController;
@@ -98,7 +100,7 @@ use App\Models\Proposal;
 use App\Models\Relationship;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => view('welcome'));
+Route::get('/', HomeController::class);
 Route::get('/join/{token}', [AccessInvitationController::class, 'show'])->name('access-invitations.show');
 Route::post('/locale', LocaleController::class)->name('locale.update');
 Route::get('/people/{actor}', ActorProfileReferenceController::class)->name('actors.profile.reference');
@@ -107,6 +109,24 @@ Route::livewire('/profiles/{profile}', ProfileShow::class)->name('profiles.show'
 Route::get('/profiles/{profile}/images/{image}', [ActorProfileImageController::class, 'show'])
     ->name('profiles.images.show');
 Route::get('/invitations/{token}', [GroupInvitationController::class, 'show'])->name('invitations.show');
+// Content read by guests (no account needed), always opened by its author:
+// public posts listed at /public, and personal invitation links at /read/{token}.
+Route::middleware('throttle:120,1')->group(function (): void {
+    Route::get('/public', [GuestContentController::class, 'index'])->name('public-content.index');
+    Route::get('/public/{content}', [GuestContentController::class, 'show'])->name('public-content.show');
+    Route::get('/read/{token}', [GuestContentController::class, 'invitation'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.show');
+    Route::get('/read/{token}/{content}', [GuestContentController::class, 'invitationContent'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.content');
+});
+Route::middleware('throttle:600,1')->group(function (): void {
+    Route::get('/public/{content}/assets/{asset}', [GuestContentController::class, 'publicAsset'])->name('public-content.assets.show');
+    Route::get('/public/{content}/assets/{asset}/download', [GuestContentController::class, 'publicAssetDownload'])->name('public-content.assets.download');
+    Route::get('/public/{content}/assets/{asset}/variants/{variant}', [GuestContentController::class, 'publicVariant'])->name('public-content.assets.variants.show');
+    Route::get('/public/{content}/assets/{asset}/tracks/{track}', [GuestContentController::class, 'publicTrack'])->name('public-content.assets.tracks.show');
+    Route::get('/read/{token}/{content}/assets/{asset}', [GuestContentController::class, 'invitationAsset'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.assets.show');
+    Route::get('/read/{token}/{content}/assets/{asset}/download', [GuestContentController::class, 'invitationAssetDownload'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.assets.download');
+    Route::get('/read/{token}/{content}/assets/{asset}/variants/{variant}', [GuestContentController::class, 'invitationVariant'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.assets.variants.show');
+    Route::get('/read/{token}/{content}/assets/{asset}/tracks/{track}', [GuestContentController::class, 'invitationTrack'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.assets.tracks.show');
+});
 Route::post('/invitations/{token}/accept', [GroupInvitationController::class, 'accept'])->middleware(['auth', 'account.active', 'verified', 'throttle:invitation-acceptance'])->name('invitations.accept');
 Route::middleware('guest')->group(function (): void {
     Route::livewire('/join/{token}/register', AccessRegister::class)->name('access-invitations.register');

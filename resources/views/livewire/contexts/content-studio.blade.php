@@ -83,6 +83,9 @@
                         @if ($canOpenReader)
                             <flux:menu.item icon="book-open" :href="route('contexts.contents.show', [$context, $content])">{{ __('ui.context_content.open_reader') }}</flux:menu.item>
                         @endif
+                        @if ($canShareOutside)
+                            <flux:menu.item icon="share" x-on:click="$dispatch('open-drawer', 'share')" data-studio-share>{{ __('public_content.share.button') }}</flux:menu.item>
+                        @endif
                         @if ($canViewRevisions)
                             <flux:menu.item icon="clock" x-on:click="$dispatch('open-drawer', 'history')">{{ __('studio_ui.version_history') }}</flux:menu.item>
                         @endif
@@ -520,6 +523,12 @@
                     @endforeach
                 </div>
             @endif
+        </x-app.drawer>
+    @endif
+
+    @if ($canShareOutside)
+        <x-app.drawer name="share" :title="__('public_content.share.title')" width="sm:max-w-lg">
+            <livewire:content.share-panel :content="$content" :key="'studio-share-'.$content->uuid" />
         </x-app.drawer>
     @endif
 

@@ -559,6 +559,7 @@ class ContentStudio extends Component
         $canArchive = Gate::forUser($user)->allows('archive', $current);
         $canRestore = Gate::forUser($user)->allows('restore', $current);
         $canViewRevisions = Gate::forUser($user)->allows('revisions', $current);
+        $canShareOutside = Gate::forUser($user)->allows('manageSharing', $current);
 
         $currentRevision = $this->visibleRevision($canUpdate || $canViewRevisions);
         $currentRevision->loadMissing(['assets.uploader.user']);
@@ -601,6 +602,7 @@ class ContentStudio extends Component
             'canArchive' => $canArchive,
             'canRestore' => $canRestore,
             'canViewRevisions' => $canViewRevisions,
+            'canShareOutside' => $canShareOutside,
             'canOpenReader' => $canOpenReader,
             'mediaAssets' => $mediaAssets,
             'mediaByUuid' => $mediaAssets->keyBy('uuid'),

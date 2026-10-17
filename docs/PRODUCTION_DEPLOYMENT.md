@@ -21,6 +21,19 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v1.3.0** — everything in v1.2.0 below, plus **sharing outside the
+  system**: the author of published Content can make it *public* (anyone can
+  read it without an account; it is listed at `/public` and previewed on the
+  home page) or send **personal invitation links** (`/read/…`) that let one
+  person read one piece — a course link also opens its lessons. Links can
+  expire, can be turned off at any time, and show how often they were opened.
+  Guests only ever see the published version: no drafts, history, comments or
+  places. In a group or business only an author who also manages that place's
+  content can share outside. Set `PUBLIC_CONTENT_INDEX=false` to keep the site
+  invitation-only (no `/public` list or home preview; direct public links and
+  invitation links keep working). One more additive migration; v1.2.0 was not
+  deployed, so an existing v1.1.0 database upgrades straight to v1.3.0 with
+  the ordinary upgrade in section 5c (three migrations in total).
 - **v1.2.0** — everyday usability and lesson video:
   Planner evidence opens as a post (image, video, audio, PDF, file) through
   authorized routes; Today stays short however busy the day is; dates show no
@@ -58,14 +71,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.2.0`, so the package is
-   `iet-v1.2.0`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.3.0`, so the package is
+   `iet-v1.3.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.2.0`. It contains:
-   - `iet-v1.2.0.zip` — the runtime package (root directory `iet-v1.2.0/`)
-   - `iet-v1.2.0.zip.sha256` — checksum of the ZIP
-   - `iet-v1.2.0.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.2.0.zip.sha256`.
+3. Download the artifact `iet-v1.3.0`. It contains:
+   - `iet-v1.3.0.zip` — the runtime package (root directory `iet-v1.3.0/`)
+   - `iet-v1.3.0.zip.sha256` — checksum of the ZIP
+   - `iet-v1.3.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.3.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -318,6 +331,16 @@ Additional checks for v1.2.0:
 12. **Lesson video**: insert a video of 50–100 MB; refresh the page halfway;
     choose the same file again — it continues; after publishing it plays,
     seeks, and shows its poster. Add an `.srt` or `.vtt` caption file.
+
+Additional checks for v1.3.0 (use a private browser window as the guest):
+
+13. **Public post**: in a published lesson choose *Share → Make public*. In a
+    private window `/public` lists it, the home page previews it, and it opens
+    and plays its video without logging in. *Make private* — it is gone (404).
+14. **Invitation link**: *Share → Create link* for a name with a message. In a
+    private window the link shows the greeting, the message and the content;
+    the panel counts the view. *Turn off* — the link now says it no longer
+    works.
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

@@ -870,10 +870,14 @@ class ContentShow extends Component
             ? app(ContentCourseNavigation::class)->for($current, $user)
             : null;
         $kindLabel = $current->blueprintVersion->blueprint->name ?? $current->definition->name;
+        $canShareOutside = Gate::forUser($user)->allows('share', $current)
+            || ($current->public_access === SpaceContent::ACCESS_PUBLIC && Gate::forUser($user)->allows('manageSharing', $current))
+            || ($canEnterStudio && Gate::forUser($user)->allows('manageSharing', $current) && $current->invitations()->exists());
         $mediaExtras = MediaPresentation::forAssets($revision->assets, $this->context, $current);
 
         return view('livewire.contexts.content-show', compact(
             'placeLabel',
+            'canShareOutside',
             'courseNavigation',
             'mediaExtras',
             'kindLabel',
