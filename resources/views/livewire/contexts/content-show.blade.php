@@ -358,9 +358,9 @@
                                             @if ($block->type === 'image')
                                                 <img src="{{ $assetUrl }}" alt="{{ $asset->alt_text ?: ($blockData['caption'] ?? $asset->original_filename) }}" class="mx-auto max-h-[42rem] w-auto {{ $radiusClass }} object-contain" loading="lazy" />
                                             @elseif ($block->type === 'audio')
-                                                <audio controls preload="metadata" class="w-full" src="{{ $assetUrl }}"></audio>
+                                                <x-media.video-player audio :src="$assetUrl" :tracks="$mediaExtras[$asset->id]['tracks'] ?? []" :duration-ms="$mediaExtras[$asset->id]['duration_ms'] ?? null" />
                                             @elseif ($block->type === 'video')
-                                                <video controls preload="metadata" class="max-h-[42rem] w-full {{ $radiusClass }} bg-black" src="{{ $assetUrl }}"></video>
+                                                <x-media.video-player :src="$assetUrl" :poster="$mediaExtras[$asset->id]['poster'] ?? null" :tracks="$mediaExtras[$asset->id]['tracks'] ?? []" :duration-ms="$mediaExtras[$asset->id]['duration_ms'] ?? null" :media-class="'max-h-[42rem] w-full '.$radiusClass.' bg-black'" />
                                             @else
                                                 <a href="{{ $downloadUrl }}" class="block p-4 font-medium" dir="auto">{{ __('reader.download') }} · {{ $asset->original_filename }}</a>
                                             @endif
@@ -429,10 +429,18 @@
                     @endforelse
                 @endif
 
-                @if ($revision->assets->isNotEmpty() && $revision->composition_mode !== \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS)
+                @php
+                    // Media the document does not place inline is still shown, so
+                    // nothing attached to an edition is invisible to its readers.
+                    $placedAssetUuids = $revision->composition_mode === \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS
+                        ? $blocks->map(fn ($block) => is_array($block->data) ? ($block->data['asset_uuid'] ?? null) : null)->filter()->all()
+                        : [];
+                    $listedAssets = $revision->assets->reject(fn ($asset) => in_array($asset->uuid, $placedAssetUuids, true));
+                @endphp
+                @if ($listedAssets->isNotEmpty())
                     <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)">
                         <h2 class="text-xl {{ $headingClass }}">{{ __('reader.media') }}</h2>
-                        @foreach ($revision->assets as $asset)
+                        @foreach ($listedAssets as $asset)
                             @php
                                 $assetUrl = route('contexts.contents.assets.show', [$context, $content, $asset]);
                                 $downloadUrl = route('contexts.contents.assets.download', [$context, $content, $asset]);
@@ -451,10 +459,10 @@
                                         <img src="{{ $assetUrl }}" alt="{{ $asset->alt_text ?: ($caption ?: $asset->original_filename) }}" class="mx-auto max-h-[42rem] w-auto {{ $radiusClass }} object-contain" loading="lazy" />
                                         @break
                                     @case('audio')
-                                        <audio controls preload="metadata" class="w-full" src="{{ $assetUrl }}"></audio>
+                                        <x-media.video-player audio :src="$assetUrl" :tracks="$mediaExtras[$asset->id]['tracks'] ?? []" :duration-ms="$mediaExtras[$asset->id]['duration_ms'] ?? null" />
                                         @break
                                     @case('video')
-                                        <video controls preload="metadata" class="max-h-[42rem] w-full {{ $radiusClass }} bg-black" src="{{ $assetUrl }}"></video>
+                                        <x-media.video-player :src="$assetUrl" :poster="$mediaExtras[$asset->id]['poster'] ?? null" :tracks="$mediaExtras[$asset->id]['tracks'] ?? []" :duration-ms="$mediaExtras[$asset->id]['duration_ms'] ?? null" :media-class="'max-h-[42rem] w-full '.$radiusClass.' bg-black'" />
                                         @break
                                     @case('pdf')
                                         <a href="{{ $assetUrl }}" target="_blank" rel="noopener" class="block p-5 font-medium" dir="auto">{{ $asset->original_filename }} ↗</a>

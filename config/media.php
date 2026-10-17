@@ -39,6 +39,33 @@ return [
     | produces a normal validation error instead of a server error.
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Resumable uploads (large audio and video)
+    |--------------------------------------------------------------------------
+    |
+    | Lesson video and long audio are uploaded in chunks, each one small enough
+    | for the host's PHP upload limits, so file size is not limited by
+    | post_max_size. chunk_kb is lowered automatically below the host limit.
+    |
+    */
+    'resumable' => [
+        'chunk_kb' => (int) env('MEDIA_RESUMABLE_CHUNK_KB', 4096),
+        'max_video_kb' => (int) env('MEDIA_RESUMABLE_MAX_VIDEO_KB', 1048576),
+        'max_audio_kb' => (int) env('MEDIA_RESUMABLE_MAX_AUDIO_KB', 512000),
+        'session_hours' => (int) env('MEDIA_RESUMABLE_SESSION_HOURS', 48),
+        'max_open_sessions' => (int) env('MEDIA_RESUMABLE_MAX_OPEN_SESSIONS', 5),
+    ],
+
+    /*
+    | Video processing implementation (App\Contracts\Media\VideoProcessor).
+    | "local" works on shared hosting: no transcoding, browser-measured
+    | metadata and poster, byte-range streaming of the original file.
+    */
+    'video' => [
+        'processor' => env('MEDIA_VIDEO_PROCESSOR', 'local'),
+    ],
+
     'limits' => [
         'profile_image' => (int) env('MEDIA_LIMIT_PROFILE_IMAGE_KB', 8192),
         'asset' => (int) env('MEDIA_LIMIT_ASSET_KB', 12288),

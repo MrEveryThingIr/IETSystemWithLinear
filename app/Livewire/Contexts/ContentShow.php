@@ -27,6 +27,7 @@ use App\Support\ContentCourseNavigation;
 use App\Support\ContentInteractionSettings;
 use App\Support\ContentRolePolicy;
 use App\Support\ContextPresenter;
+use App\Support\Media\MediaPresentation;
 use App\Support\MediaLimits;
 use App\Support\SpaceContentPublishedOutline;
 use Illuminate\Contracts\View\View;
@@ -869,10 +870,12 @@ class ContentShow extends Component
             ? app(ContentCourseNavigation::class)->for($current, $user)
             : null;
         $kindLabel = $current->blueprintVersion->blueprint->name ?? $current->definition->name;
+        $mediaExtras = MediaPresentation::forAssets($revision->assets, $this->context, $current);
 
         return view('livewire.contexts.content-show', compact(
             'placeLabel',
             'courseNavigation',
+            'mediaExtras',
             'kindLabel',
             'revision',
             'definitionVersion',

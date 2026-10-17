@@ -56,4 +56,10 @@ return [
         'asset_id' => 'Asset ID',
         'occurrence_id' => 'Occurrence ID',
     ],
+    'player' => [
+        'speed' => 'Speed',
+        'captions_on' => 'Captions on',
+        'captions_off' => 'Captions off',
+        'keyboard_help' => 'Space play/pause · ←/→ 5 s · J/L 10 s · F fullscreen · C captions',
+    ],
 ];

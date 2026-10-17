@@ -15,6 +15,7 @@ use App\Http\Controllers\ExperienceHubController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MediaUploadSessionController;
 use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\PlanOccurrenceAssetController;
 use App\Http\Controllers\SpaceContentAssetController;
@@ -188,6 +189,19 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->name('contexts.contents.assets.show');
     Route::get('/contexts/{context}/contents/{content}/assets/{asset}/download', [SpaceContentAssetController::class, 'downloadContext'])
         ->name('contexts.contents.assets.download');
+    Route::get('/contexts/{context}/contents/{content}/assets/{asset}/variants/{variant}', [SpaceContentAssetController::class, 'variantContext'])
+        ->name('contexts.contents.assets.variants.show');
+    Route::get('/contexts/{context}/contents/{content}/assets/{asset}/tracks/{track}', [SpaceContentAssetController::class, 'trackContext'])
+        ->name('contexts.contents.assets.tracks.show');
+    Route::post('/contexts/{context}/contents/{content}/uploads', [MediaUploadSessionController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('contexts.contents.uploads.store');
+    Route::get('/content-uploads/{session}', [MediaUploadSessionController::class, 'show'])->name('contexts.contents.uploads.show');
+    Route::post('/content-uploads/{session}/chunks', [MediaUploadSessionController::class, 'chunk'])
+        ->middleware('throttle:600,1')
+        ->name('contexts.contents.uploads.chunk');
+    Route::post('/content-uploads/{session}/complete', [MediaUploadSessionController::class, 'complete'])->name('contexts.contents.uploads.complete');
+    Route::delete('/content-uploads/{session}', [MediaUploadSessionController::class, 'destroy'])->name('contexts.contents.uploads.destroy');
     Route::livewire('/contexts/{context}/contents/{content}/studio', ContextContentStudio::class)->name('contexts.contents.studio');
     Route::livewire('/contexts/{context}/contents/{content}/studio/ai', ContextContentAiAssistant::class)->name('contexts.contents.ai');
     Route::livewire('/contexts/{context}/contents/{content}/studio/blocks', ContextContentBlocks::class)->name('contexts.contents.blocks');

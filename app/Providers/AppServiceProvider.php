@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\Media\VideoProcessor;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\CommitmentEvent;
 use App\Models\ContractEvent;
@@ -12,6 +13,7 @@ use App\Models\ProposalEvent;
 use App\Models\RelationshipEvent;
 use App\Models\Submission;
 use App\Support\DomainNotificationProjector;
+use App\Support\Media\LocalVideoProcessor;
 use App\Support\MediaScannerPolicy;
 use App\Support\ReleaseManifest;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
@@ -28,7 +30,9 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(VideoProcessor::class, fn () => match ((string) config('media.video.processor', 'local')) {
+            default => new LocalVideoProcessor,
+        });
     }
 
     public function boot(): void
@@ -39,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
 
         // `php artisan about --only=release` proves which GitHub build is running.
         AboutCommand::add('Release', fn (): array => ReleaseManifest::aboutRows());
+        AboutCommand::add('Video', fn (): array => [
+            'Processor' => app(VideoProcessor::class)->name(),
+            'Resumable chunk (KB)' => (string) config('media.resumable.chunk_kb'),
+            'Max video (MB)' => (string) intdiv((int) config('media.resumable.max_video_kb'), 1024),
+        ]);
         AboutCommand::add('Media scanner', function (): array {
             $policy = app(MediaScannerPolicy::class);
 

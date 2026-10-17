@@ -27,10 +27,10 @@ class ContentBlueprintKernelTest extends TestCase
         $first = app(EnsureSystemContentBlueprints::class)->execute();
         $second = app(EnsureSystemContentBlueprints::class)->execute();
 
-        $this->assertCount(14, $first);
-        $this->assertCount(14, $second);
-        $this->assertDatabaseCount('content_blueprints', 14);
-        $this->assertDatabaseCount('content_blueprint_versions', 14);
+        $this->assertCount(15, $first);
+        $this->assertCount(15, $second);
+        $this->assertDatabaseCount('content_blueprints', 15);
+        $this->assertDatabaseCount('content_blueprint_versions', 15);
 
         $evidence = ContentBlueprint::query()->where('slug', 'evidence-work-sample')->firstOrFail();
         $version = $evidence->activeVersionRecord();
@@ -45,6 +45,7 @@ class ContentBlueprintKernelTest extends TestCase
         $this->assertTrue($catalog->contains('slug', 'media-album'));
         $this->assertTrue($catalog->contains('slug', 'book-booklet'));
         $this->assertTrue($catalog->contains('slug', 'course'));
+        $this->assertTrue($catalog->contains('slug', 'course-module'));
     }
 
     public function test_system_blueprints_are_available_in_admission_context_without_group_membership(): void
