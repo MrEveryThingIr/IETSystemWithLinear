@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\Content\CreateContentFromBlueprint;
 use App\Actions\Content\EnsureSystemContentBlueprints;
 use App\Actions\Contexts\EnsurePersonalContext;
+use App\Actions\Groups\AttachAssetToSpaceContent;
 use App\Livewire\Contexts\ContentStudio;
 use App\Models\Actor;
 use App\Models\ContentBlueprint;
@@ -101,7 +102,7 @@ class ContentStudioUploadExperienceTest extends TestCase
         [$actor, $context, $content] = $this->lesson();
 
         // 14 MB: above the old 12 MB general asset limit, within the document limit.
-        $content = app(\App\Actions\Groups\AttachAssetToSpaceContent::class)->execute(
+        $content = app(AttachAssetToSpaceContent::class)->execute(
             $content,
             $actor->user,
             UploadedFile::fake()->create('handbook.pdf', 14 * 1024, 'application/pdf'),
