@@ -374,6 +374,7 @@ return [
         'changelog' => 'عرض سجل التغييرات',
     ],
     'common' => [
+        'close' => 'إغلاق',
         'back_to_group' => 'العودة إلى المجموعة',
         'all_groups' => 'كل المجموعات',
         'save' => 'حفظ',

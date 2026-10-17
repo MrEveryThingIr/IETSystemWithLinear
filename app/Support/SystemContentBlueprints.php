@@ -122,6 +122,17 @@ class SystemContentBlueprints
                 $advanced,
             ),
             $this->preset(
+                'course',
+                'Course',
+                'A course that organizes modules, lessons, and exercises in order. Add lessons through Outline; each lesson stays ordinary Content.',
+                'learning',
+                [$this->field('summary', 'About this course', 'long_text', false)],
+                [$this->fieldBlock('summary')],
+                'book',
+                $allContexts,
+                $advanced,
+            ),
+            $this->preset(
                 'lesson',
                 'Lesson',
                 'A teaching unit with objective, lesson body, media, annotations, and child pages.',

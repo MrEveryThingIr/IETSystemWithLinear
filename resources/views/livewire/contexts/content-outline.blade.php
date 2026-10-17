@@ -1,4 +1,5 @@
-<section class="space-y-6">
+<section @class(['space-y-6' => ! $embedded, 'space-y-4' => $embedded])>
+    @unless ($embedded)
     <x-app.page-header :title="__('structure.title')" :description="__('structure.subtitle')">
         <x-slot:actions>
             <flux:button :href="route('contexts.contents.studio', [$context, $content])" variant="ghost">
@@ -6,6 +7,7 @@
             </flux:button>
         </x-slot:actions>
     </x-app.page-header>
+    @endunless
 
     @if (session('status'))
         <flux:callout variant="success">{{ session('status') }}</flux:callout>
@@ -24,7 +26,7 @@
         <flux:callout>{{ __('structure.publication_notice') }}</flux:callout>
     </flux:card>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div @class(['grid gap-6', 'xl:grid-cols-[minmax(0,1fr)_22rem]' => ! $embedded])>
         <flux:card class="space-y-4">
             <div class="flex items-start justify-between gap-3">
                 <div>

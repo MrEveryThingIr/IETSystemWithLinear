@@ -1,322 +1,488 @@
-<section class="mx-auto max-w-6xl space-y-6">
-    <x-app.flash-message />
-
-    <x-app.page-header
-        :title="$currentRevision->title"
-        :description="$content->blueprintVersion?->blueprint?->name ?? $content->definition->name"
-    />
-
+<section class="mx-auto max-w-7xl" data-content-studio>
     @php
-        $contentWorkflowState = $content->status === 'archived'
-            ? __('workflow.content_shell.state_archived')
-            : ($content->draft_revision_id
-                ? __('workflow.content_shell.state_draft')
-                : __('workflow.content_shell.state_live'));
-
-        $contentWorkflowStep = $content->status === 'published' && ! $content->draft_revision_id
-            ? 'publish'
-            : ($publishBlocked
-                ? 'media'
-                : ($canPublish ? 'preview' : 'write'));
-
-        $contentWorkflowNext = $content->status === 'published' && ! $content->draft_revision_id
-            ? __('workflow.content_shell.next_history')
-            : ($publishBlocked
-                ? __('workflow.content_shell.next_media')
-                : ($canPublish
-                    ? __('workflow.content_shell.next_publish')
-                    : __('workflow.content_shell.next_write')));
+        $isArchived = $content->status === 'archived';
+        $stateKey = match (true) {
+            $isArchived => 'archived',
+            $content->status === 'published' && $content->draft_revision_id !== null => 'published_changes',
+            $content->status === 'published' => 'published',
+            default => 'draft',
+        };
+        $stateColor = match ($stateKey) {
+            'published' => 'green',
+            'published_changes' => 'amber',
+            'archived' => 'zinc',
+            default => 'blue',
+        };
+        $isBlocks = $compositionMode === \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS;
+        $assetUrl = fn ($asset) => route('contexts.contents.assets.show', [$context, $content, $asset]);
+        $assetDownloadUrl = fn ($asset) => route('contexts.contents.assets.download', [$context, $content, $asset]);
     @endphp
 
-    <x-app.workflow-shell
-        :purpose="__('workflow.content_shell.purpose')"
-        :state="$contentWorkflowState"
-        :next-action="$contentWorkflowNext"
-        :audience="__('workflow.content_shell.audience')"
-        :consequence="__('workflow.content_shell.consequence')"
-        :result="__('workflow.content_shell.result')"
-        :steps="__('workflow.content_shell.steps')"
-        :current-step="$contentWorkflowStep"
-    >
-        <x-slot:actions>
-            @if ($canPublish && ! $publishBlocked)
-                <flux:button wire:click="publish" variant="primary">
-                    {{ __('ui.content.publish') }}
-                </flux:button>
-            @elseif ($canOpenReader)
-                <flux:button :href="route('contexts.contents.show', [$context, $content])" variant="primary">
-                    {{ __('ui.context_content.open_reader') }}
-                </flux:button>
-            @endif
+    {{-- Top bar: title, where it lives, and the few actions an author needs. --}}
+    <header class="sticky top-0 z-20 -mx-4 mb-5 border-b border-zinc-200 bg-zinc-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950/95" data-studio-topbar>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('experience.content') }}" wire:navigate class="inline-flex shrink-0 items-center text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200" aria-label="{{ __('studio_ui.back_to_content') }}">
+                <flux:icon name="arrow-left" class="size-5 rtl:rotate-180" />
+            </a>
 
-            @if ($canUpdate)
-                <flux:button :href="route('contexts.contents.outline', [$context, $content])" variant="ghost">
-                    {{ __('structure.title') }}
-                </flux:button>
-            @endif
-
-            <flux:button :href="route('contexts.contents.index', $context)" variant="ghost">
-                {{ __('workflow.back') }}
-            </flux:button>
-        </x-slot:actions>
-
-        <x-slot:help>{{ __('workflow.content_shell.help') }}</x-slot:help>
-
-        @if ($canUpdate)
-            <x-slot:advanced>
-                <div class="flex flex-wrap gap-2">
-                    <flux:button :href="route('contexts.contents.ai', [$context, $content])" size="sm" variant="ghost" icon="sparkles">
-                        {{ __('ai.title') }}
-                    </flux:button>
-                    <flux:button :href="route('contexts.contents.blocks', [$context, $content])" size="sm" variant="ghost">
-                        {{ __('blocks.title') }}
-                    </flux:button>
-                    <flux:button :href="route('contexts.contents.appearance', [$context, $content])" size="sm" variant="ghost">
-                        {{ __('presentation.title') }}
-                    </flux:button>
-                    @if ($canOpenReader)
-                        <flux:button :href="route('contexts.contents.show', [$context, $content])" size="sm" variant="ghost">
-                            {{ __('ui.context_content.open_reader') }}
-                        </flux:button>
+            <div class="min-w-0 flex-1">
+                @if ($canUpdate)
+                    <input
+                        type="text"
+                        wire:model.live.debounce.500ms="title"
+                        maxlength="255"
+                        dir="auto"
+                        class="w-full truncate border-0 bg-transparent p-0 text-lg font-semibold focus:ring-0 sm:text-xl"
+                        aria-label="{{ __('ui.content.title') }}"
+                        placeholder="{{ __('studio_ui.title_placeholder') }}"
+                        data-studio-title
+                    />
+                @else
+                    <h1 class="truncate text-lg font-semibold sm:text-xl" dir="auto">{{ $currentRevision->title }}</h1>
+                @endif
+                <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500">
+                    <flux:badge size="sm" :color="$stateColor">{{ __('content_workspace.state.'.$stateKey) }}</flux:badge>
+                    <span>{{ $kindLabel }}</span>
+                    <span aria-hidden="true">·</span>
+                    <span dir="auto" data-studio-place>{{ $placeLabel }}</span>
+                    <span class="hidden sm:inline" aria-hidden="true">·</span>
+                    <span class="hidden sm:inline">{{ $content->status === 'published' ? $placeAudience : __('studio_ui.draft_audience') }}</span>
+                    @if ($dirty)
+                        <span class="font-medium text-amber-600 dark:text-amber-400" data-studio-unsaved>● {{ __('studio_ui.unsaved') }}</span>
                     @endif
                 </div>
-            </x-slot:advanced>
-        @endif
-    </x-app.workflow-shell>
+            </div>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
-        <div class="min-w-0 space-y-6">
-            <flux:card class="space-y-5">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <flux:heading size="lg">{{ __('studio.document') }}</flux:heading>
-                        <flux:text>{{ $content->draft_revision_id ? __('studio.private_draft') : __('studio.live_edition') }}</flux:text>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <flux:badge>{{ __('ui.content.status_'.$content->status) }}</flux:badge>
-                        <flux:badge>{{ __('ui.content.revision_number', ['revision' => $currentRevision->revision]) }}</flux:badge>
-                        @if ($content->blueprintVersion)
-                            <flux:badge>{{ __('ui.context_content.blueprint_version', ['version' => $content->blueprintVersion->version]) }}</flux:badge>
-                        @endif
-                    </div>
-                </div>
-
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
                 @if ($canUpdate)
-                    <form wire:submit="saveRevision" class="space-y-4">
-                        <flux:input wire:model="title" :label="__('ui.content.title')" maxlength="255" />
+                    <flux:button wire:click="saveRevision" size="sm" :variant="$dirty ? 'filled' : 'ghost'" :disabled="! $dirty" wire:loading.attr="disabled" wire:target="saveRevision" data-studio-save>
+                        <span wire:loading.remove wire:target="saveRevision">{{ $dirty ? __('studio_ui.save') : __('studio_ui.saved') }}</span>
+                        <span wire:loading wire:target="saveRevision">{{ __('studio_ui.saving') }}</span>
+                    </flux:button>
+                    <flux:button wire:click="preview" size="sm" variant="ghost" icon="eye" class="hidden sm:inline-flex">{{ __('studio_ui.preview') }}</flux:button>
+                    <flux:button x-on:click="$dispatch('open-drawer', 'ai')" size="sm" variant="ghost" icon="sparkles" data-studio-ask-ai>{{ __('studio_ui.ask_ai') }}</flux:button>
+                @elseif ($canOpenReader)
+                    <flux:button :href="route('contexts.contents.show', [$context, $content])" size="sm" variant="ghost">{{ __('ui.context_content.open_reader') }}</flux:button>
+                @endif
 
-                        @foreach ($definitionVersion->schema['fields'] as $field)
-                            @switch($field['type'])
-                                @case('short_text')
-                                    <x-space-content.fields.short-text :field="$field" :model="'payload.'.$field['key']" />
-                                    @break
-                                @case('long_text')
-                                    <x-space-content.fields.long-text :field="$field" :model="'payload.'.$field['key']" />
-                                    @break
-                                @case('number')
-                                    <x-space-content.fields.number :field="$field" :model="'payload.'.$field['key']" />
-                                    @break
-                                @case('date')
-                                    <x-space-content.fields.date :field="$field" :model="'payload.'.$field['key']" />
-                                    @break
-                                @case('boolean')
-                                    <x-space-content.fields.boolean :field="$field" :model="'payload.'.$field['key']" />
-                                    @break
-                                @case('select')
-                                    <x-space-content.fields.select :field="$field" :model="'payload.'.$field['key']" />
-                                    @break
-                            @endswitch
-                        @endforeach
+                @if ($canPublish)
+                    <flux:button wire:click="openPublishPanel" size="sm" variant="primary" data-studio-publish>{{ __('ui.content.publish') }}</flux:button>
+                @endif
 
-                        <div class="flex justify-end">
-                            <flux:button type="submit" variant="primary">{{ __('studio.save_document') }}</flux:button>
-                        </div>
-                    </form>
-                @else
+                <flux:dropdown position="bottom" align="end">
+                    <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" :aria-label="__('studio_ui.more')" data-studio-more />
+                    <flux:menu class="min-w-56">
+                        @if ($canUpdate)
+                            <flux:menu.item icon="eye" wire:click="preview" class="sm:hidden">{{ __('studio_ui.preview') }}</flux:menu.item>
+                            <flux:menu.item icon="list-bullet" x-on:click="$dispatch('open-drawer', 'outline')" class="2xl:hidden">{{ __('studio_ui.outline') }}</flux:menu.item>
+                            <flux:menu.item icon="swatch" x-on:click="$dispatch('open-drawer', 'appearance')">{{ __('studio_ui.appearance') }}</flux:menu.item>
+                            @if ($hasOutline)
+                                <flux:menu.item icon="queue-list" x-on:click="$dispatch('open-drawer', 'structure')">{{ __('studio_ui.structure') }}</flux:menu.item>
+                            @endif
+                        @endif
+                        @if ($canOpenReader)
+                            <flux:menu.item icon="book-open" :href="route('contexts.contents.show', [$context, $content])">{{ __('ui.context_content.open_reader') }}</flux:menu.item>
+                        @endif
+                        @if ($canViewRevisions)
+                            <flux:menu.item icon="clock" x-on:click="$dispatch('open-drawer', 'history')">{{ __('studio_ui.version_history') }}</flux:menu.item>
+                        @endif
+                        @if ($canArchive || $canRestore)
+                            <flux:menu.separator />
+                            @if ($canArchive)
+                                <flux:menu.item icon="archive-box" wire:click="beginArchive" variant="danger">{{ __('studio.archive') }}</flux:menu.item>
+                            @endif
+                            @if ($canRestore)
+                                <flux:menu.item icon="arrow-uturn-left" x-on:click="$dispatch('open-drawer', 'restore')">{{ __('studio.restore') }}</flux:menu.item>
+                            @endif
+                        @endif
+                        @if ($canUpdate)
+                            <flux:menu.separator />
+                            <flux:menu.item icon="squares-2x2" :href="route('contexts.contents.blocks', [$context, $content])">{{ __('studio_ui.advanced_layout') }}</flux:menu.item>
+                            <flux:menu.item icon="rectangle-stack" :href="route('contexts.contents.index', $context)">{{ __('studio_ui.templates_and_schemas') }}</flux:menu.item>
+                        @endif
+                    </flux:menu>
+                </flux:dropdown>
+            </div>
+        </div>
+    </header>
+
+    <x-app.flash-message />
+
+    @error('studio')
+        <flux:callout variant="danger" class="mb-4" data-studio-error>{{ $message }}</flux:callout>
+    @enderror
+    @if ($errors->has('title') || collect($errors->keys())->contains(fn ($key) => str_starts_with($key, 'payload.')))
+        <flux:callout variant="danger" class="mb-4">{{ $errors->first('title') ?: collect($errors->getMessages())->first(fn ($messages, $key) => str_starts_with($key, 'payload.'))[0] }}</flux:callout>
+    @endif
+
+    @if ($draftChangedElsewhere)
+        <flux:callout variant="warning" class="mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <span>{{ __('studio_ui.changed_elsewhere') }}</span>
+                <flux:button wire:click="discardAndReload" size="sm">{{ __('studio_ui.load_latest') }}</flux:button>
+            </div>
+        </flux:callout>
+    @endif
+
+    @if ($isArchived)
+        <flux:callout class="mb-4">{{ __('studio_ui.archived_notice') }}</flux:callout>
+    @endif
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] 2xl:grid-cols-[12rem_minmax(0,1fr)_17rem]">
+        {{-- Outline rail (wide screens; a drawer elsewhere) --}}
+        <nav class="hidden self-start 2xl:sticky 2xl:top-24 2xl:block" aria-label="{{ __('studio_ui.outline') }}" data-studio-outline>
+            @include('livewire.contexts.partials.studio-outline')
+        </nav>
+
+        {{-- Canvas --}}
+        <div class="min-w-0 space-y-4" data-studio-canvas>
+            <div class="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
+                @if (! $canUpdate)
                     <div class="space-y-4">
-                        @foreach ($definitionVersion->schema['fields'] as $field)
+                        @foreach ($fields as $field)
                             @php
                                 $value = $currentRevision->payload[$field['key']] ?? null;
                                 if ($field['type'] === 'boolean') {
                                     $value = $value ? __('ui.content.yes') : __('ui.content.no');
                                 } elseif ($field['type'] === 'select' && $value !== null) {
-                                    $match = collect($field['options'])->firstWhere('value', $value);
-                                    $value = $match['label'] ?? $value;
+                                    $value = collect($field['options'])->firstWhere('value', $value)['label'] ?? $value;
                                 } elseif ($value === null || $value === '') {
                                     $value = '—';
                                 }
                             @endphp
-                            <div class="border-b border-zinc-100 pb-3 last:border-0 dark:border-zinc-800">
+                            <div>
                                 <div class="text-xs font-medium uppercase tracking-wide text-zinc-500" dir="auto">{{ $field['label'] }}</div>
                                 <div class="mt-1 whitespace-pre-wrap break-words text-sm" dir="auto">{{ $value }}</div>
                             </div>
                         @endforeach
                     </div>
-                @endif
-            </flux:card>
-
-            <flux:card class="space-y-5">
-                <div>
-                    <flux:heading size="lg">{{ __('studio.media') }}</flux:heading>
-                    <flux:text>{{ __('media.preview_help') }}</flux:text>
-                </div>
-
-                <div class="space-y-4">
-                    @forelse ($mediaAssets as $asset)
-                        @php
-                            $assetUrl = route('contexts.contents.assets.show', [$context, $content, $asset]);
-                            $downloadUrl = route('contexts.contents.assets.download', [$context, $content, $asset]);
-                            $caption = $asset->pivot->caption;
-                            $canRetry = in_array($asset->scan_status, ['failed', 'quarantined'], true)
-                                || in_array($asset->processing_status, ['failed', 'pending'], true);
-                        @endphp
-                        <div wire:key="context-studio-asset-{{ $asset->uuid }}" class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-                            <x-media.asset-preview :asset="$asset" :inline-url="$assetUrl" :download-url="$downloadUrl" compact />
-
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div class="min-w-0 space-y-2">
-                                    <div class="break-words font-medium" dir="auto">{{ $asset->original_filename }}</div>
-                                    @if ($caption)
-                                        <div class="text-sm text-zinc-600 dark:text-zinc-400" dir="auto">{{ $caption }}</div>
-                                    @endif
-                                    <div class="flex flex-wrap gap-2">
-                                        <flux:badge>{{ __('media.rights.'.$asset->rights_status) }}</flux:badge>
-                                        <flux:badge>{{ $asset->scan_status }}</flux:badge>
-                                        <flux:badge>{{ $asset->processing_status }}</flux:badge>
+                @elseif (! $isBlocks)
+                    <div class="space-y-5">
+                        @foreach ($fields as $key => $field)
+                            <div id="field-{{ $key }}" class="scroll-mt-28">
+                                @include('livewire.contexts.partials.studio-field', ['field' => $field])
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="space-y-3" data-studio-blocks>
+                        @foreach ($blocks as $index => $block)
+                            <div id="block-{{ $block['logical_uuid'] }}" wire:key="studio-block-{{ $block['logical_uuid'] }}" class="group relative scroll-mt-28 rounded-xl border border-transparent p-2 hover:border-zinc-200 focus-within:border-zinc-200 dark:hover:border-zinc-800 dark:focus-within:border-zinc-800" data-studio-block="{{ $block['type'] }}">
+                                <div class="mb-1 flex items-center justify-between gap-2 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                    <span class="text-[0.7rem] font-medium uppercase tracking-wide text-zinc-400">{{ __('blocks.type.'.$block['type']) }}</span>
+                                    <div class="flex gap-0.5">
+                                        <flux:button wire:click="moveUp({{ $index }})" size="xs" variant="ghost" icon="chevron-up" :disabled="$index === 0" :aria-label="__('structure.move_up')" />
+                                        <flux:button wire:click="moveDown({{ $index }})" size="xs" variant="ghost" icon="chevron-down" :disabled="$index === count($blocks) - 1" :aria-label="__('structure.move_down')" />
+                                        <flux:button wire:click="removeBlock({{ $index }})" size="xs" variant="ghost" icon="trash" :aria-label="__('blocks.remove')" />
                                     </div>
                                 </div>
 
-                                <div class="flex flex-wrap gap-2">
-                                    <flux:button :href="$downloadUrl" size="sm" variant="ghost">{{ __('media.download') }}</flux:button>
-                                    @if ($canUpdate && $canRetry && ! app()->environment(['local', 'testing']))
-                                        <flux:button wire:click="retryAssetProcessing({{ $asset->id }})" size="sm" variant="ghost">{{ __('studio.media_retry') }}</flux:button>
-                                    @endif
-                                    @if ($canUpdate)
-                                        <flux:button wire:click="removeAsset({{ $asset->id }})" size="sm" variant="danger">{{ __('media.remove') }}</flux:button>
-                                    @endif
-                                </div>
+                                @switch($block['type'])
+                                    @case('paragraph')
+                                        <flux:textarea wire:model.live.debounce.500ms="blocks.{{ $index }}.data.text" dir="auto" rows="4" :placeholder="__('studio_ui.paragraph_placeholder')" :aria-label="__('blocks.text')" />
+                                        @break
+                                    @case('heading')
+                                        <div class="flex gap-2">
+                                            <div class="min-w-0 flex-1">
+                                                <flux:input wire:model.live.debounce.500ms="blocks.{{ $index }}.data.text" dir="auto" :placeholder="__('blocks.heading_text')" :aria-label="__('blocks.heading_text')" class="font-semibold" />
+                                            </div>
+                                            <div class="w-20">
+                                                <flux:select wire:model.live="blocks.{{ $index }}.data.level" :aria-label="__('blocks.heading_level')">
+                                                    <option value="2">H2</option>
+                                                    <option value="3">H3</option>
+                                                    <option value="4">H4</option>
+                                                </flux:select>
+                                            </div>
+                                        </div>
+                                        @break
+                                    @case('quote')
+                                        <flux:textarea wire:model.live.debounce.500ms="blocks.{{ $index }}.data.text" dir="auto" rows="3" :aria-label="__('blocks.quote_text')" :placeholder="__('blocks.quote_text')" />
+                                        <flux:input wire:model.live.debounce.500ms="blocks.{{ $index }}.data.attribution" dir="auto" :placeholder="__('blocks.attribution')" class="mt-2" :aria-label="__('blocks.attribution')" />
+                                        @break
+                                    @case('list')
+                                        <flux:textarea wire:model.live.debounce.500ms="blocks.{{ $index }}.data.items_text" dir="auto" rows="4" :description="__('blocks.list_items_help')" :aria-label="__('blocks.list_items')" />
+                                        <flux:checkbox wire:model.live="blocks.{{ $index }}.data.ordered" :label="__('blocks.ordered')" class="mt-2" />
+                                        @break
+                                    @case('callout')
+                                        <flux:textarea wire:model.live.debounce.500ms="blocks.{{ $index }}.data.text" dir="auto" rows="3" :aria-label="__('blocks.callout_text')" :placeholder="__('blocks.callout_text')" />
+                                        <div class="mt-2 w-40">
+                                            <flux:select wire:model.live="blocks.{{ $index }}.data.tone" :aria-label="__('blocks.tone')">
+                                                <option value="info">{{ __('blocks.tone_info') }}</option>
+                                                <option value="success">{{ __('blocks.tone_success') }}</option>
+                                                <option value="warning">{{ __('blocks.tone_warning') }}</option>
+                                                <option value="danger">{{ __('blocks.tone_danger') }}</option>
+                                            </flux:select>
+                                        </div>
+                                        @break
+                                    @case('divider')
+                                        <hr class="my-3 border-zinc-300 dark:border-zinc-700" />
+                                        @break
+                                    @case('field')
+                                        @php
+                                            $blockField = $fields->get($block['data']['field_key'] ?? '');
+                                        @endphp
+                                        @if ($blockField)
+                                            @include('livewire.contexts.partials.studio-field', ['field' => $blockField])
+                                        @else
+                                            <div class="text-sm text-zinc-500">{{ __('studio_ui.missing_field') }}</div>
+                                        @endif
+                                        @break
+                                    @case('image')
+                                    @case('audio')
+                                    @case('video')
+                                    @case('file')
+                                        @php
+                                            $blockAsset = $mediaByUuid->get($block['data']['asset_uuid'] ?? '');
+                                        @endphp
+                                        @if ($blockAsset)
+                                            <x-media.asset-preview :asset="$blockAsset" :inline-url="$assetUrl($blockAsset)" :download-url="$assetDownloadUrl($blockAsset)" />
+                                        @else
+                                            <div class="rounded-lg bg-zinc-50 p-3 text-sm text-zinc-500 dark:bg-zinc-800" dir="auto">{{ $block['data']['filename'] ?? __('studio_ui.missing_media') }}</div>
+                                        @endif
+                                        <flux:input wire:model.live.debounce.500ms="blocks.{{ $index }}.data.caption" dir="auto" :placeholder="__('media.caption')" class="mt-2" :aria-label="__('media.caption')" />
+                                        @break
+                                @endswitch
                             </div>
-
-                            @if ($canUpdate)
-                                <div class="max-w-sm">
-                                    <flux:select wire:change="updateAssetRights({{ $asset->id }}, $event.target.value)" :label="__('media.rights_status')">
-                                        @foreach ($rightsStatuses as $status)
-                                            <option value="{{ $status }}" @selected($asset->rights_status === $status)>{{ __('media.rights.'.$status) }}</option>
-                                        @endforeach
-                                    </flux:select>
-                                </div>
-                            @endif
-                        </div>
-                    @empty
-                        <x-app.empty-state :title="__('media.none')" />
-                    @endforelse
-                </div>
-
-                @if ($canUpdate)
-                    <div class="space-y-4 border-t border-zinc-200 pt-5 dark:border-zinc-800">
-                        <flux:heading>{{ __('media.upload_title') }}</flux:heading>
-                        <input type="file" wire:model="assetUpload" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
-                        @error('assetUpload')<div class="text-sm text-red-600">{{ $message }}</div>@enderror
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <flux:select wire:model="assetRightsStatus" :label="__('media.rights_status')">
-                                @foreach ($rightsStatuses as $status)
-                                    <option value="{{ $status }}">{{ __('media.rights.'.$status) }}</option>
-                                @endforeach
-                            </flux:select>
-                            <flux:input wire:model="assetCaption" :label="__('media.caption')" maxlength="1000" />
-                        </div>
-                        <div class="flex justify-end">
-                            <flux:button wire:click="attachAsset" wire:loading.attr="disabled" wire:target="assetUpload,attachAsset" variant="primary">
-                                {{ __('media.add_to_draft') }}
-                            </flux:button>
-                        </div>
+                        @endforeach
                     </div>
                 @endif
-            </flux:card>
 
-            @if ($canViewRevisions)
-                <flux:card class="space-y-4">
-                    <div>
-                        <flux:heading size="lg">{{ __('studio.history') }}</flux:heading>
-                        <flux:text>{{ __('ui.content.history_help') }}</flux:text>
-                    </div>
-
-                    @foreach ($revisions as $revision)
-                        <details wire:key="context-history-{{ $revision->uuid }}" class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-                            <summary class="cursor-pointer font-medium" dir="auto">
-                                {{ __('ui.content.revision_number', ['revision' => $revision->revision]) }} · {{ $revision->title }}
-                            </summary>
-                            <div class="mt-3 space-y-2 text-sm">
-                                <div class="flex flex-wrap items-center gap-2 text-zinc-500">
-                                    <x-app.actor-identity :actor="$revision->createdBy" size="xs" />
-                                    <span>· <x-app.local-datetime :value="$revision->created_at" /></span>
-                                </div>
-                                <div class="break-all font-mono text-[11px] text-zinc-500">content: {{ $revision->content_hash }}</div>
-                                @if ($revision->manifest_hash)
-                                    <div class="break-all font-mono text-[11px] text-zinc-500">manifest v{{ $revision->manifest_version ?? 0 }}: {{ $revision->manifest_hash }}</div>
+                @if ($canUpdate)
+                    {{-- Insert bar: write or add media directly into the document. --}}
+                    <div class="mt-5 flex flex-wrap items-center gap-1 border-t border-zinc-100 pt-4 dark:border-zinc-800" data-studio-insert>
+                        <span class="me-1 text-xs font-medium text-zinc-500">{{ __('studio_ui.insert') }}</span>
+                        <flux:button wire:click="addBlock('paragraph')" size="sm" variant="ghost" icon="bars-3-bottom-left">{{ __('studio_ui.insert_text') }}</flux:button>
+                        <flux:button wire:click="addBlock('heading')" size="sm" variant="ghost" icon="hashtag">{{ __('studio_ui.insert_heading') }}</flux:button>
+                        <flux:button wire:click="openMediaDialog('image')" size="sm" variant="ghost" icon="photo">{{ __('studio_ui.insert_image') }}</flux:button>
+                        <flux:button wire:click="openMediaDialog('video')" size="sm" variant="ghost" icon="film">{{ __('studio_ui.insert_video') }}</flux:button>
+                        <flux:button wire:click="openMediaDialog('audio')" size="sm" variant="ghost" icon="musical-note">{{ __('studio_ui.insert_audio') }}</flux:button>
+                        <flux:button wire:click="openMediaDialog('file')" size="sm" variant="ghost" icon="paper-clip">{{ __('studio_ui.insert_file') }}</flux:button>
+                        <flux:dropdown position="bottom" align="start">
+                            <flux:button size="sm" variant="ghost" icon="plus">{{ __('studio_ui.insert_more') }}</flux:button>
+                            <flux:menu>
+                                @foreach (['list', 'quote', 'callout', 'divider'] as $more)
+                                    <flux:menu.item wire:click="addBlock('{{ $more }}')">{{ __('blocks.type.'.$more) }}</flux:menu.item>
+                                @endforeach
+                                @if ($isBlocks)
+                                    @php
+                                        $placedFields = collect($blocks)->where('type', 'field')->pluck('data.field_key')->all();
+                                    @endphp
+                                    @foreach ($fields as $key => $field)
+                                        @unless (in_array($key, $placedFields, true))
+                                            <flux:menu.item wire:click="addFieldBlock(@js($key))"><span dir="auto">{{ $field['label'] }}</span></flux:menu.item>
+                                        @endunless
+                                    @endforeach
                                 @endif
-                                <flux:badge>{{ $revision->evidence_status }}</flux:badge>
-                            </div>
-                        </details>
-                    @endforeach
-                </flux:card>
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+                @endif
+            </div>
+
+            @if ($canUpdate && $isBlocks)
+                <div class="text-end">
+                    <button type="button" wire:click="useSimpleDocument" wire:confirm="{{ __('studio_ui.simple_document_confirm') }}" class="text-xs text-zinc-500 underline-offset-4 hover:underline">{{ __('studio_ui.simple_document') }}</button>
+                </div>
             @endif
         </div>
 
-        <div class="space-y-4 self-start xl:sticky xl:top-6">
-            @if ($canPublish)
-                <flux:card class="space-y-4">
-                    <flux:heading>{{ __('studio.publication') }}</flux:heading>
-                    @if ($publishBlocked)
-                        <flux:callout variant="danger">{{ __('media.publish_blocked_help') }}</flux:callout>
-                        @foreach ($publicationIssues as $issue)
-                            <div class="text-sm text-red-600" dir="auto">{{ $issue['filename'] }} · {{ $issue['code'] }}</div>
-                        @endforeach
-                    @else
-                        <flux:callout variant="success">{{ __('studio.ready_help') }}</flux:callout>
+        {{-- Inspector --}}
+        <aside class="space-y-4 self-start lg:sticky lg:top-24" data-studio-inspector>
+            <div class="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('studio_ui.details') }}</div>
+                <dl class="space-y-2 text-sm">
+                    <div>
+                        <dt class="text-xs text-zinc-500">{{ __('studio_ui.where') }}</dt>
+                        <dd dir="auto">{{ $placeLabel }}</dd>
+                        <dd class="text-xs text-zinc-500">{{ $placeAudience }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-zinc-500">{{ __('studio_ui.type') }}</dt>
+                        <dd>{{ $kindLabel }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-zinc-500">{{ __('studio_ui.version') }}</dt>
+                        <dd>{{ __('ui.content.revision_number', ['revision' => $currentRevision->revision]) }}</dd>
+                    </div>
+                </dl>
+                @if ($canUpdate)
+                    <flux:button x-on:click="$dispatch('open-drawer', 'appearance')" size="sm" variant="ghost" icon="swatch" class="mt-3 w-full">{{ __('studio_ui.appearance') }}</flux:button>
+                @endif
+            </div>
+
+            <div id="studio-media" class="scroll-mt-28 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900" data-studio-media-library>
+                <div class="mb-3 flex items-center justify-between gap-2">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('studio.media') }}</div>
+                    @if ($canUpdate)
+                        <flux:button wire:click="openMediaDialog('')" size="xs" variant="ghost" icon="plus">{{ __('studio_ui.add_media') }}</flux:button>
                     @endif
-                    @error('publish')<div class="text-sm text-red-600">{{ $message }}</div>@enderror
-                </flux:card>
-            @endif
+                </div>
 
-            @if ($canArchive || $canRestore)
-                <flux:card class="space-y-4">
-                    <flux:heading>{{ __('studio.lifecycle') }}</flux:heading>
-
-                    @if ($canArchive)
-                        @if (! $showArchiveConfirmation)
-                            <flux:button wire:click="beginArchive" variant="ghost" class="w-full">{{ __('studio.archive') }}</flux:button>
-                        @else
-                            <div class="space-y-3">
-                                <flux:textarea wire:model="archiveReason" :label="__('studio.archive_reason')" rows="3" maxlength="1000" />
-                                <div class="flex gap-2">
-                                    <flux:button wire:click="cancelArchive" variant="ghost" class="flex-1">{{ __('studio.cancel') }}</flux:button>
-                                    <flux:button wire:click="archive" variant="danger" class="flex-1">{{ __('studio.confirm_archive') }}</flux:button>
+                <div class="space-y-3">
+                    @forelse ($mediaAssets as $asset)
+                        @php
+                            $issue = $publicationIssues->firstWhere('asset_id', $asset->id);
+                            $canRetry = in_array($asset->scan_status, ['failed', 'quarantined'], true)
+                                || in_array($asset->processing_status, ['failed', 'pending'], true);
+                            $placedInDocument = $isBlocks && collect($blocks)->contains(fn ($block) => ($block['data']['asset_uuid'] ?? null) === $asset->uuid);
+                        @endphp
+                        <div wire:key="studio-media-{{ $asset->uuid }}" class="space-y-2 rounded-xl border border-zinc-200 p-2 dark:border-zinc-800">
+                            <x-media.asset-preview :asset="$asset" :inline-url="$assetUrl($asset)" :download-url="$assetDownloadUrl($asset)" compact />
+                            <div class="truncate text-xs font-medium" dir="auto" title="{{ $asset->original_filename }}">{{ $asset->original_filename }}</div>
+                            @if ($issue)
+                                <div class="text-xs text-amber-700 dark:text-amber-300">{{ __('studio.issue.'.$issue['code']) }}</div>
+                            @endif
+                            @if ($canUpdate)
+                                <flux:select wire:change="updateAssetRights({{ $asset->id }}, $event.target.value)" size="sm" :aria-label="__('media.rights_status')">
+                                    @foreach ($rightsStatuses as $status)
+                                        <option value="{{ $status }}" @selected($asset->rights_status === $status)>{{ __('media.rights.'.$status) }}</option>
+                                    @endforeach
+                                </flux:select>
+                                @error('assetRights.'.$asset->id)<div class="text-xs text-red-600">{{ $message }}</div>@enderror
+                                <div class="flex flex-wrap gap-1">
+                                    @unless ($placedInDocument)
+                                        <flux:button wire:click="addExistingMediaBlock('{{ $asset->uuid }}')" size="xs" variant="ghost">{{ __('studio_ui.place_in_document') }}</flux:button>
+                                    @endunless
+                                    @if ($canRetry && ! app()->environment(['local', 'testing']))
+                                        <flux:button wire:click="retryAssetProcessing({{ $asset->id }})" size="xs" variant="ghost">{{ __('studio.media_retry') }}</flux:button>
+                                    @endif
+                                    <flux:button wire:click="removeAsset({{ $asset->id }})" wire:confirm="{{ __('studio_ui.remove_media_confirm') }}" size="xs" variant="ghost" class="text-red-600">{{ __('media.remove') }}</flux:button>
                                 </div>
-                            </div>
-                        @endif
-                    @endif
-
-                    @if ($canRestore)
-                        <div class="space-y-3">
-                            <flux:textarea wire:model="restoreReason" :label="__('studio.restore_reason')" rows="3" maxlength="1000" />
-                            <flux:button wire:click="restore" variant="primary" class="w-full">{{ __('studio.restore') }}</flux:button>
+                            @else
+                                <div class="text-xs text-zinc-500">{{ __('media.rights.'.$asset->rights_status) }}</div>
+                            @endif
                         </div>
-                    @endif
-                </flux:card>
-            @endif
+                    @empty
+                        <p class="text-sm text-zinc-500">{{ __('media.none') }}</p>
+                    @endforelse
+                </div>
+            </div>
+        </aside>
+    </div>
 
-            @if ($canViewRevisions && $lifecycleEvents->isNotEmpty())
-                <flux:card class="space-y-3">
-                    <flux:heading>{{ __('studio.lifecycle') }}</flux:heading>
+    {{-- Add media --}}
+    @if ($canUpdate)
+        <x-app.dialog :show="$mediaDialogOpen" close="closeMediaDialog" :title="__('studio_ui.media_dialog.'.($insertKind !== '' ? $insertKind : 'any'))">
+            @include('livewire.contexts.partials.studio-upload', ['insertKind' => $insertKind, 'uploadLimits' => $uploadLimits, 'rightsStatuses' => $rightsStatuses])
+        </x-app.dialog>
+    @endif
+
+    {{-- Publish readiness --}}
+    @if ($canPublish)
+        <x-app.dialog :show="$publishPanelOpen" close="closePublishPanel" :title="__('studio_ui.publish.title')" size="sm">
+            <div class="space-y-4" data-studio-publish-panel>
+                @if ($publishBlocked)
+                    <div>
+                        <p class="font-medium">{{ trans_choice('studio_ui.publish.issues', $publicationIssues->count(), ['count' => $publicationIssues->count()]) }}</p>
+                        <ul class="mt-2 space-y-2 text-sm">
+                            @foreach ($publicationIssues as $issue)
+                                <li class="rounded-lg bg-amber-50 p-2 dark:bg-amber-950/30">
+                                    <span class="font-medium" dir="auto">{{ $issue['filename'] }}</span>
+                                    <span class="block text-amber-800 dark:text-amber-200">{{ __('studio.issue.'.$issue['code']) }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                        <p class="mt-3 text-xs text-zinc-500">{{ __('studio_ui.publish.fix_in_media') }}</p>
+                    </div>
+                    <div class="flex justify-end">
+                        <flux:button wire:click="closePublishPanel" variant="ghost">{{ __('studio_ui.publish.back_to_editing') }}</flux:button>
+                    </div>
+                @else
+                    <p class="text-sm">{{ __('studio_ui.publish.ready', ['audience' => $placeAudience]) }}</p>
+                    <p class="text-xs text-zinc-500">{{ __('studio_ui.publish.sealed_note') }}</p>
+                    @error('publish')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+                    <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <flux:button wire:click="closePublishPanel" variant="ghost">{{ __('studio.cancel') }}</flux:button>
+                        <flux:button wire:click="publish" variant="primary" wire:loading.attr="disabled" wire:target="publish" data-studio-confirm-publish>{{ __('ui.content.publish') }}</flux:button>
+                    </div>
+                @endif
+            </div>
+        </x-app.dialog>
+    @endif
+
+    {{-- Archive confirmation --}}
+    @if ($canArchive)
+        <x-app.dialog :show="$showArchiveConfirmation" close="cancelArchive" :title="__('studio.archive')" size="sm">
+            <div class="space-y-3">
+                <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('studio_ui.archive_help') }}</p>
+                <flux:textarea wire:model="archiveReason" :label="__('studio.archive_reason')" rows="3" maxlength="1000" />
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <flux:button wire:click="cancelArchive" variant="ghost">{{ __('studio.cancel') }}</flux:button>
+                    <flux:button wire:click="archive" variant="danger">{{ __('studio.confirm_archive') }}</flux:button>
+                </div>
+            </div>
+        </x-app.dialog>
+    @endif
+
+    {{-- Secondary tools as drawers; each keeps its own authority and saves. --}}
+    @if ($canUpdate)
+        <x-app.drawer name="ai" :title="__('ai.title')" width="sm:max-w-xl">
+            <livewire:contexts.content-ai-assistant :context="$context" :content="$content" :embedded="true" :key="'studio-ai-'.$content->uuid" />
+        </x-app.drawer>
+        <x-app.drawer name="appearance" :title="__('studio_ui.appearance')" width="sm:max-w-lg">
+            <livewire:contexts.content-appearance :context="$context" :content="$content" :embedded="true" :key="'studio-appearance-'.$content->uuid" />
+        </x-app.drawer>
+        @if ($hasOutline)
+            <x-app.drawer name="structure" :title="__('studio_ui.structure')" width="sm:max-w-2xl">
+                <livewire:contexts.content-outline :context="$context" :content="$content" :embedded="true" :key="'studio-outline-'.$content->uuid" />
+            </x-app.drawer>
+        @endif
+    @endif
+
+    <x-app.drawer name="outline" :title="__('studio_ui.outline')" side="start">
+        <div x-on:click="if ($event.target.closest('a')) $dispatch('close-drawer', 'outline')">
+            @include('livewire.contexts.partials.studio-outline')
+        </div>
+    </x-app.drawer>
+
+    @if ($canViewRevisions)
+        <x-app.drawer name="history" :title="__('studio_ui.version_history')">
+            <p class="mb-3 text-xs text-zinc-500">{{ __('ui.content.history_help') }}</p>
+            <div class="space-y-2">
+                @foreach ($revisions as $revision)
+                    <details wire:key="studio-history-{{ $revision->uuid }}" class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                        <summary class="cursor-pointer text-sm font-medium" dir="auto">
+                            {{ __('ui.content.revision_number', ['revision' => $revision->revision]) }} · {{ $revision->title }}
+                            @if ((int) $content->active_revision_id === (int) $revision->id)
+                                <flux:badge size="sm" color="green" class="ms-1">{{ __('studio_ui.live') }}</flux:badge>
+                            @endif
+                        </summary>
+                        <div class="mt-2 space-y-1 text-xs text-zinc-500">
+                            <div class="flex flex-wrap items-center gap-1">
+                                <x-app.actor-identity :actor="$revision->createdBy" size="xs" />
+                                <span>·</span>
+                                <x-app.local-datetime :value="$revision->created_at" />
+                            </div>
+                            <div class="break-all font-mono text-[11px]">content: {{ $revision->content_hash }}</div>
+                            @if ($revision->manifest_hash)
+                                <div class="break-all font-mono text-[11px]">manifest v{{ $revision->manifest_version ?? 0 }}: {{ $revision->manifest_hash }}</div>
+                            @endif
+                            <flux:badge size="sm">{{ $revision->evidence_status }}</flux:badge>
+                        </div>
+                    </details>
+                @endforeach
+            </div>
+
+            @if ($lifecycleEvents->isNotEmpty())
+                <div class="mt-6 mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('studio.lifecycle') }}</div>
+                <div class="space-y-2">
                     @foreach ($lifecycleEvents->take(10) as $event)
-                        <div class="rounded-lg border border-zinc-200 p-3 text-xs dark:border-zinc-800">
+                        <div class="rounded-lg border border-zinc-200 p-2 text-xs dark:border-zinc-800">
                             <div class="font-medium">{{ __('studio.event_'.$event->event_type) }}</div>
                             <div class="mt-1 text-zinc-500" dir="auto">{{ $event->reason }}</div>
                         </div>
                     @endforeach
-                </flux:card>
+                </div>
             @endif
-        </div>
-    </div>
+        </x-app.drawer>
+    @endif
+
+    @if ($canRestore)
+        <x-app.drawer name="restore" :title="__('studio.restore')">
+            <div class="space-y-3">
+                <flux:textarea wire:model="restoreReason" :label="__('studio.restore_reason')" rows="3" maxlength="1000" />
+                <flux:button wire:click="restore" variant="primary" class="w-full">{{ __('studio.restore') }}</flux:button>
+            </div>
+        </x-app.drawer>
+    @endif
 </section>

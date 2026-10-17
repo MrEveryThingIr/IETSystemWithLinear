@@ -33,6 +33,9 @@ class ContentAppearance extends Component
 
     public string $templateName = '';
 
+    /** Rendered as a panel inside the Studio instead of a full page. */
+    public bool $embedded = false;
+
     public function mount(Context $context, SpaceContent $content): void
     {
         abort_unless((int) $content->context_id === (int) $context->id, 404);
@@ -68,6 +71,7 @@ class ContentAppearance extends Component
     {
         $this->content = $update->execute($this->content, $this->user(), $this->templateSource, $this->presentation);
         $this->reload();
+        $this->dispatch('content-revised');
         session()->flash('status', __('presentation.saved'));
     }
 

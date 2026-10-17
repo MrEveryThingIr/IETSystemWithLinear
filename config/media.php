@@ -46,5 +46,13 @@ return [
         'real_estate_image' => (int) env('MEDIA_LIMIT_REAL_ESTATE_IMAGE_KB', 12288),
         'real_estate_audio' => (int) env('MEDIA_LIMIT_REAL_ESTATE_AUDIO_KB', 25600),
         'real_estate_video' => (int) env('MEDIA_LIMIT_REAL_ESTATE_VIDEO_KB', 102400),
+
+        // Content Studio limits per media type. Uploads still pass through
+        // PHP, so the effective limit is capped by the host limits; larger
+        // video uses the resumable upload path instead.
+        'content_image' => (int) env('MEDIA_LIMIT_CONTENT_IMAGE_KB', 15360),
+        'content_document' => (int) env('MEDIA_LIMIT_CONTENT_DOCUMENT_KB', 25600),
+        'content_audio' => (int) env('MEDIA_LIMIT_CONTENT_AUDIO_KB', 51200),
+        'content_video' => (int) env('MEDIA_LIMIT_CONTENT_VIDEO_KB', 102400),
     ],
 ];

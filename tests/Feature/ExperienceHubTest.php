@@ -167,10 +167,10 @@ class ExperienceHubTest extends TestCase
         $this->actingAs($actor->user)
             ->get(route('experience.content'))
             ->assertOk()
-            ->assertSee('My Content')
-            ->assertSee('Explore')
+            ->assertSee('Content')
+            ->assertSee('Drafts')
+            ->assertSee('Shared with me')
             ->assertSee('Create')
-            ->assertSee(route('contexts.personal'), false)
             ->assertSee(route('content.library'), false);
 
         $this->actingAs($actor->user)

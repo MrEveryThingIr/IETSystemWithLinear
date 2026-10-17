@@ -36,6 +36,7 @@ use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Commitments\Create as CommitmentCreate;
 use App\Livewire\Commitments\Show as CommitmentShow;
 use App\Livewire\Content\Library as ContentLibrary;
+use App\Livewire\Content\Workspace as ContentWorkspace;
 use App\Livewire\Contexts\ContentAiAssistant as ContextContentAiAssistant;
 use App\Livewire\Contexts\ContentAppearance as ContextContentAppearance;
 use App\Livewire\Contexts\ContentBlocks as ContextContentBlocks;
@@ -130,7 +131,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/needs-offers', [ExperienceHubController::class, 'needsOffers'])->name('experience.needs-offers');
     Route::get('/work', [ExperienceHubController::class, 'work'])->name('experience.work');
     Route::get('/organizations', [ExperienceHubController::class, 'organizations'])->name('experience.organizations');
-    Route::get('/content', [ExperienceHubController::class, 'content'])->name('experience.content');
+    Route::livewire('/content', ContentWorkspace::class)->name('experience.content');
     Route::get('/help', [ExperienceHubController::class, 'help'])->name('experience.help');
 
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');

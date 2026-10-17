@@ -1,0 +1,83 @@
+<?php
+
+return [
+    'title' => 'Content',
+    'help' => 'Everything you write or can read, in one place.',
+    'browse_library' => 'Browse library',
+    'create_button' => 'Create',
+    'search_placeholder' => 'Search content…',
+    'place_filter' => 'Where',
+    'all_places' => 'All places',
+    'place_tools' => 'Templates and settings for this place',
+    'views_label' => 'Content views',
+    'views' => [
+        'all' => 'All',
+        'drafts' => 'Drafts',
+        'published' => 'Published',
+        'shared' => 'Shared with me',
+        'learning' => 'Courses & learning',
+        'archived' => 'Archived',
+    ],
+    'empty_filtered' => 'Nothing matches these filters.',
+    'clear_filters' => 'Clear filters',
+    'empty_title' => 'Nothing here yet',
+    'empty_help' => 'Start with a note, an article or a lesson. It stays private until you publish it.',
+    'state' => [
+        'draft' => 'Draft',
+        'published' => 'Published',
+        'published_changes' => 'Published · unpublished changes',
+        'archived' => 'Archived',
+    ],
+    'edited' => 'Edited',
+    'open_editor' => 'Edit',
+    'read' => 'Read',
+    'show_archived' => 'Show archived (:count)',
+    'back_to_all' => 'Back to all content',
+    'context' => [
+        'business' => 'Business',
+        'untitled' => 'Untitled',
+        'system' => 'System',
+    ],
+    'audience' => [
+        'personal' => 'Only you can see it',
+        'business' => 'Visible to the business team',
+        'group' => 'Visible to group members',
+        'admission' => 'Visible to the people in this admission',
+        'participants' => 'Visible to the participants',
+        'everyone_signed_in' => 'Visible to everyone signed in',
+    ],
+    'kinds' => [
+        'note' => [
+            'name' => 'Note',
+            'help' => 'A quick note, diary entry or reflection.',
+        ],
+        'article' => [
+            'name' => 'Article',
+            'help' => 'A longer piece with a summary and body.',
+        ],
+        'lesson' => [
+            'name' => 'Lesson',
+            'help' => 'A teaching unit with an objective, text, media and exercises.',
+        ],
+        'course' => [
+            'name' => 'Course',
+            'help' => 'Organizes lessons and modules in order.',
+        ],
+        'evidence' => [
+            'name' => 'Evidence / work sample',
+            'help' => 'Proof of work: what was done, when and the outcome.',
+        ],
+    ],
+    'create' => [
+        'title' => 'Create',
+        'help' => 'What are you making?',
+        'more_templates' => 'More templates and custom types',
+        'title_label' => 'Title',
+        'where' => 'Where it lives',
+        'audience_when_published' => 'When published: :audience.',
+        'private_until_published' => 'It stays a private draft until you publish it.',
+        'back' => 'Back',
+        'submit' => 'Create and open',
+        'kind_unavailable_here' => 'This type is not available in the selected place.',
+    ],
+];

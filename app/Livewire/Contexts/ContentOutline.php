@@ -34,6 +34,9 @@ class ContentOutline extends Component
 
     public string $search = '';
 
+    /** Rendered as a panel inside the Studio instead of a full page. */
+    public bool $embedded = false;
+
     public function mount(Context $context, SpaceContent $content): void
     {
         abort_unless((int) $content->context_id === (int) $context->id, 404);
@@ -105,6 +108,7 @@ class ContentOutline extends Component
     {
         $this->content = $updateStructure->execute($this->content, $this->user(), $this->childIds);
         $this->reloadStructure();
+        $this->dispatch('content-revised');
         session()->flash('status', __('structure.saved'));
     }
 

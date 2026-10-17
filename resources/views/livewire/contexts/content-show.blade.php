@@ -63,8 +63,8 @@
     <div id="annotation-marker-payload-{{ $content->uuid }}" class="hidden" data-marker-payload='@json($rangeMarkers)'></div>
 
     <div class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 pt-4">
-        <flux:button :href="route('contexts.contents.index', $context)" variant="ghost" size="sm">
-            ← {{ __('reader.back_to_library') }}
+        <flux:button :href="route('experience.content')" variant="ghost" size="sm" icon="arrow-left" class="rtl:[&_svg]:rotate-180">
+            {{ __('reader.back_to_content') }}
         </flux:button>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -75,30 +75,48 @@
                     :label="__('interactions.anchor.entire_edition')"
                 />
             @endif
-            @if ($revision->hasVerifiableManifest())
-                <flux:button :href="route('contexts.contents.revisions.show', [$context, $content, $revision])" variant="ghost" size="sm">
-                    {{ __('reader.revision_permalink') }}
-                </flux:button>
+            @php
+                $canCreateEvidence = $canEnterStudio && ! $previewingDraft && ! ($legacyEvidence || $viewingEvidenceReferenceUuid || $viewingRevisionUuid);
+            @endphp
+            @if ($revision->hasVerifiableManifest() || $canCreateEvidence)
+                <flux:dropdown position="bottom" align="end">
+                    <flux:button variant="ghost" size="sm" icon="information-circle" data-reader-details>{{ __('reader.details') }}</flux:button>
+                    <flux:menu class="min-w-60">
+                        @if ($revision->hasVerifiableManifest())
+                            <flux:menu.item icon="link" :href="route('contexts.contents.revisions.show', [$context, $content, $revision])">{{ __('reader.revision_permalink') }}</flux:menu.item>
+                        @endif
+                        @if ($canCreateEvidence)
+                            <flux:menu.item icon="check-badge" wire:click="createRevisionEvidence">{{ __('ui.context_content.create_evidence_reference') }}</flux:menu.item>
+                        @endif
+                    </flux:menu>
+                </flux:dropdown>
             @endif
             @if ($canEnterStudio)
-                @unless ($legacyEvidence || $viewingEvidenceReferenceUuid || $viewingRevisionUuid)
-                    <flux:button wire:click="createRevisionEvidence" variant="ghost" size="sm">
-                        {{ __('ui.context_content.create_evidence_reference') }}
-                    </flux:button>
-                @endunless
                 <flux:button :href="route('contexts.contents.studio', [$context, $content])" variant="primary" size="sm">
-                    {{ __('reader.edit_in_studio') }}
+                    {{ $previewingDraft ? __('reader.back_to_editor') : __('reader.edit_in_studio') }}
                 </flux:button>
             @endif
         </div>
     </div>
+
+    @if ($previewingDraft)
+        <div class="mx-auto w-full max-w-7xl">
+            <flux:callout variant="warning" data-reader-draft-preview>
+                <div class="font-medium">{{ __('reader.draft_preview_title') }}</div>
+                <div class="mt-1 text-sm">{{ __('reader.draft_preview_help') }}</div>
+            </flux:callout>
+        </div>
+    @endif
 
     @if ($viewingEvidenceReferenceUuid)
         <div class="mx-auto w-full max-w-7xl">
             <flux:callout variant="info">
                 <div class="font-medium">{{ __('ui.context_content.historical_evidence') }}</div>
                 <div class="mt-1 text-sm">{{ __('ui.context_content.historical_evidence_help') }}</div>
-                <div class="mt-2 break-all font-mono text-xs">{{ $viewingEvidenceReferenceUuid }}</div>
+                <details class="mt-2 text-xs">
+                    <summary class="cursor-pointer">{{ __('reader.provenance') }}</summary>
+                    <div class="mt-1 break-all font-mono">{{ $viewingEvidenceReferenceUuid }}</div>
+                </details>
             </flux:callout>
         </div>
     @endif
@@ -108,7 +126,10 @@
             <flux:callout variant="info">
                 <div class="font-medium">{{ __('reader.fixed_edition_title') }}</div>
                 <div class="mt-1 text-sm">{{ __('reader.fixed_edition_help') }}</div>
-                <div class="mt-2 break-all font-mono text-xs">{{ $viewingRevisionUuid }}</div>
+                <details class="mt-2 text-xs">
+                    <summary class="cursor-pointer">{{ __('reader.provenance') }}</summary>
+                    <div class="mt-1 break-all font-mono">{{ $viewingRevisionUuid }}</div>
+                </details>
             </flux:callout>
         </div>
     @endif
@@ -117,12 +138,15 @@
         <div class="mx-auto w-full max-w-7xl">
             <flux:callout variant="success">
                 {{ __('ui.context_content.evidence_reference_created') }}
-                <span class="font-mono">{{ $evidenceReferenceUuid }}</span>
+                <details class="mt-2 text-xs">
+                    <summary class="cursor-pointer">{{ __('reader.provenance') }}</summary>
+                    <div class="mt-1 break-all font-mono">{{ $evidenceReferenceUuid }}</div>
+                </details>
             </flux:callout>
         </div>
     @endif
 
-    @if ($legacyEvidence)
+    @if ($legacyEvidence && ! $previewingDraft)
         <div class="mx-auto w-full max-w-7xl">
             <flux:callout variant="warning">
                 <div class="font-medium">{{ __('reader.legacy_title') }}</div>
@@ -139,19 +163,46 @@
 
     <div class="mx-auto grid w-full max-w-7xl gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <article class="min-w-0">
-            <header class="mx-auto {{ $contentWidthClass }} border-b pb-6" style="border-color: var(--content-border)">
-                <div class="mb-3 flex flex-wrap items-center gap-2 text-sm" style="color: var(--content-muted)">
-                    <x-app.actor-identity :actor="$content->author" size="xs" />
-                    <span aria-hidden="true">·</span>
-                    <span>{{ __('reader.published_label') }} @if ($readerPublishedAt)<x-app.local-datetime :value="$readerPublishedAt" />@else — @endif</span>
-                    @unless ($legacyEvidence)
-                        <flux:badge size="sm">{{ __('reader.verified_edition') }}</flux:badge>
-                    @endunless
-                    <flux:badge size="sm">{{ __('presentation.preset.'.$revision->render_template_key) }}</flux:badge>
-                </div>
+            <header class="mx-auto {{ $contentWidthClass }} border-b pb-6" style="border-color: var(--content-border)" data-reader-header>
+                @if ($courseNavigation)
+                    <a href="{{ $courseNavigation['parent']['url'] }}" class="mb-3 inline-flex items-center gap-1 text-sm font-medium hover:underline" style="color: var(--content-accent)" data-reader-course>
+                        <span dir="auto">{{ $courseNavigation['parent']['title'] }}</span>
+                        <span style="color: var(--content-muted)">· {{ __('reader.position_of', ['position' => $courseNavigation['position'], 'total' => $courseNavigation['total']]) }}</span>
+                    </a>
+                @endif
 
                 <h1 class="text-3xl sm:text-4xl {{ $headingClass }}" dir="auto">{{ $revision->title }}</h1>
-                <div class="mt-3 text-sm" style="color: var(--content-muted)" dir="auto">{{ $content->definition->name }}</div>
+
+                <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" style="color: var(--content-muted)">
+                    <x-app.actor-identity :actor="$content->author" size="xs" />
+                    @if ($readerPublishedAt && ! $previewingDraft)
+                        <span aria-hidden="true">·</span>
+                        <x-app.local-date :value="\Carbon\CarbonImmutable::parse($readerPublishedAt)->setTimezone(\App\Support\TemporalPreferences::timezoneFor(auth()->user()))" />
+                    @endif
+                    <span aria-hidden="true">·</span>
+                    <span dir="auto" data-reader-place>{{ $placeLabel }}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{{ $kindLabel }}</span>
+                </div>
+
+                @if ($canEnterStudio)
+                    <details class="mt-3 text-xs" style="color: var(--content-muted)" data-reader-provenance>
+                        <summary class="cursor-pointer select-none">{{ __('reader.provenance') }}</summary>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            @unless ($legacyEvidence)
+                                <flux:badge size="sm">{{ __('reader.verified_edition') }}</flux:badge>
+                            @endunless
+                            <flux:badge size="sm">{{ __('presentation.preset.'.$revision->render_template_key) }}</flux:badge>
+                            <span>{{ __('ui.content.revision_number', ['revision' => $revision->revision]) }}</span>
+                            @if ($readerPublishedAt)
+                                <span>· {{ __('reader.published_label') }} <x-app.local-datetime :value="$readerPublishedAt" /></span>
+                            @endif
+                        </div>
+                        @if ($revision->manifest_hash)
+                            <div class="mt-1 break-all font-mono">manifest: {{ $revision->manifest_hash }}</div>
+                        @endif
+                    </details>
+                @endif
             </header>
 
             <div class="mx-auto mt-8 {{ $contentWidthClass }} space-y-7">
@@ -442,6 +493,27 @@
                             @endforeach
                         </div>
                     </section>
+                @endif
+
+                @if ($courseNavigation && ($courseNavigation['previous'] || $courseNavigation['next']))
+                    <nav class="grid gap-3 border-t pt-6 sm:grid-cols-2" style="border-color: var(--content-border)" aria-label="{{ __('reader.course_navigation') }}" data-reader-course-nav>
+                        <div>
+                            @if ($courseNavigation['previous'])
+                                <a href="{{ $courseNavigation['previous']['url'] }}" class="block rounded-xl border p-3 hover:opacity-80" style="border-color: var(--content-border)">
+                                    <span class="block text-xs" style="color: var(--content-muted)">← {{ __('reader.previous') }}</span>
+                                    <span class="block font-medium" dir="auto">{{ $courseNavigation['previous']['title'] }}</span>
+                                </a>
+                            @endif
+                        </div>
+                        <div>
+                            @if ($courseNavigation['next'])
+                                <a href="{{ $courseNavigation['next']['url'] }}" class="block rounded-xl border p-3 text-end hover:opacity-80" style="border-color: var(--content-border)">
+                                    <span class="block text-xs" style="color: var(--content-muted)">{{ __('reader.next') }} →</span>
+                                    <span class="block font-medium" dir="auto">{{ $courseNavigation['next']['title'] }}</span>
+                                </a>
+                            @endif
+                        </div>
+                    </nav>
                 @endif
 
                 <section class="space-y-5 border-t pt-7" style="border-color: var(--content-border)" id="discussion">

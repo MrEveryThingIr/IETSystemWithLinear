@@ -35,6 +35,42 @@ final class MediaLimits
             : max(1, min($configuredKilobytes, $hostKilobytes));
     }
 
+    /** @var array<string, string> Content Studio limit kind per media kind. */
+    public const CONTENT_KINDS = [
+        'image' => 'content_image',
+        'audio' => 'content_audio',
+        'video' => 'content_video',
+        'pdf' => 'content_document',
+        'file' => 'content_document',
+    ];
+
+    /** Content Studio limit kind for a MIME type. */
+    public static function contentKindForMime(string $mime): string
+    {
+        return match (true) {
+            str_starts_with($mime, 'image/') => self::CONTENT_KINDS['image'],
+            str_starts_with($mime, 'audio/') => self::CONTENT_KINDS['audio'],
+            str_starts_with($mime, 'video/') => self::CONTENT_KINDS['video'],
+            default => self::CONTENT_KINDS['file'],
+        };
+    }
+
+    /**
+     * Effective Content Studio limits in bytes, keyed by media kind
+     * (image, audio, video, document), for display and browser preflight.
+     *
+     * @return array{image: int, audio: int, video: int, document: int}
+     */
+    public static function contentBytes(): array
+    {
+        return [
+            'image' => self::kilobytes('content_image') * 1024,
+            'audio' => self::kilobytes('content_audio') * 1024,
+            'video' => self::kilobytes('content_video') * 1024,
+            'document' => self::kilobytes('content_document') * 1024,
+        ];
+    }
+
     /** Laravel validation rule for the effective limit, e.g. "max:12288". */
     public static function rule(string $kind): string
     {

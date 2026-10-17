@@ -374,6 +374,7 @@ return [
         'changelog' => 'مشاهده گزارش تغییرات',
     ],
     'common' => [
+        'close' => 'بستن',
         'back_to_group' => 'بازگشت به گروه',
         'all_groups' => 'همه گروه‌ها',
         'save' => 'ذخیره',

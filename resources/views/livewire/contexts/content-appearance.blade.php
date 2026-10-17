@@ -1,4 +1,5 @@
-<section class="mx-auto w-full max-w-6xl space-y-6 pb-12">
+<section @class(['space-y-5' => $embedded, 'mx-auto w-full max-w-6xl space-y-6 pb-12' => ! $embedded])>
+    @unless ($embedded)
     <x-app.page-header :title="__('presentation.title')" :description="$revision->title">
         <x-slot:actions>
             <div class="flex flex-wrap gap-2">
@@ -13,9 +14,10 @@
     @if (session('status'))
         <flux:callout variant="success">{{ session('status') }}</flux:callout>
     @endif
+    @endunless
 
-    <div class="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <aside class="space-y-4 self-start xl:sticky xl:top-6">
+    <div @class(['space-y-5' => $embedded, 'grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]' => ! $embedded])>
+        <aside @class(['space-y-4', 'self-start xl:sticky xl:top-6' => ! $embedded])>
             <flux:card class="space-y-3">
                 <div>
                     <flux:heading>{{ __('presentation.presets') }}</flux:heading>
@@ -55,7 +57,7 @@
                     <flux:text>{{ __('presentation.canvas_help') }}</flux:text>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div @class(['grid gap-4', 'grid-cols-2' => $embedded, 'sm:grid-cols-2 lg:grid-cols-3' => ! $embedded])>
                     @foreach ([
                         'background' => __('presentation.background'),
                         'surface' => __('presentation.surface'),
@@ -74,7 +76,7 @@
                     @endforeach
                 </div>
 
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <div @class(['grid gap-4', 'grid-cols-1' => $embedded, 'md:grid-cols-2 lg:grid-cols-5' => ! $embedded])>
                     <flux:select wire:model="presentation.content_width" :label="__('presentation.width')">
                         <option value="narrow">{{ __('presentation.width_narrow') }}</option>
                         <option value="reading">{{ __('presentation.width_reading') }}</option>
@@ -110,7 +112,7 @@
                     <div class="mt-4 space-y-4">
                         <flux:text>{{ __('presentation.field_styles_help') }}</flux:text>
                         @foreach ($fields as $field)
-                            <div class="grid gap-3 rounded-xl border border-zinc-200 p-4 md:grid-cols-[1fr_10rem_10rem_12rem] dark:border-zinc-800">
+                            <div @class(['grid gap-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800', 'md:grid-cols-[1fr_10rem_10rem_12rem]' => ! $embedded])>
                                 <div class="font-medium" dir="auto">{{ $field['label'] }}</div>
                                 <label class="space-y-1 text-sm">
                                     <span>{{ __('presentation.text_color') }}</span>
