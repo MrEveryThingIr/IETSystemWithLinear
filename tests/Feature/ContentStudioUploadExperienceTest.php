@@ -95,6 +95,22 @@ class ContentStudioUploadExperienceTest extends TestCase
         $this->assertSame(0, $content->fresh()->draftRevisionRecord()?->assets()->count() ?? 0);
     }
 
+    public function test_documents_larger_than_the_old_general_limit_are_accepted(): void
+    {
+        Storage::fake('local');
+        [$actor, $context, $content] = $this->lesson();
+
+        // 14 MB: above the old 12 MB general asset limit, within the document limit.
+        $content = app(\App\Actions\Groups\AttachAssetToSpaceContent::class)->execute(
+            $content,
+            $actor->user,
+            UploadedFile::fake()->create('handbook.pdf', 14 * 1024, 'application/pdf'),
+            'owned',
+        );
+
+        $this->assertSame('handbook.pdf', $content->draftRevisionRecord()->assets()->sole()->original_filename);
+    }
+
     public function test_unsupported_file_type_is_rejected_before_storage(): void
     {
         Storage::fake('local');
