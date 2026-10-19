@@ -71,7 +71,7 @@ return [
         'resolve_accept' => 'Resolve as accepted',
         'resolve_reject' => 'Resolve as rejected',
         'resolution_note' => 'Resolution note',
-        'financial_boundary' => 'Accepted Fulfillment is performance truth. A separate explicit Financial Obligation may now be recognized from it; Accounting and Settlement still require their own actions and never happen automatically.',
+        'financial_boundary' => 'Accepted work is recorded here. To keep track of what is owed and paid for it, use Bookkeeping.',
     ],
     'planner' => [
         'frequency' => 'Schedule pattern',

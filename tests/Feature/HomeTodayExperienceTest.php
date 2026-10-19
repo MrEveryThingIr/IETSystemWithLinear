@@ -8,9 +8,8 @@ use App\Livewire\Home\Today;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
+use App\Models\Bookkeeping\Transaction as BookTransaction;
 use App\Models\Concept;
-use App\Models\FinancialObligation;
-use App\Models\MonetaryUnit;
 use App\Models\Plan;
 use App\Models\PlanOccurrence;
 use App\Models\PlanScheduleRule;
@@ -18,7 +17,6 @@ use App\Models\Relationship;
 use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
-use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Livewire\Livewire;
 use Tests\Concerns\PublishesFeatureSurfaces;
@@ -69,7 +67,7 @@ class HomeTodayExperienceTest extends TestCase
         ]);
 
         $beforeRelationships = Relationship::query()->count();
-        $beforeObligations = FinancialObligation::query()->count();
+        $beforeObligations = BookTransaction::query()->count();
 
         Livewire::actingAs($actor->user)
             ->test(Today::class)
@@ -78,7 +76,7 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('What should I do today?');
 
         $this->assertSame($beforeRelationships, Relationship::query()->count());
-        $this->assertSame($beforeObligations, FinancialObligation::query()->count());
+        $this->assertSame($beforeObligations, BookTransaction::query()->count());
     }
 
     public function test_today_guides_a_new_user_through_minimal_setup_without_persistent_verification_noise(): void
@@ -201,54 +199,6 @@ class HomeTodayExperienceTest extends TestCase
             ->assertSee('A proposed Deal is waiting for your response.')
             ->assertSee('Alice waits for Bob')
             ->assertSee('Another participant still needs to accept the proposed Deal.');
-    }
-
-    public function test_obligation_summary_keeps_currencies_and_directions_separate(): void
-    {
-        $alice = Actor::factory()->create();
-        $bob = Actor::factory()->create();
-
-        $eur = MonetaryUnit::factory()->create([
-            'code' => 'EUR',
-            'name' => 'Euro',
-            'symbol' => '€',
-            'exponent' => 2,
-        ]);
-        $usd = MonetaryUnit::factory()->create([
-            'code' => 'USD',
-            'name' => 'US Dollar',
-            'symbol' => '$',
-            'exponent' => 2,
-        ]);
-
-        FinancialObligation::factory()->create([
-            'creditor_actor_id' => $alice->id,
-            'debtor_actor_id' => $bob->id,
-            'monetary_unit_id' => $eur->id,
-            'amount_minor' => 10000,
-            'description' => 'Riverside work receivable',
-            'recognized_by_actor_id' => $alice->id,
-            'recognized_at' => CarbonImmutable::now(),
-        ]);
-
-        FinancialObligation::factory()->create([
-            'creditor_actor_id' => $bob->id,
-            'debtor_actor_id' => $alice->id,
-            'monetary_unit_id' => $usd->id,
-            'amount_minor' => 5000,
-            'description' => 'Tool reimbursement payable',
-            'recognized_by_actor_id' => $alice->id,
-            'recognized_at' => CarbonImmutable::now(),
-        ]);
-
-        Livewire::actingAs($alice->user)
-            ->test(Today::class)
-            ->assertSee('EUR')
-            ->assertSee('USD')
-            ->assertSee('100.00')
-            ->assertSee('50.00')
-            ->assertSee('Receivable / owed to me')
-            ->assertSee('Payable / I owe');
     }
 
     public function test_getting_started_route_keeps_compatibility_but_lands_on_today_checklist(): void

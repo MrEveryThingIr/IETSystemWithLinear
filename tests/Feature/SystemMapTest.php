@@ -24,8 +24,7 @@ class SystemMapTest extends TestCase
             ->get(route('system-map'))
             ->assertOk()
             ->assertSee('System Map')
-            ->assertSee('Personal accounting')
-            ->assertSee('Financial obligations')
+            ->assertSee('Bookkeeping')
             ->assertSee('Planner & temporal fabric')
             ->assertSee('data-system-map', false)
             ->assertSee('dir="ltr"', false)
@@ -58,19 +57,19 @@ class SystemMapTest extends TestCase
         }
 
         $this->assertSame(
-            ['contracts', 'service_economics', 'commitments', 'planner', 'fulfillment', 'obligations', 'settlements', 'accounting', 'financial_lab', 'payments', 'finance_review'],
+            ['contracts', 'service_economics', 'commitments', 'planner', 'fulfillment', 'bookkeeping', 'financial_lab', 'payments', 'finance_review'],
             $map['presets']['finance'],
         );
 
         $this->assertTrue(
             collect($map['edges'])->contains(
-                fn (array $edge): bool => $edge['source'] === 'fulfillment' && $edge['target'] === 'obligations',
+                fn (array $edge): bool => $edge['source'] === 'contracts' && $edge['target'] === 'bookkeeping',
             ),
         );
 
         $this->assertTrue(
             collect($map['edges'])->contains(
-                fn (array $edge): bool => $edge['source'] === 'settlements' && $edge['target'] === 'accounting',
+                fn (array $edge): bool => $edge['source'] === 'bookkeeping' && $edge['target'] === 'notifications',
             ),
         );
     }

@@ -98,8 +98,7 @@ class IntentMatchingKernelTest extends TestCase
         $this->assertDatabaseCount('relationships', 0);
         $this->assertDatabaseCount('proposals', 0);
         $this->assertDatabaseCount('contracts', 0);
-        $this->assertDatabaseCount('financial_obligations', 0);
-        $this->assertDatabaseCount('journal_entries', 0);
+        $this->assertDatabaseCount('bk_transactions', 0);
     }
 
     public function test_capital_need_finds_capital_offer_and_rejects_wrong_value_constraints(): void

@@ -49,6 +49,8 @@ return [
         'relationship_source' => 'This Contract preserves “:title” as its source Relationship. Every listed party must be an active Relationship participant.',
     ],
     'show' => [
+        'bookkeeping_hint' => 'Payments for this contract are kept in Bookkeeping: open a shared book with the other party to record what is owed and paid.',
+        'open_bookkeeping' => 'Open Bookkeeping',
         'help' => 'Review exact sealed Contract versions, acceptance evidence, effective time, and amendment history.',
         'authority' => 'Only explicit ContractVersion acceptance has Contract authority. Conversation wording and earlier Proposal acceptance do not count here.',
         'current_version' => 'Version :version',
@@ -86,12 +88,6 @@ return [
         'quantity_per_occurrence' => 'Quantity per occurrence',
         'unit' => 'Service unit',
         'unit_rate' => 'Agreed unit rate',
-        'reference_price_toggle' => 'Price is agreed in external money but the internal obligation is IET',
-        'reference_unit_rate' => 'Reference unit rate',
-        'reference_monetary_unit' => 'Reference money',
-        'reference_price_help' => 'Use this for agreements such as 1,500,000 toman per workday. The exact external amount, market quote and IET valuation are pinned to this Contract version.',
-        'reference_price_exchange_help' => 'Before saving, Exchange must contain an active reference-money/USD quote (for example IRT/USD). The resulting IET rate becomes immutable when the Contract is accepted.',
-        'reference_price_snapshot' => 'Agreed reference price: :amount :unit per unit',
         'monetary_unit' => 'Money unit',
         'settlement_cycle' => 'Settlement cycle',
         'cycles' => [

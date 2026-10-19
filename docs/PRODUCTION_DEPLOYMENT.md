@@ -21,6 +21,28 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v1.4.0** — **Bookkeeping replaces the old financial system**, plus
+  **faster video over slow or VPN connections**.
+  - The old Accounting, Financial Obligations/Settlements, money intentions and
+    IET exchange/valuation screens, code and **tables are removed**
+    (irreversible). Their data is not carried over: **take a full database
+    backup before upgrading** and keep it; it is the only copy of that old data.
+    IET exchange will come back later as its own, carefully designed feature.
+  - New **Bookkeeping** (`/bookkeeping`, the former *Money* facility, so
+    existing access grants carry over): a private personal book (wallets,
+    categories, income/spending/moves, month totals in the user's calendar,
+    receipts, undo) and shared/project books where each debt or payment waits
+    for the other side's confirmation, with proof files, disputes,
+    corrections, an append-only history, a book chat and Today/notification
+    reminders. Everything is in toman (whole numbers).
+  - **Video**: uploaded MP4/MOV files are rewritten so playback can start
+    immediately (index moved to the front, pure PHP, no FFmpeg), media files
+    are cached by the browser for a day with ETag/304 revalidation, and a
+    command prepares playback copies of videos uploaded earlier (run it once,
+    section 5c step 4; the scheduler then continues 20 a night).
+  - Two migrations: one removes the legacy finance tables, one creates the
+    `bk_*` bookkeeping tables. Ordinary upgrade (section 5c), but the backup
+    in step 1 is mandatory this time.
 - **v1.3.0** — everything in v1.2.0 below, plus **sharing outside the
   system**: the author of published Content can make it *public* (anyone can
   read it without an account; it is listed at `/public` and previewed on the
@@ -71,14 +93,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.3.0`, so the package is
-   `iet-v1.3.0`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.4.0`, so the package is
+   `iet-v1.4.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.3.0`. It contains:
-   - `iet-v1.3.0.zip` — the runtime package (root directory `iet-v1.3.0/`)
-   - `iet-v1.3.0.zip.sha256` — checksum of the ZIP
-   - `iet-v1.3.0.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.3.0.zip.sha256`.
+3. Download the artifact `iet-v1.4.0`. It contains:
+   - `iet-v1.4.0.zip` — the runtime package (root directory `iet-v1.4.0/`)
+   - `iet-v1.4.0.zip.sha256` — checksum of the ZIP
+   - `iet-v1.4.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.4.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -278,6 +300,13 @@ Never run `migrate:fresh` once real users or data exist.
    /usr/local/php-8.4/bin/php artisan optimize
    ```
 
+   Once after upgrading to v1.4.0 (safe to repeat; it only adds playback
+   copies next to existing videos and never changes the originals):
+
+   ```bash
+   /usr/local/php-8.4/bin/php artisan media:faststart-existing --limit=500
+   ```
+
 5. Switch `current` to the new release.
 6. Run `/usr/local/php-8.4/bin/php artisan schedule:interrupt`.
 7. Smoke-test (section 7).
@@ -341,6 +370,21 @@ Additional checks for v1.3.0 (use a private browser window as the guest):
     private window the link shows the greeting, the message and the content;
     the panel counts the view. *Turn off* — the link now says it no longer
     works.
+
+Additional checks for v1.4.0:
+
+15. **Money is gone, Bookkeeping is there**: the menu shows *Bookkeeping*;
+    `/money`, `/accounting` and `/exchange` return 404.
+16. **Personal book**: *Bookkeeping → My personal book*, record *Spent* 350,000
+    (try Persian digits) with a receipt photo; the Cash wallet and the month
+    totals change; *Undo* adds the opposite entry.
+17. **Shared book**: create a shared book, add a second test user by username,
+    record a debt of 40,000,000; log in as the second user — Today shows it
+    waiting; confirm it; record a 10,000,000 payment with an image; the first
+    user confirms and the debt shows 30,000,000 left.
+18. **Video over VPN**: open a public lesson with a video on a phone with a
+    VPN on; it should start within a few seconds and seek without waiting for
+    the whole file.
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

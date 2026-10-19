@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\AccessInvitation;
 use App\Models\AccessInvitationAcceptance;
-use App\Models\Account;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileDisclosureGrant;
@@ -33,8 +32,6 @@ use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\DomainBlueprint;
 use App\Models\DomainBlueprintVersion;
-use App\Models\FinancialObligation;
-use App\Models\FinancialObligationEvent;
 use App\Models\Fulfillment;
 use App\Models\FulfillmentDispute;
 use App\Models\FulfillmentReview;
@@ -50,9 +47,6 @@ use App\Models\GroupSpace;
 use App\Models\GroupSpaceContext;
 use App\Models\GroupSpaceMessage;
 use App\Models\GroupSpaceParticipant;
-use App\Models\JournalEntry;
-use App\Models\JournalLine;
-use App\Models\Ledger;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\MonetaryUnit;
 use App\Models\PersonalContext;
@@ -74,7 +68,6 @@ use App\Models\Relationship;
 use App\Models\RelationshipContext;
 use App\Models\RelationshipEvent;
 use App\Models\RelationshipParticipant;
-use App\Models\Settlement;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentDefinition;
 use App\Models\SpaceContentDefinitionVersion;
@@ -118,14 +111,7 @@ class ModelFactoryTest extends TestCase
             Fulfillment::factory()->create(),
             FulfillmentReview::factory()->create(),
             FulfillmentDispute::factory()->create(),
-            FinancialObligation::factory()->create(),
-            FinancialObligationEvent::factory()->create(),
-            Settlement::factory()->create(),
             MonetaryUnit::factory()->create(),
-            Ledger::factory()->create(),
-            Account::factory()->create(),
-            JournalEntry::factory()->create(),
-            JournalLine::factory()->create(),
             Conversation::factory()->create(),
             ConversationMessage::factory()->create(),
             ContentBlueprint::factory()->create(),

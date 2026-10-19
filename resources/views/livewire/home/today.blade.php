@@ -357,72 +357,7 @@
     </div>
 
     @unless ($officeAlpha)
-    <div class="grid gap-6 xl:grid-cols-2">
-        <flux:card class="space-y-4">
-            <div class="flex items-center justify-between gap-3">
-                <div>
-                    <flux:heading size="lg">{{ __('home.accounting_today') }}</flux:heading>
-                    <flux:text>{{ __('home.accounting_today_help') }}</flux:text>
-                </div>
-                <flux:button :href="route('money.index')" size="sm" variant="ghost">{{ __('home.open_accounting') }}</flux:button>
-            </div>
-
-            <div class="space-y-3">
-                @forelse ($accountingToday as $summary)
-                    <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-                        <div class="mb-3 font-semibold">{{ $summary['code'] }}</div>
-                        <div class="grid grid-cols-3 gap-3 text-sm">
-                            <div>
-                                <div class="text-zinc-500">{{ __('home.income') }}</div>
-                                <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['income_minor'], $summary['exponent']) }}</div>
-                            </div>
-                            <div>
-                                <div class="text-zinc-500">{{ __('home.expense') }}</div>
-                                <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['expense_minor'], $summary['exponent']) }}</div>
-                            </div>
-                            <div>
-                                <div class="text-zinc-500">{{ __('home.net') }}</div>
-                                <div class="font-semibold">{{ \App\Support\MoneyAmount::format($summary['net_minor'], $summary['exponent']) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <x-app.empty-state :title="__('home.no_accounting_today')" :description="__('home.no_accounting_today_help')" />
-                @endforelse
-            </div>
-        </flux:card>
-
-        <flux:card class="space-y-4">
-            <div>
-                <flux:heading size="lg">{{ __('home.obligations') }}</flux:heading>
-                <flux:text>{{ __('home.obligations_help') }}</flux:text>
-            </div>
-
-            <div class="space-y-4">
-                @forelse ($obligations as $summary)
-                    <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-                        <div class="mb-3 font-semibold">{{ $summary['code'] }}</div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('home.receivable') }}</div>
-                                <div class="mt-2 text-sm">{{ __('home.total') }}: {{ \App\Support\MoneyAmount::format($summary['receivable_total_minor'], $summary['exponent']) }}</div>
-                                <div class="text-sm">{{ __('home.paid') }}: {{ \App\Support\MoneyAmount::format($summary['receivable_paid_minor'], $summary['exponent']) }}</div>
-                                <div class="font-semibold">{{ __('home.outstanding') }}: {{ \App\Support\MoneyAmount::format($summary['receivable_outstanding_minor'], $summary['exponent']) }}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs uppercase tracking-wide text-zinc-500">{{ __('home.payable') }}</div>
-                                <div class="mt-2 text-sm">{{ __('home.total') }}: {{ \App\Support\MoneyAmount::format($summary['payable_total_minor'], $summary['exponent']) }}</div>
-                                <div class="text-sm">{{ __('home.paid') }}: {{ \App\Support\MoneyAmount::format($summary['payable_paid_minor'], $summary['exponent']) }}</div>
-                                <div class="font-semibold">{{ __('home.outstanding') }}: {{ \App\Support\MoneyAmount::format($summary['payable_outstanding_minor'], $summary['exponent']) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <x-app.empty-state :title="__('home.no_obligations')" />
-                @endforelse
-            </div>
-        </flux:card>
-    </div>
+    @include('livewire.home.partials.today-money')
 
         </div>
         </details>

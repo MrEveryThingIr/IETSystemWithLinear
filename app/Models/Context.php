@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\ContextKind;
+use App\Models\Bookkeeping\Ledger;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -101,12 +102,6 @@ class Context extends Model
         return $this->hasOne(SystemContext::class);
     }
 
-    /** @return HasMany<Ledger, $this> */
-    public function ledgers(): HasMany
-    {
-        return $this->hasMany(Ledger::class);
-    }
-
     /** @return HasMany<Plan, $this> */
     public function plans(): HasMany
     {
@@ -153,5 +148,11 @@ class Context extends Model
     public function interactionDefinitions(): HasMany
     {
         return $this->hasMany(InteractionDefinition::class);
+    }
+
+    /** @return HasOne<Ledger, $this> */
+    public function ledgerBinding(): HasOne
+    {
+        return $this->hasOne(Ledger::class, 'context_id');
     }
 }

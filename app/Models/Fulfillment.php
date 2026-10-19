@@ -129,12 +129,6 @@ class Fulfillment extends Model
             ->withTimestamps();
     }
 
-    /** @return HasOne<FinancialObligation, $this> */
-    public function financialObligation(): HasOne
-    {
-        return $this->hasOne(FinancialObligation::class);
-    }
-
     /** @return HasOne<FulfillmentReview, $this> */
     public function review(): HasOne
     {

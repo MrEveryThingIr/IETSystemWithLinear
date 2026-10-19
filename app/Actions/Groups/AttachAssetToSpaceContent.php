@@ -9,6 +9,7 @@ use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\ContextScope;
+use App\Support\Media\Mp4Faststart;
 use App\Support\MediaLimits;
 use App\Support\SpaceContentRevisionComposition;
 use Illuminate\Http\UploadedFile;
@@ -51,6 +52,8 @@ class AttachAssetToSpaceContent
 
         $realPath = $upload->getRealPath();
         abort_unless(is_string($realPath) && is_file($realPath), 422, 'The uploaded media could not be read.');
+        // Index first, so video starts quickly on slow connections; before hashing.
+        Mp4Faststart::optimizeUpload($realPath, $mime);
         $sha256 = hash_file('sha256', $realPath);
         abort_unless(is_string($sha256), 422, 'The uploaded media could not be hashed.');
 

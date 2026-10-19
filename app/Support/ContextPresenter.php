@@ -24,6 +24,7 @@ final class ContextPresenter
         'proposalBinding.proposal',
         'contractBinding.contract',
         'referenceBinding',
+        'ledgerBinding',
     ];
 
     public function label(Context $context): string
@@ -54,6 +55,7 @@ final class ContextPresenter
                 'key' => $context->referenceBinding->key ?? __('content_workspace.context.untitled'),
             ]),
             ContextKind::System => __('content_workspace.context.system'),
+            ContextKind::Ledger => $context->ledgerBinding->name ?? __('bookkeeping.book'),
         };
     }
 
@@ -65,7 +67,7 @@ final class ContextPresenter
             ContextKind::Business => 'business',
             ContextKind::GroupSpace => 'group',
             ContextKind::Admission => 'admission',
-            ContextKind::Relationship, ContextKind::Negotiation, ContextKind::Contract => 'participants',
+            ContextKind::Relationship, ContextKind::Negotiation, ContextKind::Contract, ContextKind::Ledger => 'participants',
             ContextKind::Reference, ContextKind::System => 'everyone_signed_in',
         });
     }
@@ -78,6 +80,7 @@ final class ContextPresenter
             ContextKind::GroupSpace, ContextKind::Admission => 'user-group',
             ContextKind::Relationship, ContextKind::Negotiation, ContextKind::Contract => 'briefcase',
             ContextKind::Reference, ContextKind::System => 'book-open',
+            ContextKind::Ledger => 'banknotes',
         };
     }
 }

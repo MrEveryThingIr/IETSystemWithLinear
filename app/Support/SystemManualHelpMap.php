@@ -30,7 +30,7 @@ class SystemManualHelpMap
             return 'planner';
         }
 
-        if (str_starts_with($routeName, 'accounting.')) {
+        if (str_starts_with($routeName, 'bookkeeping.')) {
             return 'accounting';
         }
 
@@ -44,10 +44,6 @@ class SystemManualHelpMap
 
         if (str_starts_with($routeName, 'commitments.')) {
             return 'commitments';
-        }
-
-        if (str_starts_with($routeName, 'financial-obligations.')) {
-            return 'financial-obligations';
         }
 
         if ($routeName === 'intents.matches') {

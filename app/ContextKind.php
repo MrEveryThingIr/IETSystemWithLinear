@@ -13,4 +13,7 @@ enum ContextKind: string
     case Contract = 'contract';
     case Reference = 'reference';
     case System = 'system';
+
+    /** A Bookkeeping book: its parties see it; evidence and chat live here. */
+    case Ledger = 'ledger';
 }

@@ -99,7 +99,7 @@ class ContractKernelTest extends TestCase
             $this->assertSame(3, ContractAcceptance::query()->count());
             $this->assertSame(ProposalStatus::Accepted, $proposal->fresh()->status);
             $this->assertDatabaseCount('plans', 0);
-            $this->assertDatabaseCount('journal_entries', 0);
+            $this->assertDatabaseCount('bk_transactions', 0);
         } finally {
             CarbonImmutable::setTestNow();
         }

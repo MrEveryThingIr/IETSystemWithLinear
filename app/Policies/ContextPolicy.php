@@ -3,6 +3,8 @@
 namespace App\Policies;
 
 use App\ContextKind;
+use App\Enums\Bookkeeping\PartyRole;
+use App\Enums\Bookkeeping\PartyStatus;
 use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\Business;
@@ -49,6 +51,7 @@ class ContextPolicy
                 && $this->contracts->view($current, $contract),
             ContextKind::Reference => $this->reference($context) instanceof ReferenceContext,
             ContextKind::System => false,
+            ContextKind::Ledger => $this->ledgerRole($current, $context) !== null,
         };
     }
 
@@ -77,6 +80,7 @@ class ContextPolicy
                 && $this->contracts->participate($current, $contract),
             ContextKind::Reference => $this->isReferenceManager($current, $context),
             ContextKind::System => false,
+            ContextKind::Ledger => $this->ledgerRole($current, $context)?->canRecord() ?? false,
         };
     }
 
@@ -111,6 +115,7 @@ class ContextPolicy
             ContextKind::Contract => false,
             ContextKind::Reference => $this->isReferenceManager($current, $context),
             ContextKind::System => false,
+            ContextKind::Ledger => $this->ledgerRole($current, $context)?->canManage() ?? false,
         };
     }
 
@@ -137,6 +142,7 @@ class ContextPolicy
             ContextKind::Contract => false,
             ContextKind::Reference => $this->isReferenceManager($current, $context),
             ContextKind::System => false,
+            ContextKind::Ledger => $this->ledgerRole($current, $context)?->canManage() ?? false,
         };
     }
 
@@ -175,6 +181,24 @@ class ContextPolicy
         }
 
         return $current;
+    }
+
+    /** The person's role in the Bookkeeping book bound to this Context, if any. */
+    private function ledgerRole(User $user, Context $context): ?PartyRole
+    {
+        $context->loadMissing('ledgerBinding');
+        $ledger = $context->ledgerBinding;
+
+        if ($ledger === null || $user->actor === null) {
+            return null;
+        }
+
+        $party = $ledger->parties()
+            ->where('actor_id', $user->actor->id)
+            ->where('status', PartyStatus::Active->value)
+            ->first();
+
+        return $party?->role;
     }
 
     private function ownsPersonalContext(User $user, Context $context): bool

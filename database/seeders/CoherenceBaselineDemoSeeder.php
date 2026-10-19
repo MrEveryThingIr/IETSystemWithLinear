@@ -4,11 +4,6 @@ namespace Database\Seeders;
 
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\CreateDirectContract;
-use App\Actions\Exchange\CreateIetExchangeRequest;
-use App\Actions\Exchange\PublishIetValuationQuote;
-use App\Actions\Exchange\ReviewIetExchangeRequest;
-use App\Actions\Financial\ProposeSettlement;
-use App\Actions\Financial\RespondToSettlement;
 use App\Actions\Fulfillments\ReviewFulfillment;
 use App\Actions\Fulfillments\SubmitFulfillment;
 use App\Actions\Profile\CreateActorProfileIntent;
@@ -16,13 +11,10 @@ use App\Actions\Profile\EnsureActorProfile;
 use App\Actions\Relationships\CreateRelationship;
 use App\Actions\Relationships\RespondToRelationship;
 use App\FulfillmentReviewDecision;
-use App\IetExchangeDirection;
 use App\Models\ActorProfileIntent;
 use App\Models\Business;
 use App\Models\BusinessListing;
 use App\Models\Contract;
-use App\Models\FinancialObligation;
-use App\Models\IetValuationQuote;
 use App\Models\PlatformAccessGrant;
 use App\Models\Relationship;
 use App\Models\User;
@@ -79,10 +71,9 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 'arrangement' => 'service',
                 'commitment_kind' => 'service',
                 'unit' => 'job',
-                'amount' => 120,
+                'amount' => 1200000,
                 'buyer_email' => 'inspection-buyer@example.com',
                 'buyer_username' => 'inspection-buyer',
-                'settled' => true,
             ],
             [
                 'key' => 'tools',
@@ -95,10 +86,9 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 'arrangement' => 'ownership_transfer',
                 'commitment_kind' => 'deliverable',
                 'unit' => 'item',
-                'amount' => 80,
+                'amount' => 800000,
                 'buyer_email' => 'tool-buyer@example.com',
                 'buyer_username' => 'tool-buyer',
-                'settled' => false,
             ],
             [
                 'key' => 'home-service',
@@ -111,10 +101,9 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 'arrangement' => 'service',
                 'commitment_kind' => 'work',
                 'unit' => 'job',
-                'amount' => 150,
+                'amount' => 1500000,
                 'buyer_email' => 'home-buyer@example.com',
                 'buyer_username' => 'home-buyer',
-                'settled' => false,
             ],
             [
                 'key' => 'real-estate-brokerage',
@@ -127,10 +116,9 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 'arrangement' => 'service',
                 'commitment_kind' => 'service',
                 'unit' => 'deal',
-                'amount' => 200,
+                'amount' => 2000000,
                 'buyer_email' => 'property-buyer@example.com',
                 'buyer_username' => 'property-buyer',
-                'settled' => false,
             ],
         ];
 
@@ -174,7 +162,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 $offer,
             );
 
-            $obligation = $this->acceptedIetScenario(
+            $this->acceptedScenario(
                 $buyer,
                 $provider,
                 $relationship,
@@ -184,10 +172,6 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 $scenario['unit'],
                 $scenario['amount'],
             );
-
-            if ($scenario['settled']) {
-                $this->settleWithPlaceholderDeposit($buyer, $provider, $obligation);
-            }
         }
     }
 
@@ -258,7 +242,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 $type,
                 [
                     'title' => $title,
-                    'short_description' => 'Seeded acceptance item offered for internal IET settlement.',
+                    'short_description' => 'Seeded acceptance item priced in toman.',
                 ],
                 visibility: 'public',
             );
@@ -268,7 +252,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
             $catalog->addPrice(
                 $listing,
                 $provider->actor,
-                'IET',
+                'IRT',
                 'baseline_rate',
                 $amount,
                 $version,
@@ -322,7 +306,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 'exchange_preference' => ProfileIntentExchangePreference::OpenHybrid->value,
                 'cash_min' => (string) $amount,
                 'cash_max' => (string) $amount,
-                'currency_code' => 'IET',
+                'currency_code' => 'IRT',
                 'cash_basis' => 'total',
                 'quantity' => '1',
                 'unit' => 'unit',
@@ -377,7 +361,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
         return $relationship->fresh();
     }
 
-    private function acceptedIetScenario(
+    private function acceptedScenario(
         User $buyer,
         User $provider,
         Relationship $relationship,
@@ -386,15 +370,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
         string $kind,
         string $unit,
         int $amount,
-    ): FinancialObligation {
-        $existing = FinancialObligation::query()
-            ->where('description', 'C5-C7 demo '.$key)
-            ->first();
-
-        if ($existing instanceof FinancialObligation) {
-            return $existing;
-        }
-
+    ): Contract {
         $contract = Contract::query()
             ->where('title', 'C5-C7 demo '.$key)
             ->first();
@@ -408,7 +384,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                 $buyer,
                 'C5-C7 demo '.$key,
                 [['actor' => $provider->actor, 'role' => 'provider']],
-                $title.' for '.$amount.' IET.',
+                $title.' for '.number_format($amount).' toman.',
                 CarbonImmutable::now(),
                 'UTC',
                 creatorRole: 'receiver',
@@ -422,7 +398,7 @@ class CoherenceBaselineDemoSeeder extends Seeder
                     'quantity_per_occurrence' => '1',
                     'unit' => $unit,
                     'unit_rate' => (string) $amount,
-                    'monetary_unit_code' => 'IET',
+                    'monetary_unit_code' => 'IRT',
                     'settlement_cycle' => 'per_fulfillment',
                     'payment_due_days' => 0,
                     'auto_create_plan' => false,
@@ -473,58 +449,6 @@ class CoherenceBaselineDemoSeeder extends Seeder
             );
         }
 
-        $obligation = $fulfillment->fresh()->financialObligation;
-        abort_unless($obligation instanceof FinancialObligation, 500, 'Seeded demo obligation is missing.');
-
-        if ($obligation->description !== 'C5-C7 demo '.$key) {
-            // Financial facts are immutable; the generated description remains authoritative.
-            // Idempotency is therefore anchored through the Contract title on future runs.
-        }
-
-        return $obligation;
-    }
-
-    private function settleWithPlaceholderDeposit(
-        User $buyer,
-        User $provider,
-        FinancialObligation $obligation,
-    ): void {
-        if ($obligation->outstandingMinor() === 0) {
-            return;
-        }
-
-        $latestQuote = IetValuationQuote::query()
-            ->latest('effective_at')
-            ->latest('id')
-            ->first();
-
-        if ((string) $latestQuote?->usd_per_iet !== '0.010000000000000000') {
-            app(PublishIetValuationQuote::class)->execute(
-                $provider,
-                '0.010000000000000000',
-                'Local demo quote: one IET equals one US cent.',
-            );
-        }
-
-        $request = app(CreateIetExchangeRequest::class)->execute(
-            $buyer,
-            IetExchangeDirection::Deposit,
-            (int) $obligation->outstandingMinor(),
-            'C5-C7-DEMO-DEPOSIT-'.$obligation->id,
-            'Placeholder external deposit for the seeded acceptance story.',
-        );
-
-        app(ReviewIetExchangeRequest::class)->confirm($request, $provider);
-
-        $settlement = app(ProposeSettlement::class)->execute(
-            $obligation,
-            $buyer,
-            $obligation->outstandingMinor(),
-            CarbonImmutable::now()->subSecond(),
-            'IET',
-            'C5-C7-DEMO-SETTLEMENT-'.$obligation->id,
-        );
-
-        app(RespondToSettlement::class)->confirm($settlement, $provider);
+        return $contract->fresh();
     }
 }

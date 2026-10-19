@@ -96,8 +96,7 @@ class IntentMatchingExperienceTest extends TestCase
         $this->assertDatabaseCount('proposals', 0);
         $this->assertDatabaseCount('contracts', 0);
         $this->assertDatabaseCount('commitments', 0);
-        $this->assertDatabaseCount('financial_obligations', 0);
-        $this->assertDatabaseCount('journal_entries', 0);
+        $this->assertDatabaseCount('bk_transactions', 0);
     }
 
     public function test_tampered_incompatible_match_is_rejected_before_relationship_creation(): void

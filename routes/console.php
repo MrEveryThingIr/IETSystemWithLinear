@@ -7,6 +7,7 @@ use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
 use App\Support\DuePlanReminderEmitter;
+use App\Support\Media\FaststartExistingVideos;
 use App\Support\Media\ResumableUploads;
 use App\Support\NotificationOutboxDispatcher;
 use App\Support\ScheduledArtisan;
@@ -155,6 +156,16 @@ Artisan::command('media:prune-upload-sessions', function () {
     $count = app(ResumableUploads::class)->prune();
     $this->info("Expired {$count} abandoned upload sessions.");
 })->purpose('Expire abandoned resumable uploads and delete their partial files');
+
+Artisan::command('media:faststart-existing {--limit=50}', function () {
+    $result = app(FaststartExistingVideos::class)->run((int) $this->option('limit'));
+    $this->info("Checked {$result['checked']} videos, made {$result['optimized']} fast-start copies, {$result['failed']} failed.");
+})->purpose('Make fast-start playback copies of older MP4 videos (index first, originals untouched)');
+
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'media:faststart-existing --limit=20')
+    ->name('media:faststart-existing')
+    ->dailyAt('03:10')
+    ->withoutOverlapping();
 
 ScheduledArtisan::register(app(ConsoleSchedule::class), 'media:prune-upload-sessions')
     ->name('media:prune-upload-sessions')

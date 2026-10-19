@@ -2,7 +2,6 @@
 
 namespace App\Actions\Fulfillments;
 
-use App\Actions\Financial\RecognizeServiceFulfillmentFinancialObligation;
 use App\CommitmentEventType;
 use App\FulfillmentReviewDecision;
 use App\FulfillmentStatus;
@@ -20,7 +19,6 @@ class ReviewFulfillment
 {
     public function __construct(
         private readonly CommitmentProgress $progress,
-        private readonly RecognizeServiceFulfillmentFinancialObligation $serviceFinancial,
     ) {}
 
     public function execute(
@@ -93,13 +91,8 @@ class ReviewFulfillment
                 ],
             ]);
 
-            if ($decision === FulfillmentReviewDecision::Accepted) {
-                $this->serviceFinancial->execute($locked, $current);
-            }
-
             return $review->fresh([
                 'fulfillment.commitment.serviceTerm.monetaryUnit',
-                'fulfillment.financialObligation.monetaryUnit',
                 'reviewer.user',
             ]);
         }, attempts: 3);

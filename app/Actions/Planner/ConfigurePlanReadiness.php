@@ -2,7 +2,7 @@
 
 namespace App\Actions\Planner;
 
-use App\Actions\Accounting\EnsureMonetaryUnit;
+use App\Actions\Money\EnsureMonetaryUnit;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\Models\PlanEvent;

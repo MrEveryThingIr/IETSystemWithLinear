@@ -134,8 +134,7 @@ class DomainBlueprintKernelTest extends TestCase
         );
         $this->assertDatabaseCount('contracts', 0);
         $this->assertDatabaseCount('commitments', 0);
-        $this->assertDatabaseCount('financial_obligations', 0);
-        $this->assertDatabaseCount('journal_entries', 0);
+        $this->assertDatabaseCount('bk_transactions', 0);
     }
 
     public function test_wrong_journey_blueprint_cannot_be_applied_to_relationship_or_plan(): void

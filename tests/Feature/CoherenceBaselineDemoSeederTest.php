@@ -3,10 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Business;
+use App\Models\ContractServiceTerm;
 use App\Models\User;
 use App\ProfileIntentKind;
 use App\Support\BusinessEconomyProjection;
-use App\Support\IetPosition;
 use App\Support\IntentMatchFinder;
 use Database\Seeders\CoherenceBaselineDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,7 +16,7 @@ class CoherenceBaselineDemoSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_local_baseline_seed_is_visible_repeatable_and_economically_meaningful(): void
+    public function test_local_baseline_seed_is_visible_repeatable_and_priced_in_toman(): void
     {
         $this->seed(CoherenceBaselineDemoSeeder::class);
         $this->seed(CoherenceBaselineDemoSeeder::class);
@@ -34,24 +34,8 @@ class CoherenceBaselineDemoSeederTest extends TestCase
         $this->assertContains('Bright Home Services', $names);
         $this->assertCount(4, $names);
 
-        $providerPosition = app(IetPosition::class)->forUser($provider);
-
-        $this->assertSame(120, $providerPosition['wallet_minor']);
-        $this->assertSame(430, $providerPosition['receivable_minor']);
-        $this->assertSame(0, $providerPosition['payable_minor']);
-        $this->assertSame(550, $providerPosition['net_position_minor']);
-        $this->assertSame(120, $providerPosition['cashout_eligible_minor']);
-
-        $expected = [
-            'inspection-buyer@example.com' => 0,
-            'tool-buyer@example.com' => -80,
-            'home-buyer@example.com' => -150,
-            'property-buyer@example.com' => -200,
-        ];
-
-        foreach ($expected as $email => $net) {
+        foreach (['inspection-buyer@example.com', 'tool-buyer@example.com', 'home-buyer@example.com', 'property-buyer@example.com'] as $email) {
             $buyer = User::query()->where('email', $email)->sole();
-            $this->assertSame($net, app(IetPosition::class)->forUser($buyer)['net_position_minor']);
 
             $need = $buyer->actor->profile->intents()
                 ->where('kind', ProfileIntentKind::Need->value)
@@ -70,20 +54,14 @@ class CoherenceBaselineDemoSeederTest extends TestCase
         $atlasProjection = $businessEconomy->forBusiness($atlas);
         $this->assertSame(1, $atlasProjection['deal_count']);
         $this->assertSame(1, $atlasProjection['contract_count']);
-        $this->assertSame(0, $atlasProjection['iet_receivable_minor']);
-        $this->assertSame(120, $atlasProjection['iet_realized_revenue_minor']);
-        $this->assertSame(120, $atlasProjection['iet_realized_profit_minor']);
 
         $tools = Business::query()->where('name', 'Everyday Tools Store')->sole();
         $toolsProjection = $businessEconomy->forBusiness($tools);
         $this->assertSame(1, $toolsProjection['deal_count']);
         $this->assertSame(1, $toolsProjection['contract_count']);
-        $this->assertSame(80, $toolsProjection['iet_receivable_minor']);
-        $this->assertSame(0, $toolsProjection['iet_realized_revenue_minor']);
 
         $this->assertDatabaseCount('relationships', 4);
         $this->assertDatabaseCount('contracts', 4);
-        $this->assertDatabaseCount('financial_obligations', 4);
-        $this->assertDatabaseCount('settlements', 1);
+        $this->assertTrue(ContractServiceTerm::query()->whereHas('monetaryUnit', fn ($query) => $query->where('code', 'IRT'))->count() === 4);
     }
 }

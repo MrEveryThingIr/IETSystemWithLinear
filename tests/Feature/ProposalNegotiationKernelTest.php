@@ -48,7 +48,7 @@ class ProposalNegotiationKernelTest extends TestCase
         $this->assertSame(ContextKind::Negotiation, $proposal->contextBinding->context->kind);
         $this->assertDatabaseCount('relationships', 0);
         $this->assertDatabaseCount('plans', 0);
-        $this->assertDatabaseCount('ledgers', 0);
+        $this->assertDatabaseCount('bk_ledgers', 0);
 
         $versionOne = $proposal->currentVersionRecord();
         $this->assertInstanceOf(ProposalVersion::class, $versionOne);
@@ -135,7 +135,7 @@ class ProposalNegotiationKernelTest extends TestCase
         ]);
 
         $this->assertDatabaseCount('plans', 0);
-        $this->assertDatabaseCount('ledgers', 0);
+        $this->assertDatabaseCount('bk_ledgers', 0);
 
         $this->expectException(AuthorizationException::class);
         app(PostContextMessage::class)->execute(

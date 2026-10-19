@@ -27,11 +27,11 @@ class SystemManualContent
         'relationships' => '15. Relationships and Direct Collaboration',
         'conversation-timeline' => '16. Conversation and Unified Timeline',
         'planner' => '17. Personal Activity and Planner',
-        'accounting' => '18. Personal Accounting',
+        'accounting' => '18. Personal Book',
         'proposals' => '19. Proposals and Negotiation',
         'contracts' => '20. Contracts and Exact Acceptance',
         'commitments' => '21. Commitments and Fulfillment',
-        'financial-obligations' => '22. Financial Obligations and Settlements',
+        'financial-obligations' => '22. Shared and Project Books',
         'journeys' => '23. Journeys and Domain Blueprints',
         'matching' => '24. Need / Offer Matching',
         'community' => '25. Group / Community Composition',
@@ -55,11 +55,11 @@ TEXT,
 IET is a coordination platform, not a collection of unrelated apps. Identity, Groups, Contexts, Content, plans, agreements, work, evidence, money, learning, and collaboration are intended to form one connected graph while each domain keeps the rules needed to make its facts trustworthy.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Personal Accounting with balanced immutable journal truth, exact-version Proposal negotiation, exact-version Contract acceptance/effective-time history, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, versioned Journeys/Domain Blueprints for proven compositions, explainable privacy-safe Need/Offer matching with explicit Relationship handoff, policy-safe Group Community composition, and the derived Home/Today personal operating view.
+Today the strongest implemented foundations are User/Actor identity, Group governance, Membership and permissions, standalone system Access Invitations, Group Invitation/Admission, Personal/GroupSpace/Admission/Relationship/Reference/Negotiation/Contract Contexts, one versioned Content system with Blueprints and immutable published revisions, annotations/evidence locators, Submission/Response/Evaluation, the guided Need/Offer + Intent Directory experience, consent-aware direct Relationships, Context Conversation/Timeline, a timezone-aware Planner with durable schedules/occurrences, Bookkeeping (a private personal book plus shared and project books with two-sided confirmation, in toman), exact-version Proposal negotiation, exact-version Contract acceptance/effective-time history, Commitment/Fulfillment, versioned Journeys/Domain Blueprints for proven compositions, explainable privacy-safe Need/Offer matching with explicit Relationship handoff, policy-safe Group Community composition, and the derived Home/Today personal operating view.
 
 The first published experience can intentionally hide advanced modules through the office-alpha release profile while preserving those kernels for later composition.
 
-Realtime transport/notification delivery, generic workflow extraction, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment, the Financial Obligation/Settlement bridge, Journeys/Domain Blueprints, and Need/Offer matching are now implemented.
+Realtime transport/notification delivery, generic workflow extraction, reputation/discovery, and AI remain later roadmap milestones. Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment, Bookkeeping, Journeys/Domain Blueprints, and Need/Offer matching are now implemented.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Start with the action you actually want, not with an internal model name.
@@ -81,7 +81,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 The target experience is a connected life/work graph where a user can move naturally from discussion to agreement, planning, execution, evidence, review, financial consequences, settlement, and learning without jumping between unrelated systems.
 
-Content becomes the primary human-facing work surface, while Contract, Planner, Fulfillment, Accounting and other kernels remain authoritative underneath.
+Content becomes the primary human-facing work surface, while Contract, Planner, Fulfillment, Bookkeeping and other kernels remain authoritative underneath.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 “Everything is one thing” does not mean one giant table or one generic JSON object. It means specialized facts remain linked and explainable from one coherent system.
@@ -363,10 +363,10 @@ TEXT,
 The long-term proof for IET is not “can it store many object types?” but “can real life flow through one connected system without losing authority or provenance?”
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner, Personal Accounting, Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment and the Financial Obligation/Settlement bridge exist. Realtime transport, generic Workflow, Domain Packs, matching, broader financial laboratory capabilities, discovery, pilots, and production release remain later roadmap work.
+Identity, governance, Context, Content, structured interaction, direct Relationship, Context Conversation/source-linked Timeline, Planner, Bookkeeping, Proposal/Negotiation, Contract/ContractVersion and Commitment/Fulfillment exist. Realtime transport, generic Workflow, Domain Packs, matching, broader financial laboratory capabilities, discovery, pilots, and production release remain later roadmap work.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity and Personal Accounting may record an Actor's own ledger history. Shared financial truth now requires an explicit Financial Obligation from accepted performance, explicit per-Actor Accounting posting, and counterparty-confirmed Settlement. A Plan/Occurrence, arbitrary JournalEntry, Conversation message or Content prose never becomes shared obligation/payment truth by wording alone.
+Use today's implemented kernels for what they already guarantee. Planner may record scheduled/actual activity and the personal book records a person's own income and spending. Debts and payments between people live in shared or project books, where the other side confirms each entry. A Plan/Occurrence, Contract, Conversation message or Content prose never becomes a debt or payment by wording alone.
 
 When a real use case exposes friction, annotate the relevant manual/system Content precisely. That feedback should influence the next official documentation edition and, when appropriate, the product roadmap.
 TEXT,
@@ -376,7 +376,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 A direct paid-work relationship should eventually flow as:
 
-request/discussion → exact Contract version → explicit acceptance → Commitments → scheduled Occurrences → actual start/end + evidence → review/acceptance → earned financial obligation → payment/settlement → accounting.
+request/discussion → exact Contract version → explicit acceptance → Commitments → scheduled Occurrences → actual start/end + evidence → review/acceptance → debt and payments recorded in a shared book and confirmed by both sides.
 
 The system should be able to explain scheduled, worked, accepted, earned, paid, outstanding, and disputed state while preserving the exact Contract version and evidence that governed each fact.
 TEXT,
@@ -531,9 +531,9 @@ TEXT,
 This chapter connects the manual into one reusable browser story. The same people introduced during registration continue into intents, Groups, Content and later roadmap capabilities so testing does not become a collection of unrelated toy examples.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, Phase 12 personal/Relationship Planner activity, Phase 13 Bob Personal Accounting, Phase 14 Alice/Bob/Carol Proposal negotiation, Phase 15 exact ContractVersion acceptance, Phase 16 Riverside Commitment → Planner → Fulfillment → explicit review/correction/dispute, and Phase 17 Financial Obligation → Accounting → confirmed Settlement → Settlement Accounting.
+The current executable story covers Diego issuing a standalone Access Invitation, Alice registering/verifying, Alice recording Needs/Offers, Bob/Carol recording complementary Offers, the permission-aware Intent Directory, Bob joining Maple Housing Office through a Group Invitation as an existing verified user, Content/Context authoring, the published Content Library with authorized cross-Context placement, Phase 7 structured Submission/Response/Evaluation, Phase 10 direct Relationships with explicit consent, Phase 11 Context Conversation + source-linked Timeline, Phase 12 personal/Relationship Planner activity, Bob's personal book, Phase 14 Alice/Bob/Carol Proposal negotiation, Phase 15 exact ContractVersion acceptance, Phase 16 Riverside Commitment → Planner → Fulfillment → explicit review/correction/dispute, and the debt and payments for that work recorded in a shared book and confirmed by both sides.
 
-Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner, Personal Accounting, Proposal/Negotiation, Contract/ContractVersion, Commitment/Fulfillment and Financial Obligation/Settlement are current implemented behavior.
+Matching, realtime notification delivery and AI remain roadmap steps and must be labelled as future until their milestone is remotely integrated. Planner, Bookkeeping, Proposal/Negotiation, Contract/ContractVersion and Commitment/Fulfillment are current implemented behavior.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Run the story in this order.
@@ -642,10 +642,8 @@ Run the story in this order.
    - Alice explicitly accepts, rejects or requests clarification.
    - Exercise correction and dispute flows; confirm old facts remain immutable.
    - Confirm accepted Fulfillment alone creates no financial consequence.
-   - Explicitly recognize the Financial Obligation from the accepted Fulfillment.
-   - Post the obligation separately into Alice's and Bob's Personal Accounting.
-   - Propose and counterparty-confirm a Settlement.
-   - Post Settlement Accounting separately for both parties.
+   - Open a shared book between Alice and Bob and record the debt for the accepted work.
+   - Record the payment with its proof; the other side confirms it.
    - Confirm earned / paid / outstanding / disputed values are derived from sources.
 
 At every step verify: what object was created, who can see it, what exact action changed state, and what did *not* happen implicitly.
@@ -653,12 +651,12 @@ TEXT,
                     'authorization' => <<<'TEXT'
 Use separate sessions/accounts when checking visibility and role boundaries. URLs/tokens are never substitutes for authorization. Do not give Alice platform or Group authority merely to make a demo easier.
 
-Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline, Planner, Personal Accounting, Proposal/Negotiation, Contract, Commitment/Fulfillment and Financial Obligation/Settlement are now implemented. When Domain Blueprints, Matching or later capabilities are implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
+Future milestones should extend this same story rather than replace it. Relationship, Conversation/Timeline, Planner, Bookkeeping, Proposal/Negotiation, Contract and Commitment/Fulfillment are now implemented. When Domain Blueprints, Matching or later capabilities are implemented, append the next Alice/Bob/Carol/Riverside steps here and in docs/LOCAL_ACCEPTANCE_WORKSHEET.md.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 The final Ideal-v1 browser story continues naturally:
 
-Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner → Proposal/Negotiation → exact ContractVersion → Commitment → planned Occurrence → actual Fulfillment/evidence → explicit review/correction/dispute → Financial Obligation → explicit per-Actor Accounting posting → counterparty-confirmed Settlement → explicit Settlement Accounting (current through this point) → Domain Blueprints / Matching / Home/Today summaries.
+Alice/Bob/Carol Intent/discovery → Relationship Context → Conversation/Timeline + Planner → Proposal/Negotiation → exact ContractVersion → Commitment → planned Occurrence → actual Fulfillment/evidence → explicit review/correction/dispute → debt and payments in a shared book, confirmed by both sides (current through this point) → Domain Blueprints / Matching / Home/Today summaries.
 
 The user should experience one understandable story while each authoritative fact remains owned by its specialized kernel.
 TEXT,
@@ -714,7 +712,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Conversation and source-linked Timeline now compose inside Relationship, Admission and GroupSpace Contexts without making messages authoritative. Realtime delivery remains future transport work.
 
-Planner composes inside active Relationship Contexts. Personal Accounting is implemented separately in each Actor's Personal Context. Proposal/Negotiation can start directly or from an active Relationship; Contract records exact accepted agreement truth; Commitment/Fulfillment compose from the exact ContractVersion; and accepted performance may now be explicitly bridged into bilateral Financial Obligation, per-Actor Accounting, counterparty-confirmed Settlement and Settlement Accounting. Capability discovery should remain purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
+Planner composes inside active Relationship Contexts. Each person's personal book is private; shared and project books each have their own Context. Proposal/Negotiation can start directly or from an active Relationship; Contract records exact accepted agreement truth; Commitment/Fulfillment compose from the exact ContractVersion; money owed for the work is recorded by the people themselves in a shared book. Capability discovery should remain purpose-aware and progressive; the product must not force every Relationship through one universal workflow or giant relationship-type enum.
 
 Multi-party creation, participant changes, broader people discovery and richer capability presentation may extend the same kernel without replacing its consent and authorization boundaries.
 TEXT,
@@ -736,7 +734,7 @@ Existing GroupSpace chat was migrated into this generic store; the former Group-
 
 A message may reference existing Assets from the same Context and exact Content Evidence References from the same Context. Those relationships reuse the original artifact/evidence identities rather than copying files or Content.
 
-Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, Personal Accounting Journal Entries, Proposal negotiation events, Contract lifecycle/acceptance events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
+Timeline is reconstructed from durable source records. Today it projects Conversation messages, Relationship events, Admission events, Planner Plan/Occurrence events, Proposal negotiation events, Contract lifecycle/acceptance events, and Content lifecycle events the viewer is separately authorized to read. Timeline itself has no persistence table and every entry links back to its source.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Relationship:
@@ -771,7 +769,7 @@ TEXT,
                     'ideal_target' => <<<'TEXT'
 Later realtime delivery should publish committed database/domain events through an outbox/queue/authorized broadcast path. Realtime transport must remain replaceable: reloading from source truth should always reconstruct the same Conversation/Timeline state.
 
-Financial Obligation/Settlement now contributes authorized source-linked financial events to the Contract Context Timeline without turning Timeline into financial authority. Planner contributes Plan/Occurrence events, Personal Accounting contributes Journal Entries, Proposal/Negotiation contributes Proposal Events, Contract contributes Contract Events, and Commitment/Fulfillment contributes Commitment Events the same way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
+Planner contributes Plan/Occurrence events, Proposal/Negotiation contributes Proposal Events, Contract contributes Contract Events, and Commitment/Fulfillment contributes Commitment Events the same way. Richer threads/topics and specialized audiences may extend Conversation when real use cases justify them.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
 A message is not an authoritative action. Writing “I agree”, “approved”, “paid”, “accepted”, “I own 20%”, or similar text records only what a participant said.
@@ -855,66 +853,35 @@ Changing a recurring schedule should not rewrite historical rules/occurrences. C
 TEXT,
                 ],
                 [
-                    'title' => '18. Personal Accounting',
+                    'title' => '18. Personal Book',
                     'summary' => <<<'TEXT'
-Personal Accounting is IET's current everyday-money kernel for one Actor's Personal Context. The UI offers plain Opening balance, Add expense, Add income and Transfer actions while the underlying Ledger posts balanced, immutable double-entry history.
+The personal book is each person's own record of money in and money out, in toman. It lives in **Bookkeeping → My personal book** and only its owner can see it.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Phase 13 provides MonetaryUnit, Ledger, Account, JournalEntry and JournalLine.
+Every person gets one personal book with a Cash wallet and everyday categories (food, transport, home, bills, salary, work income and so on). People add more wallets (bank card, bank account) with the money already in them; only the last four digits of a card or account number are kept.
 
-Money amounts are stored as integer minor units using the MonetaryUnit exponent rather than floating-point values.
+Each entry is one of: **Spent** (money out of a wallet), **Received** (money into a wallet) or **Moved** (between two of your own wallets), with an amount in whole toman, a date in your own calendar, a category, who it was paid to or received from, a note and an optional receipt photo.
 
-Every posted Journal Entry belongs to one Ledger, contains at least two lines, uses Accounts from that Ledger only, gives every line exactly one positive debit or credit amount, and must balance total debits to total credits before the database transaction commits.
+Wallet balances and month totals (income, spending, what is left, and spending by category) are always calculated from the entries; nobody types a balance. Months follow the person's calendar, so a Persian-calendar user sees Mehr, Aban and so on.
 
-The normal Accounting page hides debit/credit terminology. It shows Ledgers, cash/bank Asset Accounts, current balances, daily/weekly/monthly/yearly Income/Expense/Net summaries and immutable activity history.
-
-Posted Journal Entries and Lines cannot be edited/deleted. Mistakes use reversal/correction. Personal Journal Entries also project into the unified Context Timeline with links back to Accounting.
-
-Phase 13 is Personal Context accounting only. It does not create shared Relationship debt, invoice, obligation, settlement, ownership or payment authority.
+Entries are never edited or deleted. **Undo** records the opposite entry and both stay visible. Payments recorded in shared books "from my wallet" also move that wallet's balance once confirmed.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Bob's ordinary flow:
-1. Open **Accounting**.
-2. Choose the Monetary Unit, for example EUR, and create a Personal Ledger.
-3. Choose **Opening balance**, select Cash, enter 1000.00 and record it.
-4. Choose **Add expense**, enter 25.00, category “Work gloves”, and record it.
-5. Choose **Add income**, enter 100.00, category “Service income”, and record it.
-6. Review the Month summary: Income 100.00, Expense 25.00, Net 75.00.
-7. Add another cash/bank Account such as **Bank**.
-8. Choose **Transfer**, move 200.00 Cash → Bank.
-9. Confirm derived balances: Cash 875.00, Bank 200.00, total Asset balance 1075.00.
-10. Change Day/Week/Month/Year to inspect period summaries.
-11. If an entry is wrong, choose **Reverse entry**. The original remains visible and an equal/opposite entry restores its accounting effect.
-12. Use the Personal Context Timeline when you want Accounting activity beside other Context history.
-
-Routine users should never need to manually choose Debit or Credit.
+1. Open **Bookkeeping** and choose **My personal book**.
+2. Choose **Spent**, type 350000 (Persian digits and separators work), pick **Food & groceries**, write "Bakery", optionally add the receipt, and save.
+3. Choose **Received** for a salary into your bank card.
+4. Choose **Moved** to take cash out of the card into Cash.
+5. Use the month arrows to see totals and spending by category.
+6. If something was wrong, press **Undo** on it.
 TEXT,
                     'authorization' => <<<'TEXT'
-Phase 13 Ledgers belong only to Personal Contexts.
-
-The Personal Context owner may view/manage the Ledger and post friendly accounting actions. Another Actor cannot select, view, manage or post into that Ledger through a guessed URL/query parameter.
-
-A Journal Line cannot use an Account from another Ledger.
-
-Personal Accounting does not inherit authority from a Relationship, Group Membership, Planner occurrence, Conversation message or Content document.
+Only the book's owner sees it. Receipts are stored privately in the book's own place and served only to the owner. Wallets and card digits are never shown to anyone else, including the other side of a shared book.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Phase 17 now provides the explicit audited bridge into Accounting when authoritative shared money events actually occur.
-
-An accepted Fulfillment may be explicitly recognized as a Financial Obligation. Each involved Actor explicitly posts that obligation into their own Personal Ledger. Settlement records a payment claim that requires counterparty confirmation, and confirmed Settlement is then explicitly posted into each Actor's Accounting. Every bridge references its source object and nothing is inferred from prose, Planner completion or Contract activation alone.
-
-Future accounting work may add receivables/payables, bank reconciliation/import, exchange rates, taxes, budgeting/forecasting and richer correction UX while preserving immutable balanced journal truth.
+Later: budgets per category, recurring entries, bank-statement import, export to Excel/PDF, and optional links from Planner expenses.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
-A Personal Accounting entry records the Actor's own accounting history. It does not by itself prove that another person legally owes money or that a shared Contract/Invoice/Settlement exists.
-
-A Planner occurrence marked complete must not automatically post income/expense.
-
-Writing “paid” in Conversation or Content must not post Accounting.
-
-Reversing an entry does not delete history. The original remains, and a reversing Journal Entry records the correction path.
-
-Current balance and period summaries are derived from Journal Lines; they are not independently editable totals.
+The personal book is a private record; it does not prove anything to another person. Debts and payments between people belong in a shared book, where both sides confirm them.
 TEXT,
                 ],
                 [
@@ -985,7 +952,7 @@ Accepting version 1 does not accept version 2. Every required party must decide 
 
 Request changes does not edit existing terms. The next terms must be published as a new ProposalVersion.
 
-Proposal acceptance does not create Commitment, Fulfillment, employment, ownership, Financial Obligation, Accounting posting, Settlement or payment.
+Proposal acceptance does not create Commitment, Fulfillment, employment, ownership, debt or payment in a book.
 TEXT,
                 ],
                 [
@@ -1056,7 +1023,7 @@ Phase 16 now creates explicit Commitments from effective Contract terms and may 
 
 Commitment answers what must happen. Planner answers when it is intended to happen. Fulfillment answers what actually happened and what evidence proves it. Explicit review/correction/dispute records determine accepted performance. These facts preserve provenance to the exact ContractVersion that governed them.
 
-Phase 17 now creates explicit economic consequences only through Financial Obligation recognition from accepted Fulfillment. Contract activation, Planner completion, Fulfillment submission and Fulfillment acceptance alone still do not post Accounting. Obligation Accounting and Settlement Accounting remain separate explicit Actions.
+No money record is created automatically. Contract activation, Planner completion and Fulfillment acceptance never create a debt or payment; people record those in a shared book, where both sides confirm them.
 
 Future Contract work may add explicit party/role changes through amendments, organization/system Actors, richer termination/expiration semantics and purpose-specific UX while preserving exact immutable version/acceptance history.
 TEXT,
@@ -1067,7 +1034,7 @@ Typing “I accept” in Conversation or Content is not ContractAcceptance.
 
 An Active Contract is authoritative agreement truth, but it does not prove that work was scheduled, performed or accepted.
 
-Contract activation does not create a Financial Obligation, JournalEntry, Settlement/payment, ownership/equity, or employment record automatically.
+Contract activation does not create a debt or payment entry, ownership/equity, or employment record automatically.
 
 An amendment never edits the old effective ContractVersion. It creates a new version for future behavior, while the old version remains historical evidence.
 TEXT,
@@ -1092,7 +1059,7 @@ The beneficiary/reviewer explicitly Accepts, Rejects or Requests clarification. 
 
 Either responsible Actor or beneficiary may open one dispute against an accepted/rejected Fulfillment. The party who opened the dispute cannot resolve it themselves; the other authorized side explicitly resolves as Accepted or Rejected. While accepted performance is disputed, its quantity is excluded from accepted progress.
 
-Commitment/Fulfillment events project into the Contract Context Timeline. No Financial Obligation or Accounting JournalEntry is created automatically.
+Commitment/Fulfillment events project into the Contract Context Timeline. No bookkeeping entry is created automatically.
 TEXT,
                     'how_to_use' => <<<'TEXT'
 Riverside workday:
@@ -1128,10 +1095,10 @@ The responsible Actor or beneficiary may open one dispute after an Accepted or R
 Contract visibility still gates Commitment/Fulfillment visibility. Unrelated Actors cannot open these records, and cross-Context evidence is rejected.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Phase 17 should derive explicit Financial Obligations only from accepted Fulfillment or another specifically defined economic event.
+A later phase may offer to open a debt in a shared book from accepted Fulfillment, always as an explicit, confirmed step.
 
 The financial chain should remain:
-accepted ContractVersion → Commitment → accepted Fulfillment → Financial Obligation → explicit Accounting posting → Settlement/Payment → settlement accounting.
+accepted ContractVersion → Commitment → accepted Fulfillment → debt recorded in a shared book → payments confirmed by both sides.
 
 Future work may add richer partial-delivery views, multi-step review policies, domain-specific Commitment templates and better operational summaries without collapsing obligation, scheduling, performance and money into one state.
 TEXT,
@@ -1144,82 +1111,43 @@ A completed Planner Occurrence records execution-time facts; it does not automat
 
 A submitted Fulfillment is a performance claim; it is not accepted until explicit review.
 
-An accepted Fulfillment is performance truth only. It does not automatically mean money is owed, paid, settled, posted to Accounting, or that employment/ownership exists.
+An accepted Fulfillment is performance truth only. It does not automatically mean money is owed, paid or recorded in a book, or that employment/ownership exists.
 
 Correction does not edit the original Fulfillment. Dispute does not delete the original review. Both preserve historical provenance.
 TEXT,
                 ],
                 [
-                    'title' => '22. Financial Obligations and Settlements',
+                    'title' => '22. Shared and Project Books',
                     'summary' => <<<'TEXT'
-Financial Obligation and Settlement form IET's explicit bridge from accepted performance to shared economic truth and then into each Actor's own Accounting. The bridge is deliberately stepwise so agreement, work, money owed, personal ledger posting and payment confirmation remain separate facts.
+Shared books (between two or more people) and project books (a job or project with several people) record who owes whom and what was paid, with both sides confirming each entry. Everything is in toman.
 TEXT,
                     'current_behavior' => <<<'TEXT'
-Phase 17 provides immutable FinancialObligation, lifecycle-controlled Settlement and immutable FinancialObligationEvent history.
+A book has people: users (added by username) and people without an account (added by name, for example a day worker). Roles: owner, partner (manages the book), member (records and confirms their own entries) and viewer.
 
-A currently Accepted Fulfillment may be explicitly recognized as one Financial Obligation. The obligation permanently references that exact Fulfillment and ContractVersion, the debtor/creditor Actors, MonetaryUnit, integer minor-unit amount, optional due time/description, and the Actor/time that recognized it.
+Entries: **Debt** (someone owes someone), **Payment**, **Money returned**, **Debt forgiven**, **Settled in kind** (goods or work instead of money) and **Correction** (raises or lowers a confirmed debt).
 
-For paid-work Commitments, the current composition treats the responsible performer as creditor and the beneficiary/reviewer as debtor. The debtor explicitly recognizes the obligation after accepted performance.
+Every entry between people waits for the other side's confirmation before it counts. The book always shows three numbers: confirmed, waiting for confirmation, and disputed. A payment can be split across several debts or applied automatically to the oldest open debts; each debt shows "10,000,000 of 40,000,000 paid, 30,000,000 left".
 
-Each bilateral party separately posts the Financial Obligation into their own Personal Ledger. The Action creates balanced receivable/payable plus income/expense bridge entries as appropriate and records source/Actor provenance. Posting is idempotent.
+People without an account cannot confirm, so entries with them count at once and are labelled "recorded by one side". A confirmed entry can be objected to (disputed); while disputed it is not counted. The objector can drop the objection, or the other side (or a partner) can cancel the entry; nobody can cancel the other side's entry alone.
 
-Settlement is a separate payment-record claim. Either bilateral party may propose a payment amount/time/method/reference up to the outstanding amount. The proposer cannot self-confirm it. The counterparty explicitly confirms or rejects it. Confirmation is blocked while the source Fulfillment is disputed/not currently accepted.
-
-After confirmation, each party separately posts Settlement Accounting into their own Personal Ledger. Confirmation itself does not silently modify Accounting.
-
-ContractFinancialSummary derives scheduled/worked/accepted/disputed counts and earned/paid/outstanding/disputed money from authoritative sources. No mutable magic balance is stored.
-
-Financial events project into the Contract Context Timeline only for viewers authorized to see the bilateral obligation.
+Each entry can carry proof (receipt, bank slip, SMS screenshot) that cannot be removed afterwards. Every change is written to an append-only history with who did it and from where. Each book also has its own chat, and waiting confirmations appear on Today and as notifications.
 TEXT,
                     'how_to_use' => <<<'TEXT'
-Riverside paid-work example:
-1. Complete and explicitly Accept Bob's Fulfillment under the Riverside Commitment.
-2. Open the accepted Fulfillment.
-3. Choose **Recognize financial obligation**.
-4. Enter the exact amount and MonetaryUnit, for example 1,500,000 IRR.
-5. Open the resulting Financial Obligation and verify source Fulfillment, ContractVersion, debtor, creditor and outstanding amount.
-6. Alice explicitly chooses the Accounting posting action for her own Personal Ledger.
-7. Bob separately posts the same shared obligation source into his own Personal Ledger.
-8. When payment occurs, one bilateral party proposes a Settlement with amount, paid time and optional method/reference.
-9. The other party reviews and explicitly confirms or rejects that claim.
-10. After confirmation, Alice and Bob each explicitly post Settlement Accounting to their own Personal Ledger.
-11. Use the Contract financial summary to inspect derived earned, paid, outstanding and disputed values.
-12. Use the Contract Timeline for authorized source-linked financial history.
-
-For three accepted 1,500,000 IRR workdays, total earned is 4,500,000 IRR. If a confirmed Settlement pays 3,000,000 IRR, outstanding is derived as 1,500,000 IRR.
+The father and Majid (the reference story):
+1. The father opens **Bookkeeping → New shared book**, names it "Golestan" and adds Majid by username.
+2. He records **Debt**: Majid owes him 40,000,000. Majid confirms it.
+3. Majid records a **Payment** of 10,000,000; the father confirms. The book shows 30,000,000 left.
+4. Last week Majid recorded another 10,000,000 payment with the SMS screenshot. The father sees it on Today: "Majid recorded a payment of 10,000,000 toman — please confirm". He confirms, and 20,000,000 is left.
+5. If a payment never arrived, choose **Object** on it and explain; it stops counting until settled.
 TEXT,
                     'authorization' => <<<'TEXT'
-Financial Obligation access is bilateral: only the debtor and creditor may view it or post its Accounting.
-
-A third Contract party who is not debtor/creditor does not gain financial access merely from Contract participation.
-
-Only a bilateral party may propose Settlement.
-
-A pending Settlement may be confirmed/rejected only by an authorized bilateral party other than its proposer.
-
-Each Actor can post bridge JournalEntries only into their own Personal Ledger through the accounting policy/action path.
-
-Settlement confirmation requires the source Fulfillment to remain economically Accepted. A disputed Fulfillment blocks confirmation until explicitly resolved.
+Only the book's active people see it. Members record only entries they are part of; the owner and partners can record between any two people, and then both of them must confirm. Viewers only read. Personal wallets used for a payment stay private to the person who chose them. Leaving a book hides it but keeps every entry.
 TEXT,
                     'ideal_target' => <<<'TEXT'
-Later Domain Blueprints should configure friendly terminology and guided flows for sale, rent, service work, employment/paid work and construction compositions while keeping this same authority chain underneath.
-
-Future financial work may add invoice/document presentation, aging, recurring billing, tax rules, exchange-rate handling, bank import/reconciliation, refunds/chargebacks and multi-party split obligations. External payment verification should be represented by an explicit verifiable source rather than being implied by a manually confirmed Settlement.
-
-Home/Today should eventually summarize earned/paid/outstanding obligations permission-safely while linking every figure back to these authoritative sources.
+Later: partners acting on someone's behalf (delegation), a payer paying a sub-worker on the worker's behalf (proxy payments), SMS invitations for people without accounts, PDF/Excel export, aging reports, and automatic debts from Contracts and Needs & Offers.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
-Accepted Fulfillment is not automatically money owed. The Financial Obligation recognition Action is explicit.
-
-A Financial Obligation is shared economic-source truth; its JournalEntry is one Actor's Personal Accounting representation. They are not the same record.
-
-A Settlement proposal is not confirmed payment. The counterparty must explicitly confirm it.
-
-A confirmed Settlement still does not silently post Accounting. Each Actor posts Settlement Accounting separately.
-
-Typing “paid” in Conversation/Content, completing Planner activity, activating a Contract, or creating an arbitrary JournalEntry does not create/confirm a Settlement.
-
-Paid/outstanding/disputed are derived values. Do not edit a balance field to make them match expectations.
+Recording an entry does not move money; it records what people say happened, and both sides confirm it. A waiting entry is not part of the confirmed balance. Corrections are new entries; nothing is ever edited or deleted.
 TEXT,
                 ],
                 [
@@ -1234,7 +1162,7 @@ The built-in Journeys catalog currently offers six proven compositions: Simple S
 
 Relationship journeys can guide Relationship creation with purpose hints and participant-role terminology. Personal Activity guides Planner creation with safe defaults such as frequency and duration. The created Relationship or Plan permanently stores the exact DomainBlueprintVersion that guided it, so later Blueprint revisions do not rewrite historical provenance.
 
-A Blueprint may recommend capabilities such as Conversation, Content, Planner, Proposal, Contract, Commitment, Fulfillment, Financial, and Accounting, and may name useful Content Blueprint templates. These recommendations do not create those domain records and do not grant permission to use them.
+A Blueprint may recommend capabilities such as Conversation, Content, Planner, Proposal, Contract, Commitment, Fulfillment and Bookkeeping, and may name useful Content Blueprint templates. These recommendations do not create those domain records and do not grant permission to use them.
 
 System Blueprint definitions are normalized, content-hashed, published as immutable versions, and idempotently ensured. If a built-in recipe changes later, a new version is published instead of editing the prior version.
 TEXT,
@@ -1245,7 +1173,7 @@ Service Job example:
 3. On the guided Relationship form, review the suggested client/provider roles and purpose hint.
 4. Select the real purpose Concept, choose the participant, edit any user-owned details that should differ, and create the Relationship.
 5. Open the Relationship and confirm the **Journey recipe** shows **Service Job** with its exact version.
-6. Use Conversation or Content when useful. If the work requires Proposal, Contract, Planner, Commitment, Fulfillment, Financial Obligation, or Accounting, enter those capabilities through their own explicit UI/actions. The recipe does not run them automatically.
+6. Use Conversation or Content when useful. If the work requires Proposal, Contract, Planner, Commitment, Fulfillment or Bookkeeping, enter those capabilities through their own explicit UI/actions. The recipe does not run them automatically.
 
 Personal Activity example:
 1. Open **Journeys**.
@@ -1275,7 +1203,7 @@ A Journey is not a separate copy of sale, rental, employment, service, construct
 
 A Domain Blueprint is not a Contract, Workflow, permission bundle, or executable script.
 
-Starting a Service Job does not automatically create a Proposal, Contract, Commitment, Fulfillment, Financial Obligation, Settlement, or Accounting entry.
+Starting a Service Job does not automatically create a Proposal, Contract, Commitment, Fulfillment or bookkeeping entry.
 
 Recommended capabilities describe a useful composition; they do not imply that every journey must use every capability.
 
@@ -1314,7 +1242,7 @@ Capital example:
 1. Alice records a Capital Need with an explicit Concept, currency and range.
 2. Carol records a visible opposite Capital Offer for the same canonical Concept.
 3. Alice opens **Find matches** and sees Carol's record only when all explicitly supplied hard constraints are compatible.
-4. Starting the Relationship preserves both Intent origins; it does not itself create financing, ownership, repayment, Contract or Accounting truth.
+4. Starting the Relationship preserves both Intent origins; it does not itself create financing, ownership, repayment, Contract or bookkeeping entries.
 TEXT,
                     'authorization' => <<<'TEXT'
 Only the owner of an Intent may open its Match page.
@@ -1323,7 +1251,7 @@ Candidate discovery never widens visibility. A private Intent is excluded. A vis
 
 Compatibility is rechecked at Relationship creation so a stale or tampered URL cannot bypass current Intent status, visibility or constraints.
 
-A Match grants no permission to another Actor's Profile, Relationship, Proposal, Contract, Content, financial record or Accounting data.
+A Match grants no permission to another Actor's Profile, Relationship, Proposal, Contract, Content, financial record or bookkeeping data.
 TEXT,
                     'ideal_target' => <<<'TEXT'
 Matching can later become richer through explicitly governed semantic substitutability, geographic distance, availability normalization, unit conversion, reviewed preference weighting, and user-controlled discovery settings.
@@ -1333,7 +1261,7 @@ Do not assume every Concept hierarchy edge means substitutability. Broader/narro
 Future recommendation/discovery work may reuse the same explainability/privacy rules, but should not replace them with an opaque engagement score.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
-A Match is not an agreement, recommendation verdict, Contract, employment decision, ownership allocation, debt, invoice, payment or Accounting entry.
+A Match is not an agreement, recommendation verdict, Contract, employment decision, ownership allocation, debt, invoice, payment or bookkeeping entry.
 
 The number of aligned dimensions is descriptive, not an authoritative quality score.
 
@@ -1399,7 +1327,7 @@ Those later layers should consume the same authoritative kernels rather than cre
 Domain/Journey Blueprints may eventually help configure focused community experiences, terminology and recommended capabilities, but authorization must continue to come from the underlying Group/Space/Context/domain policies.
 TEXT,
                     'misunderstandings' => <<<'TEXT'
-A Group is not a database namespace that owns copies of Content, Planner, Intent, Relationship, Submission or Accounting records.
+A Group is not a database namespace that owns copies of Content, Planner, Intent, Relationship, Submission or bookkeeping records.
 
 Group membership does not make every member Profile or Intent visible.
 
@@ -1422,13 +1350,13 @@ Phase 21 replaces the old placeholder Dashboard with a Livewire Today view.
 
 Today's scheduled work comes from PlanOccurrence records and normal Plan participation policy.
 
-"Waiting on me" is deliberately limited to real domain actions that currently require the user: proposed Relationship response, current Proposal decision, proposed ContractVersion acceptance, submitted Fulfillment review, pending Settlement response and reviewable submitted interactions.
+"Waiting on me" is deliberately limited to real domain actions that currently require the user: proposed Relationship response, current Proposal decision, proposed ContractVersion acceptance, submitted Fulfillment review, bookkeeping entries waiting for your confirmation and reviewable submitted interactions.
 
 "Waiting on others" is the inverse where the current user has already acted and another required participant still has not.
 
 Active Needs/Offers remain the user's ActorProfileIntent records. Active Relationships remain Relationship records. Groups remain active GroupMemberships.
 
-Today's accounting summarizes actual personal-ledger JournalEntry effects through AccountingSummary. Recognized/paid/outstanding financial obligations are summarized separately from accounting truth.
+Today's money card shows confirmed amounts owed to you and by you across your books, today's income and spending from your personal book, and entries waiting for your confirmation.
 
 Money is grouped by MonetaryUnit. EUR, USD or any other unit are never silently summed into one total.
 
@@ -1438,7 +1366,7 @@ TEXT,
 Alice's morning example:
 1. Sign in. The Dashboard route opens **Today**.
 2. Under **What should I do today?**, open a scheduled Plan occurrence to work in the authoritative Planner record.
-3. Under **Waiting on me**, Alice may see Bob's proposed Relationship, a Proposal decision, Contract acceptance, Fulfillment review, Settlement confirmation or a submitted interaction. Selecting an item opens that domain's real record and action controls.
+3. Under **Waiting on me**, Alice may see Bob's proposed Relationship, a Proposal decision, Contract acceptance, Fulfillment review, a bookkeeping entry to confirm or a submitted interaction. Selecting an item opens that domain's real record and action controls.
 4. Under **Waiting on others**, Alice sees items where she already acted and Bob/Carol/another required party still needs to respond.
 5. Review **My active Needs & Offers**, **Active Relationships**, and **My Groups** for current operating context.
 6. Review **Today's accounting**. Amounts appear only after actual ledger posting.
@@ -1450,7 +1378,7 @@ TEXT,
                     'authorization' => <<<'TEXT'
 Today does not grant authority.
 
-Each derived section uses the same policy that protects the underlying domain. A user cannot gain access to a Plan, Relationship, Proposal, Contract, Fulfillment, Settlement, Submission, Group, Intent, Ledger or Context merely because Today knows such object types exist.
+Each derived section uses the same policy that protects the underlying domain. A user cannot gain access to a Plan, Relationship, Proposal, Contract, Fulfillment, Submission, Group, Intent, Ledger or Context merely because Today knows such object types exist.
 
 The office-alpha release profile continues to hide advanced navigation/capabilities. Today respects that release boundary rather than exposing hidden advanced modules through its quick actions.
 
@@ -1470,11 +1398,11 @@ Today is not a Task table, inbox database, accounting ledger, notification store
 
 "Recent activity" does not mean unread. Phase 21 does not create notification read/unread state.
 
-Today's accounting is not the same as Financial Obligations. Obligations describe recognized economic facts; accounting describes posted personal ledger truth.
+Entries still waiting for confirmation are not counted in the amounts owed; they appear under Waiting on me until the other side confirms them.
 
 Different currencies are not added together.
 
-Opening Today creates no Relationship, Proposal, Contract, Plan, Fulfillment, Settlement, Submission, JournalEntry or financial obligation.
+Opening Today creates no Relationship, Proposal, Contract, Plan, Fulfillment, Submission or bookkeeping entry.
 TEXT,
                 ],
                 [

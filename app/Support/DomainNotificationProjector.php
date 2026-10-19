@@ -4,13 +4,11 @@ namespace App\Support;
 
 use App\CommitmentEventType;
 use App\ContractEventType;
-use App\FinancialObligationEventType;
 use App\Models\Actor;
 use App\Models\CommitmentEvent;
 use App\Models\ContractEvent;
 use App\Models\ConversationMessage;
 use App\Models\Evaluation;
-use App\Models\FinancialObligationEvent;
 use App\Models\ProposalEvent;
 use App\Models\RelationshipEvent;
 use App\Models\Submission;
@@ -182,51 +180,6 @@ class DomainNotificationProjector
                 $context,
                 'commitment',
                 $commitment->uuid,
-            );
-        }
-    }
-
-    public function financial(FinancialObligationEvent $event): void
-    {
-        if (in_array($event->event_type, [
-            FinancialObligationEventType::AccountingPosted,
-            FinancialObligationEventType::SettlementAccountingPosted,
-        ], true)) {
-            return;
-        }
-
-        $event->loadMissing([
-            'obligation.contractVersion.contract.contextBinding.context',
-            'obligation.debtor.user',
-            'obligation.creditor.user',
-        ]);
-
-        $obligation = $event->obligation;
-        $context = $obligation->contractVersion->contract->contextBinding?->context;
-        $users = $this->usersFromActors(
-            collect([$obligation->debtor, $obligation->creditor]),
-            $event->actor_id,
-        );
-
-        foreach ($users as $user) {
-            $this->outbox->request(
-                $user,
-                "financial-event:{$event->id}:{$user->id}",
-                'financial.event',
-                [
-                    'title_key' => match ($event->event_type) {
-                        FinancialObligationEventType::SettlementProposed => 'notifications.messages.settlement_proposed_title',
-                        FinancialObligationEventType::SettlementConfirmed => 'notifications.messages.settlement_confirmed_title',
-                        FinancialObligationEventType::SettlementRejected => 'notifications.messages.settlement_rejected_title',
-                        default => 'notifications.messages.financial_obligation_title',
-                    },
-                    'body_key' => 'notifications.messages.financial_event_body',
-                    'body_params' => ['event' => str_replace('_', ' ', $event->event_type->value)],
-                    'url' => route('financial-obligations.show', $obligation),
-                ],
-                $context,
-                'financial_obligation',
-                $obligation->uuid,
             );
         }
     }

@@ -13,7 +13,6 @@ use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
 use App\Support\BusinessDirectory;
 use App\Support\BusinessEconomyProjection;
-use App\Support\ExternalMoneyGatewayRegistry;
 use App\Support\MediaLimits;
 use App\Support\PlatformAdmin;
 use Illuminate\Http\RedirectResponse;
@@ -88,7 +87,6 @@ class BusinessController extends Controller
         Request $request,
         Business $business,
         EnsureBusinessContext $contexts,
-        ExternalMoneyGatewayRegistry $externalGateways,
         FeatureSurfaceAccess $surfaceAccess,
         BusinessEconomyProjection $economy,
     ): View {
@@ -129,8 +127,7 @@ class BusinessController extends Controller
         $canUsePlanner = $surfaceAccess->allows($request->user(), 'planner');
         $canUseDeals = $surfaceAccess->allows($request->user(), 'deals');
         $canUseMarket = $surfaceAccess->allows($request->user(), 'market');
-        $canUseMoney = collect(['money', 'accounting', 'exchange'])
-            ->contains(fn (string $surface): bool => $surfaceAccess->allows($request->user(), $surface));
+        $canUseMoney = $surfaceAccess->allows($request->user(), 'money');
 
         $publicSiteUrl = $business->status === 'active' && $business->visibility === 'public'
             ? route('public.businesses.show', ['business' => $business->slug])
@@ -160,7 +157,7 @@ class BusinessController extends Controller
             'catalog' => route('businesses.catalog.index', $business),
             'work' => $canUsePlanner ? route('planner.index', ['context' => $context->uuid]) : null,
             'deals' => $canUseDeals ? route('deals.index') : null,
-            'money' => $canUseMoney ? route('money.index') : null,
+            'money' => $canUseMoney ? route('bookkeeping.index') : null,
             'manage' => $canManage ? route('businesses.show', $business).'#team-settings' : null,
         ]);
 
@@ -174,7 +171,6 @@ class BusinessController extends Controller
             'routineCount' => $routineCount,
             'economyProjection' => $economyProjection,
             'professions' => $professions,
-            'externalMoneyGateways' => $externalGateways->available(),
             'canOperate' => $canOperate,
             'canManage' => $canManage,
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),

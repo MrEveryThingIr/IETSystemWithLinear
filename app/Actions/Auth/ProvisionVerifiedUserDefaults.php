@@ -2,14 +2,14 @@
 
 namespace App\Actions\Auth;
 
-use App\Actions\Accounting\CreatePersonalLedger;
+use App\Actions\Bookkeeping\EnsurePersonalLedger;
 use App\Models\Actor;
 use App\Models\User;
 
 class ProvisionVerifiedUserDefaults
 {
     public function __construct(
-        private readonly CreatePersonalLedger $ledgers,
+        private readonly EnsurePersonalLedger $personalBooks,
     ) {}
 
     public function execute(User $user): void
@@ -24,7 +24,6 @@ class ProvisionVerifiedUserDefaults
             return;
         }
 
-        $code = strtoupper(trim((string) $user->default_monetary_unit_code));
-        $this->ledgers->execute($user, $code !== '' ? $code : 'USD');
+        $this->personalBooks->execute($user);
     }
 }

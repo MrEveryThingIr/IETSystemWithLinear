@@ -206,7 +206,7 @@ class CommitmentFulfillmentKernelTest extends TestCase
             $this->assertSame('1.0000', $progress->acceptedQuantity($commitment));
             $this->assertSame('0.0000', $progress->remainingQuantity($commitment));
             $this->assertTrue($progress->isSatisfied($commitment));
-            $this->assertDatabaseCount('journal_entries', 0);
+            $this->assertDatabaseCount('bk_transactions', 0);
         } finally {
             CarbonImmutable::setTestNow();
         }

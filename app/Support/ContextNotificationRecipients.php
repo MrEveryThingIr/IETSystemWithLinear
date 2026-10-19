@@ -27,6 +27,7 @@ class ContextNotificationRecipients
             ContextKind::Contract => $this->contractActors($context),
             ContextKind::Reference => $this->referenceActors($context),
             ContextKind::System => collect(),
+            ContextKind::Ledger => $this->ledgerActors($context),
         };
 
         return $actors
@@ -147,5 +148,15 @@ class ContextNotificationRecipients
         $context->loadMissing('referenceBinding.manager.user');
 
         return collect([$context->referenceBinding?->manager])->filter();
+    }
+
+    /** @return Collection<int, Actor> */
+    private function ledgerActors(Context $context): Collection
+    {
+        $context->loadMissing('ledgerBinding.activeParties.actor.user');
+
+        return $context->ledgerBinding?->activeParties
+            ->map(fn ($party): Actor => $party->actor)
+            ->values() ?? collect();
     }
 }

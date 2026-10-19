@@ -67,8 +67,8 @@ class BusinessCapabilityVisibilityTest extends TestCase
             ->assertSee(route('businesses.catalog.index', $business), false)
             ->assertDontSee(route('planner.index'), false)
             ->assertDontSee(route('deals.index'), false)
-            ->assertDontSee(route('money.index'), false)
-            ->assertDontSee(__('business.show.money.title'));
+            ->assertDontSee(route('bookkeeping.index'), false)
+            ->assertDontSee(__('business.show.money.activity_title'));
 
         app(FeatureSurfaceGrantService::class)->sync(
             $owner,
@@ -83,8 +83,8 @@ class BusinessCapabilityVisibilityTest extends TestCase
         $response
             ->assertSee(route('planner.index'), false)
             ->assertSee(route('deals.index'), false)
-            ->assertSee(route('money.index'), false)
-            ->assertSee(__('business.show.money.title'));
+            ->assertSee(route('bookkeeping.index'), false)
+            ->assertSee(__('business.show.money.activity_title'));
     }
 
     public function test_superadmin_can_see_and_manage_any_business_without_becoming_a_business_member(): void

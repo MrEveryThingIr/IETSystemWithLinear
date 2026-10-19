@@ -36,7 +36,7 @@ class ExperienceCompositionNavigationTest extends TestCase
         $this->assertSame('experience.needs-offers', $primary['needs-offers']['route']);
         $this->assertSame('experience.work', $primary['work']['route']);
         $this->assertSame('experience.organizations', $primary['organizations']['route']);
-        $this->assertSame('money.index', $primary['money']['route']);
+        $this->assertSame('bookkeeping.index', $primary['money']['route']);
         $this->assertSame('experience.content', $primary['content']['route']);
 
         $this->assertSame(['deals', 'planner'], collect($primary['work']['items'])->pluck('key')->all());

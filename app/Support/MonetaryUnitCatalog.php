@@ -20,6 +20,21 @@ final class MonetaryUnitCatalog
         ];
     }
 
+    /**
+     * Units people can choose for new amounts. IET stays known only so that
+     * historical records keep formatting; it is not offered until the IET
+     * exchange is redesigned.
+     *
+     * @return array<string, array{name: string, exponent: int, symbol: string}>
+     */
+    public static function selectable(): array
+    {
+        $units = self::all();
+        unset($units['IET']);
+
+        return $units;
+    }
+
     /** @return array{name: string, exponent: int, symbol: string} */
     public static function get(string $code): array
     {
