@@ -2,7 +2,6 @@
 
 namespace App\Actions\Fulfillments;
 
-use App\Actions\Financial\RecognizeServiceFulfillmentFinancialObligation;
 use App\CommitmentEventType;
 use App\FulfillmentStatus;
 use App\Models\Actor;
@@ -19,7 +18,6 @@ class ResolveFulfillmentDispute
 {
     public function __construct(
         private readonly CommitmentProgress $progress,
-        private readonly RecognizeServiceFulfillmentFinancialObligation $serviceFinancial,
     ) {}
 
     public function execute(
@@ -85,13 +83,8 @@ class ResolveFulfillmentDispute
                 ],
             ]);
 
-            if ($resolution === FulfillmentStatus::Accepted) {
-                $this->serviceFinancial->execute($fulfillment, $current);
-            }
-
             return $locked->fresh([
                 'fulfillment.commitment.serviceTerm.monetaryUnit',
-                'fulfillment.financialObligation.monetaryUnit',
                 'openedBy.user',
                 'resolvedBy.user',
             ]);

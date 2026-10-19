@@ -3,10 +3,11 @@
 namespace Tests\Feature;
 
 use App\Actions\Auth\ProvisionVerifiedUserDefaults;
-use App\Actions\Contexts\EnsurePersonalContext;
+use App\Enums\Bookkeeping\LedgerKind;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Profile\TemporalPreferences;
+use App\Models\Bookkeeping\Ledger;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\URL;
@@ -17,7 +18,7 @@ class FirstPublicationExperienceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_email_verification_provisions_an_idempotent_personal_wallet_foundation(): void
+    public function test_email_verification_provisions_an_idempotent_personal_book(): void
     {
         $user = User::factory()->unverified()->create([
             'default_monetary_unit_code' => 'USD',
@@ -31,18 +32,16 @@ class FirstPublicationExperienceTest extends TestCase
         $this->actingAs($user)->get($url)->assertRedirect(route('dashboard'));
         $this->get($url)->assertRedirect(route('dashboard'));
 
-        $context = app(EnsurePersonalContext::class)->execute($user->refresh());
-        $ledger = $context->ledgers()->with(['monetaryUnit', 'accounts'])->sole();
-        $this->assertSame('USD', $ledger->monetaryUnit->code);
-        $this->assertEqualsCanonicalizing(
-            ['cash', 'general_expense', 'general_income', 'opening_equity'],
-            $ledger->accounts->pluck('system_key')->all(),
-        );
-        $this->assertDatabaseCount('ledgers', 1);
-        $this->assertDatabaseCount('journal_entries', 0);
+        $ledger = Ledger::query()->where('owner_actor_id', $user->refresh()->actor->id)->sole();
+        $this->assertSame(LedgerKind::Personal, $ledger->kind);
+        $this->assertSame('IRT', $ledger->currency);
+        $this->assertSame(1, $ledger->wallets()->count());
+        $this->assertTrue($ledger->categories()->where('system_key', 'food')->exists());
+        $this->assertDatabaseCount('bk_ledgers', 1);
+        $this->assertDatabaseCount('bk_transactions', 0);
     }
 
-    public function test_default_currency_can_change_without_converting_existing_history(): void
+    public function test_default_currency_can_change_without_touching_the_toman_book(): void
     {
         $user = User::factory()->create([
             'default_monetary_unit_code' => 'USD',
@@ -59,13 +58,8 @@ class FirstPublicationExperienceTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame('IRR', $user->refresh()->default_monetary_unit_code);
-
-        $context = app(EnsurePersonalContext::class)->execute($user->refresh());
-        $ledger = $context->ledgers()->with('monetaryUnit')->sole();
-
-        $this->assertSame('USD', $ledger->monetaryUnit->code);
-        $this->assertDatabaseCount('ledgers', 1);
-        $this->assertDatabaseCount('journal_entries', 0);
+        $this->assertSame('IRT', Ledger::query()->where('owner_actor_id', $user->actor->id)->sole()->currency);
+        $this->assertDatabaseCount('bk_ledgers', 1);
     }
 
     public function test_calendar_drills_from_year_to_month_to_day_to_minute_slots_and_prefills_exact_plan_time(): void

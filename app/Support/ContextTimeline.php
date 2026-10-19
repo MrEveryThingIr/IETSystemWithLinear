@@ -7,8 +7,6 @@ use App\Models\CommitmentEvent;
 use App\Models\Context;
 use App\Models\ContractEvent;
 use App\Models\ConversationMessage;
-use App\Models\FinancialObligationEvent;
-use App\Models\JournalEntry;
 use App\Models\PlanEvent;
 use App\Models\PlanOccurrenceEvent;
 use App\Models\ProposalEvent;
@@ -44,34 +42,6 @@ class ContextTimeline
                     occurredAt: $message->created_at ?? now(),
                     actor: $message->author,
                     url: route('contexts.conversation', $context).'#message-'.$message->uuid,
-                ));
-            });
-
-        JournalEntry::query()
-            ->with(['ledger', 'creator.user'])
-            ->whereHas('ledger', fn ($query) => $query->where('context_id', $context->id))
-            ->latest('posted_at')
-            ->limit($limit)
-            ->get()
-            ->each(function (JournalEntry $entry) use ($entries, $user): void {
-                if (! Gate::forUser($user)->allows('view', $entry->ledger)) {
-                    return;
-                }
-
-                $kind = (string) __('accounting.entry_kind.'.$entry->kind->value);
-                $description = $entry->description ?: $kind;
-
-                $entries->push(new TimelineEntry(
-                    key: 'journal-entry:'.$entry->uuid,
-                    kind: 'accounting',
-                    title: (string) __('accounting.timeline.entry', [
-                        'kind' => $kind,
-                        'description' => $description,
-                    ]),
-                    summary: $entry->description,
-                    occurredAt: $entry->posted_at ?? $entry->created_at ?? now(),
-                    actor: $entry->creator,
-                    url: route('accounting.index', ['ledger' => $entry->ledger->uuid]).'#entry-'.$entry->uuid,
                 ));
             });
 
@@ -202,31 +172,6 @@ class ContextTimeline
                         occurredAt: $event->created_at ?? now(),
                         actor: $event->actor,
                         url: route('commitments.show', $event->commitment),
-                    ));
-                });
-
-            FinancialObligationEvent::query()
-                ->with(['actor.user', 'obligation'])
-                ->whereHas(
-                    'obligation.contractVersion',
-                    fn ($query) => $query->where('contract_id', $contract->id),
-                )
-                ->latest('id')
-                ->limit($limit)
-                ->get()
-                ->each(function (FinancialObligationEvent $event) use ($entries, $user): void {
-                    if (! Gate::forUser($user)->allows('view', $event->obligation)) {
-                        return;
-                    }
-
-                    $entries->push(new TimelineEntry(
-                        key: 'financial-obligation-event:'.$event->uuid,
-                        kind: 'financial',
-                        title: (string) __('financial.events.'.$event->event_type->value),
-                        summary: $event->obligation->description,
-                        occurredAt: $event->created_at ?? now(),
-                        actor: $event->actor,
-                        url: route('financial-obligations.show', $event->obligation),
                     ));
                 });
         }

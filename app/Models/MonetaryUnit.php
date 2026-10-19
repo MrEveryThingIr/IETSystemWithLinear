@@ -6,7 +6,6 @@ use Database\Factories\MonetaryUnitFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -37,12 +36,6 @@ class MonetaryUnit extends Model
     public function getRouteKeyName(): string
     {
         return 'uuid';
-    }
-
-    /** @return HasMany<Ledger, $this> */
-    public function ledgers(): HasMany
-    {
-        return $this->hasMany(Ledger::class);
     }
 
     protected function casts(): array

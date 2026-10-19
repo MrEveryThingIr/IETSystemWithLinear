@@ -44,6 +44,8 @@ return [
         'relationship_source' => '此合同保留关系“:title”作为来源。列出的所有当事方都必须是该关系中的有效参与者。',
     ],
     'show' => [
+        'bookkeeping_hint' => '本合同的付款记录在记账中：与对方建立一个共享账本，记录应付和已付款项。',
+        'open_bookkeeping' => '打开记账',
         'help' => '查看精确合同版本、接受证据、生效时间和修改历史。',
         'authority' => '只有明确接受当前精确合同版本才具有合同效力。对话内容或之前接受某个协议提案都不能替代它。',
         'current_version' => '版本 :version',
@@ -81,12 +83,6 @@ return [
         'quantity_per_occurrence' => '每次数量',
         'unit' => '服务单位',
         'unit_rate' => '约定单价',
-        'reference_price_toggle' => '以外部货币约价，但内部债务以 IET 记录',
-        'reference_unit_rate' => '参考单价',
-        'reference_monetary_unit' => '参考货币',
-        'reference_price_help' => '例如可记录“每个工作日 1,500,000 toman”。外部金额、市场汇率和 IET 估值都会固定到该合同版本。',
-        'reference_price_exchange_help' => '保存前，Exchange 中必须存在参考货币/USD 的有效报价（例如 IRT/USD）。合同接受后，换算出的 IET 单价保持不可变。',
-        'reference_price_snapshot' => '约定参考价格：每单位 :amount :unit',
         'monetary_unit' => '货币单位',
         'settlement_cycle' => '结算周期',
         'cycles' => [

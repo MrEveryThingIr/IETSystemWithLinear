@@ -305,7 +305,7 @@ function initSystemMap(root) {
         hint.append(createElement(
             'p',
             'mt-1 text-zinc-600 dark:text-zinc-300',
-            ui.starting_point_help || 'Choose “Financial flow” to review Planner costs → Fulfillment → Obligation → Settlement → Accounting as one human story.',
+            ui.starting_point_help || 'Choose “Financial flow” to review Planner costs → Fulfillment → Bookkeeping as one human story.',
         ));
         inspector.append(hint);
     }

@@ -69,7 +69,7 @@ return [
         'resolve_accept' => '以接受方式解决异议',
         'resolve_reject' => '以拒绝方式解决异议',
         'resolution_note' => '异议处理备注',
-        'financial_boundary' => '接受履行只确认工作事实。如需财务义务，必须单独明确创建；记账和结算也都是独立操作。',
+        'financial_boundary' => '已接受的工作记录在这里。如需跟踪应付与已付款项，请使用记账。',
     ],
     'planner' => [
         'frequency' => '计划模式',

@@ -65,7 +65,7 @@ class BusinessFoundationTest extends TestCase
             ->assertOk()
             ->assertDontSee(route('planner.index'), false)
             ->assertDontSee(route('deals.index'), false)
-            ->assertDontSee(route('money.index'), false);
+            ->assertDontSee(route('bookkeeping.index'), false);
     }
 
     public function test_stranger_cannot_view_private_business(): void

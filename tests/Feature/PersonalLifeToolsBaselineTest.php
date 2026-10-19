@@ -5,12 +5,9 @@ namespace Tests\Feature;
 use App\Actions\Contexts\EnsurePersonalContext;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
-use App\Livewire\Accounting\BasicIndex as MoneyIndex;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Vault\Index as VaultIndex;
 use App\Models\Actor;
-use App\Models\Ledger;
-use App\Models\MoneyIntention;
 use App\Models\PersonalSecret;
 use App\PlanScheduleFrequency;
 use App\PlanTimingMode;
@@ -32,91 +29,6 @@ class PersonalLifeToolsBaselineTest extends TestCase
         parent::setUp();
 
         config(['release.profile' => 'planning_baseline']);
-    }
-
-    public function test_personal_money_records_expense_income_transfer_and_future_intention_without_dashboard_calculations(): void
-    {
-        CarbonImmutable::setTestNow('2026-09-28 10:00:00 UTC');
-
-        try {
-            $actor = Actor::factory()->create();
-            $actor->user->forceFill(['timezone' => 'UTC', 'locale' => 'en'])->save();
-
-            $component = Livewire::actingAs($actor->user)
-                ->test(MoneyIndex::class)
-                ->set('unitCode', 'USD')
-                ->set('ledgerName', 'Daily USD')
-                ->call('createLedger')
-                ->assertHasNoErrors()
-                ->assertSee('Daily USD')
-                ->assertDontSee('Current balance')
-                ->assertDontSee('Net');
-
-            $ledger = Ledger::query()->with('accounts')->sole();
-            $cash = $ledger->accounts->firstWhere('system_key', 'cash');
-            $this->assertNotNull($cash);
-
-            $component
-                ->set('newAccountName', 'Visa •1234')
-                ->call('addAccount')
-                ->assertHasNoErrors()
-                ->assertSee('Visa •1234');
-
-            $ledger->refresh()->load('accounts');
-            $card = $ledger->accounts->firstWhere('name', 'Visa •1234');
-            $this->assertNotNull($card);
-
-            $component
-                ->set('action', 'expense')
-                ->set('accountUuid', $cash->uuid)
-                ->set('amount', '12.50')
-                ->set('date', '2026-09-28')
-                ->set('category', 'Food')
-                ->set('description', 'Lunch')
-                ->call('record')
-                ->assertHasNoErrors()
-                ->assertSee('Lunch');
-
-            $component
-                ->set('action', 'income')
-                ->set('accountUuid', $cash->uuid)
-                ->set('amount', '100.00')
-                ->set('date', '2026-09-28')
-                ->set('category', 'Service')
-                ->set('description', 'Small job')
-                ->call('record')
-                ->assertHasNoErrors()
-                ->assertSee('Small job');
-
-            $component
-                ->set('action', 'transfer')
-                ->set('accountUuid', $cash->uuid)
-                ->set('toAccountUuid', $card->uuid)
-                ->set('amount', '20.00')
-                ->set('date', '2026-09-28')
-                ->set('description', 'Move to card')
-                ->call('record')
-                ->assertHasNoErrors()
-                ->assertSee('Move to card');
-
-            $this->assertDatabaseCount('journal_entries', 3);
-
-            $component
-                ->set('intentionKind', 'purchase')
-                ->set('intentionTitle', 'Buy a bicycle')
-                ->set('intentionAmount', '500.00')
-                ->set('intentionDate', '2026-10-20')
-                ->set('intentionNotes', 'Just remember the target; no progress math yet.')
-                ->call('addIntention')
-                ->assertHasNoErrors()
-                ->assertSee('Buy a bicycle');
-
-            $intention = MoneyIntention::query()->sole();
-            $this->assertSame(50000, $intention->amount_minor);
-            $this->assertSame('2026-10-20', $intention->target_on?->format('Y-m-d'));
-        } finally {
-            CarbonImmutable::setTestNow();
-        }
     }
 
     public function test_vault_encrypts_revealable_values_at_rest_and_hides_them_by_default(): void
@@ -232,10 +144,10 @@ class PersonalLifeToolsBaselineTest extends TestCase
     {
         $actor = Actor::factory()->create();
 
-        $this->publishSurfaces($actor->user, ['accounting', 'vault']);
+        $this->publishSurfaces($actor->user, ['money', 'vault']);
 
         $this->actingAs($actor->user)
-            ->get(route('accounting.index'))
+            ->get(route('bookkeeping.personal'))
             ->assertOk();
 
         $this->actingAs($actor->user)

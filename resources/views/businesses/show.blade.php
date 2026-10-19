@@ -121,7 +121,7 @@
                             </flux:button>
                         @endif
                         @if ($canUseMoney)
-                            <flux:button :href="route('money.index')" size="sm" variant="ghost">
+                            <flux:button :href="route('bookkeeping.index')" size="sm" variant="ghost">
                                 {{ __('workflow.business.sections.money') }}
                             </flux:button>
                         @endif
@@ -242,51 +242,19 @@
     </section>
     @endif
 
-    @if($canOperate && $canUseMoney)
-        <section class="panel">
+    @if($canOperate && ($canUseMarket || $canUseDeals))
+        <section class="panel" data-business-activity>
             <div class="head">
                 <div>
-                    <h2>💰 {{ __('business.show.money.title') }}</h2>
-                    <p>{{ __('business.show.money.help') }}</p>
+                    <h2>📈 {{ __('business.show.money.activity_title') }}</h2>
+                    <p>{{ __('business.show.money.activity_help') }}</p>
                 </div>
             </div>
             <div class="body">
-                <div class="grid3">
-                    <div class="item">
-                        <strong>{{ __('business.show.money.position') }}</strong>
-                        <div style="font-size:26px;font-weight:950;margin-top:6px">
-                            {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_net_minor'] ?? 0), 0) }} IET
-                        </div>
-                        <div class="muted" style="margin-top:5px">
-                            {{ __('business.show.money.receivable') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_receivable_minor'] ?? 0), 0) }}
-                            · {{ __('business.show.money.payable') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_payable_minor'] ?? 0), 0) }} IET
-                        </div>
-                        <div class="muted" style="margin-top:5px">
-                            {{ __('business.show.money.revenue') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_revenue_minor'] ?? 0), 0) }}
-                            · {{ __('business.show.money.expense') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_expense_minor'] ?? 0), 0) }}
-                            · {{ __('business.show.money.profit') }} {{ \App\Support\MoneyAmount::format((int)($economyProjection['iet_realized_profit_minor'] ?? 0), 0) }} IET
-                        </div>
-                        <div class="badges" style="margin-top:8px">
-                            <span class="badge">{{ $economyProjection['market_intent_count'] ?? 0 }} {{ __('business.show.money.market') }}</span>
-                            <span class="badge">{{ $economyProjection['deal_count'] ?? 0 }} {{ __('business.show.money.deals') }}</span>
-                            <span class="badge">{{ $economyProjection['contract_count'] ?? 0 }} {{ __('business.show.money.contracts') }}</span>
-                        </div>
-                    </div>
-                    <div class="item">
-                        <strong>{{ __('business.show.money.unit') }}</strong>
-                        <div style="font-size:26px;font-weight:950;margin-top:6px">{{ $business->defaultMonetaryUnit?->code ?? 'IET' }}</div>
-                        <div class="muted" style="margin-top:5px">{{ __('business.show.money.unit_help') }}</div>
-                    </div>
-                    <div class="item">
-                        <strong>{{ __('business.show.money.external') }}</strong>
-                        <div class="badge" style="margin-top:9px">{{ __('business.show.money.external_status') }}</div>
-                        <div class="muted" style="margin-top:5px">{{ __('business.show.money.external_help') }}</div>
-                    </div>
-                </div>
-                <div class="badges" style="margin-top:12px">
-                    @foreach($externalMoneyGateways as $gateway)
-                        <span class="badge">{{ $gateway['label'] }} — {{ $gateway['status'] }}</span>
-                    @endforeach
+                <div class="badges">
+                    <span class="badge">{{ $economyProjection['market_intent_count'] ?? 0 }} {{ __('business.show.money.market') }}</span>
+                    <span class="badge">{{ $economyProjection['deal_count'] ?? 0 }} {{ __('business.show.money.deals') }}</span>
+                    <span class="badge">{{ $economyProjection['contract_count'] ?? 0 }} {{ __('business.show.money.contracts') }}</span>
                 </div>
             </div>
         </section>

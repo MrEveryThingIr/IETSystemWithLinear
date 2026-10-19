@@ -3,12 +3,13 @@
 namespace App\Support;
 
 use App\ContractStatus;
+use App\Enums\Bookkeeping\LedgerKind;
 use App\FulfillmentStatus;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
+use App\Models\Bookkeeping\Transaction as BookTransaction;
 use App\Models\Contract;
 use App\Models\ContractContext;
-use App\Models\FinancialObligation;
 use App\Models\Fulfillment;
 use App\Models\GroupMembership;
 use App\Models\GroupSpace;
@@ -19,14 +20,14 @@ use App\Models\ProposalContext;
 use App\Models\Relationship;
 use App\Models\RelationshipContext;
 use App\Models\RelationshipParticipant;
-use App\Models\Settlement;
 use App\Models\Submission;
 use App\Models\User;
 use App\ProfileIntentStatus;
 use App\ProposalStatus;
 use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
-use App\SettlementStatus;
+use App\Support\Bookkeeping\BookkeepingOverview;
+use App\Support\Bookkeeping\Toman;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -40,7 +41,6 @@ class HomeTodayProjection
     public const SCHEDULE_PREVIEW_LIMIT = 6;
 
     public function __construct(
-        private readonly AccountingSummary $accounting,
         private readonly ContextTimeline $timeline,
     ) {}
 
@@ -49,6 +49,7 @@ class HomeTodayProjection
      *   timezone: string,
      *   today: string,
      *   todayDisplay: string,
+     *   money: array{owed_to_me: int, i_owe: int, waiting_for_me: Collection<int, BookTransaction>, today_income: int, today_expense: int, has_books: bool},
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   todayOccurrenceCount: int,
      *   todayOccurrencesTruncated: bool,
@@ -60,8 +61,6 @@ class HomeTodayProjection
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
      *   groupMemberships: Collection<int, GroupMembership>,
-     *   accountingToday: Collection<int, array{code:string, exponent:int, income_minor:int, expense_minor:int, net_minor:int}>,
-     *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>,
      *   recentActivity: Collection<int, TimelineEntry>
      * }
      */
@@ -125,21 +124,26 @@ class HomeTodayProjection
             ->filter(fn (GroupMembership $membership): bool => Gate::forUser($current)->allows('view', $membership->group))
             ->values();
 
+        $money = app(BookkeepingOverview::class)->forUser($current, $today);
+
         return [
             'timezone' => $timezone,
             'today' => $today,
             'todayDisplay' => $todayDisplay,
+            'money' => $money,
             'todayOccurrences' => $todayOccurrences,
             'todayOccurrenceCount' => $todayOccurrences->count(),
             'todayOccurrencesTruncated' => $fetchedOccurrences->count() >= self::OCCURRENCE_SCAN_LIMIT,
             ...$schedule,
-            'waitingOnMe' => $this->waitingOnMe($current, $actor),
+            'waitingOnMe' => $this->waitingOnMe($current, $actor)
+                ->concat($this->bookkeepingWaiting($money['waiting_for_me']))
+                ->sortByDesc(fn (HomeActionItem $item): int => $item->occurredAt->getTimestamp())
+                ->take(20)
+                ->values(),
             'waitingOnOthers' => $this->waitingOnOthers($current, $actor),
             'activeIntents' => $activeIntents,
             'activeRelationships' => $activeRelationships,
             'groupMemberships' => $groupMemberships,
-            'accountingToday' => $this->accountingToday($current, $actor, $today),
-            'obligations' => $this->obligationSummary($current, $actor),
             'recentActivity' => $this->recentActivity($current, $actor),
         ];
     }
@@ -188,6 +192,7 @@ class HomeTodayProjection
      *   timezone: string,
      *   today: string,
      *   todayDisplay: string,
+     *   money: array{owed_to_me: int, i_owe: int, waiting_for_me: Collection<int, BookTransaction>, today_income: int, today_expense: int, has_books: bool},
      *   todayOccurrences: Collection<int, PlanOccurrence>,
      *   todayOccurrenceCount: int,
      *   todayOccurrencesTruncated: bool,
@@ -199,8 +204,6 @@ class HomeTodayProjection
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
      *   groupMemberships: Collection<int, GroupMembership>,
-     *   accountingToday: Collection<int, array{code:string, exponent:int, income_minor:int, expense_minor:int, net_minor:int}>,
-     *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>,
      *   recentActivity: Collection<int, TimelineEntry>
      * }
      */
@@ -210,6 +213,7 @@ class HomeTodayProjection
             'timezone' => $timezone,
             'today' => $today,
             'todayDisplay' => $todayDisplay,
+            'money' => ['owed_to_me' => 0, 'i_owe' => 0, 'waiting_for_me' => collect(), 'today_income' => 0, 'today_expense' => 0, 'has_books' => false],
             'todayOccurrences' => collect(),
             'todayOccurrenceCount' => 0,
             'todayOccurrencesTruncated' => false,
@@ -221,13 +225,34 @@ class HomeTodayProjection
             'activeIntents' => collect(),
             'activeRelationships' => collect(),
             'groupMemberships' => collect(),
-            'accountingToday' => collect(),
-            'obligations' => collect(),
             'recentActivity' => collect(),
         ];
     }
 
     /** @return Collection<int, HomeActionItem> */
+    /**
+     * Bookkeeping entries other people recorded that wait for this person's
+     * confirmation ("Majid recorded a 10,000,000 payment — please confirm").
+     *
+     * @param  Collection<int, BookTransaction>  $entries
+     * @return Collection<int, HomeActionItem>
+     */
+    private function bookkeepingWaiting(Collection $entries): Collection
+    {
+        return $entries->map(fn (BookTransaction $entry): HomeActionItem => new HomeActionItem(
+            key: 'bookkeeping:'.$entry->uuid,
+            kind: 'money',
+            title: (string) __('bookkeeping.today.waiting_title', [
+                'who' => $entry->recorder->user->username ?? '',
+                'type' => __('bookkeeping.types.'.$entry->type->value),
+                'amount' => Toman::format((int) $entry->amount),
+            ]),
+            summary: $entry->ledger->kind === LedgerKind::Personal ? null : $entry->ledger->name,
+            url: route('bookkeeping.books.show', $entry->ledger).'#entry-'.$entry->uuid,
+            occurredAt: $entry->created_at ?? now(),
+        ))->values();
+    }
+
     private function waitingOnMe(User $user, Actor $actor): Collection
     {
         /** @var Collection<int, HomeActionItem> $items */
@@ -311,27 +336,6 @@ class HomeTodayProjection
                     summary: (string) __('home.actions.fulfillment_waiting'),
                     url: route('commitments.show', $fulfillment->commitment).'#fulfillment-'.$fulfillment->uuid,
                     occurredAt: $fulfillment->submitted_at ?? $fulfillment->created_at ?? now(),
-                ));
-            });
-
-        Settlement::query()
-            ->where('status', SettlementStatus::PendingConfirmation->value)
-            ->whereHas('obligation', fn ($query) => $query
-                ->where('debtor_actor_id', $actor->id)
-                ->orWhere('creditor_actor_id', $actor->id))
-            ->with(['obligation.monetaryUnit'])
-            ->latest('paid_at')
-            ->limit(40)
-            ->get()
-            ->filter(fn (Settlement $settlement): bool => Gate::forUser($user)->allows('respond', $settlement))
-            ->each(function (Settlement $settlement) use ($items): void {
-                $items->push(new HomeActionItem(
-                    key: 'settlement:'.$settlement->uuid,
-                    kind: 'settlement',
-                    title: $settlement->obligation->description ?: (string) __('financial.obligation.title'),
-                    summary: (string) __('home.actions.settlement_waiting'),
-                    url: route('financial-obligations.show', $settlement->obligation),
-                    occurredAt: $settlement->paid_at ?? $settlement->created_at ?? now(),
                 ));
             });
 
@@ -500,120 +504,10 @@ class HomeTodayProjection
                 ));
             });
 
-        Settlement::query()
-            ->where('status', SettlementStatus::PendingConfirmation->value)
-            ->where('proposed_by_actor_id', $actor->id)
-            ->with(['obligation.monetaryUnit'])
-            ->latest('paid_at')
-            ->limit(40)
-            ->get()
-            ->filter(fn (Settlement $settlement): bool => Gate::forUser($user)->allows('view', $settlement))
-            ->each(function (Settlement $settlement) use ($items): void {
-                $items->push(new HomeActionItem(
-                    key: 'settlement-wait:'.$settlement->uuid,
-                    kind: 'settlement',
-                    title: $settlement->obligation->description ?: (string) __('financial.obligation.title'),
-                    summary: (string) __('home.actions.settlement_other'),
-                    url: route('financial-obligations.show', $settlement->obligation),
-                    occurredAt: $settlement->paid_at ?? $settlement->created_at ?? now(),
-                ));
-            });
-
         return $items
             ->sortByDesc(fn (HomeActionItem $item): int => $item->occurredAt->getTimestamp())
             ->take(20)
             ->values();
-    }
-
-    /**
-     * @return Collection<int, array{code:string, exponent:int, income_minor:int, expense_minor:int, net_minor:int}>
-     */
-    private function accountingToday(User $user, Actor $actor, string $today): Collection
-    {
-        $personal = PersonalContext::query()
-            ->with('context.ledgers.monetaryUnit')
-            ->where('actor_id', $actor->id)
-            ->first();
-
-        if ($personal === null) {
-            return collect();
-        }
-
-        $buckets = [];
-
-        foreach ($personal->context->ledgers as $ledger) {
-            if (! Gate::forUser($user)->allows('view', $ledger)) {
-                continue;
-            }
-
-            $period = $this->accounting->period($ledger, $today, $today);
-            $code = $ledger->monetaryUnit->code;
-
-            $buckets[$code] ??= [
-                'code' => $code,
-                'exponent' => $ledger->monetaryUnit->exponent,
-                'income_minor' => 0,
-                'expense_minor' => 0,
-                'net_minor' => 0,
-            ];
-
-            $buckets[$code]['income_minor'] += $period['income_minor'];
-            $buckets[$code]['expense_minor'] += $period['expense_minor'];
-            $buckets[$code]['net_minor'] += $period['net_minor'];
-        }
-
-        return collect(array_values($buckets));
-    }
-
-    /**
-     * @return Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>
-     */
-    private function obligationSummary(User $user, Actor $actor): Collection
-    {
-        $obligations = FinancialObligation::query()
-            ->where(fn ($query) => $query
-                ->where('debtor_actor_id', $actor->id)
-                ->orWhere('creditor_actor_id', $actor->id))
-            ->with(['monetaryUnit', 'settlements'])
-            ->latest('recognized_at')
-            ->limit(250)
-            ->get()
-            ->filter(fn (FinancialObligation $obligation): bool => Gate::forUser($user)->allows('view', $obligation));
-
-        $buckets = [];
-
-        foreach ($obligations as $obligation) {
-            $code = $obligation->monetaryUnit->code;
-            $paid = (int) $obligation->settlements
-                ->filter(fn (Settlement $settlement): bool => $settlement->status === SettlementStatus::Confirmed)
-                ->sum('amount_minor');
-            $outstanding = max(0, (int) $obligation->amount_minor - $paid);
-
-            $buckets[$code] ??= [
-                'code' => $code,
-                'exponent' => $obligation->monetaryUnit->exponent,
-                'receivable_total_minor' => 0,
-                'receivable_paid_minor' => 0,
-                'receivable_outstanding_minor' => 0,
-                'payable_total_minor' => 0,
-                'payable_paid_minor' => 0,
-                'payable_outstanding_minor' => 0,
-            ];
-
-            if ((int) $obligation->creditor_actor_id === (int) $actor->id) {
-                $buckets[$code]['receivable_total_minor'] += (int) $obligation->amount_minor;
-                $buckets[$code]['receivable_paid_minor'] += $paid;
-                $buckets[$code]['receivable_outstanding_minor'] += $outstanding;
-            }
-
-            if ((int) $obligation->debtor_actor_id === (int) $actor->id) {
-                $buckets[$code]['payable_total_minor'] += (int) $obligation->amount_minor;
-                $buckets[$code]['payable_paid_minor'] += $paid;
-                $buckets[$code]['payable_outstanding_minor'] += $outstanding;
-            }
-        }
-
-        return collect(array_values($buckets));
     }
 
     /** @return Collection<int, TimelineEntry> */

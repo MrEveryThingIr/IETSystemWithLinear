@@ -41,7 +41,7 @@ return [
         'explore' => 'Explore the system',
         'explore_help' => 'Select any node to see why it exists, what truth it owns, how it connects, and what questions are worth reviewing next.',
         'starting_point' => 'Useful starting point',
-        'starting_point_help' => 'Choose “Financial flow” to review Planner costs → Fulfillment → Obligation → Settlement → Accounting as one human story.',
+        'starting_point_help' => 'Choose “Financial flow” to review Planner costs → Fulfillment → Bookkeeping as one human story.',
         'open_area' => 'Open this area ↗',
         'human_purpose' => 'Human purpose',
         'truth' => 'Authoritative truth',

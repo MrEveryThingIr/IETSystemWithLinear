@@ -4,14 +4,18 @@ namespace App\Providers;
 
 use App\Contracts\Media\VideoProcessor;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\Bookkeeping\Dispute;
+use App\Models\Bookkeeping\Ledger;
+use App\Models\Bookkeeping\Transaction;
 use App\Models\CommitmentEvent;
 use App\Models\ContractEvent;
 use App\Models\ConversationMessage;
 use App\Models\Evaluation;
-use App\Models\FinancialObligationEvent;
 use App\Models\ProposalEvent;
 use App\Models\RelationshipEvent;
 use App\Models\Submission;
+use App\Policies\Bookkeeping\LedgerPolicy;
+use App\Policies\Bookkeeping\TransactionPolicy;
 use App\Support\DomainNotificationProjector;
 use App\Support\Media\LocalVideoProcessor;
 use App\Support\MediaScannerPolicy;
@@ -21,6 +25,7 @@ use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -37,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Gate::policy(Ledger::class, LedgerPolicy::class);
+        Gate::policy(Transaction::class, TransactionPolicy::class);
+        Gate::policy(Dispute::class, TransactionPolicy::class);
+
         Log::shareContext([
             'app_version' => (string) config('app.version', 'unknown'),
         ]);
@@ -83,9 +92,6 @@ class AppServiceProvider extends ServiceProvider
         );
         CommitmentEvent::created(
             fn (CommitmentEvent $event) => app(DomainNotificationProjector::class)->commitment($event),
-        );
-        FinancialObligationEvent::created(
-            fn (FinancialObligationEvent $event) => app(DomainNotificationProjector::class)->financial($event),
         );
         ConversationMessage::created(
             fn (ConversationMessage $message) => app(DomainNotificationProjector::class)->conversation($message),

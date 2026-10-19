@@ -59,55 +59,10 @@ return new class extends Migration
             $table->foreign('contract_service_term_id', 'commitments_service_term_fk')
                 ->references('id')->on('contract_service_terms')->restrictOnDelete();
         });
-
-        Schema::create('contract_settlement_batches', function (Blueprint $table): void {
-            $table->id();
-            $table->uuid('uuid')->unique();
-            $table->foreignId('contract_id');
-            $table->foreignId('debtor_actor_id');
-            $table->foreignId('creditor_actor_id');
-            $table->foreignId('monetary_unit_id');
-            $table->foreignId('proposed_by_actor_id');
-            $table->unsignedBigInteger('amount_minor');
-            $table->string('method', 32)->default('cash');
-            $table->dateTime('paid_at');
-            $table->string('reference', 255)->nullable();
-            $table->text('note')->nullable();
-            $table->timestamps();
-
-            $table->foreign('contract_id', 'settlement_batches_contract_fk')
-                ->references('id')->on('contracts')->restrictOnDelete();
-            $table->foreign('debtor_actor_id', 'settlement_batches_debtor_fk')
-                ->references('id')->on('actors')->restrictOnDelete();
-            $table->foreign('creditor_actor_id', 'settlement_batches_creditor_fk')
-                ->references('id')->on('actors')->restrictOnDelete();
-            $table->foreign('monetary_unit_id', 'settlement_batches_unit_fk')
-                ->references('id')->on('monetary_units')->restrictOnDelete();
-            $table->foreign('proposed_by_actor_id', 'settlement_batches_proposer_fk')
-                ->references('id')->on('actors')->restrictOnDelete();
-
-            $table->index(['contract_id', 'monetary_unit_id', 'paid_at'], 'settlement_batches_contract_unit_time_index');
-        });
-
-        Schema::table('settlements', function (Blueprint $table): void {
-            $table->foreignId('contract_settlement_batch_id')->nullable()->after('financial_obligation_id');
-
-            $table->foreign('contract_settlement_batch_id', 'settlements_batch_fk')
-                ->references('id')->on('contract_settlement_batches')->restrictOnDelete();
-            $table->index('contract_settlement_batch_id', 'settlements_batch_index');
-        });
     }
 
     public function down(): void
     {
-        Schema::table('settlements', function (Blueprint $table): void {
-            PortableForeignKey::drop($table, 'settlements_batch_fk', ['contract_settlement_batch_id']);
-            $table->dropIndex('settlements_batch_index');
-            $table->dropColumn('contract_settlement_batch_id');
-        });
-
-        Schema::dropIfExists('contract_settlement_batches');
-
         Schema::table('commitments', function (Blueprint $table): void {
             PortableForeignKey::drop($table, 'commitments_service_term_fk', ['contract_service_term_id']);
             $table->dropUnique(['contract_service_term_id']);

@@ -6,13 +6,10 @@ use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\BusinessMembership;
 use App\Models\GroupMembership;
-use App\Models\PersonalContext;
 use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\HomeTodayProjection;
-use App\Support\IetPosition;
-use App\Support\MoneyAmount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -214,121 +211,6 @@ class ExperienceHubController extends Controller
         }
 
         return $this->renderHub('organizations', $sections);
-    }
-
-    public function money(Request $request): View
-    {
-        $user = $this->user($request);
-        $this->requireAny($user, ['money', 'accounting', 'exchange']);
-
-        $projection = $this->today()->build($user);
-        $actor = $user->actor;
-        abort_unless($actor instanceof Actor, 403);
-
-        $binding = PersonalContext::query()
-            ->with(['context.ledgers.monetaryUnit'])
-            ->where('actor_id', $actor->id)
-            ->first();
-
-        $ledgers = $binding?->context->ledgers ?? collect();
-        $obligations = collect($projection['obligations']);
-
-        $summaryItems = $obligations->map(fn (array $bucket): array => [
-            'title' => $bucket['code'],
-            'meta' => __('experience.hubs.money.outstanding_line', [
-                'receive' => MoneyAmount::format(
-                    (int) $bucket['receivable_outstanding_minor'],
-                    (int) $bucket['exponent'],
-                ),
-                'pay' => MoneyAmount::format(
-                    (int) $bucket['payable_outstanding_minor'],
-                    (int) $bucket['exponent'],
-                ),
-                'code' => $bucket['code'],
-            ]),
-            'href' => route('money.accounts'),
-        ])->values()->all();
-
-        $iet = app(IetPosition::class)->forUser($user);
-        $ietPositionItems = [[
-            'title' => __('experience.hubs.money.iet_position_value', [
-                'amount' => MoneyAmount::format($iet['net_position_minor'], 0),
-            ]),
-            'meta' => __('experience.hubs.money.iet_position_breakdown', [
-                'wallet' => MoneyAmount::format($iet['wallet_minor'], 0),
-                'receive' => MoneyAmount::format($iet['receivable_minor'], 0),
-                'pay' => MoneyAmount::format($iet['payable_minor'], 0),
-                'cashout' => MoneyAmount::format($iet['cashout_eligible_minor'], 0),
-            ]),
-            'href' => route('money.accounts'),
-        ]];
-
-        if ($iet['debt_position_minor'] > 0) {
-            $ietPositionItems[] = [
-                'title' => __('experience.hubs.money.iet_debt_title', [
-                    'amount' => MoneyAmount::format($iet['debt_position_minor'], 0),
-                ]),
-                'meta' => __('experience.hubs.money.iet_debt_help'),
-                'href' => route('intents.create'),
-            ];
-        } elseif ($iet['positive_position_minor'] > 0) {
-            $ietPositionItems[] = [
-                'title' => __('experience.hubs.money.iet_positive_title', [
-                    'amount' => MoneyAmount::format($iet['positive_position_minor'], 0),
-                ]),
-                'meta' => __('experience.hubs.money.iet_positive_help'),
-                'href' => route('intents.index'),
-            ];
-        }
-
-        return $this->renderHub('money', [
-            [
-                'title' => __('experience.hubs.money.iet_position'),
-                'help' => __('experience.hubs.money.iet_position_help'),
-                'primary' => $this->access()->allows($user, 'exchange')
-                    ? ['label' => __('experience.hubs.money.deposit_or_cashout'), 'href' => route('exchange.index')]
-                    : ['label' => __('experience.hubs.money.offer_to_earn'), 'href' => route('intents.create')],
-                'secondary' => $this->access()->allows($user, 'profile')
-                    ? ['label' => __('experience.hubs.money.skills_and_offers'), 'href' => route('profile.professions.index')]
-                    : ['label' => __('experience.hubs.money.offer_to_earn'), 'href' => route('intents.create')],
-                'items' => $ietPositionItems,
-            ],
-            [
-                'title' => __('experience.hubs.money.overview'),
-                'help' => __('experience.hubs.money.overview_help'),
-                'count' => $obligations->count(),
-                'primary' => ['label' => __('experience.hubs.money.open_accounts'), 'href' => route('money.accounts')],
-                'items' => $summaryItems,
-                'empty' => __('experience.hubs.money.outstanding_empty'),
-            ],
-            [
-                'title' => __('experience.hubs.money.activity'),
-                'help' => __('experience.hubs.money.activity_help'),
-                'primary' => ['label' => __('experience.hubs.money.record_activity'), 'href' => route('money.accounts')],
-                'items' => $ledgers->take(5)->map(fn ($ledger): array => [
-                    'title' => $ledger->name,
-                    'meta' => $ledger->monetaryUnit->code,
-                    'href' => route('money.accounts', ['ledger' => $ledger->uuid]),
-                ])->all(),
-                'empty' => __('experience.hubs.money.activity_empty'),
-            ],
-            ...($this->access()->allows($user, 'accounting') || $this->access()->allows($user, 'exchange') ? [[
-                'title' => __('experience.hubs.money.advanced'),
-                'help' => __('experience.hubs.money.advanced_help'),
-                'items' => array_values(array_filter([
-                    $this->access()->allows($user, 'accounting') ? [
-                        'title' => __('experience.hubs.money.accounting'),
-                        'meta' => __('experience.hubs.money.accounting_help'),
-                        'href' => route('accounting.index'),
-                    ] : null,
-                    $this->access()->allows($user, 'exchange') ? [
-                        'title' => __('experience.hubs.money.exchange'),
-                        'meta' => __('experience.hubs.money.exchange_help'),
-                        'href' => route('exchange.index'),
-                    ] : null,
-                ])),
-            ]] : []),
-        ]);
     }
 
     public function help(Request $request): View

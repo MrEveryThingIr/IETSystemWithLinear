@@ -2,8 +2,8 @@
 
 namespace App\Services\Business;
 
-use App\Actions\Accounting\EnsureMonetaryUnit;
 use App\Actions\Contexts\EnsureBusinessContext;
+use App\Actions\Money\EnsureMonetaryUnit;
 use App\Models\Actor;
 use App\Models\Business;
 use App\Models\BusinessMembership;

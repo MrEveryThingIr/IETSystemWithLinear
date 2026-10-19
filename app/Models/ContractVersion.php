@@ -106,12 +106,6 @@ class ContractVersion extends Model
         return $this->hasOne(ContractServiceTerm::class);
     }
 
-    /** @return HasMany<FinancialObligation, $this> */
-    public function financialObligations(): HasMany
-    {
-        return $this->hasMany(FinancialObligation::class);
-    }
-
     public function markAccepted(CarbonInterface $at): void
     {
         if ($this->status !== ContractVersionStatus::Proposed) {

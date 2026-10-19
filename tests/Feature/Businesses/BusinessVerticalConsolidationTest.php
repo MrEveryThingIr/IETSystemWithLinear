@@ -406,10 +406,10 @@ class BusinessVerticalConsolidationTest extends TestCase
         );
     }
 
-    public function test_business_operating_shell_renders_iet_economy_projection(): void
+    public function test_business_operating_shell_renders_market_activity(): void
     {
         $owner = $this->userWithActor();
-        $this->publishSurfaces($owner, ['business', 'money']);
+        $this->publishSurfaces($owner, ['business', 'deals']);
 
         $business = app(BusinessService::class)->create($owner->actor, [
             'name' => 'Economy Projection Business',
@@ -421,8 +421,8 @@ class BusinessVerticalConsolidationTest extends TestCase
         $this->actingAs($owner)
             ->get(route('businesses.show', $business))
             ->assertOk()
-            ->assertSee(__('business.show.money.position'))
-            ->assertSee('0 IET');
+            ->assertSee(__('business.show.money.activity_title'))
+            ->assertSee('data-business-activity', false);
     }
 
     private function userWithActor(array $attributes = []): User

@@ -21,9 +21,10 @@ class FeatureSurfaceRegistry
                 'Needs, offers & services', 'نیازها، ارائه‌ها و خدمات', 'magnifying-glass', 'market', ['profile'],
                 ['intents.index'], ['intents.*', 'market.*', 'needs.*', 'offers.*']
             ),
+            // Kept as "money" so existing publication grants carry over to Bookkeeping.
             'money' => $this->surface(
-                'Personal money', 'پول شخصی', 'wallet', 'finance', ['profile'],
-                ['money.index'], ['money.*', 'financial-obligations.*']
+                'Bookkeeping', 'دفتر حساب', 'wallet', 'finance', ['profile'],
+                ['bookkeeping.index'], ['bookkeeping.*']
             ),
             'deals' => $this->surface(
                 'Deals', 'معامله‌ها', 'arrows-right-left', 'market', ['market', 'money'],
@@ -47,14 +48,6 @@ class FeatureSurfaceRegistry
             'planner' => $this->surface(
                 'Planner', 'برنامه‌ریز', 'calendar-days', 'execution', ['profile'],
                 ['planner.index'], ['planner.*', 'journeys.*']
-            ),
-            'accounting' => $this->surface(
-                'Accounting', 'حسابداری', 'banknotes', 'finance', ['money'],
-                ['accounting.index'], ['accounting.*']
-            ),
-            'exchange' => $this->surface(
-                'IET Exchange', 'صرافی IET', 'arrows-right-left', 'finance', ['money'],
-                ['exchange.index'], ['exchange.*']
             ),
             'vault' => $this->surface(
                 'Private vault', 'خزانه خصوصی', 'lock-closed', 'tools', ['profile'],
@@ -286,7 +279,6 @@ class FeatureSurfaceRegistry
             'proposals.show',
             'contracts.show',
             'commitments.show',
-            'financial-obligations.show',
 
             // A known plan remains governed by plan/context authorization;
             // opening it does not reveal the general Planner facility.
@@ -295,6 +287,10 @@ class FeatureSurfaceRegistry
             // occurrence/asset chain and plan authorization decide access.
             'planner.occurrences.assets.*',
             'planner.occurrences.evidence.*',
+
+            // A shared or project book is opened by its parties, who may not
+            // have the Bookkeeping facility published; book membership decides.
+            'bookkeeping.books.*',
 
             // Known group/community/workspace resources are governed by
             // membership and group authorization. The Groups directory

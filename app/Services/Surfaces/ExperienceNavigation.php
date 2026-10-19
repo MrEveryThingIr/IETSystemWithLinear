@@ -87,7 +87,7 @@ class ExperienceNavigation
             $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', 'experience.needs-offers', ['market']),
             $destination('work', 'experience.navigation.work', 'briefcase', 'experience.work', ['deals', 'planner']),
             $destination('organizations', 'experience.navigation.organizations', 'building-office-2', 'experience.organizations', ['business', 'groups']),
-            $destination('money', 'experience.navigation.money', 'wallet', 'money.index', ['money', 'accounting', 'exchange']),
+            $destination('money', 'experience.navigation.money', 'wallet', 'bookkeeping.index', ['money']),
             $destination('content', 'experience.navigation.content', 'rectangle-stack', 'experience.content', ['content']),
         ]));
 

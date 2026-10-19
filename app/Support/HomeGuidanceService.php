@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
+use App\Models\Bookkeeping\Transaction;
 use App\Models\GroupMembership;
 use App\Models\PersonalContext;
 use App\Models\PlanOccurrence;
@@ -27,7 +28,7 @@ class HomeGuidanceService
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
      *   groupMemberships: Collection<int, GroupMembership>,
-     *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>
+     *   money: array{owed_to_me: int, i_owe: int, waiting_for_me: Collection<int, Transaction>, today_income: int, today_expense: int, has_books: bool}
      * }  $projection
      * @return array{
      *   onboarding: array{completed:int,total:int,percent:int,complete:bool,steps:list<HomeOnboardingStep>},
@@ -136,7 +137,7 @@ class HomeGuidanceService
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
-     *   obligations: Collection<int, array{code:string, exponent:int, receivable_total_minor:int, receivable_paid_minor:int, receivable_outstanding_minor:int, payable_total_minor:int, payable_paid_minor:int, payable_outstanding_minor:int}>
+     *   money: array{owed_to_me: int, i_owe: int, waiting_for_me: Collection<int, Transaction>, today_income: int, today_expense: int, has_books: bool}
      * }  $projection
      * @param  list<HomeOnboardingStep>  $steps
      * @param  list<HomeGuidanceItem>  $firstGoalChoices
@@ -198,19 +199,17 @@ class HomeGuidanceService
             );
         }
 
-        $outstanding = $projection['obligations']->sum(
-            fn (array $bucket): int => (int) $bucket['receivable_outstanding_minor']
-                + (int) $bucket['payable_outstanding_minor'],
-        );
+        $money = $projection['money'];
+        $outstanding = (int) $money['owed_to_me'] + (int) $money['i_owe'];
 
-        if ($outstanding > 0 && ($surfaceKeys->contains('money') || $surfaceKeys->contains('accounting'))) {
+        if ($outstanding > 0 && $surfaceKeys->contains('money')) {
             return new HomeGuidanceItem(
                 key: 'money:outstanding',
                 kind: 'money',
                 title: (string) __('home.guidance.money_title'),
                 summary: (string) __('home.guidance.money_reason'),
                 consequence: (string) __('home.guidance.money_consequence'),
-                url: route('money.index'),
+                url: route('bookkeeping.index'),
                 cta: (string) __('home.guidance.open_money'),
             );
         }

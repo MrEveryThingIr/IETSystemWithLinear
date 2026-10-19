@@ -36,7 +36,7 @@ return [
         'explore' => '探索系统',
         'explore_help' => '选择任意节点，了解它为何存在、拥有什么权威事实、如何连接，以及下一步值得评审的问题。',
         'starting_point' => '建议起点',
-        'starting_point_help' => '选择“财务流程”，把计划成本 → 履约 → 财务义务 → 结算 → 会计作为一个人的完整故事来检查。',
+        'starting_point_help' => '选择“财务流程”，把计划成本 → 履约 → 记账作为一个人的完整故事来检查。',
         'open_area' => '打开此区域 ↗',
         'human_purpose' => '人的目的',
         'truth' => '权威事实',

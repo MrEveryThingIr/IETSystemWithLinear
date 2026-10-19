@@ -8,6 +8,7 @@ use App\Http\Controllers\AdmissionContextCollaborationController;
 use App\Http\Controllers\AdmissionContextContentController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\BookkeepingEvidenceController;
 use App\Http\Controllers\ContentEvidenceReferenceController;
 use App\Http\Controllers\ContentRevisionController;
 use App\Http\Controllers\ContextConversationAssetController;
@@ -23,8 +24,6 @@ use App\Http\Controllers\PlanOccurrenceAssetController;
 use App\Http\Controllers\SpaceContentAssetController;
 use App\Http\Controllers\SubmissionAssetController;
 use App\Http\Controllers\SystemManualController;
-use App\Livewire\Accounting\BasicIndex as AccountingBasicIndex;
-use App\Livewire\Accounting\Index as AccountingIndex;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -36,6 +35,9 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Bookkeeping\BookShow as BookkeepingBook;
+use App\Livewire\Bookkeeping\Index as BookkeepingIndex;
+use App\Livewire\Bookkeeping\PersonalBook as BookkeepingPersonal;
 use App\Livewire\Commitments\Create as CommitmentCreate;
 use App\Livewire\Commitments\Show as CommitmentShow;
 use App\Livewire\Content\Library as ContentLibrary;
@@ -52,8 +54,6 @@ use App\Livewire\Contexts\Timeline as ContextTimeline;
 use App\Livewire\Contracts\Create as ContractCreate;
 use App\Livewire\Contracts\Index as ContractIndex;
 use App\Livewire\Contracts\Show as ContractShow;
-use App\Livewire\Exchange\Index as ExchangeIndex;
-use App\Livewire\Financial\Show as FinancialObligationShow;
 use App\Livewire\Groups\AcceptAgreements;
 use App\Livewire\Groups\Agreements;
 use App\Livewire\Groups\Community as GroupCommunity;
@@ -171,9 +171,6 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/contracts/{contract}/commitments/create', CommitmentCreate::class)->name('commitments.create');
     Route::livewire('/contracts/{contract}', ContractShow::class)->can('view', 'contract')->name('contracts.show');
     Route::livewire('/commitments/{commitment}', CommitmentShow::class)->can('view', 'commitment')->name('commitments.show');
-    Route::livewire('/financial-obligations/{obligation}', FinancialObligationShow::class)
-        ->can('view', 'obligation')
-        ->name('financial-obligations.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/tools/repeat', PlannerRepeatWindow::class)->name('planner.tools.repeat');
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
@@ -185,11 +182,13 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         ->name('planner.occurrences.assets.download');
     Route::get('/planner/{plan}/occurrences/{occurrence}/evidence/{asset}', [PlanOccurrenceAssetController::class, 'evidence'])
         ->name('planner.occurrences.evidence.show');
-    Route::get('/money', [ExperienceHubController::class, 'money'])->name('money.index');
-    Route::livewire('/money/accounts', AccountingBasicIndex::class)->name('money.accounts');
-    Route::livewire('/accounting', config('release.profile') === 'planning_baseline' ? AccountingBasicIndex::class : AccountingIndex::class)->name('accounting.index');
-    Route::livewire('/exchange', ExchangeIndex::class)->name('exchange.index');
     Route::livewire('/vault', VaultIndex::class)->name('vault.index');
+    Route::livewire('/bookkeeping', BookkeepingIndex::class)->name('bookkeeping.index');
+    Route::livewire('/bookkeeping/personal', BookkeepingPersonal::class)->name('bookkeeping.personal');
+    Route::livewire('/bookkeeping/books/{ledger}', BookkeepingBook::class)->can('view', 'ledger')->name('bookkeeping.books.show');
+    Route::get('/bookkeeping/books/{ledger}/entries/{transaction}/files/{asset}', BookkeepingEvidenceController::class)
+        ->can('view', 'ledger')
+        ->name('bookkeeping.books.evidence');
     Route::livewire('/ai/chat', AiChat::class)->name('ai.chat');
     Route::livewire('/library', ContentLibrary::class)->name('content.library');
     Route::get('/my-content', MyContextContentController::class)->name('contexts.personal');

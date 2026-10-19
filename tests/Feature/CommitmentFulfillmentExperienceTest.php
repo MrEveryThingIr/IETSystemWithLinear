@@ -129,7 +129,7 @@ class CommitmentFulfillmentExperienceTest extends TestCase
 
             $this->assertSame(FulfillmentStatus::Accepted, $fulfillment->fresh()->status);
             $this->assertSame(540, $fulfillment->fresh()->duration_minutes);
-            $this->assertDatabaseCount('journal_entries', 0);
+            $this->assertDatabaseCount('bk_transactions', 0);
         } finally {
             CarbonImmutable::setTestNow();
         }

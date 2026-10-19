@@ -35,7 +35,7 @@ class ExperienceHubTest extends TestCase
         $this->assertSame('experience.needs-offers', $primary['needs-offers']['route']);
         $this->assertSame('experience.work', $primary['work']['route']);
         $this->assertSame('experience.organizations', $primary['organizations']['route']);
-        $this->assertSame('money.index', $primary['money']['route']);
+        $this->assertSame('bookkeeping.index', $primary['money']['route']);
         $this->assertSame('experience.content', $primary['content']['route']);
 
         $this->assertSame(['help'], collect($navigation['help'])->pluck('key')->all());
@@ -125,24 +125,20 @@ class ExperienceHubTest extends TestCase
             ->assertDontSee(route('planner.index'), false);
     }
 
-    public function test_money_route_is_now_the_daily_hub_and_detailed_accounts_remain_reachable(): void
+    public function test_money_destination_opens_bookkeeping_and_the_old_finance_pages_are_gone(): void
     {
         $actor = Actor::factory()->create();
 
         $this->publishSurfaces($actor->user, ['money']);
 
         $this->actingAs($actor->user)
-            ->get(route('money.index'))
+            ->get(route('bookkeeping.index'))
             ->assertOk()
-            ->assertSee('What is outstanding')
-            ->assertSee('Accounts & activity')
-            ->assertSee(route('money.accounts'), false)
-            ->assertDontSee(route('accounting.index'), false)
-            ->assertDontSee(route('exchange.index'), false);
+            ->assertSee(__('bookkeeping.personal.title'));
 
-        $this->actingAs($actor->user)
-            ->get(route('money.accounts'))
-            ->assertOk();
+        foreach (['/money', '/money/accounts', '/accounting', '/exchange'] as $retired) {
+            $this->actingAs($actor->user)->get($retired)->assertNotFound();
+        }
     }
 
     public function test_help_hub_only_shows_published_help_tools(): void

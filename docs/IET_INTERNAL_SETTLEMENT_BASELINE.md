@@ -1,3 +1,5 @@
+> **Retired in v1.4.0.** The accounting, financial obligation, settlement and IET exchange code described here was removed and replaced by Bookkeeping. See [BOOKKEEPING.md](BOOKKEEPING.md). This file is kept as history only.
+
 # IET Internal Settlement + Exchange Baseline
 
 ## Purpose

@@ -227,7 +227,7 @@ class PlannerReadinessLifecycleTest extends TestCase
             $this->assertSame(2850, $expense->amount_minor);
             $this->assertSame('25.00', MoneyAmount::format($estimate->amount_minor, $estimate->monetaryUnit->exponent));
             $this->assertSame('28.50', MoneyAmount::format($expense->amount_minor, $expense->monetaryUnit->exponent));
-            $this->assertDatabaseCount('journal_entries', 0);
+            $this->assertDatabaseCount('bk_transactions', 0);
         } finally {
             CarbonImmutable::setTestNow();
         }
