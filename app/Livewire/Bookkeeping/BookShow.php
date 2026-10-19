@@ -383,7 +383,7 @@ class BookShow extends Component
             'canArchive' => Gate::forUser($user)->allows('archive', $ledger),
             'openDisputes' => Dispute::query()->whereIn('transaction_id', $entries->pluck('id'))->where('status', DisputeStatus::Open->value)->get()->keyBy('transaction_id'),
             'roles' => [PartyRole::Partner, PartyRole::Member, PartyRole::Viewer],
-        ])->title($this->ledger->name);
+        ])->title($ledger->name);
     }
 
     private function preview(string $value): ?string
