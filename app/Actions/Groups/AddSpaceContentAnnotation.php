@@ -10,6 +10,7 @@ use App\Models\SpaceContentAnnotation;
 use App\Models\SpaceContentAnnotationAnchor;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\Content\SectionSemantics;
 use App\Support\ContentInteractionSettings;
 use App\Support\ContentRolePolicy;
 use App\Support\ContextScope;
@@ -123,6 +124,15 @@ class AddSpaceContentAnnotation
                         'selector' => $anchor->selector,
                     ])->all()
                     : $this->anchorNormalizer->normalize($lockedRevision, $anchors);
+
+                if ($parentAnnotation === null && in_array($kind, SpaceContentAnnotation::SECTION_RESPONSE_KINDS, true)) {
+                    abort_unless(
+                        collect($normalizedAnchors)->contains(fn (array $anchor): bool => $anchor['target_type'] === 'block'
+                            && SectionSemantics::isAnswerable(SectionSemantics::roleOfBlock($lockedRevision, $anchor['target_uuid']))),
+                        422,
+                        'Answers belong to a question or exercise section.',
+                    );
+                }
 
                 $actor = $this->actor($user);
                 $annotation = SpaceContentAnnotation::query()->create([

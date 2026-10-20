@@ -21,6 +21,22 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v1.5.0** — content improvements and the version label. **No database
+  migrations**; ordinary upgrade (section 5c), the backup is still advised.
+  - Authors can **delete content permanently** (warning + type the title) as
+    long as nobody else has engaged with it; otherwise only archive. Content
+    can be **renamed** in one step (published content shows the new name
+    immediately).
+  - **Section types and tags** (question, exercise, discussion, definition,
+    key point, example, summary) map to reader actions; question/exercise
+    sections can be answered directly and answers marked correct. Stored in
+    the block data, so older content is unaffected. See
+    `app/Support/Content/SectionSemantics.php`.
+  - Reader menus, the note composer and dialogs stay on screen (bottom
+    sheets on phones).
+  - The running version is shown next to the site name and opens
+    `/whats-new`. It is read from the package's `release-manifest.json`, so
+    `APP_VERSION` in `shared/.env` no longer has to be edited for it.
 - **v1.4.0** — **Bookkeeping replaces the old financial system**, plus
   **faster video over slow or VPN connections**.
   - The old Accounting, Financial Obligations/Settlements, money intentions and
@@ -93,14 +109,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.4.0`, so the package is
-   `iet-v1.4.0`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.5.0`, so the package is
+   `iet-v1.5.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.4.0`. It contains:
-   - `iet-v1.4.0.zip` — the runtime package (root directory `iet-v1.4.0/`)
-   - `iet-v1.4.0.zip.sha256` — checksum of the ZIP
-   - `iet-v1.4.0.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.4.0.zip.sha256`.
+3. Download the artifact `iet-v1.5.0`. It contains:
+   - `iet-v1.5.0.zip` — the runtime package (root directory `iet-v1.5.0/`)
+   - `iet-v1.5.0.zip.sha256` — checksum of the ZIP
+   - `iet-v1.5.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.5.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -385,6 +401,19 @@ Additional checks for v1.4.0:
 18. **Video over VPN**: open a public lesson with a video on a phone with a
     VPN on; it should start within a few seconds and seek without waiting for
     the whole file.
+
+Additional checks for v1.5.0:
+
+19. **Version**: the sidebar shows the site name with `1.5.0`; clicking it
+    opens *What's new*.
+20. **Delete / rename**: on *Content*, open a test item's `⋯` menu → *Rename*;
+    then *Delete permanently*, type the title, confirm — it is gone. On an
+    item someone else commented on, the dialog offers *Archive instead*.
+21. **Sections**: in the editor give a paragraph the type *Question*,
+    publish; in the reader the paragraph shows *Answer*; answer it; as the
+    author open the answers and *Mark as correct*.
+22. **Menus on a phone**: select text in a lesson — the actions appear at
+    the bottom of the screen; the note box opens as a bottom sheet.
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

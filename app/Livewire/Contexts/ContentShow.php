@@ -23,6 +23,7 @@ use App\Models\SpaceContentAnnotationDisposition;
 use App\Models\SpaceContentReaction;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\Content\SectionSemantics;
 use App\Support\ContentCourseNavigation;
 use App\Support\ContentInteractionSettings;
 use App\Support\ContentRolePolicy;
@@ -48,6 +49,7 @@ class ContentShow extends Component
 
     /** @var list<string> */
     private const COMPOSER_PURPOSES = [
+        'answer',
         'remember',
         'note',
         'question',
@@ -302,13 +304,17 @@ class ContentShow extends Component
             default => 'text',
         };
         $this->annotationKind = match ($purpose) {
+            'answer' => SpaceContentAnnotation::KIND_ANSWER,
             'question' => SpaceContentAnnotation::KIND_QUESTION,
             'comment' => SpaceContentAnnotation::KIND_COMMENT,
             'correction' => SpaceContentAnnotation::KIND_CORRECTION,
             'idea' => SpaceContentAnnotation::KIND_IDEA,
             default => SpaceContentAnnotation::KIND_NOTE,
         };
-        $this->annotationVisibility = $this->defaultAnnotationVisibility();
+        // Answers are for the author (and readers) to see, never private.
+        $this->annotationVisibility = $purpose === 'answer'
+            ? SpaceContentAnnotation::VISIBILITY_SPACE
+            : $this->defaultAnnotationVisibility();
         $this->annotationComposerX = max(12, min(3000, $x));
         $this->annotationComposerY = max(12, min(3000, $y));
         $this->annotationAnchors = $this->mergeAnchors(array_map(
@@ -546,7 +552,9 @@ class ContentShow extends Component
     {
         $allowedKinds = $this->annotationParentUuid !== null
             ? SpaceContentAnnotation::CHILD_KINDS
-            : SpaceContentAnnotation::TOP_LEVEL_KINDS;
+            : ($this->annotationComposerMode === 'answer'
+                ? SpaceContentAnnotation::SECTION_RESPONSE_KINDS
+                : SpaceContentAnnotation::TOP_LEVEL_KINDS);
         $allowedKinds = array_values(array_intersect(
             $allowedKinds,
             app(ContentRolePolicy::class)->allowedKinds($this->content, $this->user()),
@@ -802,6 +810,7 @@ class ContentShow extends Component
                 'replies.anchors',
                 'replies.assets',
                 'replies.endorsements.actor.user',
+                'endorsements.actor.user',
             ])
             ->orderBy('created_at')
             ->orderBy('id')
@@ -822,21 +831,35 @@ class ContentShow extends Component
             ->whereIn('uuid', $this->previewAnnotationUuids)
             ->values();
 
+        // Answers given directly to question/exercise sections, per section.
+        $sectionAnswers = [];
+        foreach ($annotations->where('kind', SpaceContentAnnotation::KIND_ANSWER) as $answer) {
+            foreach ($answer->anchors->where('target_type', 'block')->pluck('target_uuid')->unique() as $blockUuid) {
+                $sectionAnswers[(string) $blockUuid]['uuids'][] = $answer->uuid;
+                $sectionAnswers[(string) $blockUuid]['correct'] = ($sectionAnswers[(string) $blockUuid]['correct'] ?? 0)
+                    + ($answer->endorsements->isNotEmpty() ? 1 : 0);
+                $sectionAnswers[(string) $blockUuid]['mine'] = ($sectionAnswers[(string) $blockUuid]['mine'] ?? false)
+                    || (int) $answer->author_actor_id === (int) $actor->id;
+            }
+        }
+        $sectionActionMap = SectionSemantics::actionMap();
+
         $reactionTypes = SpaceContentReaction::TYPES;
         $rolePolicy = app(ContentRolePolicy::class);
         $viewerKinds = $rolePolicy->allowedKinds($current, $user);
         $annotationKinds = array_values(array_intersect(
             $this->annotationParentUuid !== null
                 ? SpaceContentAnnotation::CHILD_KINDS
-                : SpaceContentAnnotation::TOP_LEVEL_KINDS,
+                : ($this->annotationComposerMode === 'answer' ? SpaceContentAnnotation::SECTION_RESPONSE_KINDS : SpaceContentAnnotation::TOP_LEVEL_KINDS),
             $viewerKinds,
         ));
         if ($annotationKinds !== [] && ! in_array($this->annotationKind, $annotationKinds, true)) {
             $this->annotationKind = $annotationKinds[0];
         }
-        $canAnnotate = $canAnnotate && $annotationKinds !== [];
+        $canAnnotate = $canAnnotate && ($annotationKinds !== [] || array_intersect(SpaceContentAnnotation::TOP_LEVEL_KINDS, $viewerKinds) !== []);
         $canReplyKinds = array_values(array_intersect(SpaceContentAnnotation::CHILD_KINDS, $viewerKinds));
         $canEndorse = $rolePolicy->canEndorse($current, $user);
+        $canAnswerSections = $canAnnotate && in_array(SpaceContentAnnotation::KIND_ANSWER, $viewerKinds, true);
         $roleRulesGroup = $canResolveFeedback ? $rolePolicy->group($current) : null;
         $roleRulesRoles = $roleRulesGroup !== null ? app(GroupRoleProvisioner::class)->roles($roleRulesGroup) : collect();
         $roleRulesActive = $rolePolicy->isRestricted($current);
@@ -911,6 +934,9 @@ class ContentShow extends Component
             'blockMarkerUuids',
             'previewAnnotations',
             'interactionDefinitions',
+            'sectionAnswers',
+            'sectionActionMap',
+            'canAnswerSections',
         ));
     }
 

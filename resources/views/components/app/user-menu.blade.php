@@ -47,6 +47,9 @@
             <flux:menu.item :href="route('profile.edit')" icon="user-circle">
                 {{ __('ui.navigation.profile') }}
             </flux:menu.item>
+            <flux:menu.item :href="route('whats-new')" icon="sparkles" data-menu-whats-new>
+                {{ __('changelog.title') }} · {{ \App\Support\Changelog::currentVersion() }}
+            </flux:menu.item>
 
             <flux:menu.separator />
 

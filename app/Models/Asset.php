@@ -42,6 +42,20 @@ class Asset extends Model
 {
     use HasFactory;
 
+    /** Every table that can point at an Asset; a file is only removed when none do. */
+    public const REFERENCE_TABLES = [
+        'space_content_revision_assets',
+        'space_content_annotation_assets',
+        'actor_profile_images',
+        'submission_responses',
+        'plan_occurrence_assets',
+        'fulfillment_assets',
+        'business_listing_media',
+        'conversation_message_assets',
+        'bk_transaction_assets',
+        'media_upload_sessions',
+    ];
+
     public const SCAN_STATUSES = ['quarantined', 'scanning', 'clean', 'rejected', 'failed', 'unavailable'];
 
     public const PROCESSING_STATUSES = ['pending', 'processing', 'ready', 'blocked', 'failed'];

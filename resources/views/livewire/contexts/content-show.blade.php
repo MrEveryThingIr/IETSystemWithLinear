@@ -17,21 +17,6 @@
     class="min-h-screen space-y-6 px-1 pb-16"
     style="--content-bg: {{ $readerBackground }}; --content-surface: {{ $readerSurface }}; --content-text: {{ $readerText }}; --content-muted: {{ $readerMuted }}; --content-accent: {{ $readerAccent }}; --content-border: {{ $readerBorder }}; background: var(--content-bg); color: var(--content-text);"
 >
-    <style>
-        @media (max-width: 639px) {
-            #annotation-selection-toolbar-{{ $content->uuid }},
-            #annotation-context-composer-{{ $content->uuid }},
-            #annotation-preview-panel-{{ $content->uuid }} {
-                inset-inline: .75rem !important;
-                left: auto !important;
-                right: auto !important;
-                top: auto !important;
-                bottom: .75rem !important;
-                width: auto !important;
-                max-width: none !important;
-            }
-        }
-    </style>
 
     <div id="annotation-marker-payload-{{ $content->uuid }}" class="hidden" data-marker-payload='@json($rangeMarkers)'></div>
 
@@ -311,6 +296,9 @@
                                     @if ($annotation->body)
                                         <div class="whitespace-pre-wrap break-words text-sm leading-7" dir="auto">{{ $annotation->body }}</div>
                                     @endif
+                                    @if ($annotation->kind === 'answer')
+                                        @include('livewire.contexts.partials.answer-verdict', ['answer' => $annotation])
+                                    @endif
 
                                     @if ($canResolveFeedback && $isFeedback)
                                         <div class="flex flex-wrap gap-2 rounded-lg border p-2" style="border-color: var(--content-border)">
@@ -507,43 +495,36 @@
 
     <div
         id="annotation-selection-toolbar-{{ $content->uuid }}"
-        class="fixed z-50 hidden max-w-[calc(100vw-1.5rem)] rounded-xl border p-1.5 shadow-2xl sm:w-max"
+        wire:ignore
+        class="fixed z-50 hidden rounded-xl border p-1.5 shadow-2xl max-sm:inset-x-3 max-sm:bottom-3 sm:w-max sm:max-w-[min(32rem,calc(100vw-1.5rem))]"
         style="border-color: var(--content-border); background: var(--content-surface); color: var(--content-text)"
         role="toolbar"
         aria-label="{{ __('interactions.selection_actions') }}"
+        data-selection-toolbar
+        data-action-map='@json($sectionActionMap)'
     >
-        <div class="flex flex-wrap gap-1">
-            @foreach ([
-                'remember' => __('interactions.quick.remember'),
-                'note' => __('interactions.quick.note'),
-                'question' => __('interactions.quick.question'),
-                'comment' => __('interactions.quick.comment'),
-            ] as $purpose => $label)
-                <button type="button" data-selection-purpose="{{ $purpose }}" class="rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-black/5 focus:bg-black/5 focus:outline-none dark:hover:bg-white/10 dark:focus:bg-white/10">{{ $label }}</button>
+        <div class="flex flex-wrap items-center gap-1" data-selection-primary>
+            @foreach (array_unique([...array_merge(...array_column($sectionActionMap, 'primary')), ...array_merge(...array_column($sectionActionMap, 'more'))]) as $purpose)
+                @continue($purpose === 'advanced')
+                <button type="button" data-selection-purpose="{{ $purpose }}" class="hidden rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-black/5 focus:bg-black/5 focus:outline-none dark:hover:bg-white/10 dark:focus:bg-white/10">{{ __('interactions.quick.'.$purpose) }}</button>
             @endforeach
             <button type="button" data-selection-select class="rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-black/5 focus:bg-black/5 focus:outline-none dark:hover:bg-white/10 dark:focus:bg-white/10">{{ __('interactions.quick.add_to_selection') }}</button>
-            <details class="relative">
-                <summary class="cursor-pointer list-none rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-black/5 focus:outline-none dark:hover:bg-white/10 [&::-webkit-details-marker]:hidden">{{ __('interactions.quick.more') }}</summary>
-                <div class="absolute end-0 mt-2 w-44 rounded-xl border p-1.5 shadow-xl" style="border-color: var(--content-border); background: var(--content-surface)">
-                    @foreach ([
-                        'translate' => __('interactions.quick.translate'),
-                        'file' => __('interactions.quick.file'),
-                        'voice' => __('interactions.quick.voice'),
-                        'advanced' => __('interactions.quick.advanced'),
-                    ] as $purpose => $label)
-                        <button type="button" data-selection-purpose="{{ $purpose }}" class="block w-full rounded-lg px-3 py-2 text-start text-xs hover:bg-black/5 focus:bg-black/5 focus:outline-none dark:hover:bg-white/10 dark:focus:bg-white/10">{{ $label }}</button>
-                    @endforeach
-                </div>
-            </details>
+            <button type="button" data-selection-more-toggle aria-expanded="false" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-black/5 focus:outline-none dark:hover:bg-white/10">{{ __('interactions.quick.more') }} <flux:icon name="chevron-down" class="size-3.5 opacity-60" /></button>
+        </div>
+        <div class="mt-1 hidden flex-wrap gap-1 border-t pt-1" style="border-color: var(--content-border)" data-selection-more>
+            <button type="button" data-selection-purpose="advanced" class="rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-black/5 focus:outline-none dark:hover:bg-white/10">{{ __('interactions.quick.advanced') }}</button>
         </div>
     </div>
 
     @if ($canAnnotate)
+        {{-- Placed by the reader script next to what it is about and kept inside the screen; a bottom sheet on phones. --}}
         <section
             id="annotation-context-composer-{{ $content->uuid }}"
-            class="fixed z-50 w-[22rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border p-4 shadow-2xl {{ $annotationComposerOpen ? '' : 'hidden' }}"
-            style="left: {{ $annotationComposerX }}px; top: {{ $annotationComposerY }}px; border-color: var(--content-border); background: var(--content-surface); color: var(--content-text)"
+            class="fixed z-50 w-[24rem] max-w-[calc(100vw-1.5rem)] overflow-y-auto overscroll-contain rounded-2xl border p-4 shadow-2xl max-sm:inset-x-0 max-sm:bottom-0 max-sm:max-h-[85dvh] max-sm:w-auto max-sm:max-w-none max-sm:rounded-b-none max-sm:pb-[max(1rem,env(safe-area-inset-bottom))] {{ $annotationComposerOpen ? '' : 'hidden' }}"
+            style="border-color: var(--content-border); background: var(--content-surface); color: var(--content-text)"
             data-annotation-composer
+            data-fallback-x="{{ $annotationComposerX }}"
+            data-fallback-y="{{ $annotationComposerY }}"
         >
             <div class="flex items-start justify-between gap-3">
                 <div>
@@ -574,7 +555,7 @@
                         @foreach ($annotationVisibilities as $visibility)<option value="{{ $visibility }}">{{ __('interactions.visibility_value.'.$visibility) }}</option>@endforeach
                     </flux:select>
                 </div>
-            @elseif (! $annotationParentUuid)
+            @elseif (! $annotationParentUuid && $annotationComposerMode !== 'answer')
                 <div class="mt-3 flex justify-end">
                     <button type="button" wire:click="$set('annotationVisibility', '{{ $annotationVisibility === 'private' ? 'space' : 'private' }}')" class="text-xs underline underline-offset-4" style="color: var(--content-muted)">
                         {{ $annotationVisibility === 'private' ? __('interactions.make_space_visible') : __('interactions.make_private') }}
@@ -649,7 +630,7 @@
     @if ($previewAnnotations->isNotEmpty())
         <aside
             id="annotation-preview-panel-{{ $content->uuid }}"
-            class="fixed end-4 top-20 z-50 max-h-[70vh] w-[22rem] max-w-[calc(100vw-1.5rem)] overflow-auto rounded-2xl border p-4 shadow-2xl"
+            class="fixed end-4 top-20 z-50 max-h-[70vh] w-[24rem] max-w-[calc(100vw-1.5rem)] overflow-auto overscroll-contain rounded-2xl border p-4 shadow-2xl max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:max-h-[80dvh] max-sm:w-auto max-sm:max-w-none max-sm:rounded-b-none"
             style="border-color: var(--content-border); background: var(--content-surface); color: var(--content-text)"
         >
             <div class="flex items-center justify-between gap-3">
@@ -665,7 +646,10 @@
                             @if ($annotation->visibility === 'private')<span>🔒</span>@endif
                         </div>
                         @if ($annotation->body)<div class="mt-2 whitespace-pre-wrap text-sm" dir="auto">{{ \Illuminate\Support\Str::limit($annotation->body, 320) }}</div>@endif
-                        @if ($canAnnotate)
+                        @if ($annotation->kind === 'answer')
+                            @include('livewire.contexts.partials.answer-verdict', ['answer' => $annotation])
+                        @endif
+                        @if ($canAnnotate && $annotation->kind !== 'answer')
                             <button type="button" data-reply-annotation="{{ $annotation->uuid }}" class="mt-2 text-xs font-medium underline underline-offset-4" style="color: var(--content-accent)">{{ $annotation->kind === 'question' ? __('interactions.answer') : __('interactions.reply') }}</button>
                         @endif
                     </article>
@@ -711,12 +695,91 @@
 
             const positionNear = rect => {
                 if (!rect) return { x: 24, y: 80 }
-                const width = 360
+                const width = 384
                 return {
                     x: clamp(Math.round(rect.left), 12, Math.max(12, window.innerWidth - width - 12)),
                     y: clamp(Math.round(rect.bottom + 10), 12, Math.max(12, window.innerHeight - 260)),
                 }
             }
+
+            // Floating panels: placed next to what they are about, flipped
+            // above when there is no room below, always kept inside the
+            // screen. On phones they are bottom sheets (CSS) and not moved.
+            const isSheet = () => window.matchMedia('(max-width: 639px)').matches
+            const rectOf = source => {
+                if (!source) return null
+                if (typeof source.getBoundingClientRect !== 'function') return null
+                if (source instanceof Element && !source.isConnected) return null
+                const rect = source.getBoundingClientRect()
+                return rect.width === 0 && rect.height === 0 && rect.top === 0 ? null : rect
+            }
+            const place = (el, rect, gap = 8) => {
+                if (!el || el.classList.contains('hidden')) return
+                if (isSheet()) {
+                    if (el.style.left || el.style.top) { el.style.left = ''; el.style.top = ''; el.style.maxHeight = '' }
+                    return
+                }
+                if (!rect) return
+                const margin = 12
+                const vw = document.documentElement.clientWidth
+                const vh = window.innerHeight
+                const maxHeight = `${vh - margin * 2}px`
+                if (el.style.maxHeight !== maxHeight) el.style.maxHeight = maxHeight
+                const width = el.offsetWidth
+                const height = el.offsetHeight
+                const rtl = getComputedStyle(el).direction === 'rtl'
+                const left = clamp(rtl ? rect.right - width : rect.left, margin, Math.max(margin, vw - width - margin))
+                let top = rect.bottom + gap
+                if (top + height > vh - margin) {
+                    const above = rect.top - gap - height
+                    top = above >= margin ? above : Math.max(margin, vh - height - margin)
+                }
+                const x = `${Math.round(left)}px`
+                const y = `${Math.round(top)}px`
+                if (el.style.left !== x) el.style.left = x
+                if (el.style.top !== y) el.style.top = y
+            }
+
+            let composerSource = null
+            const placeComposer = () => {
+                if (!composer || composer.classList.contains('hidden')) return
+                const rect = rectOf(composerSource)
+                    ?? new DOMRect(Number(composer.dataset.fallbackX || 24), Number(composer.dataset.fallbackY || 80) - 10, 0, 0)
+                place(composer, rect, 10)
+            }
+            const openMenus = () => Array.from(document.querySelectorAll('details[data-context-menu][open]'))
+            const placeMenu = details => {
+                const panel = details.querySelector(':scope > [data-floating-panel]')
+                place(panel, rectOf(details.querySelector(':scope > summary')), 6)
+            }
+            const closeMenus = (except = null) => openMenus().forEach(menu => { if (menu !== except) menu.removeAttribute('open') })
+
+            // Which actions the selection toolbar offers depends on the role
+            // of the section the text was selected in (see SectionSemantics).
+            const actionMap = (() => { try { return JSON.parse(selectionToolbar?.dataset.actionMap || '{}') } catch (_) { return {} } })()
+            const configureToolbar = role => {
+                if (!selectionToolbar) return
+                const actions = actionMap[role] ?? actionMap[''] ?? { primary: [], more: [] }
+                const primaryBox = selectionToolbar.querySelector('[data-selection-primary]')
+                const moreBox = selectionToolbar.querySelector('[data-selection-more]')
+                const selectButton = primaryBox.querySelector('[data-selection-select]')
+                const buttons = Array.from(selectionToolbar.querySelectorAll('[data-selection-purpose]'))
+                buttons.forEach(button => button.classList.add('hidden'))
+                actions.primary.forEach(purpose => {
+                    const button = buttons.find(item => item.dataset.selectionPurpose === purpose)
+                    if (button) { button.classList.remove('hidden'); primaryBox.insertBefore(button, selectButton) }
+                })
+                ;[...actions.more.filter(purpose => purpose !== 'advanced'), 'advanced'].forEach(purpose => {
+                    const button = buttons.find(item => item.dataset.selectionPurpose === purpose)
+                    if (button) { button.classList.remove('hidden'); moreBox.appendChild(button) }
+                })
+                const first = primaryBox.querySelector('[data-selection-purpose]:not(.hidden)')
+                buttons.forEach(button => button.classList.toggle('font-semibold', role !== '' && button === first))
+                moreBox.classList.add('hidden')
+                moreBox.classList.remove('flex')
+                selectionToolbar.querySelector('[data-selection-more-toggle]')?.setAttribute('aria-expanded', 'false')
+            }
+            let selectionRange = null
 
             const hideSelectionToolbar = () => {
                 selectionToolbar?.classList.add('hidden')
@@ -793,15 +856,20 @@
 
                 const rect = range.getBoundingClientRect()
                 pendingPosition = positionNear(rect)
-                if (window.innerWidth >= 640) {
-                    selectionToolbar.style.left = `${pendingPosition.x}px`
-                    selectionToolbar.style.top = `${pendingPosition.y}px`
+                selectionRange = range.cloneRange()
+                const role = startSegment.closest('[data-section-role]')?.dataset.sectionRole || ''
+                if (selectionToolbar.dataset.role !== role || selectionToolbar.classList.contains('hidden')) {
+                    selectionToolbar.dataset.role = role
+                    configureToolbar(role)
                 }
                 selectionToolbar.classList.remove('hidden')
+                place(selectionToolbar, rect, 10)
             }
 
-            const openComposer = (purpose, anchor, position = pendingPosition) => {
+            const openComposer = (purpose, anchor, position = pendingPosition, source = selectionRange) => {
                 if (!anchor) return
+                composerSource = source
+                closeMenus()
                 hideSelectionToolbar()
                 window.getSelection()?.removeAllRanges()
                 $wire.call('openContextComposer', purpose, anchor, position.x, position.y)
@@ -920,11 +988,22 @@
                         return
                     }
 
+                    if (event.target.closest?.('[data-selection-more-toggle]')) {
+                        const moreBox = selectionToolbar?.querySelector('[data-selection-more]')
+                        const expanded = moreBox?.classList.contains('hidden')
+                        moreBox?.classList.toggle('hidden', !expanded)
+                        moreBox?.classList.toggle('flex', expanded)
+                        event.target.closest('[data-selection-more-toggle]').setAttribute('aria-expanded', expanded ? 'true' : 'false')
+                        if (selectionRange) place(selectionToolbar, selectionRange.getBoundingClientRect(), 10)
+                        return
+                    }
+
                     const purposeButton = event.target.closest?.('[data-context-purpose]')
                     if (purposeButton) {
                         const menu = purposeButton.closest('[data-annotation-target-menu]')
                         const anchor = targetAnchor(menu)
-                        openComposer(purposeButton.dataset.contextPurpose, anchor, positionNear(purposeButton.getBoundingClientRect()))
+                        const source = menu?.closest('[data-annotation-target]') ?? menu ?? purposeButton
+                        openComposer(purposeButton.dataset.contextPurpose, anchor, positionNear(source.getBoundingClientRect()), source)
                         menu?.querySelectorAll('details[open]').forEach(details => details.removeAttribute('open'))
                         return
                     }
@@ -939,6 +1018,7 @@
                     const reply = event.target.closest?.('[data-reply-annotation]')
                     if (reply) {
                         const position = positionNear(reply.getBoundingClientRect())
+                        composerSource = reply.closest('article') ?? reply
                         $wire.call('openReplyComposer', reply.dataset.replyAnnotation, position.x, position.y)
                     }
                 })
@@ -953,6 +1033,7 @@
                         return
                     }
                     if (event.key === 'Escape') {
+                        if (openMenus().length) { closeMenus(); return }
                         hideSelectionToolbar()
                         if (composer && !composer.classList.contains('hidden')) {
                             const body = composer.querySelector('textarea')?.value?.trim() || ''
@@ -962,6 +1043,37 @@
                         }
                     }
                 })
+
+                // Menus: one open at a time, placed on open, closed by an outside tap.
+                document.addEventListener('toggle', event => {
+                    const details = event.target
+                    if (!(details instanceof HTMLDetailsElement)) return
+                    if (details.matches('[data-context-menu]') && details.open) {
+                        closeMenus(details)
+                        hideSelectionToolbar()
+                        placeMenu(details)
+                    } else if (details.matches('[data-menu-more]')) {
+                        const menu = details.closest('details[data-context-menu]')
+                        if (menu) placeMenu(menu)
+                    }
+                }, true)
+                document.addEventListener('pointerdown', event => {
+                    if (!event.target.closest?.('details[data-context-menu]')) closeMenus()
+                })
+                const reflow = () => {
+                    openMenus().forEach(placeMenu)
+                    placeComposer()
+                    if (selectionRange && selectionToolbar && !selectionToolbar.classList.contains('hidden')) place(selectionToolbar, selectionRange.getBoundingClientRect(), 10)
+                }
+                // Keep the text selection while tapping the toolbar.
+                selectionToolbar?.addEventListener('mousedown', event => event.preventDefault())
+                window.addEventListener('resize', reflow, { passive: true })
+                window.addEventListener('scroll', () => window.requestAnimationFrame(reflow), { passive: true, capture: true })
+                if (composer) {
+                    // Livewire re-renders the composer (mode, files, errors): keep it placed.
+                    new ResizeObserver(() => placeComposer()).observe(composer)
+                    new MutationObserver(() => window.requestAnimationFrame(placeComposer)).observe(composer, { attributes: true, attributeFilter: ['class', 'style'] })
+                }
 
                 document.addEventListener('pointerdown', event => {
                     if (!composer || composer.classList.contains('hidden')) return
@@ -979,7 +1091,15 @@
                 })
             }
 
-            observer = new MutationObserver(() => {
+            const outsideText = '[data-selection-toolbar], [data-annotation-composer], [data-floating-panel], [data-context-menu], #annotation-preview-panel-' + suffix
+            observer = new MutationObserver(mutations => {
+                // Menus and the composer changing must not re-draw highlights
+                // (that would drop the reader's current text selection).
+                const relevant = mutations.some(mutation => {
+                    const element = mutation.target.nodeType === Node.ELEMENT_NODE ? mutation.target : mutation.target.parentElement
+                    return !element?.closest?.(outsideText)
+                })
+                if (!relevant) return
                 clearTimeout(highlightTimer)
                 highlightTimer = setTimeout(applyHighlights, 25)
             })

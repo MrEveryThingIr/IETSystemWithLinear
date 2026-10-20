@@ -15,7 +15,7 @@
         <main class="flex min-h-dvh items-center justify-center px-4 py-10 sm:px-6">
             <div class="w-full max-w-md space-y-8">
                 <div class="flex justify-center">
-                    <flux:brand :href="route('dashboard')" :name="config('app.name')" />
+                    <x-app.versioned-brand />
                 </div>
                 <div class="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
                     {{ $slot ?? '' }}

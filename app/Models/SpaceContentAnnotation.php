@@ -58,6 +58,15 @@ class SpaceContentAnnotation extends Model
     /** @var list<string> */
     public const CHILD_KINDS = [self::KIND_REPLY, self::KIND_ANSWER];
 
+    /**
+     * Kinds that may also stand alone when anchored to a section the author
+     * marked as answerable (a "question" or "exercise" section); checked by
+     * App\Actions\Groups\AddSpaceContentAnnotation.
+     *
+     * @var list<string>
+     */
+    public const SECTION_RESPONSE_KINDS = [self::KIND_ANSWER];
+
     /** @var list<string> */
     public const KINDS = [
         ...self::TOP_LEVEL_KINDS,
@@ -98,7 +107,7 @@ class SpaceContentAnnotation extends Model
             }
 
             if ($annotation->parent_annotation_id === null) {
-                if (! in_array($annotation->kind, self::TOP_LEVEL_KINDS, true)) {
+                if (! in_array($annotation->kind, [...self::TOP_LEVEL_KINDS, ...self::SECTION_RESPONSE_KINDS], true)) {
                     throw new LogicException('This annotation role must be a reply to another annotation.');
                 }
 

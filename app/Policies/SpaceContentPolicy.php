@@ -74,6 +74,20 @@ class SpaceContentPolicy
         return $content->status !== 'archived' && $this->canMutate($user, $content);
     }
 
+    /**
+     * Permanent deletion is the author's own decision, in their own, a group
+     * or a business place. Whether anyone else has engaged with it is
+     * checked by App\Actions\Content\DeleteContentPermanently.
+     */
+    public function delete(User $user, SpaceContent $content): bool
+    {
+        $content->loadMissing('context');
+
+        return in_array($content->context->kind, [ContextKind::Personal, ContextKind::GroupSpace, ContextKind::Business], true)
+            && $this->isAuthor($user, $content)
+            && $this->contexts->view($user, $content->context);
+    }
+
     public function restore(User $user, SpaceContent $content): bool
     {
         return $content->status === 'archived' && $this->canMutate($user, $content);

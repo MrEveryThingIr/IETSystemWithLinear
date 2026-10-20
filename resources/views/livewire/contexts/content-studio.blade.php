@@ -89,13 +89,19 @@
                         @if ($canViewRevisions)
                             <flux:menu.item icon="clock" x-on:click="$dispatch('open-drawer', 'history')">{{ __('studio_ui.version_history') }}</flux:menu.item>
                         @endif
-                        @if ($canArchive || $canRestore)
+                        @if ($canUpdate && ! $dirty)
+                            <flux:menu.item icon="pencil-square" wire:click="openRename('{{ $content->uuid }}')" data-studio-rename>{{ __('studio.rename.title') }}</flux:menu.item>
+                        @endif
+                        @if ($canArchive || $canRestore || $canDelete)
                             <flux:menu.separator />
                             @if ($canArchive)
                                 <flux:menu.item icon="archive-box" wire:click="beginArchive" variant="danger">{{ __('studio.archive') }}</flux:menu.item>
                             @endif
                             @if ($canRestore)
                                 <flux:menu.item icon="arrow-uturn-left" x-on:click="$dispatch('open-drawer', 'restore')">{{ __('studio.restore') }}</flux:menu.item>
+                            @endif
+                            @if ($canDelete)
+                                <flux:menu.item icon="trash" wire:click="openDelete('{{ $content->uuid }}')" variant="danger" data-studio-delete>{{ __('studio.delete.title') }}</flux:menu.item>
                             @endif
                         @endif
                         @if ($canUpdate)
@@ -172,7 +178,35 @@
                         @foreach ($blocks as $index => $block)
                             <div id="block-{{ $block['logical_uuid'] }}" wire:key="studio-block-{{ $block['logical_uuid'] }}" class="group relative scroll-mt-28 rounded-xl border border-transparent p-2 hover:border-zinc-200 focus-within:border-zinc-200 dark:hover:border-zinc-800 dark:focus-within:border-zinc-800" data-studio-block="{{ $block['type'] }}">
                                 <div class="mb-1 flex items-center justify-between gap-2 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                                    <span class="text-[0.7rem] font-medium uppercase tracking-wide text-zinc-400">{{ __('blocks.type.'.$block['type']) }}</span>
+                                    @php
+                                        $sectionRole = (string) ($block['data']['semantics']['role'] ?? '');
+                                    @endphp
+                                    <div class="flex min-w-0 items-center gap-2">
+                                        <span class="text-[0.7rem] font-medium uppercase tracking-wide text-zinc-400">{{ __('blocks.type.'.$block['type']) }}</span>
+                                        @if (\App\Support\Content\SectionSemantics::supports($block['type']))
+                                            <flux:dropdown position="bottom" align="start">
+                                                @if ($sectionRole !== '')
+                                                    <flux:badge as="button" size="sm" color="violet" :icon="\App\Support\Content\SectionSemantics::ROLES[$sectionRole]['icon'] ?? null" data-studio-section-role="{{ $sectionRole }}">{{ __('sections.roles.'.$sectionRole.'.name') }}</flux:badge>
+                                                @else
+                                                    <button type="button" class="rounded-full border border-dashed border-zinc-300 px-2 py-0.5 text-[0.7rem] text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700" data-studio-section-role-add>+ {{ __('sections.set_role') }}</button>
+                                                @endif
+                                                <flux:menu class="min-w-64">
+                                                    @foreach (\App\Support\Content\SectionSemantics::ROLES as $roleKey => $roleConfig)
+                                                        <flux:menu.item :icon="$roleConfig['icon']" wire:click="setSectionRole({{ $index }}, '{{ $roleKey }}')">
+                                                            <div>
+                                                                <div>{{ __('sections.roles.'.$roleKey.'.name') }}</div>
+                                                                <div class="text-xs font-normal text-zinc-500">{{ __('sections.roles.'.$roleKey.'.help') }}</div>
+                                                            </div>
+                                                        </flux:menu.item>
+                                                    @endforeach
+                                                    @if ($sectionRole !== '')
+                                                        <flux:menu.separator />
+                                                        <flux:menu.item icon="x-mark" wire:click="setSectionRole({{ $index }}, '')">{{ __('sections.clear_role') }}</flux:menu.item>
+                                                    @endif
+                                                </flux:menu>
+                                            </flux:dropdown>
+                                        @endif
+                                    </div>
                                     <div class="flex gap-0.5">
                                         <flux:button wire:click="moveUp({{ $index }})" size="xs" variant="ghost" icon="chevron-up" :disabled="$index === 0" :aria-label="__('structure.move_up')" />
                                         <flux:button wire:click="moveDown({{ $index }})" size="xs" variant="ghost" icon="chevron-down" :disabled="$index === count($blocks) - 1" :aria-label="__('structure.move_down')" />
@@ -245,6 +279,13 @@
                                         <flux:input wire:model.live.debounce.500ms="blocks.{{ $index }}.data.caption" dir="auto" :placeholder="__('media.caption')" class="mt-2" :aria-label="__('media.caption')" />
                                         @break
                                 @endswitch
+
+                                @if (($block['data']['semantics']['role'] ?? '') !== '')
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <flux:icon name="tag" class="size-4 shrink-0 text-zinc-400" />
+                                        <input type="text" wire:model.live.debounce.500ms="blocks.{{ $index }}.data.semantics.tags_text" dir="auto" maxlength="400" placeholder="{{ __('sections.tags_placeholder') }}" aria-label="{{ __('sections.tags') }}" class="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-transparent px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:border-zinc-700" data-studio-section-tags />
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -540,4 +581,6 @@
             </div>
         </x-app.drawer>
     @endif
+
+    @include('livewire.content.partials.lifecycle-dialogs')
 </section>

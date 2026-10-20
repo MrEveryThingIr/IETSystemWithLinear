@@ -24,6 +24,7 @@ use App\Http\Controllers\PlanOccurrenceAssetController;
 use App\Http\Controllers\SpaceContentAssetController;
 use App\Http\Controllers\SubmissionAssetController;
 use App\Http\Controllers\SystemManualController;
+use App\Http\Controllers\WhatsNewController;
 use App\Livewire\Actors\Create;
 use App\Livewire\Actors\Index;
 use App\Livewire\Actors\Show;
@@ -154,6 +155,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/organizations', [ExperienceHubController::class, 'organizations'])->name('experience.organizations');
     Route::livewire('/content', ContentWorkspace::class)->name('experience.content');
     Route::get('/help', [ExperienceHubController::class, 'help'])->name('experience.help');
+    Route::get('/whats-new', WhatsNewController::class)->name('whats-new');
 
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
