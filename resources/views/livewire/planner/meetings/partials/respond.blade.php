@@ -25,7 +25,7 @@
         <button type="button" wire:click="$toggle('suggesting')" class="text-sm font-medium underline-offset-4 hover:underline" data-suggest-toggle>{{ __('planner.meetings.suggest_other') }}</button>
         @if ($suggesting)
             <div class="mt-2 grid gap-3 sm:grid-cols-2">
-                <flux:input type="date" wire:model="suggestDate" :label="__('planner.create.starts_on')" />
+                <x-app.calendar-date-input model="suggestDate" :label="__('planner.create.starts_on')" :timezone="$viewerTimezone" />
                 <flux:input type="time" wire:model="suggestTime" :label="__('planner.create.start_time')" />
             </div>
             <p class="mt-1 text-xs text-zinc-500">{{ __('planner.meetings.times_in', ['timezone' => $viewerTimezone]) }}</p>
