@@ -5,6 +5,17 @@ return [
     'help' => 'Changes in each version of :name. You are using :version.',
     'current' => 'You are here',
     'versions' => [
+        '1_6_0' => [
+            'title' => 'Planner: a step-by-step plan wizard, a timeline time picker and meetings',
+            'items' => [
+                'New plans are made in short steps: what, when, who (for meetings), details and a final check.',
+                'Pick the time on a timeline: today, tomorrow, this or next week, this or next month and its weeks, then a day — and drag from start to end. Exact date and time typing is still one tap away.',
+                'Choose several days at once, or repeat every day or every week on the chosen weekdays.',
+                'Plan types (event, task, routine, meeting, focus time, reminder) with their own colours, plus your own labels and colours.',
+                'Meetings: offer several times to people with an account or to anyone by a private link; they answer yes/maybe/no or suggest another time. Once agreed, it is added to everyone\'s planner, and guests can add it to their calendar. A guest who later has an account keeps it.',
+                'Repeating plans appear once in the planner list with their next times, and a plan\'s page shows the next few occurrences in full and the rest as a short list.',
+            ],
+        ],
         '1_5_0' => [
             'title' => 'Content: delete, rename and question sections',
             'items' => [

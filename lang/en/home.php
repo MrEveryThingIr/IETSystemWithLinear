@@ -133,6 +133,8 @@ return [
         'fulfillment' => 'Work review',
         'settlement' => 'Payment',
         'submission' => 'Review',
+        'money' => 'Bookkeeping',
+        'planner' => 'Meeting',
     ],
     'actions' => [
         'relationship_waiting' => 'A proposed Deal is waiting for your response.',

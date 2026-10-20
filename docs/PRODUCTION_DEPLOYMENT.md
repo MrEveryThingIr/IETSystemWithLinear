@@ -21,6 +21,25 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v1.6.0** — the Planner redesign. **One additive migration**
+  (`planner_labels`, `meeting_requests`, `meeting_invitees`, `meeting_slots`,
+  `meeting_votes`); ordinary upgrade (section 5c).
+  - New plans are made with a short wizard (what → when → who → details →
+    review) and a visual time picker: today / tomorrow / this or next week /
+    this or next month and its weeks → a day → drag on the day's timeline.
+    The exact date-and-time fields stay one tap away.
+  - Plan types (event, task, routine, meeting, focus time, reminder) with
+    default colours; personal labels with colours (Planner → *Labels*), and a
+    type/label/colour editor on every plan page.
+  - **Meetings**: offer several times to users and/or guests (private links at
+    `/meet/{token}`, no account needed). Invitees answer yes/maybe/no or
+    suggest a time; with one invitee a single "yes" agrees it, otherwise the
+    organizer chooses. The agreed time becomes a plan in each user's planner
+    (in their own timezone); guests get an `.ics` file. A guest who signs in
+    and opens the link, or who later verifies an account with the invited
+    email, gets the meeting in their planner.
+  - Repeating plans are listed once with their next times; a plan page shows
+    the next few occurrences in full and the rest in short lists.
 - **v1.5.0** — content improvements and the version label. **No database
   migrations**; ordinary upgrade (section 5c), the backup is still advised.
   - Authors can **delete content permanently** (warning + type the title) as
@@ -109,14 +128,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.5.0`, so the package is
-   `iet-v1.5.0`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.6.0`, so the package is
+   `iet-v1.6.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.5.0`. It contains:
-   - `iet-v1.5.0.zip` — the runtime package (root directory `iet-v1.5.0/`)
-   - `iet-v1.5.0.zip.sha256` — checksum of the ZIP
-   - `iet-v1.5.0.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.5.0.zip.sha256`.
+3. Download the artifact `iet-v1.6.0`. It contains:
+   - `iet-v1.6.0.zip` — the runtime package (root directory `iet-v1.6.0/`)
+   - `iet-v1.6.0.zip.sha256` — checksum of the ZIP
+   - `iet-v1.6.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.6.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -414,6 +433,20 @@ Additional checks for v1.5.0:
     author open the answers and *Mark as correct*.
 22. **Menus on a phone**: select text in a lesson — the actions appear at
     the bottom of the screen; the note box opens as a bottom sheet.
+
+Additional checks for v1.6.0:
+
+23. **Wizard**: *Planner → New plan*; choose *Focus time*, a title, *Next
+    week*, tap two days with *Pick several days*, drag 09:00–11:30 on the
+    timeline, pick a label and colour, create. Both days appear in the list as
+    one card.
+24. **Meeting**: *New plan → Meeting*, add two times, invite a second test
+    user and a guest by name; open the guest link in a private window and
+    answer; as the second user answer *Yes* to one time; as the organizer
+    *Choose* it — it appears in both planners; the guest page offers the
+    calendar file.
+25. **Repeating plan**: a daily routine shows once in *List* with "+N more",
+    and its page shows three occurrences in full.
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

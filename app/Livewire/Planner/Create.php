@@ -6,12 +6,15 @@ use App\Actions\Contexts\EnsurePersonalContext;
 use App\Actions\Planner\ConfigurePlanReadiness;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
+use App\Actions\Planner\ManagePlannerLabels;
+use App\Actions\Planner\Meetings\MeetingScheduler;
 use App\ContextKind;
 use App\DomainJourneyKind;
 use App\Models\Actor;
 use App\Models\Business;
 use App\Models\Context;
 use App\Models\DomainBlueprintVersion;
+use App\Models\Planner\PlannerLabel;
 use App\Models\Relationship;
 use App\Models\User;
 use App\PlanScheduleFrequency;
@@ -19,21 +22,62 @@ use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
 use App\Support\DomainBlueprintCatalog;
 use App\Support\MonetaryUnitCatalog;
+use App\Support\Planner\PlanKinds;
+use App\Support\Planner\PlannerHorizons;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
+/**
+ * New plan, as a short wizard: what → when → (who, for meetings) → details
+ * → review. Every field keeps working without the wizard (save() validates
+ * everything), so links from the calendar can prefill date and time.
+ */
 #[Layout('layouts.app')]
 #[Title('New plan')]
 class Create extends Component
 {
+    /** @var list<string> */
+    public const STEPS = ['what', 'when', 'who', 'details', 'review'];
+
+    public string $step = 'what';
+
+    public string $kind = 'event';
+
+    /** 'visual' (timeline) or 'exact' (date and time fields). */
+    public string $timeMode = 'visual';
+
+    /** @var list<string> days chosen in the visual picker (Y-m-d) */
+    public array $selectedDays = [];
+
+    public string $labelUuid = '';
+
+    public string $color = '';
+
+    public string $newLabelName = '';
+
+    public string $location = '';
+
+    /** @var list<string> meeting options as local "Y-m-d H:i" */
+    public array $meetingSlots = [];
+
+    /** @var list<array{username?: string, name?: string, email?: string}> */
+    public array $invitees = [];
+
+    public string $inviteUsername = '';
+
+    public string $guestName = '';
+
+    public string $guestEmail = '';
+
     #[Url(as: 'context')]
     public string $contextUuid = '';
 
@@ -118,12 +162,161 @@ class Create extends Component
             }
         }
 
+        $requestedKind = trim((string) request()->query('kind', ''));
+        if (PlanKinds::valid($requestedKind)) {
+            $this->chooseKind($requestedKind);
+        }
+        $this->selectedDays = [$this->startsOn];
+
         if ($this->contextUuid === '') {
             $this->contextUuid = $personal->execute($user)->uuid;
         }
 
         $context = $this->context();
         Gate::forUser($user)->authorize('interactContent', $context);
+    }
+
+    public function chooseKind(string $kind): void
+    {
+        abort_unless(PlanKinds::valid($kind), 422);
+        $this->kind = $kind;
+        $defaults = PlanKinds::KINDS[$kind];
+        $this->durationMinutes = $defaults['duration'];
+        $this->frequency = $defaults['frequency'];
+        $this->reminderOffsets = $defaults['reminder'] > 0 ? (string) $defaults['reminder'] : '';
+    }
+
+    public function goTo(string $step): void
+    {
+        abort_unless(in_array($step, $this->steps(), true), 422);
+        $target = array_search($step, $this->steps(), true);
+        $current = array_search($this->step, $this->steps(), true);
+        if ($target > $current) {
+            foreach (array_slice($this->steps(), (int) $current, (int) $target - (int) $current) as $passing) {
+                $this->validateStep($passing);
+            }
+        }
+        $this->step = $step;
+    }
+
+    public function next(): void
+    {
+        $steps = $this->steps();
+        $index = (int) array_search($this->step, $steps, true);
+        $this->validateStep($this->step);
+        $this->step = $steps[min(count($steps) - 1, $index + 1)];
+    }
+
+    public function back(): void
+    {
+        $steps = $this->steps();
+        $index = (int) array_search($this->step, $steps, true);
+        $this->step = $steps[max(0, $index - 1)];
+    }
+
+    public function setRepeat(string $repeat): void
+    {
+        abort_unless(in_array($repeat, ['none', 'daily', 'weekly'], true), 422);
+        $this->frequency = match ($repeat) {
+            'daily' => 'daily',
+            'weekly' => 'weekly',
+            default => count($this->selectedDays) > 1 ? 'selected_dates' : 'once',
+        };
+        if ($repeat === 'weekly' && $this->selectedDays !== []) {
+            $this->weekdays = collect($this->selectedDays)
+                ->map(fn (string $date): int => CarbonImmutable::parse($date)->isoWeekday())
+                ->unique()->sort()->values()->all();
+        }
+    }
+
+    public function toggleReminder(int $minutes): void
+    {
+        abort_unless(in_array($minutes, [0, 5, 10, 15, 30, 60, 1440], true), 422);
+        $current = $this->integers($this->reminderOffsets);
+        $current = in_array($minutes, $current, true)
+            ? array_values(array_diff($current, [$minutes]))
+            : [...$current, $minutes];
+        rsort($current);
+        $this->reminderOffsets = implode(', ', $current);
+    }
+
+    public function chooseLabel(string $uuid): void
+    {
+        $this->labelUuid = $this->labelUuid === $uuid ? '' : $uuid;
+    }
+
+    public function chooseColor(string $color): void
+    {
+        $this->color = PlanKinds::normalizeColor($color) ?? '';
+    }
+
+    public function createLabel(ManagePlannerLabels $labels): void
+    {
+        $this->validate(['newLabelName' => ['required', 'string', 'max:60']]);
+        $label = $labels->create($this->user(), $this->newLabelName, $this->color !== '' ? $this->color : PlanKinds::color($this->kind));
+        $this->labelUuid = $label->uuid;
+        $this->newLabelName = '';
+    }
+
+    /** Meeting options from the visual picker: each chosen day at the chosen time. */
+    public function addSlotsFromPicker(array $days, string $time, int $minutes): void
+    {
+        abort_unless(preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $time) === 1, 422);
+        $this->durationMinutes = max(5, min(1440, $minutes));
+        foreach (array_slice($days, 0, 14) as $day) {
+            if (is_string($day) && $this->canonicalDate($day) instanceof CarbonImmutable) {
+                $slot = $day.' '.$time;
+                if (! in_array($slot, $this->meetingSlots, true) && count($this->meetingSlots) < MeetingScheduler::MAX_SLOTS) {
+                    $this->meetingSlots[] = $slot;
+                }
+            }
+        }
+        sort($this->meetingSlots);
+        $this->resetErrorBag('slots');
+    }
+
+    /** Meeting option from the exact date and time fields. */
+    public function addSlotFromFields(): void
+    {
+        $this->validate(['startsOn' => ['required', 'date_format:Y-m-d'], 'startTime' => ['required', 'date_format:H:i']]);
+        $this->addSlotsFromPicker([$this->startsOn], $this->startTime, $this->durationMinutes);
+    }
+
+    public function removeSlot(int $index): void
+    {
+        unset($this->meetingSlots[$index]);
+        $this->meetingSlots = array_values($this->meetingSlots);
+    }
+
+    public function addUserInvitee(): void
+    {
+        $username = ltrim(trim($this->inviteUsername), '@');
+        $this->validate(['inviteUsername' => ['required', 'string', 'max:80']]);
+        $user = User::query()->where('username', $username)->where('status', 'active')->first();
+        if (! $user instanceof User || (int) $user->id === (int) $this->user()->id) {
+            throw ValidationException::withMessages(['inviteUsername' => __('planner.meetings.errors.unknown_user', ['username' => $username])]);
+        }
+        if (! collect($this->invitees)->contains(fn (array $invitee): bool => ($invitee['username'] ?? null) === $user->username)) {
+            $this->invitees[] = ['username' => $user->username];
+        }
+        $this->inviteUsername = '';
+    }
+
+    public function addGuestInvitee(): void
+    {
+        $this->validate([
+            'guestName' => ['required', 'string', 'max:120'],
+            'guestEmail' => ['nullable', 'email', 'max:190'],
+        ]);
+        $this->invitees[] = ['name' => trim($this->guestName), 'email' => trim($this->guestEmail)];
+        $this->guestName = '';
+        $this->guestEmail = '';
+    }
+
+    public function removeInvitee(int $index): void
+    {
+        unset($this->invitees[$index]);
+        $this->invitees = array_values($this->invitees);
     }
 
     public function addPrerequisite(): void
@@ -161,6 +354,18 @@ class Create extends Component
         ConfigurePlanReadiness $configureReadiness,
         CreatePlanScheduleRule $createRule,
     ): mixed {
+        if ($this->kind === 'meeting') {
+            return $this->saveMeeting(app(MeetingScheduler::class));
+        }
+
+        // Several days picked on the timeline without repeating: those dates.
+        if ($this->frequency === 'once' && count($this->selectedDays) > 1) {
+            $this->frequency = 'selected_dates';
+        }
+        if ($this->frequency === 'selected_dates' && trim($this->selectedDates) === '' && $this->selectedDays !== []) {
+            $this->selectedDates = implode(', ', $this->selectedDays);
+        }
+
         $unitCodes = array_keys(MonetaryUnitCatalog::all());
 
         $data = $this->validate([
@@ -215,6 +420,7 @@ class Create extends Component
                 $participants,
                 $originType,
                 $originUuid,
+                metadata: $this->appearanceMetadata(),
                 domainBlueprintVersion: $this->blueprintVersion(),
             );
 
@@ -257,13 +463,97 @@ class Create extends Component
             'groupSpaceBinding.groupSpace.group',
         ]);
 
+        $user = $this->user();
+
         return view('livewire.planner.create', [
+            'steps' => $this->steps(),
+            'kinds' => PlanKinds::KINDS,
+            'palette' => PlanKinds::PALETTE,
+            'labels' => PlannerLabel::query()->where('actor_id', $user->actor?->id)->orderBy('name')->get(),
+            'picker' => PlannerHorizons::for($user),
+            'busy' => $this->step === 'when' ? PlannerHorizons::busy($user) : [],
+            'previewColor' => PlanKinds::normalizeColor($this->color)
+                ?? PlannerLabel::query()->where('uuid', $this->labelUuid)->value('color')
+                ?? PlanKinds::color($this->kind),
             'context' => $context,
             'contextLabel' => $this->contextLabel($context),
             'weekdayOrder' => TemporalPreferences::weekdayOrder($this->user()->locale),
             'blueprintVersion' => $this->blueprintVersion(),
             'unitCatalog' => MonetaryUnitCatalog::all(),
+        ])->title(__('planner.create.title'));
+    }
+
+    /** @return list<string> */
+    public function steps(): array
+    {
+        return $this->kind === 'meeting'
+            ? self::STEPS
+            : array_values(array_diff(self::STEPS, ['who']));
+    }
+
+    private function validateStep(string $step): void
+    {
+        match ($step) {
+            'what' => $this->validate([
+                'title' => ['required', 'string', 'max:180'],
+                'kind' => ['required', Rule::in(PlanKinds::keys())],
+            ]),
+            'when' => $this->kind === 'meeting'
+                ? ($this->meetingSlots === [] ? throw ValidationException::withMessages(['slots' => __('planner.meetings.errors.slots')]) : null)
+                : $this->validate([
+                    'startsOn' => ['required', 'date_format:Y-m-d'],
+                    'startTime' => ['required', 'date_format:H:i'],
+                    'durationMinutes' => ['required', 'integer', 'min:1', 'max:10080'],
+                ]),
+            'who' => $this->invitees === []
+                ? throw ValidationException::withMessages(['invitees' => __('planner.meetings.errors.invitees')])
+                : null,
+            default => null,
+        };
+    }
+
+    /** @return array<string, string> */
+    private function appearanceMetadata(): array
+    {
+        $label = $this->labelUuid !== ''
+            ? PlannerLabel::query()->where('uuid', $this->labelUuid)->where('actor_id', $this->user()->actor?->id)->first()
+            : null;
+
+        return array_filter([
+            'kind' => PlanKinds::valid($this->kind) ? $this->kind : null,
+            'label_uuid' => $label?->uuid,
+            'color' => PlanKinds::normalizeColor($this->color),
         ]);
+    }
+
+    private function saveMeeting(MeetingScheduler $meetings): mixed
+    {
+        $this->validateStep('what');
+        $this->validateStep('when');
+        $this->validateStep('who');
+        $this->validate([
+            'description' => ['nullable', 'string', 'max:5000'],
+            'location' => ['nullable', 'string', 'max:300'],
+            'timezone' => ['required', 'timezone:all'],
+        ]);
+
+        $starts = collect($this->meetingSlots)
+            ->map(fn (string $slot): CarbonImmutable => CarbonImmutable::createFromFormat('Y-m-d H:i', $slot, $this->timezone))
+            ->values()
+            ->all();
+
+        $result = $meetings->create($this->user(), [
+            'title' => $this->title,
+            'description' => $this->description,
+            'location' => $this->location,
+            'duration_minutes' => $this->durationMinutes,
+            'timezone' => $this->timezone,
+            'label_uuid' => $this->appearanceMetadata()['label_uuid'] ?? null,
+        ], $starts, $this->invitees);
+
+        session()->flash('meeting-links', $result['links']);
+
+        return $this->redirectRoute('planner.meetings.show', $result['meeting']);
     }
 
     /** @return array{list<array{actor: Actor, role: string}>, ?string, ?string} */

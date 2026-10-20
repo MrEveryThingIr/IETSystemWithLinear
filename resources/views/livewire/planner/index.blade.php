@@ -3,6 +3,10 @@
 
     <x-app.page-header :title="__('planner.title')" :description="__('planner.help')">
         <x-slot:actions>
+            <x-app.popover>
+                <x-slot:trigger><flux:button variant="ghost" icon="tag" data-labels-button>{{ __('planner.labels.manage') }}</flux:button></x-slot:trigger>
+                <livewire:planner.labels-manager />
+            </x-app.popover>
             <flux:button
                 :href="route('planner.create', $context ? ['context' => $context->uuid] : [])"
                 variant="primary"
@@ -251,7 +255,14 @@
                             <span class="block text-xs font-semibold text-zinc-500">{{ $calendarDay['label'] }}</span>
 
                             @if ($itemCount > 0)
-                                <span class="mt-2 block text-sm font-semibold">{{ trans_choice('planner.calendar.item_count', $itemCount, ['count' => $itemCount]) }}</span>
+                                <span class="mt-2 flex items-center gap-1.5 text-sm font-semibold">
+                                    {{ trans_choice('planner.calendar.item_count', $itemCount, ['count' => $itemCount]) }}
+                                    <span class="flex gap-0.5" aria-hidden="true">
+                                        @foreach ($items->map(fn ($occurrence) => $appearance->of($occurrence->plan)['color'])->unique()->take(4) as $dot)
+                                            <span class="size-2 rounded-full" style="background: {{ $dot }}"></span>
+                                        @endforeach
+                                    </span>
+                                </span>
                                 <span class="mt-1 block space-y-0.5 text-[11px] leading-4 text-zinc-500">
                                     @foreach ($phaseCounts->take(3) as $phase => $count)
                                         <span class="block">{{ __('planner.occurrence_phase.'.$phase) }} · {{ $count }}</span>
@@ -266,31 +277,51 @@
             @endif
         </flux:card>
     @else
-        <div class="space-y-3">
-            @forelse ($occurrences as $occurrence)
-                <article
-                    wire:key="planner-occurrence-{{ $occurrence->uuid }}"
-                    class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950"
-                >
-                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
-                                <span class="text-xs text-zinc-500">{{ $occurrence->plan->timezone }}</span>
+        {{-- One card per plan: a repeating plan is shown once with its times, not as a long list. --}}
+        @php
+            $series = $occurrences->groupBy('plan_id')->sortBy(fn ($items) => $items->first()->scheduled_start_at->getTimestamp());
+        @endphp
+        <div class="space-y-3" data-planner-series>
+            @forelse ($series as $planId => $items)
+                @php
+                    $plan = $items->first()->plan;
+                    $look = $appearance->of($plan);
+                    $expanded = in_array($plan->uuid, $expandedPlans, true);
+                    $visible = $expanded ? $items : $items->take($view === 'today' ? 6 : 4);
+                    $summary = \App\Support\Planner\PlanSeries::summary($plan);
+                @endphp
+                <article wire:key="planner-series-{{ $plan->uuid }}" class="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950" style="border-inline-start: 4px solid {{ $look['color'] }}" data-plan-series="{{ $plan->uuid }}">
+                    <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="flex min-w-0 items-start gap-3">
+                            <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg text-white" style="background: {{ $look['color'] }}"><flux:icon :name="$look['icon']" class="size-4" /></span>
+                            <div class="min-w-0">
+                                <a href="{{ route('planner.show', $plan) }}" wire:navigate class="block font-semibold hover:underline" dir="auto">{{ $plan->title }}</a>
+                                <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500">
+                                    @if ($look['label'])<span class="inline-flex items-center gap-1"><span class="size-2 rounded-full" style="background: {{ $look['label']->color }}"></span><span dir="auto">{{ $look['label']->name }}</span></span>@endif
+                                    @if ($summary !== '')<span>{{ $summary }}</span>@endif
+                                    @if ($view === 'today' && $items->count() > 1)<span class="font-medium text-zinc-700 dark:text-zinc-300">{{ __('planner.series.times_today', ['count' => $items->count()]) }}</span>@endif
+                                </div>
                             </div>
-                            <a href="{{ route('planner.show', $occurrence->plan) }}#occurrence-{{ $occurrence->uuid }}" class="mt-2 block text-lg font-semibold hover:underline" dir="auto">
-                                {{ $occurrence->plan->title }}
-                            </a>
-                            @if ($occurrence->plan->description)
-                                <p class="mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300" dir="auto">{{ $occurrence->plan->description }}</p>
-                            @endif
                         </div>
-
                         <div class="shrink-0 text-sm sm:text-end">
-                            <div class="font-medium"><x-app.local-datetime :value="$occurrence->scheduled_start_at" /></div>
-                            <div class="text-zinc-500">→ <x-app.local-time :value="$occurrence->scheduled_end_at" /></div>
+                            <div class="font-medium"><x-app.local-datetime :value="$items->first()->scheduled_start_at" /></div>
+                            <div class="text-xs text-zinc-500">→ <x-app.local-time :value="$items->first()->scheduled_end_at" /> · {{ __('planner.occurrence_status.'.$items->first()->status->value) }}</div>
                         </div>
                     </div>
+                    @if ($items->count() > 1)
+                        <div class="flex flex-wrap gap-1.5 border-t border-zinc-100 px-4 py-2.5 dark:border-zinc-800">
+                            @foreach ($visible->skip(1) as $occurrence)
+                                <a href="{{ route('planner.show', $plan) }}#occurrence-{{ $occurrence->uuid }}" wire:navigate wire:key="series-occ-{{ $occurrence->uuid }}" class="rounded-lg bg-zinc-100 px-2 py-1 text-xs hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+                                    @if ($view === 'today')<x-app.local-time :value="$occurrence->scheduled_start_at" />@else<x-app.local-datetime :value="$occurrence->scheduled_start_at" />@endif
+                                </a>
+                            @endforeach
+                            @if ($items->count() > $visible->count())
+                                <button type="button" wire:click="toggleSeries('{{ $plan->uuid }}')" class="rounded-lg px-2 py-1 text-xs font-medium text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-300" data-series-more>{{ __('planner.series.more_times', ['count' => $items->count() - $visible->count()]) }}</button>
+                            @elseif ($expanded)
+                                <button type="button" wire:click="toggleSeries('{{ $plan->uuid }}')" class="rounded-lg px-2 py-1 text-xs text-zinc-500 hover:underline">{{ __('planner.series.show_less') }}</button>
+                            @endif
+                        </div>
+                    @endif
                 </article>
             @empty
                 <x-app.empty-state
@@ -298,6 +329,28 @@
                 />
             @endforelse
         </div>
+    @endif
+
+    @if ($meetingsWaiting->isNotEmpty() || $meetingsOrganized->isNotEmpty())
+        <flux:card class="space-y-4" data-planner-meetings>
+            <flux:heading size="lg">{{ __('planner.meetings.section') }}</flux:heading>
+            <div class="grid gap-3 md:grid-cols-2">
+                @foreach ($meetingsWaiting as $waiting)
+                    <a href="{{ route('planner.meetings.show', $waiting->meeting) }}" wire:navigate class="rounded-xl border border-violet-300 bg-violet-50 p-3 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950" data-meeting-waiting>
+                        <div class="text-xs font-medium text-violet-700 dark:text-violet-300">{{ __('planner.meetings.waiting_for_you') }}</div>
+                        <div class="font-semibold" dir="auto">{{ $waiting->meeting->title }}</div>
+                        <div class="text-xs text-zinc-600 dark:text-zinc-300">{{ __('planner.meetings.organized_by', ['name' => $waiting->meeting->organizer?->user?->username]) }}</div>
+                    </a>
+                @endforeach
+                @foreach ($meetingsOrganized as $organized)
+                    <a href="{{ route('planner.meetings.show', $organized) }}" wire:navigate class="rounded-xl border border-zinc-200 p-3 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900" data-meeting-organized>
+                        <div class="text-xs font-medium text-zinc-500">{{ __('planner.meetings.organized') }} · {{ __('planner.meetings.status.open') }}</div>
+                        <div class="font-semibold" dir="auto">{{ $organized->title }}</div>
+                        <div class="text-xs text-zinc-500">{{ $organized->answered_count }}/{{ $organized->invitees_count }} {{ __('planner.meetings.answers_title') }}</div>
+                    </a>
+                @endforeach
+            </div>
+        </flux:card>
     @endif
 
     <flux:card class="space-y-4">
@@ -308,16 +361,23 @@
 
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             @forelse ($plans as $plan)
+                @php $look = $appearance->of($plan); $summary = \App\Support\Planner\PlanSeries::summary($plan); @endphp
                 <a
                     wire:key="planner-plan-{{ $plan->uuid }}"
                     href="{{ route('planner.show', $plan) }}"
+                    wire:navigate
                     class="rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                    style="border-inline-start: 4px solid {{ $look['color'] }}"
                 >
                     <div class="flex items-start justify-between gap-3">
                         <div class="font-semibold" dir="auto">{{ $plan->title }}</div>
                         <flux:badge size="sm">{{ __('planner.status.'.$plan->status->value) }}</flux:badge>
                     </div>
-                    <div class="mt-2 text-xs text-zinc-500">{{ $plan->timezone }}</div>
+                    <div class="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-zinc-500">
+                        @if ($look['kind'])<span>{{ __('planner.kinds.'.$look['kind'].'.name') }}</span>@endif
+                        @if ($look['label'])<span dir="auto">· {{ $look['label']->name }}</span>@endif
+                        @if ($summary !== '')<span>· {{ $summary }}</span>@endif
+                    </div>
                 </a>
             @empty
                 <div class="md:col-span-2 xl:col-span-3">

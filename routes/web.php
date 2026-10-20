@@ -19,6 +19,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MediaUploadSessionController;
+use App\Http\Controllers\MeetingCalendarController;
 use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\PlanOccurrenceAssetController;
 use App\Http\Controllers\SpaceContentAssetController;
@@ -77,6 +78,7 @@ use App\Livewire\Planner\BasicCreate as PlannerBasicCreate;
 use App\Livewire\Planner\BasicEdit as PlannerBasicEdit;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
+use App\Livewire\Planner\Meetings\GuestRespond;
 use App\Livewire\Planner\Show as PlannerShow;
 use App\Livewire\Planner\Tools\RepeatWindow as PlannerRepeatWindow;
 use App\Livewire\Platform\Access as PlatformAccess;
@@ -117,6 +119,10 @@ Route::middleware('throttle:120,1')->group(function (): void {
     Route::get('/public/{content}', [GuestContentController::class, 'show'])->name('public-content.show');
     Route::get('/read/{token}', [GuestContentController::class, 'invitation'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.show');
     Route::get('/read/{token}/{content}', [GuestContentController::class, 'invitationContent'])->where('token', '[A-Za-z0-9]{40}')->name('content-invitations.content');
+    // Meeting invitations for people with or without an account.
+    Route::livewire('/meet/{token}', GuestRespond::class)->where('token', '[A-Za-z0-9]{40}')->name('meetings.guest');
+    Route::get('/meet/{token}/calendar.ics', [MeetingCalendarController::class, 'guest'])->where('token', '[A-Za-z0-9]{40}')->name('meetings.guest.ics');
+    Route::get('/meet/{token}/sign-in', [MeetingCalendarController::class, 'signIn'])->where('token', '[A-Za-z0-9]{40}')->name('meetings.guest.sign-in');
 });
 Route::middleware('throttle:600,1')->group(function (): void {
     Route::get('/public/{content}/assets/{asset}', [GuestContentController::class, 'publicAsset'])->name('public-content.assets.show');
@@ -176,6 +182,8 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/tools/repeat', PlannerRepeatWindow::class)->name('planner.tools.repeat');
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
+    Route::livewire('/planner/meetings/{meeting}', App\Livewire\Planner\Meetings\Show::class)->name('planner.meetings.show');
+    Route::get('/planner/meetings/{meeting}/calendar.ics', [MeetingCalendarController::class, 'member'])->name('planner.meetings.ics');
     Route::livewire('/planner/{plan}/edit', PlannerBasicEdit::class)->can('manage', 'plan')->name('planner.edit');
     Route::livewire('/planner/{plan}', PlannerShow::class)->can('view', 'plan')->name('planner.show');
     Route::get('/planner/{plan}/occurrences/{occurrence}/assets/{asset}', [PlanOccurrenceAssetController::class, 'show'])
