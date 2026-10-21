@@ -92,9 +92,11 @@ class Concept extends Model
         $locale ??= app()->getLocale();
         $labels = $this->relationLoaded('labels') ? $this->labels : $this->labels()->get();
 
+        // Labels store their locale in lower case (zh_cn), the app uses zh_CN.
+        $locale = Str::lower($locale);
         $preferred = $labels
             ->where('kind', ConceptLabelKind::Preferred)
-            ->firstWhere('locale', $locale)
+            ->first(fn (ConceptLabel $label): bool => Str::lower($label->locale) === $locale)
             ?? $labels->firstWhere('kind', ConceptLabelKind::Preferred)
             ?? $labels->first();
 

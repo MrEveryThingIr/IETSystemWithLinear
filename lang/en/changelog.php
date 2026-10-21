@@ -5,6 +5,17 @@ return [
     'help' => 'Changes in each version of :name. You are using :version.',
     'current' => 'You are here',
     'versions' => [
+        '1_8_0' => [
+            'title' => 'Categories for everything, and “What I can do”',
+            'items' => [
+                'A shared category tree: 16 areas of life (housing, food, health, education, transport, industry, technology…) with about 180 subcategories, in Persian, English, Arabic and Chinese.',
+                'A new category picker: search in any language, or open an area and choose. If yours is missing, add your own under any category — it is usable at once and only you see it.',
+                'Suggest your category for everyone; administrators approve it, merge it with an existing one, or keep it private for you.',
+                '“What I can do” replaces “My professions”: skills with level, years of experience and how sure you are (shown as self-declared), and who can see them. Your earlier professions were copied over; nothing was deleted.',
+                'Businesses and groups you manage can list what they can do too, and business team members\' skills use the same categories.',
+                'Faster pages: the live-update libraries load only where they are used.',
+            ],
+        ],
         '1_7_1' => [
             'title' => 'Every screen size: phones, tablets and computers',
             'items' => [

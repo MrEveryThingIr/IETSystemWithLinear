@@ -4,10 +4,12 @@ namespace App\Policies;
 
 use App\ConceptVocabularyScope;
 use App\Models\Actor;
+use App\Models\Business;
 use App\Models\ConceptVocabulary;
 use App\Models\Group;
 use App\Models\User;
 use App\PlatformCapability;
+use App\Support\BusinessAccess;
 use App\Support\RequestMemo;
 
 class ConceptVocabularyPolicy
@@ -40,6 +42,7 @@ class ConceptVocabularyPolicy
             ConceptVocabularyScope::Platform => $this->createPlatform($user),
             ConceptVocabularyScope::Actor => $this->manageActorScope($user, $vocabulary),
             ConceptVocabularyScope::Group => $this->manageGroupScope($user, $vocabulary),
+            ConceptVocabularyScope::Business => $this->manageBusinessScope($user, $vocabulary),
         };
     }
 
@@ -55,6 +58,20 @@ class ConceptVocabularyPolicy
         $group = Group::query()->find($vocabulary->scope_id);
 
         return $group instanceof Group && $this->createForGroup($user, $group);
+    }
+
+    public function createForBusiness(User $user, Business $business): bool
+    {
+        $current = $this->currentUser($user);
+
+        return $current instanceof User && $current->actor instanceof Actor && BusinessAccess::canManage($current, $business);
+    }
+
+    private function manageBusinessScope(User $user, ConceptVocabulary $vocabulary): bool
+    {
+        $business = Business::query()->find($vocabulary->scope_id);
+
+        return $business instanceof Business && $this->createForBusiness($user, $business);
     }
 
     private function hasActiveActor(User $user): bool

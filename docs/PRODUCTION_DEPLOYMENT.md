@@ -21,6 +21,26 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v1.8.0** — shared categories and capabilities. **One additive migration**
+  (`concept_kinds`, `concept_suggestions`, `capabilities`,
+  `professions.concept_id`, two concept relation types). Ordinary upgrade
+  (section 5c) with two extra commands for hosting support:
+  1. **Before** `migrate`, inside the new release directory (after copying
+     `.env` and linking `storage`, still on the old database):
+     `/usr/local/php-8.4/bin/php artisan iet:inventory > ~/iet-inventory-before.txt`
+     (read-only; send the file to the product owner — it lists every existing
+     profession, person and business-member skill and where each will map).
+  2. **After** `migrate` and `optimize`:
+     `/usr/local/php-8.4/bin/php artisan iet:taxonomy:sync`
+     installs the shared category tree (16 areas, ~180 subcategories, four
+     languages) and copies the old skills into capabilities. Safe to repeat;
+     `--dry-run` only reports. The old tables are never changed. If the command
+     is forgotten, the same work runs the first time someone opens a category
+     picker.
+  3. `iet:inventory` again after the sync; the counts of old skill rows must be
+     unchanged and `skills.capabilities_already_created` equal to them.
+  - Reviewers of category suggestions are superadmins (and roles with the
+    *manage concepts* permission): *Administration → Category suggestions*.
 - **v1.7.1** — every screen size, and speed. **No migration**; ordinary
   upgrade (section 5c); `migrate` reports nothing to run.
   - Pages can no longer become wider than a phone (which made phones zoom out
@@ -169,14 +189,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.7.1`, so the package is
-   `iet-v1.7.1`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.8.0`, so the package is
+   `iet-v1.8.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.7.1`. It contains:
-   - `iet-v1.7.1.zip` — the runtime package (root directory `iet-v1.7.1/`)
-   - `iet-v1.7.1.zip.sha256` — checksum of the ZIP
-   - `iet-v1.7.1.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.7.1.zip.sha256`.
+3. Download the artifact `iet-v1.8.0`. It contains:
+   - `iet-v1.8.0.zip` — the runtime package (root directory `iet-v1.8.0/`)
+   - `iet-v1.8.0.zip.sha256` — checksum of the ZIP
+   - `iet-v1.8.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.8.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -510,6 +530,15 @@ Additional checks for v1.7.1:
 30. **Caching**: in the browser's developer tools (Network), a file under
     `/build/assets/` shows `Cache-Control: public, max-age=31536000,
     immutable` and the page is served with `Content-Encoding: gzip` (or `br`).
+
+Additional checks for v1.8.0:
+
+31. **What I can do**: account menu → *What I can do* → *Add a skill*; search
+    a skill in Persian, then open an area, add your own category with
+    *Suggest it for everyone*, set level/years/confidence and save.
+32. **Review**: *Administration → Category suggestions*: approve the
+    suggestion; the skill now shows the shared category.
+33. **Business team**: on a business you manage, add a skill to a team member.
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

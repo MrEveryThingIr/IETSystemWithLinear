@@ -6,7 +6,6 @@ use App\Actions\Contexts\EnsureBusinessContext;
 use App\Http\Controllers\Controller;
 use App\Models\Actor;
 use App\Models\Business;
-use App\Models\Profession;
 use App\Services\Business\BusinessService;
 use App\Services\Business\EnsureRealEstateBusinessIntake;
 use App\Services\Surfaces\FeatureSurfaceAccess;
@@ -107,18 +106,11 @@ class BusinessController extends Controller
             'publicIntakePortals',
             'contextBinding.context',
             'memberships' => fn ($q) => $q
-                ->with(['actor.user', 'professions.parent'])
+                ->with(['actor.user'])
                 ->where('status', 'active')
                 ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
                 ->orderBy('id'),
         ]);
-
-        $professions = Profession::query()
-            ->with('parent')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
 
         $routineCount = $context->plans()->count();
         $economyProjection = $economy->forBusiness($business);
@@ -170,7 +162,6 @@ class BusinessController extends Controller
             'businessContext' => $context,
             'routineCount' => $routineCount,
             'economyProjection' => $economyProjection,
-            'professions' => $professions,
             'canOperate' => $canOperate,
             'canManage' => $canManage,
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),

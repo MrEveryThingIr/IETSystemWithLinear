@@ -7,9 +7,10 @@ use App\Http\Controllers\Business\BusinessController;
 use App\Http\Controllers\Business\BusinessListingController;
 use App\Http\Controllers\Business\BusinessTeamController;
 use App\Http\Controllers\Business\PublicBusinessController;
-use App\Http\Controllers\Profile\ProfessionProfileController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateIntakeController;
 use App\Http\Middleware\RequireFeatureSurface;
+use App\Livewire\Profile\Capabilities;
+use App\Models\Business;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/b/{business:slug}', [PublicBusinessController::class, 'show'])
@@ -67,13 +68,15 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
         Route::delete('/businesses/{business}/members/{membership}', [BusinessTeamController::class, 'destroy'])->name('businesses.members.destroy');
         Route::post('/businesses/{business}/transfer-ownership', [BusinessTeamController::class, 'transferOwnership'])->name('businesses.transfer-ownership');
 
-        Route::post('/businesses/{business}/members/{membership}/professions', [BusinessTeamController::class, 'assignProfession'])->name('businesses.members.professions.store');
-        Route::delete('/businesses/{business}/members/{membership}/professions/{profession}', [BusinessTeamController::class, 'removeProfession'])->name('businesses.members.professions.destroy');
+        // Member skills are capabilities now (managed on the team section); old forms only redirect.
+        Route::post('/businesses/{business}/members/{membership}/professions', fn (Business $business) => redirect()->to(route('businesses.show', $business).'#team-settings'))->name('businesses.members.professions.store');
+        Route::delete('/businesses/{business}/members/{membership}/professions/{profession}', fn (Business $business) => redirect()->to(route('businesses.show', $business).'#team-settings'))->name('businesses.members.professions.destroy');
     });
 
     Route::middleware(RequireFeatureSurface::class.':profile')->group(function (): void {
-        Route::get('/profile/professions', [ProfessionProfileController::class, 'index'])->name('profile.professions.index');
-        Route::post('/profile/professions', [ProfessionProfileController::class, 'store'])->name('profile.professions.store');
-        Route::delete('/profile/professions/{actorProfession}', [ProfessionProfileController::class, 'destroy'])->name('profile.professions.destroy');
+        // "What I can do" (capabilities). The old skill forms no longer write; the old records are kept and copied.
+        Route::livewire('/profile/professions', Capabilities::class)->name('profile.professions.index');
+        Route::post('/profile/professions', fn () => redirect()->route('profile.professions.index'))->name('profile.professions.store');
+        Route::delete('/profile/professions/{actorProfession}', fn () => redirect()->route('profile.professions.index'))->name('profile.professions.destroy');
     });
 });

@@ -22,6 +22,7 @@ return [
         'development-origins' => 'Development Origins',
         'actors' => 'Actors',
         'publication-control' => 'Publication control',
+        'category-review' => 'Category suggestions',
     ],
     'navigation' => [
         'needs_offers' => 'Needs & Offers',

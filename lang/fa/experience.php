@@ -22,6 +22,7 @@ return [
         'development-origins' => 'مبدأهای توسعه',
         'actors' => 'کنشگران',
         'publication-control' => 'انتشار قابلیت‌ها',
+        'category-review' => 'پیشنهاد دسته‌بندی',
     ],
     'navigation' => [
         'needs_offers' => 'نیازها و ارائه‌ها',

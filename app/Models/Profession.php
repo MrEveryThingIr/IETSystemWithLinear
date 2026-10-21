@@ -11,6 +11,7 @@ class Profession extends Model
     protected $fillable = [
         'parent_id',
         'code',
+        'concept_id',
         'name',
         'name_fa',
         'description',

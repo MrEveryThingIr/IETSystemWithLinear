@@ -22,6 +22,7 @@ return [
         'development-origins' => '开发来源',
         'actors' => '参与者',
         'publication-control' => '发布控制',
+        'category-review' => '分类建议',
     ],
     'navigation' => [
         'needs_offers' => '需求与提供',
