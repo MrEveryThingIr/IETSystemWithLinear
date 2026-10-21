@@ -20,9 +20,10 @@ class ContentBlueprintCatalog
     /** @return Collection<int, ContentBlueprint> */
     public function availableFor(User $user, Context $context, ?string $search = null): Collection
     {
-        $this->ensureSystem->execute();
+        $this->ensureSystem->ensureCurrent();
 
-        $current = User::query()->with('actor')->findOrFail($user->id);
+        $current = RequestMemo::user($user);
+        abort_unless($current instanceof User, 404);
         abort_unless($current->actor instanceof Actor, 403);
 
         $needle = mb_strtolower(trim((string) $search));
@@ -36,6 +37,7 @@ class ContentBlueprintCatalog
             ->get()
             ->filter(function (ContentBlueprint $blueprint) use ($current, $context, $needle): bool {
                 $version = $blueprint->activeVersion;
+                $version?->setRelation('blueprint', $blueprint);
                 if (! $version instanceof ContentBlueprintVersion
                     || ! $this->access->view($current, $context, $version)) {
                     return false;

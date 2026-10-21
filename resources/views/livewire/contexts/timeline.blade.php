@@ -22,7 +22,7 @@
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <flux:badge size="sm">{{ __('collaboration.timeline.kinds.'.$entry->kind) }}</flux:badge>
-                                <span class="font-semibold" dir="auto">{{ $entry->title }}</span>
+                                <span class="min-w-0 font-semibold [overflow-wrap:anywhere]" dir="auto">{{ $entry->title }}</span>
                             </div>
                             @if ($entry->summary)
                                 <p class="mt-2 whitespace-pre-wrap break-words text-sm text-zinc-600 dark:text-zinc-300" dir="auto">{{ $entry->summary }}</p>

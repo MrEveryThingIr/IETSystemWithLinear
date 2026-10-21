@@ -659,7 +659,7 @@
     @endif
     @if ($canShareOutside)
         <x-app.drawer name="share" :title="__('public_content.share.title')" width="sm:max-w-lg">
-            <livewire:content.share-panel :content="$content" :key="'share-panel-'.$content->uuid" />
+            <livewire:content.share-panel :content="$content" lazy :key="'share-panel-'.$content->uuid" />
         </x-app.drawer>
     @endif
 </section>

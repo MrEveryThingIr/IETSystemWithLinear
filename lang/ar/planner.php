@@ -209,6 +209,8 @@ return [
         'expense_recorded' => 'تم تسجيل مصروف النوبة',
         'evidence_attached' => 'تم إرفاق دليل بالنوبة',
         'occurrence_evidence_attached' => 'تم إرفاق دليل بالنوبة',
+        'occurrence_prerequisite_updated' => 'تم تحديث متطلب النوبة',
+        'occurrence_expense_recorded' => 'تم تسجيل مصروف النوبة',
     ],
     'wizard' => [
         'help' => 'خطوات قصيرة: ما هو، ومتى، والتفاصيل التي تريدها.',

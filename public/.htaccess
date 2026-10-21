@@ -23,3 +23,22 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Compress text responses (pages, scripts, styles, SVG).
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json image/svg+xml application/manifest+json
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Built scripts, styles and fonts have a content hash in their names: cache for a year.
+    <FilesMatch "\.(js|css|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(png|svg|ico)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+    # The notification service worker must always be checked for updates.
+    <FilesMatch "^sw\.js$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>

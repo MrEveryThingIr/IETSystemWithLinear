@@ -21,6 +21,21 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v1.7.1** — every screen size, and speed. **No migration**; ordinary
+  upgrade (section 5c); `migrate` reports nothing to run.
+  - Pages can no longer become wider than a phone (which made phones zoom out
+    and show the hidden side menu). All pages were checked at 320–1920px in
+    Persian, English, Arabic and Chinese. Profile pictures keep their shape.
+  - Fonts (Inter, Vazirmatn) are now part of the build in `public/build/assets`
+    instead of being loaded from Google Fonts.
+  - `public/.htaccess` now compresses text responses and caches the hashed
+    files in `/build/assets` for a year (`mod_deflate` / `mod_headers`; both
+    are skipped if the server does not have them). `sw.js` is never cached.
+  - Fewer database queries: Today loads first and recent activity right after;
+    the content list, the content index and the studio need far fewer checks.
+  - Ask hosting support to confirm OPcache is on for PHP 8.4
+    (`/usr/local/php-8.4/bin/php -i | grep opcache.enable` for CLI, and the
+    web PHP's `opcache.enable => On`); it makes every page several times faster.
 - **v1.7.0** — reminders that are never forgotten, device notifications and
   speed. **One additive migration** (`plan_schedule_rules.month_day` and
   `.calendar`, `notification_outbox.pushed_at`, new table
@@ -154,14 +169,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.7.0`, so the package is
-   `iet-v1.7.0`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.7.1`, so the package is
+   `iet-v1.7.1`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.7.0`. It contains:
-   - `iet-v1.7.0.zip` — the runtime package (root directory `iet-v1.7.0/`)
-   - `iet-v1.7.0.zip.sha256` — checksum of the ZIP
-   - `iet-v1.7.0.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.7.0.zip.sha256`.
+3. Download the artifact `iet-v1.7.1`. It contains:
+   - `iet-v1.7.1.zip` — the runtime package (root directory `iet-v1.7.1/`)
+   - `iet-v1.7.1.zip.sha256` — checksum of the ZIP
+   - `iet-v1.7.1.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.7.1.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -485,6 +500,16 @@ Additional checks for v1.7.0:
     cannot reach the push service; email reminders still work.
 28. **Phone time picker**: on a phone the timeline is full width; the ‹ ›
     arrows move hours and 24 h / 12 h / 4 h zoom.
+
+Additional checks for v1.7.1:
+
+29. **Phone layout**: on a phone open Today, Content, a content studio page
+    and the profile page — nothing is cut off at the edge, the page cannot be
+    dragged sideways, the side menu appears only with the ☰ button, and the
+    profile picture in the header is a square.
+30. **Caching**: in the browser's developer tools (Network), a file under
+    `/build/assets/` shows `Cache-Control: public, max-age=31536000,
+    immutable` and the page is served with `Content-Encoding: gzip` (or `br`).
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

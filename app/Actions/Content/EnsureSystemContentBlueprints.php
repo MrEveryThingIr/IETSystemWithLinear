@@ -7,6 +7,7 @@ use App\Models\ContentBlueprintVersion;
 use App\Support\ContentBlueprintConfig;
 use App\Support\SystemContentBlueprints;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -16,6 +17,25 @@ class EnsureSystemContentBlueprints
         private readonly SystemContentBlueprints $presets,
         private readonly ContentBlueprintConfig $config,
     ) {}
+
+    /**
+     * Brings the built-in blueprints up to date only when their definitions
+     * changed (a new release), instead of on every page that lists them.
+     */
+    public function ensureCurrent(): void
+    {
+        $presets = $this->presets->all();
+        $fingerprint = hash('sha256', serialize($presets));
+        $key = 'content-blueprints:system';
+
+        if (Cache::get($key) === $fingerprint
+            && ContentBlueprint::query()->where('scope', ContentBlueprint::SCOPE_SYSTEM)->count() >= count($presets)) {
+            return;
+        }
+
+        $this->execute();
+        Cache::forever($key, $fingerprint);
+    }
 
     /** @return Collection<int, ContentBlueprint> */
     public function execute(): Collection

@@ -209,6 +209,8 @@ return [
         'expense_recorded' => 'هزینه نوبت ثبت شد',
         'evidence_attached' => 'مدرک به نوبت پیوست شد',
         'occurrence_evidence_attached' => 'مدرک به نوبت پیوست شد',
+        'occurrence_prerequisite_updated' => 'وضعیت پیش‌نیاز نوبت تغییر کرد',
+        'occurrence_expense_recorded' => 'هزینه نوبت ثبت شد',
     ],
     'wizard' => [
         'help' => 'چند قدم کوتاه: چه کاری، چه زمانی و جزئیاتی که می‌خواهید.',

@@ -100,6 +100,8 @@ return [
             'fulfillment' => 'You will review submitted work/evidence and decide whether it satisfies the commitment.',
             'settlement' => 'You will review the payment/settlement claim before confirming or rejecting it.',
             'submission' => 'You will open the submitted work in its original Context and can evaluate it there.',
+            'money' => 'You will open the entry in the shared book and can confirm it, dispute it or look at its proof first. Nothing changes until you choose.',
+            'planner' => 'You will open the meeting and can say which times suit you. Nothing is booked until a time is agreed.',
         ],
     ],
     'goals' => [
