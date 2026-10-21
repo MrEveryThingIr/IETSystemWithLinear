@@ -35,10 +35,23 @@
         @endforeach
     </ol>
 
+    @if ($errors->any())
+        <flux:callout variant="danger" icon="exclamation-triangle" data-wizard-errors>
+            <flux:callout.heading>{{ __('planner.wizard.fix_first') }}</flux:callout.heading>
+            <flux:callout.text>
+                <ul class="list-disc space-y-0.5 ps-5">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
     <form wire:submit="{{ $step === 'review' ? 'save' : 'next' }}" class="space-y-6">
         {{-- 1. What --}}
         @if ($step === 'what')
-            <flux:card class="space-y-5">
+            <flux:card class="space-y-5" wire:key="wizard-what">
                 <div>
                     <flux:heading size="lg">{{ __('planner.wizard.what_title') }}</flux:heading>
                     <p class="mt-1 text-sm text-zinc-500">{{ __('planner.wizard.what_help') }}</p>
@@ -73,7 +86,7 @@
 
         {{-- 2. When --}}
         @if ($step === 'when')
-            <flux:card class="space-y-5">
+            <flux:card class="space-y-5" wire:key="wizard-when">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <flux:heading size="lg">{{ $kind === 'meeting' ? __('planner.wizard.when_meeting_title') : __('planner.wizard.when_title') }}</flux:heading>
@@ -115,10 +128,10 @@
                     </div>
                 @else
                     <div class="space-y-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                        @php $repeat = match ($frequency) { 'daily' => 'daily', 'weekly' => 'weekly', default => 'none' }; @endphp
+                        @php $repeat = match ($frequency) { 'daily' => 'daily', 'weekly' => 'weekly', 'monthly' => 'monthly', default => 'none' }; @endphp
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="text-sm font-medium">{{ __('planner.wizard.repeat') }}</span>
-                            @foreach (['none', 'daily', 'weekly'] as $option)
+                            @foreach (['none', 'daily', 'weekly', 'monthly'] as $option)
                                 <button type="button" wire:click="setRepeat('{{ $option }}')" class="rounded-full border px-3 py-1 text-sm {{ $repeat === $option ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-700' }}" data-repeat="{{ $option }}">{{ __('planner.wizard.repeats.'.$option) }}</button>
                             @endforeach
                         </div>
@@ -132,11 +145,17 @@
                                 @endforeach
                             </div>
                         @endif
-                        @if (in_array($frequency, ['daily', 'weekly'], true))
+                        @if ($frequency === 'monthly')
+                            <p class="text-sm text-zinc-600 dark:text-zinc-300" data-monthly-day>{{ __('planner.wizard.monthly_on', ['day' => $monthDayLabel]) }}</p>
+                        @endif
+                        @if (in_array($frequency, ['daily', 'weekly', 'monthly'], true))
                             <div class="grid gap-3 sm:grid-cols-3">
-                                <flux:input wire:model="interval" type="number" min="1" max="365" :label="__('planner.wizard.every', ['unit' => __('planner.wizard.units.'.$frequency)])" />
-                                <x-app.calendar-date-input model="endsOn" :label="__('planner.create.ends_on')" :timezone="$timezone" />
-                                <flux:input wire:model="occurrenceLimit" type="number" min="1" max="10000" :label="__('planner.create.occurrence_limit')" />
+                                <flux:input wire:model="interval" type="number" min="1" max="365" :label="__('planner.wizard.every', ['unit' => __('planner.wizard.units.'.$frequency)])" :description="__('planner.wizard.help_texts.interval_'.$frequency)" title="{{ __('planner.wizard.help_texts.interval_'.$frequency) }}" />
+                                <div title="{{ __('planner.wizard.help_texts.ends_on') }}">
+                                    <x-app.calendar-date-input model="endsOn" :label="__('planner.create.ends_on')" :timezone="$timezone" />
+                                    <p class="mt-1 text-xs text-zinc-500">{{ __('planner.wizard.help_texts.ends_on') }}</p>
+                                </div>
+                                <flux:input wire:model="occurrenceLimit" type="number" min="1" max="10000" :label="__('planner.create.occurrence_limit')" :description="__('planner.wizard.help_texts.occurrence_limit')" title="{{ __('planner.wizard.help_texts.occurrence_limit') }}" />
                             </div>
                         @endif
                         @if ($frequency === 'selected_dates' && $timeMode === 'exact')
@@ -151,7 +170,7 @@
 
         {{-- 3. Who (meetings) --}}
         @if ($step === 'who')
-            <flux:card class="space-y-5">
+            <flux:card class="space-y-5" wire:key="wizard-who">
                 <div>
                     <flux:heading size="lg">{{ __('planner.wizard.who_title') }}</flux:heading>
                     <p class="mt-1 text-sm text-zinc-500">{{ __('planner.wizard.who_help') }}</p>
@@ -193,7 +212,7 @@
 
         {{-- 4. Details --}}
         @if ($step === 'details')
-            <flux:card class="space-y-5">
+            <flux:card class="space-y-5" wire:key="wizard-details">
                 <flux:heading size="lg">{{ __('planner.wizard.details_title') }}</flux:heading>
 
                 <div class="space-y-2">
@@ -227,23 +246,33 @@
                     </div>
                 </div>
 
+                <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-3 {{ $important ? 'border-sky-500 bg-sky-50 dark:bg-sky-950' : 'border-zinc-200 dark:border-zinc-700' }}" data-important-toggle>
+                    <input type="checkbox" wire:model.live="important" class="mt-1 size-4 rounded border-zinc-300">
+                    <span>
+                        <span class="block font-medium">{{ __('planner.wizard.important') }}</span>
+                        <span class="block text-xs text-zinc-500">{{ __('planner.wizard.important_help') }}</span>
+                    </span>
+                </label>
+
                 <div class="space-y-2">
                     <div class="text-sm font-medium">{{ __('planner.create.reminders') }}</div>
+                    <p class="text-xs text-zinc-500">{{ __('planner.wizard.help_texts.reminders') }}</p>
                     @php $reminders = collect(preg_split('/[\s,;]+/', $reminderOffsets) ?: [])->filter(fn ($value) => $value !== '')->map(fn ($value) => (int) $value)->all(); @endphp
                     <div class="flex flex-wrap gap-2">
-                        @foreach ([0, 5, 10, 15, 30, 60, 1440] as $minutes)
+                        @foreach ([0, 10, 30, 60, 180, 1440, 4320, 10080] as $minutes)
                             <button type="button" wire:click="toggleReminder({{ $minutes }})" class="rounded-full border px-3 py-1 text-sm {{ in_array($minutes, $reminders, true) ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-700' }}" data-reminder="{{ $minutes }}">{{ __('planner.wizard.reminders.'.$minutes) }}</button>
                         @endforeach
                     </div>
                 </div>
+                <x-app.device-notifications />
 
                 <details class="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" @if ($prerequisites !== [] || $expenseEstimates !== []) open @endif>
                     <summary class="cursor-pointer text-sm font-medium">{{ __('planner.wizard.more_options') }}</summary>
                     <div class="mt-4 space-y-5">
                         <div class="grid gap-4 sm:grid-cols-3">
-                            <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" />
-                            <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" />
-                            <flux:input wire:model="timezone" :label="__('planner.create.timezone')" />
+                            <flux:input wire:model="windowBeforeMinutes" type="number" min="0" max="10080" :label="__('planner.create.early_window')" :description="__('planner.wizard.help_texts.early_window')" />
+                            <flux:input wire:model="windowAfterMinutes" type="number" min="0" max="10080" :label="__('planner.create.late_window')" :description="__('planner.wizard.help_texts.late_window')" />
+                            <flux:input wire:model="timezone" :label="__('planner.create.timezone')" :description="__('planner.wizard.help_texts.timezone')" />
                         </div>
 
                         <div class="space-y-3">
@@ -291,7 +320,7 @@
 
         {{-- 5. Review --}}
         @if ($step === 'review')
-            <flux:card class="space-y-4" data-wizard-review>
+            <flux:card class="space-y-4" wire:key="wizard-review" data-wizard-review>
                 <flux:heading size="lg">{{ __('planner.wizard.review_title') }}</flux:heading>
                 <div class="flex items-start gap-3 rounded-xl border-s-4 bg-zinc-50 p-4 dark:bg-zinc-900" style="border-color: {{ $previewColor }}">
                     <span class="flex size-9 shrink-0 items-center justify-center rounded-lg text-white" style="background: {{ $previewColor }}"><flux:icon :name="$kinds[$kind]['icon']" class="size-5" /></span>

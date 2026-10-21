@@ -10,6 +10,7 @@ use App\Support\DuePlanReminderEmitter;
 use App\Support\Media\FaststartExistingVideos;
 use App\Support\Media\ResumableUploads;
 use App\Support\NotificationOutboxDispatcher;
+use App\Support\Push\DevicePushDispatcher;
 use App\Support\ScheduledArtisan;
 use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
 use Illuminate\Foundation\Inspiring;
@@ -132,6 +133,11 @@ Artisan::command('notifications:dispatch-outbox {--limit=200}', function () {
     $this->info("Queued {$count} pending notification outbox records.");
 })->purpose('Requeue undelivered durable notification outbox records');
 
+Artisan::command('notifications:push-devices {--limit=200}', function () {
+    $count = app(DevicePushDispatcher::class)->run((int) $this->option('limit'));
+    $this->info("Sent {$count} notifications to devices.");
+})->purpose('Send delivered notifications to subscribed devices and email important reminders');
+
 Artisan::command('notifications:emit-due-reminders {--limit=250}', function () {
     $count = app(DuePlanReminderEmitter::class)->emit((int) $this->option('limit'));
     $this->info("Requested {$count} due Planner reminder notifications.");
@@ -191,3 +197,8 @@ ScheduledArtisan::register(app(ConsoleSchedule::class), 'notifications:emit-due-
     ->name('notifications:emit-due-reminders')
     ->everyMinute()
     ->withoutOverlapping();
+
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'notifications:push-devices --limit=300')
+    ->name('notifications:push-devices')
+    ->everyMinute()
+    ->withoutOverlapping(10);

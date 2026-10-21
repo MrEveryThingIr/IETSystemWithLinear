@@ -106,6 +106,29 @@
         </flux:card>
     @endif
 
+    @if ($dontForget->isNotEmpty())
+        <flux:card class="space-y-3 border-sky-300 bg-sky-50/60 dark:border-sky-900 dark:bg-sky-950/20" data-today-dont-forget>
+            <div class="flex items-center gap-2">
+                <flux:icon name="bell-alert" class="size-5 text-sky-700 dark:text-sky-300" />
+                <flux:heading size="lg">{{ __('planner.reminders.dont_forget') }}</flux:heading>
+            </div>
+            <ul class="divide-y divide-sky-100 dark:divide-sky-900">
+                @foreach ($dontForget as $due)
+                    @php $overdue = $due->scheduled_start_at->isPast(); @endphp
+                    <li wire:key="due-{{ $due->uuid }}" class="flex flex-wrap items-center justify-between gap-2 py-2">
+                        <a href="{{ route('planner.show', $due->plan).'#occurrence-'.$due->uuid }}" wire:navigate class="min-w-0">
+                            <span class="block truncate font-medium" dir="auto">{{ $due->plan->title }}</span>
+                            <span class="text-xs {{ $overdue ? 'font-medium text-rose-700 dark:text-rose-400' : 'text-zinc-500' }}">
+                                {{ $overdue ? __('planner.reminders.overdue') : __('planner.reminders.due') }} · <x-app.local-datetime :value="$due->scheduled_start_at" />
+                            </span>
+                        </a>
+                        <flux:button wire:click="markDone('{{ $due->uuid }}')" size="sm" icon="check" data-mark-done>{{ __('planner.reminders.done') }}</flux:button>
+                    </li>
+                @endforeach
+            </ul>
+        </flux:card>
+    @endif
+
     @unless ($officeAlpha)
     <div class="grid gap-6 xl:grid-cols-2">
         <flux:card class="order-2 space-y-4" data-today-schedule>

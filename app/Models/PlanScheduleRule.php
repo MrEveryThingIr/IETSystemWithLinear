@@ -31,6 +31,8 @@ use LogicException;
     'window_after_minutes',
     'timezone',
     'status',
+    'month_day',
+    'calendar',
 ])]
 class PlanScheduleRule extends Model
 {

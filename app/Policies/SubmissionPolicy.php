@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Actor;
 use App\Models\Submission;
 use App\Models\User;
+use App\Support\RequestMemo;
 
 class SubmissionPolicy
 {
@@ -76,7 +77,7 @@ class SubmissionPolicy
 
     private function actor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         return $current?->actor;
     }

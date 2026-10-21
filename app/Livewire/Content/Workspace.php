@@ -45,6 +45,14 @@ class Workspace extends Component
     #[Url(as: 'place', except: '')]
     public string $place = '';
 
+    /** Cards rendered now; more load on demand (rendering is the slow part). */
+    public int $shown = 24;
+
+    public function showMore(): void
+    {
+        $this->shown = min(300, $this->shown + 24);
+    }
+
     public function mount(): void
     {
         abort_unless(app(FeatureSurfaceAccess::class)->allows($this->user(), 'content'), 403);
@@ -116,11 +124,15 @@ class Workspace extends Component
                     (string) $content->blueprintVersion?->blueprint?->name,
                 ])), $needle);
             })
+            ->values();
+        $total = $items->count();
+        $items = $items->take($this->shown)
             ->map(fn (SpaceContent $content): array => $this->card($content, $contextsById, $presenter, $actor, $editable))
             ->values();
 
         return view('livewire.content.workspace', [
             'items' => $items,
+            'remaining' => max(0, $total - $items->count()),
             'counts' => $counts,
             'placeOptions' => $contexts->mapWithKeys(fn (Context $context): array => [$context->uuid => $presenter->label($context)])->all(),
             'placeContext' => $placeContext,

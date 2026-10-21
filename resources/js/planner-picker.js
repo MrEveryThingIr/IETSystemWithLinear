@@ -30,6 +30,10 @@ document.addEventListener('alpine:init', () => {
         end: 10 * 60,
         drag: null,
         presets: [15, 30, 45, 60, 90, 120],
+        // The visible part of the day (minutes). Phones show half a day at a
+        // time and move it with the arrows instead of scrolling sideways.
+        viewFrom: 0,
+        viewSpan: 1440,
 
         init() {
             const startsOn = this.$wire.get('startsOn')
@@ -41,7 +45,8 @@ document.addEventListener('alpine:init', () => {
             this.end = Math.min(1440, this.start + Math.max(this.step, Number(this.$wire.get('durationMinutes')) || 60))
             this.horizon = Object.keys(this.horizons).find(key => this.horizons[key].days.includes(this.selected[0])) ?? 'this_month'
             this.week = Math.max(0, this.weeks().findIndex(week => week.includes(this.selected[0])))
-            this.$nextTick(() => this.scrollToSelection())
+            this.viewSpan = window.matchMedia('(max-width: 639px)').matches ? 720 : 1440
+            this.centerView()
         },
 
         weeks() {
@@ -89,7 +94,28 @@ document.addEventListener('alpine:init', () => {
         minuteAt(event) {
             const rect = this.$refs.track.getBoundingClientRect()
             const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width))
-            return Math.round((ratio * 1440) / this.step) * this.step
+            return Math.round((this.viewFrom + ratio * this.viewSpan) / this.step) * this.step
+        },
+        centerView() {
+            const middle = (this.start + this.end) / 2
+            this.viewFrom = Math.min(1440 - this.viewSpan, Math.max(0, Math.round((middle - this.viewSpan / 2) / 60) * 60))
+        },
+        shiftView(direction) {
+            const step = this.viewSpan / 2
+            this.viewFrom = Math.min(1440 - this.viewSpan, Math.max(0, this.viewFrom + direction * step))
+        },
+        ensureVisible() {
+            if (this.start < this.viewFrom || this.end > this.viewFrom + this.viewSpan) this.centerView()
+        },
+        zoom(span) {
+            this.viewSpan = span
+            this.centerView()
+        },
+        visibleHours() {
+            const hours = []
+            const every = this.viewSpan > 720 ? 1 : (this.viewSpan > 360 ? 1 : 0.5)
+            for (let minute = Math.ceil(this.viewFrom / 60) * 60; minute < this.viewFrom + this.viewSpan; minute += every * 60) hours.push(minute)
+            return hours
         },
         pointerDown(event) {
             if (event.button !== undefined && event.button > 0) return
@@ -102,15 +128,19 @@ document.addEventListener('alpine:init', () => {
             } else if (minute > this.start && minute < this.end) {
                 this.drag = { mode: 'move', offset: minute - this.start, length: this.end - this.start }
             } else {
-                this.drag = { mode: 'new', anchor: minute }
-                this.start = Math.min(minute, 1440 - this.step)
-                this.end = this.start + this.step
+                // A tap moves the current length there; dragging draws a new range.
+                const length = this.end - this.start
+                this.drag = { mode: 'new', anchor: minute, x: event.clientX, length, moved: false }
+                this.start = Math.min(minute, 1440 - length)
+                this.end = this.start + length
             }
         },
         pointerMove(event) {
             if (!this.drag) return
             const minute = this.minuteAt(event)
             if (this.drag.mode === 'new') {
+                if (!this.drag.moved && Math.abs(event.clientX - this.drag.x) < 8) return
+                this.drag.moved = true
                 this.start = Math.min(this.drag.anchor, minute)
                 this.end = Math.max(this.drag.anchor + this.step, minute)
             } else if (this.drag.mode === 'start') {
@@ -132,10 +162,12 @@ document.addEventListener('alpine:init', () => {
         nudge(edge, delta) {
             if (edge === 'start') this.start = Math.min(Math.max(0, this.start + delta), this.end - this.step)
             else this.end = Math.max(Math.min(1440, this.end + delta), this.start + this.step)
+            this.ensureVisible()
             this.commit()
         },
         preset(minutes) {
             this.end = Math.min(1440, this.start + minutes)
+            this.ensureVisible()
             this.commit()
         },
 
@@ -149,19 +181,19 @@ document.addEventListener('alpine:init', () => {
             this.commit()
             this.$wire.call('addSlotsFromPicker', [...this.selected], toTime(this.start), this.end - this.start)
         },
-        scrollToSelection() {
-            const scroller = this.$refs.scroller
-            if (!scroller) return
-            const x = (Math.max(0, this.start - 90) / 1440) * this.$refs.track.scrollWidth
-            scroller.scrollLeft = getComputedStyle(scroller).direction === 'rtl' ? -x : x
-        },
 
         // ── Display helpers ──────────────────────────────────────────────
         percent(minutes) {
             return `${(minutes / 1440) * 100}%`
         },
         span(from, to) {
-            return `left:${(from / 1440) * 100}%;width:${((to - from) / 1440) * 100}%`
+            const a = Math.max(from, this.viewFrom)
+            const b = Math.min(to, this.viewFrom + this.viewSpan)
+            if (b <= a) return 'display:none'
+            return `left:${((a - this.viewFrom) / this.viewSpan) * 100}%;width:${((b - a) / this.viewSpan) * 100}%`
+        },
+        at(minute) {
+            return `left:${((minute - this.viewFrom) / this.viewSpan) * 100}%`
         },
         clock(minutes) {
             try {

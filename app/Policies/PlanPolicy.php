@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\Models\User;
+use App\Support\RequestMemo;
 use Illuminate\Support\Facades\Gate;
 
 class PlanPolicy
@@ -53,7 +54,7 @@ class PlanPolicy
 
     private function currentActor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (
             ! $current instanceof User

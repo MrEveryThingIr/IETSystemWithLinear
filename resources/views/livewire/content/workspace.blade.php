@@ -140,6 +140,12 @@
         </div>
     @endif
 
+    @if ($remaining > 0)
+        <div class="text-center">
+            <flux:button wire:click="showMore" variant="ghost" size="sm" data-content-more>{{ __('content_workspace.show_more', ['count' => $remaining]) }}</flux:button>
+        </div>
+    @endif
+
     @if ($counts['archived'] > 0 && $view !== 'archived')
         <div class="text-center">
             <button type="button" wire:click="setView('archived')" class="text-sm text-zinc-500 underline-offset-4 hover:underline">{{ __('content_workspace.show_archived', ['count' => $counts['archived']]) }}</button>

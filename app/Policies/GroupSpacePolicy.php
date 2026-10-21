@@ -8,6 +8,7 @@ use App\Models\GroupMembership;
 use App\Models\GroupSpace;
 use App\Models\GroupSpaceParticipant;
 use App\Models\User;
+use App\Support\RequestMemo;
 
 class GroupSpacePolicy
 {
@@ -83,7 +84,7 @@ class GroupSpacePolicy
 
     private function currentWebsiteUser(User $user): ?User
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (
             ! $current instanceof User

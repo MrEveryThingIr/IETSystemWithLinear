@@ -80,4 +80,5 @@ return [
         'submit' => 'Create and open',
         'kind_unavailable_here' => 'This type is not available in the selected place.',
     ],
+    'show_more' => 'Show more (:count)',
 ];

@@ -374,7 +374,7 @@
             <flux:callout icon="information-circle" class="text-sm">{{ __('bookkeeping.book_show.confirmation_note') }}</flux:callout>
 
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeRecord" variant="ghost">{{ __('ui.common.close') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeRecord()" variant="ghost">{{ __('ui.common.close') }}</flux:button>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="record,evidence" data-record-submit>{{ __('bookkeeping.actions.save') }}</flux:button>
             </div>
         </form>
@@ -386,7 +386,7 @@
             <flux:textarea wire:model="disputeReason" :label="__('bookkeeping.fields.reason')" rows="3" maxlength="1000" required />
             @error('disputeReason')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeDispute" variant="ghost">{{ __('ui.common.close') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeDispute()" variant="ghost">{{ __('ui.common.close') }}</flux:button>
                 <flux:button type="submit" variant="danger">{{ __('bookkeeping.actions.dispute') }}</flux:button>
             </div>
         </form>
@@ -405,7 +405,7 @@
             <flux:input wire:model="adjustReason" :label="__('bookkeeping.fields.reason')" maxlength="500" required />
             @error('adjustReason')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeAdjust" variant="ghost">{{ __('ui.common.close') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeAdjust()" variant="ghost">{{ __('ui.common.close') }}</flux:button>
                 <flux:button type="submit" variant="primary">{{ __('bookkeeping.actions.save') }}</flux:button>
             </div>
         </form>
@@ -417,7 +417,7 @@
             <input type="file" wire:model="extraEvidence" accept="image/*,application/pdf" class="block w-full text-sm" />
             @error('extraEvidence')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeEvidence" variant="ghost">{{ __('ui.common.close') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeEvidence()" variant="ghost">{{ __('ui.common.close') }}</flux:button>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="addEvidence,extraEvidence">{{ __('bookkeeping.actions.save') }}</flux:button>
             </div>
         </form>

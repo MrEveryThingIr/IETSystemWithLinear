@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Home;
 
+use App\Actions\Planner\TransitionPlanOccurrence;
+use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\Support\HomeGuidanceService;
 use App\Support\HomeTodayProjection;
@@ -20,6 +22,14 @@ class Today extends Component
     public function toggleFullSchedule(): void
     {
         $this->showFullSchedule = ! $this->showFullSchedule;
+    }
+
+    public function markDone(string $occurrenceUuid, TransitionPlanOccurrence $transition): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+        $occurrence = PlanOccurrence::query()->where('uuid', $occurrenceUuid)->firstOrFail();
+        $transition->markDone($occurrence, $user);
     }
 
     public function render(

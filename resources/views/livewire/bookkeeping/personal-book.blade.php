@@ -209,7 +209,7 @@
             @error('walletName')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             @error('walletOpening')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeWallet" variant="ghost">{{ __('ui.common.close') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeWallet()" variant="ghost">{{ __('ui.common.close') }}</flux:button>
                 <flux:button type="submit" variant="primary">{{ __('bookkeeping.actions.save') }}</flux:button>
             </div>
         </form>
@@ -220,7 +220,7 @@
             <flux:input wire:model="categoryName" :label="__('bookkeeping.fields.category_name')" maxlength="80" required />
             @error('categoryName')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeCategory" variant="ghost">{{ __('ui.common.close') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeCategory()" variant="ghost">{{ __('ui.common.close') }}</flux:button>
                 <flux:button type="submit" variant="primary">{{ __('bookkeeping.actions.save') }}</flux:button>
             </div>
         </form>

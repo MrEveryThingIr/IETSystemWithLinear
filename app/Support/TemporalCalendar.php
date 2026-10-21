@@ -12,6 +12,9 @@ use Throwable;
 
 class TemporalCalendar
 {
+    /** @var array<string, IntlDateFormatter> */
+    private static array $formatters = [];
+
     public static function monthStart(CarbonImmutable $date, ?User $user, string $timezone): CarbonImmutable
     {
         $local = $date->setTimezone($timezone)->startOfDay();
@@ -212,7 +215,8 @@ class TemporalCalendar
         $icuLocale = str_replace('-', '_', $locale).'@calendar='.$icuCalendar;
 
         try {
-            $formatter = new IntlDateFormatter(
+            // Creating an ICU formatter is costly; pages format hundreds of dates.
+            $formatter = self::$formatters[$icuLocale.'|'.$timezone.'|'.$pattern] ??= new IntlDateFormatter(
                 $icuLocale,
                 IntlDateFormatter::NONE,
                 IntlDateFormatter::NONE,

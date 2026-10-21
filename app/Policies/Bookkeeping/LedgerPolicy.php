@@ -8,6 +8,7 @@ use App\Enums\Bookkeeping\PartyStatus;
 use App\Models\Actor;
 use App\Models\Bookkeeping\Ledger;
 use App\Models\User;
+use App\Support\RequestMemo;
 
 /**
  * Books are private to their people: a personal book to its owner, a shared
@@ -55,7 +56,7 @@ class LedgerPolicy
 
     private function actor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User
             || $current->status !== 'active'

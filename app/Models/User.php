@@ -76,6 +76,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->locale;
     }
 
+    /** @return HasMany<PushSubscription, $this> */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     /** @return HasMany<FeatureSurfaceGrant, $this> */
     public function featureSurfaceGrants(): HasMany
     {

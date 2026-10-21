@@ -17,9 +17,9 @@ final class PlatformAdmin
             return false;
         }
 
-        return $user->platformAccessGrants()
+        return (bool) RequestMemo::remember('superadmin:'.$user->getKey(), fn (): bool => $user->platformAccessGrants()
             ->active()
             ->where('role', PlatformRole::Superadmin->value)
-            ->exists();
+            ->exists());
     }
 }

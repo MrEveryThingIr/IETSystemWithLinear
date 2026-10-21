@@ -34,6 +34,32 @@ class TransitionPlanOccurrence
         );
     }
 
+    /**
+     * "Done" for something that is simply handled (a paid installment, a
+     * cashed cheque): marks it started and completed now.
+     */
+    public function markDone(PlanOccurrence $occurrence, User $user): PlanOccurrence
+    {
+        $current = $this->currentUser($user);
+
+        return DB::transaction(function () use ($occurrence, $current): PlanOccurrence {
+            $locked = PlanOccurrence::query()->with('plan')->lockForUpdate()->findOrFail($occurrence->id);
+            Gate::forUser($current)->authorize('participate', $locked->plan);
+            abort_unless(in_array($locked->status, [PlanOccurrenceStatus::Scheduled, PlanOccurrenceStatus::InProgress], true), 422, __('planner.validation.cancellable_occurrence'));
+            $actor = Actor::query()->findOrFail($current->actor->id);
+            $now = now();
+
+            if ($locked->status === PlanOccurrenceStatus::Scheduled) {
+                $locked->transition(PlanOccurrenceStatus::InProgress, $now);
+                PlanOccurrenceEvent::query()->create(['plan_occurrence_id' => $locked->id, 'actor_id' => $actor->id, 'event_type' => PlanOccurrenceEventType::Started, 'payload' => ['actual_start_at' => $now->toIso8601String(), 'marked_done' => true]]);
+            }
+            $locked->refresh()->transition(PlanOccurrenceStatus::Completed, $locked->actual_start_at ?? $now, $now, $now);
+            PlanOccurrenceEvent::query()->create(['plan_occurrence_id' => $locked->id, 'actor_id' => $actor->id, 'event_type' => PlanOccurrenceEventType::Completed, 'payload' => ['actual_end_at' => $now->toIso8601String(), 'marked_done' => true]]);
+
+            return $locked->fresh();
+        }, attempts: 3);
+    }
+
     public function skip(PlanOccurrence $occurrence, User $user): PlanOccurrence
     {
         return $this->execute(

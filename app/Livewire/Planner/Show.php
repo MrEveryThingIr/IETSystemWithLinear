@@ -291,6 +291,12 @@ class Show extends Component
 
     public string $appearanceColor = '';
 
+    public function markOccurrenceDone(int $occurrenceId, TransitionPlanOccurrence $transition): void
+    {
+        $occurrence = $this->plan->occurrences()->whereKey($occurrenceId)->firstOrFail();
+        $transition->markDone($occurrence, $this->user());
+    }
+
     /** Open one occurrence from the compact list. */
     public function focusOccurrence(int $occurrenceId): void
     {

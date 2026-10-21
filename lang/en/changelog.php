@@ -5,6 +5,17 @@ return [
     'help' => 'Changes in each version of :name. You are using :version.',
     'current' => 'You are here',
     'versions' => [
+        '1_7_0' => [
+            'title' => 'Planner: never forget due dates, device notifications, faster everywhere',
+            'items' => [
+                'New plan type "Due date" for installments, cheques and bills, and plans that repeat every month on the same day of your calendar (Persian calendar included).',
+                'Mark a plan Important: it is reminded up to a week before, also by email, and stays under "Don\'t forget" on Today until you mark it done.',
+                'Notifications on your phone or computer, even when the site is closed: turn them on in the plan wizard or on the notifications page.',
+                'The plan wizard shows the reason if something cannot be saved and takes you to the step to fix; every field has a short explanation.',
+                'The time picker fits phones: move earlier or later with the arrows, zoom to 24, 12 or 4 hours, and tap to move the time.',
+                'Pages and buttons respond faster: fewer database checks per page, dialogs close at once, and long content lists load in parts.',
+            ],
+        ],
         '1_6_0' => [
             'title' => 'Planner: a step-by-step plan wizard, a timeline time picker and meetings',
             'items' => [

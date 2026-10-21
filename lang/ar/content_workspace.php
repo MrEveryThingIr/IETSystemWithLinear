@@ -80,4 +80,5 @@ return [
         'submit' => 'إنشاء وفتح',
         'kind_unavailable_here' => 'هذا النوع غير متاح في المكان المحدد.',
     ],
+    'show_more' => 'عرض المزيد (:count)',
 ];

@@ -8,6 +8,7 @@ use App\Models\ConceptVocabulary;
 use App\Models\Group;
 use App\Models\User;
 use App\PlatformCapability;
+use App\Support\RequestMemo;
 
 class ConceptVocabularyPolicy
 {
@@ -63,7 +64,7 @@ class ConceptVocabularyPolicy
 
     private function currentUser(User $user): ?User
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User || $current->status !== 'active' || $current->email_verified_at === null) {
             return null;

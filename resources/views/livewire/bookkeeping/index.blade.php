@@ -114,7 +114,7 @@
             <flux:input wire:model="newName" :label="__('bookkeeping.fields.book_name')" :placeholder="$newKind === 'project' ? __('bookkeeping.index.project_placeholder') : __('bookkeeping.index.shared_placeholder')" maxlength="160" required />
             <flux:textarea wire:model="newDescription" :label="__('bookkeeping.fields.description')" rows="2" maxlength="1000" />
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeCreate" variant="ghost">{{ __('ui.common.close') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeCreate()" variant="ghost">{{ __('ui.common.close') }}</flux:button>
                 <flux:button type="submit" variant="primary">{{ __('bookkeeping.actions.create_book') }}</flux:button>
             </div>
         </form>

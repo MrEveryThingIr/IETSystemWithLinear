@@ -35,7 +35,7 @@ class PersonalPlannerDemoSeederTest extends TestCase
             ->where('origin_type', 'demo.personal_planner')
             ->get();
 
-        $this->assertCount(8, $plans);
+        $this->assertCount(9, $plans);
         $this->assertTrue($plans->every(
             fn (Plan $plan): bool => $plan->context->personalBinding?->actor_id === $user->actor?->id,
         ));

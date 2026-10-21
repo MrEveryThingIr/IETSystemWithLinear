@@ -7,6 +7,7 @@ use App\Models\Actor;
 use App\Models\Fulfillment;
 use App\Models\FulfillmentDispute;
 use App\Models\User;
+use App\Support\RequestMemo;
 use Illuminate\Support\Facades\Gate;
 
 class FulfillmentPolicy
@@ -66,7 +67,7 @@ class FulfillmentPolicy
 
     private function currentActor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User
             || $current->status !== 'active'

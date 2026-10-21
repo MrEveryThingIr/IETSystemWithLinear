@@ -178,6 +178,7 @@
                                             @if (in_array($phase, ['ready', 'late'], true) && $remainingPrerequisites === 0)
                                                 <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
                                             @endif
+                                            <flux:button wire:click="markOccurrenceDone({{ $occurrence->id }})" size="sm" variant="ghost" icon="check" data-occurrence-done>{{ __('planner.reminders.done') }}</flux:button>
                                             <flux:button wire:click="skipOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.skip') }}</flux:button>
                                             <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
                                         @elseif ($occurrence->status === \App\PlanOccurrenceStatus::InProgress)

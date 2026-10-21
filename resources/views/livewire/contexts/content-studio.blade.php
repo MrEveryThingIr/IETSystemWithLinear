@@ -449,7 +449,7 @@
                         <flux:input wire:model="captionLabel" :label="__('studio_ui.captions.label')" maxlength="120" />
                     </div>
                     <div class="flex justify-end gap-2">
-                        <flux:button wire:click="closeCaptions" variant="ghost">{{ __('studio.cancel') }}</flux:button>
+                        <flux:button x-on:click="open = false; $wire.closeCaptions()" variant="ghost">{{ __('studio.cancel') }}</flux:button>
                         <flux:button wire:click="addCaptions" variant="primary" wire:loading.attr="disabled" wire:target="captionUpload,addCaptions">{{ __('studio_ui.captions.add') }}</flux:button>
                     </div>
                 </div>
@@ -475,14 +475,14 @@
                         <p class="mt-3 text-xs text-zinc-500">{{ __('studio_ui.publish.fix_in_media') }}</p>
                     </div>
                     <div class="flex justify-end">
-                        <flux:button wire:click="closePublishPanel" variant="ghost">{{ __('studio_ui.publish.back_to_editing') }}</flux:button>
+                        <flux:button x-on:click="open = false; $wire.closePublishPanel()" variant="ghost">{{ __('studio_ui.publish.back_to_editing') }}</flux:button>
                     </div>
                 @else
                     <p class="text-sm">{{ __('studio_ui.publish.ready', ['audience' => $placeAudience]) }}</p>
                     <p class="text-xs text-zinc-500">{{ __('studio_ui.publish.sealed_note') }}</p>
                     @error('publish')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
                     <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                        <flux:button wire:click="closePublishPanel" variant="ghost">{{ __('studio.cancel') }}</flux:button>
+                        <flux:button x-on:click="open = false; $wire.closePublishPanel()" variant="ghost">{{ __('studio.cancel') }}</flux:button>
                         <flux:button wire:click="publish" variant="primary" wire:loading.attr="disabled" wire:target="publish" data-studio-confirm-publish>{{ __('ui.content.publish') }}</flux:button>
                     </div>
                 @endif
@@ -497,7 +497,7 @@
                 <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('studio_ui.archive_help') }}</p>
                 <flux:textarea wire:model="archiveReason" :label="__('studio.archive_reason')" rows="3" maxlength="1000" />
                 <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                    <flux:button wire:click="cancelArchive" variant="ghost">{{ __('studio.cancel') }}</flux:button>
+                    <flux:button x-on:click="open = false; $wire.cancelArchive()" variant="ghost">{{ __('studio.cancel') }}</flux:button>
                     <flux:button wire:click="archive" variant="danger">{{ __('studio.confirm_archive') }}</flux:button>
                 </div>
             </div>
