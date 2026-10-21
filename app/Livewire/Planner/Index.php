@@ -5,9 +5,12 @@ namespace App\Livewire\Planner;
 use App\Actions\Contexts\EnsurePersonalContext;
 use App\Models\Context;
 use App\Models\Plan;
+use App\Models\Planner\MeetingInvitee;
+use App\Models\Planner\MeetingRequest;
 use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\PlanAttentionMode;
+use App\Support\Planner\PlanAppearance;
 use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
@@ -90,6 +93,16 @@ class Index extends Component
 
     #[Url(as: 'color')]
     public string $calendarColorBy = 'none';
+
+    /** @var list<string> plans whose times are all shown */
+    public array $expandedPlans = [];
+
+    public function toggleSeries(string $planUuid): void
+    {
+        $this->expandedPlans = in_array($planUuid, $this->expandedPlans, true)
+            ? array_values(array_diff($this->expandedPlans, [$planUuid]))
+            : [...$this->expandedPlans, $planUuid];
+    }
 
     public function mount(): void
     {
@@ -340,6 +353,7 @@ class Index extends Component
             ->with([
                 'plan.context',
                 'plan.participants.actor.user',
+                'plan.scheduleRules',
                 'scheduleRule',
             ])
             ->when($context instanceof Context, fn ($query) => $query->whereHas(
@@ -553,6 +567,18 @@ class Index extends Component
             'timezone' => $timezone,
             'context' => $context,
             'categories' => $categories,
+            'appearance' => PlanAppearance::forActor($user->actor?->id),
+            'meetingsWaiting' => MeetingInvitee::query()
+                ->with('meeting.organizer.user')
+                ->where('actor_id', $user->actor?->id)
+                ->whereIn('status', [MeetingInvitee::STATUS_PENDING])
+                ->whereHas('meeting', fn ($query) => $query->where('status', MeetingRequest::STATUS_OPEN))
+                ->latest('id')->limit(20)->get(),
+            'meetingsOrganized' => MeetingRequest::query()
+                ->withCount(['invitees', 'invitees as answered_count' => fn ($query) => $query->where('status', '!=', MeetingInvitee::STATUS_PENDING)])
+                ->where('organizer_actor_id', $user->actor?->id)
+                ->where('status', MeetingRequest::STATUS_OPEN)
+                ->latest('id')->limit(20)->get(),
         ])->title((string) config('release.profile') === 'planning_baseline'
             ? __('planning_baseline.title')
             : __('planner.title'));

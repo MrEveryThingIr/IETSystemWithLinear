@@ -11,6 +11,7 @@ use App\Actions\Groups\RetryAssetMediaProcessing;
 use App\Actions\Groups\ReviseSpaceContent;
 use App\Actions\Groups\UpdateAssetRightsStatus;
 use App\Actions\Groups\UpdateSpaceContentBlocks;
+use App\Livewire\Concerns\ManagesContentLifecycle;
 use App\Models\Actor;
 use App\Models\Asset;
 use App\Models\AssetMediaTrack;
@@ -19,6 +20,7 @@ use App\Models\SpaceContent;
 use App\Models\SpaceContentBlock;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\Content\SectionSemantics;
 use App\Support\ContextPresenter;
 use App\Support\Media\CaptionTracks;
 use App\Support\Media\MediaPresentation;
@@ -52,6 +54,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 #[Title('Content Studio')]
 class ContentStudio extends Component
 {
+    use ManagesContentLifecycle;
     use WithFileUploads;
 
     /** Block types the canvas can insert directly. */
@@ -539,6 +542,29 @@ class ContentStudio extends Component
         session()->flash('status', __('studio.restored'));
     }
 
+    /** Give a section a role (question, definition…) or clear it with ''. */
+    public function setSectionRole(int $index, string $role): void
+    {
+        abort_unless(array_key_exists($index, $this->blocks), 404);
+        abort_unless($role === '' || in_array($role, SectionSemantics::roles(), true), 422);
+        $semantics = is_array($this->blocks[$index]['data']['semantics'] ?? null) ? $this->blocks[$index]['data']['semantics'] : [];
+        $this->blocks[$index]['data']['semantics'] = [
+            'role' => $role,
+            'tags_text' => (string) ($semantics['tags_text'] ?? ''),
+        ];
+    }
+
+    protected function afterContentRenamed(SpaceContent $content): void
+    {
+        $this->content = $content;
+        $this->reloadFromDraft();
+    }
+
+    protected function afterContentDeleted(): mixed
+    {
+        return $this->redirectRoute('experience.content', navigate: true);
+    }
+
     public function render(): View
     {
         $user = $this->user();
@@ -600,6 +626,7 @@ class ContentStudio extends Component
             'canUpdate' => $canUpdate,
             'canPublish' => $canPublish,
             'canArchive' => $canArchive,
+            'canDelete' => Gate::forUser($user)->allows('delete', $current),
             'canRestore' => $canRestore,
             'canViewRevisions' => $canViewRevisions,
             'canShareOutside' => $canShareOutside,
@@ -798,6 +825,12 @@ class ContentStudio extends Component
                     unset($data['items']);
                 }
                 unset($data['asset_placement_uuid']);
+                if (is_array($data['semantics'] ?? null)) {
+                    $data['semantics'] = [
+                        'role' => $data['semantics']['role'] ?? '',
+                        'tags_text' => implode(', ', is_array($data['semantics']['tags'] ?? null) ? $data['semantics']['tags'] : []),
+                    ];
+                }
 
                 return [
                     'logical_uuid' => $block->logical_uuid,
@@ -821,13 +854,25 @@ class ContentStudio extends Component
         ], JSON_UNESCAPED_UNICODE);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function withoutEmptySemantics(array $data): array
+    {
+        $semantics = is_array($data['semantics'] ?? null) ? array_filter($data['semantics'], static fn (mixed $value): bool => $value !== null && $value !== '' && $value !== []) : [];
+        unset($data['semantics']);
+
+        return $semantics === [] ? $data : [...$data, 'semantics' => $semantics];
+    }
+
     /** @return list<array<string, mixed>> */
     private function comparableBlocks(): array
     {
         return array_map(static fn (array $block): array => [
             'logical_uuid' => $block['logical_uuid'] ?? null,
             'type' => $block['type'] ?? null,
-            'data' => $block['data'] ?? [],
+            'data' => self::withoutEmptySemantics(is_array($block['data'] ?? null) ? $block['data'] : []),
             'style' => array_filter(is_array($block['style'] ?? null) ? $block['style'] : [], static fn (mixed $value): bool => $value !== null && $value !== ''),
         ], $this->blocks);
     }

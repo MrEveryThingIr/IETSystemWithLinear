@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\SpaceContentBlock;
 use App\Models\SpaceContentDefinitionVersion;
 use App\Models\SpaceContentRevision;
+use App\Support\Content\SectionSemantics;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -49,6 +50,7 @@ class SpaceContentBlocks
             $logicalUuids[$logicalUuid] = true;
 
             $data = is_array($block['data'] ?? null) ? $block['data'] : [];
+            $semantics = SectionSemantics::normalize($type, is_array($data['semantics'] ?? null) ? $data['semantics'] : []);
             $style = $this->normalizeStyle(is_array($block['style'] ?? null) ? $block['style'] : []);
 
             if ($type === SpaceContentBlock::TYPE_PARAGRAPH) {
@@ -102,6 +104,10 @@ class SpaceContentBlocks
                     'filename' => (string) $placement->original_filename,
                     'caption' => $this->text($data['caption'] ?? '', 1000, false),
                 ];
+            }
+
+            if ($semantics !== []) {
+                $data['semantics'] = $semantics;
             }
 
             $normalized[] = [

@@ -12,6 +12,46 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    <div class="flex flex-wrap items-center gap-2" data-plan-appearance>
+        <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm text-white" style="background: {{ $look['color'] }}">
+            <flux:icon :name="$look['icon']" class="size-4" />
+            {{ $look['kind'] ? __('planner.kinds.'.$look['kind'].'.name') : __('planner.title') }}
+            @if ($look['label']) · <span dir="auto">{{ $look['label']->name }}</span>@endif
+        </span>
+        @if ($meetingUuid = data_get($plan->metadata, 'meeting_uuid'))
+            <a href="{{ route('planner.meetings.show', $meetingUuid) }}" wire:navigate class="text-sm underline-offset-4 hover:underline">{{ __('planner.meetings.section') }}</a>
+        @endif
+        @if ($canManage)
+            <x-app.popover align="start" width="w-72">
+                <x-slot:trigger><flux:button size="xs" variant="ghost" icon="swatch">{{ __('planner.appearance.title') }}</flux:button></x-slot:trigger>
+                <div class="space-y-3">
+                    <flux:select wire:model="appearanceKind" :label="__('planner.wizard.steps.what')">
+                        <option value="">—</option>
+                        @foreach (\App\Support\Planner\PlanKinds::keys() as $kindKey)
+                            <option value="{{ $kindKey }}">{{ __('planner.kinds.'.$kindKey.'.name') }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:select wire:model="appearanceLabel" :label="__('planner.labels.title')">
+                        <option value="">{{ __('planner.labels.none') }}</option>
+                        @foreach ($labels as $label)
+                            <option value="{{ $label->uuid }}">{{ $label->name }}</option>
+                        @endforeach
+                    </flux:select>
+                    <div>
+                        <div class="mb-1 text-sm font-medium">{{ __('planner.labels.color') }}</div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" wire:click="$set('appearanceColor', '')" class="rounded-full border px-2 py-0.5 text-xs {{ $appearanceColor === '' ? 'border-zinc-900 dark:border-white' : 'border-zinc-200 dark:border-zinc-700' }}">{{ __('planner.labels.automatic') }}</button>
+                            @foreach (\App\Support\Planner\PlanKinds::PALETTE as $swatch)
+                                <button type="button" wire:click="$set('appearanceColor', '{{ $swatch }}')" class="size-6 rounded-full ring-offset-2 {{ $appearanceColor === $swatch ? 'ring-2 ring-zinc-900 dark:ring-white' : '' }}" style="background: {{ $swatch }}" aria-label="{{ $swatch }}"></button>
+                            @endforeach
+                        </div>
+                    </div>
+                    <flux:button wire:click="saveAppearance" size="sm" variant="primary" data-save-appearance>{{ __('planner.appearance.save') }}</flux:button>
+                </div>
+            </x-app.popover>
+        @endif
+    </div>
+
     @if ($plan->domainBlueprintVersion)
         <flux:callout>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -79,8 +119,21 @@
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('planner.plan.occurrences') }}</flux:heading>
 
+                @php
+                    // Show the current and next few in full; the rest as short rows.
+                    $sortedOccurrences = $plan->occurrences->sortBy('scheduled_start_at')->values();
+                    $nowInstant = now();
+                    $activeOrNext = $sortedOccurrences->filter(fn ($item) => $item->status === \App\PlanOccurrenceStatus::InProgress
+                        || ($item->status === \App\PlanOccurrenceStatus::Scheduled && $item->scheduled_end_at->gte($nowInstant)));
+                    $fullIds = $activeOrNext->take(3)->pluck('id')
+                        ->when($focusedOccurrenceId !== null, fn ($ids) => $ids->push($focusedOccurrenceId))
+                        ->when($sortedOccurrences->count() <= 4, fn ($ids) => $sortedOccurrences->pluck('id'))
+                        ->unique();
+                    $laterRows = $activeOrNext->reject(fn ($item) => $fullIds->contains($item->id));
+                    $earlierRows = $sortedOccurrences->reject(fn ($item) => $fullIds->contains($item->id) || $activeOrNext->contains('id', $item->id))->reverse();
+                @endphp
                 <div class="space-y-3">
-                    @forelse ($plan->occurrences->sortBy('scheduled_start_at') as $occurrence)
+                    @forelse ($sortedOccurrences->filter(fn ($item) => $fullIds->contains($item->id)) as $occurrence)
                         @php
                             $phase = $occurrence->executionPhase();
                             $remainingPrerequisites = $occurrence->remainingRequiredPrerequisites();
@@ -268,9 +321,29 @@
                             @endif
                         </article>
                     @empty
-                        <x-app.empty-state :title="__('planner.empty.list')" />
+                        @if ($sortedOccurrences->isEmpty())
+                            <x-app.empty-state :title="__('planner.empty.list')" />
+                        @endif
                     @endforelse
                 </div>
+
+                @foreach (['upcoming' => $laterRows, 'earlier' => $earlierRows] as $group => $rows)
+                    @if ($rows->isNotEmpty())
+                        <details class="rounded-xl border border-zinc-200 dark:border-zinc-700" @if ($group === 'upcoming') open @endif data-occurrence-group="{{ $group }}">
+                            <summary class="cursor-pointer px-4 py-2.5 text-sm font-medium">{{ __('planner.series.'.$group) }} · {{ $rows->count() }}</summary>
+                            <ul class="divide-y divide-zinc-100 border-t border-zinc-100 dark:divide-zinc-800 dark:border-zinc-800">
+                                @foreach ($rows->take($group === 'upcoming' ? 30 : 60) as $row)
+                                    <li wire:key="occurrence-row-{{ $row->uuid }}" id="occurrence-{{ $row->uuid }}">
+                                        <button type="button" wire:click="focusOccurrence({{ $row->id }})" class="flex w-full items-center justify-between gap-3 px-4 py-2 text-start text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900">
+                                            <span><x-app.local-datetime :value="$row->scheduled_start_at" /></span>
+                                            <flux:badge size="sm">{{ __('planner.occurrence_phase.'.$row->executionPhase()) }}</flux:badge>
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    @endif
+                @endforeach
             </flux:card>
 
             @if ($evidenceOccurrenceId !== null)

@@ -3,6 +3,7 @@
 namespace App\Livewire\Content;
 
 use App\ContextKind;
+use App\Livewire\Concerns\ManagesContentLifecycle;
 use App\Models\Actor;
 use App\Models\Context;
 use App\Models\SpaceContent;
@@ -30,6 +31,8 @@ use Livewire\Component;
 #[Title('Content')]
 class Workspace extends Component
 {
+    use ManagesContentLifecycle;
+
     /** @var list<string> */
     public const VIEWS = ['all', 'drafts', 'published', 'shared', 'learning', 'archived'];
 
@@ -181,6 +184,8 @@ class Workspace extends Component
                 ? route('contexts.contents.show', [$context, $content])
                 : null,
             'can_edit' => $canEdit,
+            'can_rename' => $canEdit && $content->status !== 'archived',
+            'can_delete' => Gate::forUser($this->user())->allows('delete', $content),
         ];
     }
 

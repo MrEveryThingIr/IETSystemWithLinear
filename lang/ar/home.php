@@ -133,6 +133,8 @@ return [
         'fulfillment' => 'تنفيذ',
         'settlement' => 'تسوية',
         'submission' => 'تقديم',
+        'money' => 'دفتر الحسابات',
+        'planner' => 'اجتماع',
     ],
     'actions' => [
         'relationship_waiting' => 'دعوة مشاركة تنتظر ردك.',

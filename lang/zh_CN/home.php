@@ -133,6 +133,8 @@ return [
         'fulfillment' => '履约',
         'settlement' => '结算',
         'submission' => '提交',
+        'money' => '记账',
+        'planner' => '会面',
     ],
     'actions' => [
         'relationship_waiting' => '参与邀请正在等待您的回应。',

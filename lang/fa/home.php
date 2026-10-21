@@ -133,6 +133,8 @@ return [
         'fulfillment' => 'بررسی کار',
         'settlement' => 'پرداخت',
         'submission' => 'بررسی',
+        'money' => 'دفتر حساب',
+        'planner' => 'قرار ملاقات',
     ],
     'actions' => [
         'relationship_waiting' => 'یک معامله پیشنهادی منتظر پاسخ شماست.',

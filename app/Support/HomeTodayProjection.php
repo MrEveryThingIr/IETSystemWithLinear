@@ -14,6 +14,8 @@ use App\Models\Fulfillment;
 use App\Models\GroupMembership;
 use App\Models\GroupSpace;
 use App\Models\PersonalContext;
+use App\Models\Planner\MeetingInvitee;
+use App\Models\Planner\MeetingRequest;
 use App\Models\PlanOccurrence;
 use App\Models\Proposal;
 use App\Models\ProposalContext;
@@ -137,6 +139,7 @@ class HomeTodayProjection
             ...$schedule,
             'waitingOnMe' => $this->waitingOnMe($current, $actor)
                 ->concat($this->bookkeepingWaiting($money['waiting_for_me']))
+                ->concat($this->meetingsWaiting($actor))
                 ->sortByDesc(fn (HomeActionItem $item): int => $item->occurredAt->getTimestamp())
                 ->take(20)
                 ->values(),
@@ -251,6 +254,30 @@ class HomeTodayProjection
             url: route('bookkeeping.books.show', $entry->ledger).'#entry-'.$entry->uuid,
             occurredAt: $entry->created_at ?? now(),
         ))->values();
+    }
+
+    /** Meeting requests waiting for this person's answer. */
+    private function meetingsWaiting(Actor $actor): Collection
+    {
+        return MeetingInvitee::query()
+            ->with('meeting.organizer.user')
+            ->where('actor_id', $actor->id)
+            ->where('status', MeetingInvitee::STATUS_PENDING)
+            ->whereHas('meeting', fn ($query) => $query->where('status', MeetingRequest::STATUS_OPEN))
+            ->latest('id')
+            ->limit(10)
+            ->get()
+            ->map(fn (MeetingInvitee $invitee): HomeActionItem => new HomeActionItem(
+                key: 'meeting:'.$invitee->uuid,
+                kind: 'planner',
+                title: (string) __('planner.meetings.today_waiting', [
+                    'organizer' => $invitee->meeting->organizer->user->username ?? '',
+                    'title' => $invitee->meeting->title,
+                ]),
+                summary: null,
+                url: route('planner.meetings.show', $invitee->meeting),
+                occurredAt: $invitee->created_at ?? now(),
+            ))->values();
     }
 
     private function waitingOnMe(User $user, Actor $actor): Collection

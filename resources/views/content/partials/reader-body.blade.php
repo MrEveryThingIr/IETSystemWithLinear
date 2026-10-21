@@ -30,17 +30,33 @@
                 ($blockStyle['emphasis'] ?? null) === 'callout' ? 'border-color: '.$blockAccent : null,
             ])->filter()->implode('; ');
             $blockMarkers = $blockMarkerUuids[$block->uuid] ?? [];
+            $section = \App\Support\Content\SectionSemantics::of($block);
+            $sectionRole = $section['role'];
+            $sectionAnswered = ($sectionAnswers ?? [])[$block->uuid] ?? null;
         @endphp
 
         <section
             wire:key="reader-block-{{ $block->uuid }}"
-            class="group relative {{ $alignment }} {{ $emphasisClass }} {{ $radiusClass }}"
+            class="group relative {{ $alignment }} {{ $emphasisClass }} {{ $radiusClass }} {{ $canAnnotate && ! in_array($block->type, ['divider', 'field', 'image', 'audio', 'video', 'file'], true) ? 'max-sm:pe-9' : '' }}"
             style="{{ $blockInlineStyle }}"
             data-annotation-target="block"
             data-target-type="block"
             data-target-uuid="{{ $block->uuid }}"
-            data-target-label="{{ __('blocks.type.'.$block->type) }}"
+            data-target-label="{{ $sectionRole ? __('sections.roles.'.$sectionRole.'.name') : __('blocks.type.'.$block->type) }}"
+            @if ($sectionRole) data-section-role="{{ $sectionRole }}" @endif
+            @if ($section['tags'] !== []) data-section-tags="{{ implode(' ', $section['tags']) }}" @endif
         >
+            @if ($sectionRole)
+                <div class="mb-2 flex flex-wrap items-center gap-1.5 text-xs" data-section-badge>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium" style="color: var(--content-accent); background: color-mix(in srgb, var(--content-accent) 12%, transparent)">
+                        <flux:icon :name="\App\Support\Content\SectionSemantics::ROLES[$sectionRole]['icon']" class="size-3.5" />
+                        {{ __('sections.roles.'.$sectionRole.'.name') }}
+                    </span>
+                    @foreach ($section['tags'] as $tag)
+                        <span class="rounded-full border px-1.5 py-0.5" style="border-color: var(--content-border); color: var(--content-muted)" dir="auto">#{{ $tag }}</span>
+                    @endforeach
+                </div>
+            @endif
             @switch($block->type)
                 @case('paragraph')
                     <div
@@ -171,9 +187,35 @@
                     @break
             @endswitch
 
-            @if ($canAnnotate && ! in_array($block->type, ['divider', 'field', 'image', 'audio', 'video', 'file'], true))
-                <div class="absolute -end-10 top-0 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                    <x-app.annotation-target-menu target-type="block" :target-uuid="$block->uuid" :label="__('blocks.type.'.$block->type)" :marker-uuids="$blockMarkers" />
+            @if (\App\Support\Content\SectionSemantics::isAnswerable($sectionRole) && (($canAnswerSections ?? false) || $sectionAnswered))
+                <div
+                    class="mt-3 flex flex-wrap items-center gap-2"
+                    data-section-answers
+                    data-annotation-target-menu
+                    data-target-type="block"
+                    data-target-uuid="{{ $block->uuid }}"
+                    data-target-label="{{ __('sections.roles.'.$sectionRole.'.name') }}"
+                >
+                    @if ($canAnswerSections ?? false)
+                        <button type="button" data-context-purpose="answer" class="inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2" style="background: var(--content-accent)" data-section-answer>
+                            <flux:icon name="pencil" class="size-4" />
+                            {{ ($sectionAnswered['mine'] ?? false) ? __('sections.answer_again') : __('sections.answer') }}
+                        </button>
+                    @endif
+                    @if ($sectionAnswered)
+                        <button type="button" data-marker-preview='@json($sectionAnswered['uuids'])' class="inline-flex min-h-9 items-center gap-1 rounded-full border px-3 text-sm focus:outline-none focus:ring-2" style="border-color: var(--content-border); color: var(--content-muted)" data-section-answer-count>
+                            {{ trans_choice('sections.answer_count', count($sectionAnswered['uuids']), ['count' => count($sectionAnswered['uuids'])]) }}
+                            @if (($sectionAnswered['correct'] ?? 0) > 0)
+                                <span class="text-green-700 dark:text-green-400">· {{ trans_choice('sections.correct_count', $sectionAnswered['correct'], ['count' => $sectionAnswered['correct']]) }}</span>
+                            @endif
+                        </button>
+                    @endif
+                </div>
+            @endif
+
+            @if ($canAnnotate && $block->type !== 'divider' && ! in_array($block->type, ['field', 'image', 'audio', 'video', 'file'], true))
+                <div class="absolute end-1 top-1 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100 sm:-end-10 sm:top-0 sm:opacity-0 [@media(hover:none)]:opacity-100">
+                    <x-app.annotation-target-menu target-type="block" :target-uuid="$block->uuid" :label="$sectionRole ? __('sections.roles.'.$sectionRole.'.name') : __('blocks.type.'.$block->type)" :marker-uuids="$blockMarkers" :role="$sectionRole" />
                 </div>
             @endif
         </section>

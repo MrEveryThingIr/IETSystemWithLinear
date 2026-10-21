@@ -287,6 +287,9 @@ class FeatureSurfaceRegistry
             // occurrence/asset chain and plan authorization decide access.
             'planner.occurrences.assets.*',
             'planner.occurrences.evidence.*',
+            // A meeting is opened by its organizer and invitees; being asked
+            // decides access, not the Planner facility.
+            'planner.meetings.*',
 
             // A shared or project book is opened by its parties, who may not
             // have the Bookkeeping facility published; book membership decides.

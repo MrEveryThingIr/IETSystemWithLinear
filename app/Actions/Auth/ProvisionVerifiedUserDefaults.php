@@ -3,6 +3,7 @@
 namespace App\Actions\Auth;
 
 use App\Actions\Bookkeeping\EnsurePersonalLedger;
+use App\Actions\Planner\Meetings\MeetingScheduler;
 use App\Models\Actor;
 use App\Models\User;
 
@@ -10,6 +11,7 @@ class ProvisionVerifiedUserDefaults
 {
     public function __construct(
         private readonly EnsurePersonalLedger $personalBooks,
+        private readonly MeetingScheduler $meetings,
     ) {}
 
     public function execute(User $user): void
@@ -25,5 +27,7 @@ class ProvisionVerifiedUserDefaults
         }
 
         $this->personalBooks->execute($user);
+        // Meeting invitations sent to this email before the account existed.
+        $this->meetings->claimByEmail($user);
     }
 }

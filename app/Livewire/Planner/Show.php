@@ -4,6 +4,7 @@ namespace App\Livewire\Planner;
 
 use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Planner\AttachPlanOccurrenceEvidence;
+use App\Actions\Planner\ManagePlannerLabels;
 use App\Actions\Planner\RecordPlanOccurrenceExpense;
 use App\Actions\Planner\SetPlanOccurrencePrerequisite;
 use App\Actions\Planner\TransitionPlan;
@@ -22,6 +23,7 @@ use App\PlanOccurrenceStatus;
 use App\PlanStatus;
 use App\Support\MediaLimits;
 use App\Support\MonetaryUnitCatalog;
+use App\Support\Planner\PlanAppearance;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
@@ -69,6 +71,10 @@ class Show extends Component
         $user = $this->user();
         Gate::forUser($user)->authorize('view', $plan);
         $this->plan = $plan;
+        $metadata = is_array($plan->metadata) ? $plan->metadata : [];
+        $this->appearanceKind = (string) ($metadata['kind'] ?? '');
+        $this->appearanceLabel = (string) ($metadata['label_uuid'] ?? '');
+        $this->appearanceColor = (string) ($metadata['color'] ?? '');
 
         $code = strtoupper((string) ($user->default_monetary_unit_code ?: 'USD'));
         $this->expenseUnitCode = array_key_exists($code, MonetaryUnitCatalog::all())
@@ -277,6 +283,27 @@ class Show extends Component
         session()->flash('status', __('planner.messages.expense_recorded'));
     }
 
+    public ?int $focusedOccurrenceId = null;
+
+    public string $appearanceKind = '';
+
+    public string $appearanceLabel = '';
+
+    public string $appearanceColor = '';
+
+    /** Open one occurrence from the compact list. */
+    public function focusOccurrence(int $occurrenceId): void
+    {
+        abort_unless($this->plan->occurrences()->whereKey($occurrenceId)->exists(), 404);
+        $this->focusedOccurrenceId = $occurrenceId;
+    }
+
+    public function saveAppearance(ManagePlannerLabels $labels): void
+    {
+        $this->plan = $labels->setAppearance($this->plan, $this->user(), $this->appearanceKind, $this->appearanceLabel, $this->appearanceColor);
+        session()->flash('status', __('planner.labels.saved'));
+    }
+
     public function render(): View
     {
         $user = $this->user();
@@ -340,7 +367,11 @@ class Show extends Component
             ? Commitment::query()->where('uuid', $plan->origin_uuid)->first()
             : null;
 
+        $appearance = PlanAppearance::forActor($user->actor?->id);
+
         return view('livewire.planner.show', [
+            'look' => $appearance->of($plan),
+            'labels' => $appearance->labels(),
             'canManage' => $canManage,
             'canParticipate' => $canParticipate,
             'canUploadEvidence' => $canUploadEvidence,

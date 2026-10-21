@@ -1,4 +1,5 @@
 <section class="mx-auto max-w-7xl space-y-5" data-content-workspace>
+    <x-app.flash-message />
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
             <h1 class="text-2xl font-semibold">{{ __('content_workspace.title') }}</h1>
@@ -119,6 +120,19 @@
                             @if ($item['can_edit'] && $item['read_url'])
                                 <flux:button :href="$item['read_url']" size="sm" variant="ghost">{{ __('content_workspace.read') }}</flux:button>
                             @endif
+                            @if ($item['can_rename'] || $item['can_delete'])
+                                <flux:dropdown position="bottom" align="end" class="ms-auto">
+                                    <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" :aria-label="__('studio.more_actions')" data-content-card-menu />
+                                    <flux:menu>
+                                        @if ($item['can_rename'])
+                                            <flux:menu.item icon="pencil-square" wire:click="openRename('{{ $item['uuid'] }}')" data-content-rename>{{ __('studio.rename.title') }}</flux:menu.item>
+                                        @endif
+                                        @if ($item['can_delete'])
+                                            <flux:menu.item icon="trash" variant="danger" wire:click="openDelete('{{ $item['uuid'] }}')" data-content-delete>{{ __('studio.delete.title') }}</flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            @endif
                         </div>
                     </div>
                 </article>
@@ -137,4 +151,6 @@
     @endif
 
     <livewire:content.create-content />
+
+    @include('livewire.content.partials.lifecycle-dialogs')
 </section>
