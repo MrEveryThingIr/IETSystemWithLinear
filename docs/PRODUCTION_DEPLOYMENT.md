@@ -21,6 +21,32 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v1.7.0** — reminders that are never forgotten, device notifications and
+  speed. **One additive migration** (`plan_schedule_rules.month_day` and
+  `.calendar`, `notification_outbox.pushed_at`, new table
+  `push_subscriptions`); ordinary upgrade (section 5c).
+  - Plan type *Due date* and monthly repeats on the same day of the user's
+    calendar (Persian months included). *Important* plans are reminded up to a
+    week before, also **by email**, and stay on Today under *Don't forget*
+    until marked done.
+  - **Device notifications** (Web Push, no extra package): the scheduler's
+    `notifications:push-devices` command (every minute, already part of
+    `schedule:run`) sends reminders to subscribed phones/computers, so the
+    cron entry in section 6 must be active. The signing keys (VAPID) are
+    created on first use in `storage/app/private/webpush-vapid.json` — in the
+    shared storage, so they survive releases; do not delete that file (all
+    devices would have to turn notifications on again). Optional fixed keys:
+    `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
+  - Push delivery needs HTTPS and outbound HTTPS from the host to the
+    browsers' push services (Google FCM for Chrome/Edge on Android and
+    Windows, Mozilla, Apple). If the host cannot reach them the test button
+    says so; email and Today still cover important reminders. On iPhone the
+    site must be added to the Home Screen first.
+  - The plan wizard shows the reason when a plan cannot be saved instead of a
+    generic error, and returns to the step with the problem.
+  - Speed: authorisation lookups are memoised per request, sidebar links
+    navigate without a full reload, dialogs close immediately, and the
+    content list loads 24 items at a time.
 - **v1.6.0** — the Planner redesign. **One additive migration**
   (`planner_labels`, `meeting_requests`, `meeting_invitees`, `meeting_slots`,
   `meeting_votes`); ordinary upgrade (section 5c).
@@ -128,14 +154,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.6.0`, so the package is
-   `iet-v1.6.0`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `1.7.0`, so the package is
+   `iet-v1.7.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.6.0`. It contains:
-   - `iet-v1.6.0.zip` — the runtime package (root directory `iet-v1.6.0/`)
-   - `iet-v1.6.0.zip.sha256` — checksum of the ZIP
-   - `iet-v1.6.0.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.6.0.zip.sha256`.
+3. Download the artifact `iet-v1.7.0`. It contains:
+   - `iet-v1.7.0.zip` — the runtime package (root directory `iet-v1.7.0/`)
+   - `iet-v1.7.0.zip.sha256` — checksum of the ZIP
+   - `iet-v1.7.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v1.7.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -447,6 +473,18 @@ Additional checks for v1.6.0:
     calendar file.
 25. **Repeating plan**: a daily routine shows once in *List* with "+N more",
     and its page shows three occurrences in full.
+
+Additional checks for v1.7.0:
+
+26. **Due date**: *New plan → Due date*, title, a day next week, *Every
+    month*, keep *Important* on, create. Today shows it under *Don't
+    forget*; *Done* removes it.
+27. **Device notifications**: on the notifications page *Turn on*, allow the
+    browser prompt, then *Send a test* — a notification appears (also with
+    the site tab closed). If it says it could not be delivered, the host
+    cannot reach the push service; email reminders still work.
+28. **Phone time picker**: on a phone the timeline is full width; the ‹ ›
+    arrows move hours and 24 h / 12 h / 4 h zoom.
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

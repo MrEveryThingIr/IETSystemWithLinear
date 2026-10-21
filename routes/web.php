@@ -22,6 +22,7 @@ use App\Http\Controllers\MediaUploadSessionController;
 use App\Http\Controllers\MeetingCalendarController;
 use App\Http\Controllers\MyContextContentController;
 use App\Http\Controllers\PlanOccurrenceAssetController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SpaceContentAssetController;
 use App\Http\Controllers\SubmissionAssetController;
 use App\Http\Controllers\SystemManualController;
@@ -162,6 +163,9 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/content', ContentWorkspace::class)->name('experience.content');
     Route::get('/help', [ExperienceHubController::class, 'help'])->name('experience.help');
     Route::get('/whats-new', WhatsNewController::class)->name('whats-new');
+    Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store'])->middleware('throttle:30,1')->name('push.subscriptions.store');
+    Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.subscriptions.destroy');
+    Route::post('/push/test', [PushSubscriptionController::class, 'test'])->middleware('throttle:6,1')->name('push.test');
 
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');

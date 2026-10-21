@@ -16,6 +16,7 @@ use App\Models\ReferenceContext;
 use App\Models\Relationship;
 use App\Models\User;
 use App\Support\BusinessAccess;
+use App\Support\RequestMemo;
 
 class ContextPolicy
 {
@@ -168,7 +169,7 @@ class ContextPolicy
 
     private function currentUser(User $user): ?User
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (
             ! $current instanceof User

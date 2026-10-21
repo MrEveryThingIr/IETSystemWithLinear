@@ -7,6 +7,7 @@ use App\Models\Actor;
 use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\User;
+use App\Support\RequestMemo;
 use Illuminate\Support\Facades\Gate;
 
 class CommitmentPolicy
@@ -50,7 +51,7 @@ class CommitmentPolicy
 
     private function currentActor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User
             || $current->status !== 'active'

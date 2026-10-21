@@ -6,6 +6,7 @@ use App\Models\ActorProfileIntent;
 use App\Models\User;
 use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
+use App\Support\RequestMemo;
 
 class ActorProfileIntentPolicy
 {
@@ -42,7 +43,7 @@ class ActorProfileIntentPolicy
             return false;
         }
 
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         return $current instanceof User
             && $current->actor !== null

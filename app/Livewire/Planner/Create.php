@@ -24,6 +24,7 @@ use App\Support\DomainBlueprintCatalog;
 use App\Support\MonetaryUnitCatalog;
 use App\Support\Planner\PlanKinds;
 use App\Support\Planner\PlannerHorizons;
+use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -35,6 +36,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * New plan, as a short wizard: what → when → (who, for meetings) → details
@@ -59,6 +61,9 @@ class Create extends Component
     public array $selectedDays = [];
 
     public string $labelUuid = '';
+
+    /** Never let me forget: reminders also by email and on this person's devices, kept on Today until done. */
+    public bool $important = false;
 
     public string $color = '';
 
@@ -178,17 +183,25 @@ class Create extends Component
 
     public function chooseKind(string $kind): void
     {
-        abort_unless(PlanKinds::valid($kind), 422);
+        if (! PlanKinds::valid($kind)) {
+            return;
+        }
         $this->kind = $kind;
         $defaults = PlanKinds::KINDS[$kind];
         $this->durationMinutes = $defaults['duration'];
         $this->frequency = $defaults['frequency'];
         $this->reminderOffsets = $defaults['reminder'] > 0 ? (string) $defaults['reminder'] : '';
+        $this->important = isset(PlanKinds::IMPORTANT_DEFAULTS[$kind]);
+        if ($this->important) {
+            $this->reminderOffsets = implode(', ', PlanKinds::IMPORTANT_DEFAULTS[$kind]);
+        }
     }
 
     public function goTo(string $step): void
     {
-        abort_unless(in_array($step, $this->steps(), true), 422);
+        if (! in_array($step, $this->steps(), true)) {
+            return;
+        }
         $target = array_search($step, $this->steps(), true);
         $current = array_search($this->step, $this->steps(), true);
         if ($target > $current) {
@@ -216,10 +229,13 @@ class Create extends Component
 
     public function setRepeat(string $repeat): void
     {
-        abort_unless(in_array($repeat, ['none', 'daily', 'weekly'], true), 422);
+        if (! in_array($repeat, ['none', 'daily', 'weekly', 'monthly'], true)) {
+            return;
+        }
         $this->frequency = match ($repeat) {
             'daily' => 'daily',
             'weekly' => 'weekly',
+            'monthly' => 'monthly',
             default => count($this->selectedDays) > 1 ? 'selected_dates' : 'once',
         };
         if ($repeat === 'weekly' && $this->selectedDays !== []) {
@@ -231,7 +247,7 @@ class Create extends Component
 
     public function toggleReminder(int $minutes): void
     {
-        abort_unless(in_array($minutes, [0, 5, 10, 15, 30, 60, 1440], true), 422);
+        $minutes = max(0, min(43200, $minutes));
         $current = $this->integers($this->reminderOffsets);
         $current = in_array($minutes, $current, true)
             ? array_values(array_diff($current, [$minutes]))
@@ -261,7 +277,9 @@ class Create extends Component
     /** Meeting options from the visual picker: each chosen day at the chosen time. */
     public function addSlotsFromPicker(array $days, string $time, int $minutes): void
     {
-        abort_unless(preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $time) === 1, 422);
+        if (preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $time) !== 1) {
+            return;
+        }
         $this->durationMinutes = max(5, min(1440, $minutes));
         foreach (array_slice($days, 0, 14) as $day) {
             if (is_string($day) && $this->canonicalDate($day) instanceof CarbonImmutable) {
@@ -349,7 +367,57 @@ class Create extends Component
         $this->expenseEstimates = array_values($this->expenseEstimates);
     }
 
-    public function save(
+    /**
+     * Create the plan (or send the meeting invitations). Any problem is shown
+     * in the wizard: validation errors open the step they belong to, and a
+     * refusal from the planner explains itself instead of an error page.
+     */
+    public function save(): mixed
+    {
+        $this->resetErrorBag('save');
+
+        try {
+            return $this->persist(app(CreatePlan::class), app(ConfigurePlanReadiness::class), app(CreatePlanScheduleRule::class));
+        } catch (ValidationException $exception) {
+            $this->openStepOf(array_keys($exception->errors()));
+
+            throw $exception;
+        } catch (HttpException $exception) {
+            if ($exception->getStatusCode() !== 422) {
+                throw $exception;
+            }
+            report(new \RuntimeException('Plan wizard refused: '.$exception->getMessage(), previous: $exception));
+            $this->addError('save', __('planner.wizard.save_failed', ['reason' => $exception->getMessage()]));
+
+            return null;
+        }
+    }
+
+    /** @param list<string> $fields */
+    private function openStepOf(array $fields): void
+    {
+        $stepOf = function (string $field): string {
+            $root = explode('.', $field)[0];
+
+            return match (true) {
+                in_array($root, ['title', 'kind', 'description'], true) => 'what',
+                in_array($root, ['startsOn', 'startTime', 'durationMinutes', 'interval', 'weekdays', 'selectedDates', 'endsOn', 'occurrenceLimit', 'slots', 'frequency'], true) => 'when',
+                in_array($root, ['invitees', 'inviteUsername', 'guestName', 'guestEmail', 'location'], true) => 'who',
+                default => 'details',
+            };
+        };
+        foreach ($this->steps() as $step) {
+            foreach ($fields as $field) {
+                if ($stepOf($field) === $step) {
+                    $this->step = $step;
+
+                    return;
+                }
+            }
+        }
+    }
+
+    private function persist(
         CreatePlan $createPlan,
         ConfigurePlanReadiness $configureReadiness,
         CreatePlanScheduleRule $createRule,
@@ -371,8 +439,12 @@ class Create extends Component
         $data = $this->validate([
             'title' => ['required', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:10000'],
-            'timezone' => ['required', 'timezone:all'],
-            'frequency' => ['required', 'in:once,daily,weekly,selected_dates'],
+            'timezone' => ['required', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! TemporalPreferences::validTimezone(is_string($value) ? $value : null)) {
+                    $fail(__('planner.wizard.invalid_timezone'));
+                }
+            }],
+            'frequency' => ['required', 'in:once,daily,weekly,selected_dates,monthly'],
             'startsOn' => ['required', 'date_format:Y-m-d'],
             'startTime' => ['required', 'date_format:H:i'],
             'durationMinutes' => ['required', 'integer', 'min:1', 'max:10080'],
@@ -448,7 +520,7 @@ class Create extends Component
                 $this->integers($data['reminderOffsets']),
             );
 
-            return $this->redirectRoute('planner.show', $plan);
+            return $this->redirectRoute('planner.show', $plan, navigate: true);
         });
     }
 
@@ -467,6 +539,7 @@ class Create extends Component
 
         return view('livewire.planner.create', [
             'steps' => $this->steps(),
+            'monthDayLabel' => $this->monthDayLabel($user),
             'kinds' => PlanKinds::KINDS,
             'palette' => PlanKinds::PALETTE,
             'labels' => PlannerLabel::query()->where('actor_id', $user->actor?->id)->orderBy('name')->get(),
@@ -481,6 +554,15 @@ class Create extends Component
             'blueprintVersion' => $this->blueprintVersion(),
             'unitCatalog' => MonetaryUnitCatalog::all(),
         ])->title(__('planner.create.title'));
+    }
+
+    private function monthDayLabel(User $user): string
+    {
+        $date = $this->canonicalDate($this->startsOn);
+
+        return $date instanceof CarbonImmutable
+            ? TemporalCalendar::format($date, $user, $this->timezone, 'd')
+            : '';
     }
 
     /** @return list<string> */
@@ -512,7 +594,7 @@ class Create extends Component
         };
     }
 
-    /** @return array<string, string> */
+    /** @return array<string, string|true> */
     private function appearanceMetadata(): array
     {
         $label = $this->labelUuid !== ''
@@ -520,6 +602,7 @@ class Create extends Component
             : null;
 
         return array_filter([
+            'important' => $this->important ?: null,
             'kind' => PlanKinds::valid($this->kind) ? $this->kind : null,
             'label_uuid' => $label?->uuid,
             'color' => PlanKinds::normalizeColor($this->color),
@@ -534,7 +617,11 @@ class Create extends Component
         $this->validate([
             'description' => ['nullable', 'string', 'max:5000'],
             'location' => ['nullable', 'string', 'max:300'],
-            'timezone' => ['required', 'timezone:all'],
+            'timezone' => ['required', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! TemporalPreferences::validTimezone(is_string($value) ? $value : null)) {
+                    $fail(__('planner.wizard.invalid_timezone'));
+                }
+            }],
         ]);
 
         $starts = collect($this->meetingSlots)
@@ -553,7 +640,7 @@ class Create extends Component
 
         session()->flash('meeting-links', $result['links']);
 
-        return $this->redirectRoute('planner.meetings.show', $result['meeting']);
+        return $this->redirectRoute('planner.meetings.show', $result['meeting'], navigate: true);
     }
 
     /** @return array{list<array{actor: Actor, role: string}>, ?string, ?string} */
@@ -595,7 +682,7 @@ class Create extends Component
         abort_unless($version instanceof DomainBlueprintVersion, 422);
 
         $frequency = (string) ($version->guided_entry['frequency'] ?? '');
-        if (in_array($frequency, ['once', 'daily', 'weekly', 'selected_dates'], true)) {
+        if (in_array($frequency, ['once', 'daily', 'weekly', 'selected_dates', 'monthly'], true)) {
             $this->frequency = $frequency;
         }
 

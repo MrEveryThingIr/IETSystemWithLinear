@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\ActorProfileDisclosureGrant;
 use App\Models\User;
+use App\Support\RequestMemo;
 
 class ActorProfileDisclosureGrantPolicy
 {
@@ -15,7 +16,7 @@ class ActorProfileDisclosureGrantPolicy
             return false;
         }
 
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User
             || $current->status !== 'active'

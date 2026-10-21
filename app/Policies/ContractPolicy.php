@@ -10,6 +10,7 @@ use App\Models\ContractAcceptance;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\User;
+use App\Support\RequestMemo;
 
 class ContractPolicy
 {
@@ -114,7 +115,7 @@ class ContractPolicy
 
     private function currentActor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User
             || $current->status !== 'active'

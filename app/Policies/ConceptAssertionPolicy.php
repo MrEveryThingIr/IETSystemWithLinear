@@ -8,6 +8,7 @@ use App\Models\Group;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\RequestMemo;
 use Illuminate\Database\Eloquent\Model;
 
 class ConceptAssertionPolicy
@@ -40,7 +41,7 @@ class ConceptAssertionPolicy
 
     private function canAssertActor(User $user, Actor $actor): bool
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         return $current instanceof User
             && $current->status === 'active'

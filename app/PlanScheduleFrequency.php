@@ -8,4 +8,5 @@ enum PlanScheduleFrequency: string
     case Daily = 'daily';
     case Weekly = 'weekly';
     case SelectedDates = 'selected_dates';
+    case Monthly = 'monthly';
 }

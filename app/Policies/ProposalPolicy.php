@@ -9,6 +9,7 @@ use App\Models\ProposalParty;
 use App\Models\ProposalVersion;
 use App\Models\User;
 use App\ProposalStatus;
+use App\Support\RequestMemo;
 
 class ProposalPolicy
 {
@@ -80,7 +81,7 @@ class ProposalPolicy
 
     private function currentActor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User
             || $current->status !== 'active'

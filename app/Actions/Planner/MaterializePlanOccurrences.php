@@ -2,12 +2,14 @@
 
 namespace App\Actions\Planner;
 
+use App\CalendarSystem;
 use App\Models\PlanOccurrence;
 use App\Models\PlanScheduleRule;
 use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanStatus;
 use App\PlanTimingMode;
+use App\Support\Planner\CalendarMonths;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 
@@ -152,7 +154,20 @@ class MaterializePlanOccurrences
             ),
             PlanScheduleFrequency::Daily => ((int) $scheduleStart->diffInDays($date)) % $rule->interval === 0,
             PlanScheduleFrequency::Weekly => $this->matchesWeekly($rule, $scheduleStart, $date),
+            PlanScheduleFrequency::Monthly => CalendarMonths::isMonthlyDay(
+                $date,
+                $scheduleStart,
+                (int) ($rule->month_day ?: CalendarMonths::dayOf($scheduleStart, $this->calendarOf($rule), $rule->timezone)),
+                (int) $rule->interval,
+                $this->calendarOf($rule),
+                $rule->timezone,
+            ),
         };
+    }
+
+    private function calendarOf(PlanScheduleRule $rule): CalendarSystem
+    {
+        return CalendarSystem::tryFrom((string) $rule->calendar) ?? CalendarSystem::Gregorian;
     }
 
     private function matchesWeekly(

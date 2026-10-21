@@ -4,7 +4,7 @@
         <flux:input wire:model="renameTitle" :label="__('ui.content.title')" maxlength="255" dir="auto" autofocus />
         <p class="text-xs text-zinc-500">{{ __('studio.rename.help') }}</p>
         <div class="flex justify-end gap-2">
-            <flux:button type="button" wire:click="closeRename" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
+            <flux:button type="button" x-on:click="open = false; $wire.closeRename()" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
             <flux:button type="submit" variant="primary">{{ __('studio.rename.save') }}</flux:button>
         </div>
     </form>
@@ -27,7 +27,7 @@
                 </flux:callout.text>
             </flux:callout>
             <div class="flex justify-end gap-2">
-                <flux:button type="button" wire:click="closeDelete" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
+                <flux:button type="button" x-on:click="open = false; $wire.closeDelete()" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
                 @if ($deleteAssessment['can_archive'])
                     <flux:button type="button" wire:click="archiveInstead" icon="archive-box">{{ __('studio.delete.archive_instead') }}</flux:button>
                 @endif
@@ -48,7 +48,7 @@
             <form wire:submit="deleteForGood" class="space-y-3">
                 <flux:input wire:model="deleteConfirmation" :label="__('studio.delete.type_title')" dir="auto" autocomplete="off" data-delete-confirmation />
                 <div class="flex justify-end gap-2">
-                    <flux:button type="button" wire:click="closeDelete" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
+                    <flux:button type="button" x-on:click="open = false; $wire.closeDelete()" variant="ghost">{{ __('ui.common.cancel') }}</flux:button>
                     <flux:button type="submit" variant="danger" icon="trash" data-delete-confirm>{{ __('studio.delete.confirm') }}</flux:button>
                 </div>
             </form>

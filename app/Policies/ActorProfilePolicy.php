@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\ActorProfile;
 use App\Models\User;
 use App\ProfileVisibility;
+use App\Support\RequestMemo;
 
 class ActorProfilePolicy
 {
@@ -53,7 +54,7 @@ class ActorProfilePolicy
             return false;
         }
 
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         return $current instanceof User
             && $current->actor !== null

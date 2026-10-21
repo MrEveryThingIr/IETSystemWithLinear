@@ -9,6 +9,7 @@ use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\RequestMemo;
 
 class SpaceContentPolicy
 {
@@ -140,7 +141,7 @@ class SpaceContentPolicy
 
     private function isAuthor(User $user, SpaceContent $content): bool
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         return $current instanceof User
             && $current->actor instanceof Actor
@@ -164,7 +165,7 @@ class SpaceContentPolicy
             return false;
         }
 
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User || ! $current->actor instanceof Actor) {
             return false;
@@ -183,7 +184,7 @@ class SpaceContentPolicy
             return false;
         }
 
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User || ! $current->actor instanceof Actor) {
             return false;

@@ -36,6 +36,7 @@ class PersonalPlannerDemoSeeder extends Seeder
         'walking' => '10000000-0000-4000-8000-000000000006',
         'early_riser' => '10000000-0000-4000-8000-000000000007',
         'missed' => '10000000-0000-4000-8000-000000000008',
+        'installment' => '10000000-0000-4000-8000-000000000009',
     ];
 
     public function run(): void
@@ -65,6 +66,7 @@ class PersonalPlannerDemoSeeder extends Seeder
         $this->seedWalkingChallenge($context, $user, $timezone, $now);
         $this->seedCancelledExperiment($context, $user, $timezone, $now);
         $this->seedMissedButUnresolvedTask($context, $user, $timezone, $now);
+        $this->seedMonthlyInstallment($context, $user, $timezone, $now);
     }
 
     private function seedMorningFoundation(
@@ -485,6 +487,42 @@ class PersonalPlannerDemoSeeder extends Seeder
     /**
      * @param  array<string, mixed>  $metadata
      */
+    private function seedMonthlyInstallment(
+        Context $context,
+        User $user,
+        string $timezone,
+        CarbonImmutable $now,
+    ): void {
+        if ($this->existing($context, self::IDS['installment'])) {
+            return;
+        }
+
+        $plan = $this->createPlan(
+            $context,
+            $user,
+            self::IDS['installment'],
+            'Car loan installment',
+            'A monthly due date marked important: reminders a week, a day and an hour before, and it stays on Today until it is marked done.',
+            $timezone,
+            [
+                'kind' => 'due',
+                'important' => true,
+            ],
+        );
+
+        $start = $now->addDays(10);
+        app(CreatePlanScheduleRule::class)->execute(
+            $plan,
+            $user,
+            PlanScheduleFrequency::Monthly,
+            $start->toDateString(),
+            '10:00',
+            15,
+            occurrenceLimit: 12,
+            reminderOffsets: [10080, 1440, 60],
+        );
+    }
+
     private function createPlan(
         Context $context,
         User $user,

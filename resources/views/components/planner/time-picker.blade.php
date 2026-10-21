@@ -21,7 +21,7 @@
     ];
 @endphp
 
-<div x-data="plannerTimePicker(@js($config))" class="space-y-4" data-time-picker wire:ignore>
+<div {{ $attributes->merge(['class' => 'space-y-4']) }} x-data="plannerTimePicker(@js($config))" data-time-picker wire:ignore>
     {{-- 1. Which span of time --}}
     <div class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="tablist" aria-label="{{ __('planner.picker.when') }}">
         @foreach (array_keys($picker['horizons']) as $horizon)
@@ -87,23 +87,34 @@
                 </template>
             </span>
         </div>
-        <div x-ref="scroller" class="overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900" dir="ltr">
-            <div x-ref="track" class="relative h-24 min-w-[56rem] cursor-crosshair touch-none select-none"
-                x-on:pointerdown="pointerDown($event)" x-on:pointermove="pointerMove($event)" x-on:pointerup="pointerUp()" x-on:pointercancel="pointerUp()"
-                data-timeline>
-                <template x-for="hour in 24" :key="hour">
-                    <div class="pointer-events-none absolute inset-y-0 border-s border-zinc-200 dark:border-zinc-800" x-bind:style="`left:${((hour - 1) / 24) * 100}%`">
-                        <span class="absolute start-1 top-1 text-[0.65rem] text-zinc-400" x-text="hourLabel(hour - 1)"></span>
+        <div dir="ltr">
+            <div class="relative min-w-0 flex-1 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+                <div x-ref="track" class="relative h-28 cursor-crosshair touch-none select-none"
+                    x-on:pointerdown="pointerDown($event)" x-on:pointermove="pointerMove($event)" x-on:pointerup="pointerUp()" x-on:pointercancel="pointerUp()"
+                    data-timeline>
+                    <template x-for="minute in visibleHours()" :key="minute">
+                        <div class="pointer-events-none absolute inset-y-0 border-s" x-bind:class="minute % 60 === 0 ? 'border-zinc-200 dark:border-zinc-800' : 'border-dashed border-zinc-100 dark:border-zinc-800/60'" x-bind:style="at(minute)">
+                            <span x-show="minute % 60 === 0" class="absolute start-1 top-1 text-[0.7rem] text-zinc-500" x-text="hourLabel(minute / 60)"></span>
+                        </div>
+                    </template>
+                    <template x-for="(item, i) in busyFor(selected[0])" :key="'b' + i">
+                        <div class="pointer-events-none absolute top-6 h-6 overflow-hidden rounded-md px-1 text-[0.65rem] leading-6 text-white opacity-70" x-bind:style="span(item[0], item[1]) + `;background:${item[3]}`" x-bind:title="item[2]" x-text="item[2]"></div>
+                    </template>
+                    <div class="absolute bottom-2 top-12 rounded-lg border-2 border-violet-600 bg-violet-500/25" x-bind:style="span(start, end)" data-selection>
+                        <div data-handle="start" class="absolute -start-2.5 inset-y-0 w-5 cursor-ew-resize"><span class="absolute inset-y-0 start-2 w-1.5 rounded bg-violet-600"></span></div>
+                        <div data-handle="end" class="absolute -end-2.5 inset-y-0 w-5 cursor-ew-resize"><span class="absolute inset-y-0 end-2 w-1.5 rounded bg-violet-600"></span></div>
                     </div>
-                </template>
-                <template x-for="(item, i) in busyFor(selected[0])" :key="'b' + i">
-                    <div class="pointer-events-none absolute top-6 h-6 overflow-hidden rounded-md px-1 text-[0.65rem] leading-6 text-white opacity-70" x-bind:style="span(item[0], item[1]) + `;background:${item[3]}`" x-bind:title="item[2]" x-text="item[2]"></div>
-                </template>
-                <div class="absolute bottom-2 top-12 rounded-lg border-2 border-violet-600 bg-violet-500/25" x-bind:style="span(start, end)" data-selection>
-                    <div data-handle="start" class="absolute -start-1.5 inset-y-0 w-3 cursor-ew-resize rounded bg-violet-600"></div>
-                    <div data-handle="end" class="absolute -end-1.5 inset-y-0 w-3 cursor-ew-resize rounded bg-violet-600"></div>
                 </div>
             </div>
+        </div>
+        <div class="flex items-center justify-between gap-2" dir="ltr">
+            <button type="button" x-on:click="shiftView(-1)" x-bind:disabled="viewFrom <= 0" class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 disabled:opacity-30 dark:border-zinc-700" aria-label="{{ __('planner.picker.earlier_hours') }}">‹</button>
+        <div class="flex items-center justify-center gap-1 text-xs" role="group" aria-label="{{ __('planner.picker.zoom') }}">
+            @foreach ([1440 => 'day', 720 => 'half', 240 => 'four'] as $span => $zoomKey)
+                <button type="button" x-on:click="zoom({{ $span }})" class="rounded-md px-2 py-0.5" x-bind:class="viewSpan === {{ $span }} ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'">{{ __('planner.picker.zooms.'.$zoomKey) }}</button>
+            @endforeach
+        </div>
+            <button type="button" x-on:click="shiftView(1)" x-bind:disabled="viewFrom + viewSpan >= 1440" class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 disabled:opacity-30 dark:border-zinc-700" aria-label="{{ __('planner.picker.later_hours') }}">›</button>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="text-sm font-medium" dir="auto" x-text="summary()" data-picker-summary></div>

@@ -5,6 +5,7 @@
 @endphp
 
 <flux:sidebar.item
+    wire:navigate
     :href="route('dashboard')"
     :current="request()->routeIs('dashboard')"
     icon="home"
@@ -18,6 +19,7 @@
 
 @foreach($navigation['primary'] as $destination)
     <flux:sidebar.item
+    wire:navigate
         :href="route($destination['route'])"
         :current="request()->routeIs(...$destination['patterns'])"
         :icon="$destination['icon']"
@@ -33,6 +35,7 @@
         </div>
         @foreach($navigation['account'] as $item)
             <flux:sidebar.item
+    wire:navigate
                 :href="route($item['route'])"
                 :current="request()->routeIs(...$item['patterns'])"
                 :icon="$item['icon']"
@@ -50,6 +53,7 @@
         </div>
         @foreach($navigation['help'] as $item)
             <flux:sidebar.item
+    wire:navigate
                 :href="route($item['route'])"
                 :current="request()->routeIs(...$item['patterns'])"
                 :icon="$item['icon']"
@@ -67,6 +71,7 @@
         </div>
         @foreach($navigation['labs'] as $item)
             <flux:sidebar.item
+    wire:navigate
                 :href="route($item['route'])"
                 :current="request()->routeIs(...$item['patterns'])"
                 :icon="$item['icon']"
@@ -84,6 +89,7 @@
         </div>
         @foreach($navigation['admin'] as $item)
             <flux:sidebar.item
+    wire:navigate
                 :href="route($item['route'])"
                 :current="request()->routeIs(...$item['patterns'])"
                 :icon="$item['icon']"

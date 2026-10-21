@@ -32,6 +32,10 @@ final class PlanSeries
                 'count' => $interval,
                 'days' => collect($rule->weekdays ?? [])->map(fn (mixed $day): string => (string) __('planner.weekdays.'.(int) $day))->implode(__('planner.picker.separator')),
             ]),
+            PlanScheduleFrequency::Monthly => trans_choice('planner.series.monthly', $interval, [
+                'count' => $interval,
+                'day' => (int) ($rule->month_day ?? 1),
+            ]),
             PlanScheduleFrequency::SelectedDates => trans_choice('planner.series.selected_dates', count($rule->selected_dates ?? []), ['count' => count($rule->selected_dates ?? [])]),
         };
     }

@@ -67,10 +67,9 @@ class DuePlanReminderEmitter
                             'title_params' => ['title' => $reminder->plan->title],
                             'body_key' => 'notifications.messages.plan_reminder_body',
                             'body_params' => [
-                                'time' => $occurrence->scheduled_start_at
-                                    ->setTimezone($occurrence->timezone)
-                                    ->format('Y-m-d H:i'),
+                                'time' => TemporalCalendar::dateTimeLabel($occurrence->scheduled_start_at, $user),
                             ],
+                            'important' => (bool) data_get($reminder->plan->metadata, 'important', false),
                             'url' => route('planner.show', $reminder->plan).'#occurrence-'.$occurrence->uuid,
                         ],
                         context: $reminder->plan->context,

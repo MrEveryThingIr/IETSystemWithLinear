@@ -5,6 +5,7 @@ namespace App\Services\Surfaces;
 use App\Models\FeatureSurfaceGrant;
 use App\Models\User;
 use App\Support\PlatformAdmin;
+use App\Support\RequestMemo;
 
 class FeatureSurfaceAccess
 {
@@ -26,10 +27,7 @@ class FeatureSurfaceAccess
             return true;
         }
 
-        return FeatureSurfaceGrant::query()
-            ->where('user_id', $user->getKey())
-            ->where('surface_key', $surfaceKey)
-            ->exists();
+        return in_array($surfaceKey, $this->grantedKeys($user), true);
     }
 
     public function grantedKeys(User $user): array
@@ -38,10 +36,10 @@ class FeatureSurfaceAccess
             return $this->registry->keys();
         }
 
-        return FeatureSurfaceGrant::query()
+        return RequestMemo::remember('surfaces:'.$user->getKey(), fn (): array => FeatureSurfaceGrant::query()
             ->where('user_id', $user->getKey())
             ->pluck('surface_key')
-            ->all();
+            ->all());
     }
 
     /**

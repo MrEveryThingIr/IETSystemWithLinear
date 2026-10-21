@@ -80,4 +80,5 @@ return [
         'submit' => '创建并打开',
         'kind_unavailable_here' => '所选位置不提供此类型。',
     ],
+    'show_more' => '显示更多（:count）',
 ];

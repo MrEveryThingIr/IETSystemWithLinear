@@ -19,6 +19,18 @@ final class PlanKinds
         'meeting' => ['icon' => 'user-group', 'color' => '#8b5cf6', 'duration' => 45, 'frequency' => 'once', 'reminder' => 30],
         'focus' => ['icon' => 'bolt', 'color' => '#ef4444', 'duration' => 90, 'frequency' => 'once', 'reminder' => 5],
         'reminder' => ['icon' => 'bell', 'color' => '#ec4899', 'duration' => 5, 'frequency' => 'once', 'reminder' => 0],
+        'due' => ['icon' => 'banknotes', 'color' => '#0ea5e9', 'duration' => 15, 'frequency' => 'once', 'reminder' => 1440],
+    ];
+
+    /**
+     * Kinds that are about not forgetting: they start as "important" with
+     * several early reminders (a week, a day and an hour before).
+     *
+     * @var array<string, list<int>>
+     */
+    public const IMPORTANT_DEFAULTS = [
+        'due' => [10080, 1440, 60],
+        'reminder' => [1440, 0],
     ];
 
     /** Colour choices offered next to custom colours. */

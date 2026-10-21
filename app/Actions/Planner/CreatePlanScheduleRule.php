@@ -14,6 +14,7 @@ use App\PlanScheduleFrequency;
 use App\PlanStatus;
 use App\PlanTimingMode;
 use App\Support\PlanAttentionConflicts;
+use App\Support\Planner\CalendarMonths;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +49,7 @@ class CreatePlanScheduleRule
         int $windowAfterMinutes = 0,
         array $reminderOffsets = [],
         PlanTimingMode $timingMode = PlanTimingMode::Fixed,
+        ?int $monthDay = null,
     ): PlanScheduleRule {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('manage', $plan);
@@ -112,7 +114,17 @@ class CreatePlanScheduleRule
             ->values()
             ->all();
         abort_if(count($reminders) > 10, 422, 'A Schedule Rule may have at most ten reminder offsets.');
-        abort_if(collect($reminders)->contains(fn (int $minutes): bool => $minutes < 0 || $minutes > 10080), 422, 'Reminder offsets must be between 0 minutes and 7 days.');
+        abort_if(collect($reminders)->contains(fn (int $minutes): bool => $minutes < 0 || $minutes > 43200), 422, 'Reminder offsets must be between 0 minutes and 30 days.');
+
+        // Monthly plans count months in the person's own calendar.
+        $calendar = $frequency === PlanScheduleFrequency::Monthly ? TemporalPreferences::calendarFor($current) : null;
+        if ($calendar !== null) {
+            $monthDay = $monthDay !== null && $monthDay >= 1 && $monthDay <= 31
+                ? $monthDay
+                : CalendarMonths::dayOf($startDate, $calendar, $lockedPlan->timezone);
+        } else {
+            $monthDay = null;
+        }
 
         return DB::transaction(function () use (
             $lockedPlan,
@@ -130,6 +142,8 @@ class CreatePlanScheduleRule
             $windowAfterMinutes,
             $reminders,
             $timingMode,
+            $calendar,
+            $monthDay,
         ): PlanScheduleRule {
             $plan = Plan::query()->lockForUpdate()->findOrFail($lockedPlan->id);
             Gate::forUser($current)->authorize('manage', $plan);
@@ -163,6 +177,8 @@ class CreatePlanScheduleRule
                 'window_before_minutes' => $windowBeforeMinutes,
                 'window_after_minutes' => $windowAfterMinutes,
                 'timezone' => $plan->timezone,
+                'month_day' => $monthDay,
+                'calendar' => $calendar?->value,
             ]);
 
             foreach ($reminders as $minutesBefore) {
@@ -190,7 +206,7 @@ class CreatePlanScheduleRule
 
             $materializeFrom = $startDate;
 
-            if (in_array($frequency, [PlanScheduleFrequency::Daily, PlanScheduleFrequency::Weekly], true)) {
+            if (in_array($frequency, [PlanScheduleFrequency::Daily, PlanScheduleFrequency::Weekly, PlanScheduleFrequency::Monthly], true)) {
                 $recent = CarbonImmutable::now($plan->timezone)->subDays(30)->startOfDay();
 
                 if ($recent->greaterThan($materializeFrom)) {

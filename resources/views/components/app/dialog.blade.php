@@ -28,16 +28,18 @@
         role="dialog"
         aria-modal="true"
         @if ($title) aria-label="{{ $title }}" @endif
-        x-data="{ shown: false }"
+        x-data="{ shown: false, open: true }"
         x-init="$nextTick(() => shown = true)"
-        @if ($close) x-on:keydown.escape.window="$wire.{{ $close }}()" @endif
+        x-show="open"
+        @if ($close) x-on:keydown.escape.window="open = false; $wire.{{ $close }}()" @endif
         data-app-dialog
     >
         @if ($close)
-            <button type="button" class="absolute inset-0 cursor-default" aria-hidden="true" tabindex="-1" wire:click="{{ $close }}"></button>
+            {{-- Closes at once on screen; the server catches up in the background. --}}
+            <button type="button" class="absolute inset-0 cursor-default" aria-hidden="true" tabindex="-1" x-on:click="open = false; $wire.{{ $close }}()"></button>
         @endif
         <div
-            x-trap.noscroll="shown"
+            x-trap.noscroll="shown && open"
             x-bind:class="shown ? 'translate-y-0 opacity-100 sm:scale-100' : 'translate-y-4 opacity-0 sm:translate-y-0 sm:scale-95'"
             {{ $attributes->merge(['class' => "relative flex max-h-[92dvh] w-full {$width} flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl transition duration-150 ease-out sm:rounded-2xl dark:bg-zinc-900"]) }}
         >
@@ -47,7 +49,7 @@
                         <h2 class="min-w-0 text-lg font-semibold" dir="auto">{{ $title }}</h2>
                     @endif
                     @if ($close)
-                        <flux:button wire:click="{{ $close }}" size="sm" variant="ghost" icon="x-mark" class="-me-2 shrink-0" :aria-label="__('ui.common.close')" />
+                        <flux:button x-on:click="open = false; $wire.{{ $close }}()" size="sm" variant="ghost" icon="x-mark" class="-me-2 shrink-0" :aria-label="__('ui.common.close')" />
                     @endif
                 </div>
             @endif

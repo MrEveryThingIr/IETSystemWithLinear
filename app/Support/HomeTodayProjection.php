@@ -24,6 +24,7 @@ use App\Models\RelationshipContext;
 use App\Models\RelationshipParticipant;
 use App\Models\Submission;
 use App\Models\User;
+use App\PlanOccurrenceStatus;
 use App\ProfileIntentStatus;
 use App\ProposalStatus;
 use App\RelationshipParticipantStatus;
@@ -133,6 +134,7 @@ class HomeTodayProjection
             'today' => $today,
             'todayDisplay' => $todayDisplay,
             'money' => $money,
+            'dontForget' => $this->dontForget($current, $now),
             'todayOccurrences' => $todayOccurrences,
             'todayOccurrenceCount' => $todayOccurrences->count(),
             'todayOccurrencesTruncated' => $fetchedOccurrences->count() >= self::OCCURRENCE_SCAN_LIMIT,
@@ -217,6 +219,7 @@ class HomeTodayProjection
             'today' => $today,
             'todayDisplay' => $todayDisplay,
             'money' => ['owed_to_me' => 0, 'i_owe' => 0, 'waiting_for_me' => collect(), 'today_income' => 0, 'today_expense' => 0, 'has_books' => false],
+            'dontForget' => collect(),
             'todayOccurrences' => collect(),
             'todayOccurrenceCount' => 0,
             'todayOccurrencesTruncated' => false,
@@ -254,6 +257,30 @@ class HomeTodayProjection
             url: route('bookkeeping.books.show', $entry->ledger).'#entry-'.$entry->uuid,
             occurredAt: $entry->created_at ?? now(),
         ))->values();
+    }
+
+    /**
+     * Plans marked important (installments, cheques, bills) that are due in
+     * the next two weeks or overdue and not done yet: they stay here until
+     * the person marks them done.
+     *
+     * @return Collection<int, PlanOccurrence>
+     */
+    private function dontForget(User $user, CarbonImmutable $now): Collection
+    {
+        return PlanOccurrence::query()
+            ->with('plan')
+            ->whereIn('status', [PlanOccurrenceStatus::Scheduled->value, PlanOccurrenceStatus::InProgress->value])
+            ->where('scheduled_start_at', '<=', $now->addDays(14)->utc())
+            ->where('scheduled_start_at', '>=', $now->subDays(60)->utc())
+            ->whereHas('plan', fn ($query) => $query->where('status', 'active'))
+            ->orderBy('scheduled_start_at')
+            ->limit(500)
+            ->get()
+            ->filter(fn (PlanOccurrence $occurrence): bool => (bool) data_get($occurrence->plan->metadata, 'important')
+                && Gate::forUser($user)->allows('participate', $occurrence->plan))
+            ->take(8)
+            ->values();
     }
 
     /** Meeting requests waiting for this person's answer. */

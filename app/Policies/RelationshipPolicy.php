@@ -8,6 +8,7 @@ use App\Models\RelationshipParticipant;
 use App\Models\User;
 use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
+use App\Support\RequestMemo;
 
 class RelationshipPolicy
 {
@@ -90,7 +91,7 @@ class RelationshipPolicy
 
     private function currentActor(User $user): ?Actor
     {
-        $current = User::query()->with('actor')->find($user->id);
+        $current = RequestMemo::user($user);
 
         if (! $current instanceof User
             || $current->status !== 'active'

@@ -20,11 +20,14 @@ use App\Support\DomainNotificationProjector;
 use App\Support\Media\LocalVideoProcessor;
 use App\Support\MediaScannerPolicy;
 use App\Support\ReleaseManifest;
+use App\Support\RequestMemo;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Events\RouteMatched;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -42,6 +45,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Per-request memo: start empty for every request and forget it on
+        // any change to users, actors or access grants.
+        Event::listen(RouteMatched::class, fn () => RequestMemo::flush());
+        foreach (RequestMemo::invalidatingModels() as $model) {
+            $model::saved(fn () => RequestMemo::flush());
+            $model::deleted(fn () => RequestMemo::flush());
+        }
+
         Gate::policy(Ledger::class, LedgerPolicy::class);
         Gate::policy(Transaction::class, TransactionPolicy::class);
         Gate::policy(Dispute::class, TransactionPolicy::class);

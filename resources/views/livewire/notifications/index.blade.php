@@ -9,6 +9,8 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    <x-app.device-notifications />
+
     <flux:callout>{{ __('notifications.reconnect_boundary') }}</flux:callout>
 
     <div class="flex flex-wrap gap-2">
