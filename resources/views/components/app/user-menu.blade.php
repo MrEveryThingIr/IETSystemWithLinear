@@ -49,6 +49,11 @@
             <flux:menu.item :href="route('profile.edit')" icon="user-circle">
                 {{ __('ui.navigation.profile') }}
             </flux:menu.item>
+            @if (\Illuminate\Support\Facades\Route::has('profile.professions.index') && app(\App\Services\Surfaces\FeatureSurfaceAccess::class)->allows($accountUser, 'profile'))
+                <flux:menu.item :href="route('profile.professions.index')" icon="wrench-screwdriver" wire:navigate data-menu-capabilities>
+                    {{ __('capabilities.title') }}
+                </flux:menu.item>
+            @endif
             <flux:menu.item :href="route('whats-new')" icon="sparkles" data-menu-whats-new>
                 {{ __('changelog.title') }} · {{ \App\Support\Changelog::currentVersion() }}
             </flux:menu.item>

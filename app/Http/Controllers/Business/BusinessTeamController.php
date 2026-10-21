@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Actor;
 use App\Models\Business;
 use App\Models\BusinessMembership;
-use App\Models\Profession;
 use App\Services\Business\BusinessService;
 use App\Support\BusinessAccess;
 use Illuminate\Http\RedirectResponse;
@@ -67,45 +66,6 @@ class BusinessTeamController extends Controller
         $service->removeMember($business, $membership);
 
         return back()->with('status', __('business.messages.member_removed'));
-    }
-
-    public function assignProfession(
-        Request $request,
-        Business $business,
-        BusinessMembership $membership,
-        BusinessService $service
-    ): RedirectResponse {
-        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
-
-        $data = $request->validate([
-            'profession_id' => ['required', 'exists:professions,id'],
-            'is_primary' => ['nullable', 'boolean'],
-        ]);
-
-        $profession = Profession::query()->findOrFail($data['profession_id']);
-
-        $service->assignProfession(
-            $business,
-            $membership,
-            $profession,
-            (bool) ($data['is_primary'] ?? false)
-        );
-
-        return back()->with('status', __('business.messages.profession_added'));
-    }
-
-    public function removeProfession(
-        Request $request,
-        Business $business,
-        BusinessMembership $membership,
-        Profession $profession
-    ): RedirectResponse {
-        abort_unless(BusinessAccess::canManage($request->user(), $business), 403);
-        abort_unless((int) $membership->business_id === (int) $business->getKey(), 404);
-
-        $membership->professions()->detach($profession->getKey());
-
-        return back()->with('status', __('business.messages.profession_removed'));
     }
 
     public function transferOwnership(

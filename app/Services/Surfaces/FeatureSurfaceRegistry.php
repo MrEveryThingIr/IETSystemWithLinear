@@ -76,6 +76,10 @@ class FeatureSurfaceRegistry
                 'Development Origins', 'مبدأهای توسعه', 'clock', 'platform', [],
                 ['platform.development-origins'], ['platform.development-origins']
             ),
+            'category-review' => $this->surface(
+                'Category suggestions', 'پیشنهاد دسته‌بندی', 'tag', 'platform', [],
+                ['platform.categories'], ['platform.categories']
+            ),
             'actors' => $this->surface('Actors', 'کنشگران', 'users', 'platform', [], ['actors.index'], ['actors.*']),
 
             'publication-control' => [

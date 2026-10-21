@@ -19,7 +19,7 @@
         .body{padding:22px}
         .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
         label span{display:block;font-size:14px;font-weight:900;margin-bottom:7px;color:#344054}
-        input,select,textarea{width:100%;border:1.5px solid #9daabc!important;border-radius:14px!important;padding:12px 13px!important;font-size:15px!important;background:#fff!important;color:#172033!important}
+        input,select,textarea{width:100%;border:1.5px solid #9daabc!important;border-radius:14px!important;padding:12px 13px!important;font-size:16px!important;background:#fff!important;color:#172033!important}
         input:focus,select:focus,textarea:focus{outline:4px solid #e0e7ff!important;border-color:#6366f1!important}
         .btn{border:0;border-radius:14px;padding:11px 15px;font-weight:950;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
         .primary{background:#4f46e5;color:#fff}.green{background:#047857;color:#fff}.light{background:#f8fafc;color:#344054;border:1px solid #d0d5dd}.danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
@@ -377,7 +377,7 @@
     <section id="team-settings" class="panel">
         <div class="head">
             <div><h2>👥 {{ __('business.show.team.title') }}</h2><p>{{ __('business.show.team.help') }}</p></div>
-            <a class="btn light" href="{{ route('profile.professions.index') }}">{{ __('business.show.team.my_professions') }}</a>
+            <a class="btn light" href="{{ route('profile.professions.index') }}">{{ __('capabilities.title') }}</a>
         </div>
         <div class="body">
             <div class="list">
@@ -389,7 +389,7 @@
                                 <div style="margin-top:6px">
                                     <span class="badge {{ $membership->role }}">{{ $roleLabels[$membership->role] ?? $membership->role }}</span>
                                     @if($membership->job_title)<span class="badge">{{ $membership->job_title }}</span>@endif
-                                    @foreach($membership->professions as $profession)<span class="badge profession">{{ $profession->name_fa ?: $profession->name }}</span>@endforeach
+
                                 </div>
                             </div>
                             @if($canManage && $membership->role !== 'owner')
@@ -408,20 +408,7 @@
                             </form>
                         @endif
 
-                        @if($canManage)
-                            <form method="POST" action="{{ route('businesses.members.professions.store',[$business,$membership]) }}" class="section-form">
-                                @csrf
-                                <div class="grid">
-                                    <label><span>{{ __('business.show.team.profession') }}</span><select name="profession_id">
-                                        @foreach($professions as $profession)
-                                            <option value="{{ $profession->id }}">{{ $profession->parent ? (($profession->parent->name_fa ?: $profession->parent->name).' ← ') : '' }}{{ $profession->name_fa ?: $profession->name }}</option>
-                                        @endforeach
-                                    </select></label>
-                                    <label style="display:flex;gap:8px;align-items:end;padding-bottom:10px"><input style="width:20px" type="checkbox" name="is_primary" value="1"><span style="margin:0">{{ __('business.show.team.primary_profession') }}</span></label>
-                                </div>
-                                <button class="btn light">＋ {{ __('business.show.team.add_profession') }}</button>
-                            </form>
-                        @endif
+                        <livewire:business.member-capabilities :membership="$membership" :key="'member-capabilities-'.$membership->id" />
                     </article>
                 @endforeach
             </div>

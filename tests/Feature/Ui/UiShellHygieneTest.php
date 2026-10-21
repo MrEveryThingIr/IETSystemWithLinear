@@ -36,7 +36,6 @@ class UiShellHygieneTest extends TestCase
     {
         $paths = [
             resource_path('views/profile/contact-center/index.blade.php'),
-            resource_path('views/profile/professions/index.blade.php'),
             resource_path('views/businesses/index.blade.php'),
             resource_path('views/businesses/create.blade.php'),
             resource_path('views/businesses/show.blade.php'),

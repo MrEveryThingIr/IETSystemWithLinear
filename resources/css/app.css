@@ -44,6 +44,13 @@ html {
     overflow-x: hidden;
 }
 
+/* Long menu labels truncate inside the sidebar instead of running past its edge. */
+ui-sidebar ui-tooltip {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+}
+
 body {
     overflow-wrap: break-word;
 }

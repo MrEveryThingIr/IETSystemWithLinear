@@ -94,6 +94,8 @@ class PlannerKernelTest extends TestCase
 
     public function test_weekly_class_and_non_consecutive_workdays_use_the_same_schedule_kernel(): void
     {
+        // The dates below are fixed; keep "now" next to them so the materialization window covers them.
+        $this->travelTo(CarbonImmutable::parse('2026-09-20 12:00:00', 'UTC'));
         $bob = Actor::factory()->create();
         $context = app(EnsurePersonalContext::class)->execute($bob->user);
 

@@ -22,6 +22,7 @@ return [
         'development-origins' => 'أصول التطوير',
         'actors' => 'الجهات الفاعلة',
         'publication-control' => 'التحكم في النشر',
+        'category-review' => 'اقتراحات التصنيفات',
     ],
     'navigation' => [
         'needs_offers' => 'الاحتياجات والعروض',
