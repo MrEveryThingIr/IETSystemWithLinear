@@ -209,6 +209,8 @@ return [
         'expense_recorded' => 'Occurrence expense recorded',
         'evidence_attached' => 'Occurrence evidence attached',
         'occurrence_evidence_attached' => 'Occurrence evidence attached',
+        'occurrence_prerequisite_updated' => 'Occurrence prerequisite updated',
+        'occurrence_expense_recorded' => 'Occurrence expense recorded',
     ],
     'wizard' => [
         'help' => 'A few short steps: what it is, when, and the details you want.',

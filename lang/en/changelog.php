@@ -5,6 +5,17 @@ return [
     'help' => 'Changes in each version of :name. You are using :version.',
     'current' => 'You are here',
     'versions' => [
+        '1_7_1' => [
+            'title' => 'Every screen size: phones, tablets and computers',
+            'items' => [
+                'Pages no longer get wider than a phone screen, so the side menu stays hidden and nothing is cut off at the edge. All 84 pages were checked at seven screen sizes, from a 320px phone to a wide monitor, in Persian, English, Arabic and Chinese.',
+                'The content studio fits phones: its buttons wrap instead of pushing the page sideways.',
+                'Profile pictures keep their shape everywhere instead of shrinking to a thin line.',
+                'Faster: fonts are served from this site instead of Google, Today shows first and loads recent activity right after, content pages need far fewer database checks, and side panels in the studio load when you open them.',
+                'Inputs on phones use a size that stops iPhones from zooming in, and small buttons and checkboxes are easier to tap.',
+                'Fixes: the "add field" buttons in the block editor work again, and a few labels that showed technical names are translated.',
+            ],
+        ],
         '1_7_0' => [
             'title' => 'Planner: never forget due dates, device notifications, faster everywhere',
             'items' => [

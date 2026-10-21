@@ -209,6 +209,8 @@ return [
         'expense_recorded' => '事项支出已记录',
         'evidence_attached' => '证据已附加到计划事项',
         'occurrence_evidence_attached' => '证据已附加到计划事项',
+        'occurrence_prerequisite_updated' => '事项前置条件已更新',
+        'occurrence_expense_recorded' => '事项支出已记录',
     ],
     'wizard' => [
         'help' => '几个简短步骤：做什么、什么时候，以及你需要的细节。',

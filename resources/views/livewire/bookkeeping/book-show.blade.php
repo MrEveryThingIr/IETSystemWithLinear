@@ -189,7 +189,7 @@
     <flux:card class="space-y-4" data-history>
         <div class="flex flex-wrap items-center justify-between gap-2">
             <flux:heading size="lg">{{ __('bookkeeping.book_show.history') }}</flux:heading>
-            <div class="inline-flex rounded-lg bg-zinc-100 p-1 text-sm dark:bg-zinc-800">
+            <div class="inline-flex max-w-full flex-wrap rounded-lg bg-zinc-100 p-1 text-sm dark:bg-zinc-800">
                 @foreach (['all', 'waiting', 'debts', 'payments'] as $option)
                     <button type="button" wire:click="$set('filter', '{{ $option }}')" class="rounded-md px-3 py-1 {{ $filter === $option ? 'bg-white shadow dark:bg-zinc-900' : 'text-zinc-600 dark:text-zinc-300' }}">{{ __('bookkeeping.filters.'.$option) }}</button>
                 @endforeach

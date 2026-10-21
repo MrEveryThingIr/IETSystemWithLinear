@@ -11,12 +11,14 @@
             variant="ghost"
             icon:trailing="chevron-down"
             :aria-label="__('ui.navigation.account_menu')"
-            class="max-w-56 gap-2"
+            class="max-w-56 shrink-0 gap-2"
         >
-            @if ($accountActor)
-                <x-app.actor-avatar :actor="$accountActor" size="xs" :alt="$displayName" />
-            @endif
-            <span class="hidden min-w-0 truncate sm:block">{{ $displayName }}</span>
+            <span class="flex min-w-0 items-center gap-2">
+                @if ($accountActor)
+                    <x-app.actor-avatar :actor="$accountActor" size="xs" :alt="$displayName" />
+                @endif
+                <span class="hidden min-w-0 truncate sm:block">{{ $displayName }}</span>
+            </span>
         </flux:button>
 
         <flux:menu class="w-72 max-w-[calc(100vw-2rem)] sm:w-80">

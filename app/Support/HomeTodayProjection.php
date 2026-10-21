@@ -63,8 +63,7 @@ class HomeTodayProjection
      *   waitingOnOthers: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
-     *   groupMemberships: Collection<int, GroupMembership>,
-     *   recentActivity: Collection<int, TimelineEntry>
+     *   groupMemberships: Collection<int, GroupMembership>
      * }
      */
     public function build(User $user): array
@@ -149,7 +148,6 @@ class HomeTodayProjection
             'activeIntents' => $activeIntents,
             'activeRelationships' => $activeRelationships,
             'groupMemberships' => $groupMemberships,
-            'recentActivity' => $this->recentActivity($current, $actor),
         ];
     }
 
@@ -208,8 +206,7 @@ class HomeTodayProjection
      *   waitingOnOthers: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
-     *   groupMemberships: Collection<int, GroupMembership>,
-     *   recentActivity: Collection<int, TimelineEntry>
+     *   groupMemberships: Collection<int, GroupMembership>
      * }
      */
     private function emptyProjection(string $timezone, string $today, string $todayDisplay): array
@@ -231,7 +228,6 @@ class HomeTodayProjection
             'activeIntents' => collect(),
             'activeRelationships' => collect(),
             'groupMemberships' => collect(),
-            'recentActivity' => collect(),
         ];
     }
 
@@ -564,9 +560,20 @@ class HomeTodayProjection
             ->values();
     }
 
-    /** @return Collection<int, TimelineEntry> */
-    private function recentActivity(User $user, Actor $actor): Collection
+    /**
+     * The latest events across the places this person can see. Built on its own
+     * (Today loads it after the page appears) because it reads many timelines.
+     *
+     * @return Collection<int, TimelineEntry>
+     */
+    public function recentActivity(User $user): Collection
     {
+        $user = User::query()->with('actor')->find($user->id);
+        $actor = $user?->actor;
+        if (! $user instanceof User || ! $actor instanceof Actor) {
+            return collect();
+        }
+
         $contexts = collect();
 
         $personal = PersonalContext::query()->with('context')->where('actor_id', $actor->id)->first();

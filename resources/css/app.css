@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap');
+/* Fonts are served from this site (Google Fonts is slow or blocked for many visitors). */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/vazirmatn';
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 
@@ -8,8 +10,60 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Inter', 'Vazirmatn', 'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Microsoft YaHei', 'PingFang SC', ui-sans-serif, system-ui, sans-serif,
+    --font-sans: 'Inter Variable', 'Vazirmatn Variable', 'Inter', 'Vazirmatn', 'Segoe UI', Tahoma, Arial, 'Noto Sans Arabic', 'Microsoft YaHei', 'PingFang SC', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/*
+ * Layout guards for every screen size.
+ * - A grid's automatic column may shrink to the screen; without this a single
+ *   wide child (an image, a long word, a row of buttons) widens the whole
+ *   column, and phones then zoom the page out and reveal the hidden sidebar.
+ * - The page never scrolls sideways; anything wider scrolls in its own box.
+ */
+@layer base {
+    .grid {
+        grid-auto-columns: minmax(0, 1fr);
+    }
+
+    img,
+    video {
+        max-width: 100%;
+    }
+
+    /* Absolutely placed children (screen-reader labels, badges) stay inside their scroll box. */
+    ui-table-scroll-area,
+    .overflow-auto,
+    .overflow-x-auto,
+    .overflow-x-scroll {
+        position: relative;
+    }
+}
+
+html {
+    overflow-x: hidden;
+}
+
+body {
+    overflow-wrap: break-word;
+}
+
+/* Easier to hit with a finger: plain checkboxes and radio buttons. */
+@media (pointer: coarse) {
+    input[type='checkbox']:not([class*='size-']):not([class*='w-']),
+    input[type='radio']:not([class*='size-']):not([class*='w-']) {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+}
+
+/* iPhone zooms into any field with text smaller than 16px; keep fields at 16px on phones. */
+@media (max-width: 639px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']),
+    select,
+    textarea {
+        font-size: 16px;
+    }
 }
 
 [x-cloak] {
