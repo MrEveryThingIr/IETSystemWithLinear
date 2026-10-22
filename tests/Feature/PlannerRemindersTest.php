@@ -36,7 +36,8 @@ class PlannerRemindersTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $keys = VapidKeys::generate();
+        // Public test-only identity. Ordinary planner tests do not provision keys.
+        $keys = json_decode(file_get_contents(base_path('tests/Fixtures/push/vapid.json')), true, flags: JSON_THROW_ON_ERROR);
         // Configured keys, so the test never writes generated keys to storage.
         config(['webpush.public_key' => $keys['public'], 'webpush.private_key' => $keys['private_pem'], 'webpush.subject' => 'mailto:test@example.com']);
         VapidKeys::forgetCached();

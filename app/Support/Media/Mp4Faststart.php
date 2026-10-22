@@ -97,6 +97,7 @@ final class Mp4Faststart
             throw new RuntimeException('The video could not be opened.');
         }
 
+        $temporary = null;
         try {
             fseek($in, $moov['offset']);
             $moovBytes = (string) fread($in, $moov['size']);
@@ -118,7 +119,9 @@ final class Mp4Faststart
 
             try {
                 self::copy($in, $out, $ftyp['offset'], $ftyp['size']);
-                fwrite($out, $patched);
+                if (fwrite($out, $patched) !== strlen($patched)) {
+                    throw new RuntimeException('The video index could not be written.');
+                }
                 foreach ($boxes as $box) {
                     if ($box['type'] === 'moov' || $box['type'] === 'ftyp') {
                         continue;
@@ -129,20 +132,26 @@ final class Mp4Faststart
                 fclose($out);
             }
 
-            if (filesize($temporary) !== filesize($source)) {
-                @unlink($temporary);
-
+            if (filesize($temporary) !== filesize($source) || self::topLevelBoxes($temporary) === [] || ! self::isFaststart($temporary)) {
                 return false;
             }
 
-            if (! rename($temporary, $target)) {
-                @unlink($temporary);
+            // Windows cannot replace a file while our source handle is open.
+            // Keep the original in place until the complete output is validated.
+            fclose($in);
+            $in = null;
+            if (! @rename($temporary, $target)) {
                 throw new RuntimeException('The video could not be replaced.');
             }
 
             return true;
         } finally {
-            fclose($in);
+            if (is_resource($in)) {
+                fclose($in);
+            }
+            if ($temporary !== null && is_file($temporary)) {
+                @unlink($temporary);
+            }
         }
     }
 
