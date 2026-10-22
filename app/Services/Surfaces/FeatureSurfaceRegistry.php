@@ -246,6 +246,8 @@ class FeatureSurfaceRegistry
             'actors.profile.reference',
             'profiles.show',
             'profiles.images.*',
+            // A Need/Offer's photos follow the Need/Offer's own visibility.
+            'intents.media.*',
             'profiles.shares.*',
 
             // Context-specific content resources are shared infrastructure.

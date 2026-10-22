@@ -5,16 +5,15 @@ namespace App\Livewire\Intents;
 use App\Models\ActorProfileIntent;
 use App\Models\User;
 use App\ProfileIntentStatus;
-use App\ProfileVisibility;
+use App\Support\Categories\CategoryCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
-#[Title('Needs, offers & services')]
 class Directory extends Component
 {
     use WithPagination;
@@ -35,6 +34,10 @@ class Directory extends Component
 
     public ?string $highlight = null;
 
+    public int $area = 0;
+
+    public string $scope = 'all';
+
     protected array $queryString = [
         'quick' => ['except' => 'all'],
         'kind' => ['except' => 'all'],
@@ -44,23 +47,27 @@ class Directory extends Component
         'search' => ['except' => ''],
         'location' => ['except' => ''],
         'highlight' => ['except' => null],
+        'area' => ['except' => 0],
+        'scope' => ['except' => 'all'],
     ];
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location'], true)) {
+        if (in_array($property, ['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location', 'area', 'scope'], true)) {
             $this->resetPage();
         }
     }
 
     public function clearFilters(): void
     {
-        $this->reset(['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location']);
+        $this->reset(['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location', 'area', 'scope']);
         $this->quick = 'all';
         $this->kind = 'all';
         $this->subject = 'all';
         $this->arrangement = 'all';
         $this->exchange = 'all';
+        $this->area = 0;
+        $this->scope = 'all';
         $this->resetPage();
     }
 
@@ -71,7 +78,7 @@ class Directory extends Component
 
         $query = ActorProfileIntent::query()
             ->where('status', ProfileIntentStatus::Active->value)
-            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset']);
+            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup', 'media' => fn ($media) => $media->with('asset')]);
 
         $this->applyQuickFilter($query);
 
@@ -106,47 +113,42 @@ class Directory extends Component
             });
         }
 
-        $actorId = $user->actor?->id;
-        $isActiveVerified = $user->status === 'active' && $user->email_verified_at !== null;
+        $query->visibleTo($user);
 
-        $query->where(function (Builder $visibility) use ($actorId, $isActiveVerified): void {
-            if ($actorId !== null) {
-                $visibility->whereHas('profile', fn (Builder $profile) => $profile->where('actor_id', $actorId));
-            } else {
-                $visibility->whereRaw('0 = 1');
-            }
+        if ($this->area > 0) {
+            $query->whereIn('concept_id', $this->areaConceptIds($this->area));
+        }
 
-            $visibility->orWhere(function (Builder $discoverable) use ($isActiveVerified): void {
-                $discoverable
-                    ->whereHas('profile.actor', fn (Builder $actor) => $actor->where('status', 'active'))
-                    ->where(function (Builder $intentVisibility) use ($isActiveVerified): void {
-                        $intentVisibility->where('visibility', 'public');
-
-                        if ($isActiveVerified) {
-                            $intentVisibility->orWhere('visibility', 'authenticated');
-                        }
-
-                        $intentVisibility->orWhere(function (Builder $inherited) use ($isActiveVerified): void {
-                            $inherited
-                                ->where('visibility', 'inherited')
-                                ->whereHas('profile', function (Builder $profile) use ($isActiveVerified): void {
-                                    $profile->where('visibility', ProfileVisibility::Public->value);
-
-                                    if ($isActiveVerified) {
-                                        $profile->orWhere('visibility', ProfileVisibility::Authenticated->value);
-                                    }
-                                });
-                        });
-                    });
-            });
-        });
+        if ($this->scope === 'mine') {
+            $actorId = (int) $user->actor?->id;
+            $memberships = ActorProfileIntent::membershipsOf($actorId);
+            $query->where(fn (Builder $mine) => $mine->where('publisher_actor_id', $actorId)
+                ->orWhereIn('publisher_business_id', $memberships['managed_businesses'])
+                ->orWhereIn('publisher_group_id', $memberships['managed_groups']));
+        }
 
         $intents = $query
             ->latest('updated_at')
             ->latest('id')
             ->paginate(24);
 
-        return view('livewire.intents.directory', compact('intents'));
+        $catalog = app(CategoryCatalog::class);
+        $paths = [];
+        foreach ($intents->getCollection() as $intent) {
+            $paths[$intent->id] = implode(' › ', array_column($catalog->path((int) $intent->concept_id, null), 'label'));
+        }
+
+        $versionIds = $intents->getCollection()->pluck('business_listing_version_id')->filter()->unique()->values()->all();
+        $listingCovers = $versionIds === [] ? [] : array_flip(DB::table('business_listing_media')
+            ->whereIn('business_listing_version_id', $versionIds)->where('visibility', 'public')
+            ->distinct()->pluck('business_listing_version_id')->map(fn ($id): int => (int) $id)->all());
+
+        return view('livewire.intents.directory', [
+            'intents' => $intents,
+            'listingCovers' => $listingCovers,
+            'areas' => $catalog->areas(),
+            'paths' => $paths,
+        ])->title(__('intents.directory.title'));
     }
 
     /** @param Builder<ActorProfileIntent> $query */
@@ -167,5 +169,34 @@ class Directory extends Component
             }),
             default => null,
         };
+    }
+
+    /**
+     * The area itself, every shared category under it, and private categories
+     * hanging below those (a few levels at most).
+     *
+     * @return list<int>
+     */
+    private function areaConceptIds(int $area): array
+    {
+        $catalog = app(CategoryCatalog::class);
+        $ids = DB::table('concept_closure')
+            ->where('scheme_id', $catalog->sharedSchemeId())
+            ->where('ancestor_concept_id', $area)
+            ->pluck('descendant_concept_id')
+            ->map(fn ($id): int => (int) $id)
+            ->push($area)
+            ->unique()
+            ->values()
+            ->all();
+        $narrower = (int) DB::table('concept_relation_types')->where('key', 'narrower_than')->value('id');
+        $frontier = $ids;
+        for ($depth = 0; $depth < CategoryCatalog::MAX_PRIVATE_DEPTH && $frontier !== [] && $narrower > 0; $depth++) {
+            $frontier = DB::table('concept_relations')->where('relation_type_id', $narrower)->whereIn('to_concept_id', $frontier)
+                ->pluck('from_concept_id')->map(fn ($id): int => (int) $id)->diff($ids)->values()->all();
+            $ids = [...$ids, ...$frontier];
+        }
+
+        return $ids;
     }
 }

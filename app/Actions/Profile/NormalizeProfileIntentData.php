@@ -8,6 +8,7 @@ use App\ProfileIntentExchangePreference;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
+use App\Support\Market\RateBasis;
 use App\Support\TemporalPreferences;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -71,7 +72,7 @@ class NormalizeProfileIntentData
             'cash_min' => ['nullable', 'numeric', 'min:0', 'max:9999999999999999'],
             'cash_max' => ['nullable', 'numeric', 'min:0', 'max:9999999999999999', 'gte:cash_min'],
             'currency_code' => ['nullable', 'string', 'size:3', 'regex:/^[A-Za-z]{3}$/'],
-            'cash_basis' => ['nullable', Rule::in(['total', 'hour', 'day', 'week', 'month', 'year'])],
+            'cash_basis' => ['nullable', Rule::in(RateBasis::values())],
             'exchange_notes' => ['nullable', 'string', 'max:2000'],
             'unit' => ['nullable', 'string', 'max:64'],
             'location_text' => ['nullable', 'string', 'max:255'],
@@ -90,6 +91,7 @@ class NormalizeProfileIntentData
             'time_window_start' => ['nullable', 'date_format:H:i'],
             'time_window_end' => ['nullable', 'date_format:H:i'],
             'visibility' => ['required', Rule::enum(ProfileItemVisibility::class)],
+            'negotiable' => ['sometimes', 'boolean'],
         ]);
 
         $validator->after(function ($validator) use ($input): void {

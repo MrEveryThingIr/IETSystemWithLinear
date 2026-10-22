@@ -11,6 +11,7 @@ use App\Models\BusinessListing;
 use App\Models\BusinessListingVersion;
 use App\Models\BusinessPriceVersion;
 use App\Models\PublicRealEstateCase;
+use App\Support\Categories\CategoryCatalog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -37,6 +38,8 @@ class BusinessCatalogService
                 'parent_id' => $parent?->id,
                 'name' => $name,
                 'is_active' => true,
+                // Same name as a shared category: offers are found under it too.
+                'concept_id' => app(CategoryCatalog::class)->exactSharedMatch($name),
             ],
         );
     }

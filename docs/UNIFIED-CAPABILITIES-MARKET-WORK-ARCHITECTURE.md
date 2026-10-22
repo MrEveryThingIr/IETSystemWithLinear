@@ -130,6 +130,34 @@ their own side only. Filters: all / manual / IET / imported / corrections.
   team skills, *Administration → Category suggestions*.
 * `iet:inventory` — read-only report; works on the pre-1.8 schema too.
 
+## 5b. Implemented in 1.9 (Needs & Offers)
+
+* Publisher party on `actor_profile_intents` (`publisher_actor_id` /
+  `publisher_business_id` / `publisher_group_id`, immutable) beside the profile
+  of the person who acted. Backfill: every existing row → the profile's person;
+  rows whose metadata names a business listing or client need → that business,
+  plus explicit `business_listing_id` / `business_listing_version_id`.
+* One visibility rule: `ActorProfileIntent::scopeVisibleTo()` (creator and
+  managers of the publisher always; others only while active, publisher active,
+  and visibility allows; new `members` visibility for business/group members).
+  Used by the policy, the directory and matching.
+* Sources: `capability_id` (offer started from a skill), listing + exact version.
+* `RateBasis` (13 bases), `negotiable`, `free` exchange preference.
+* Wizard: publisher choice (only parties the user may act for), category picker
+  with typed-name fallback, start-from-skill chips, members visibility for
+  organisations only.
+* Matching: same category, same label, **category family** (one inside the
+  other) and **related** (same subcategory; siblings directly under an area do
+  not count). Excludes the same publisher and the same creating profile.
+* Directory: area filter (shared descendants + private sub-categories),
+  *mine and my organisations*, publisher name, category path, price basis,
+  negotiable, cover photo (own photo or the exact catalog version's public cover).
+* Photos: `actor_profile_intent_media` → shared Asset pipeline (publisher's
+  business context, else the acting person's), max 6, served by
+  `/intents/{intent}/media/{media}` only to viewers of the Need/Offer.
+* Business categories link to a shared category by exact name (on creation and
+  in `iet:taxonomy:sync`); business offers then carry the shared category.
+
 ## 6. Release checklist
 
 | Release | Additive schema | Data steps | Acceptance |
