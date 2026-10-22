@@ -3,6 +3,7 @@
 namespace App\Actions\Bookkeeping;
 
 use App\Enums\Bookkeeping\AdjustmentDirection;
+use App\Enums\Bookkeeping\EntryOrigin;
 use App\Enums\Bookkeeping\TransactionStatus;
 use App\Enums\Bookkeeping\TransactionType;
 use App\Models\Bookkeeping\Transaction;
@@ -70,7 +71,8 @@ class RecordAdjustment
                 'related_transaction_id' => $locked->id,
                 'recorded_by_actor_id' => $actor->id,
                 'idempotency_key' => $idempotencyKey,
-                'meta' => ['source' => 'manual'],
+                'meta' => ['source' => 'correction'],
+                'origin' => EntryOrigin::Correction,
             ]);
 
             $this->recorder->audit($locked->ledger, $actor, 'entry.recorded', $adjustment, after: BookkeepingRecorder::snapshot($adjustment) + ['direction' => $direction->value]);

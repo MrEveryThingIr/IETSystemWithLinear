@@ -331,4 +331,13 @@ return [
         'same_wallet' => 'اختر محفظتين مختلفتين.',
         'name_required' => 'أدخل اسمًا.',
     ],
+    'origin' => [
+        'filter' => 'المصدر:',
+        'all' => 'الكل',
+        'manual' => 'يدوي',
+        'iet_workflow' => 'من أعمال IET',
+        'import' => 'مستورد',
+        'correction' => 'تصحيحات',
+        'open_work' => 'فتح العمل',
+    ],
 ];

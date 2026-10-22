@@ -77,6 +77,38 @@
                     <flux:input wire:model="servicePaymentDueDays" type="number" min="0" max="3650" :label="__('contracts.service.payment_due_days')" />
                 </div>
 
+                <fieldset class="space-y-2 border-t border-zinc-200 pt-5 dark:border-zinc-800" data-contract-plan-choice>
+                    <legend class="mb-2 text-sm font-medium">{{ __('work.plans.contract_choice') }}</legend>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        @foreach (['new', 'template', 'later', 'none'] as $option)
+                            <label @class([
+                                'flex min-h-11 cursor-pointer gap-3 rounded-xl border p-3 text-sm',
+                                'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' => $servicePlanChoice === $option,
+                                'border-zinc-200 dark:border-zinc-700' => $servicePlanChoice !== $option,
+                            ])>
+                                <input type="radio" wire:model.live="servicePlanChoice" value="{{ $option }}" class="mt-1">
+                                <span class="min-w-0">
+                                    <span class="block font-medium">{{ __('work.plans.contract_choices.'.$option.'.title') }}</span>
+                                    <span class="block text-zinc-500">{{ __('work.plans.contract_choices.'.$option.'.help') }}</span>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @if ($servicePlanChoice === 'template')
+                        @if ($planTemplates->isEmpty())
+                            <flux:text class="text-sm">{{ __('work.templates.none') }}</flux:text>
+                        @else
+                            <flux:select wire:model.live="serviceTemplateUuid" :label="__('work.templates.choose')">
+                                <flux:select.option value="">—</flux:select.option>
+                                @foreach ($planTemplates as $template)
+                                    <flux:select.option :value="$template->uuid">{{ $template->name }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                            <flux:text class="text-xs">{{ __('work.templates.fills_times') }}</flux:text>
+                        @endif
+                    @endif
+                </fieldset>
+
                 <div class="border-t border-zinc-200 pt-5 dark:border-zinc-800">
                     <div class="mb-4">
                         <flux:heading>{{ __('contracts.service.schedule_title') }}</flux:heading>
@@ -129,10 +161,6 @@
                     </div>
                 </div>
 
-                <div class="grid gap-3 md:grid-cols-2">
-                    <flux:checkbox wire:model="serviceAutoCreatePlan" :label="__('contracts.service.auto_plan')" />
-                    <flux:checkbox wire:model="serviceAutoRecognizeObligation" :label="__('contracts.service.auto_obligation')" />
-                </div>
             @endif
         </flux:card>
 

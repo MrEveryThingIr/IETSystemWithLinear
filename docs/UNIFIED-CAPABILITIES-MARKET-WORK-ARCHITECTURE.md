@@ -158,13 +158,42 @@ their own side only. Filters: all / manual / IET / imported / corrections.
 * Business categories link to a shared category by exact name (on creation and
   in `iet:taxonomy:sync`); business offers then carry the shared category.
 
+## 5c. Implemented in 1.10 (Work, Planner, Bookkeeping)
+
+* **Plan choice** for work. Contract form: *create the shared plan* / *use a
+  template* (fills the times) / *decide later* / *no plan*; it maps onto the
+  existing `auto_create_plan` switch, and every scheduling field stays (they
+  are the agreed period and due dates even without a plan). Work page:
+  *new plan* / *from template* / *a plan already in this deal* (only plans in
+  the deal's own context, never someone's private plan) / *no plan*.
+* **Plan templates** (`plan_templates`, party-owned): frequency, timing mode,
+  interval, start time, duration, weekdays, month day, occurrence limit,
+  windows, reminders. No people, dates or history. Saved from a plan's active
+  schedule; applied with a new start date.
+* `auto_recognize_obligation` no longer appears in the form; the column and its
+  value are kept.
+* Fixed: automatic plan creation on contract activation referenced a relation
+  removed with the old finance system and failed.
+* **Bookkeeping provenance**: `bk_transactions.origin` (manual / iet_workflow /
+  import / correction) + `source_type`, `source_uuid`, `source_version`;
+  existing entries become *manual*, adjustments *correction*.
+* **Work → books**: an accepted fulfillment can be *proposed* as a debt
+  (employer → worker) in a shared/project book where both are active, amount =
+  accepted quantity × agreed rate in toman (IRR ÷ 10; other currencies are not
+  proposed). It counts only after the other side confirms; one live entry per
+  fulfillment across all books (either side asking again gets the same entry; a
+  rejected one can be proposed again). IET never writes to personal books.
+* Book page: source filter (all / manual / IET / imported / corrections),
+  origin badge and a link back to the work.
+* Work hub: *Work in progress* (role, accepted progress, plan, waiting reviews).
+
 ## 6. Release checklist
 
 | Release | Additive schema | Data steps | Acceptance |
 |---|---|---|---|
 | 1.8 | concept_kinds, concept_suggestions, capabilities, professions.concept_id, relation types narrower/broader, business vocabulary scope | `iet:inventory` (read-only) before; `iet:taxonomy:sync` after (idempotent; also runs on first use) | picker at 320–1920 in 4 languages; suggestion → approve/merge/reject; legacy professions visible as capabilities; legacy rows unchanged |
 | 1.9 | publisher party on intents, capability/listing-version/content links, rate/unit decimals | backfill publisher = existing profile actor | person/business/group publish; matches with reasons |
-| 1.10 | plan templates, bookkeeping origin/source | map service-term plan fields to bindings before hiding them | four-way plan choice; proposal → confirmation; no duplicate entries |
+| 1.10 | plan_templates, bk_transactions origin/source | existing entries → manual, adjustments → correction | four-way plan choice; template apply; proposal → confirmation; no duplicate entries |
 | 1.11 | none expected | redirects for moved pages | full journeys A–H |
 | 1.12 | contacts, conversation kinds/read state | none | messaging on phones and desktop |
 

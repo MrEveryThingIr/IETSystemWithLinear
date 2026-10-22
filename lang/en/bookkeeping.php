@@ -8,13 +8,11 @@ return [
     'you' => 'You',
     'archived' => 'Archived',
     'currency_note' => 'All amounts are in toman.',
-
     'kinds' => [
         'personal' => 'Personal',
         'shared' => 'Shared',
         'project' => 'Project',
     ],
-
     'types' => [
         'obligation' => 'Debt',
         'payment' => 'Payment',
@@ -26,7 +24,6 @@ return [
         'expense' => 'Expense',
         'transfer' => 'Transfer',
     ],
-
     'status' => [
         'pending' => 'Waiting for confirmation',
         'confirmed' => 'Confirmed',
@@ -34,7 +31,6 @@ return [
         'disputed' => 'Disputed',
         'void' => 'Cancelled',
     ],
-
     'progress' => [
         'unpaid' => 'Not paid yet',
         'partially_paid' => 'Partly paid',
@@ -44,31 +40,26 @@ return [
         'rejected' => 'Rejected',
         'void' => 'Cancelled',
     ],
-
     'roles' => [
         'owner' => 'Owner',
         'partner' => 'Partner',
         'member' => 'Member',
         'viewer' => 'Viewer',
     ],
-
     'role_help' => [
         'partner' => 'manages the book with you',
         'member' => 'records and confirms their own entries',
         'viewer' => 'can only read',
     ],
-
     'wallet_kinds' => [
         'cash' => 'Cash',
         'card' => 'Bank card',
         'bank' => 'Bank account',
         'other' => 'Other',
     ],
-
     'wallets' => [
         'default_cash' => 'Cash',
     ],
-
     'categories' => [
         'food' => 'Food & groceries',
         'transport' => 'Transport',
@@ -86,7 +77,6 @@ return [
         'other_income' => 'Other',
         'correction' => 'Correction',
     ],
-
     'balances' => [
         'owed_to_me' => 'Owed to you',
         'i_owe' => 'You owe',
@@ -99,7 +89,6 @@ return [
         'waiting_short' => 'waiting :amount',
         'disputed_short' => 'disputed :amount',
     ],
-
     'sentences' => [
         'obligation' => ':from owes :to :amount',
         'payment' => ':from paid :to :amount',
@@ -109,7 +98,6 @@ return [
         'adjust_up' => 'Debt of :from to :to increased by :amount',
         'adjust_down' => 'Debt of :from to :to reduced by :amount',
     ],
-
     'help_by_type' => [
         'obligation' => 'Write down that someone owes someone, for example wages for work done. The other side confirms it.',
         'payment' => 'Write down money that was paid. It is applied to the oldest open debts unless you choose.',
@@ -117,7 +105,6 @@ return [
         'write_off' => 'Write down that the creditor forgives part or all of a debt.',
         'settlement_in_kind' => 'Write down a debt settled with goods or work instead of money. Say what was given.',
     ],
-
     'from_label' => [
         'obligation' => 'Who owes',
         'payment' => 'Who paid',
@@ -125,7 +112,6 @@ return [
         'write_off' => 'Whose debt',
         'settlement_in_kind' => 'Who settled',
     ],
-
     'to_label' => [
         'obligation' => 'To whom',
         'payment' => 'To whom',
@@ -133,14 +119,12 @@ return [
         'write_off' => 'Forgiven by',
         'settlement_in_kind' => 'With whom',
     ],
-
     'filters' => [
         'all' => 'All',
         'waiting' => 'Waiting',
         'debts' => 'Debts',
         'payments' => 'Payments',
     ],
-
     'fields' => [
         'book_name' => 'Name of the book',
         'description' => 'Description',
@@ -167,7 +151,6 @@ return [
         'direction' => 'Change',
         'what_was_given' => 'What was given',
     ],
-
     'actions' => [
         'create_book' => 'Create book',
         'record_debt' => 'Record a debt',
@@ -185,24 +168,20 @@ return [
         'open' => 'Open',
         'swap' => 'Swap',
     ],
-
     'adjust' => [
         'increase' => 'Increase the debt',
         'decrease' => 'Reduce the debt',
     ],
-
     'allocation' => [
         'choose' => 'Choose which debts this pays',
         'automatic' => 'It will be applied to the oldest open debts first. Anything left over is kept as an advance.',
         'open' => ':amount left to pay',
     ],
-
     'evidence' => [
         'file' => 'file',
         'has' => 'Has proof',
         'help' => 'A photo of the receipt, bank slip or SMS. Files cannot be removed once added.',
     ],
-
     'index' => [
         'new_shared' => 'New shared book',
         'new_project' => 'New project book',
@@ -219,7 +198,6 @@ return [
         'people' => '{1} 1 person|[2,*] :count people',
         'pending_badge' => '{1} 1 waiting|[2,*] :count waiting',
     ],
-
     'personal' => [
         'title' => 'My personal book',
         'help' => 'What you earn and spend. Only you can see it.',
@@ -250,7 +228,6 @@ return [
         'correction' => 'Correction',
         'shared_moves' => 'Payments in shared books through your wallets',
     ],
-
     'book_show' => [
         'chat' => 'Chat',
         'who_owes_whom' => 'Who owes whom',
@@ -279,7 +256,6 @@ return [
         'empty_title' => 'Nothing recorded yet',
         'empty_help' => 'Record a debt or a payment to start.',
     ],
-
     'people' => [
         'title' => 'People in this book',
         'add' => 'Add person',
@@ -296,7 +272,6 @@ return [
         'leave' => 'Leave',
         'remove_confirm' => 'Remove this person from the book? Their entries stay.',
     ],
-
     'today' => [
         'title' => 'Money',
         'help' => 'Today in your personal book, and what is owed across your shared books.',
@@ -306,7 +281,6 @@ return [
         'waiting_title' => ':who recorded a :type of :amount toman — please confirm',
         'waiting_count' => '{1} 1 entry is waiting for your confirmation.|[2,*] :count entries are waiting for your confirmation.',
     ],
-
     'messages' => [
         'saved' => 'Saved.',
         'undone' => 'Undone. An opposite entry was recorded.',
@@ -321,7 +295,6 @@ return [
         'evidence_added' => 'Proof added.',
         'person_added' => 'Person added.',
     ],
-
     'notifications' => [
         'confirm_request_title' => ':who recorded a :type of :amount toman',
         'confirm_request_body' => 'In ":book". Please confirm or reject it.',
@@ -338,7 +311,6 @@ return [
         'added_to_book_title' => 'You were added to the book ":book"',
         'added_to_book_body' => 'You can see its entries and confirm the ones about you.',
     ],
-
     'validation' => [
         'amount' => 'Enter a whole amount in toman, more than zero.',
         'date' => 'Enter a valid date.',
@@ -358,5 +330,14 @@ return [
         'to_wallet_required' => 'Choose where the money went.',
         'same_wallet' => 'Choose two different wallets.',
         'name_required' => 'Enter a name.',
+    ],
+    'origin' => [
+        'filter' => 'Source:',
+        'all' => 'All',
+        'manual' => 'Manual',
+        'iet_workflow' => 'From IET work',
+        'import' => 'Imported',
+        'correction' => 'Corrections',
+        'open_work' => 'open the work',
     ],
 ];

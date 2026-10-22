@@ -3,6 +3,7 @@
 namespace App\Models\Bookkeeping;
 
 use App\Enums\Bookkeeping\AdjustmentDirection;
+use App\Enums\Bookkeeping\EntryOrigin;
 use App\Enums\Bookkeeping\TransactionStatus;
 use App\Enums\Bookkeeping\TransactionType;
 use App\Models\Actor;
@@ -35,6 +36,10 @@ use LogicException;
     'ledger_id',
     'type',
     'status',
+    'origin',
+    'source_type',
+    'source_uuid',
+    'source_version',
     'amount',
     'direction',
     'occurred_on',
@@ -70,6 +75,8 @@ class Transaction extends Model
         return [
             'type' => TransactionType::class,
             'status' => TransactionStatus::class,
+            'origin' => EntryOrigin::class,
+            'source_version' => 'integer',
             'direction' => AdjustmentDirection::class,
             'amount' => 'integer',
             'occurred_on' => 'date',
@@ -86,6 +93,7 @@ class Transaction extends Model
         static::creating(function (self $transaction): void {
             $transaction->uuid ??= (string) Str::uuid();
             $transaction->version ??= 1;
+            $transaction->origin ??= EntryOrigin::Manual;
 
             if ((int) $transaction->amount <= 0) {
                 throw new LogicException('Amounts must be positive whole toman.');
