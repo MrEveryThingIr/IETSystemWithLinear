@@ -51,7 +51,7 @@ document.addEventListener('alpine:init', () => {
 
         interval() {
             if (this.failures > 0) return Math.min(60000, 4000 * 2 ** this.failures)
-            return Date.now() - this.lastActivity < 120000 ? 3000 : 10000
+            return Date.now() - this.lastActivity < 120000 ? 4000 : 15000
         },
         schedule() {
             this.stop()
