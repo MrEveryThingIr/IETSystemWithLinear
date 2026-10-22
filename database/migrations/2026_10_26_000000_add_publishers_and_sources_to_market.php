@@ -40,7 +40,7 @@ return new class extends Migration
             $table->foreignId('created_by_actor_id')->constrained('actors')->restrictOnDelete();
             $table->timestamps();
 
-            $table->index(['actor_profile_intent_id', 'position']);
+            $table->index(['actor_profile_intent_id', 'position'], 'intent_media_order_idx');
         });
 
         Schema::table('business_categories', function (Blueprint $table): void {
