@@ -80,13 +80,16 @@ return new class extends Migration
             $table->dropIndex(['concept_id']);
         });
         Schema::table('business_categories', fn (Blueprint $table) => $table->dropColumn('concept_id'));
+        // Foreign keys first: MySQL/MariaDB will not drop an index a foreign key still uses.
+        Schema::table('actor_profile_intents', function (Blueprint $table): void {
+            foreach (['publisher_actor_id', 'publisher_business_id', 'publisher_group_id', 'capability_id', 'business_listing_id', 'business_listing_version_id'] as $column) {
+                $table->dropForeign([$column]);
+            }
+        });
         Schema::table('actor_profile_intents', function (Blueprint $table): void {
             $table->dropIndex(['publisher_business_id', 'status']);
             $table->dropIndex(['publisher_group_id', 'status']);
             $table->dropIndex(['publisher_actor_id', 'status']);
-            foreach (['publisher_actor_id', 'publisher_business_id', 'publisher_group_id', 'capability_id', 'business_listing_id', 'business_listing_version_id'] as $column) {
-                $table->dropForeign([$column]);
-            }
         });
         Schema::table('actor_profile_intents', fn (Blueprint $table) => $table->dropColumn([
             'publisher_actor_id', 'publisher_business_id', 'publisher_group_id', 'capability_id',
