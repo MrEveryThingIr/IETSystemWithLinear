@@ -1,12 +1,15 @@
 name: Build production package
 
 on:
+  pull_request:
+    branches:
+      - integration/v2
   workflow_dispatch:
     inputs:
       version:
         description: Package version label
         required: false
-        default: v1.0.1
+        default: ''
   push:
     branches:
       - release/formal-v1-production
@@ -25,6 +28,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Package the reviewed source, rather than GitHub's synthetic merge ref.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -73,7 +79,8 @@ jobs:
           set -euo pipefail
 
           VERSION="${{ github.event.inputs.version }}"
-          TEMPLATE_VERSION="$(sed -n 's/^APP_VERSION=//p' deploy/production.env.example | tr -d '[:space:]')"
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          TEMPLATE_VERSION="$(tr -d '[:space:]' < VERSION)"
           if [[ -z "$VERSION" ]]; then
             if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
               VERSION="$GITHUB_REF_NAME"
@@ -84,7 +91,8 @@ jobs:
             fi
           fi
           if [[ "${VERSION#v}" != "$TEMPLATE_VERSION" ]]; then
-            echo "::warning title=Version mismatch::Package ${VERSION} differs from APP_VERSION=${TEMPLATE_VERSION} in deploy/production.env.example"
+            echo "::error title=Version mismatch::Package ${VERSION} differs from source VERSION=${TEMPLATE_VERSION}"
+            exit 1
           fi
           SAFE_VERSION="$(printf '%s' "$VERSION" | tr -cd 'A-Za-z0-9._-')"
           PACKAGE="iet-${SAFE_VERSION}"
@@ -92,7 +100,7 @@ jobs:
 
           mkdir -p "$ROOT"
 
-          cp artisan composer.json composer.lock "$ROOT/"
+          cp artisan composer.json composer.lock VERSION "$ROOT/"
           cp deploy/production.env.example "$ROOT/production.env.example"
 
           cp -a app bootstrap config database lang public resources routes storage vendor "$ROOT/"
@@ -109,7 +117,7 @@ jobs:
             --arg package "$PACKAGE" \
             --arg package_version "$SAFE_VERSION" \
             --arg application_version "$APP_VERSION" \
-            --arg git_commit "$GITHUB_SHA" \
+            --arg git_commit "$SOURCE_SHA" \
             --arg git_ref "$GITHUB_REF" \
             --arg git_ref_name "$GITHUB_REF_NAME" \
             --arg repository "$GITHUB_REPOSITORY" \
@@ -187,7 +195,7 @@ jobs:
           {
             echo "### Production package ${PACKAGE}"
             echo
-            echo "- Source commit: \`${GITHUB_SHA}\` (${GITHUB_REF})"
+            echo "- Source commit: \`${SOURCE_SHA}\` (${GITHUB_REF})"
             echo "- Package root directory: \`${PACKAGE}/\`"
             echo "- SHA-256: \`$(cut -d' ' -f1 "${PACKAGE}.zip.sha256")\`"
             echo
@@ -197,7 +205,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           # Machine-readable provenance, also visible through the check-run API.
-          echo "::notice title=Package::root=${PACKAGE}/ zip=${PACKAGE}.zip sha256=$(cut -d' ' -f1 "${PACKAGE}.zip.sha256") commit=${GITHUB_SHA}"
+          echo "::notice title=Package::root=${PACKAGE}/ zip=${PACKAGE}.zip sha256=$(cut -d' ' -f1 "${PACKAGE}.zip.sha256") commit=${SOURCE_SHA}"
           echo "::notice title=release-manifest.json::$(jq -c . "${PACKAGE}.release-manifest.json")"
 
           echo "PACKAGE_NAME=${PACKAGE}" >> "$GITHUB_ENV"

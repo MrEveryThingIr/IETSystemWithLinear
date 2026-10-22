@@ -5,6 +5,22 @@ return [
     'help' => 'Changes in each version of :name. You are using :version.',
     'current' => 'You are here',
     'versions' => [
+        '1_12_0' => [
+            'title' => 'Professional messaging',
+            'items' => ['Professional messaging uses the shared conversation engine.'],
+        ],
+        '1_11_0' => [
+            'title' => 'Unified business experience',
+            'items' => ['Unified business screens, team skills, group needs and improved localization.'],
+        ],
+        '1_10_0' => [
+            'title' => 'Work planning and bookkeeping',
+            'items' => ['Choose work plans, reuse plan templates and trace bookkeeping records to their source.'],
+        ],
+        '1_9_0' => [
+            'title' => 'Needs and offers',
+            'items' => ['People, businesses and groups can publish needs and offers.'],
+        ],
         '1_8_0' => [
             'title' => 'Categories for everything, and “What I can do”',
             'items' => [

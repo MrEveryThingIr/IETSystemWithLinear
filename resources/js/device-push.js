@@ -20,6 +20,7 @@ document.addEventListener('alpine:init', () => {
         state: 'checking', // unsupported | blocked | off | on | working | ios
         message: '',
         async init() {
+            if (!config.publicKey) { this.state = 'unavailable'; return }
             const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
             const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone
             if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {

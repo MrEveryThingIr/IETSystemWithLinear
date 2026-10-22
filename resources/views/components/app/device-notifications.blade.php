@@ -1,7 +1,7 @@
 {{-- "Notify me on this device" (Web Push), see resources/js/device-push.js. --}}
 @php
     $pushConfig = [
-        'publicKey' => \App\Support\Push\VapidKeys::publicKey(),
+        'publicKey' => \App\Support\Push\VapidKeys::availablePublicKey(),
         'storeUrl' => route('push.subscriptions.store'),
         'testUrl' => route('push.test'),
         'labels' => [
@@ -24,6 +24,7 @@
                     <span x-show="state === 'off' || state === 'working' || state === 'checking'">{{ __('notifications.device.state_off') }}</span>
                     <span x-show="state === 'blocked'" x-cloak class="text-amber-700 dark:text-amber-400">{{ __('notifications.device.state_blocked') }}</span>
                     <span x-show="state === 'unsupported'" x-cloak>{{ __('notifications.device.state_unsupported') }}</span>
+                    <span x-show="state === 'unavailable'" x-cloak>{{ __('notifications.device.state_unavailable') }}</span>
                     <span x-show="state === 'ios'" x-cloak>{{ __('notifications.device.state_ios') }}</span>
                 </div>
             </div>

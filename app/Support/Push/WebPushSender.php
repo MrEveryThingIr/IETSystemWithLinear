@@ -52,7 +52,7 @@ final class WebPushSender
 
     public function encrypt(string $payload, string $userPublic, string $userAuth): string
     {
-        $local = openssl_pkey_new(['curve_name' => 'prime256v1', 'private_key_type' => OPENSSL_KEYTYPE_EC]);
+        $local = openssl_pkey_new(VapidKeys::opensslOptions());
         if ($local === false) {
             throw new \RuntimeException('OpenSSL could not create an EC key.');
         }

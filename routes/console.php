@@ -14,6 +14,7 @@ use App\Support\Media\FaststartExistingVideos;
 use App\Support\Media\ResumableUploads;
 use App\Support\NotificationOutboxDispatcher;
 use App\Support\Push\DevicePushDispatcher;
+use App\Support\Push\VapidKeys;
 use App\Support\ScheduledArtisan;
 use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
 use Illuminate\Foundation\Inspiring;
@@ -23,6 +24,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Str;
+
+Artisan::command('push:provision', function (): int {
+    try {
+        VapidKeys::provision();
+        $this->info('Web Push identity is provisioned. Existing keys were preserved.');
+
+        return 0;
+    } catch (Throwable $exception) {
+        $this->error($exception->getMessage());
+        $this->line('PHP '.PHP_VERSION.' / '.OPENSSL_VERSION_TEXT);
+        $this->line('Check OPENSSL_CONF or set WEBPUSH_OPENSSL_CONFIG to the openssl.cnf shipped with this PHP runtime.');
+
+        return 1;
+    }
+})->purpose('Provision persistent P-256 Web Push keys without rotating an existing identity');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
