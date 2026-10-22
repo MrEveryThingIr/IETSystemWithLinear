@@ -223,7 +223,17 @@ Artisan::command('iet:taxonomy:sync {--dry-run : Only report what the copy would
     Cache::forever('categories:shared:fingerprint', EnsureSharedCategories::fingerprint());
     CategoryCatalog::bumpVersion();
     $report = app(CopyLegacyProfessions::class)->execute();
+    $catalog = app(CategoryCatalog::class);
+    $linked = 0;
+    DB::table('business_categories')->whereNull('concept_id')->orderBy('id')->each(function ($category) use ($catalog, &$linked): void {
+        $conceptId = $catalog->exactSharedMatch((string) $category->name);
+        if ($conceptId !== null) {
+            DB::table('business_categories')->where('id', $category->id)->whereNull('concept_id')->update(['concept_id' => $conceptId]);
+            $linked++;
+        }
+    });
     $this->info('Shared categories are up to date.');
+    $this->info('Business categories linked to a shared category by exact name: '.$linked.'.');
     $this->info('Copied into capabilities: '.$report['people'].' people skills, '.$report['business_members'].' business member skills; new categories for unlisted skills: '.$report['new_categories'].'; skipped: '.$report['skipped'].'. Old records were not changed.');
 
     return 0;

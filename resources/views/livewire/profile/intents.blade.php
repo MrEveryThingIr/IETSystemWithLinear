@@ -96,7 +96,7 @@
                         <label class="mb-2 block text-sm font-medium">{{ __('intents.fields.cash_basis') }}</label>
                         <select wire:model="cashBasis" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
                             <option value="">—</option>
-                            @foreach (['total','hour','day','week','month','year'] as $basis)<option value="{{ $basis }}">{{ __('intents.cash_basis.'.$basis) }}</option>@endforeach
+                            @foreach (\App\Support\Market\RateBasis::cases() as $basis)<option value="{{ $basis->value }}">{{ __('intents.cash_basis.'.$basis->value) }}</option>@endforeach
                         </select>
                     </div>
                 </div>
@@ -366,6 +366,7 @@
                     @if ($intent->status->value !== 'closed')
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                             <flux:button wire:click="edit({{ $intent->id }})" size="xs" variant="ghost" class="w-full sm:w-auto">{{ __('ui.common.edit') }}</flux:button>
+                            <flux:button :href="route('intents.photos', $intent)" size="xs" variant="ghost" class="w-full sm:w-auto" wire:navigate>{{ __('intents.media.title') }}</flux:button>
                             @if ($intent->status->value === 'active')
                                 <flux:button wire:click="setStatus({{ $intent->id }}, 'paused')" size="xs" variant="ghost" class="w-full sm:w-auto">{{ __('ui.profile.intents.pause') }}</flux:button>
                             @else

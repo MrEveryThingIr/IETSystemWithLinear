@@ -214,27 +214,61 @@ final class CategoryCatalog
      */
     public function path(int $conceptId, ?Party $owner, ?string $locale = null): array
     {
-        $locale = $this->locale($locale);
-        $chain = [$conceptId];
-        $current = $conceptId;
-        $sharedVocabulary = $this->sharedVocabularyId();
-        $schemeId = $this->sharedSchemeId();
+        $chain = array_reverse([$conceptId, ...$this->ancestorIds($conceptId)]);
+        $labels = $this->labels($chain, $locale);
 
-        for ($depth = 0; $depth < self::MAX_PRIVATE_DEPTH + 2; $depth++) {
-            $isShared = (int) DB::table('concepts')->where('id', $current)->value('vocabulary_id') === (int) $sharedVocabulary;
-            $parent = $isShared
-                ? DB::table('concept_hierarchy_edges')->where('scheme_id', $schemeId)->where('child_concept_id', $current)->value('parent_concept_id')
-                : $this->privateParentId($current);
-            if ($parent === null || in_array((int) $parent, $chain, true)) {
-                break;
+        return array_map(fn (int $id): array => ['id' => $id, 'label' => $labels[$id] ?? ''], $chain);
+    }
+
+    /**
+     * Parents of a category, nearest first, up to its area (shared tree edges,
+     * then private "narrower than" links). Remembered for the request.
+     *
+     * @return list<int>
+     */
+    public function ancestorIds(int $conceptId): array
+    {
+        return RequestMemo::remember('category-ancestors:'.$conceptId, function () use ($conceptId): array {
+            $chain = [$conceptId];
+            $current = $conceptId;
+            $sharedVocabulary = (int) $this->sharedVocabularyId();
+            $schemeId = $this->sharedSchemeId();
+
+            for ($depth = 0; $depth < self::MAX_PRIVATE_DEPTH + 2; $depth++) {
+                $isShared = (int) DB::table('concepts')->where('id', $current)->value('vocabulary_id') === $sharedVocabulary;
+                $parent = $isShared
+                    ? DB::table('concept_hierarchy_edges')->where('scheme_id', $schemeId)->where('child_concept_id', $current)->value('parent_concept_id')
+                    : $this->privateParentId($current);
+                if ($parent === null || in_array((int) $parent, $chain, true)) {
+                    break;
+                }
+                $chain[] = (int) $parent;
+                $current = (int) $parent;
             }
-            $chain[] = (int) $parent;
-            $current = (int) $parent;
+            array_shift($chain);
+
+            return $chain;
+        });
+    }
+
+    /** The one shared category whose name (any language, synonyms too) is exactly this text, if there is exactly one. */
+    public function exactSharedMatch(string $label): ?int
+    {
+        $normalized = Str::of($label)->squish()->lower()->toString();
+        $vocabulary = $this->sharedVocabularyId();
+        if ($normalized === '' || $vocabulary === null) {
+            return null;
         }
+        $ids = DB::table('concept_labels')
+            ->join('concepts', 'concepts.id', '=', 'concept_labels.concept_id')
+            ->where('concepts.vocabulary_id', $vocabulary)
+            ->where('concepts.status', ConceptStatus::Active->value)
+            ->where('concept_labels.normalized_label', $normalized)
+            ->distinct()
+            ->limit(2)
+            ->pluck('concepts.id');
 
-        $labels = $this->labels(array_reverse($chain), $locale);
-
-        return array_map(fn (int $id): array => ['id' => $id, 'label' => $labels[$id] ?? ''], array_reverse($chain));
+        return $ids->count() === 1 ? (int) $ids->first() : null;
     }
 
     /** Whether this owner (or anyone, for shared ones) may use the category. */

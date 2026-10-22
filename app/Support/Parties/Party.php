@@ -65,6 +65,12 @@ final readonly class Party
         ];
     }
 
+    /** The one filled column, e.g. "publisher_business_id". */
+    public function column(string $prefix): string
+    {
+        return $prefix.'_'.$this->kind.'_id';
+    }
+
     public function model(): Actor|Business|Group|null
     {
         return match ($this->kind) {

@@ -7,6 +7,7 @@ use App\Actions\Profile\EnsureActorProfile;
 use App\Actions\Profile\SetActorProfileIntentStatus;
 use App\Models\ActorProfileIntent;
 use App\Models\Business;
+use App\Models\BusinessCategory;
 use App\Models\BusinessContact;
 use App\Models\BusinessListing;
 use App\Models\BusinessListingVersion;
@@ -20,7 +21,9 @@ use App\ProfileIntentStatus;
 use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use App\Support\BusinessAccess;
+use App\Support\Categories\CategoryCatalog;
 use App\Support\MoneyAmount;
+use App\Support\Parties\Party;
 use Illuminate\Support\Str;
 
 final class BusinessMarketService
@@ -49,14 +52,13 @@ final class BusinessMarketService
         $profile = $this->profiles->execute($user);
         $conceptLabel = $this->conceptLabel($listing, $version, $conceptLabel);
 
-        $existing = $profile->intents()
+        $existing = ActorProfileIntent::query()
             ->where('kind', ProfileIntentKind::Offer->value)
-            ->where('metadata->source', 'business_listing_version')
-            ->where('metadata->business_listing_uuid', $listing->uuid)
+            ->where('business_listing_id', $listing->id)
             ->get();
 
         foreach ($existing as $intent) {
-            if (($intent->metadata['business_listing_version_uuid'] ?? null) === $version->uuid
+            if ((int) $intent->business_listing_version_id === (int) $version->id
                 && $intent->status === ProfileIntentStatus::Active) {
                 return $intent->load('concept.labels');
             }
@@ -92,13 +94,19 @@ final class BusinessMarketService
                 'cash_max' => $price ? MoneyAmount::format((int) $price->amount_minor, (int) $price->monetaryUnit->exponent) : null,
                 'currency_code' => $price?->monetaryUnit?->code,
                 'cash_basis' => $price?->basis ? $this->cashBasis($price->basis) : null,
-                'exchange_notes' => 'Internal settlement may use IET according to the Business agreement.',
+                'exchange_notes' => null,
                 'quantity' => $quantity,
                 'unit' => $unit,
                 'location_text' => $location,
                 'schedule_kind' => ProfileIntentScheduleKind::Ongoing->value,
                 'timezone' => $business->timezone ?: config('app.timezone', 'UTC'),
                 'visibility' => ProfileItemVisibility::Public->value,
+            ],
+            [
+                'publisher' => Party::of($business),
+                'concept_id' => $this->categoryConcept($listing),
+                'business_listing_id' => $listing->id,
+                'business_listing_version_id' => $version->id,
             ],
         );
 
@@ -151,7 +159,7 @@ final class BusinessMarketService
                 'cash_max' => $input['cash_max'] ?? null,
                 'currency_code' => $input['currency_code'] ?? null,
                 'cash_basis' => $input['cash_basis'] ?? null,
-                'exchange_notes' => 'Business-managed client need; internal settlement may use IET.',
+                'exchange_notes' => null,
                 'quantity' => $input['quantity'] ?? null,
                 'unit' => $input['unit'] ?? null,
                 'location_text' => $input['location_text'] ?? null,
@@ -159,6 +167,7 @@ final class BusinessMarketService
                 'timezone' => $business->timezone ?: config('app.timezone', 'UTC'),
                 'visibility' => ProfileItemVisibility::Public->value,
             ],
+            ['publisher' => Party::of($business)],
         );
 
         $intent->update([
@@ -170,6 +179,16 @@ final class BusinessMarketService
         ]);
 
         return $intent->refresh()->load('concept.labels');
+    }
+
+    /** The shared category the business linked to this item's catalog category, if any. */
+    private function categoryConcept(BusinessListing $listing): ?int
+    {
+        $conceptId = $listing->business_category_id !== null
+            ? BusinessCategory::query()->whereKey($listing->business_category_id)->value('concept_id')
+            : null;
+
+        return $conceptId !== null && app(CategoryCatalog::class)->isShared((int) $conceptId) ? (int) $conceptId : null;
     }
 
     private function subjectKind(BusinessListing $listing): ProfileIntentSubjectKind
