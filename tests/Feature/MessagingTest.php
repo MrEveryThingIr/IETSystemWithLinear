@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Groups\CreateGroup;
+use App\Actions\Groups\PostGroupSpaceMessage;
 use App\Actions\Messaging\ManageContacts;
 use App\Actions\Messaging\ManageConversation;
 use App\Actions\Messaging\OpenDirectConversation;
@@ -23,6 +24,7 @@ use App\Models\PlatformAccessGrant;
 use App\PlatformRole;
 use App\Support\Messaging\Inbox;
 use App\Support\Messaging\MessagingPrivacy;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -63,7 +65,7 @@ class MessagingTest extends TestCase
             $this->assertSame(403, $exception->getStatusCode(), $message);
 
             return;
-        } catch (\Illuminate\Auth\Access\AuthorizationException) {
+        } catch (AuthorizationException) {
             $this->assertTrue(true);
 
             return;
@@ -320,7 +322,7 @@ class MessagingTest extends TestCase
     {
         $group = app(CreateGroup::class)->execute($this->ana, 'Choir', null);
         $space = GroupSpace::query()->where('group_id', $group->id)->where('kind', 'chat')->firstOrFail();
-        app(\App\Actions\Groups\PostGroupSpaceMessage::class)->execute($space, $this->ana->user, 'Old chat still works');
+        app(PostGroupSpaceMessage::class)->execute($space, $this->ana->user, 'Old chat still works');
 
         $row = app(Inbox::class)->for($this->ana->user->fresh())->sole();
         $this->assertSame('group_space', $row['kind']);
