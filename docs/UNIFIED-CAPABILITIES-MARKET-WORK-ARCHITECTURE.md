@@ -230,8 +230,8 @@ their own side only. Filters: all / manual / IET / imported / corrections.
   (explicit tap, rounded to 5 decimals, OpenStreetMap link), contact cards
   (own accepted contacts only). `client_uuid` makes repeated sends safe.
 * **Delivery without WebSockets:** the open thread asks
-  `/messages/{c}/state` for a short version fingerprint (3 s while active,
-  10 s idle, paused when hidden, backing off after errors) and refreshes only
+  `/messages/{c}/state` for a short version fingerprint (4 s while active,
+  15 s idle, paused when hidden, backing off after errors) and refreshes only
   when it changed; the sidebar badge asks `/messages/unread` every 30 s.
 * **Notifications** through the existing outbox (in-app + device push):
   never contain message text; not while muted, not while the person is looking
