@@ -275,6 +275,7 @@ return [
                 'draft' => 'Draft',
             ],
         ],
+        'team_chat' => 'Team chat',
     ],
     'validation' => [
         'user_not_found' => 'No active, verified user was found with that email or username.',

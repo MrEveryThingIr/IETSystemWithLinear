@@ -23,6 +23,8 @@ return [
         'actors' => '参与者',
         'publication-control' => '发布控制',
         'category-review' => '分类建议',
+        'messages' => '消息',
+        'message-reports' => '消息举报',
     ],
     'navigation' => [
         'needs_offers' => '需求与提供',
@@ -34,6 +36,7 @@ return [
         'help' => '帮助与学习',
         'labs' => '实验功能',
         'admin' => '系统管理',
+        'messages' => '消息',
     ],
     'hubs' => [
         'boundary' => '这些页面只整理现有 IET 能力。打开卡片本身不会创建、接受、发布、开始、付款或结算任何事项。',

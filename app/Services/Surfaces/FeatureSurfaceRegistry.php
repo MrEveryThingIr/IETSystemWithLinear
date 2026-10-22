@@ -58,6 +58,10 @@ class FeatureSurfaceRegistry
                 ['content.library'],
                 ['content.library', 'contents.*', 'content.*', 'contexts.*', 'context.*', 'content-evidence.*', 'admissions.*']
             ),
+            'messages' => $this->surface(
+                'Messages', 'پیام‌ها', 'chat-bubble-left-right', 'collaboration', ['profile'],
+                ['messages.index'], ['messages.*', 'contacts.*']
+            ),
             'groups' => $this->surface(
                 'Groups', 'گروه‌ها', 'users', 'collaboration', ['profile'],
                 ['groups.index'], ['groups.*', 'group.*']
@@ -79,6 +83,10 @@ class FeatureSurfaceRegistry
             'category-review' => $this->surface(
                 'Category suggestions', 'پیشنهاد دسته‌بندی', 'tag', 'platform', [],
                 ['platform.categories'], ['platform.categories']
+            ),
+            'message-reports' => $this->surface(
+                'Message reports', 'گزارش پیام‌ها', 'flag', 'platform', [],
+                ['platform.message-reports'], ['platform.message-reports']
             ),
             'actors' => $this->surface('Actors', 'کنشگران', 'users', 'platform', [], ['actors.index'], ['actors.*']),
 
@@ -248,6 +256,8 @@ class FeatureSurfaceRegistry
             'profiles.images.*',
             // A Need/Offer's photos follow the Need/Offer's own visibility.
             'intents.media.*',
+            // Message files follow the conversation's own access rules.
+            'messages.assets.*',
             'profiles.shares.*',
 
             // Context-specific content resources are shared infrastructure.

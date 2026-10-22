@@ -155,4 +155,10 @@ class Context extends Model
     {
         return $this->hasOne(Ledger::class, 'context_id');
     }
+
+    /** @return HasOne<DirectContext, $this> */
+    public function directBinding(): HasOne
+    {
+        return $this->hasOne(DirectContext::class);
+    }
 }

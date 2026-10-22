@@ -32,6 +32,15 @@
                 @auth
                     @if ((int) auth()->user()?->actor?->id === (int) $profile->actor_id)
                         <flux:button :href="route('profile.edit')" variant="primary">{{ __('ui.profile.edit') }}</flux:button>
+                    @elseif ($messaging['canMessage'] || $messaging['canAsk'])
+                        <div class="flex flex-wrap gap-2" data-profile-messaging>
+                            @if ($messaging['canMessage'])
+                                <form method="POST" action="{{ route('messages.start', $profile->actor) }}">@csrf<flux:button type="submit" variant="primary" icon="chat-bubble-left-right">{{ __('messages.message_them') }}</flux:button></form>
+                            @endif
+                            @if ($messaging['canAsk'])
+                                <flux:button :href="route('contacts.index', ['find' => $profile->actor->user?->username])" variant="ghost" icon="user-plus">{{ __('messages.contacts_page.ask') }}</flux:button>
+                            @endif
+                        </div>
                     @endif
                 @endauth
             </div>

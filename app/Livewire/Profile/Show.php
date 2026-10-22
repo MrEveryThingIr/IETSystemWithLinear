@@ -2,16 +2,20 @@
 
 namespace App\Livewire\Profile;
 
+use App\Actions\Messaging\OpenDirectConversation;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
 use App\ConceptAssertionVisibility;
+use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
 use App\Models\ConceptAssertion;
 use App\Models\User;
 use App\Policies\ActorProfileIntentPolicy;
 use App\ProfileIntentStatus;
+use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\Localization;
+use App\Support\Messaging\MessagingPrivacy;
 use App\Support\TemporalPreferences;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -76,6 +80,7 @@ class Show extends Component
             'offers' => $intents->where('kind.value', 'offer')->values(),
             'calendar' => TemporalPreferences::calendarFor($user)->value,
             'intlLocale' => Localization::intlLocale(),
+            'messaging' => $this->messagingOptions($user),
         ]);
     }
 
@@ -90,5 +95,24 @@ class Show extends Component
         return $current instanceof User
             && $current->actor !== null
             && (int) $current->actor->id === (int) $this->profile->actor_id;
+    }
+
+    /** @return array{canMessage: bool, existing: bool, canAsk: bool} */
+    private function messagingOptions(?User $user): array
+    {
+        $me = $user?->actor;
+        $them = $this->profile->actor;
+        if (! $me instanceof Actor || ! $them instanceof Actor || (int) $me->id === (int) $them->id
+            || ! app(FeatureSurfaceAccess::class)->allows($user, 'messages')) {
+            return ['canMessage' => false, 'existing' => false, 'canAsk' => false];
+        }
+        $existing = app(OpenDirectConversation::class)->existing((int) $me->id, (int) $them->id) !== null;
+        $privacy = app(MessagingPrivacy::class);
+
+        return [
+            'canMessage' => $existing || $privacy->canStart($me, $them),
+            'existing' => $existing,
+            'canAsk' => ! $privacy->blocked((int) $me->id, (int) $them->id) && ! $privacy->areContacts((int) $me->id, (int) $them->id),
+        ];
     }
 }

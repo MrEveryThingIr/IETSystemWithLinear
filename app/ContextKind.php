@@ -16,4 +16,7 @@ enum ContextKind: string
 
     /** A Bookkeeping book: its parties see it; evidence and chat live here. */
     case Ledger = 'ledger';
+
+    /** A private conversation between exactly two people. */
+    case Direct = 'direct';
 }
