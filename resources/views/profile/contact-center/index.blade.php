@@ -1,306 +1,164 @@
 @extends('layouts.app')
-@section('title', app()->getLocale() === 'fa' ? 'راه‌های ارتباطی و آدرس‌ها' : 'Contacts & addresses')
+@section('title', __('contact_center.title'))
 
 @section('content')
-<style>
-:root{
-            --ink:#172033;--muted:#667085;--line:#d7deea;--paper:#fff;
-            --purple:#7c3aed;--blue:#2563eb;--green:#059669;--orange:#ea580c;
-        }
-        *{box-sizing:border-box}
-        body{margin:0;background:linear-gradient(180deg,#eef2ff 0,#f8fafc 260px);color:var(--ink);font-family:inherit}
-        .wrap{max-width:1180px;margin:auto;padding:30px 16px 60px}
-        .hero{
-            position:relative;overflow:hidden;border-radius:32px;padding:32px;
-            background:linear-gradient(125deg,#4338ca,#7c3aed 50%,#db2777);
-            color:#fff;box-shadow:0 22px 60px rgba(79,70,229,.22)
-        }
-        .hero:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.11);left:-70px;top:-100px}
-        .hero h1{font-size:34px;margin:8px 0 10px;font-weight:950}
-        .hero p{font-size:17px;line-height:2;margin:0;max-width:760px;color:#f5f3ff}
-        .account-email{margin-top:20px;display:inline-flex;gap:10px;align-items:center;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:16px;padding:11px 15px;font-size:15px}
-        .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
-        .stat{background:#fff;border:1px solid #e4e7ec;border-radius:22px;padding:20px;box-shadow:0 6px 22px rgba(15,23,42,.05)}
-        .stat strong{display:block;font-size:31px;margin-top:5px}.stat span{color:var(--muted);font-weight:800}
-        .section{background:#fff;border:1px solid #e4e7ec;border-radius:28px;margin-top:18px;box-shadow:0 8px 26px rgba(15,23,42,.05);overflow:hidden}
-        .section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:23px 25px;border-bottom:1px solid #edf0f5;flex-wrap:wrap}
-        .section-title{display:flex;gap:13px;align-items:center}
-        .icon{width:50px;height:50px;display:grid;place-items:center;border-radius:16px;font-size:24px}
-        .icon.contact{background:#ede9fe}.icon.address{background:#dcfce7}
-        .section h2{font-size:24px;margin:0}.section-head p{margin:4px 0 0;color:var(--muted);font-size:14px}
-        .body{padding:24px}
-        .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-        .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-        label span{display:block;font-size:14px;font-weight:850;color:#344054;margin:0 0 7px}
-        input,select,textarea{
-            width:100%;border:1.5px solid #aeb8c8!important;background:#fff!important;border-radius:15px!important;
-            padding:12px 14px!important;font-size:16px!important;color:#172033!important;box-shadow:0 1px 2px rgba(16,24,40,.03)
-        }
-        input:focus,select:focus,textarea:focus{outline:4px solid #e0e7ff!important;border-color:#6366f1!important}
-        input::placeholder,textarea::placeholder{color:#98a2b3}
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:12px 17px;font-size:15px;font-weight:900;cursor:pointer;text-decoration:none}
-        .btn-purple{background:#6d28d9;color:#fff}.btn-green{background:#047857;color:#fff}.btn-light{background:#f8fafc;color:#344054;border:1px solid #d0d5dd}.btn-danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
-        .list{display:grid;gap:12px;margin-bottom:22px}
-        .item{border:1px solid #dfe5ee;border-radius:20px;padding:17px;background:linear-gradient(135deg,#fff,#fbfdff)}
-        .item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
-        .item-main{display:flex;gap:12px;align-items:flex-start}
-        .bubble{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#eff6ff;font-size:20px}
-        .value{font-size:18px;font-weight:950;direction:ltr;text-align:right;unicode-bidi:plaintext}
-        .meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
-        .badge{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:900;background:#f2f4f7;color:#475467}
-        .badge.primary{background:#fef3c7;color:#92400e}.badge.verified{background:#dcfce7;color:#166534}.badge.private{background:#fee2e2;color:#991b1b}.badge.public{background:#dbeafe;color:#1d4ed8}
-        details.editor{margin-top:13px;border-top:1px dashed #d0d5dd;padding-top:12px}
-        details.editor summary{cursor:pointer;color:#4f46e5;font-weight:900}
-        .form-box{border:2px dashed #c7d2fe;background:#f8faff;border-radius:20px;padding:18px;margin-top:12px}
-        .form-box.green{border-color:#a7f3d0;background:#f0fdf4}
-        .form-box h3{margin:0 0 14px;font-size:18px}
-        .check{display:flex;align-items:center;gap:9px;padding:10px 0}.check input{width:20px!important;height:20px!important}
-        .address-line{font-size:17px;font-weight:850;line-height:1.9}
-        .status{margin:18px 0;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:16px;padding:13px 16px;font-weight:900}
-        .errors{margin:18px 0;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:16px;padding:14px 17px}
-        .empty{text-align:center;border:2px dashed #d0d5dd;border-radius:20px;padding:28px;color:#667085}
-        .privacy-note{font-size:13px;color:#667085;line-height:1.8;margin-top:10px}
-        @media(max-width:760px){
-            .hero{padding:24px}.hero h1{font-size:28px}.stats,.grid,.grid3{grid-template-columns:1fr}
-            .section-head,.body{padding:18px}.value{font-size:16px}
-        }
-</style>
 @php
-    $kindLabels = [
-        'email'=>'ایمیل','mobile'=>'موبایل','phone'=>'تلفن','website'=>'وب‌سایت',
-        'whatsapp'=>'واتساپ','telegram'=>'تلگرام','other'=>'سایر',
-    ];
-    $kindIcons = [
-        'email'=>'✉️','mobile'=>'📱','phone'=>'☎️','website'=>'🌐',
-        'whatsapp'=>'💬','telegram'=>'✈️','other'=>'🔗',
-    ];
-    $visibilityLabels = [
-        'private'=>'فقط خودم/مدیران',
-        'contacts'=>'افراد مرتبط',
-        'members'=>'اعضای مجموعه',
-        'public'=>'عمومی',
-    ];
-    $addressTypes = [
-        'residence'=>'محل سکونت','work'=>'محل کار','branch'=>'شعبه','billing'=>'صورتحساب',
-        'shipping'=>'ارسال','project_site'=>'محل پروژه','other'=>'سایر',
-    ];
+    $kindLabels = collect(['email', 'mobile', 'phone', 'website', 'whatsapp', 'telegram', 'other'])->mapWithKeys(fn ($k) => [$k => __('contact_center.kinds.'.$k)])->all();
+    $kindIcons = ['email' => 'envelope', 'mobile' => 'device-phone-mobile', 'phone' => 'phone', 'website' => 'globe-alt', 'whatsapp' => 'chat-bubble-left-right', 'telegram' => 'paper-airplane', 'other' => 'link'];
+    $visibilityLabels = collect(['private', 'contacts', 'members', 'public'])->mapWithKeys(fn ($v) => [$v => __('contact_center.visibility.'.$v)])->all();
+    $addressTypes = collect(['residence', 'work', 'branch', 'billing', 'shipping', 'project_site', 'other'])->mapWithKeys(fn ($t) => [$t => __('contact_center.types.'.$t)])->all();
+    $item = 'min-w-0 space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50';
+    $subform = 'space-y-4 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700';
 @endphp
+<div class="mx-auto max-w-5xl space-y-6" data-contact-center>
+    <x-app.page-header :title="__('contact_center.title')" :description="__('contact_center.intro')" />
+    <div class="-mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <flux:icon.lock-closed class="size-4 text-zinc-500" />
+        <span class="text-zinc-500">{{ __('contact_center.login_email') }}:</span>
+        <strong dir="ltr" class="[overflow-wrap:anywhere]">{{ $user->email }}</strong>
+        <flux:badge size="sm" :color="$user->email_verified_at ? 'green' : 'amber'">{{ $user->email_verified_at ? __('contact_center.verified') : __('contact_center.unverified') }}</flux:badge>
+    </div>
 
-<main class="wrap">
-    <header class="hero">
-        <div style="font-weight:900;opacity:.92">پروفایل من</div>
-        <h1>راه‌های ارتباطی و آدرس‌ها</h1>
-        <p>هر شماره، ایمیل یا آدرس را با کاربرد خودش نگه دارید. شما تعیین می‌کنید کدام مورد اصلی است و چه کسانی اجازه دیدن آن را دارند.</p>
-        <div class="account-email">
-            <span>🔐 ایمیل ورود به حساب:</span>
-            <strong dir="ltr">{{ $user->email }}</strong>
-            @if($user->email_verified_at)
-                <span style="background:#dcfce7;color:#166534;border-radius:999px;padding:3px 8px;font-weight:900">تأییدشده</span>
-            @else
-                <span style="background:#fef3c7;color:#92400e;border-radius:999px;padding:3px 8px;font-weight:900">تأییدنشده</span>
-            @endif
-        </div>
-    </header>
-
-    @if(session('status'))
-        <div class="status">✓ {{ session('status') }}</div>
+    @if (session('status'))<flux:callout variant="success" icon="check-circle">{{ session('status') }}</flux:callout>@endif
+    @if ($errors->any())
+        <flux:callout variant="danger" icon="exclamation-triangle">
+            <strong>{{ __('contact_center.fix') }}</strong>
+            <ul class="list-disc ps-5">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        </flux:callout>
     @endif
 
-    @if($errors->any())
-        <div class="errors">
-            <strong>چند مورد نیاز به اصلاح دارد:</strong>
-            <ul>
-                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
-            </ul>
-        </div>
-    @endif
-
-    <section class="stats">
-        <div class="stat"><span>راه‌های ارتباطی</span><strong>{{ $contactPoints->count() }}</strong></div>
-        <div class="stat"><span>آدرس‌های ذخیره‌شده</span><strong>{{ $addresses->count() }}</strong></div>
-        <div class="stat"><span>موارد عمومی</span><strong>{{ $contactPoints->where('visibility','public')->count() + $addresses->where('visibility','public')->count() }}</strong></div>
+    <section class="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,10rem),1fr))]">
+        @foreach ([['contacts', $contactPoints->count()], ['addresses', $addresses->count()], ['public', $contactPoints->where('visibility', 'public')->count() + $addresses->where('visibility', 'public')->count()]] as [$key, $count])
+            <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"><span class="text-sm text-zinc-500">{{ __('contact_center.stats.'.$key) }}</span><strong class="mt-1 block text-2xl">{{ $count }}</strong></div>
+        @endforeach
     </section>
 
-    <section class="section">
-        <div class="section-head">
-            <div class="section-title">
-                <div class="icon contact">📞</div>
-                <div><h2>راه‌های ارتباطی</h2><p>موبایل، تلفن کاری، ایمیل دوم، سایت و...</p></div>
-            </div>
-        </div>
-
-        <div class="body">
-            <div class="list">
-                @forelse($contactPoints as $point)
-                    <article class="item">
-                        <div class="item-top">
-                            <div class="item-main">
-                                <div class="bubble">{{ $kindIcons[$point->kind] ?? '🔗' }}</div>
-                                <div>
-                                    <div style="font-size:13px;color:#667085;font-weight:800">
-                                        {{ $point->label ?: ($kindLabels[$point->kind] ?? $point->kind) }}
-                                    </div>
-                                    <div class="value">{{ $point->value }}</div>
-                                    <div class="meta">
-                                        @if($point->is_primary)<span class="badge primary">⭐ اصلی</span>@endif
-                                        @if($point->is_verified)<span class="badge verified">✓ تأییدشده</span>@else<span class="badge">تأییدنشده</span>@endif
-                                        <span class="badge {{ $point->visibility === 'public' ? 'public' : ($point->visibility === 'private' ? 'private' : '') }}">
-                                            {{ $visibilityLabels[$point->visibility] ?? $point->visibility }}
-                                        </span>
-                                    </div>
+    <x-app.panel :title="__('contact_center.contacts.title')" :help="__('contact_center.contacts.help')" icon="phone">
+        <div class="space-y-3">
+            @forelse ($contactPoints as $point)
+                <article class="{{ $item }}" wire:key="point-{{ $point->id }}">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="flex min-w-0 items-start gap-3">
+                            <flux:icon :name="$kindIcons[$point->kind] ?? 'link'" class="mt-1 size-5 shrink-0 text-zinc-500" />
+                            <div class="min-w-0">
+                                <div class="text-sm text-zinc-500">{{ $point->label ?: ($kindLabels[$point->kind] ?? $point->kind) }}</div>
+                                <div class="font-semibold [overflow-wrap:anywhere]" dir="ltr">{{ $point->value }}</div>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    @if ($point->is_primary)<flux:badge size="sm" color="amber">★ {{ __('contact_center.primary_badge') }}</flux:badge>@endif
+                                    <flux:badge size="sm" :color="$point->is_verified ? 'green' : 'zinc'">{{ $point->is_verified ? __('contact_center.verified') : __('contact_center.unverified') }}</flux:badge>
+                                    <flux:badge size="sm" :color="$point->visibility === 'public' ? 'blue' : 'zinc'">{{ $visibilityLabels[$point->visibility] ?? $point->visibility }}</flux:badge>
                                 </div>
                             </div>
-
-                            <form method="POST" action="{{ route('profile.contacts.contact.destroy',$point) }}" onsubmit="return confirm('این راه ارتباطی حذف شود؟')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger">حذف</button>
-                            </form>
                         </div>
-
-                        <details class="editor">
-                            <summary>ویرایش</summary>
-                            <form method="POST" action="{{ route('profile.contacts.contact.update',$point) }}" class="form-box">
-                                @csrf @method('PUT')
-                                <div class="grid3">
-                                    <label><span>نوع</span><select name="kind">
-                                        @foreach($kindLabels as $v=>$text)<option value="{{ $v }}" @selected($point->kind===$v)>{{ $text }}</option>@endforeach
-                                    </select></label>
-                                    <label><span>عنوان دلخواه</span><input name="label" value="{{ $point->label }}" placeholder="مثلاً موبایل کاری"></label>
-                                    <label><span>چه کسانی ببینند؟</span><select name="visibility">
-                                        @foreach($visibilityLabels as $v=>$text)<option value="{{ $v }}" @selected($point->visibility===$v)>{{ $text }}</option>@endforeach
-                                    </select></label>
-                                </div>
-                                <label style="display:block;margin-top:12px"><span>مقدار</span><input name="value" value="{{ $point->value }}" required></label>
-                                <label class="check"><input type="checkbox" name="is_primary" value="1" @checked($point->is_primary)><span style="margin:0">این مورد اصلی باشد</span></label>
-                                <button class="btn btn-purple">ذخیره تغییرات</button>
-                            </form>
-                        </details>
-                    </article>
-                @empty
-                    <div class="empty">هنوز شماره تماس یا راه ارتباطی دیگری ثبت نکرده‌اید.</div>
-                @endforelse
-            </div>
-
-            <div class="form-box">
-                <h3>＋ افزودن راه ارتباطی</h3>
-                <form method="POST" action="{{ route('profile.contacts.contact.store') }}">
-                    @csrf
-                    <div class="grid3">
-                        <label><span>نوع</span><select name="kind" required>
-                            @foreach($kindLabels as $v=>$text)<option value="{{ $v }}">{{ $text }}</option>@endforeach
-                        </select></label>
-                        <label><span>عنوان</span><input name="label" placeholder="مثلاً موبایل شخصی"></label>
-                        <label><span>نمایش برای</span><select name="visibility" required>
-                            @foreach($visibilityLabels as $v=>$text)<option value="{{ $v }}" @selected($v==='private')>{{ $text }}</option>@endforeach
-                        </select></label>
+                        <form method="POST" action="{{ route('profile.contacts.contact.destroy', $point) }}" onsubmit="return confirm({{ \Illuminate\Support\Js::from(__('contact_center.contacts.delete_confirm')) }})">
+                            @csrf @method('DELETE')
+                            <flux:button type="submit" size="sm" variant="danger">{{ __('contact_center.contacts.delete') }}</flux:button>
+                        </form>
                     </div>
-                    <label style="display:block;margin-top:12px"><span>شماره / ایمیل / آدرس وب</span><input name="value" required placeholder="مثلاً ۰۹۱۲... یا work@example.com"></label>
-                    <label class="check"><input type="checkbox" name="is_primary" value="1"><span style="margin:0">به‌عنوان مورد اصلی این نوع ذخیره شود</span></label>
-                    <button class="btn btn-purple">＋ افزودن</button>
-                </form>
-                <div class="privacy-note">تغییر شماره یا ایمیلِ تأییدشده، وضعیت تأیید آن را خودکار بازنشانی می‌کند؛ تأیید نباید با یک تیک دستی جعل شود.</div>
-            </div>
+                    <details>
+                        <summary class="cursor-pointer py-1 text-sm font-medium">{{ __('contact_center.contacts.edit') }}</summary>
+                        <form method="POST" action="{{ route('profile.contacts.contact.update', $point) }}" class="mt-2 {{ $subform }}">
+                            @csrf @method('PUT')
+                            <div class="grid gap-4 sm:grid-cols-3">
+                                <x-form.select name="kind" :options="$kindLabels" :selected="$point->kind" :label="__('contact_center.contacts.kind')" />
+                                <x-form.input name="label" :value="$point->label" :label="__('contact_center.contacts.label')" :placeholder="__('contact_center.contacts.label_placeholder')" />
+                                <x-form.select name="visibility" :options="$visibilityLabels" :selected="$point->visibility" :label="__('contact_center.contacts.visibility')" />
+                            </div>
+                            <x-form.input name="value" :value="$point->value" required dir="ltr" :label="__('contact_center.contacts.value')" />
+                            <x-form.checkbox name="is_primary" :checked="(bool) $point->is_primary" :label="__('contact_center.contacts.primary')" />
+                            <flux:button type="submit" variant="primary" size="sm">{{ __('contact_center.contacts.save') }}</flux:button>
+                        </form>
+                    </details>
+                </article>
+            @empty
+                <flux:text>{{ __('contact_center.contacts.empty') }}</flux:text>
+            @endforelse
         </div>
-    </section>
 
-    <section class="section">
-        <div class="section-head">
-            <div class="section-title">
-                <div class="icon address">📍</div>
-                <div><h2>آدرس‌ها</h2><p>خانه، محل کار، شعبه، آدرس ارسال یا محل پروژه</p></div>
+        <form method="POST" action="{{ route('profile.contacts.contact.store') }}" class="{{ $subform }}">
+            @csrf
+            <flux:heading size="sm" level="3">{{ __('contact_center.contacts.add_title') }}</flux:heading>
+            <div class="grid gap-4 sm:grid-cols-3">
+                <x-form.select name="kind" required :options="$kindLabels" :label="__('contact_center.contacts.kind')" />
+                <x-form.input name="label" :label="__('contact_center.addresses.label')" :placeholder="__('contact_center.contacts.add_label_placeholder')" />
+                <x-form.select name="visibility" required :options="$visibilityLabels" selected="private" :label="__('contact_center.contacts.show_to')" />
             </div>
-        </div>
+            <x-form.input name="value" required dir="ltr" :label="__('contact_center.contacts.add_value')" :placeholder="__('contact_center.contacts.add_value_placeholder')" />
+            <x-form.checkbox name="is_primary" :label="__('contact_center.contacts.add_primary')" />
+            <flux:button type="submit" variant="primary" icon="plus">{{ __('contact_center.contacts.add') }}</flux:button>
+            <flux:text class="text-xs">{{ __('contact_center.contacts.note') }}</flux:text>
+        </form>
+    </x-app.panel>
 
-        <div class="body">
-            <div class="list">
-                @forelse($addresses as $address)
-                    <article class="item">
-                        <div class="item-top">
-                            <div class="item-main">
-                                <div class="bubble" style="background:#ecfdf5">🏠</div>
-                                <div>
-                                    <div style="font-size:13px;color:#667085;font-weight:800">
-                                        {{ $address->label ?: ($addressTypes[$address->type] ?? $address->type) }}
-                                    </div>
-                                    <div class="address-line">
-                                        {{ collect([$address->province,$address->city,$address->district,$address->street,$address->alley])->filter()->join('، ') }}
-                                        @if($address->building_no) پلاک {{ $address->building_no }} @endif
-                                        @if($address->unit) واحد {{ $address->unit }} @endif
-                                    </div>
-                                    <div class="meta">
-                                        @if($address->is_primary)<span class="badge primary">⭐ اصلی</span>@endif
-                                        <span class="badge {{ $address->visibility === 'public' ? 'public' : ($address->visibility === 'private' ? 'private' : '') }}">
-                                            {{ $visibilityLabels[$address->visibility] ?? $address->visibility }}
-                                        </span>
-                                        @if($address->postal_code)<span class="badge">کدپستی: {{ $address->postal_code }}</span>@endif
-                                    </div>
+    <x-app.panel :title="__('contact_center.addresses.title')" :help="__('contact_center.addresses.help')" icon="map-pin">
+        <div class="space-y-3">
+            @forelse ($addresses as $address)
+                <article class="{{ $item }}" wire:key="address-{{ $address->id }}">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="flex min-w-0 items-start gap-3">
+                            <flux:icon.home class="mt-1 size-5 shrink-0 text-zinc-500" />
+                            <div class="min-w-0">
+                                <div class="text-sm text-zinc-500">{{ $address->label ?: ($addressTypes[$address->type] ?? $address->type) }}</div>
+                                <div class="[overflow-wrap:anywhere]" dir="auto">
+                                    {{ collect([$address->province, $address->city, $address->district, $address->street, $address->alley])->filter()->join('، ') }}
+                                    @if ($address->building_no) {{ __('contact_center.addresses.building_line', ['no' => $address->building_no]) }} @endif
+                                    @if ($address->unit) {{ __('contact_center.addresses.unit_line', ['unit' => $address->unit]) }} @endif
+                                </div>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    @if ($address->is_primary)<flux:badge size="sm" color="amber">★ {{ __('contact_center.primary_badge') }}</flux:badge>@endif
+                                    <flux:badge size="sm" :color="$address->visibility === 'public' ? 'blue' : 'zinc'">{{ $visibilityLabels[$address->visibility] ?? $address->visibility }}</flux:badge>
+                                    @if ($address->postal_code)<flux:badge size="sm" color="zinc">{{ __('contact_center.addresses.postal_badge', ['code' => $address->postal_code]) }}</flux:badge>@endif
                                 </div>
                             </div>
-                            <form method="POST" action="{{ route('profile.contacts.address.destroy',$address) }}" onsubmit="return confirm('این آدرس حذف شود؟')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger">حذف</button>
-                            </form>
                         </div>
-
-                        <details class="editor">
-                            <summary>ویرایش آدرس</summary>
-                            <form method="POST" action="{{ route('profile.contacts.address.update',$address) }}" class="form-box green">
-                                @csrf @method('PUT')
-                                <div class="grid3">
-                                    <label><span>نوع</span><select name="type">
-                                        @foreach($addressTypes as $v=>$text)<option value="{{ $v }}" @selected($address->type===$v)>{{ $text }}</option>@endforeach
-                                    </select></label>
-                                    <label><span>عنوان</span><input name="label" value="{{ $address->label }}"></label>
-                                    <label><span>نمایش برای</span><select name="visibility">
-                                        @foreach($visibilityLabels as $v=>$text)<option value="{{ $v }}" @selected($address->visibility===$v)>{{ $text }}</option>@endforeach
-                                    </select></label>
-                                    <label><span>کشور</span><input name="country_code" value="{{ $address->country_code ?: 'IR' }}" maxlength="2"></label>
-                                    <label><span>استان</span><input name="province" value="{{ $address->province }}"></label>
-                                    <label><span>شهر *</span><input name="city" value="{{ $address->city }}" required></label>
-                                    <label><span>محله / منطقه</span><input name="district" value="{{ $address->district }}"></label>
-                                    <label><span>خیابان</span><input name="street" value="{{ $address->street }}"></label>
-                                    <label><span>کوچه</span><input name="alley" value="{{ $address->alley }}"></label>
-                                    <label><span>پلاک</span><input name="building_no" value="{{ $address->building_no }}"></label>
-                                    <label><span>واحد</span><input name="unit" value="{{ $address->unit }}"></label>
-                                    <label><span>کدپستی</span><input name="postal_code" value="{{ $address->postal_code }}"></label>
-                                </div>
-                                <label class="check"><input type="checkbox" name="is_primary" value="1" @checked($address->is_primary)><span style="margin:0">این آدرس اصلی این نوع باشد</span></label>
-                                <button class="btn btn-green">ذخیره تغییرات</button>
-                            </form>
-                        </details>
-                    </article>
-                @empty
-                    <div class="empty">هنوز آدرسی ثبت نشده است.</div>
-                @endforelse
-            </div>
-
-            <div class="form-box green">
-                <h3>＋ افزودن آدرس</h3>
-                <form method="POST" action="{{ route('profile.contacts.address.store') }}">
-                    @csrf
-                    <div class="grid3">
-                        <label><span>نوع آدرس</span><select name="type" required>
-                            @foreach($addressTypes as $v=>$text)<option value="{{ $v }}">{{ $text }}</option>@endforeach
-                        </select></label>
-                        <label><span>عنوان دلخواه</span><input name="label" placeholder="مثلاً خانه تهران"></label>
-                        <label><span>نمایش برای</span><select name="visibility" required>
-                            @foreach($visibilityLabels as $v=>$text)<option value="{{ $v }}" @selected($v==='private')>{{ $text }}</option>@endforeach
-                        </select></label>
-                        <label><span>کشور</span><input name="country_code" value="IR" maxlength="2"></label>
-                        <label><span>استان</span><input name="province" placeholder="تهران"></label>
-                        <label><span>شهر *</span><input name="city" required placeholder="تهران"></label>
-                        <label><span>محله / منطقه</span><input name="district"></label>
-                        <label><span>خیابان</span><input name="street"></label>
-                        <label><span>کوچه</span><input name="alley"></label>
-                        <label><span>پلاک</span><input name="building_no"></label>
-                        <label><span>واحد</span><input name="unit"></label>
-                        <label><span>کدپستی</span><input name="postal_code"></label>
+                        <form method="POST" action="{{ route('profile.contacts.address.destroy', $address) }}" onsubmit="return confirm({{ \Illuminate\Support\Js::from(__('contact_center.addresses.delete_confirm')) }})">
+                            @csrf @method('DELETE')
+                            <flux:button type="submit" size="sm" variant="danger">{{ __('contact_center.contacts.delete') }}</flux:button>
+                        </form>
                     </div>
-                    <label class="check"><input type="checkbox" name="is_primary" value="1"><span style="margin:0">این آدرس اصلی این نوع باشد</span></label>
-                    <button class="btn btn-green">＋ افزودن آدرس</button>
-                </form>
-            </div>
+                    <details>
+                        <summary class="cursor-pointer py-1 text-sm font-medium">{{ __('contact_center.addresses.edit') }}</summary>
+                        <form method="POST" action="{{ route('profile.contacts.address.update', $address) }}" class="mt-2 {{ $subform }}">
+                            @csrf @method('PUT')
+                            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                <x-form.select name="type" :options="$addressTypes" :selected="$address->type" :label="__('contact_center.addresses.type')" />
+                                <x-form.input name="label" :value="$address->label" :label="__('contact_center.addresses.label')" />
+                                <x-form.select name="visibility" :options="$visibilityLabels" :selected="$address->visibility" :label="__('contact_center.contacts.show_to')" />
+                                <x-form.input name="country_code" :value="$address->country_code ?: 'IR'" maxlength="2" :label="__('contact_center.addresses.country')" />
+                                @foreach (['province', 'district', 'street', 'alley', 'building_no', 'unit', 'postal_code'] as $field)
+                                    @if ($field === 'district')
+                                        <x-form.input name="city" :value="$address->city" required :label="__('contact_center.addresses.city').' *'" />
+                                    @endif
+                                    <x-form.input :name="$field" :value="$address->{$field}" :label="__('contact_center.addresses.'.$field)" />
+                                @endforeach
+                            </div>
+                            <x-form.checkbox name="is_primary" :checked="(bool) $address->is_primary" :label="__('contact_center.addresses.primary')" />
+                            <flux:button type="submit" variant="primary" size="sm">{{ __('contact_center.contacts.save') }}</flux:button>
+                        </form>
+                    </details>
+                </article>
+            @empty
+                <flux:text>{{ __('contact_center.addresses.empty') }}</flux:text>
+            @endforelse
         </div>
-    </section>
-</main>
+
+        <form method="POST" action="{{ route('profile.contacts.address.store') }}" class="{{ $subform }}">
+            @csrf
+            <flux:heading size="sm" level="3">{{ __('contact_center.addresses.add_title') }}</flux:heading>
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <x-form.select name="type" required :options="$addressTypes" :label="__('contact_center.addresses.add_type')" />
+                <x-form.input name="label" :label="__('contact_center.contacts.label')" :placeholder="__('contact_center.addresses.label_placeholder')" />
+                <x-form.select name="visibility" required :options="$visibilityLabels" selected="private" :label="__('contact_center.contacts.show_to')" />
+                <x-form.input name="country_code" value="IR" maxlength="2" :label="__('contact_center.addresses.country')" />
+                <x-form.input name="province" :label="__('contact_center.addresses.province')" />
+                <x-form.input name="city" required :label="__('contact_center.addresses.city').' *'" />
+                @foreach (['district', 'street', 'alley', 'building_no', 'unit', 'postal_code'] as $field)
+                    <x-form.input :name="$field" :label="__('contact_center.addresses.'.$field)" />
+                @endforeach
+            </div>
+            <x-form.checkbox name="is_primary" :label="__('contact_center.addresses.primary')" />
+            <flux:button type="submit" variant="primary" icon="plus">{{ __('contact_center.addresses.add') }}</flux:button>
+        </form>
+    </x-app.panel>
+</div>
 @endsection

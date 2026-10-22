@@ -1,9 +1,21 @@
 @extends('layouts.app')
-@section('title', app()->getLocale() === 'fa' ? 'دفاتر املاک' : 'Real Estate offices')
+@section('title', __('business.real_estate_workspace.title'))
 
 @section('content')
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f7f9fc;color:#172033;font-family:inherit}.wrap{max-width:1050px;margin:auto;padding:25px 16px 60px}.hero{background:linear-gradient(125deg,#047857,#0ea5e9);color:#fff;border-radius:28px;padding:27px}.hero h1{font-size:31px;margin:5px 0}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px;margin-top:18px}.card{background:#fff;border:1px solid #e4e7ec;border-radius:22px;padding:20px}.btn{display:inline-flex;margin-top:13px;background:#2563eb;color:#fff;text-decoration:none;border-radius:13px;padding:10px 14px;font-weight:900}
-</style>
-<main class="wrap"><header class="hero"><div style="font-weight:900;opacity:.9">عمودی تخصصی</div><h1>دفاتر املاک من</h1><div>فقط دفترهایی که اجازه دسترسی دارید اینجا دیده می‌شوند.</div></header><section class="cards">@forelse($portals as $portal)<article class="card"><div style="font-size:34px">🏠</div><h2>{{ $portal->title }}</h2><a class="btn" href="{{ route('office.real-estate.index',$portal) }}">باز کردن پرونده‌ها ←</a></article>@empty<article class="card"><h2>دفتری در دسترس نیست</h2><p style="color:#667085">برای این حساب هنوز دسترسی به دفتر املاک ثبت نشده است.</p></article>@endforelse</section></main>
+<div class="mx-auto max-w-5xl space-y-6" data-real-estate-workspace>
+    <x-app.page-header :title="__('business.real_estate_workspace.title')" :description="__('business.real_estate_workspace.help')" />
+    @if ($portals->isEmpty())
+        <x-app.empty-state icon="home-modern" :title="__('business.real_estate_workspace.empty_title')" :description="__('business.real_estate_workspace.empty_help')" />
+    @else
+        <section class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr))]">
+            @foreach ($portals as $portal)
+                <article class="flex min-w-0 flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-700 dark:bg-zinc-900">
+                    <flux:icon.home-modern class="size-7 text-zinc-500" />
+                    <flux:heading size="lg" level="2" class="[overflow-wrap:anywhere]">{{ $portal->title }}</flux:heading>
+                    <div class="mt-auto"><flux:button :href="route('office.real-estate.index', $portal)" variant="primary" size="sm">{{ __('business.real_estate_workspace.open') }}</flux:button></div>
+                </article>
+            @endforeach
+        </section>
+    @endif
+</div>
 @endsection

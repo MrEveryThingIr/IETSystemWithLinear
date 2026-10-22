@@ -187,6 +187,26 @@ their own side only. Filters: all / manual / IET / imported / corrections.
   origin badge and a link back to the work.
 * Work hub: *Work in progress* (role, accepted progress, plan, waiting reviews).
 
+## 5d. Implemented in 1.11 (Businesses, Groups, coherence)
+
+* Internal business pages (overview, list, create, catalog, listing editor,
+  clients) rebuilt on the app's components: no page-level CSS that restyled
+  the whole app (body, inputs with `!important`), dark mode works, phones get
+  16px inputs. Public business pages keep their own branding.
+* Shared Blade pieces for classic forms: `x-app.panel`, `x-form.input`,
+  `x-form.select`, `x-form.textarea`, `x-form.checkbox` (old input only where
+  the page opts in, so several forms on one page never share values).
+* Business overview shows *What the team can do* (members' skills practised
+  there + the business's own) and the business's Needs & Offers, with
+  *Publish for this business* for owners/managers only.
+* Catalog shows which local categories are linked to a shared category.
+* Group home shows the group's Needs & Offers; group managers publish for it.
+* Contact center and real-estate workspace were hard-coded Persian; now in all
+  four languages (`contact_center.php`).
+* Fixed: archiving a client required the market feature; it no longer does.
+* Navigation is already intention-based (Needs & Offers, Work, Organizations,
+  Money, Content); no routes moved, so no redirects were needed.
+
 ## 6. Release checklist
 
 | Release | Additive schema | Data steps | Acceptance |
