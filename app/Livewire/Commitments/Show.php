@@ -2,26 +2,35 @@
 
 namespace App\Livewire\Commitments;
 
+use App\Actions\Commitments\BindExistingPlan;
 use App\Actions\Commitments\CreateCommitmentPlan;
 use App\Actions\Fulfillments\OpenFulfillmentDispute;
 use App\Actions\Fulfillments\ResolveFulfillmentDispute;
 use App\Actions\Fulfillments\ReviewFulfillment;
 use App\Actions\Fulfillments\SubmitFulfillment;
+use App\Actions\Planner\SavePlanTemplate;
+use App\Actions\Work\ProposeWorkBookkeepingEntry;
 use App\FulfillmentReviewDecision;
 use App\FulfillmentStatus;
 use App\Models\Actor;
+use App\Models\Bookkeeping\Ledger;
+use App\Models\Bookkeeping\Transaction;
 use App\Models\Commitment;
 use App\Models\Fulfillment;
 use App\Models\FulfillmentDispute;
 use App\Models\PlanOccurrence;
+use App\Models\PlanTemplate;
 use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\Support\CommitmentProgress;
+use App\Support\Parties\Party;
+use App\Support\Parties\PartyAuthority;
 use App\Support\QuantityAmount;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -46,6 +55,20 @@ class Show extends Component
     public string $planSelectedDates = '';
 
     public string $planReminderOffsets = '15';
+
+    /** How to schedule this work: new, template, existing (a plan already in this deal) or none. */
+    public string $planChoice = 'new';
+
+    public string $templateUuid = '';
+
+    public string $existingPlanUuid = '';
+
+    public string $templateName = '';
+
+    public string $templateOwner = '';
+
+    /** @var array<int, string> fulfillment id => chosen shared book uuid */
+    public array $bookChoice = [];
 
     public string $fulfillmentOccurrenceUuid = '';
 
@@ -220,6 +243,95 @@ class Show extends Component
         session()->flash('status', __('commitments.messages.resolved'));
     }
 
+    public function applyTemplate(CreateCommitmentPlan $create): void
+    {
+        Gate::forUser($this->user())->authorize('manage', $this->commitment);
+        $this->validate([
+            'templateUuid' => ['required', 'string'],
+            'planStartsOn' => ['required', 'date_format:Y-m-d'],
+        ], [], ['templateUuid' => __('work.templates.choose')]);
+        $template = PlanTemplate::query()->ownedByAny($this->templateParties())->where('uuid', $this->templateUuid)->firstOrFail();
+
+        $create->execute(
+            $this->commitment,
+            $this->user(),
+            $template->frequency,
+            $this->planStartsOn,
+            $template->start_time,
+            $template->duration_minutes,
+            $template->interval,
+            $template->weekdays ?? [],
+            [],
+            null,
+            $template->occurrence_limit ?? ($template->frequency === PlanScheduleFrequency::Once ? 1 : null),
+            $template->window_before_minutes,
+            $template->window_after_minutes,
+            $template->reminder_offsets ?? [],
+            $template->timing_mode,
+            $template->month_day,
+        );
+
+        $this->refreshCommitment();
+        session()->flash('status', __('commitments.messages.plan_created'));
+    }
+
+    public function bindExisting(BindExistingPlan $bind): void
+    {
+        $plan = $bind->candidates($this->user(), $this->commitment)->firstWhere('uuid', $this->existingPlanUuid);
+        if ($plan === null) {
+            $this->addError('existingPlanUuid', __('work.plans.choose_existing'));
+
+            return;
+        }
+        $bind->execute($this->user(), $this->commitment, $plan);
+        $this->refreshCommitment();
+        session()->flash('status', __('work.plans.connected'));
+    }
+
+    public function saveTemplate(SavePlanTemplate $save): void
+    {
+        $plan = $this->commitment->planBinding?->plan;
+        abort_unless($plan !== null, 422);
+        $owner = $this->templateParties()[0];
+        foreach ($this->templateParties() as $party) {
+            if ($party->key() === $this->templateOwner) {
+                $owner = $party;
+            }
+        }
+        $save->fromPlan($this->user(), $plan, $this->templateName !== '' ? $this->templateName : $plan->title, $owner);
+        $this->reset('templateName');
+        session()->flash('status', __('work.templates.saved'));
+    }
+
+    public function proposeEntry(int $fulfillmentId, ProposeWorkBookkeepingEntry $propose): void
+    {
+        $fulfillment = $this->commitment->fulfillments()->whereKey($fulfillmentId)->firstOrFail();
+        $ledger = $propose->booksFor($this->user(), $this->commitment)->firstWhere('uuid', $this->bookChoice[$fulfillmentId] ?? '');
+        if ($ledger === null) {
+            $this->addError('bookChoice.'.$fulfillmentId, __('work.books.choose'));
+
+            return;
+        }
+        $propose->execute($this->user(), $fulfillment, $ledger);
+        $this->refreshCommitment();
+        session()->flash('status', __('work.books.proposed'));
+    }
+
+    public function createBook(ProposeWorkBookkeepingEntry $propose): void
+    {
+        $ledger = $propose->createSharedBook($this->user(), $this->commitment);
+        foreach ($this->commitment->fulfillments as $fulfillment) {
+            $this->bookChoice[$fulfillment->id] = $ledger->uuid;
+        }
+        session()->flash('status', __('work.books.created'));
+    }
+
+    /** @return list<Party> */
+    private function templateParties(): array
+    {
+        return app(PartyAuthority::class)->partiesFor($this->user())->pluck('party')->all();
+    }
+
     public function render(): View
     {
         $this->refreshCommitment();
@@ -242,6 +354,12 @@ class Show extends Component
             'plan' => $plan,
             'completedOccurrences' => $completedOccurrences,
             'timezone' => TemporalPreferences::timezoneFor($user),
+            'templates' => ! $plan && Gate::forUser($user)->allows('manage', $this->commitment)
+                ? PlanTemplate::query()->ownedByAny($this->templateParties())->orderBy('name')->get()
+                : collect(),
+            'existingPlans' => ! $plan ? app(BindExistingPlan::class)->candidates($user, $this->commitment) : collect(),
+            'templateOwners' => $plan ? app(PartyAuthority::class)->partiesFor($user) : collect(),
+            'work' => $this->workBookkeeping($user),
         ]);
     }
 
@@ -273,6 +391,33 @@ class Show extends Component
 
         Gate::forUser($this->user())->authorize('view', $commitment);
         $this->commitment = $commitment;
+    }
+
+    /**
+     * For each accepted fulfillment: the live book entry (if any) and whether one can be proposed.
+     *
+     * @return array{isParty: bool, books: Collection<int, Ledger>, entries: array<int, Transaction|null>, amounts: array<int, int|null>}
+     */
+    private function workBookkeeping(User $user): array
+    {
+        $propose = app(ProposeWorkBookkeepingEntry::class);
+        $actorId = (int) $user->actor?->id;
+        $isParty = in_array($actorId, [(int) $this->commitment->obligor_actor_id, (int) $this->commitment->beneficiary_actor_id], true);
+        $accepted = $this->commitment->fulfillments->where('status', FulfillmentStatus::Accepted);
+        $entries = $accepted->isEmpty() ? collect() : Transaction::query()
+            ->where('source_type', ProposeWorkBookkeepingEntry::SOURCE_TYPE)
+            ->whereIn('source_uuid', $accepted->pluck('uuid'))
+            ->whereIn('status', ['pending', 'confirmed', 'disputed'])
+            ->with('ledger')
+            ->get()
+            ->keyBy('source_uuid');
+
+        return [
+            'isParty' => $isParty,
+            'books' => $isParty && $accepted->isNotEmpty() ? $propose->booksFor($user, $this->commitment) : collect(),
+            'entries' => $accepted->mapWithKeys(fn (Fulfillment $f): array => [$f->id => $entries->get($f->uuid)])->all(),
+            'amounts' => $accepted->mapWithKeys(fn (Fulfillment $f): array => [$f->id => $propose->amountFor($f)])->all(),
+        ];
     }
 
     /** @return list<string> */

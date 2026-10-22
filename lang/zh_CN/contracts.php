@@ -9,7 +9,10 @@ return [
     'source_proposal' => '来源协议提案',
     'source_relationship' => '来源关系',
     'relationship_action' => '创建合同',
-    'status' => ['pending' => '等待生效', 'active' => '有效'],
+    'status' => [
+        'pending' => '等待生效',
+        'active' => '有效',
+    ],
     'version_status' => [
         'proposed' => '等待接受',
         'accepted' => '已接受，等待生效时间',
@@ -25,7 +28,9 @@ return [
         'version_activated' => '合同版本已生效',
         'version_superseded' => '合同版本已被新版本替代',
     ],
-    'timeline' => ['entry' => ':event · :title'],
+    'timeline' => [
+        'entry' => ':event · :title',
+    ],
     'create' => [
         'title' => '新建合同',
         'help' => '可以直接创建合同条款，也可以从已接受的协议提案开始。所有必需当事方仍需重新明确接受此合同版本。',
@@ -92,8 +97,8 @@ return [
             'contract_end' => '合同/服务结束时',
         ],
         'payment_due_days' => '付款期限（天）',
-        'schedule_title' => '工作计划',
-        'schedule_help' => '启用自动规划后，此计划会创建共享 Planner 的工作时段。计划时间本身不证明工作已完成或价值已赚取；被接受的履行才是依据。',
+        'schedule_title' => '工作时间',
+        'schedule_help' => '约定的期限、时间和到期日。选择计划时，它们也会成为共享的计划安排。计划时间本身不能证明工作完成；被接受的履约记录才能证明。',
         'auto_plan' => '自动创建共享 Plan',
         'auto_obligation' => '履行被接受后自动确认价值',
         'active_title' => '当前结构化服务经济条款',

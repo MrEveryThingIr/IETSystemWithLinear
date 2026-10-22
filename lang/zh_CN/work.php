@@ -1,0 +1,105 @@
+<?php
+
+return [
+    'plans' => [
+        'choice' => '这项工作如何安排？',
+        'choices' => [
+            'new' => [
+                'title' => '新的共享计划',
+                'help' => '现在设定时间；双方看到同一个计划。',
+            ],
+            'template' => [
+                'title' => '使用模板',
+                'help' => '复用已保存的日程形式，并选择开始日期。',
+            ],
+            'existing' => [
+                'title' => '本交易中已有的计划',
+                'help' => '连接双方在此已共享的计划。',
+            ],
+            'none' => [
+                'title' => '不使用计划',
+                'help' => '不设定时间安排来跟踪工作。',
+                'later' => '尚未连接计划。你可以随时选择其他选项。',
+            ],
+        ],
+        'contract_choice' => '此工作的计划',
+        'contract_choices' => [
+            'new' => [
+                'title' => '创建共享计划',
+                'help' => '协议被接受后，下面的时间将成为共享计划。',
+            ],
+            'template' => [
+                'title' => '使用模板',
+                'help' => '用已保存的模板填写下面的时间，然后创建共享计划。',
+            ],
+            'later' => [
+                'title' => '稍后决定',
+                'help' => '现在不建计划；可在工作页面连接或创建。',
+            ],
+            'none' => [
+                'title' => '不使用计划',
+                'help' => '下面的时间仅表示约定期限和到期日。',
+            ],
+        ],
+        'existing' => '计划',
+        'existing_help' => '只列出本交易中的计划，不会向对方显示任何私人内容。',
+        'no_existing' => '本交易中还没有未连接的计划。',
+        'choose_existing' => '请选择一个计划。',
+        'connect' => '连接计划',
+        'connected' => '计划已连接到此工作。',
+    ],
+    'templates' => [
+        'choose' => '模板',
+        'none' => '你还没有日程模板。可以从任何工作计划保存一个。',
+        'apply' => '用模板创建计划',
+        'applies_shape' => '只复用日程形式：频率、时间、时长、提醒以及允许的提前/延后时间窗。不含人员、日期或历史。',
+        'fills_times' => '模板会填写下面的时间；你仍可修改。',
+        'save_title' => '将此日程保存为模板',
+        'save_help' => '只保存日程形式，不保存此工作的人员、日期或历史。',
+        'name' => '模板名称',
+        'owner' => '模板归属',
+        'save' => '保存模板',
+        'saved' => '模板已保存。',
+        'name_required' => '请为模板命名（最多 160 个字符）。',
+        'no_schedule' => '此计划没有可复用的日程。',
+        'dates_not_reusable' => '此计划使用指定日期；模板只保留重复的形式。',
+        'frequency' => [
+            'once' => '一次',
+            'daily' => '每天',
+            'weekly' => '每周',
+            'monthly' => '每月',
+            'selected_dates' => '指定日期',
+        ],
+    ],
+    'books' => [
+        'title' => '记账',
+        'propose_help' => '在共享账本中提议一笔 :amount 的欠款。只有对方在账本中确认后才会计入。',
+        'book' => '共享账本',
+        'choose' => '请选择共享账本。',
+        'propose' => '提议记账',
+        'proposed' => '已在共享账本中提议，等待对方确认。',
+        'no_amount' => '此工作没有约定托曼价格，因此无法提议记账。',
+        'not_shared' => '此工作的双方都必须是该账本的有效成员。',
+        'no_shared_book' => '你还没有与对方的共享账本。',
+        'create' => '与对方创建共享账本',
+        'created' => '共享账本已创建。现在可以提议记账。',
+        'default_name' => '工作：:title',
+        'description' => '工作：:title — 已接受 :quantity :unit',
+        'status' => [
+            'pending' => '等待确认',
+            'confirmed' => '已在账本中确认',
+            'disputed' => '账本中有争议',
+        ],
+    ],
+    'hub' => [
+        'commitments' => '进行中的工作',
+        'commitments_help' => '你承担或为你完成的已约定工作。',
+        'commitments_empty' => '没有进行中的工作。',
+        'i_do' => '我来做',
+        'for_me' => '为我完成',
+        'progress' => '已接受 :done / :total :unit',
+        'planned' => '已计划',
+        'not_planned' => '无计划',
+        'waiting_review' => '{1} :count 项待审核|[2,*] :count 项待审核',
+    ],
+];
