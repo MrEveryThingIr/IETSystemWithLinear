@@ -19,13 +19,25 @@ use LogicException;
     'author_actor_id',
     'reply_to_message_id',
     'body',
+    'kind',
+    'meta',
+    'client_uuid',
 ])]
 class ConversationMessage extends Model
 {
     /** @use HasFactory<ConversationMessageFactory> */
     use HasFactory;
 
+    public const KINDS = ['text', 'voice', 'location', 'contact'];
+
     protected $table = 'conversation_messages';
+
+    protected $attributes = ['kind' => 'text'];
+
+    protected function casts(): array
+    {
+        return ['meta' => 'array'];
+    }
 
     protected static function booted(): void
     {
@@ -105,6 +117,12 @@ class ConversationMessage extends Model
         return $this->belongsToMany(Asset::class, 'conversation_message_assets')
             ->withPivot('uuid')
             ->withTimestamps();
+    }
+
+    /** @return HasMany<ConversationMessageReaction, $this> */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(ConversationMessageReaction::class);
     }
 
     /** @return BelongsToMany<ContentEvidenceReference, $this> */

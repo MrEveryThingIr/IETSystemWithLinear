@@ -74,6 +74,9 @@
                 @endif
                 <flux:button :href="route('businesses.clients.index', $business)" variant="ghost">{{ __('workflow.business.sections.clients') }}</flux:button>
                 <flux:button :href="route('businesses.catalog.index', $business)" variant="ghost">{{ __('workflow.business.sections.catalog') }}</flux:button>
+                @if ($businessContext)
+                    <flux:button :href="route('contexts.conversation', $businessContext)" variant="ghost" icon="chat-bubble-left-right">{{ __('business.show.team_chat') }}</flux:button>
+                @endif
             </x-slot:actions>
 
             <x-slot:advanced>

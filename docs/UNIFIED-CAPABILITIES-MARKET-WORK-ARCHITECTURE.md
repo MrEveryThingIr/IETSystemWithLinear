@@ -207,6 +207,43 @@ their own side only. Filters: all / manual / IET / imported / corrections.
 * Navigation is already intention-based (Needs & Offers, Work, Organizations,
   Money, Content); no routes moved, so no redirects were needed.
 
+## 5e. Implemented in 1.12 (Messaging)
+
+* **One engine.** Private conversations are a Context of kind `direct`
+  (`direct_contexts`: exactly two people, lower id first, one per pair) with
+  the same `conversations` / `conversation_messages` tables used by groups,
+  businesses, deals, agreements and books. Authorization stays in
+  `ContextPolicy` for every kind.
+* **Privacy.** `users.message_privacy` (everyone / contacts / nobody, default
+  contacts) decides who may *start*; anyone may answer someone who wrote to
+  them; blocking (`actor_blocks`) stops messages and requests both ways and is
+  not announced. Contacts (`actor_contacts`) grant messaging only.
+* **Per-person state** (`conversation_participants`): last read, last seen,
+  mute, archive, pin; created when someone opens or writes in any chat, so
+  group/business/deal chats appear in the same inbox; access is re-checked on
+  every read.
+* **Messages:** text, replies, edit/delete with the existing revision trail
+  (deleted text is hidden, a record is kept), reactions
+  (`conversation_message_reactions`, fixed emoji set), photos/videos/files and
+  voice notes through the shared Asset pipeline (served only via
+  `/messages/{conversation}/files/…` after a view check), static location
+  (explicit tap, rounded to 5 decimals, OpenStreetMap link), contact cards
+  (own accepted contacts only). `client_uuid` makes repeated sends safe.
+* **Delivery without WebSockets:** the open thread asks
+  `/messages/{c}/state` for a short version fingerprint (3 s while active,
+  10 s idle, paused when hidden, backing off after errors) and refreshes only
+  when it changed; the sidebar badge asks `/messages/unread` every 30 s.
+* **Notifications** through the existing outbox (in-app + device push):
+  never contain message text; not while muted, not while the person is looking
+  at the conversation, at most one per conversation per 10 minutes.
+* **Reports** (`message_reports`) go to *Administration → Message reports*
+  (platform user managers); only the reported message is shown there.
+* Search covers the person's visible conversations, current text after edits.
+* Honesty: HTTPS in transit and access control at rest — no end-to-end
+  encryption claim (stated in the interface).
+* New facility **Messages** (`messages`) must be published to people in
+  Publication control, like every other facility.
+
 ## 6. Release checklist
 
 | Release | Additive schema | Data steps | Acceptance |
@@ -215,7 +252,7 @@ their own side only. Filters: all / manual / IET / imported / corrections.
 | 1.9 | publisher party on intents, capability/listing-version/content links, rate/unit decimals | backfill publisher = existing profile actor | person/business/group publish; matches with reasons |
 | 1.10 | plan_templates, bk_transactions origin/source | existing entries → manual, adjustments → correction | four-way plan choice; template apply; proposal → confirmation; no duplicate entries |
 | 1.11 | none expected | redirects for moved pages | full journeys A–H |
-| 1.12 | contacts, conversation kinds/read state | none | messaging on phones and desktop |
+| 1.12 | direct_contexts, actor_contacts, actor_blocks, message_reports, conversation_participants, conversation_message_reactions; conversation_messages kind/meta/client_uuid; users.message_privacy | none | messaging on phones and desktop; publish *Messages* |
 
 Rollback for each release: the previous package plus its database; every
 migration is additive, so the previous code runs against the newer schema.

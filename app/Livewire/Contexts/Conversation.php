@@ -3,6 +3,7 @@
 namespace App\Livewire\Contexts;
 
 use App\Actions\Conversations\PostContextMessage;
+use App\Actions\Messaging\ManageConversation;
 use App\ContextKind;
 use App\Models\ContentEvidenceReference;
 use App\Models\Context;
@@ -35,6 +36,10 @@ class Conversation extends Component
     {
         Gate::forUser($this->user())->authorize('view', $context);
         $this->context = $context;
+        $conversation = ConversationModel::query()->where('context_id', $context->id)->where('key', 'main')->first();
+        if ($conversation instanceof ConversationModel) {
+            app(ManageConversation::class)->markRead($this->user(), $conversation);
+        }
     }
 
     public function replyTo(int $messageId): void
@@ -135,7 +140,10 @@ class Conversation extends Component
                 ->get()
             : collect();
 
+        $conversationUuid = ConversationModel::query()->where('context_id', $this->context->id)->where('key', 'main')->value('uuid');
+
         return view('livewire.contexts.conversation', compact(
+            'conversationUuid',
             'messages',
             'replyToMessage',
             'canPost',

@@ -170,6 +170,14 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.subscriptions.destroy');
     Route::post('/push/test', [PushSubscriptionController::class, 'test'])->middleware('throttle:6,1')->name('push.test');
 
+    Route::livewire('/messages', \App\Livewire\Messages\Index::class)->name('messages.index');
+    Route::get('/messages/unread', [\App\Http\Controllers\Messaging\MessagingController::class, 'unread'])->name('messages.unread');
+    Route::post('/messages/start/{actor}', [\App\Http\Controllers\Messaging\MessagingController::class, 'start'])->middleware('throttle:30,1')->name('messages.start');
+    Route::get('/messages/{conversation}', [\App\Http\Controllers\Messaging\MessagingController::class, 'show'])->name('messages.show');
+    Route::get('/messages/{conversation}/state', [\App\Http\Controllers\Messaging\MessagingController::class, 'state'])->middleware('throttle:120,1')->name('messages.state');
+    Route::get('/messages/{conversation}/files/{message}/{asset}', [\App\Http\Controllers\Messaging\MessagingController::class, 'asset'])->name('messages.assets.show');
+    Route::livewire('/contacts', \App\Livewire\Messages\Contacts::class)->name('contacts.index');
+
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');
@@ -261,6 +269,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/platform/access-invitations', AccessInvitations::class)->name('platform.access-invitations');
     Route::livewire('/platform/development-origins', DevelopmentOrigins::class)->name('platform.development-origins');
     Route::livewire('/platform/categories', CategorySuggestions::class)->name('platform.categories');
+    Route::livewire('/platform/message-reports', \App\Livewire\Platform\MessageReports::class)->name('platform.message-reports');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
     Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');

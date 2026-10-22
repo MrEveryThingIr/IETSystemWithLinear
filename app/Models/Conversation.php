@@ -67,4 +67,10 @@ class Conversation extends Model
     {
         return $this->hasMany(ConversationMessage::class);
     }
+
+    /** @return HasMany<ConversationParticipant, $this> */
+    public function participants(): HasMany
+    {
+        return $this->hasMany(ConversationParticipant::class);
+    }
 }

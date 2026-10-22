@@ -28,6 +28,7 @@ class ContextNotificationRecipients
             ContextKind::Reference => $this->referenceActors($context),
             ContextKind::System => collect(),
             ContextKind::Ledger => $this->ledgerActors($context),
+            ContextKind::Direct => $this->directActors($context),
         };
 
         return $actors
@@ -39,6 +40,14 @@ class ContextNotificationRecipients
                 && Gate::forUser($user)->allows('view', $context))
             ->unique('id')
             ->values();
+    }
+
+    /** @return Collection<int, Actor> */
+    private function directActors(Context $context): Collection
+    {
+        $context->loadMissing('directBinding.actorOne.user', 'directBinding.actorTwo.user');
+
+        return collect([$context->directBinding?->actorOne, $context->directBinding?->actorTwo])->filter();
     }
 
     /** @return Collection<int, Actor> */

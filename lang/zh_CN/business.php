@@ -275,6 +275,7 @@ return [
                 'draft' => '草稿',
             ],
         ],
+        'team_chat' => '团队聊天',
     ],
     'validation' => [
         'user_not_found' => '未找到使用该电子邮件或用户名的活跃且已验证用户。',
