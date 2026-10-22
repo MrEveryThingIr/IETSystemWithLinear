@@ -192,11 +192,6 @@ return [
                 'auto' => 'Automatic — follow this device',
                 'fixed' => 'Fixed — keep the selected timezone',
             ],
-            'timezone_mode' => 'Timezone behavior',
-            'timezone_modes' => [
-                'auto' => 'Automatic — follow this device',
-                'fixed' => 'Fixed — keep the selected timezone',
-            ],
             'use_device_timezone' => 'Use device timezone',
             'calendar' => 'Calendar',
             'calendar_help' => 'Auto follows the default calendar for :language. You can override it without changing stored dates.',
@@ -369,7 +364,7 @@ return [
         ],
     ],
     'welcome' => [
-        'get_started' => "Let's get started",
+        'get_started' => 'Let\'s get started',
         'start_help' => 'With so many options available to you, we suggest you start with the following:',
         'read' => 'Read the',
         'documentation' => 'Documentation',
@@ -465,6 +460,11 @@ return [
         'description_help' => 'Optional. Explain the purpose of this group.',
         'timezone' => 'Group timezone',
         'timezone_help' => 'Schedules are entered and displayed in this IANA timezone; storage remains UTC.',
+        'market' => [
+            'title' => 'Needs & offers',
+            'add' => 'Publish for the group',
+            'empty' => 'Nothing published for this group yet.',
+        ],
     ],
     'admission' => [
         'agreement_progress' => 'Required agreements accepted: :accepted of :total.',
@@ -560,7 +560,6 @@ return [
         'secret_not_recoverable' => 'Private link hidden after creation for security.',
         'uses' => ':used/:maximum uses',
         'expires' => 'Expires',
-
         'created' => 'Created',
         'created_expires' => 'Created :created · expires :expires',
         'never' => 'never',
@@ -590,7 +589,10 @@ return [
         'actions' => 'Actions',
         'accountless' => 'Accountless',
         'status' => 'Status',
-        'statuses' => ['active' => 'Active', 'archived' => 'Archived'],
+        'statuses' => [
+            'active' => 'Active',
+            'archived' => 'Archived',
+        ],
         'actor_number' => 'Actor #:id',
         'all' => 'All Actors',
         'view' => 'View',
@@ -734,7 +736,9 @@ return [
         'type_select' => 'Select',
         'select_options' => 'Select options',
         'select_options_help' => 'One option per line using value|Label, for example on_track|On track.',
-        'select_options_placeholder' => "on_track|On track\ndelayed|Delayed\nblocked|Blocked",
+        'select_options_placeholder' => 'on_track|On track
+delayed|Delayed
+blocked|Blocked',
         'remove_field' => 'Remove field',
         'add_field' => 'Add field',
         'update_definition' => 'Update draft definition',
@@ -854,7 +858,6 @@ return [
         'shared_help' => 'This view contains only the information the profile owner explicitly shared with your actor.',
         'profile_owner' => 'Profile owner',
         'expires_label' => 'Access expires',
-
         'expires_at' => 'Access expires :date',
         'no_expiry' => 'Access does not expire unless revoked.',
         'semantic' => 'Shared semantic statements',

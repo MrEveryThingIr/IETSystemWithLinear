@@ -2,126 +2,107 @@
 @section('title', __('business.clients.title').' — '.$business->name)
 
 @section('content')
-<style>
-.crm{max-width:1180px;margin:auto;padding:26px 16px 70px}.head{display:flex;justify-content:space-between;gap:14px;align-items:end;flex-wrap:wrap}.head h1{font-size:32px;margin:5px 0}.muted{color:#667085;line-height:1.8}.panel{background:#fff;border:1px solid #e4e7ec;border-radius:24px;padding:20px;margin-top:18px;box-shadow:0 7px 24px rgba(15,23,42,.04)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.clients{display:grid;gap:10px}.client{border:1px solid #e2e8f0;border-radius:18px;padding:16px;background:#fff;display:flex;justify-content:space-between;gap:16px;align-items:start;flex-wrap:wrap}.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.badge{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:850}
-.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:0;border-radius:13px;padding:10px 14px;font-weight:900;cursor:pointer}.primary{background:#4f46e5;color:#fff}.light{background:#fff;color:#334155;border:1px solid #cbd5e1}.danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
-label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,select,textarea{width:100%;border:1.5px solid #aab4c4;border-radius:12px;padding:11px;background:#fff}.status{background:#ecfdf5;color:#065f46;font-weight:900}.search{display:flex;gap:8px;align-items:end}.search label{flex:1}
-@media(max-width:800px){.grid{grid-template-columns:1fr}.search{align-items:stretch;flex-direction:column}}
-</style>
-<main class="crm">
-    @if(session('status'))<div class="panel status">✓ {{ session('status') }}</div>@endif
-    @if($errors->any())<div class="panel" style="background:#fff1f2;color:#9f1239"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-
-    <header class="head">
-        <div>
-            <a href="{{ route('businesses.show',$business) }}" style="text-decoration:none;color:#4f46e5;font-weight:900">← {{ $business->name }}</a>
-            <h1>{{ __('business.clients.heading') }}</h1>
-            <p class="muted">{{ __('business.clients.intro') }}</p>
-        </div>
-        <a class="btn light" href="{{ route('businesses.catalog.index',$business) }}">{{ __('business.clients.catalog') }}</a>
-    </header>
-
-    @if($canManage)
-        <section class="panel">
-            <h2 style="margin-top:0">＋ {{ __('business.clients.add_title') }}</h2>
-            <form method="POST" action="{{ route('businesses.clients.store',$business) }}">
-                @csrf
-                <div class="grid">
-                    <label><span>{{ __('business.clients.name') }}</span><input name="display_name" required maxlength="160"></label>
-                    <label><span>{{ __('business.clients.primary_phone') }}</span><input name="phone" required dir="ltr"></label>
-                    <label><span>{{ __('business.clients.secondary_phone') }}</span><input name="secondary_phone" dir="ltr"></label>
-                    <label><span>{{ __('business.clients.source') }}</span><input name="source" placeholder="{{ __('business.clients.source_placeholder') }}"></label>
-                    <label><span>{{ __('business.clients.city') }}</span><input name="city"></label>
-                    <label><span>{{ __('business.clients.district') }}</span><input name="district"></label>
-                </div>
-                <label style="display:block;margin-top:12px"><span>{{ __('business.clients.street') }}</span><input name="street"></label>
-                <label style="display:block;margin-top:12px"><span>{{ __('business.clients.notes') }}</span><textarea name="notes" rows="3"></textarea></label>
-                <button class="btn primary" style="margin-top:12px">{{ __('business.clients.save') }}</button>
-            </form>
-        </section>
+@php
+    $item = 'min-w-0 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50';
+    $subform = 'space-y-3 rounded-lg border border-dashed border-zinc-300 p-3 dark:border-zinc-700';
+@endphp
+<div class="mx-auto max-w-6xl space-y-6" data-business-clients>
+    @if (session('status'))<flux:callout variant="success" icon="check-circle">{{ session('status') }}</flux:callout>@endif
+    @if ($errors->any())
+        <flux:callout variant="danger" icon="exclamation-triangle"><ul class="list-disc ps-5">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></flux:callout>
     @endif
 
-    <section class="panel">
-        <form method="GET" class="search">
-            <label><span>{{ __('business.clients.search') }}</span><input name="q" value="{{ request('q') }}" placeholder="{{ __('business.clients.search_placeholder') }}"></label>
-            <button class="btn primary">{{ __('business.clients.search') }}</button>
-            @if(request('q'))<a class="btn light" href="{{ route('businesses.clients.index',$business) }}">{{ __('business.clients.clear') }}</a>@endif
-        </form>
-    </section>
+    <div>
+        <flux:button :href="route('businesses.show', $business)" variant="ghost" size="sm" icon="arrow-left" class="rtl:[&_svg]:rotate-180">{{ $business->name }}</flux:button>
+    </div>
+    <x-app.page-header :title="__('business.clients.heading')" :description="__('business.clients.intro')">
+        <x-slot:actions>
+            <flux:button :href="route('businesses.catalog.index', $business)" variant="ghost">{{ __('business.clients.catalog') }}</flux:button>
+        </x-slot:actions>
+    </x-app.page-header>
 
-    <section class="panel">
-        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px">
-            <h2 style="margin:0">{{ __('business.clients.directory') }}</h2>
-            <span class="badge">{{ $clients->total() }}</span>
+    @if ($canManage)
+        <x-app.panel :title="__('business.clients.add_title')" icon="user-plus">
+            <form method="POST" action="{{ route('businesses.clients.store', $business) }}" class="space-y-4">
+                @csrf
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <x-form.input name="display_name" required maxlength="160" :label="__('business.clients.name')" />
+                    <x-form.input name="phone" required dir="ltr" inputmode="tel" :label="__('business.clients.primary_phone')" />
+                    <x-form.input name="secondary_phone" dir="ltr" inputmode="tel" :label="__('business.clients.secondary_phone')" />
+                    <x-form.input name="source" :label="__('business.clients.source')" :placeholder="__('business.clients.source_placeholder')" />
+                    <x-form.input name="city" :label="__('business.clients.city')" />
+                    <x-form.input name="district" :label="__('business.clients.district')" />
+                </div>
+                <x-form.input name="street" :label="__('business.clients.street')" />
+                <x-form.textarea name="notes" rows="3" :label="__('business.clients.notes')" />
+                <flux:button type="submit" variant="primary">{{ __('business.clients.save') }}</flux:button>
+            </form>
+        </x-app.panel>
+    @endif
+
+    <form method="GET" class="flex flex-wrap items-end gap-2" role="search">
+        <div class="min-w-0 flex-1 basis-60">
+            <x-form.input name="q" :value="request('q')" :label="__('business.clients.search')" :placeholder="__('business.clients.search_placeholder')" />
         </div>
-        <div class="clients">
-            @forelse($clients as $client)
-                <article class="client">
-                    <div>
-                        <strong style="font-size:18px">{{ $client->display_name }}</strong>
-                        <div class="badges">
-                            <span class="badge">{{ $client->status }}</span>
-                            @if($client->source)<span class="badge">{{ $client->source }}</span>@endif
-                            @foreach($client->contactPoints as $point)
-                                <span class="badge" dir="ltr">{{ $point->value }}</span>
+        <flux:button type="submit" variant="primary" icon="magnifying-glass">{{ __('business.clients.search') }}</flux:button>
+        @if (request('q'))<flux:button :href="route('businesses.clients.index', $business)" variant="ghost">{{ __('business.clients.clear') }}</flux:button>@endif
+    </form>
+
+    <x-app.panel :title="__('business.clients.directory')" icon="users">
+        <x-slot:actions><flux:badge>{{ $clients->total() }}</flux:badge></x-slot:actions>
+        <div class="space-y-3">
+            @forelse ($clients as $client)
+                <article class="flex flex-wrap items-start justify-between gap-4 {{ $item }}" wire:key="client-{{ $client->uuid }}">
+                    <div class="min-w-0 flex-1 basis-64">
+                        <strong class="text-base [overflow-wrap:anywhere]" dir="auto">{{ $client->display_name }}</strong>
+                        <div class="mt-1 flex flex-wrap gap-1">
+                            <flux:badge size="sm" color="zinc">{{ $client->status }}</flux:badge>
+                            @if ($client->source)<flux:badge size="sm" color="zinc">{{ $client->source }}</flux:badge>@endif
+                            @foreach ($client->contactPoints as $point)
+                                <flux:badge size="sm" dir="ltr">{{ $point->value }}</flux:badge>
                             @endforeach
                         </div>
-                        @if($client->notes)<p class="muted" style="margin:10px 0 0;white-space:pre-line">{{ $client->notes }}</p>@endif
-                        @foreach($client->addresses as $address)
-                            <div class="muted" style="margin-top:6px">{{ collect([$address->city,$address->district,$address->street])->filter()->join(' · ') }}</div>
+                        @if ($client->notes)<p class="mt-2 whitespace-pre-line text-sm text-zinc-600 [overflow-wrap:anywhere] dark:text-zinc-300" dir="auto">{{ $client->notes }}</p>@endif
+                        @foreach ($client->addresses as $address)
+                            <div class="mt-1 text-sm text-zinc-500" dir="auto">{{ collect([$address->city, $address->district, $address->street])->filter()->join(' · ') }}</div>
                         @endforeach
                     </div>
-                    @if($canManage && $canUseMarket && $client->status === 'active')
-                        @php($marketNeed = $marketNeedsByContact->get($client->uuid))
-                        <div style="min-width:min(100%,360px)">
-                            @if($marketNeed)
-                                <a class="btn primary" href="{{ route('intents.matches',$marketNeed) }}">
-                                    {{ __('business.clients.active_need') }}
-                                </a>
-                            @else
-                            <details>
-                                <summary class="btn primary" style="list-style:none">{{ __('business.clients.publish_need') }}</summary>
-                                <form method="POST" action="{{ route('businesses.clients.needs.store',[$business,$client]) }}" style="margin-top:10px;padding:12px;border:1px dashed #cbd5e1;border-radius:14px">
-                                    @csrf
-                                    <label><span>{{ __('business.clients.need_concept') }}</span><input name="concept_label" required placeholder="{{ __('business.clients.need_concept_placeholder') }}"></label>
-                                    <label style="display:block;margin-top:8px"><span>{{ __('business.clients.need_title') }}</span><input name="title"></label>
-                                    <div class="grid" style="margin-top:8px">
-                                        <label><span>{{ __('business.clients.type') }}</span>
-                                            <select name="subject_kind">
-                                                <option value="service">{{ __('business.clients.types.service') }}</option>
-                                                <option value="good">{{ __('business.clients.types.good') }}</option>
-                                                <option value="property">{{ __('business.clients.types.property') }}</option>
-                                                <option value="other">{{ __('business.clients.types.other') }}</option>
-                                            </select>
-                                        </label>
-                                        <label><span>{{ __('business.clients.arrangement') }}</span>
-                                            <select name="arrangement_kind">
-                                                <option value="service">{{ __('business.clients.types.service') }}</option>
-                                                <option value="ownership_transfer">{{ __('business.clients.arrangements.ownership_transfer') }}</option>
-                                                <option value="temporary_use">{{ __('business.clients.arrangements.temporary_use') }}</option>
-                                                <option value="other">{{ __('business.clients.types.other') }}</option>
-                                            </select>
-                                        </label>
-                                        <label><span>{{ __('business.clients.location') }}</span><input name="location_text"></label>
-                                    </div>
-                                    <label style="display:block;margin-top:8px"><span>{{ __('business.clients.description') }}</span><textarea name="description" rows="2">{{ $client->notes }}</textarea></label>
-                                    <button class="btn primary" style="margin-top:8px">{{ __('business.clients.publish_and_match') }}</button>
-                                </form>
-                            </details>
+                    @if ($canManage && $client->status === 'active')
+                        <div class="w-full min-w-0 space-y-2 sm:w-auto sm:max-w-sm">
+                            @if ($canUseMarket)
+                                @php($marketNeed = $marketNeedsByContact->get($client->uuid))
+                                @if ($marketNeed)
+                                    <flux:button size="sm" variant="primary" :href="route('intents.matches', $marketNeed)">{{ __('business.clients.active_need') }}</flux:button>
+                                @else
+                                    <details class="group">
+                                        <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-white dark:text-zinc-900">{{ __('business.clients.publish_need') }}</summary>
+                                        <form method="POST" action="{{ route('businesses.clients.needs.store', [$business, $client]) }}" class="mt-2 {{ $subform }}">
+                                            @csrf
+                                            <x-form.input name="concept_label" required :label="__('business.clients.need_concept')" :placeholder="__('business.clients.need_concept_placeholder')" />
+                                            <x-form.input name="title" :label="__('business.clients.need_title')" />
+                                            <div class="grid gap-3 sm:grid-cols-2">
+                                                <x-form.select name="subject_kind" :label="__('business.clients.type')" :options="collect(['service', 'good', 'property', 'other'])->mapWithKeys(fn ($type) => [$type => __('business.clients.types.'.$type)])->all()" />
+                                                <x-form.select name="arrangement_kind" :label="__('business.clients.arrangement')" :options="['service' => __('business.clients.types.service'), 'ownership_transfer' => __('business.clients.arrangements.ownership_transfer'), 'temporary_use' => __('business.clients.arrangements.temporary_use'), 'other' => __('business.clients.types.other')]" />
+                                            </div>
+                                            <x-form.input name="location_text" :label="__('business.clients.location')" />
+                                            <x-form.textarea name="description" rows="2" :value="$client->notes" :label="__('business.clients.description')" />
+                                            <flux:button type="submit" size="sm" variant="primary">{{ __('business.clients.publish_and_match') }}</flux:button>
+                                        </form>
+                                    </details>
+                                @endif
                             @endif
-                            <form method="POST" action="{{ route('businesses.clients.archive',[$business,$client]) }}" onsubmit="return confirm('{{ __('business.clients.archive_confirm') }}')" style="margin-top:8px">
+                            <form method="POST" action="{{ route('businesses.clients.archive', [$business, $client]) }}" onsubmit="return confirm({{ \Illuminate\Support\Js::from(__('business.clients.archive_confirm')) }})">
                                 @csrf @method('PATCH')
-                                <button class="btn danger">{{ __('business.clients.archive') }}</button>
+                                <flux:button type="submit" size="sm" variant="danger">{{ __('business.clients.archive') }}</flux:button>
                             </form>
                         </div>
                     @endif
                 </article>
             @empty
-                <div class="muted" style="text-align:center;padding:30px">{{ __('business.clients.empty') }}</div>
+                <flux:text class="py-6 text-center">{{ __('business.clients.empty') }}</flux:text>
             @endforelse
         </div>
-        @if($clients->hasPages())<div style="margin-top:16px">{{ $clients->links() }}</div>@endif
-    </section>
-</main>
+        @if ($clients->hasPages())<div>{{ $clients->links() }}</div>@endif
+    </x-app.panel>
+</div>
 @endsection
