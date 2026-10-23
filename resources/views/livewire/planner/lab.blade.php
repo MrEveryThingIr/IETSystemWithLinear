@@ -143,7 +143,7 @@
         <div class="overflow-x-auto rounded-xl border"><table class="w-full text-start text-sm"><thead><tr>@foreach(['commitment_to', 'target', 'outcome', 'deviation', 'duration', 'confidence'] as $label)<th class="p-3 text-start">{{ __('living_planner.'.$label) }}</th>@endforeach</tr></thead><tbody>
         @foreach($factors['rows'] as $row)<tr class="border-t"><td class="p-3">{{ __('living_planner.'.$row['commitment_to']) }}</td><td class="p-3"><x-app.local-datetime :value="$row['target_start']" /></td><td class="p-3">{{ __('living_planner.'.$row['outcome']) }}</td><td class="p-3">{{ $row['start_deviation_seconds'] === null ? '—' : round($row['start_deviation_seconds'] / 60, 1).' '.__('living_planner.minutes') }}</td><td class="p-3">{{ $row['active_seconds'] === null ? '—' : round($row['active_seconds'] / 60, 1).' / '.round($row['target_seconds'] / 60, 1) }}</td><td class="p-3">{{ __('living_planner.'.$row['confidence']) }}</td></tr>@endforeach
         </tbody></table></div>
-        <details class="rounded-xl border p-5"><summary class="cursor-pointer text-lg font-semibold">{{ __('living_planner.experiments') }}</summary>
+        <details class="rounded-xl border p-5" @if($experimentUuid !== '') open @endif><summary class="cursor-pointer text-lg font-semibold">{{ __('living_planner.experiments') }}</summary>
             <p class="my-4 text-sm text-zinc-500">{{ __('living_planner.private_help') }}</p>
             <flux:select wire:model.live="experimentUuid" :label="__('living_planner.experiment')"><option value="">{{ __('living_planner.select') }}</option>@foreach($experiments as $item)<option value="{{ $item->uuid }}">{{ $item->title }}</option>@endforeach</flux:select>
             @if($experiment)

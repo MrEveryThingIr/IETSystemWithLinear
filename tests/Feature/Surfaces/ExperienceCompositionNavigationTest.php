@@ -30,7 +30,7 @@ class ExperienceCompositionNavigationTest extends TestCase
         $primary = collect($navigation['primary'])->keyBy('key');
 
         $this->assertSame(
-            ['needs-offers', 'work', 'organizations', 'money', 'content'],
+            ['plans', 'needs-offers', 'work', 'organizations', 'money', 'content'],
             collect($navigation['primary'])->pluck('key')->all()
         );
         $this->assertSame('experience.needs-offers', $primary['needs-offers']['route']);
@@ -39,7 +39,9 @@ class ExperienceCompositionNavigationTest extends TestCase
         $this->assertSame('bookkeeping.index', $primary['money']['route']);
         $this->assertSame('experience.content', $primary['content']['route']);
 
-        $this->assertSame(['deals', 'planner'], collect($primary['work']['items'])->pluck('key')->all());
+        $this->assertSame('planner.lab', $primary['plans']['route']);
+        $this->assertSame(['planner'], collect($primary['plans']['items'])->pluck('key')->all());
+        $this->assertSame(['deals'], collect($primary['work']['items'])->pluck('key')->all());
         $this->assertSame(['business', 'groups'], collect($primary['organizations']['items'])->pluck('key')->all());
         $this->assertSame(['money'], collect($primary['money']['items'])->pluck('key')->all());
 

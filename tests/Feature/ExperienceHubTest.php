@@ -42,7 +42,9 @@ class ExperienceHubTest extends TestCase
         $this->assertSame('experience.help', $navigation['help'][0]['route']);
 
         $this->assertContains('deals', collect($primary['work']['items'])->pluck('key')->all());
-        $this->assertContains('planner', collect($primary['work']['items'])->pluck('key')->all());
+        $this->assertSame('planner.lab', $primary['plans']['route']);
+        $this->assertContains('planner', collect($primary['plans']['items'])->pluck('key')->all());
+        $this->assertNotContains('planner', collect($primary['work']['items'])->pluck('key')->all());
     }
 
     public function test_hubs_respect_publication_and_do_not_leak_unpublished_facilities(): void
