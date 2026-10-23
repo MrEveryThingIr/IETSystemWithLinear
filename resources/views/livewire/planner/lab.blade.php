@@ -65,6 +65,7 @@
                 <flux:select wire:model="reportOutcome" :label="__('living_planner.outcome')">@foreach(['completed', 'partial', 'interrupted', 'missed'] as $outcome)<option value="{{ $outcome }}">{{ __('living_planner.'.$outcome) }}</option>@endforeach</flux:select>
                 <x-app.calendar-datetime-input model="actualStart" :label="__('living_planner.actual_start')" />
                 <x-app.calendar-datetime-input model="actualEnd" :label="__('living_planner.actual_end')" />
+                <flux:input type="number" min="0" max="10080" step="0.001" wire:model="reportedMinutes" :label="__('living_planner.active_minutes')" />
                 @if ($supersedes !== '')<p>{{ __('living_planner.correcting') }}</p>@endif
                 <flux:input wire:model="correctionReason" :label="__('living_planner.reason')" />
                 <p class="text-sm text-zinc-500">{{ __('living_planner.report_help') }} {{ $timezone }}</p>

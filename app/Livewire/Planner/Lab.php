@@ -126,6 +126,8 @@ class Lab extends Component
 
     public string $actualEnd = '';
 
+    public string $reportedMinutes = '';
+
     public string $correctionReason = '';
 
     public string $supersedes = '';
@@ -174,17 +176,20 @@ class Lab extends Component
         $participation = OccurrenceParticipation::query()->where('plan_occurrence_id', $occurrence->id)->where('actor_id', $user->actor->id)->first();
         $timezone = TemporalPreferences::timezoneFor($user);
         $this->reportOutcome = $participation->outcome ?? 'completed';
-        $this->actualStart = $participation?->actual_start_at?->setTimezone($timezone)->format('Y-m-d\TH:i') ?? '';
-        $this->actualEnd = $participation?->actual_end_at?->setTimezone($timezone)->format('Y-m-d\TH:i') ?? '';
+        $this->actualStart = $participation?->actual_start_at?->setTimezone($timezone)->format('Y-m-d\TH:i:s') ?? '';
+        $this->actualEnd = $participation?->actual_end_at?->setTimezone($timezone)->format('Y-m-d\TH:i:s') ?? '';
+        $this->reportedMinutes = $participation === null ? '' : (string) round($participation->active_seconds / 60, 3);
         $this->correctionReason = '';
     }
 
     public function report(): void
     {
         $user = $this->user();
+        $this->validate(['reportedMinutes' => ['nullable', 'numeric', 'between:0,10080']]);
         $occurrence = PlanOccurrence::query()->where('uuid', $this->reportOccurrence)->firstOrFail();
         $payload = ['outcome' => $this->reportOutcome, 'actual_start_at' => $this->actualStart ?: null,
-            'actual_end_at' => $this->actualEnd ?: null, 'reason' => $this->correctionReason ?: null, 'supersedes' => $this->supersedes ?: null];
+            'actual_end_at' => $this->actualEnd ?: null, 'active_seconds' => $this->reportedMinutes === '' ? null : (int) round((float) $this->reportedMinutes * 60),
+            'reason' => $this->correctionReason ?: null, 'supersedes' => $this->supersedes ?: null];
         // Stable for an unchanged form; a different report receives a different key.
         $key = 'report-'.hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR));
         $this->domain(fn () => app(ExecuteLivingOccurrence::class)->execute($user, $occurrence, $this->supersedes === '' ? 'report' : 'correct', $key, $payload));

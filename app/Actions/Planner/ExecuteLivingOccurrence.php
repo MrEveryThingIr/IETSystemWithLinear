@@ -93,6 +93,7 @@ final class ExecuteLivingOccurrence
                     $data = Validator::make($payload, [
                         'outcome' => ['required', 'in:completed,partial,interrupted,missed'],
                         'actual_start_at' => ['nullable', 'date'], 'actual_end_at' => ['nullable', 'date'],
+                        'active_seconds' => ['nullable', 'integer', 'between:0,604800'],
                         'reason' => [$action === 'correct' ? 'required' : 'nullable', 'string', 'max:1000'],
                         'supersedes' => [$action === 'correct' ? 'required' : 'nullable', 'uuid'],
                     ])->validate();
@@ -116,11 +117,15 @@ final class ExecuteLivingOccurrence
                     } else {
                         abort_unless(empty($data['actual_start_at']) && empty($data['actual_end_at']), 422, 'A missed report cannot also claim execution.');
                     }
+                    $span = $start === null ? 0 : (int) $start->diffInSeconds($end);
+                    $activeSeconds = $data['active_seconds'] ?? $span;
+                    abort_if($activeSeconds > $span, 422, 'Active time cannot exceed the reported execution interval.');
                     $this->closeSegment($locked, $participant, $now, 'reported');
                     $participant->update(['phase' => 'finished', 'outcome' => $data['outcome'], 'confidence' => 'self_reported',
-                        'actual_start_at' => $start, 'actual_end_at' => $end, 'active_seconds' => $start === null ? 0 : (int) $start->diffInSeconds($end)]);
+                        'actual_start_at' => $start, 'actual_end_at' => $end, 'active_seconds' => $activeSeconds]);
                     $eventPayload += ['outcome' => $data['outcome'], 'actual_start_at' => $start?->toIso8601String(),
-                        'actual_end_at' => $end?->toIso8601String(), 'supersedes' => $data['supersedes'] ?? null, 'reason' => $data['reason'] ?? null];
+                        'actual_end_at' => $end?->toIso8601String(), 'active_seconds' => $activeSeconds,
+                        'supersedes' => $data['supersedes'] ?? null, 'reason' => $data['reason'] ?? null];
                 }
                 $this->project($locked);
             }

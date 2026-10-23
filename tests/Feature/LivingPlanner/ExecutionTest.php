@@ -137,4 +137,18 @@ class ExecutionTest extends TestCase
         $this->assertSame('completed', $result->evaluated_outcome);
         $this->assertTrue($result->actual_end_at->gt($result->window_end_at));
     }
+
+    public function test_reported_active_time_can_exclude_breaks_but_cannot_exceed_the_interval(): void
+    {
+        [$user, $occurrence] = $this->fixture();
+        $this->travel(2)->hours();
+        $payload = ['outcome' => 'partial', 'actual_start_at' => '2026-11-05T09:00:00Z', 'actual_end_at' => '2026-11-05T10:00:00Z', 'active_seconds' => 1200];
+        $result = app(ExecuteLivingOccurrence::class)->execute($user, $occurrence, 'report', 'break-report', $payload);
+        $this->assertSame(1200, $result->active_seconds);
+        $event = $occurrence->events()->where('event_type', 'outcome_reported')->sole();
+        $this->assertSame(1200, $event->payload['active_seconds']);
+        $this->expectException(HttpException::class);
+        app(ExecuteLivingOccurrence::class)->execute($user, $occurrence, 'correct', 'invalid-break-report',
+            [...$payload, 'active_seconds' => 3601, 'supersedes' => $event->uuid, 'reason' => 'Invalid duration']);
+    }
 }
