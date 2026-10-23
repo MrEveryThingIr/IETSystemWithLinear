@@ -15,7 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
-    'version' => env('APP_VERSION', 'local'),
+    // Source-controlled release identity; local environment files can outlive upgrades.
+    'version' => trim(file_get_contents(base_path('VERSION'))),
 
     /*
     |--------------------------------------------------------------------------

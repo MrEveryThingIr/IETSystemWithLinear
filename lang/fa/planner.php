@@ -77,6 +77,10 @@ return [
         'cancelled' => 'لغوشده',
     ],
     'occurrence_phase' => [
+        'unconfirmed' => 'نامشخص',
+        'paused' => 'مکث',
+        'partial' => 'انجام جزئی',
+        'interrupted' => 'متوقف‌شده',
         'upcoming' => 'در آینده',
         'ready' => 'آماده شروع',
         'late' => 'شروع با تأخیر',

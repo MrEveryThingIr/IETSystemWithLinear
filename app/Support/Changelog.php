@@ -11,6 +11,10 @@ final class Changelog
 {
     /** Newest first. Add a line (and its texts) with every release. */
     public const RELEASES = [
+        '1.12.0' => '2026-10-22',
+        '1.11.0' => '2026-10-22',
+        '1.10.0' => '2026-10-22',
+        '1.9.0' => '2026-10-22',
         '1.8.0' => '2026-10-26',
         '1.7.1' => '2026-10-24',
         '1.7.0' => '2026-10-23',
@@ -22,19 +26,20 @@ final class Changelog
     ];
 
     /**
-     * The running version: the release package's manifest, then APP_VERSION,
-     * then the newest entry here (a development checkout).
+     * The running version: the release package's manifest, then the
+     * source-controlled VERSION (also available in development checkouts).
      */
-    public static function currentVersion(): string
+    public static function currentVersion(?string $manifestPath = null): string
     {
-        $manifest = ReleaseManifest::read();
+        $manifest = ReleaseManifest::read($manifestPath);
         $version = is_array($manifest) ? (string) ($manifest['application_version'] ?? '') : '';
         if ($version === '') {
             $version = (string) config('app.version', '');
         }
         $version = ltrim(trim($version), 'vV');
 
-        return preg_match('/^\d+\.\d+\.\d+/', $version) === 1 ? $version : (string) array_key_first(self::RELEASES);
+        return preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/D', $version) === 1
+            ? $version : trim((string) file_get_contents(base_path('VERSION')));
     }
 
     /** @return list<array{version: string, date: string, title: string, items: list<string>, current: bool}> */

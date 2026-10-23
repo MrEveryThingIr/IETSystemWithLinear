@@ -4,6 +4,12 @@ return [
     'language' => 'Language',
     'account' => 'Account',
     'ambient' => [
+        'pause' => 'Pause messages',
+        'resume' => 'Resume messages',
+        'fullscreen' => 'Full screen',
+        'fullscreen_unavailable' => 'Full screen is unavailable in this browser.',
+        'exit_fullscreen' => 'Exit full screen',
+        'explore' => 'Explore',
         'label' => 'Time & rhythm',
         'messages' => [
             'plan' => 'Plan the next useful step; keep the source record authoritative.',

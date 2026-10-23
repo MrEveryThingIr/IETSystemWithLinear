@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Planner\OccurrenceParticipation;
 use App\PlanOccurrenceStatus;
 use App\PlanOccurrenceWindowState;
 use App\PlanTimingMode;
@@ -34,12 +35,15 @@ use LogicException;
     'origin_type',
     'origin_uuid',
     'metadata',
+    'policy_snapshot',
 ])]
 class PlanOccurrence extends Model
 {
     use HasFactory;
 
     private bool $applyingLifecycle = false;
+
+    private bool $applyingLiving = false;
 
     protected $attributes = [
         'status' => PlanOccurrenceStatus::Scheduled->value,
@@ -52,6 +56,9 @@ class PlanOccurrence extends Model
         });
 
         static::updating(function (self $occurrence): void {
+            if ($occurrence->isDirty(['execution_phase', 'evaluated_outcome', 'evidence_confidence', 'window_closed_at', 'policy_snapshot', 'active_seconds']) && ! $occurrence->applyingLiving) {
+                throw new LogicException('Living updates require their dedicated action.');
+            }
             if ($occurrence->isDirty([
                 'uuid',
                 'plan_id',
@@ -87,6 +94,21 @@ class PlanOccurrence extends Model
     public function getRouteKeyName(): string
     {
         return 'uuid';
+    }
+
+    /** @param array<string, mixed> $attributes Internal projection update; target changes are never accepted. */
+    public function applyLiving(array $attributes): void
+    {
+        $allowed = ['execution_phase', 'evaluated_outcome', 'evidence_confidence', 'window_closed_at', 'policy_snapshot', 'active_seconds', 'actual_start_at', 'actual_end_at'];
+        if (array_diff(array_keys($attributes), $allowed) !== []) {
+            throw new LogicException('Cannot alter targets through an execution projection.');
+        }
+        $this->applyingLiving = $this->applyingLifecycle = true;
+        try {
+            $this->forceFill($attributes)->save();
+        } finally {
+            $this->applyingLiving = $this->applyingLifecycle = false;
+        }
     }
 
     public function transition(
@@ -152,11 +174,28 @@ class PlanOccurrence extends Model
 
     public function executionPhase(?CarbonInterface $at = null): string
     {
+        if ($this->evaluated_outcome !== null && $this->evaluated_outcome !== 'unconfirmed') {
+            return $this->evaluated_outcome;
+        }
+        if (in_array($this->execution_phase, ['running', 'paused'], true)) {
+            return $this->execution_phase === 'running' ? 'in_progress' : 'paused';
+        }
+
         return $this->windowState($at)->value;
     }
 
     public function canStart(?CarbonInterface $at = null): bool
     {
+        if ((int) data_get($this->policy_snapshot, 'version', 0) > 0) {
+            $moment = $at === null ? CarbonImmutable::now('UTC') : CarbonImmutable::instance($at);
+            $style = data_get($this->policy_snapshot, 'window_style', 'hard');
+            $earliest = $style === 'deadline' ? $this->created_at : $this->window_start_at;
+            $latest = $style === 'hard' ? $this->window_end_at : $this->window_end_at->addDays((int) data_get($this->policy_snapshot, 'reporting_days', 30));
+
+            return ! in_array($this->status, [PlanOccurrenceStatus::Cancelled, PlanOccurrenceStatus::Skipped, PlanOccurrenceStatus::Completed], true)
+                && $moment->betweenIncluded($earliest, $latest) && $this->prerequisitesSatisfied();
+        }
+
         return in_array($this->windowState($at), [
             PlanOccurrenceWindowState::Ready,
             PlanOccurrenceWindowState::Late,
@@ -190,7 +229,7 @@ class PlanOccurrence extends Model
             return PlanOccurrenceWindowState::Late;
         }
 
-        return PlanOccurrenceWindowState::Missed;
+        return PlanOccurrenceWindowState::Unconfirmed;
     }
 
     public function prerequisitesSatisfied(): bool
@@ -253,6 +292,12 @@ class PlanOccurrence extends Model
         return $this->hasMany(PlanOccurrenceEvent::class)->orderBy('id');
     }
 
+    /** @return HasMany<OccurrenceParticipation, $this> */
+    public function participations(): HasMany
+    {
+        return $this->hasMany(OccurrenceParticipation::class);
+    }
+
     /** @return HasMany<PlanOccurrencePrerequisiteCheck, $this> */
     public function prerequisiteChecks(): HasMany
     {
@@ -294,6 +339,9 @@ class PlanOccurrence extends Model
     protected function casts(): array
     {
         return [
+            'policy_snapshot' => 'array',
+            'window_closed_at' => 'immutable_datetime',
+            'active_seconds' => 'integer',
             'status' => PlanOccurrenceStatus::class,
             'local_date' => 'immutable_date',
             'scheduled_start_at' => 'immutable_datetime',

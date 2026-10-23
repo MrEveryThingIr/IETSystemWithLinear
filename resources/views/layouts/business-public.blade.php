@@ -9,6 +9,7 @@
     @fluxAppearance
 </head>
 <body class="min-h-dvh bg-slate-50 text-slate-950 antialiased">
+    <x-app.ambient-bar />
     @php
         $businessHome = route('public.businesses.show', ['business' => $business->slug]);
         $publicPortal = $business->relationLoaded('publicIntakePortals')

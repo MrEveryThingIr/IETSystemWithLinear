@@ -5,6 +5,7 @@ namespace App\Actions\Planner;
 use App\Models\Actor;
 use App\Models\Plan;
 use App\Models\PlanEvent;
+use App\Models\Planner\ExecutionPolicy;
 use App\Models\PlanReminder;
 use App\Models\PlanScheduleRule;
 use App\Models\User;
@@ -162,6 +163,7 @@ class CreatePlanScheduleRule
             }
 
             $rule = PlanScheduleRule::query()->create([
+                'execution_policy_id' => ExecutionPolicy::query()->where('plan_id', $plan->id)->latest('version')->value('id'),
                 'plan_id' => $plan->id,
                 'created_by_actor_id' => $actor->id,
                 'frequency' => $frequency,

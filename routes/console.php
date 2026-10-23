@@ -5,6 +5,7 @@ use App\Actions\Categories\EnsureSharedCategories;
 use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Groups\ManageGroupAgreement;
 use App\Actions\Planner\MaterializePlannerHorizon;
+use App\Actions\Planner\ReconcileOccurrenceWindows;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
@@ -14,6 +15,7 @@ use App\Support\Media\FaststartExistingVideos;
 use App\Support\Media\ResumableUploads;
 use App\Support\NotificationOutboxDispatcher;
 use App\Support\Push\DevicePushDispatcher;
+use App\Support\Push\VapidKeys;
 use App\Support\ScheduledArtisan;
 use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
 use Illuminate\Foundation\Inspiring;
@@ -23,6 +25,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Str;
+
+Artisan::command('push:provision', function (): int {
+    try {
+        VapidKeys::provision();
+        $this->info('Web Push identity is provisioned. Existing keys were preserved.');
+
+        return 0;
+    } catch (Throwable $exception) {
+        $this->error($exception->getMessage());
+        $this->line('PHP '.PHP_VERSION.' / '.OPENSSL_VERSION_TEXT);
+        $this->line('Check OPENSSL_CONF or set WEBPUSH_OPENSSL_CONFIG to the openssl.cnf shipped with this PHP runtime.');
+
+        return 1;
+    }
+})->purpose('Provision persistent P-256 Web Push keys without rotating an existing identity');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -185,6 +202,16 @@ ScheduledArtisan::register(app(ConsoleSchedule::class), 'media:prune-upload-sess
 ScheduledArtisan::register(app(ConsoleSchedule::class), 'planner:materialize --days=120')
     ->name('planner:materialize')
     ->dailyAt('00:05')
+    ->withoutOverlapping();
+
+Artisan::command('planner:reconcile {--limit=500}', function (): void {
+    $count = app(ReconcileOccurrenceWindows::class)->execute((int) $this->option('limit'));
+    $this->info("Reconciled {$count} elapsed windows; missing reports remain unconfirmed.");
+})->purpose('Reconcile elapsed planning windows without inventing execution outcomes');
+
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'planner:reconcile --limit=500')
+    ->name('planner:reconcile')
+    ->everyMinute()
     ->withoutOverlapping();
 
 ScheduledArtisan::register(app(ConsoleSchedule::class), 'contracts:activate-due')

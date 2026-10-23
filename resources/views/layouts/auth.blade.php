@@ -9,6 +9,7 @@
         @fluxAppearance
     </head>
     <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+        <x-app.ambient-bar />
         <div class="fixed end-4 top-4 z-10">
             <x-app.locale-switcher />
         </div>

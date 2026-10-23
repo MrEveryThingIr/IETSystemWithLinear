@@ -84,9 +84,10 @@ class ExperienceNavigation
         };
 
         $primary = array_values(array_filter([
+            $destination('plans', 'living_planner.title', 'calendar-days', 'planner.lab', ['planner']),
             $destination('messages', 'experience.navigation.messages', 'chat-bubble-left-right', 'messages.index', ['messages']),
             $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', 'experience.needs-offers', ['market']),
-            $destination('work', 'experience.navigation.work', 'briefcase', 'experience.work', ['deals', 'planner']),
+            $destination('work', 'experience.navigation.work', 'briefcase', 'experience.work', ['deals']),
             $destination('organizations', 'experience.navigation.organizations', 'building-office-2', 'experience.organizations', ['business', 'groups']),
             $destination('money', 'experience.navigation.money', 'wallet', 'bookkeeping.index', ['money']),
             $destination('content', 'experience.navigation.content', 'rectangle-stack', 'experience.content', ['content']),

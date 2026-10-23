@@ -503,6 +503,10 @@ class IetAmbientStatus extends HTMLElement {
         }
 
         this.initialized = true;
+        this.lifecycle = new AbortController();
+        const { signal } = this.lifecycle;
+        this.motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        this.visible = true;
         this.messageIndex = 0;
         this.clock = this.querySelector('[data-ambient-clock]');
         this.equivalent = this.querySelector('[data-ambient-equivalent]');
@@ -512,16 +516,115 @@ class IetAmbientStatus extends HTMLElement {
             .filter(Boolean);
         this.renderClock();
         this.renderMessage();
-        this.clockTimer = window.setInterval(() => this.renderClock(), 1000);
+        this.clockTimer = window.setInterval(() => {
+            if (!document.hidden) this.renderClock();
+            if (this.frame == null && !this.motion.matches) this.updateAnimation();
+        }, 1000);
         this.messageTimer = window.setInterval(() => {
+            if (document.hidden || this.paused) return;
             this.messageIndex = (this.messageIndex + 1) % Math.max(this.messages.length, 1);
             this.renderMessage();
         }, 12000);
+        this.querySelector('[data-ambient-pause]')?.addEventListener('click', () => {
+            this.paused = !this.paused;
+            this.renderPauseControl();
+        }, { signal });
+        this.renderPauseControl();
+        const fullscreen = this.querySelector('[data-ambient-fullscreen]');
+        if (fullscreen && document.fullscreenEnabled) {
+            fullscreen.hidden = false;
+            fullscreen.addEventListener('click', async () => {
+                try {
+                    if (document.fullscreenElement) await document.exitFullscreen();
+                    else {
+                        await document.documentElement.requestFullscreen();
+                        window.scrollTo(0, 0);
+                    }
+                } catch {
+                    this.querySelector('[data-clock-feedback]').textContent = this.dataset.fullscreenUnavailable;
+                }
+            }, { signal });
+            document.addEventListener('fullscreenchange', () => {
+                fullscreen.textContent = document.fullscreenElement ? this.dataset.exitFullscreenLabel : this.dataset.fullscreenLabel;
+            }, { signal });
+        }
+        this.hourHand = this.querySelector('[data-clock-hour]');
+        this.minuteHand = this.querySelector('[data-clock-minute]');
+        this.secondHand = this.querySelector('[data-clock-second]');
+        this.renderHands();
+        this.motion.addEventListener('change', () => this.updateAnimation(), { signal });
+        document.addEventListener('visibilitychange', () => {
+            this.renderClock();
+            this.updateAnimation();
+        }, { signal });
+        if (this.hourHand) {
+            this.intersection = new IntersectionObserver(([entry]) => {
+                this.visible = entry.isIntersecting;
+                this.updateAnimation();
+            });
+            this.intersection.observe(this);
+        }
+        const bar = this.closest('[data-ambient-bar]');
+        if (bar) {
+            this.resize = new ResizeObserver(() => {
+                document.documentElement.style.setProperty('--ambient-bar-height', `${bar.getBoundingClientRect().height}px`);
+            });
+            this.resize.observe(bar);
+        }
+        this.updateAnimation();
     }
 
     disconnectedCallback() {
         window.clearInterval(this.clockTimer);
         window.clearInterval(this.messageTimer);
+        window.cancelAnimationFrame(this.frame);
+        this.frame = null;
+        this.lifecycle?.abort();
+        this.intersection?.disconnect();
+        this.resize?.disconnect();
+        this.initialized = false;
+    }
+
+    renderPauseControl() {
+        const button = this.querySelector('[data-ambient-pause]');
+        if (!button) return;
+        button.hidden = false;
+        button.textContent = this.paused ? this.dataset.resumeLabel : this.dataset.pauseLabel;
+        button.setAttribute('aria-pressed', String(Boolean(this.paused)));
+    }
+
+    updateAnimation() {
+        window.cancelAnimationFrame(this.frame);
+        this.frame = null;
+        if (!this.hourHand || !this.isConnected || document.hidden || !this.visible || this.motion.matches) return;
+        const animate = () => {
+            if (!this.isConnected || document.hidden || !this.visible || this.motion.matches) {
+                this.frame = null;
+                return;
+            }
+            this.renderHands();
+            this.frame = window.requestAnimationFrame(animate);
+        };
+        this.frame = window.requestAnimationFrame(animate);
+    }
+
+    renderHands(now = new Date()) {
+        if (!this.hourHand) return;
+        const second = Math.floor(now.getTime() / 1000);
+        if (this.handSecond !== second || this.handTimezone !== this.dataset.timezone) {
+            this.handTimezone = this.dataset.timezone;
+            this.handSecond = second;
+            this.handParts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+                timeZone: this.dataset.timezone || 'UTC', numberingSystem: 'latn', hourCycle: 'h23',
+                hour: 'numeric', minute: 'numeric', second: 'numeric',
+            }).formatToParts(now).filter(part => part.type !== 'literal').map(part => [part.type, Number(part.value)]));
+        }
+        const seconds = this.handParts.second + (this.motion.matches ? 0 : now.getMilliseconds() / 1000);
+        const minutes = this.handParts.minute + seconds / 60;
+        const hours = this.handParts.hour % 12 + minutes / 60;
+        this.hourHand.setAttribute('transform', `rotate(${hours * 30} 120 120)`);
+        this.minuteHand.setAttribute('transform', `rotate(${minutes * 6} 120 120)`);
+        this.secondHand.setAttribute('transform', `rotate(${seconds * 6} 120 120)`);
     }
 
     renderClock() {
@@ -543,6 +646,8 @@ class IetAmbientStatus extends HTMLElement {
             ...dateFormatOptions(dateFormat),
             ...timeFormatOptions(timeFormat, true),
         }).format(now);
+        this.clock.dateTime = now.toISOString();
+        this.renderHands(now);
 
         if (this.equivalent) {
             const showEquivalent = showEquivalentPreference && calendar !== 'gregory';
@@ -555,6 +660,12 @@ class IetAmbientStatus extends HTMLElement {
                     ...timeFormatOptions(timeFormat),
                 }).format(now)}`
                 : '';
+            if (showEquivalent && this.dataset.equivalentMode === 'hover') {
+                this.equivalent.classList.add('ambient-equivalent-popover');
+                this.equivalent.setAttribute('role', 'tooltip');
+                this.equivalent.id ||= `ambient-equivalent-${crypto.randomUUID()}`;
+                this.equivalent.parentElement.setAttribute('aria-describedby', this.equivalent.id);
+            }
         }
     }
 

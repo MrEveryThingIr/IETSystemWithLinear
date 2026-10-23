@@ -3,6 +3,7 @@
 namespace App\Actions\Planner;
 
 use App\Models\Actor;
+use App\Models\Planner\OccurrenceParticipation;
 use App\Models\PlanOccurrence;
 use App\Models\PlanOccurrenceEvent;
 use App\Models\User;
@@ -40,6 +41,7 @@ class TransitionPlanOccurrence
      */
     public function markDone(PlanOccurrence $occurrence, User $user): PlanOccurrence
     {
+        abort_if($this->usesLivingExecution($occurrence), 422, 'Record your own execution or report actual times in Plans.');
         $current = $this->currentUser($user);
 
         return DB::transaction(function () use ($occurrence, $current): PlanOccurrence {
@@ -86,6 +88,18 @@ class TransitionPlanOccurrence
         PlanOccurrenceStatus $status,
         PlanOccurrenceEventType $eventType,
     ): PlanOccurrence {
+        if ($this->usesLivingExecution($occurrence)) {
+            $action = match ($status) {
+                PlanOccurrenceStatus::InProgress => 'start',
+                PlanOccurrenceStatus::Completed => 'finish',
+                PlanOccurrenceStatus::Skipped => 'report',
+                PlanOccurrenceStatus::Cancelled => 'cancel',
+                default => abort(422),
+            };
+
+            return app(ExecuteLivingOccurrence::class)->execute($user, $occurrence, $action,
+                'legacy-'.$action.'-'.$user->id, $action === 'report' ? ['outcome' => 'missed'] : []);
+        }
         $current = $this->currentUser($user);
 
         return DB::transaction(function () use ($occurrence, $current, $status, $eventType): PlanOccurrence {
@@ -145,6 +159,14 @@ class TransitionPlanOccurrence
                 'events',
             ]);
         }, attempts: 3);
+    }
+
+    private function usesLivingExecution(PlanOccurrence $occurrence): bool
+    {
+        $current = $occurrence->fresh();
+
+        return (int) data_get($current->policy_snapshot, 'version', 0) > 0
+            || OccurrenceParticipation::query()->where('plan_occurrence_id', $current->id)->exists();
     }
 
     private function currentUser(User $user): User

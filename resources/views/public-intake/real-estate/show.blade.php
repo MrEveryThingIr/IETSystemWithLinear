@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow,noarchive">
     <title>{{ $business?->name ?? $portal->title }} — {{ $portal->welcome_heading ?: __('public_business.real_estate.heading') }}</title>
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
     <style>
         body{background:#f1f5f9;color:#0f172a;font-family:inherit}
@@ -37,6 +37,7 @@
     </style>
 </head>
 <body>
+<x-app.ambient-bar />
 <main class="wrap">
     @if($business)
         <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">

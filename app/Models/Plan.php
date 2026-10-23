@@ -33,6 +33,8 @@ class Plan extends Model
 
     private bool $applyingLifecycle = false;
 
+    private bool $applyingStructure = false;
+
     protected $attributes = [
         'status' => PlanStatus::Active->value,
         'attention_mode' => PlanAttentionMode::Exclusive->value,
@@ -45,6 +47,9 @@ class Plan extends Model
         });
 
         static::updating(function (self $plan): void {
+            if ($plan->isDirty('parent_plan_id') && ! $plan->applyingStructure) {
+                throw new LogicException('Plan hierarchy changes require ComposePlan.');
+            }
             if ($plan->isDirty([
                 'uuid',
                 'context_id',
@@ -69,6 +74,28 @@ class Plan extends Model
     public function getRouteKeyName(): string
     {
         return 'uuid';
+    }
+
+    public function applyParent(?int $parentId): void
+    {
+        $this->applyingStructure = true;
+        try {
+            $this->forceFill(['parent_plan_id' => $parentId])->save();
+        } finally {
+            $this->applyingStructure = false;
+        }
+    }
+
+    /** @return BelongsTo<Plan, $this> */
+    public function parentPlan(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_plan_id');
+    }
+
+    /** @return HasMany<Plan, $this> */
+    public function childPlans(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_plan_id');
     }
 
     public function applyStatus(PlanStatus $status): void

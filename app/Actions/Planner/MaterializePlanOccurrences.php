@@ -3,6 +3,7 @@
 namespace App\Actions\Planner;
 
 use App\CalendarSystem;
+use App\Models\Planner\ExecutionPolicy;
 use App\Models\PlanOccurrence;
 use App\Models\PlanScheduleRule;
 use App\PlanScheduleFrequency;
@@ -88,6 +89,7 @@ class MaterializePlanOccurrences
                 ],
                 [
                     'plan_id' => $current->plan_id,
+                    'policy_snapshot' => ExecutionPolicy::snapshot($current),
                     'local_date' => $date->format('Y-m-d'),
                     'scheduled_end_at' => $localEnd->utc(),
                     'window_start_at' => $localStart->subMinutes($current->window_before_minutes)->utc(),
@@ -136,7 +138,7 @@ class MaterializePlanOccurrences
         return $count;
     }
 
-    private function matches(
+    public function matches(
         PlanScheduleRule $rule,
         CarbonImmutable $scheduleStart,
         CarbonImmutable $date,

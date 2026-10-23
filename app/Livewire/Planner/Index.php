@@ -10,7 +10,9 @@ use App\Models\Planner\MeetingRequest;
 use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\PlanAttentionMode;
+use App\PlanScheduleRuleStatus;
 use App\Support\Planner\PlanAppearance;
+use App\Support\Planner\RecurrenceProjection;
 use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
@@ -544,6 +546,12 @@ class Index extends Component
             : 'livewire.planner.index';
 
         return view($viewName, [
+            'recurrenceSummaries' => $this->view !== 'calendar' ? collect() : $allPlans->flatMap(function (Plan $plan) use ($user, $from, $through) {
+                return $plan->scheduleRules->where('status', PlanScheduleRuleStatus::Active)->map(fn ($rule) => [
+                    'plan' => $plan,
+                    'counts' => app(RecurrenceProjection::class)->summarize($user, $rule, $from, $through),
+                ]);
+            }),
             'plans' => $plans,
             'occurrences' => $occurrences,
             'calendarDays' => $calendarDays,

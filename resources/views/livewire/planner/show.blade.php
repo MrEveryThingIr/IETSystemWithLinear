@@ -174,7 +174,9 @@
 
                                 @if ($canParticipate && $plan->status === \App\PlanStatus::Active)
                                     <div class="flex flex-wrap gap-2">
-                                        @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
+                                        @if ((int) data_get($occurrence->policy_snapshot, 'version', 0) > 0 || $occurrence->participations()->exists())
+                                            <flux:button :href="route('planner.lab', ['occurrence' => $occurrence->uuid])" wire:navigate size="sm">{{ __('living_planner.report') }}</flux:button>
+                                          @elseif ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
                                             @if (in_array($phase, ['ready', 'late'], true) && $remainingPrerequisites === 0)
                                                 <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
                                             @endif

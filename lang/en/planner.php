@@ -77,6 +77,10 @@ return [
         'cancelled' => 'Cancelled',
     ],
     'occurrence_phase' => [
+        'unconfirmed' => 'Unconfirmed',
+        'paused' => 'Paused',
+        'partial' => 'Partially completed',
+        'interrupted' => 'Interrupted',
         'upcoming' => 'Upcoming',
         'ready' => 'Ready to start',
         'late' => 'Late start',

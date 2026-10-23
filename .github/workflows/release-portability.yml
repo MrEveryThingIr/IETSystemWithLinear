@@ -1,0 +1,50 @@
+name: Release portability
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  blockers:
+    name: Release blockers / ${{ matrix.os }} / PHP 8.4
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, curl, intl, openssl, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Install and prepare isolated checkout
+        shell: pwsh
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item .env.example .env
+          php artisan key:generate
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run build
+          exit $LASTEXITCODE
+      - name: Exercise real cryptography and release regressions
+        run: php artisan test --do-not-cache-result --filter="PushProvisioningTest|VideoFaststartTest|PlannerRemindersTest|NotificationExperienceTest|PlannerWizardTest|WhatsNewTest|ReleaseManifestTest" --log-junit=storage/logs/release-portability.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-portability-${{ matrix.os }}
+          path: storage/logs/release-portability.xml

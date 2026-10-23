@@ -17,6 +17,9 @@ use LogicException;
     'event_type',
     'payload',
     'created_at',
+    'effective_at',
+    'source',
+    'idempotency_key',
 ])]
 class PlanOccurrenceEvent extends Model
 {
@@ -59,6 +62,7 @@ class PlanOccurrenceEvent extends Model
             'event_type' => PlanOccurrenceEventType::class,
             'payload' => 'array',
             'created_at' => 'immutable_datetime',
+            'effective_at' => 'immutable_datetime',
         ];
     }
 }

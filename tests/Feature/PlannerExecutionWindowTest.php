@@ -60,7 +60,7 @@ class PlannerExecutionWindowTest extends TestCase
         }
     }
 
-    public function test_missed_window_does_not_fabricate_an_actual_start(): void
+    public function test_elapsed_unreported_window_is_unconfirmed_and_does_not_fabricate_an_actual_start(): void
     {
         CarbonImmutable::setTestNow('2026-09-25 06:11:00 UTC');
 
@@ -74,7 +74,7 @@ class PlannerExecutionWindowTest extends TestCase
             );
             $occurrence = $rule->occurrences()->sole();
 
-            $this->assertSame(PlanOccurrenceWindowState::Missed, $occurrence->windowState());
+            $this->assertSame(PlanOccurrenceWindowState::Unconfirmed, $occurrence->windowState());
             $this->assertRejected(fn () => app(TransitionPlanOccurrence::class)->start($occurrence, $actor->user));
             $this->assertSame(PlanOccurrenceStatus::Scheduled, $occurrence->fresh()->status);
             $this->assertNull($occurrence->fresh()->actual_start_at);

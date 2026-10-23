@@ -32,6 +32,7 @@ class PlanTemplate extends Model
             'timing_mode' => PlanTimingMode::class,
             'weekdays' => 'array',
             'reminder_offsets' => 'array',
+            'composition' => 'array',
             'interval' => 'integer',
             'duration_minutes' => 'integer',
             'month_day' => 'integer',

@@ -77,6 +77,10 @@ return [
         'cancelled' => '已取消',
     ],
     'occurrence_phase' => [
+        'unconfirmed' => '未确认',
+        'paused' => '已暂停',
+        'partial' => '部分完成',
+        'interrupted' => '已中断',
         'upcoming' => '尚未到时',
         'ready' => '可开始',
         'late' => '延迟开始',
