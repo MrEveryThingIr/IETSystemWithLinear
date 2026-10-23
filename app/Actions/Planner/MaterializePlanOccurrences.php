@@ -136,7 +136,7 @@ class MaterializePlanOccurrences
         return $count;
     }
 
-    private function matches(
+    public function matches(
         PlanScheduleRule $rule,
         CarbonImmutable $scheduleStart,
         CarbonImmutable $date,
