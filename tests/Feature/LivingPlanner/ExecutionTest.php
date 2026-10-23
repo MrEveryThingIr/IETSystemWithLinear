@@ -126,4 +126,15 @@ class ExecutionTest extends TestCase
         $act->execute($user, $occurrence, 'acknowledge', 'identical-key-1');
         $act->execute($user, $occurrence, 'attend', 'identical-key-1');
     }
+
+    public function test_hard_window_duration_is_bounded_even_if_scheduler_was_absent(): void
+    {
+        [$user, $occurrence] = $this->fixture();
+        app(ExecuteLivingOccurrence::class)->execute($user, $occurrence, 'start', 'downtime-start');
+        $this->travel(3)->hours();
+        $result = app(ExecuteLivingOccurrence::class)->execute($user, $occurrence, 'finish', 'downtime-finish');
+        $this->assertSame(3600, $result->active_seconds);
+        $this->assertSame('completed', $result->evaluated_outcome);
+        $this->assertTrue($result->actual_end_at->gt($result->window_end_at));
+    }
 }

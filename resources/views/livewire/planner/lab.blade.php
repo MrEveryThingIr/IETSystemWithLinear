@@ -40,7 +40,13 @@
                 </div>
                 <details><summary>{{ __('living_planner.participation') }}</summary>
                     <p>{{ __('living_planner.outcome') }}: {{ __('living_planner.'.($occurrence->evaluated_outcome ?? 'unconfirmed')) }}</p>
-                    @foreach($occurrence->participations()->with('actor.user')->get() as $record)<p>{{ $record->actor->user?->username }} · {{ __('living_planner.'.($record->outcome ?? $record->phase)) }} · {{ round($record->active_seconds / 60, 1) }} {{ __('living_planner.minutes') }}</p>@endforeach
+                    @php($participantRows = $occurrence->participations()->get()->keyBy('actor_id'))
+                    @foreach($occurrence->plan->participants()->with('actor.user')->where('status', 'active')->get() as $member)
+                        @php($record = $participantRows->get($member->actor_id))
+                        <p>{{ $member->actor->user?->username }} · {{ __('living_planner.'.($record->outcome ?? 'unconfirmed')) }} · {{ $record === null ? '—' : round($record->active_seconds / 60, 1) }} {{ __('living_planner.minutes') }}
+                        @if($record?->acknowledged_at) · {{ __('living_planner.acknowledge') }}: <x-app.local-datetime :value="$record->acknowledged_at" />@endif
+                        @if($record?->attended_at) · {{ __('living_planner.attend') }}: <x-app.local-datetime :value="$record->attended_at" />@endif</p>
+                    @endforeach
                 </details>
                 @if ($closed && $participation?->outcome === null)<p class="text-sm text-zinc-500">{{ __('living_planner.unconfirmed_help') }}</p>@endif
                 <details><summary class="cursor-pointer text-sm">{{ __('living_planner.report') }}</summary>

@@ -78,7 +78,8 @@ final class ExecuteLivingOccurrence
                     ExecutionSegment::query()->create(['plan_occurrence_id' => $locked->id, 'actor_id' => $actor->id, 'started_at' => $now]);
                 } elseif ($action === 'pause' || $action === 'finish') {
                     abort_unless(in_array($participant->phase, $action === 'pause' ? ['running'] : ['running', 'paused', 'awaiting_report'], true), 422, 'Execution is not running or paused.');
-                    $this->closeSegment($locked, $participant, $now, $action);
+                    $segmentEnd = $snapshot['window_style'] === 'hard' ? $now->min($locked->window_end_at) : $now;
+                    $this->closeSegment($locked, $participant, $segmentEnd, $action);
                     if ($action === 'pause') {
                         $participant->update(['phase' => 'paused']);
                     } else {

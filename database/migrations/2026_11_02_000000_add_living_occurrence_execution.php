@@ -75,6 +75,7 @@ return new class extends Migration
         Schema::dropIfExists('plan_execution_segments');
         Schema::dropIfExists('plan_occurrence_participations');
         Schema::table('plan_occurrences', function (Blueprint $table): void {
+            $table->dropIndex(['window_closed_at']);
             $table->dropColumn(['execution_phase', 'evaluated_outcome', 'evidence_confidence', 'window_closed_at', 'policy_snapshot', 'active_seconds']);
         });
         Schema::table('plan_schedule_rules', function (Blueprint $table): void {
