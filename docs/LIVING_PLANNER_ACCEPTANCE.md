@@ -25,3 +25,11 @@ Actor-specific measurements preserve target and actual start/end, signed deviati
 An explicit recipient/purpose/expiry consent service returns a fixed sanitized snapshot, rechecks source-plan permission on read and supports revocation. Reflections and experiments are never included; no obligation, fulfillment, agreement or hiring decision is triggered.
 
 Focused factor tests verify unknown denominators, delayed completion, hierarchy deduplication and recipient/purpose/revocation boundaries. Domain verification through D: 12 tests, 51 assertions. Browser and cross-database migration checks remain pending F.
+
+## E — optional private experiments
+
+Adds immutable experiment definitions, private observations with append-only corrections, selected changes, cue-response plans, obstacles, difficulty and reflections. Equally long baseline/current periods compare observed means and sample sizes; missing observations remain missing. Declared baseline and target are never silently rewritten.
+
+Adjustment proposals require an explicit owner decision, recorded once; approval does not change a Plan or its targets. Insights label self-reporting and association without causal or psychological conclusions. Ordinary plan creation does not depend on this module.
+
+Domain suite through E: 14 tests, 61 assertions, plus PHPStan with zero errors. Tests cover private owner access, baseline comparison, idempotent correction, immutable original observations and approval without automatic target changes. Browser UX and migration portability remain pending F.
