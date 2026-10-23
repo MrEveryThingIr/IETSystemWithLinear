@@ -4,6 +4,58 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 
+:root { --ambient-bar-height: 4rem; }
+body:has([data-ambient-bar]) { padding-block-start: var(--ambient-bar-height); }
+[data-ambient-bar] { position: fixed; inset: 0 0 auto; z-index: 60; }
+body:has([data-ambient-bar]) [data-flux-sidebar] {
+    top: var(--ambient-bar-height) !important;
+    min-height: calc(100dvh - var(--ambient-bar-height)) !important;
+    max-height: calc(100dvh - var(--ambient-bar-height)) !important;
+}
+body:has([data-ambient-bar]) .fixed.top-4 { top: calc(var(--ambient-bar-height) + 1rem); }
+body:has([data-ambient-bar]) header.sticky { top: var(--ambient-bar-height); }
+.ambient-compact { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.ambient-compact .ambient-time { font-size: .75rem; }
+.ambient-compact [data-ambient-message] { flex: 1 1 12rem; }
+.ambient-controls { display: flex; justify-content: center; gap: .5rem; }
+.ambient-control { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 999px; padding: .4rem .75rem; font-size: .7rem; min-height: 2rem; cursor: pointer; }
+.ambient-control:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+.ambient-control:focus-visible, .ambient-time:focus-visible { outline: 2px solid #6366f1; outline-offset: 3px; }
+.ambient-equivalent { display: block; font-size: .75em; }
+.ambient-equivalent[hidden] { display: none; }
+.ambient-equivalent-popover { display: none; position: absolute; inset-block-start: 100%; inset-inline-start: 0; z-index: 70; width: max-content; max-width: min(24rem, 85vw); border-radius: .75rem; padding: .75rem; background: #18181b; color: #fafafa; box-shadow: 0 8px 20px #0003; text-align: start; }
+.ambient-time:hover .ambient-equivalent-popover, .ambient-time:focus-within .ambient-equivalent-popover, .ambient-time[data-temporal-open] .ambient-equivalent-popover { display: block; }
+.ambient-home { display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 1.5rem; min-height: calc(100svh - var(--ambient-bar-height)); padding: 1.5rem clamp(1rem, 4vw, 4rem); background: radial-gradient(ellipse at 20% 25%, #c7d2fe80, transparent 60%), radial-gradient(ellipse at 85% 75%, #a5f3fc70, transparent 55%); }
+.ambient-home:fullscreen { overflow-y: auto; background-color: #fafafa; min-height: 100dvh; }
+.dark .ambient-home:fullscreen { background-color: #09090b; }
+.ambient-expanded { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; width: 100%; }
+.ambient-expanded .ambient-time { text-align: center; font-size: clamp(.95rem, 2.5vw, 1.35rem); }
+.ambient-expanded [data-ambient-message] { text-align: center; max-width: 38rem; }
+.ambient-face { width: min(78vw, 56svh, 34rem); height: auto; overflow: visible; filter: drop-shadow(0 18px 28px #4f46e520); }
+.ambient-face-rim { fill: #eef2ff; stroke: #a5b4fc; stroke-width: 1; }
+.ambient-face-inner { fill: #ffffff; stroke: #e0e7ff; stroke-width: .5; }
+.ambient-face-brand { fill: #4f46e5; opacity: .18; font-size: 44px; font-weight: 900; letter-spacing: -2px; }
+.ambient-tick, .ambient-tick-major { stroke: #a5b4fc; stroke-width: .7; }
+.ambient-tick-major { stroke: #6366f1; stroke-width: 1.4; }
+.ambient-numeral { font-size: 11px; fill: #4338ca; font-weight: 600; }
+.ambient-hand-hour, .ambient-hand-minute, .ambient-hand-second { stroke-linecap: round; }
+.ambient-hand-hour { stroke: #312e81; stroke-width: 5; }
+.ambient-hand-minute { stroke: #4f46e5; stroke-width: 3; }
+.ambient-hand-second { stroke: #0891b2; stroke-width: 1.2; }
+.ambient-hand-cap { fill: #0891b2; stroke: white; stroke-width: 1; }
+.dark .ambient-face-rim { fill: #1e1b4b; stroke: #4338ca; }
+.dark .ambient-face-inner { fill: #18181b; stroke: #312e81; }
+.dark .ambient-face-brand { fill: #a5b4fc; opacity: .24; }
+.dark .ambient-numeral { fill: #c7d2fe; }
+.dark .ambient-hand-hour { stroke: #e0e7ff; }
+.dark .ambient-hand-minute { stroke: #a5b4fc; }
+@media (max-width: 479px) {
+    .ambient-compact { gap: .35rem .5rem; }
+    .ambient-compact .ambient-time { flex-basis: calc(100% - 8rem); }
+    .ambient-compact [data-ambient-message] { order: 3; flex-basis: 100%; font-size: .65rem; }
+    .ambient-home { padding-block: 1rem; gap: 1rem; }
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 

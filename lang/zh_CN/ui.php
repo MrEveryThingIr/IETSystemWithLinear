@@ -4,6 +4,12 @@ return [
     'language' => '语言',
     'account' => '账户',
     'ambient' => [
+        'pause' => '暂停消息',
+        'resume' => '继续消息',
+        'fullscreen' => '全屏',
+        'fullscreen_unavailable' => '此浏览器无法使用全屏模式。',
+        'exit_fullscreen' => '退出全屏',
+        'explore' => '探索',
         'label' => '时间与节奏',
         'messages' => [
             'plan' => '规划下一项有用行动，并让原始记录保持权威。',

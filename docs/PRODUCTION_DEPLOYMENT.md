@@ -68,7 +68,7 @@ from inside the release directory (for example
     `notifications:push-devices` command (every minute, already part of
     `schedule:run`) sends reminders to subscribed phones/computers, so the
     cron entry in section 6 must be active. The signing keys (VAPID) are
-    created on first use in `storage/app/private/webpush-vapid.json` — in the
+    provisioned with `php artisan push:provision` in `storage/app/private/webpush-vapid.json` — in the
     shared storage, so they survive releases; do not delete that file (all
     devices would have to turn notifications on again). Optional fixed keys:
     `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.

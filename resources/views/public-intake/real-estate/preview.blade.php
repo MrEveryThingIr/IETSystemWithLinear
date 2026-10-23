@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow,noarchive">
     <title>{{ __('public_real_estate.preview.title') }} — {{ $portal?->business?->name ?? $portal?->title }}</title>
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+<x-app.ambient-bar />
 <main class="mx-auto max-w-2xl px-4 py-10">
     @if($portal?->business)
         <div class="mb-4">

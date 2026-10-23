@@ -8,8 +8,23 @@
     @fluxAppearance
 </head>
 <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-    <div class="fixed end-4 top-4 z-10"><x-app.locale-switcher /></div>
-    <main class="mx-auto flex min-h-dvh max-w-5xl {{ empty($publicCards) ? 'items-center' : 'items-start' }} px-4 py-10 sm:px-6">
+    <x-app.ambient-bar />
+    <section class="ambient-home" data-home-clock aria-label="{{ __('ui.ambient.label') }}">
+        <div class="flex w-full items-center justify-between gap-4">
+            <x-app.versioned-brand />
+            <x-app.locale-switcher />
+        </div>
+        <x-app.ambient-status analog />
+        <div class="flex flex-wrap justify-center gap-3">
+            @auth
+                <flux:button :href="route('dashboard')" wire:navigate variant="primary">{{ __('access.root.open') }}</flux:button>
+            @else
+                <flux:button :href="route('login')" wire:navigate variant="primary">{{ __('ui.auth.login') }}</flux:button>
+            @endauth
+            <flux:button href="#home-content" variant="ghost">{{ __('ui.ambient.explore') }}</flux:button>
+        </div>
+    </section>
+    <main id="home-content" class="mx-auto flex max-w-5xl items-start px-4 py-10 sm:px-6">
         <div class="w-full space-y-6">
             <x-app.brand-banner />
             <flux:card class="w-full space-y-6">
@@ -46,6 +61,7 @@
             @endif
         </div>
     </main>
+    @livewireScripts
     @fluxScripts
 </body>
 </html>

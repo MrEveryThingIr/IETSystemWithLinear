@@ -9,6 +9,7 @@
         @fluxAppearance
     </head>
     <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+        <x-app.ambient-bar />
         <header class="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <div class="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
                 <x-app.versioned-brand />
