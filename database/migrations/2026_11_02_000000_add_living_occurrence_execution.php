@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedInteger('version');
             $table->string('window_style', 20);
             $table->unsignedInteger('reporting_days')->default(30);
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
             $table->unique(['plan_id', 'version'], 'execution_policy_version_unique');
         });
         Schema::table('plan_schedule_rules', function (Blueprint $table): void {
@@ -53,7 +53,7 @@ return new class extends Migration
             $table->dateTime('started_at');
             $table->dateTime('ended_at')->nullable();
             $table->string('closure_reason', 24)->nullable();
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
             $table->index(['plan_occurrence_id', 'actor_id'], 'execution_segment_participant_idx');
         });
         Schema::table('plan_occurrence_events', function (Blueprint $table): void {

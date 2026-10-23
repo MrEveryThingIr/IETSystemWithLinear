@@ -1,5 +1,6 @@
 <section class="mx-auto max-w-7xl space-y-6">
     <x-app.flash-message />
+    <flux:button :href="route('planner.lab')" wire:navigate size="sm">{{ __('living_planner.title') }}</flux:button>
 
     <x-app.page-header :title="__('planner.title')" :description="__('planner.help')">
         <x-slot:actions>
@@ -41,6 +42,9 @@
     </div>
 
     @if ($view === 'calendar')
+        <details class="rounded-xl border p-4"><summary>{{ __('living_planner.recurrence_summary') }}</summary>
+            @foreach($recurrenceSummaries as $summary)<p class="my-2"><a class="underline" wire:navigate href="{{ route('planner.show', $summary['plan']) }}">{{ $summary['plan']->title }}</a> ? {{ __('living_planner.expected') }}: {{ $summary['counts']['expected'] }} ? {{ __('living_planner.virtual') }}: {{ $summary['counts']['virtual'] }}</p>@endforeach
+        </details>
         <flux:card class="space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <flux:button wire:click="previousPeriod" variant="ghost" size="sm" icon="chevron-left">

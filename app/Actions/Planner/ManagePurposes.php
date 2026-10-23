@@ -40,4 +40,22 @@ final class ManagePurposes
         LabAuthority::owns($user, (int) $purpose->owner_actor_id);
         $purpose->update(['status' => 'archived']);
     }
+
+    public function update(User $user, Purpose $purpose, string $title, ?string $description, ?string $targetOn): Purpose
+    {
+        LabAuthority::owns($user, (int) $purpose->owner_actor_id);
+        $data = Validator::make(['title' => trim($title), 'description' => $description, 'target_on' => $targetOn], [
+            'title' => ['required', 'string', 'max:180'], 'description' => ['nullable', 'string', 'max:10000'],
+            'target_on' => ['nullable', 'date_format:Y-m-d'],
+        ])->validate();
+        $purpose->update($data);
+
+        return $purpose->fresh();
+    }
+
+    public function unlink(User $user, Purpose $purpose, Plan $plan): void
+    {
+        LabAuthority::owns($user, (int) $purpose->owner_actor_id);
+        $purpose->plans()->detach($plan->id);
+    }
 }

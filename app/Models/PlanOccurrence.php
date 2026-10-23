@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Planner\OccurrenceParticipation;
 use App\PlanOccurrenceStatus;
 use App\PlanOccurrenceWindowState;
 use App\PlanTimingMode;
@@ -173,11 +174,28 @@ class PlanOccurrence extends Model
 
     public function executionPhase(?CarbonInterface $at = null): string
     {
+        if ($this->evaluated_outcome !== null && $this->evaluated_outcome !== 'unconfirmed') {
+            return $this->evaluated_outcome;
+        }
+        if (in_array($this->execution_phase, ['running', 'paused'], true)) {
+            return $this->execution_phase === 'running' ? 'in_progress' : 'paused';
+        }
+
         return $this->windowState($at)->value;
     }
 
     public function canStart(?CarbonInterface $at = null): bool
     {
+        if ((int) data_get($this->policy_snapshot, 'version', 0) > 0) {
+            $moment = $at === null ? CarbonImmutable::now('UTC') : CarbonImmutable::instance($at);
+            $style = data_get($this->policy_snapshot, 'window_style', 'hard');
+            $earliest = $style === 'deadline' ? $this->created_at : $this->window_start_at;
+            $latest = $style === 'hard' ? $this->window_end_at : $this->window_end_at->addDays((int) data_get($this->policy_snapshot, 'reporting_days', 30));
+
+            return ! in_array($this->status, [PlanOccurrenceStatus::Cancelled, PlanOccurrenceStatus::Skipped, PlanOccurrenceStatus::Completed], true)
+                && $moment->betweenIncluded($earliest, $latest) && $this->prerequisitesSatisfied();
+        }
+
         return in_array($this->windowState($at), [
             PlanOccurrenceWindowState::Ready,
             PlanOccurrenceWindowState::Late,
@@ -211,7 +229,7 @@ class PlanOccurrence extends Model
             return PlanOccurrenceWindowState::Late;
         }
 
-        return PlanOccurrenceWindowState::Missed;
+        return PlanOccurrenceWindowState::Unconfirmed;
     }
 
     public function prerequisitesSatisfied(): bool
@@ -272,6 +290,12 @@ class PlanOccurrence extends Model
     public function events(): HasMany
     {
         return $this->hasMany(PlanOccurrenceEvent::class)->orderBy('id');
+    }
+
+    /** @return HasMany<OccurrenceParticipation, $this> */
+    public function participations(): HasMany
+    {
+        return $this->hasMany(OccurrenceParticipation::class);
     }
 
     /** @return HasMany<PlanOccurrencePrerequisiteCheck, $this> */

@@ -2,7 +2,9 @@
 
 namespace App\Models\Planner;
 
+use App\Models\Actor;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
 class OccurrenceParticipation extends Model
@@ -12,6 +14,12 @@ class OccurrenceParticipation extends Model
     protected $guarded = ['id'];
 
     protected $attributes = ['phase' => 'not_started', 'active_seconds' => 0, 'confidence' => 'self_reported'];
+
+    /** @return BelongsTo<Actor, $this> */
+    public function actor(): BelongsTo
+    {
+        return $this->belongsTo(Actor::class);
+    }
 
     protected function casts(): array
     {

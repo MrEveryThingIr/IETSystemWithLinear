@@ -18,7 +18,7 @@ return new class extends Migration
             $table->json('snapshot');
             $table->dateTime('expires_at');
             $table->dateTime('revoked_at')->nullable();
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
             $table->index(['subject_actor_id', 'recipient_actor_id'], 'planner_share_parties_idx');
         });
     }

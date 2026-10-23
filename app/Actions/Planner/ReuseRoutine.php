@@ -4,6 +4,7 @@ namespace App\Actions\Planner;
 
 use App\Models\Context;
 use App\Models\Plan;
+use App\Models\Planner\ExecutionPolicy;
 use App\Models\PlanTemplate;
 use App\Models\User;
 use App\PlanScheduleFrequency;
@@ -33,6 +34,7 @@ final class ReuseRoutine
                 $rule = $plan->scheduleRules()->where('status', 'active')->latest('id')->first();
                 abort_if($rule !== null && ! in_array($rule->frequency, PlanTemplate::FREQUENCIES, true), 422, 'Date-specific schedules cannot be reused as routine shapes.');
                 $shape = $rule === null ? null : [
+                    'execution_policy' => ExecutionPolicy::snapshot($rule),
                     'frequency' => $rule->frequency->value, 'timing_mode' => $rule->timing_mode->value,
                     'interval' => (int) $rule->interval, 'start_time' => substr($rule->start_time, 0, 5),
                     'duration_minutes' => (int) $rule->duration_minutes, 'weekdays' => $rule->weekdays,
@@ -77,6 +79,9 @@ final class ReuseRoutine
                 $created[$key] = $plan;
                 $shape = $node['schedule'];
                 if ($shape !== null) {
+                    if ((int) data_get($shape, 'execution_policy.version', 0) > 0) {
+                        app(ConfigureExecutionPolicy::class)->execute($user, $plan, $shape['execution_policy']['window_style'], $shape['execution_policy']['reporting_days']);
+                    }
                     app(CreatePlanScheduleRule::class)->execute($plan, $user,
                         PlanScheduleFrequency::from($shape['frequency']), $startsOn, $shape['start_time'], $shape['duration_minutes'],
                         interval: $shape['interval'], weekdays: $shape['weekdays'] ?? [], occurrenceLimit: $shape['occurrence_limit'],

@@ -8,6 +8,7 @@ enum PlanOccurrenceWindowState: string
     case Ready = 'ready';
     case Late = 'late';
     case Missed = 'missed';
+    case Unconfirmed = 'unconfirmed';
     case InProgress = 'in_progress';
     case Completed = 'completed';
     case Skipped = 'skipped';

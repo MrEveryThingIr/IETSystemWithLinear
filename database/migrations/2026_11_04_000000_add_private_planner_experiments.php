@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('timezone', 80);
             $table->text('cue')->nullable();
             $table->text('planned_response')->nullable();
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
             $table->index(['owner_actor_id', 'starts_on'], 'planner_experiment_owner_period_idx');
         });
         Schema::create('planner_experiment_observations', function (Blueprint $table): void {
@@ -43,7 +43,7 @@ return new class extends Migration
             $table->text('response')->nullable();
             $table->text('reflection')->nullable();
             $table->json('context')->nullable();
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
             $table->unique(['experiment_id', 'retry_key'], 'experiment_observation_retry_unique');
             $table->unique('supersedes_id', 'experiment_observation_correction_unique');
         });
@@ -54,7 +54,7 @@ return new class extends Migration
             $table->text('proposal');
             $table->string('decision', 16)->nullable();
             $table->dateTime('decided_at')->nullable();
-            $table->timestamp('created_at');
+            $table->dateTime('created_at');
         });
     }
 

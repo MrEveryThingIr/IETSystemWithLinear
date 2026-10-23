@@ -77,6 +77,10 @@ return [
         'cancelled' => 'ملغاة',
     ],
     'occurrence_phase' => [
+        'unconfirmed' => 'غير مؤكد',
+        'paused' => 'متوقف مؤقتاً',
+        'partial' => 'مكتمل جزئياً',
+        'interrupted' => 'انقطع',
         'upcoming' => 'قادمة',
         'ready' => 'جاهزة للبدء',
         'late' => 'بدء متأخر',

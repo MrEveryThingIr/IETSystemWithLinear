@@ -41,6 +41,9 @@ final class ReconcileOccurrenceWindows
                 $occurrence->applyLiving(['window_closed_at' => $occurrence->window_end_at,
                     'policy_snapshot' => $snapshot, 'evaluated_outcome' => $outcome,
                     'evidence_confidence' => $occurrence->evidence_confidence ?? ($outcome === 'unconfirmed' ? 'unconfirmed' : 'self_reported')]);
+                if ($snapshot['window_style'] === 'hard') {
+                    app(ExecuteLivingOccurrence::class)->project($occurrence);
+                }
                 PlanOccurrenceEvent::query()->create(['plan_occurrence_id' => $occurrence->id, 'actor_id' => null,
                     'event_type' => PlanOccurrenceEventType::WindowClosed, 'effective_at' => $occurrence->window_end_at,
                     'created_at' => $now, 'source' => 'scheduler', 'idempotency_key' => 'system:window-closed',

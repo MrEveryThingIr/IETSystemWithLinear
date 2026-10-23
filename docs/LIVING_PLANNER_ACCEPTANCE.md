@@ -1,5 +1,46 @@
 # Living Planner milestone acceptance
 
+## F — integration candidate (verification in progress)
+
+Plans now has a dedicated `/plans` entry and Today, Calendar, Routines, Purposes,
+Insights and History destinations. The Lab exposes personal activity creation,
+execution outcomes, guided reporting/correction, purpose editing/archiving/linking,
+routine reuse, period comparison, private observations/corrections and explicit
+approved-adjustment application. Future and single-occurrence schedule revisions
+retain original definitions and events. Today and History use visible pagination.
+
+Elapsed unreported windows display unconfirmed in the legacy calendar too. Living
+occurrence detail controls link to the same participant-aware execution surface.
+Calendar recurrence summaries call the existing projection service. Reusable
+routine shapes retain their execution policy. Fonts are built from the existing
+local Inter/Vazirmatn packages without an unused external font request.
+
+Current verification is a candidate, not final acceptance. Focused regression,
+revision and UI tests have passed in separate runs; PHPStan passed. MySQL fresh
+migrations and realistic seeding passed in `iet_living_planner_demo`. Two concurrent
+reconciliation workers processed one overdue occurrence exactly once; inspection
+found zero duplicate window events and zero remaining elapsed windows. Populated
+MySQL upgrade/rollback, full regression and real-browser gates are still running.
+
+The main checkout and its database are untouched. Only the Planner worktree's
+ignored `.env` points to the explicitly named local demo database. Credentials and
+browser artifacts are ignored under `storage/release-acceptance/living`.
+
+Local demo setup (local MySQL only; preserves the source database and APP_KEY):
+
+```powershell
+php tools/prepare-living-demo.php C:/laragon/www/EveryThing/.env
+php tools/living-planner-demo.php
+npm.cmd ci
+npm.cmd run build
+php artisan serve --host=127.0.0.1 --port=8002
+```
+
+Run these from the Living Planner checkout. The demo script rejects ordinary
+database names and never resets an existing database. It preserves existing demo
+accounts rather than overwriting them. A partial fixture setup requires explicit
+inspection before retrying. The development server uses the checkout's `.env`.
+
 Successor branch `feat/living-planner`; production and the release branch are not modified by these milestones. A real production-data rehearsal remains unavailable.
 
 ## A — architecture and audit

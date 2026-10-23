@@ -83,6 +83,7 @@ use App\Livewire\Planner\BasicCreate as PlannerBasicCreate;
 use App\Livewire\Planner\BasicEdit as PlannerBasicEdit;
 use App\Livewire\Planner\Create as PlannerCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
+use App\Livewire\Planner\Lab;
 use App\Livewire\Planner\Meetings\GuestRespond;
 use App\Livewire\Planner\Show as PlannerShow;
 use App\Livewire\Planner\Tools\RepeatWindow as PlannerRepeatWindow;
@@ -200,6 +201,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/contracts/{contract}/commitments/create', CommitmentCreate::class)->name('commitments.create');
     Route::livewire('/contracts/{contract}', ContractShow::class)->can('view', 'contract')->name('contracts.show');
     Route::livewire('/commitments/{commitment}', CommitmentShow::class)->can('view', 'commitment')->name('commitments.show');
+    Route::livewire('/plans', Lab::class)->name('planner.lab');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/tools/repeat', PlannerRepeatWindow::class)->name('planner.tools.repeat');
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
