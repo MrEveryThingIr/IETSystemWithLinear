@@ -33,6 +33,7 @@ use LogicException;
     'status',
     'month_day',
     'calendar',
+    'execution_policy_id',
 ])]
 class PlanScheduleRule extends Model
 {
@@ -73,6 +74,7 @@ class PlanScheduleRule extends Model
                 'window_before_minutes',
                 'window_after_minutes',
                 'timezone',
+                'execution_policy_id',
             ])) {
                 throw new LogicException('Schedule rules are immutable; cancel and replace the rule instead.');
             }

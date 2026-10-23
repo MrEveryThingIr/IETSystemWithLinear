@@ -5,6 +5,7 @@ namespace App;
 enum PlanEventType: string
 {
     case StructureChanged = 'structure_changed';
+    case PolicyChanged = 'policy_changed';
     case Created = 'created';
     case ScheduleRuleCreated = 'schedule_rule_created';
     case ScheduleRuleCancelled = 'schedule_rule_cancelled';

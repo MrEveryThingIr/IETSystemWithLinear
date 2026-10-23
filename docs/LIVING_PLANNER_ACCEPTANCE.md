@@ -11,3 +11,9 @@ Documented in `LIVING_PLANNER_ARCHITECTURE.md` before implementation. Existing P
 Adds private purposes, idempotent authorized purpose links, context-locked cycle-safe hierarchy, and personal reusable routine compositions within existing PlanTemplate. Reuse copies authorized definitions only, not occurrences, participants, private lab reflections or execution history. Distant recurrence counts reuse the existing matcher without materialization; a year of daily repetition is summarized without writing hundreds of extra rows. Existing schedule/timezone/calendar behavior is preserved.
 
 Focused tests cover hierarchy cycles and duplicate changes, purpose privacy/deduplication, reuse without history, and a 365-occurrence virtual horizon with no extra materialization. UI/browser scenarios will be exercised with the progressively disclosed lab views in F. B is a domain foundation, not a claim that the complete Living Planner is finished.
+
+## C — living execution foundation
+
+Adds versioned policy snapshots, participant execution, pause/resume segments, late reporting, immutable correction chains and idempotent reconciliation. The scheduled command closes elapsed windows as unconfirmed, with separate effective/processing timestamps and system attribution. Explicit living policies and participant records route old start/complete controls through the same service; financial mark-done shortcuts cannot bypass these policies.
+
+Focused plus kernel verification: 16 tests, 69 assertions. Covers active duration, retries, scheduler catch-up, flexible versus hard windows, immutable corrections with stale-edit rejection, group completion isolation and retained policy versions. All migrations were applied to disposable in-memory SQLite by the tests; cross-database migration and browser acceptance remain part of F. No production-data compatibility claim is made.

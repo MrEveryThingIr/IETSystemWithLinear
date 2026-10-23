@@ -5,6 +5,7 @@ use App\Actions\Categories\EnsureSharedCategories;
 use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Groups\ManageGroupAgreement;
 use App\Actions\Planner\MaterializePlannerHorizon;
+use App\Actions\Planner\ReconcileOccurrenceWindows;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
@@ -201,6 +202,16 @@ ScheduledArtisan::register(app(ConsoleSchedule::class), 'media:prune-upload-sess
 ScheduledArtisan::register(app(ConsoleSchedule::class), 'planner:materialize --days=120')
     ->name('planner:materialize')
     ->dailyAt('00:05')
+    ->withoutOverlapping();
+
+Artisan::command('planner:reconcile {--limit=500}', function (): void {
+    $count = app(ReconcileOccurrenceWindows::class)->execute((int) $this->option('limit'));
+    $this->info("Reconciled {$count} elapsed windows; missing reports remain unconfirmed.");
+})->purpose('Reconcile elapsed planning windows without inventing execution outcomes');
+
+ScheduledArtisan::register(app(ConsoleSchedule::class), 'planner:reconcile --limit=500')
+    ->name('planner:reconcile')
+    ->everyMinute()
     ->withoutOverlapping();
 
 ScheduledArtisan::register(app(ConsoleSchedule::class), 'contracts:activate-due')

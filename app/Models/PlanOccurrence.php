@@ -34,12 +34,15 @@ use LogicException;
     'origin_type',
     'origin_uuid',
     'metadata',
+    'policy_snapshot',
 ])]
 class PlanOccurrence extends Model
 {
     use HasFactory;
 
     private bool $applyingLifecycle = false;
+
+    private bool $applyingLiving = false;
 
     protected $attributes = [
         'status' => PlanOccurrenceStatus::Scheduled->value,
@@ -52,6 +55,9 @@ class PlanOccurrence extends Model
         });
 
         static::updating(function (self $occurrence): void {
+            if ($occurrence->isDirty(['execution_phase', 'evaluated_outcome', 'evidence_confidence', 'window_closed_at', 'policy_snapshot', 'active_seconds']) && ! $occurrence->applyingLiving) {
+                throw new LogicException('Living updates require their dedicated action.');
+            }
             if ($occurrence->isDirty([
                 'uuid',
                 'plan_id',
@@ -87,6 +93,21 @@ class PlanOccurrence extends Model
     public function getRouteKeyName(): string
     {
         return 'uuid';
+    }
+
+    /** @param array<string, mixed> $attributes Internal projection update; target changes are never accepted. */
+    public function applyLiving(array $attributes): void
+    {
+        $allowed = ['execution_phase', 'evaluated_outcome', 'evidence_confidence', 'window_closed_at', 'policy_snapshot', 'active_seconds', 'actual_start_at', 'actual_end_at'];
+        if (array_diff(array_keys($attributes), $allowed) !== []) {
+            throw new LogicException('Cannot alter targets through an execution projection.');
+        }
+        $this->applyingLiving = $this->applyingLifecycle = true;
+        try {
+            $this->forceFill($attributes)->save();
+        } finally {
+            $this->applyingLiving = $this->applyingLifecycle = false;
+        }
     }
 
     public function transition(
@@ -294,6 +315,9 @@ class PlanOccurrence extends Model
     protected function casts(): array
     {
         return [
+            'policy_snapshot' => 'array',
+            'window_closed_at' => 'immutable_datetime',
+            'active_seconds' => 'integer',
             'status' => PlanOccurrenceStatus::class,
             'local_date' => 'immutable_date',
             'scheduled_start_at' => 'immutable_datetime',
