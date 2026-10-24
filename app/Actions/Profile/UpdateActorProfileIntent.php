@@ -2,6 +2,7 @@
 
 namespace App\Actions\Profile;
 
+use App\Actions\Market\PublishIntent;
 use App\Models\ActorProfileIntent;
 use App\Models\User;
 use App\ProfileIntentStatus;
@@ -50,6 +51,12 @@ class UpdateActorProfileIntent
                     $locked->concept,
                     $locked->kind,
                 );
+            }
+
+            // Legacy callers publish immediately. The composer stages edits through
+            // SaveIntentWorkingCopy and calls PublishIntent only after explicit consent.
+            if ($locked->status !== ProfileIntentStatus::Draft) {
+                app(PublishIntent::class)->execute($user, $locked);
             }
 
             return $locked->refresh()->load('concept.labels');

@@ -24,6 +24,7 @@ class SetActorProfileIntentStatus
                 ->findOrFail($intent->id);
 
             Gate::forUser($user)->authorize('update', $locked);
+            abort_if($locked->status === ProfileIntentStatus::Draft || $status === ProfileIntentStatus::Draft, 422, __('composer.publish_required'));
 
             abort_if(
                 $locked->status === ProfileIntentStatus::Closed && $status !== ProfileIntentStatus::Closed,

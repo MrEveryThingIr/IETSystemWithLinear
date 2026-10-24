@@ -176,6 +176,24 @@ class ActorProfileIntent extends Model
         return $this->hasMany(ActorProfileIntentMedia::class)->orderBy('position')->orderBy('id');
     }
 
+    /** @return HasMany<IntentDetail, $this> */
+    public function details(): HasMany
+    {
+        return $this->hasMany(IntentDetail::class)->orderBy('position')->orderBy('id');
+    }
+
+    /** @return HasMany<IntentVersion, $this> */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(IntentVersion::class)->orderBy('version');
+    }
+
+    /** @return BelongsTo<IntentVersion, $this> */
+    public function publishedVersion(): BelongsTo
+    {
+        return $this->belongsTo(IntentVersion::class, 'published_version_id');
+    }
+
     /**
      * The single rule for who can see a Need or Offer (also used by the policy):
      * its creator and those who may act for its publisher always; others only
@@ -269,6 +287,7 @@ class ActorProfileIntent extends Model
     protected function casts(): array
     {
         return [
+            'working_copy' => 'array',
             'kind' => ProfileIntentKind::class,
             'subject_kind' => ProfileIntentSubjectKind::class,
             'arrangement_kind' => ProfileIntentArrangementKind::class,

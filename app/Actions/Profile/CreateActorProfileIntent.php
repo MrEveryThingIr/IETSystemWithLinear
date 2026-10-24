@@ -2,6 +2,7 @@
 
 namespace App\Actions\Profile;
 
+use App\Actions\Market\PublishIntent;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
@@ -11,6 +12,7 @@ use App\Models\Capability;
 use App\Models\Concept;
 use App\Models\User;
 use App\ProfileIntentKind;
+use App\ProfileIntentStatus;
 use App\ProfileItemVisibility;
 use App\Support\Categories\CategoryCatalog;
 use App\Support\Parties\Party;
@@ -35,6 +37,7 @@ class CreateActorProfileIntent
         string $conceptLabel,
         array $input,
         array $sources = [],
+        bool $draft = false,
     ): ActorProfileIntent {
         Gate::forUser($user)->authorize('update', $profile);
 
@@ -56,7 +59,7 @@ class CreateActorProfileIntent
         }
         $links = $this->sources($publisher, $sources);
 
-        return DB::transaction(function () use ($user, $profile, $kind, $concept, $data, $publisher, $links): ActorProfileIntent {
+        return DB::transaction(function () use ($user, $profile, $kind, $concept, $data, $publisher, $links, $draft): ActorProfileIntent {
             $lockedProfile = ActorProfile::query()->lockForUpdate()->findOrFail($profile->id);
             Gate::forUser($user)->authorize('update', $lockedProfile);
 
@@ -71,9 +74,12 @@ class CreateActorProfileIntent
             $intent->creator()->associate($actor);
             $intent->kind = $kind;
             $intent->metadata = [];
+            if ($draft) {
+                $intent->status = ProfileIntentStatus::Draft;
+            }
             $intent->save();
 
-            if ($intent->publisher_business_id === null && $intent->publisher_group_id === null) {
+            if (! $draft && $intent->publisher_business_id === null && $intent->publisher_group_id === null) {
                 app(SyncProfileIntentConceptAssertion::class)->execute(
                     $user,
                     $lockedProfile,
@@ -82,7 +88,11 @@ class CreateActorProfileIntent
                 );
             }
 
-            return $intent->load('concept.labels');
+            if (! $draft) {
+                app(PublishIntent::class)->execute($user, $intent);
+            }
+
+            return $intent->refresh()->load('concept.labels');
         }, 3);
     }
 
