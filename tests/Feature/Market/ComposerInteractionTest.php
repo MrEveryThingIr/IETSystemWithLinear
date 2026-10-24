@@ -11,10 +11,12 @@ use App\ProfileIntentStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
 use Livewire\Livewire;
+use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
 
 class ComposerInteractionTest extends TestCase
 {
+    use PublishesFeatureSurfaces;
     use RefreshDatabase;
 
     public function test_minimal_description_saves_privately_then_publishes_the_same_record(): void
@@ -83,5 +85,19 @@ class ComposerInteractionTest extends TestCase
         $this->assertSame('USD', $post->fresh()->currency_code);
         $this->assertSame('50.00', $post->fresh()->cash_min);
         $this->assertSame('100.00', $post->fresh()->cash_max);
+    }
+
+    public function test_composer_routes_render_for_owner_and_refuse_others(): void
+    {
+        $owner = Actor::factory()->create()->user;
+        $this->publishSurfaces($owner, ['market']);
+        $this->actingAs($owner)->get(route('intents.compose'))->assertOk();
+        Livewire::actingAs($owner)->test(Composer::class)->set('core.description', 'Need a ladder')->call('saveDraft');
+        $post = ActorProfileIntent::query()->sole();
+        $this->actingAs($owner)->get(route('intents.compose.edit', $post))->assertOk();
+        $other = Actor::factory()->create()->user;
+        $this->publishSurfaces($other, ['market']);
+        $this->actingAs($other)->get(route('intents.compose.edit', $post))->assertForbidden();
+        $this->actingAs($owner)->get(route('intents.create'))->assertOk();
     }
 }

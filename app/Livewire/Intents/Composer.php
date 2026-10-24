@@ -327,6 +327,8 @@ class Composer extends Component
 
             return app(SaveIntentWorkingCopy::class)->execute($user, $intent, $core, $this->editableDetails(), $kind);
         }, 3);
+        // Keep a reload on this draft instead of an empty composer.
+        $this->js('history.replaceState(null, "", '.json_encode(route('intents.compose.edit', $this->intent, false), JSON_UNESCAPED_SLASHES).')');
     }
 
     public function render(): View
