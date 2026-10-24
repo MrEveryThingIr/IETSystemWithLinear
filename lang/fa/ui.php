@@ -460,6 +460,11 @@ return [
         'description_help' => 'اختیاری. هدف این گروه را توضیح دهید.',
         'timezone' => 'منطقه زمانی گروه',
         'timezone_help' => 'زمان‌بندی‌ها در این منطقه زمانی IANA وارد و نمایش داده می‌شوند؛ ذخیره‌سازی همچنان UTC است.',
+        'market' => [
+            'title' => 'نیازها و پیشنهادها',
+            'add' => 'انتشار برای گروه',
+            'empty' => 'هنوز چیزی برای این گروه منتشر نشده است.',
+        ],
     ],
     'admission' => [
         'agreement_progress' => 'توافق‌نامه‌های لازم پذیرفته‌شده: :accepted از :total.',
@@ -555,7 +560,6 @@ return [
         'secret_not_recoverable' => 'پیوند خصوصی پس از ایجاد برای امنیت پنهان می‌شود.',
         'uses' => ':used/:maximum استفاده',
         'expires' => 'انقضا',
-
         'created' => 'ایجاد',
         'created_expires' => 'ایجاد :created · انقضا :expires',
         'never' => 'هرگز',
@@ -585,7 +589,10 @@ return [
         'actions' => 'اقدامات',
         'accountless' => 'بدون حساب',
         'status' => 'وضعیت',
-        'statuses' => ['active' => 'فعال', 'archived' => 'بایگانی‌شده'],
+        'statuses' => [
+            'active' => 'فعال',
+            'archived' => 'بایگانی‌شده',
+        ],
         'actor_number' => 'هویت #:id',
         'all' => 'همه هویت‌ها',
         'view' => 'مشاهده',
@@ -729,7 +736,9 @@ return [
         'type_select' => 'انتخاب',
         'select_options' => 'گزینه‌های انتخاب',
         'select_options_help' => 'هر گزینه را در یک خط با قالب «value|Label» بنویسید؛ مثلاً active|فعال.',
-        'select_options_placeholder' => "on_track|طبق برنامه\ndelayed|با تأخیر\nblocked|متوقف",
+        'select_options_placeholder' => 'on_track|طبق برنامه
+delayed|با تأخیر
+blocked|متوقف',
         'remove_field' => 'حذف فیلد',
         'add_field' => 'افزودن فیلد',
         'update_definition' => 'به‌روزرسانی تعریف پیش‌نویس',
@@ -849,7 +858,6 @@ return [
         'shared_help' => 'این صفحه فقط اطلاعاتی را نشان می‌دهد که صاحب پروفایل مشخصاً با شما به اشتراک گذاشته است.',
         'profile_owner' => 'مالک پروفایل',
         'expires_label' => 'پایان دسترسی',
-
         'expires_at' => 'دسترسی در :date منقضی می‌شود',
         'no_expiry' => 'دسترسی تا زمان لغو منقضی نمی‌شود.',
         'semantic' => 'گزاره‌های معنایی به‌اشتراک‌گذاشته‌شده',

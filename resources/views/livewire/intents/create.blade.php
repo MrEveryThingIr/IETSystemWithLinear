@@ -75,7 +75,46 @@
                     </div>
                 @endif
 
-                <flux:input wire:model="conceptLabel" :label="__('intents.fields.subject')" :placeholder="__('intents.fields.subject_placeholder')" maxlength="120" />
+                @if (count($parties) > 1)
+                    <div>
+                        <label for="intent-publisher" class="mb-2 block text-sm font-medium">{{ __('intents.fields.publisher') }}</label>
+                        <select id="intent-publisher" dir="auto" wire:model.live="ownerKey" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            @foreach ($parties as $party)
+                                <option value="{{ $party['party']->key() }}">{{ $party['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <flux:text class="mt-1 text-xs">{{ __('intents.create.publisher_help') }}</flux:text>
+                    </div>
+                @endif
+
+                @if ($capabilities->isNotEmpty())
+                    <div>
+                        <div class="mb-2 text-sm font-medium">{{ __('intents.create.from_capability') }}</div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($capabilities as $capability)
+                                <button type="button" wire:click="useCapability('{{ $capability->uuid }}')" @class([
+                                    'min-w-0 max-w-full rounded-full border px-3 py-1.5 text-sm [overflow-wrap:anywhere]',
+                                    'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' => $capabilityUuid === $capability->uuid,
+                                    'border-zinc-200 dark:border-zinc-700' => $capabilityUuid !== $capability->uuid,
+                                ])>{{ $capability->title ?: $capability->concept?->displayLabel(app()->getLocale()) }}</button>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if (! $typeInstead)
+                    <div>
+                        <div class="mb-2 text-sm font-medium">{{ __('intents.fields.category') }}</div>
+                        <livewire:categories.picker wire:model.live="conceptId" :owner="$publisher->key()" :kinds="$pickerKinds" :allow-create="true" :key="'intent-picker-'.$publisher->key()" />
+                        @error('conceptLabel') <div class="mt-1 text-sm text-red-600">{{ __('intents.errors.choose_category') }}</div> @enderror
+                        <button type="button" wire:click="$set('typeInstead', true)" class="mt-2 text-sm text-zinc-500 underline">{{ __('intents.create.type_instead') }}</button>
+                    </div>
+                @else
+                    <div>
+                        <flux:input wire:model="conceptLabel" :label="__('intents.fields.subject')" :placeholder="__('intents.fields.subject_placeholder')" maxlength="120" />
+                        <button type="button" wire:click="$set('typeInstead', false)" class="mt-2 text-sm text-zinc-500 underline">{{ __('intents.create.pick_instead') }}</button>
+                    </div>
+                @endif
 
                 @if ($journey?->isManual())
                     <div class="grid gap-4 md:grid-cols-2">
@@ -118,12 +157,17 @@
                     <div>
                         <label class="mb-2 block text-sm font-medium">{{ __('intents.fields.cash_basis') }}</label>
                         <select wire:model="cashBasis" class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900">
-                            @foreach (['total','hour','day','week','month','year'] as $basis)
-                                <option value="{{ $basis }}">{{ __('intents.cash_basis.'.$basis) }}</option>
+                            @foreach ($rateBases as $basis)
+                                <option value="{{ $basis->value }}">{{ __('intents.cash_basis.'.$basis->value) }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <flux:input wire:model="quantity" type="number" min="0" step="0.01" :label="__('intents.fields.quantity')" />
+                    <flux:input wire:model="unit" :label="__('intents.fields.unit')" maxlength="64" />
+                </div>
+                <flux:checkbox wire:model="negotiable" :label="__('intents.fields.negotiable')" />
                 <flux:callout>{{ __('intents.create.cash_note') }}</flux:callout>
             </div>
         @elseif ($step === 4)
@@ -169,6 +213,9 @@
                             <option value="private">{{ __('intents.visibility.private') }}</option>
                             <option value="authenticated">{{ __('intents.visibility.authenticated') }}</option>
                             <option value="public">{{ __('intents.visibility.public') }}</option>
+                            @if ($publisher->kind !== \App\Support\Parties\Party::ACTOR)
+                                <option value="members">{{ __('intents.visibility.members') }}</option>
+                            @endif
                         </select>
                     </div>
                 </div>
@@ -185,7 +232,10 @@
                     @endif
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.kind') }}</span><div class="font-medium">{{ __('intents.kinds.'.$kind) }}</div></div>
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.subject_kind') }}</span><div class="font-medium">{{ __('intents.subjects.'.$subjectKind) }}</div></div>
-                    <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.subject') }}</span><div class="font-medium" dir="auto">{{ $conceptLabel }}</div></div>
+                    <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.subject') }}</span><div class="font-medium [overflow-wrap:anywhere]" dir="auto">{{ $conceptPath !== '' ? $conceptPath : $conceptLabel }}</div></div>
+                    @if (count($parties) > 1)
+                        <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.publisher') }}</span><div class="font-medium [overflow-wrap:anywhere]" dir="auto">{{ $parties->first(fn ($p) => $p['party']->key() === $ownerKey)['label'] ?? '' }}</div></div>
+                    @endif
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950"><span class="text-xs text-zinc-500">{{ __('intents.fields.arrangement') }}</span><div class="font-medium">{{ __('intents.arrangements.'.$kind.'.'.$arrangementKind) }}</div></div>
                     <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950 sm:col-span-2"><span class="text-xs text-zinc-500">{{ __('intents.fields.exchange_preference') }}</span><div class="font-medium">{{ __('intents.exchange.'.$exchangePreference.'.title') }}</div></div>
                 </div>

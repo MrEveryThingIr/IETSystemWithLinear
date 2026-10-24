@@ -4,6 +4,7 @@ namespace App\Actions\Concepts;
 
 use App\ConceptVocabularyScope;
 use App\Models\Actor;
+use App\Models\Business;
 use App\Models\ConceptVocabulary;
 use App\Models\Group;
 use App\Models\User;
@@ -20,7 +21,7 @@ class CreateConceptVocabulary
         ConceptVocabularyScope $scope,
         string $name,
         string $slug,
-        Actor|Group|null $owner = null,
+        Actor|Business|Group|null $owner = null,
         array $metadata = [],
     ): ConceptVocabulary {
         $scopeId = $this->authorizeScope($user, $scope, $owner);
@@ -49,16 +50,17 @@ class CreateConceptVocabulary
         ]);
     }
 
-    private function authorizeScope(User $user, ConceptVocabularyScope $scope, Actor|Group|null $owner): int
+    private function authorizeScope(User $user, ConceptVocabularyScope $scope, Actor|Business|Group|null $owner): int
     {
         return match ($scope) {
             ConceptVocabularyScope::Platform => $this->authorizePlatform($user, $owner),
             ConceptVocabularyScope::Actor => $this->authorizeActor($user, $owner),
             ConceptVocabularyScope::Group => $this->authorizeGroup($user, $owner),
+            ConceptVocabularyScope::Business => $this->authorizeBusiness($user, $owner),
         };
     }
 
-    private function authorizePlatform(User $user, Actor|Group|null $owner): int
+    private function authorizePlatform(User $user, Actor|Business|Group|null $owner): int
     {
         abort_unless($owner === null, 422, 'Platform Concept Vocabularies do not have a scope owner.');
         Gate::forUser($user)->authorize('createPlatform', ConceptVocabulary::class);
@@ -66,7 +68,7 @@ class CreateConceptVocabulary
         return 0;
     }
 
-    private function authorizeActor(User $user, Actor|Group|null $owner): int
+    private function authorizeActor(User $user, Actor|Business|Group|null $owner): int
     {
         abort_unless($owner instanceof Actor, 422, 'Actor-scoped Concept Vocabulary requires an Actor owner.');
         Gate::forUser($user)->authorize('createForActor', [ConceptVocabulary::class, $owner]);
@@ -74,10 +76,18 @@ class CreateConceptVocabulary
         return (int) $owner->id;
     }
 
-    private function authorizeGroup(User $user, Actor|Group|null $owner): int
+    private function authorizeGroup(User $user, Actor|Business|Group|null $owner): int
     {
         abort_unless($owner instanceof Group, 422, 'Group-scoped Concept Vocabulary requires a Group owner.');
         Gate::forUser($user)->authorize('createForGroup', [ConceptVocabulary::class, $owner]);
+
+        return (int) $owner->id;
+    }
+
+    private function authorizeBusiness(User $user, Actor|Business|Group|null $owner): int
+    {
+        abort_unless($owner instanceof Business, 422, 'Business-scoped Concept Vocabulary requires a Business owner.');
+        Gate::forUser($user)->authorize('createForBusiness', [ConceptVocabulary::class, $owner]);
 
         return (int) $owner->id;
     }

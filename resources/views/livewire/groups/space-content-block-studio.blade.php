@@ -140,7 +140,7 @@
                 <flux:card class="space-y-3">
                     <flux:heading>{{ __('blocks.add_field') }}</flux:heading>
                     @foreach ($fields as $field)
-                        <flux:button wire:click="addFieldBlock(@js($field['key']))" class="w-full" variant="ghost">
+                        <flux:button wire:click="addFieldBlock({{ \Illuminate\Support\Js::from($field['key']) }})" class="w-full" variant="ghost">
                             <span dir="auto">+ {{ $field['label'] }}</span>
                         </flux:button>
                     @endforeach

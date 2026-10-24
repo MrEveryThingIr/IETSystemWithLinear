@@ -11,12 +11,14 @@
             variant="ghost"
             icon:trailing="chevron-down"
             :aria-label="__('ui.navigation.account_menu')"
-            class="max-w-56 gap-2"
+            class="max-w-56 shrink-0 gap-2"
         >
-            @if ($accountActor)
-                <x-app.actor-avatar :actor="$accountActor" size="xs" :alt="$displayName" />
-            @endif
-            <span class="hidden min-w-0 truncate sm:block">{{ $displayName }}</span>
+            <span class="flex min-w-0 items-center gap-2">
+                @if ($accountActor)
+                    <x-app.actor-avatar :actor="$accountActor" size="xs" :alt="$displayName" />
+                @endif
+                <span class="hidden min-w-0 truncate sm:block">{{ $displayName }}</span>
+            </span>
         </flux:button>
 
         <flux:menu class="w-72 max-w-[calc(100vw-2rem)] sm:w-80">
@@ -47,6 +49,11 @@
             <flux:menu.item :href="route('profile.edit')" icon="user-circle">
                 {{ __('ui.navigation.profile') }}
             </flux:menu.item>
+            @if (\Illuminate\Support\Facades\Route::has('profile.professions.index') && app(\App\Services\Surfaces\FeatureSurfaceAccess::class)->allows($accountUser, 'profile'))
+                <flux:menu.item :href="route('profile.professions.index')" icon="wrench-screwdriver" wire:navigate data-menu-capabilities>
+                    {{ __('capabilities.title') }}
+                </flux:menu.item>
+            @endif
             <flux:menu.item :href="route('whats-new')" icon="sparkles" data-menu-whats-new>
                 {{ __('changelog.title') }} · {{ \App\Support\Changelog::currentVersion() }}
             </flux:menu.item>

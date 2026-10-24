@@ -84,6 +84,7 @@ class ExperienceNavigation
         };
 
         $primary = array_values(array_filter([
+            $destination('messages', 'experience.navigation.messages', 'chat-bubble-left-right', 'messages.index', ['messages']),
             $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', 'experience.needs-offers', ['market']),
             $destination('work', 'experience.navigation.work', 'briefcase', 'experience.work', ['deals', 'planner']),
             $destination('organizations', 'experience.navigation.organizations', 'building-office-2', 'experience.organizations', ['business', 'groups']),
@@ -116,18 +117,20 @@ class ExperienceNavigation
             $item('ai'),
         ]);
 
-        $adminKeys = ['access-invitations', 'development-origins', 'actors'];
+        $adminKeys = ['access-invitations', 'development-origins', 'actors', 'category-review', 'message-reports'];
         $admin = array_values(array_filter(array_map($item, $adminKeys)));
 
-        if ($root && $this->registry->available('publication-control')) {
-            $surface = $this->registry->get('publication-control');
-            $admin[] = [
-                'key' => 'publication-control',
-                'label' => __('experience.surfaces.publication-control'),
-                'icon' => $surface['icon'],
-                'route' => $this->registry->entryRoute('publication-control'),
-                'patterns' => $surface['route_patterns'],
-            ];
+        foreach (['day-texts', 'publication-control'] as $rootKey) {
+            if ($root && $this->registry->available($rootKey)) {
+                $surface = $this->registry->get($rootKey);
+                $admin[] = [
+                    'key' => $rootKey,
+                    'label' => __('experience.surfaces.'.$rootKey),
+                    'icon' => $surface['icon'],
+                    'route' => $this->registry->entryRoute($rootKey),
+                    'patterns' => $surface['route_patterns'],
+                ];
+            }
         }
 
         return compact('primary', 'account', 'help', 'labs', 'admin');

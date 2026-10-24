@@ -54,7 +54,7 @@
                                 @endif
                             </div>
                         </div>
-                        <flux:badge color="zinc">{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                        <flux:badge color="zinc">{{ __('planner.occurrence_phase.'.$occurrence->executionPhase()) }}</flux:badge>
                     </a>
                 @empty
                     <x-app.empty-state :title="__('planning_baseline.workspace.empty_today')" :description="__('planning_baseline.workspace.empty_today_help')" />

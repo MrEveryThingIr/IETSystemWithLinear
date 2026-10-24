@@ -15,7 +15,6 @@ use App\Models\Planner\PlannerLabel;
 use App\PlanScheduleFrequency;
 use App\Support\Planner\PlannerHorizons;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -153,11 +152,8 @@ class PlannerWizardTest extends TestCase
         $manager->set("edits.{$label->uuid}.name", 'Customers')->call('saveLabel', $label->uuid);
         $this->assertSame('Customers', $label->fresh()->name);
 
-        try {
-            Livewire::actingAs($other->user)->test(LabelsManager::class)->call('remove', $label->uuid);
-            $this->fail('Someone else cannot remove my label.');
-        } catch (ModelNotFoundException) {
-            $this->assertNotNull($label->fresh());
-        }
+        // Someone else cannot remove my label: it does not even exist for them.
+        Livewire::actingAs($other->user)->test(LabelsManager::class)->call('remove', $label->uuid)->assertNotFound();
+        $this->assertNotNull($label->fresh());
     }
 }

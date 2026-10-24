@@ -37,7 +37,7 @@
 
         <section
             wire:key="reader-block-{{ $block->uuid }}"
-            class="group relative {{ $alignment }} {{ $emphasisClass }} {{ $radiusClass }} {{ $canAnnotate && ! in_array($block->type, ['divider', 'field', 'image', 'audio', 'video', 'file'], true) ? 'max-sm:pe-9' : '' }}"
+            class="group relative {{ $alignment }} {{ $emphasisClass }} {{ $radiusClass }} {{ $canAnnotate && ! in_array($block->type, ['divider', 'field', 'image', 'audio', 'video', 'file'], true) ? 'max-xl:pe-9' : '' }}"
             style="{{ $blockInlineStyle }}"
             data-annotation-target="block"
             data-target-type="block"
@@ -214,7 +214,7 @@
             @endif
 
             @if ($canAnnotate && $block->type !== 'divider' && ! in_array($block->type, ['field', 'image', 'audio', 'video', 'file'], true))
-                <div class="absolute end-1 top-1 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100 sm:-end-10 sm:top-0 sm:opacity-0 [@media(hover:none)]:opacity-100">
+                <div class="absolute end-1 top-1 opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100 xl:-end-10 xl:top-0 xl:opacity-0 [@media(hover:none)]:opacity-100">
                     <x-app.annotation-target-menu target-type="block" :target-uuid="$block->uuid" :label="$sectionRole ? __('sections.roles.'.$sectionRole.'.name') : __('blocks.type.'.$block->type)" :marker-uuids="$blockMarkers" :role="$sectionRole" />
                 </div>
             @endif

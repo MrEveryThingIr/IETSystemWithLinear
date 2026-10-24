@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Business;
 use App\Actions\Contexts\EnsureBusinessContext;
 use App\Http\Controllers\Controller;
 use App\Models\Actor;
+use App\Models\ActorProfileIntent;
 use App\Models\Business;
-use App\Models\Profession;
+use App\Models\Capability;
 use App\Services\Business\BusinessService;
 use App\Services\Business\EnsureRealEstateBusinessIntake;
 use App\Services\Surfaces\FeatureSurfaceAccess;
@@ -107,18 +108,11 @@ class BusinessController extends Controller
             'publicIntakePortals',
             'contextBinding.context',
             'memberships' => fn ($q) => $q
-                ->with(['actor.user', 'professions.parent'])
+                ->with(['actor.user'])
                 ->where('status', 'active')
                 ->orderByRaw("case role when 'owner' then 1 when 'manager' then 2 else 3 end")
                 ->orderBy('id'),
         ]);
-
-        $professions = Profession::query()
-            ->with('parent')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
 
         $routineCount = $context->plans()->count();
         $economyProjection = $economy->forBusiness($business);
@@ -165,12 +159,32 @@ class BusinessController extends Controller
             ->only(array_keys($businessSectionLinks))
             ->all();
 
+        // What the team can do (own skills practised here + the business's own), by category.
+        $membershipIds = $business->memberships->pluck('id');
+        $capabilitySummary = Capability::query()
+            ->active()
+            ->where(fn ($query) => $query->whereIn('business_membership_id', $membershipIds)->orWhere('holder_business_id', $business->id))
+            ->with('concept.labels')
+            ->get()
+            ->groupBy('concept_id')
+            ->map(fn ($group): array => ['label' => (string) $group->first()->concept?->displayLabel(app()->getLocale()), 'count' => $group->count()])
+            ->sortByDesc('count')
+            ->values()
+            ->take(24);
+        $marketItems = ActorProfileIntent::query()
+            ->where('publisher_business_id', $business->id)
+            ->with('concept.labels')
+            ->latest('updated_at')
+            ->limit(6)
+            ->get();
+
         return view('businesses.show', [
             'business' => $business,
+            'capabilitySummary' => $capabilitySummary,
+            'marketItems' => $marketItems,
             'businessContext' => $context,
             'routineCount' => $routineCount,
             'economyProjection' => $economyProjection,
-            'professions' => $professions,
             'canOperate' => $canOperate,
             'canManage' => $canManage,
             'canManageOwnership' => BusinessAccess::canManageOwnership($request->user(), $business),

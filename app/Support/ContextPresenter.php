@@ -56,6 +56,7 @@ final class ContextPresenter
             ]),
             ContextKind::System => __('content_workspace.context.system'),
             ContextKind::Ledger => $context->ledgerBinding->name ?? __('bookkeeping.book'),
+            ContextKind::Direct => __('messages.context.direct'),
         };
     }
 
@@ -67,7 +68,7 @@ final class ContextPresenter
             ContextKind::Business => 'business',
             ContextKind::GroupSpace => 'group',
             ContextKind::Admission => 'admission',
-            ContextKind::Relationship, ContextKind::Negotiation, ContextKind::Contract, ContextKind::Ledger => 'participants',
+            ContextKind::Relationship, ContextKind::Negotiation, ContextKind::Contract, ContextKind::Ledger, ContextKind::Direct => 'participants',
             ContextKind::Reference, ContextKind::System => 'everyone_signed_in',
         });
     }
@@ -81,6 +82,7 @@ final class ContextPresenter
             ContextKind::Relationship, ContextKind::Negotiation, ContextKind::Contract => 'briefcase',
             ContextKind::Reference, ContextKind::System => 'book-open',
             ContextKind::Ledger => 'banknotes',
+            ContextKind::Direct => 'chat-bubble-left-right',
         };
     }
 }

@@ -21,6 +21,110 @@ from inside the release directory (for example
 
 ## Release notes
 
+- **v2.0.0** — consolidated release of v1.9 (market publishers), v1.10 (work
+  planner and bookkeeping provenance), v1.11 (business and group coherence),
+  v1.12 (professional messaging), v1.13 (clock and text of the day) and
+  v1.14 (plans that know what time it is, expected vs actual, habits), on
+  top of v1.8.0, which was never installed separately. **Six additive
+  migrations** (`2026_10_24` … `2026_11_02`, see the list below). Ordinary
+  upgrade (section 5c) **plus**: the three v1.8.0 steps (`iet:inventory`
+  before, `iet:taxonomy:sync` after, `iet:inventory` again) and
+  `push:provision` once (it keeps existing Web Push keys; it only creates
+  them if the file is missing).
+  - **Which installed version?** Ask support for
+    `$PHP artisan migrate:status | tail -5` in the *current* release first.
+    From v1.4.0 or later (the production line is on v1.7.0) the upgrade only
+    adds tables and columns; it was rehearsed from v1.7.0, v1.4.0 and v1.1.0
+    with representative data on MariaDB in shared-host mode (MyISAM default,
+    legacy TIMESTAMP): no row of any existing table changed, and restoring
+    the backup brought the old release back exactly.
+  - **Older than v1.4.0** (the migration `2026_10_19_000000_retire_legacy_financial_system`
+    is still *Pending*): that already-shipped v1.4.0 migration **drops the
+    old accounting tables** (ledgers, accounts, journals, financial
+    obligations, settlements, money intentions, quotes). It is irreversible.
+    **Stop and get the owner's written authorization** and a verified
+    database backup before running `migrate` on such an installation.
+  - Migrations in this release, all additive (each `down()` only removes what
+    it added):
+    1. `2026_10_24_000000_create_categories_and_capabilities` — shared
+       categories and capabilities (v1.8.0).
+    2. `2026_10_26_000000_add_publishers_and_sources_to_market` — publisher
+       columns on Needs & Offers, `actor_profile_intent_media`,
+       `business_categories.concept_id`.
+    3. `2026_10_28_000000_add_plan_templates_and_bookkeeping_provenance` —
+       `plan_templates`; `bk_transactions.origin/source_*` (existing
+       adjustments are marked *correction*, nothing else changes).
+    4. `2026_10_30_000000_create_messaging` — contacts, blocks, reports,
+       direct conversations, participants, reactions;
+       `conversation_messages.kind/meta/client_uuid`; `users.message_privacy`
+       (default *contacts*).
+    5. `2026_11_01_000000_create_day_texts` — the text of the day.
+    6. `2026_11_02_000000_add_living_plans_and_habits` —
+       `plan_schedule_rules.close_policy`; `plan_occurrences.closes_at`,
+       `completion_percent`, `reason`, `note`, `difficulty`, `reported_at`
+       (+ index); tables `plan_habits`, `plan_periods`, `plan_urges`. Fills
+       `close_policy` and `closes_at` for existing plans from their kind and
+       times; no existing value changes. On a large planner this backfill
+       takes a few seconds per 10,000 occurrences.
+    (`2026_10_23_000000_add_monthly_plans_and_device_notifications` belongs
+    to v1.7.0 and is already applied on v1.7.0.)
+  - **Messages** use polling, not WebSockets: an open conversation asks
+    every 4 seconds (every 15 seconds when idle, never while the tab is in
+    the background) and the menu badge every 30 seconds. Each poll is one
+    small request with a few indexed queries; sessions and cache stay in the
+    database. Keep OPcache on. Messages are protected by HTTPS and access
+    control; they are **not** end-to-end encrypted, and the product says so.
+  - Messages is a facility like the others: publish it per person in
+    *Administration → Publication control* (superadmins always see it).
+    Reports of people or messages: *Administration → Message reports*.
+  - **Plans**: nothing can be started or marked done before its time; a
+    past occurrence without an answer asks "How did it go?" for 7 days and
+    then shows "No report" (never "not done"). Appointments close with
+    their window, routines and tasks the same day, due dates stay open.
+    Habit data (loop, periods, urges) is private to the plan's creator.
+  - **Security**: Livewire 4.4.8 (fixes an authorization bypass in
+    `#[Authorize]`, PKSA-xhv3-nr94-h8db).
+  - **Clock and text of the day**: a slim bar on every page (signed in or
+    not) and a full-screen clock on the home page. The time comes from each
+    visitor's device; the bar makes no extra requests. The superadmin writes
+    the moving text under *Administration → Text of the day*; without
+    entries the built-in message is shown in the page language.
+
+- **v1.8.0** — shared categories and capabilities. **One additive migration**
+  (`concept_kinds`, `concept_suggestions`, `capabilities`,
+  `professions.concept_id`, two concept relation types). Ordinary upgrade
+  (section 5c) with two extra commands for hosting support:
+  1. **Before** `migrate`, inside the new release directory (after copying
+     `.env` and linking `storage`, still on the old database):
+     `/usr/local/php-8.4/bin/php artisan iet:inventory > ~/iet-inventory-before.txt`
+     (read-only; send the file to the product owner — it lists every existing
+     profession, person and business-member skill and where each will map).
+  2. **After** `migrate` and `optimize`:
+     `/usr/local/php-8.4/bin/php artisan iet:taxonomy:sync`
+     installs the shared category tree (16 areas, ~180 subcategories, four
+     languages) and copies the old skills into capabilities. Safe to repeat;
+     `--dry-run` only reports. The old tables are never changed. If the command
+     is forgotten, the same work runs the first time someone opens a category
+     picker.
+  3. `iet:inventory` again after the sync; the counts of old skill rows must be
+     unchanged and `skills.capabilities_already_created` equal to them.
+  - Reviewers of category suggestions are superadmins (and roles with the
+    *manage concepts* permission): *Administration → Category suggestions*.
+- **v1.7.1** — every screen size, and speed. **No migration**; ordinary
+  upgrade (section 5c); `migrate` reports nothing to run.
+  - Pages can no longer become wider than a phone (which made phones zoom out
+    and show the hidden side menu). All pages were checked at 320–1920px in
+    Persian, English, Arabic and Chinese. Profile pictures keep their shape.
+  - Fonts (Inter, Vazirmatn) are now part of the build in `public/build/assets`
+    instead of being loaded from Google Fonts.
+  - `public/.htaccess` now compresses text responses and caches the hashed
+    files in `/build/assets` for a year (`mod_deflate` / `mod_headers`; both
+    are skipped if the server does not have them). `sw.js` is never cached.
+  - Fewer database queries: Today loads first and recent activity right after;
+    the content list, the content index and the studio need far fewer checks.
+  - Ask hosting support to confirm OPcache is on for PHP 8.4
+    (`/usr/local/php-8.4/bin/php -i | grep opcache.enable` for CLI, and the
+    web PHP's `opcache.enable => On`); it makes every page several times faster.
 - **v1.7.0** — reminders that are never forgotten, device notifications and
   speed. **One additive migration** (`plan_schedule_rules.month_day` and
   `.calendar`, `notification_outbox.pushed_at`, new table
@@ -33,7 +137,7 @@ from inside the release directory (for example
     `notifications:push-devices` command (every minute, already part of
     `schedule:run`) sends reminders to subscribed phones/computers, so the
     cron entry in section 6 must be active. The signing keys (VAPID) are
-    created on first use in `storage/app/private/webpush-vapid.json` — in the
+    provisioned with `php artisan push:provision` in `storage/app/private/webpush-vapid.json` — in the
     shared storage, so they survive releases; do not delete that file (all
     devices would have to turn notifications on again). Optional fixed keys:
     `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
@@ -154,14 +258,14 @@ from inside the release directory (for example
 
 1. Every push to `release/formal-v1-production` runs **Build production
    package** automatically. The package version comes from `APP_VERSION` in
-   `deploy/production.env.example` (currently `1.7.0`, so the package is
-   `iet-v1.7.0`). A manual run with an explicit version is also possible.
+   `deploy/production.env.example` (currently `2.0.0`, so the package is
+   `iet-v2.0.0`). A manual run with an explicit version is also possible.
 2. Open that run for the exact commit you want to deploy.
-3. Download the artifact `iet-v1.7.0`. It contains:
-   - `iet-v1.7.0.zip` — the runtime package (root directory `iet-v1.7.0/`)
-   - `iet-v1.7.0.zip.sha256` — checksum of the ZIP
-   - `iet-v1.7.0.release-manifest.json` — copy of the package's manifest
-4. Verify the checksum before uploading: `sha256sum -c iet-v1.7.0.zip.sha256`.
+3. Download the artifact `iet-v2.0.0`. It contains:
+   - `iet-v2.0.0.zip` — the runtime package (root directory `iet-v2.0.0/`)
+   - `iet-v2.0.0.zip.sha256` — checksum of the ZIP
+   - `iet-v2.0.0.release-manifest.json` — copy of the package's manifest
+4. Verify the checksum before uploading: `sha256sum -c iet-v2.0.0.zip.sha256`.
 
 The package contains `vendor/` (production dependencies only),
 `public/build/manifest.json`, `artisan`, the application code, migrations,
@@ -372,6 +476,61 @@ Never run `migrate:fresh` once real users or data exist.
 6. Run `/usr/local/php-8.4/bin/php artisan schedule:interrupt`.
 7. Smoke-test (section 7).
 
+### 5e. Upgrade from v1.7.0 to v2.0.0 (exact commands for hosting support)
+
+`$R` = `/home/imeveryt/domains/imeverything.ir/app/releases/2.0.0`,
+`$PHP` = `/usr/local/php-8.4/bin/php`. Nothing here deletes data.
+
+1. **Backup** (DirectAdmin → *Create/Restore Backups*, or):
+
+   ```bash
+   mysqldump --single-transaction --routines --triggers --default-character-set=utf8mb4 \
+     -u DB_USER -p DB_NAME > ~/backups/iet-before-2.0.0-$(date +%F-%H%M).sql
+   tar -czf ~/backups/iet-storage-before-2.0.0-$(date +%F-%H%M).tgz \
+     -C /home/imeveryt/domains/imeverything.ir/app shared/storage
+   ls -l ~/backups/        # both files must be larger than zero
+   ```
+
+2. **Check the installed version** (in the *current* release):
+
+   ```bash
+   cd /home/imeveryt/domains/imeverything.ir/app/current
+   $PHP artisan migrate:status | tail -5
+   ```
+
+   If `2026_10_19_000000_retire_legacy_financial_system` is listed as
+   *Pending*, the installation is older than v1.4.0: **stop** and ask the
+   owner (see the v2.0.0 release notes).
+
+3. **Unpack and prepare** `iet-v2.0.0.zip` (checksum first:
+   `sha256sum -c iet-v2.0.0.zip.sha256`) into `$R`; copy `shared/.env` into
+   `$R/.env`; replace `$R/storage` with a symlink to `../../shared/storage`.
+
+4. **Run, in this order:**
+
+   ```bash
+   cd $R
+   $PHP artisan optimize:clear
+   $PHP artisan iet:inventory > ~/iet-inventory-before-2.0.0.txt
+   $PHP artisan migrate --force
+   $PHP artisan iet:taxonomy:sync
+   $PHP artisan push:provision
+   $PHP artisan optimize
+   $PHP artisan iet:inventory > ~/iet-inventory-after-2.0.0.txt
+   $PHP artisan migrate:status | grep -c Pending   # must print 0
+   ```
+
+5. Point `current` to `releases/2.0.0`, run `$PHP artisan schedule:interrupt`,
+   and do the smoke test (section 7, checks 34–39).
+
+**Rollback** (if anything is wrong after step 4): point `current` back to
+the v1.7.0 release; restore the SQL backup into the same database
+(`mysql -u DB_USER -p DB_NAME < ~/backups/iet-before-2.0.0-….sql`); in the
+v1.7.0 release run `optimize:clear` and `optimize`. Shared storage needs no
+restore (2.0.0 only adds files), unless the owner asks for it. This exact
+restore was rehearsed: the old release ran again with a database identical
+to the pre-upgrade copy.
+
 ### 5d. Rollback
 
 Switch `current` back to the previous release directory and run
@@ -485,6 +644,54 @@ Additional checks for v1.7.0:
     cannot reach the push service; email reminders still work.
 28. **Phone time picker**: on a phone the timeline is full width; the ‹ ›
     arrows move hours and 24 h / 12 h / 4 h zoom.
+
+Additional checks for v1.7.1:
+
+29. **Phone layout**: on a phone open Today, Content, a content studio page
+    and the profile page — nothing is cut off at the edge, the page cannot be
+    dragged sideways, the side menu appears only with the ☰ button, and the
+    profile picture in the header is a square.
+30. **Caching**: in the browser's developer tools (Network), a file under
+    `/build/assets/` shows `Cache-Control: public, max-age=31536000,
+    immutable` and the page is served with `Content-Encoding: gzip` (or `br`).
+
+Additional checks for v1.8.0:
+
+31. **What I can do**: account menu → *What I can do* → *Add a skill*; search
+    a skill in Persian, then open an area, add your own category with
+    *Suggest it for everyone*, set level/years/confidence and save.
+32. **Review**: *Administration → Category suggestions*: approve the
+    suggestion; the skill now shows the shared category.
+33. **Business team**: on a business you manage, add a skill to a team member.
+
+Additional checks for v2.0.0:
+
+34. **Clock**: in a private window the home page shows the full-screen clock
+    ticking, the time and date in the page language's calendar under it;
+    hovering or tapping it shows the Gregorian date and the time zone. The
+    full-screen button fills the screen. Every page (login too) has the thin
+    bar with the small clock and the moving text; ⏸ stops it, ⌄ shows it all.
+35. **Text of the day**: *Administration → Text of the day* → *Add text*,
+    *News*, English and Persian text, save; reload any page — the bar shows
+    it in the page language.
+36. **Messages**: two test users. By default people accept messages from
+    contacts only, so A uses *Messages → Contacts → Add contact* for B; B
+    accepts; A sends text, a photo and a voice note; B sees them within a few
+    seconds and the menu badge counts unread; B replies. Block, then unblock.
+37. **Market**: *Needs & Offers → New* as a business you manage, with a
+    photo and a price per hour; it shows the business as publisher.
+38. **Work and books**: on an agreed piece of work choose *From a template*
+    (or save its schedule with *Save template*), then *Propose entry* into a
+    book you share; the other side confirms it there; in the book the entry
+    carries *From IET work* and the *Source* filter finds it.
+
+39. **Plans and habits**: create a routine *Every day* at 06:00 for 21
+    days. Tomorrow's occurrence offers only *Skip this one* (no Done). After
+    its time, Today shows it under *How did it go?*; answer *At another
+    time…* with 06:48. On the plan page the day shows "48 min later". Add a
+    habit loop, *Change one thing* with an in-between target, and check
+    *Compare periods*. *Planner → New plan → Change a habit*: replace
+    "Smoking" with "Walk for 5 minutes", tap the urge buttons.
 
 Only after this real-host browser acceptance should the release be tagged
 `v1.0.1`.

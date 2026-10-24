@@ -72,6 +72,25 @@
                 @endforelse
             </flux:card>
 
+            @if ($canUseMarket && ($groupMarket->isNotEmpty() || $canPublishForGroup))
+                <flux:card class="space-y-3" data-group-market>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <flux:heading size="lg">{{ __('ui.groups.market.title') }}</flux:heading>
+                        @if ($canPublishForGroup)
+                            <flux:button :href="route('intents.create', ['as' => 'group:'.$group->id])" size="sm" variant="ghost" icon="plus">{{ __('ui.groups.market.add') }}</flux:button>
+                        @endif
+                    </div>
+                    @forelse ($groupMarket as $intent)
+                        <a wire:key="group-intent-{{ $intent->id }}" href="{{ route('intents.index', ['highlight' => $intent->uuid]) }}" class="flex min-w-0 items-center justify-between gap-2 py-1 text-sm hover:underline">
+                            <span class="min-w-0 truncate font-medium" dir="auto">{{ $intent->title ?: $intent->concept?->displayLabel() }}</span>
+                            <flux:badge size="sm" :color="$intent->kind->value === 'need' ? 'amber' : 'green'">{{ __('intents.kinds.'.$intent->kind->value) }}</flux:badge>
+                        </a>
+                    @empty
+                        <flux:text class="text-sm">{{ __('ui.groups.market.empty') }}</flux:text>
+                    @endforelse
+                </flux:card>
+            @endif
+
             <flux:card class="space-y-3">
                 <flux:heading size="lg">{{ __('classroom.group.members', ['count' => $activeMembers->count()]) }}</flux:heading>
                 <ul class="space-y-2">

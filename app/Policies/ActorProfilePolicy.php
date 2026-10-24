@@ -67,7 +67,7 @@ class ActorProfilePolicy
             return false;
         }
 
-        $current = User::query()->find($user->id);
+        $current = RequestMemo::user($user);
 
         return $current instanceof User
             && $current->status === 'active'

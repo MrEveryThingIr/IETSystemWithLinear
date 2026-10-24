@@ -7,7 +7,6 @@ use App\Actions\Money\EnsureMonetaryUnit;
 use App\Models\Actor;
 use App\Models\Business;
 use App\Models\BusinessMembership;
-use App\Models\Profession;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -149,27 +148,6 @@ class BusinessService
             'status' => 'inactive',
             'ended_at' => now(),
         ]);
-    }
-
-    public function assignProfession(
-        Business $business,
-        BusinessMembership $membership,
-        Profession $profession,
-        bool $primary = false
-    ): void {
-        $this->guardMembership($business, $membership);
-
-        DB::transaction(function () use ($membership, $profession, $primary): void {
-            if ($primary) {
-                DB::table('business_membership_profession')
-                    ->where('business_membership_id', $membership->getKey())
-                    ->update(['is_primary' => false]);
-            }
-
-            $membership->professions()->syncWithoutDetaching([
-                $profession->getKey() => ['is_primary' => $primary],
-            ]);
-        });
     }
 
     public function transferOwnership(

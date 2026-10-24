@@ -18,5 +18,5 @@
 <img
     src="{{ route('actors.avatar', $actor) }}"
     alt="{{ $alt ?? '' }}"
-    {{ $attributes->class($sizeClass.' shrink-0 bg-zinc-200 object-cover dark:bg-zinc-800') }}
+    {{ $attributes->class($sizeClass.' max-w-none shrink-0 bg-zinc-200 object-cover dark:bg-zinc-800') }}
 >

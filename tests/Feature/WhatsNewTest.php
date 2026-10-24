@@ -42,6 +42,35 @@ class WhatsNewTest extends TestCase
     {
         config(['app.version' => 'local']);
 
-        $this->assertSame(array_key_first(Changelog::RELEASES), Changelog::currentVersion());
+        $this->assertSame(trim(file_get_contents(base_path('VERSION'))), Changelog::currentVersion());
+    }
+
+    public function test_source_version_templates_and_release_notes_stay_in_sync(): void
+    {
+        $version = trim(file_get_contents(base_path('VERSION')));
+        $this->assertSame('2.0.0', $version);
+        $this->assertSame($version, config('app.version'));
+        $this->assertSame($version, array_key_first(Changelog::RELEASES));
+        foreach (['.env.example', 'deploy/production.env.example'] as $template) {
+            $this->assertStringContainsString('APP_VERSION='.$version, file_get_contents(base_path($template)));
+        }
+        $actor = Actor::factory()->create();
+        $this->actingAs($actor->user)->get(route('whats-new'))->assertOk()
+            ->assertSee('data-release="'.$version.'"', false)
+            ->assertSee(config('app.name').' '.$version);
+    }
+
+    public function test_a_package_manifest_takes_precedence_and_malformed_versions_fall_back(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'iet-version-');
+        try {
+            config(['app.version' => '1.8.0']);
+            file_put_contents($path, json_encode(['application_version' => '1.12.0']));
+            $this->assertSame('1.12.0', Changelog::currentVersion($path));
+            file_put_contents($path, json_encode(['application_version' => '1.8.0garbage']));
+            $this->assertSame(trim(file_get_contents(base_path('VERSION'))), Changelog::currentVersion($path));
+        } finally {
+            unlink($path);
+        }
     }
 }

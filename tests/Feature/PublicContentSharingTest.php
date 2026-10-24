@@ -261,7 +261,7 @@ class PublicContentSharingTest extends TestCase
         Livewire::actingAs($author->user)
             ->test(ContentShow::class, ['context' => $context, 'content' => $content])
             ->assertSeeHtml('data-reader-share')
-            ->assertSeeHtml('data-share-panel');
+            ->assertSeeHtml('data-drawer="share"');
 
         $panel = Livewire::actingAs($author->user)
             ->test(SharePanel::class, ['content' => $content])

@@ -54,6 +54,11 @@ class ConceptVocabulary extends Model
                     LogicException::class,
                     'Group-scoped Concept Vocabulary owner does not exist.',
                 ),
+                ConceptVocabularyScope::Business => throw_unless(
+                    Business::query()->whereKey($vocabulary->scope_id)->exists(),
+                    LogicException::class,
+                    'Business-scoped Concept Vocabulary owner does not exist.',
+                ),
             };
         });
 

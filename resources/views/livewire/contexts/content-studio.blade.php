@@ -53,14 +53,14 @@
                 </div>
             </div>
 
-            <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <div class="flex min-w-0 max-w-full flex-wrap items-center gap-2">
                 @if ($canUpdate)
                     <flux:button wire:click="saveRevision" size="sm" :variant="$dirty ? 'filled' : 'ghost'" :disabled="! $dirty" wire:loading.attr="disabled" wire:target="saveRevision" data-studio-save>
                         <span wire:loading.remove wire:target="saveRevision">{{ $dirty ? __('studio_ui.save') : __('studio_ui.saved') }}</span>
                         <span wire:loading wire:target="saveRevision">{{ __('studio_ui.saving') }}</span>
                     </flux:button>
                     <flux:button wire:click="preview" size="sm" variant="ghost" icon="eye" class="hidden sm:inline-flex">{{ __('studio_ui.preview') }}</flux:button>
-                    <flux:button x-on:click="$dispatch('open-drawer', 'ai')" size="sm" variant="ghost" icon="sparkles" data-studio-ask-ai>{{ __('studio_ui.ask_ai') }}</flux:button>
+                    <flux:button x-on:click="$dispatch('open-drawer', 'ai')" size="sm" variant="ghost" icon="sparkles" :aria-label="__('studio_ui.ask_ai')" data-studio-ask-ai><span class="hidden sm:inline">{{ __('studio_ui.ask_ai') }}</span></flux:button>
                 @elseif ($canOpenReader)
                     <flux:button :href="route('contexts.contents.show', [$context, $content])" size="sm" variant="ghost">{{ __('ui.context_content.open_reader') }}</flux:button>
                 @endif
@@ -313,7 +313,7 @@
                                     @endphp
                                     @foreach ($fields as $key => $field)
                                         @unless (in_array($key, $placedFields, true))
-                                            <flux:menu.item wire:click="addFieldBlock(@js($key))"><span dir="auto">{{ $field['label'] }}</span></flux:menu.item>
+                                            <flux:menu.item wire:click="addFieldBlock({{ \Illuminate\Support\Js::from($key) }})"><span dir="auto">{{ $field['label'] }}</span></flux:menu.item>
                                         @endunless
                                     @endforeach
                                 @endif
@@ -507,14 +507,14 @@
     {{-- Secondary tools as drawers; each keeps its own authority and saves. --}}
     @if ($canUpdate)
         <x-app.drawer name="ai" :title="__('ai.title')" width="sm:max-w-xl">
-            <livewire:contexts.content-ai-assistant :context="$context" :content="$content" :embedded="true" :key="'studio-ai-'.$content->uuid" />
+            <livewire:contexts.content-ai-assistant :context="$context" :content="$content" :embedded="true" lazy :key="'studio-ai-'.$content->uuid" />
         </x-app.drawer>
         <x-app.drawer name="appearance" :title="__('studio_ui.appearance')" width="sm:max-w-lg">
-            <livewire:contexts.content-appearance :context="$context" :content="$content" :embedded="true" :key="'studio-appearance-'.$content->uuid" />
+            <livewire:contexts.content-appearance :context="$context" :content="$content" :embedded="true" lazy :key="'studio-appearance-'.$content->uuid" />
         </x-app.drawer>
         @if ($hasOutline)
             <x-app.drawer name="structure" :title="__('studio_ui.structure')" width="sm:max-w-2xl">
-                <livewire:contexts.content-outline :context="$context" :content="$content" :embedded="true" :key="'studio-outline-'.$content->uuid" />
+                <livewire:contexts.content-outline :context="$context" :content="$content" :embedded="true" lazy :key="'studio-outline-'.$content->uuid" />
             </x-app.drawer>
         @endif
     @endif
@@ -569,7 +569,7 @@
 
     @if ($canShareOutside)
         <x-app.drawer name="share" :title="__('public_content.share.title')" width="sm:max-w-lg">
-            <livewire:content.share-panel :content="$content" :key="'studio-share-'.$content->uuid" />
+            <livewire:content.share-panel :content="$content" lazy :key="'studio-share-'.$content->uuid" />
         </x-app.drawer>
     @endif
 

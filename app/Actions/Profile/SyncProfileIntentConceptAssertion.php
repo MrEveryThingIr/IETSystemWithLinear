@@ -29,7 +29,10 @@ class SyncProfileIntentConceptAssertion
             ? ConceptAssertionPredicate::Needs
             : ConceptAssertionPredicate::Offers;
 
+        // Only what the person publishes as themself; business and group posts are not personal claims.
         $activeIntents = $profile->intents()
+            ->whereNull('publisher_business_id')
+            ->whereNull('publisher_group_id')
             ->where('concept_id', $concept->id)
             ->where('kind', $kind->value)
             ->where('status', ProfileIntentStatus::Active->value)

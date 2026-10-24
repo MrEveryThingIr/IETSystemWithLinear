@@ -43,12 +43,14 @@ class UpdateActorProfileIntent
             $locked->fill($data);
             $locked->save();
 
-            app(SyncProfileIntentConceptAssertion::class)->execute(
-                $user,
-                $locked->profile,
-                $locked->concept,
-                $locked->kind,
-            );
+            if ($locked->publisher_business_id === null && $locked->publisher_group_id === null) {
+                app(SyncProfileIntentConceptAssertion::class)->execute(
+                    $user,
+                    $locked->profile,
+                    $locked->concept,
+                    $locked->kind,
+                );
+            }
 
             return $locked->refresh()->load('concept.labels');
         }, 3);

@@ -31,6 +31,43 @@ class VideoFaststartTest extends TestCase
 
     private const FIXTURE = 'tests/Fixtures/media/moov-at-end.mp4';
 
+    public function test_separate_output_preserves_the_original_and_cleans_temporary_files(): void
+    {
+        $source = $this->scratchCopy();
+        $target = $source.'.playback.mp4';
+        $checksum = hash_file('sha256', $source);
+        try {
+            $this->assertTrue(Mp4Faststart::optimize($source, $target));
+            $this->assertSame($checksum, hash_file('sha256', $source));
+            $this->assertTrue(Mp4Faststart::isFaststart($target));
+            $this->assertSame([], glob($target.'.faststart-*'));
+        } finally {
+            @unlink($source);
+            @unlink($target);
+        }
+    }
+
+    public function test_replacement_failure_preserves_original_and_cleans_output(): void
+    {
+        $source = $this->scratchCopy();
+        $target = $source.'.directory';
+        mkdir($target);
+        $checksum = hash_file('sha256', $source);
+        try {
+            try {
+                Mp4Faststart::optimize($source, $target);
+                $this->fail('Replacing a directory must fail.');
+            } catch (\Throwable $exception) {
+                $this->assertStringContainsString('replace', $exception->getMessage());
+            }
+            $this->assertSame($checksum, hash_file('sha256', $source));
+            $this->assertSame([], glob($target.'.faststart-*'));
+        } finally {
+            @unlink($source);
+            rmdir($target);
+        }
+    }
+
     public function test_index_moves_to_the_front_and_media_bytes_stay_identical(): void
     {
         $path = $this->scratchCopy();

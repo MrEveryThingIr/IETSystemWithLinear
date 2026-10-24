@@ -3,6 +3,9 @@
 namespace App\Support;
 
 use App\Models\Actor;
+use App\Models\ActorBlock;
+use App\Models\ActorContact;
+use App\Models\ConversationMessage;
 use App\Models\FeatureSurfaceGrant;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
@@ -46,6 +49,6 @@ final class RequestMemo
     /** @return list<class-string> */
     public static function invalidatingModels(): array
     {
-        return [User::class, Actor::class, FeatureSurfaceGrant::class, PlatformAccessGrant::class];
+        return [User::class, Actor::class, FeatureSurfaceGrant::class, PlatformAccessGrant::class, ActorContact::class, ActorBlock::class, ConversationMessage::class];
     }
 }

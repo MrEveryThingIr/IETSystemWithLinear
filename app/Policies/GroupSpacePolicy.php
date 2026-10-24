@@ -16,6 +16,14 @@ class GroupSpacePolicy
 
     public function view(User $user, GroupSpace $space): bool
     {
+        return (bool) RequestMemo::remember(
+            'space-view:'.$user->getKey().':'.$space->getKey(),
+            fn (): bool => $this->checkView($user, $space),
+        );
+    }
+
+    private function checkView(User $user, GroupSpace $space): bool
+    {
         $current = $this->currentWebsiteUser($user);
 
         if (! $current instanceof User || ! $this->spaceAndGroupAreActive($space)) {

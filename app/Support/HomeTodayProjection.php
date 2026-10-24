@@ -14,6 +14,7 @@ use App\Models\Fulfillment;
 use App\Models\GroupMembership;
 use App\Models\GroupSpace;
 use App\Models\PersonalContext;
+use App\Models\Plan;
 use App\Models\Planner\MeetingInvitee;
 use App\Models\Planner\MeetingRequest;
 use App\Models\PlanOccurrence;
@@ -31,6 +32,7 @@ use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
 use App\Support\Bookkeeping\BookkeepingOverview;
 use App\Support\Bookkeeping\Toman;
+use App\Support\Planner\OccurrenceTiming;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -59,12 +61,15 @@ class HomeTodayProjection
      *   todayOccurrencePreview: Collection<int, PlanOccurrence>,
      *   nextOccurrence: ?PlanOccurrence,
      *   inProgressOccurrences: Collection<int, PlanOccurrence>,
+     *   followUps: Collection<int, PlanOccurrence>,
+     *   followUpCount: int,
+     *   reportStats: array{told: int, total: int},
+     *   changingHabits: Collection<int, Plan>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
-     *   groupMemberships: Collection<int, GroupMembership>,
-     *   recentActivity: Collection<int, TimelineEntry>
+     *   groupMemberships: Collection<int, GroupMembership>
      * }
      */
     public function build(User $user): array
@@ -135,6 +140,7 @@ class HomeTodayProjection
             'todayDisplay' => $todayDisplay,
             'money' => $money,
             'dontForget' => $this->dontForget($current, $now),
+            ...$this->followUps($current, $actor, $now),
             'todayOccurrences' => $todayOccurrences,
             'todayOccurrenceCount' => $todayOccurrences->count(),
             'todayOccurrencesTruncated' => $fetchedOccurrences->count() >= self::OCCURRENCE_SCAN_LIMIT,
@@ -149,7 +155,6 @@ class HomeTodayProjection
             'activeIntents' => $activeIntents,
             'activeRelationships' => $activeRelationships,
             'groupMemberships' => $groupMemberships,
-            'recentActivity' => $this->recentActivity($current, $actor),
         ];
     }
 
@@ -204,12 +209,15 @@ class HomeTodayProjection
      *   todayOccurrencePreview: Collection<int, PlanOccurrence>,
      *   nextOccurrence: ?PlanOccurrence,
      *   inProgressOccurrences: Collection<int, PlanOccurrence>,
+     *   followUps: Collection<int, PlanOccurrence>,
+     *   followUpCount: int,
+     *   reportStats: array{told: int, total: int},
+     *   changingHabits: Collection<int, Plan>,
      *   waitingOnMe: Collection<int, HomeActionItem>,
      *   waitingOnOthers: Collection<int, HomeActionItem>,
      *   activeIntents: Collection<int, ActorProfileIntent>,
      *   activeRelationships: Collection<int, Relationship>,
-     *   groupMemberships: Collection<int, GroupMembership>,
-     *   recentActivity: Collection<int, TimelineEntry>
+     *   groupMemberships: Collection<int, GroupMembership>
      * }
      */
     private function emptyProjection(string $timezone, string $today, string $todayDisplay): array
@@ -220,6 +228,10 @@ class HomeTodayProjection
             'todayDisplay' => $todayDisplay,
             'money' => ['owed_to_me' => 0, 'i_owe' => 0, 'waiting_for_me' => collect(), 'today_income' => 0, 'today_expense' => 0, 'has_books' => false],
             'dontForget' => collect(),
+            'followUps' => collect(),
+            'followUpCount' => 0,
+            'reportStats' => ['told' => 0, 'total' => 0],
+            'changingHabits' => collect(),
             'todayOccurrences' => collect(),
             'todayOccurrenceCount' => 0,
             'todayOccurrencesTruncated' => false,
@@ -231,7 +243,6 @@ class HomeTodayProjection
             'activeIntents' => collect(),
             'activeRelationships' => collect(),
             'groupMemberships' => collect(),
-            'recentActivity' => collect(),
         ];
     }
 
@@ -262,25 +273,74 @@ class HomeTodayProjection
     /**
      * Plans marked important (installments, cheques, bills) that are due in
      * the next two weeks or overdue and not done yet: they stay here until
-     * the person marks them done.
+     * the person handles them. Only the nearest open one of each plan, and
+     * only while it can still be done (a past routine is asked about under
+     * "How did it go?" instead).
      *
      * @return Collection<int, PlanOccurrence>
      */
     private function dontForget(User $user, CarbonImmutable $now): Collection
     {
         return PlanOccurrence::query()
-            ->with('plan')
+            ->with(['plan', 'scheduleRule'])
             ->whereIn('status', [PlanOccurrenceStatus::Scheduled->value, PlanOccurrenceStatus::InProgress->value])
             ->where('scheduled_start_at', '<=', $now->addDays(14)->utc())
             ->where('scheduled_start_at', '>=', $now->subDays(60)->utc())
+            ->where(fn ($query) => $query->whereNull('closes_at')->orWhere('closes_at', '>=', $now->utc()))
             ->whereHas('plan', fn ($query) => $query->where('status', 'active'))
             ->orderBy('scheduled_start_at')
             ->limit(500)
             ->get()
             ->filter(fn (PlanOccurrence $occurrence): bool => (bool) data_get($occurrence->plan->metadata, 'important')
                 && Gate::forUser($user)->allows('participate', $occurrence->plan))
+            ->unique('plan_id')
             ->take(8)
             ->values();
+    }
+
+    /**
+     * Past occurrences nobody has told about yet (the last week), so the
+     * person can say how they went in one tap; and how many recent ones were
+     * told about, said kindly. Also the habits being replaced, for the urge
+     * buttons.
+     *
+     * @return array{followUps: Collection<int, PlanOccurrence>, followUpCount: int, reportStats: array{told: int, total: int}, changingHabits: Collection<int, Plan>}
+     */
+    private function followUps(User $user, Actor $actor, CarbonImmutable $now): array
+    {
+        $waiting = PlanOccurrence::query()
+            ->with(['plan', 'scheduleRule'])
+            ->whereIn('status', [PlanOccurrenceStatus::Scheduled->value, PlanOccurrenceStatus::InProgress->value])
+            ->whereBetween('closes_at', [$now->subDays(OccurrenceTiming::REPORT_DAYS)->utc(), $now->utc()])
+            ->whereHas('plan', fn ($query) => $query->where('status', '!=', 'cancelled'))
+            ->orderByDesc('closes_at')
+            ->limit(200)
+            ->get()
+            ->filter(fn (PlanOccurrence $occurrence): bool => Gate::forUser($user)->allows('participate', $occurrence->plan))
+            ->values();
+
+        $recent = PlanOccurrence::query()
+            ->whereBetween('closes_at', [$now->subDays(14)->utc(), $now->utc()])
+            ->whereIn('status', [PlanOccurrenceStatus::Scheduled->value, PlanOccurrenceStatus::InProgress->value, PlanOccurrenceStatus::Completed->value, PlanOccurrenceStatus::Skipped->value])
+            ->whereHas('plan', fn ($query) => $query->where('created_by_actor_id', $actor->id))
+            ->selectRaw('COUNT(*) as total, SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END) as told', [PlanOccurrenceStatus::Completed->value, PlanOccurrenceStatus::Skipped->value])
+            ->first();
+
+        $changing = Plan::query()
+            ->with(['habit', 'periods'])
+            ->where('created_by_actor_id', $actor->id)
+            ->where('status', 'active')
+            ->whereHas('habit', fn ($query) => $query->where('mode', 'replace'))
+            ->latest('id')
+            ->limit(3)
+            ->get();
+
+        return [
+            'followUps' => $waiting->take(5)->values(),
+            'followUpCount' => $waiting->count(),
+            'reportStats' => ['told' => (int) ($recent->told ?? 0), 'total' => (int) ($recent->total ?? 0)],
+            'changingHabits' => $changing,
+        ];
     }
 
     /** Meeting requests waiting for this person's answer. */
@@ -564,9 +624,20 @@ class HomeTodayProjection
             ->values();
     }
 
-    /** @return Collection<int, TimelineEntry> */
-    private function recentActivity(User $user, Actor $actor): Collection
+    /**
+     * The latest events across the places this person can see. Built on its own
+     * (Today loads it after the page appears) because it reads many timelines.
+     *
+     * @return Collection<int, TimelineEntry>
+     */
+    public function recentActivity(User $user): Collection
     {
+        $user = User::query()->with('actor')->find($user->id);
+        $actor = $user?->actor;
+        if (! $user instanceof User || ! $actor instanceof Actor) {
+            return collect();
+        }
+
         $contexts = collect();
 
         $personal = PersonalContext::query()->with('context')->where('actor_id', $actor->id)->first();

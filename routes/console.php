@@ -1,24 +1,44 @@
 <?php
 
+use App\Actions\Capabilities\CopyLegacyProfessions;
+use App\Actions\Categories\EnsureSharedCategories;
 use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Groups\ManageGroupAgreement;
 use App\Actions\Planner\MaterializePlannerHorizon;
 use App\Models\PlatformAccessGrant;
 use App\Models\User;
 use App\PlatformRole;
+use App\Support\Categories\CategoryCatalog;
 use App\Support\DuePlanReminderEmitter;
 use App\Support\Media\FaststartExistingVideos;
 use App\Support\Media\ResumableUploads;
 use App\Support\NotificationOutboxDispatcher;
 use App\Support\Push\DevicePushDispatcher;
+use App\Support\Push\VapidKeys;
 use App\Support\ScheduledArtisan;
 use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Str;
+
+Artisan::command('push:provision', function (): int {
+    try {
+        VapidKeys::provision();
+        $this->info('Web Push identity is provisioned. Existing keys were preserved.');
+
+        return 0;
+    } catch (Throwable $exception) {
+        $this->error($exception->getMessage());
+        $this->line('PHP '.PHP_VERSION.' / '.OPENSSL_VERSION_TEXT);
+        $this->line('Check OPENSSL_CONF or set WEBPUSH_OPENSSL_CONFIG to the openssl.cnf shipped with this PHP runtime.');
+
+        return 1;
+    }
+})->purpose('Provision persistent P-256 Web Push keys without rotating an existing identity');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -202,3 +222,35 @@ ScheduledArtisan::register(app(ConsoleSchedule::class), 'notifications:push-devi
     ->name('notifications:push-devices')
     ->everyMinute()
     ->withoutOverlapping(10);
+
+Artisan::command('iet:taxonomy:sync {--dry-run : Only report what the copy would do}', function (): int {
+    $shared = app(EnsureSharedCategories::class);
+    if ($this->option('dry-run')) {
+        $report = app(CopyLegacyProfessions::class)->execute(true);
+        $this->info('Would copy: '.$report['people'].' people skills, '.$report['business_members'].' business member skills. Nothing was written.');
+
+        return 0;
+    }
+    if (! $shared->execute()) {
+        $this->error('No active superadmin yet: run iet:bootstrap-superadmin first.');
+
+        return 1;
+    }
+    Cache::forever('categories:shared:fingerprint', EnsureSharedCategories::fingerprint());
+    CategoryCatalog::bumpVersion();
+    $report = app(CopyLegacyProfessions::class)->execute();
+    $catalog = app(CategoryCatalog::class);
+    $linked = 0;
+    DB::table('business_categories')->whereNull('concept_id')->orderBy('id')->each(function ($category) use ($catalog, &$linked): void {
+        $conceptId = $catalog->exactSharedMatch((string) $category->name);
+        if ($conceptId !== null) {
+            DB::table('business_categories')->where('id', $category->id)->whereNull('concept_id')->update(['concept_id' => $conceptId]);
+            $linked++;
+        }
+    });
+    $this->info('Shared categories are up to date.');
+    $this->info('Business categories linked to a shared category by exact name: '.$linked.'.');
+    $this->info('Copied into capabilities: '.$report['people'].' people skills, '.$report['business_members'].' business member skills; new categories for unlisted skills: '.$report['new_categories'].'; skipped: '.$report['skipped'].'. Old records were not changed.');
+
+    return 0;
+})->purpose('Install or update the shared categories and copy old skills into capabilities (safe to repeat)');

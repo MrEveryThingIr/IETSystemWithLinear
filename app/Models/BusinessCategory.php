@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['uuid', 'business_id', 'parent_id', 'name', 'slug', 'description', 'sort_order', 'is_active'])]
+#[Fillable(['uuid', 'business_id', 'parent_id', 'concept_id', 'name', 'slug', 'description', 'sort_order', 'is_active'])]
 class BusinessCategory extends Model
 {
     protected static function booted(): void

@@ -1,0 +1,105 @@
+<?php
+
+return [
+    'plans' => [
+        'choice' => 'How should this work be scheduled?',
+        'choices' => [
+            'new' => [
+                'title' => 'New shared plan',
+                'help' => 'Set the times now; both sides see the same plan.',
+            ],
+            'template' => [
+                'title' => 'From a template',
+                'help' => 'Reuse a saved schedule shape and pick a start date.',
+            ],
+            'existing' => [
+                'title' => 'A plan already in this deal',
+                'help' => 'Connect a plan both sides already share here.',
+            ],
+            'none' => [
+                'title' => 'No plan',
+                'help' => 'Track the work without scheduled times.',
+                'later' => 'No plan is connected. You can choose another option any time.',
+            ],
+        ],
+        'contract_choice' => 'Planner for this work',
+        'contract_choices' => [
+            'new' => [
+                'title' => 'Create the shared plan',
+                'help' => 'When the agreement is accepted, the times below become a shared plan.',
+            ],
+            'template' => [
+                'title' => 'Use a template',
+                'help' => 'Fill the times below from a saved template, then create the shared plan.',
+            ],
+            'later' => [
+                'title' => 'Decide later',
+                'help' => 'No plan now; connect or create one on the work page.',
+            ],
+            'none' => [
+                'title' => 'No plan',
+                'help' => 'The times below are only the agreed period and due dates.',
+            ],
+        ],
+        'existing' => 'Plan',
+        'existing_help' => 'Only plans in this deal are offered, so nothing private is shown to the other side.',
+        'no_existing' => 'There is no unconnected plan in this deal yet.',
+        'choose_existing' => 'Choose a plan.',
+        'connect' => 'Connect plan',
+        'connected' => 'The plan is connected to this work.',
+    ],
+    'templates' => [
+        'choose' => 'Template',
+        'none' => 'You have no schedule templates yet. Save one from any plan of your work.',
+        'apply' => 'Create plan from template',
+        'applies_shape' => 'Only the schedule shape is reused: frequency, time, duration, reminders and allowed early/late windows. No people, dates or history.',
+        'fills_times' => 'The template fills the times below; you can still change them.',
+        'save_title' => 'Save this schedule as a template',
+        'save_help' => 'Saves only the schedule shape, never the people, dates or history of this work.',
+        'name' => 'Template name',
+        'owner' => 'Template belongs to',
+        'save' => 'Save template',
+        'saved' => 'Template saved.',
+        'name_required' => 'Give the template a name (up to 160 characters).',
+        'no_schedule' => 'This plan has no schedule to reuse.',
+        'dates_not_reusable' => 'This plan uses specific dates; a template keeps only repeating shapes.',
+        'frequency' => [
+            'once' => 'Once',
+            'daily' => 'Daily',
+            'weekly' => 'Weekly',
+            'monthly' => 'Monthly',
+            'selected_dates' => 'Selected dates',
+        ],
+    ],
+    'books' => [
+        'title' => 'Bookkeeping',
+        'propose_help' => 'Propose a debt of :amount in a book you share. It counts only after the other side confirms it there.',
+        'book' => 'Shared book',
+        'choose' => 'Choose a shared book.',
+        'propose' => 'Propose entry',
+        'proposed' => 'Proposed in the shared book. It waits for the other side to confirm.',
+        'no_amount' => 'No toman price was agreed for this work, so nothing can be proposed for the books.',
+        'not_shared' => 'Both people of this work must be active in that book.',
+        'no_shared_book' => 'You have no shared book with the other person yet.',
+        'create' => 'Create a shared book with them',
+        'created' => 'Shared book created. You can now propose the entry.',
+        'default_name' => 'Work: :title',
+        'description' => 'Work: :title — :quantity :unit accepted',
+        'status' => [
+            'pending' => 'Waiting for confirmation',
+            'confirmed' => 'Confirmed in the books',
+            'disputed' => 'Disputed in the books',
+        ],
+    ],
+    'hub' => [
+        'commitments' => 'Work in progress',
+        'commitments_help' => 'Agreed work you do or that is done for you.',
+        'commitments_empty' => 'No active work.',
+        'i_do' => 'I do this',
+        'for_me' => 'Done for me',
+        'progress' => ':done of :total :unit accepted',
+        'planned' => 'planned',
+        'not_planned' => 'no plan',
+        'waiting_review' => '{1} :count waiting for review|[2,*] :count waiting for review',
+    ],
+];

@@ -399,7 +399,6 @@ return [
         'request_create_access' => 'طلب صلاحية إنشاء مجموعة',
         'pending_creation_requests' => 'طلبات إنشاء المجموعات المعلقة',
         'pending_creation_help' => 'راجع طلبات المستخدمين الذين يحتاجون إلى صلاحية إنشاء مجموعات.',
-
         'your_groups' => 'مجموعاتك',
         'no_memberships' => 'لا توجد عضويات نشطة',
         'no_memberships_help' => 'افتح دعوة إلى مجموعة لبدء طلب الانضمام.',
@@ -461,6 +460,11 @@ return [
         'description_help' => 'اختياري. اشرح هدف هذه المجموعة.',
         'timezone' => 'المنطقة الزمنية للمجموعة',
         'timezone_help' => 'تُدخل المواعيد وتُعرض وفق منطقة IANA هذه، بينما يبقى التخزين بتوقيت UTC.',
+        'market' => [
+            'title' => 'الطلبات والعروض',
+            'add' => 'النشر باسم المجموعة',
+            'empty' => 'لم يُنشر شيء باسم هذه المجموعة بعد.',
+        ],
     ],
     'admission' => [
         'agreement_progress' => 'الاتفاقيات المطلوبة المقبولة: :accepted من :total.',
@@ -556,7 +560,6 @@ return [
         'secret_not_recoverable' => 'يُخفى الرابط الخاص بعد الإنشاء حفاظًا على الأمان.',
         'uses' => ':used/:maximum استخدام',
         'expires' => 'تنتهي',
-
         'created' => 'أُنشئت',
         'created_expires' => 'أُنشئت :created · تنتهي :expires',
         'never' => 'أبدًا',
@@ -586,7 +589,10 @@ return [
         'actions' => 'الإجراءات',
         'accountless' => 'دون حساب',
         'status' => 'الحالة',
-        'statuses' => ['active' => 'نشط', 'archived' => 'مؤرشف'],
+        'statuses' => [
+            'active' => 'نشط',
+            'archived' => 'مؤرشف',
+        ],
         'actor_number' => 'المشارك رقم :id',
         'all' => 'كل الجهات الفاعلة',
         'view' => 'عرض',
@@ -730,7 +736,9 @@ return [
         'type_select' => 'اختيار',
         'select_options' => 'خيارات الاختيار',
         'select_options_help' => 'خيار واحد في كل سطر بصيغة value|Label.',
-        'select_options_placeholder' => "on_track|وفق الخطة\ndelayed|متأخر\nblocked|متوقف",
+        'select_options_placeholder' => 'on_track|وفق الخطة
+delayed|متأخر
+blocked|متوقف',
         'remove_field' => 'إزالة الحقل',
         'add_field' => 'إضافة حقل',
         'update_definition' => 'تحديث تعريف المسودة',
@@ -850,7 +858,6 @@ return [
         'shared_help' => 'يعرض هذا الجزء فقط المعلومات التي شاركها مالك الملف صراحةً معك.',
         'profile_owner' => 'مالك الملف',
         'expires_label' => 'ينتهي الوصول',
-
         'expires_at' => 'ينتهي الوصول في :date',
         'no_expiry' => 'لا ينتهي الوصول ما لم يتم إلغاؤه.',
         'semantic' => 'العبارات الدلالية المشتركة',

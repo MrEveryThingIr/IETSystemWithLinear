@@ -60,7 +60,7 @@
 
     <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_23rem]">
         <flux:card class="min-w-0 space-y-3 p-3 sm:p-4">
-            <div class="grid gap-3 md:grid-cols-[minmax(14rem,1fr)_12rem_11rem_auto] md:items-end">
+            <div class="grid gap-3 sm:grid-cols-2 sm:items-end">
                 <flux:input
                     type="search"
                     data-system-map-search
