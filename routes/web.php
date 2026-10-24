@@ -89,6 +89,7 @@ use App\Livewire\Planner\Tools\RepeatWindow as PlannerRepeatWindow;
 use App\Livewire\Platform\Access as PlatformAccess;
 use App\Livewire\Platform\AccessInvitations;
 use App\Livewire\Platform\CategorySuggestions;
+use App\Livewire\Platform\DayTexts;
 use App\Livewire\Platform\DevelopmentOrigins;
 use App\Livewire\Platform\MessageReports;
 use App\Livewire\Profile\BasicManage as ProfileBasicManage;
@@ -273,6 +274,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/platform/development-origins', DevelopmentOrigins::class)->name('platform.development-origins');
     Route::livewire('/platform/categories', CategorySuggestions::class)->name('platform.categories');
     Route::livewire('/platform/message-reports', MessageReports::class)->name('platform.message-reports');
+    Route::livewire('/platform/day-texts', DayTexts::class)->name('platform.day-texts');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');
     Route::livewire('/actors/create', Create::class)->can('create', Actor::class)->name('actors.create');
     Route::livewire('/actors/{actor}', Show::class)->can('view', 'actor')->name('actors.show');

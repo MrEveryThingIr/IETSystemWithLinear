@@ -25,6 +25,7 @@ return [
         'category-review' => '分类建议',
         'messages' => '消息',
         'message-reports' => '消息举报',
+        'day-texts' => '每日寄语',
     ],
     'navigation' => [
         'needs_offers' => '需求与提供',

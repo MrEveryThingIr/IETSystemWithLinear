@@ -5,3 +5,4 @@ import './system-map';
 import './planner-picker';
 import './device-push';
 import './messages';
+import './clock';

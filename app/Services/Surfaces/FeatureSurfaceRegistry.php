@@ -90,6 +90,15 @@ class FeatureSurfaceRegistry
             ),
             'actors' => $this->surface('Actors', 'کنشگران', 'users', 'platform', [], ['actors.index'], ['actors.*']),
 
+            // Superadmin only, like publication control.
+            'day-texts' => [
+                ...$this->surface(
+                    'Text of the day', 'متن روز', 'megaphone', 'platform', [],
+                    ['platform.day-texts'], ['platform.day-texts']
+                ),
+                'sidebar' => false,
+                'grantable' => false,
+            ],
             'publication-control' => [
                 ...$this->surface(
                     'Publication control', 'انتشار قابلیت‌ها', 'adjustments-horizontal', 'platform', [],
