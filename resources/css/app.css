@@ -116,7 +116,9 @@ body {
 .iet-analog .iet-tick-hour { stroke: rgb(113 113 122); stroke-width: 2.4; }
 .iet-analog .iet-tick-quarter { stroke: rgb(24 24 27); stroke-width: 3.4; }
 .iet-analog:not(.iet-analog-detailed) .iet-tick-hour,
-.iet-analog:not(.iet-analog-detailed) .iet-tick-quarter { stroke: rgb(113 113 122); stroke-width: 12; }
+.iet-analog:not(.iet-analog-detailed) .iet-tick-quarter { stroke: rgb(39 39 42); stroke-width: 12; }
+.iet-analog:not(.iet-analog-detailed) .iet-tick-hour { stroke: rgb(82 82 91); stroke-width: 7; }
+.iet-analog:not(.iet-analog-detailed) .iet-bezel { fill: rgb(63 63 70); }
 .iet-analog .iet-numeral { fill: rgb(39 39 42); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .iet-analog .iet-wordmark { fill: rgb(161 161 170); font-size: 6px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
 .iet-analog .iet-date-window rect { fill: rgb(244 244 245); stroke: rgb(212 212 216); stroke-width: 0.8; }
@@ -138,7 +140,8 @@ body {
 .dark .iet-analog .iet-tick-hour { stroke: rgb(161 161 170); }
 .dark .iet-analog .iet-tick-quarter { stroke: rgb(250 250 250); }
 .dark .iet-analog:not(.iet-analog-detailed) .iet-tick-hour,
-.dark .iet-analog:not(.iet-analog-detailed) .iet-tick-quarter { stroke: rgb(212 212 216); }
+.dark .iet-analog:not(.iet-analog-detailed) .iet-tick-quarter { stroke: rgb(250 250 250); }
+.dark .iet-analog:not(.iet-analog-detailed) .iet-bezel { fill: rgb(212 212 216); }
 .dark .iet-analog .iet-numeral { fill: rgb(228 228 231); }
 .dark .iet-analog .iet-wordmark { fill: rgb(113 113 122); }
 .dark .iet-analog .iet-date-window rect { fill: rgb(39 39 42); stroke: rgb(63 63 70); }
@@ -172,10 +175,10 @@ body {
 .iet-marquee:hover .iet-marquee-track,
 .iet-marquee:focus-within .iet-marquee-track { animation-play-state: paused; }
 .iet-marquee-group { display: flex; flex-shrink: 0; align-items: center; gap: 3rem; padding-inline-end: 3rem; white-space: nowrap; }
-.iet-marquee-item { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: inherit; text-decoration: none; }
+.iet-marquee-item { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 500; line-height: 1.5; color: inherit; text-decoration: none; }
 a.iet-marquee-item:hover span[dir] { text-decoration: underline; text-underline-offset: 2px; }
 .iet-marquee-kind {
-    flex-shrink: 0; border-radius: 9999px; padding: 0.1rem 0.5rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em;
+    flex-shrink: 0; border-radius: 9999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em;
     background: rgb(224 231 255); color: rgb(55 48 163);
 }
 .iet-kind-news { background: rgb(224 242 254); color: rgb(7 89 133); }

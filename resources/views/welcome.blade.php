@@ -11,7 +11,7 @@
     <x-app.time-bar />
 
     {{-- The full-screen clock: analog face, the time and date under it, Gregorian on hover or tap. --}}
-    <section class="relative isolate flex min-h-[calc(100dvh-2.5rem)] flex-col items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,rgb(224_231_255)_0%,rgb(250_250_250)_55%)] px-4 py-10 dark:bg-[radial-gradient(ellipse_at_top,rgb(30_27_75)_0%,rgb(9_9_11)_60%)]"
+    <section class="relative isolate flex min-h-[calc(100dvh-3rem)] flex-col items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,rgb(224_231_255)_0%,rgb(250_250_250)_55%)] px-4 py-10 dark:bg-[radial-gradient(ellipse_at_top,rgb(30_27_75)_0%,rgb(9_9_11)_60%)]"
         data-clock-stage aria-label="{{ __('time_bar.home.clock') }}" {!! \App\Support\TimeBar\ClockSettings::attributes(request()->user()) !!}>
         <div class="absolute end-3 top-3 flex items-center gap-2 sm:end-5 sm:top-5">
             <x-app.locale-switcher />

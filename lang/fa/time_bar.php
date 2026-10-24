@@ -12,6 +12,7 @@ return [
         'gregorian' => 'میلادی',
         'timezone' => 'منطقهٔ زمانی',
         'your_time' => 'منطقهٔ زمانی دستگاه شما',
+        'edit_texts' => 'ویرایش متن روز',
     ],
     'kinds' => [
         'quote' => 'سخن روز',

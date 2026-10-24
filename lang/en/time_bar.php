@@ -12,6 +12,7 @@ return [
         'gregorian' => 'Gregorian',
         'timezone' => 'Time zone',
         'your_time' => 'Your device\'s time zone',
+        'edit_texts' => 'Edit the text of the day',
     ],
     'kinds' => [
         'quote' => 'Quote of the day',

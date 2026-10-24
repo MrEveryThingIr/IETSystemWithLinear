@@ -10,12 +10,12 @@
     foreach (range(0, 59) as $i) {
         $hour = $i % 5 === 0;
         $quarter = $i % 15 === 0;
-        if (! $detailed && ! $quarter) {
+        if (! $detailed && ! $hour) {
             continue;
         }
         $angle = deg2rad($i * 6);
         $outer = $detailed ? 88 : 84;
-        $inner = $detailed ? ($quarter ? 72 : ($hour ? 76 : 83)) : 72;
+        $inner = $detailed ? ($quarter ? 72 : ($hour ? 76 : 83)) : ($quarter ? 66 : 74);
         $ticks[] = [
             'x1' => round(100 + $inner * sin($angle), 2), 'y1' => round(100 - $inner * cos($angle), 2),
             'x2' => round(100 + $outer * sin($angle), 2), 'y2' => round(100 - $outer * cos($angle), 2),

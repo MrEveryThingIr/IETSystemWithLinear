@@ -12,6 +12,7 @@ return [
         'gregorian' => '公历',
         'timezone' => '时区',
         'your_time' => '您设备的时区',
+        'edit_texts' => '编辑每日寄语',
     ],
     'kinds' => [
         'quote' => '每日一句',
