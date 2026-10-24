@@ -9,7 +9,7 @@ Lifecycle: Planned → In progress → Engineering-complete → Awaiting owner a
 | Milestone | Scope | Current evidence-backed status | Dependency |
 |---|---|---|---|
 | M1 | Navigation, Interests, Abilities, My Items | Engineering-complete reported; PR #85 open. Owner acceptance not established | None |
-| M2 | Adaptive Composer, Needs and Offers | In progress on `feat/m2-adaptive-intention-composer`; C1 implemented and locally verified, C2 routed beside legacy forms, C3 media/preview implemented; C4–C6 incomplete | Unmerged M1 |
+| M2 | Adaptive Composer, Needs and Offers | In progress on `feat/m2-adaptive-intention-composer`; C1 implemented and locally verified, C2 routed beside legacy forms, C3 media/preview implemented; C4 history and C5 filters/catalog implemented; C6 evidence recorded, MariaDB pending | Unmerged M1 |
 | M3 | Deals, negotiation, Terms and agreement | Planned | M2 prefilling |
 | M4 | Deal-linked Planner execution and Deliveries | Planned | M3; preserve independent Planner workstream |
 | M5 | Deal accounts, obligations, settlement | Planned | M4 |
