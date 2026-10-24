@@ -40,6 +40,7 @@ class UpdateActorProfileIntent
 
             Gate::forUser($user)->authorize('update', $locked);
             abort_if($locked->status === ProfileIntentStatus::Closed, 409, 'Closed Profile declarations cannot be edited.');
+            abort_if($locked->working_copy !== null, 409, __('composer.pending'));
 
             $locked->fill($data);
             $locked->save();

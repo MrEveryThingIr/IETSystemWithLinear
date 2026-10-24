@@ -10,6 +10,7 @@ This file is the continuation record; do not restart from the older
 
 - Base: `feat/m1-one-home`, `afc52dc28d072c98ac66147acf92cb07bcb34916`.
 - Feature: `feat/m2-adaptive-intention-composer`.
+- C1 implementation commit: `3381e806aeb989334404def767c7d5b81285033e`, pushed.
 - Latest implementation commit: use `git log -1 --format=%H` on this branch.
 - M2 PR: not created yet; initially target `feat/m1-one-home`.
 - M1: [PR #85](https://github.com/MrEveryThingIr/IETSystemWithLinear/pull/85), open and unmerged when checked October 25, 2026. Acceptance not inferred.
@@ -29,7 +30,7 @@ those milestones now. Repository compass and development circuit were read.
 | Checkpoint | Code | Engineering | Browser | Owner |
 |---|---|---|---|---|
 | C1 Typed details/version foundations | Implemented | 34 tests / 182 assertions; retry regression 7 / 27; PHPStan clean; SQLite and MySQL rollback/reapply passed | Not applicable to storage | Not accepted |
-| C2 Composer | Local unexposed prototype | Not yet verified | Not run | Not accepted |
+| C2 Composer | Implemented component, not yet routed | 6 interaction tests, translation parity, PHPStan; integration still pending | Not run | Not accepted |
 | C3 Media/preview | Planned | Not run | Not run | Not accepted |
 | C4 Publishing/history | Foundations only | Initial immutable-version tests passed | Not run | Not accepted |
 | C5 Discovery/Business | Catalog whitelist foundation only | Not accepted | Not run | Not accepted |
@@ -84,7 +85,24 @@ C2–C6 remain: canonical composer, legacy adapters,
 shared audience-aware presentation, media/progress/retry/privacy, templates,
 publication history, typed filters, Business/property adapters, full regression,
 remote exact-head CI and real browser scenarios. Do not describe this foundation
-as a finished user feature. Full four-language strings are still required.
+as a finished user feature. Composer strings have parity in four languages;
+downstream media/history/discovery strings must also maintain that parity.
+
+The C2 component now has four-language controls, category/skill picker reuse,
+publisher authority, typed inputs, field ordering/grouping/privacy, shape-only
+personal/business templates, localized core numbers, and optional advanced
+schedules/routes. Six interaction tests plus seven foundation tests passed
+(13 tests / 54 assertions). Existing routes still use the old editors: do not
+claim replacement or browser acceptance yet. Reference selection currently scans
+the latest 100 candidates and applies viewer policies before showing labels;
+replace this bounded prototype with searchable scoped queries before acceptance.
+Legacy non-IRT price edits preserve original terms unless explicitly replaced.
+Draft kind can change before any publication; published kind stays immutable.
+Legacy update refuses to overwrite/publish a pending composer working copy.
+Shared exact preview, media, historical presentation and discovery are outstanding.
+Latest compatibility run: 40 tests / 210 assertions passed; subsequent focused
+foundation run: 9 tests / 33 assertions passed (adds Deal version pinning and
+legacy pending-publication regression cases). PHPStan clean; touched PHP Pint clean.
 
 ## Continuation
 

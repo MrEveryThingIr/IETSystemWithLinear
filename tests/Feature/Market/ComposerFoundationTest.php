@@ -8,6 +8,8 @@ use App\Actions\Market\SaveIntentWorkingCopy;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
 use App\Actions\Profile\SetActorProfileIntentStatus;
+use App\Actions\Profile\UpdateActorProfileIntent;
+use App\Actions\Relationships\CreateRelationship;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\IntentVersion;
@@ -117,5 +119,36 @@ class ComposerFoundationTest extends TestCase
         $this->assertSame(2100000, MarketMoney::parse('۲٬۱۰۰٬۰۰۰'));
         $this->assertSame('123.45', MarketMoney::legacyToman('1234.50', 'IRR'));
         $this->assertNull(MarketMoney::legacyToman('50.00', 'USD'));
+    }
+
+    public function test_legacy_editor_cannot_accidentally_publish_pending_composer_changes(): void
+    {
+        [$user, $post] = $this->draft();
+        app(PublishIntent::class)->execute($user, $post);
+        $post->refresh();
+        app(SaveIntentWorkingCopy::class)->execute($user, $post, ['title' => 'Unpublished secret', 'schedule_kind' => 'ongoing'], []);
+        try {
+            app(UpdateActorProfileIntent::class)->execute($user, $post, ['title' => 'Legacy edit', 'schedule_kind' => 'ongoing']);
+            $this->fail('Legacy update published pending work.');
+        } catch (HttpException $exception) {
+            $this->assertSame(409, $exception->getStatusCode());
+        }
+        $this->assertSame('Repair my laptop', $post->fresh()->title);
+        $this->assertSame('Unpublished secret', $post->fresh()->working_copy['core']['title']);
+    }
+
+    public function test_new_deal_pins_the_source_version_even_after_republication(): void
+    {
+        [$user, $post] = $this->draft();
+        $first = app(PublishIntent::class)->execute($user, $post);
+        $post->refresh();
+        $provider = Actor::factory()->create();
+        $deal = app(CreateRelationship::class)->execute($provider->user, $post->concept, 'provider',
+            [['actor' => $user->actor, 'role' => 'client']], $post);
+        $this->assertSame($first->id, $deal->originating_intent_version_id);
+        app(SaveIntentWorkingCopy::class)->execute($user, $post, ['title' => 'New terms', 'schedule_kind' => 'ongoing', 'visibility' => 'public'], []);
+        $second = app(PublishIntent::class)->execute($user, $post);
+        $this->assertNotSame($second->id, $deal->fresh()->originating_intent_version_id);
+        $this->assertSame($first->id, $deal->fresh()->originating_intent_version_id);
     }
 }

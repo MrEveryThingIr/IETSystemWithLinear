@@ -91,13 +91,17 @@ class ActorProfileIntent extends Model
                 'uuid',
                 'actor_profile_id',
                 'concept_id',
-                'kind',
                 'created_by_actor_id',
                 'publisher_actor_id',
                 'publisher_business_id',
                 'publisher_group_id',
             ])) {
                 throw new LogicException('Profile intent semantic identity and provenance cannot be reassigned.');
+            }
+
+            if ($intent->isDirty('kind') && ($intent->getRawOriginal('status') !== ProfileIntentStatus::Draft->value
+                || $intent->published_version_id !== null || $intent->status !== ProfileIntentStatus::Draft)) {
+                throw new LogicException('A published profile intent keeps its semantic kind.');
             }
 
             if ($intent->isDirty(['status', 'closed_at']) && ! $intent->applyingStatus) {

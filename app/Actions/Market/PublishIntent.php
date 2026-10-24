@@ -2,6 +2,7 @@
 
 namespace App\Actions\Market;
 
+use App\Actions\Profile\SyncProfileIntentConceptAssertion;
 use App\Models\ActorProfileIntent;
 use App\Models\IntentVersion;
 use App\Models\User;
@@ -59,6 +60,9 @@ final class PublishIntent
             $locked->forceFill(['published_version_id' => $version->id, 'working_copy' => null])->save();
             if ($locked->status === ProfileIntentStatus::Draft) {
                 $locked->applyStatus(ProfileIntentStatus::Active);
+            }
+            if ($locked->publisher_business_id === null && $locked->publisher_group_id === null) {
+                app(SyncProfileIntentConceptAssertion::class)->execute($user, $locked->profile, $locked->concept, $locked->kind);
             }
 
             return $version;
