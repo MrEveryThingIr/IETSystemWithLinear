@@ -210,6 +210,13 @@ class TimeBarTest extends TestCase
         $this->get('/')->assertOk()->assertSee(__('time_bar.default_text', [], 'en'));
     }
 
+    public function test_the_superadmin_can_reach_the_editor_from_the_bar(): void
+    {
+        $this->actingAs($this->superadmin())->get(route('dashboard'))->assertSee('data-time-bar-edit', false);
+        $this->actingAs($this->person())->get(route('dashboard'))->assertDontSee('data-time-bar-edit', false);
+        $this->get('/')->assertDontSee('data-time-bar-edit', false);
+    }
+
     public function test_navigation_lists_the_page_for_the_superadmin_only(): void
     {
         $this->actingAs($this->superadmin())->get(route('dashboard'))->assertSee(route('platform.day-texts'), false);

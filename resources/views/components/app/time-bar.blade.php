@@ -8,24 +8,25 @@
     $clockSettings = \App\Support\TimeBar\ClockSettings::for($viewer);
     $dayItems = \App\Support\TimeBar\DayTexts::today($viewer, app()->getLocale());
     $barId = 'iet-time-bar';
+    $canEditTexts = \App\Support\PlatformAdmin::check($viewer);
 @endphp
 
-<div {{ $attributes->class('iet-time-bar relative z-40 border-b border-indigo-200/70 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 text-zinc-700 print:hidden dark:border-indigo-950 dark:from-indigo-950/60 dark:via-zinc-950 dark:to-cyan-950/40 dark:text-zinc-200') }} data-time-bar>
-    <div class="flex h-10 min-w-0 items-center gap-2 px-2 sm:gap-3 sm:px-4">
+<div {{ $attributes->class('iet-time-bar relative z-40 border-b border-indigo-200/70 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 text-zinc-900 print:hidden dark:border-indigo-900 dark:from-indigo-950 dark:via-zinc-950 dark:to-cyan-950 dark:text-white') }} data-time-bar>
+    <div class="flex h-12 min-w-0 items-center gap-2 px-2 sm:gap-3 sm:px-4">
         <div class="group/clock relative shrink-0" {!! \App\Support\TimeBar\ClockSettings::attributes($viewer) !!}>
-            <button type="button" class="flex min-h-9 items-center gap-2 rounded-full px-1.5 py-1 text-start outline-none hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-white/5"
+            <button type="button" class="flex min-h-10 items-center gap-2 rounded-full px-1.5 py-1 text-start outline-none hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-white/5"
                 aria-describedby="{{ $barId }}-gregorian" aria-label="{{ __('time_bar.bar.clock') }}" data-clock-trigger>
-                <x-clock.analog class="size-6 shrink-0" />
-                <span class="flex min-w-0 items-baseline gap-2 text-xs leading-none">
-                    <time class="font-semibold tabular-nums text-zinc-900 dark:text-white" data-clock-time data-seconds></time>
-                    <span class="hidden truncate text-zinc-500 md:inline dark:text-zinc-400" data-clock-date data-date-style="bar"></span>
+                <x-clock.analog class="size-9 shrink-0" />
+                <span class="flex min-w-0 items-baseline gap-2 leading-none">
+                    <time class="text-base font-bold tabular-nums text-zinc-950 sm:text-lg dark:text-white" data-clock-time data-seconds></time>
+                    <span class="hidden truncate text-sm font-medium text-zinc-700 md:inline dark:text-zinc-200" data-clock-date data-date-style="bar"></span>
                     @if ($clockSettings['inline_gregorian'])
-                        <span class="hidden truncate text-[0.68rem] text-zinc-400 lg:inline" data-clock-gregorian-short></span>
+                        <span class="hidden truncate text-xs text-zinc-600 lg:inline dark:text-zinc-300" data-clock-gregorian-short></span>
                     @endif
                 </span>
             </button>
             <div id="{{ $barId }}-gregorian" role="tooltip"
-                class="pointer-events-none absolute start-0 top-full z-50 mt-1.5 hidden w-max max-w-[min(22rem,calc(100vw-1rem))] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg group-hover/clock:block group-focus-within/clock:block dark:border-zinc-700 dark:bg-zinc-900">
+                class="pointer-events-none absolute start-0 top-full z-50 mt-1.5 hidden w-max max-w-[min(22rem,calc(100vw-1rem))] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-lg group-hover/clock:block group-focus-within/clock:block dark:border-zinc-700 dark:bg-zinc-900">
                 <span class="block text-[0.65rem] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">{{ __('time_bar.bar.gregorian') }}</span>
                 <span class="mt-0.5 block font-medium text-zinc-900 dark:text-white" data-clock-gregorian></span>
                 <span class="mt-1 block text-zinc-500 dark:text-zinc-400"><span class="sr-only">{{ __('time_bar.bar.timezone') }}: </span><span data-clock-zone></span></span>
@@ -33,7 +34,7 @@
         </div>
 
         @if ($dayItems !== [])
-            <span class="h-5 w-px shrink-0 bg-indigo-200 dark:bg-indigo-900" aria-hidden="true"></span>
+            <span class="h-6 w-px shrink-0 bg-indigo-300 dark:bg-indigo-800" aria-hidden="true"></span>
             <section class="iet-marquee min-w-0 flex-1" aria-label="{{ __('time_bar.bar.label') }}" data-marquee>
                 <div class="iet-marquee-viewport" data-marquee-viewport>
                     <div class="iet-marquee-track" data-marquee-track>
@@ -50,16 +51,22 @@
                 </div>
             </section>
             <div class="flex shrink-0 items-center">
-                <button type="button" class="grid size-8 place-items-center rounded-full text-zinc-500 hover:bg-white/70 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-indigo-400 dark:hover:bg-white/5 dark:hover:text-white"
+                <button type="button" class="grid size-10 place-items-center rounded-full text-zinc-700 hover:bg-white/70 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-indigo-400 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white"
                     data-marquee-toggle aria-pressed="false" data-label-pause="{{ __('time_bar.bar.pause') }}" data-label-play="{{ __('time_bar.bar.play') }}" aria-label="{{ __('time_bar.bar.pause') }}" title="{{ __('time_bar.bar.pause') }}">
-                    <svg viewBox="0 0 20 20" class="size-4" fill="currentColor" aria-hidden="true" data-icon-pause><rect x="5" y="4" width="3.5" height="12" rx="1"/><rect x="11.5" y="4" width="3.5" height="12" rx="1"/></svg>
-                    <svg viewBox="0 0 20 20" class="size-4 rtl:-scale-x-100" fill="currentColor" aria-hidden="true" data-icon-play hidden><path d="M6 4.2v11.6a.8.8 0 0 0 1.2.7l9.3-5.8a.8.8 0 0 0 0-1.4L7.2 3.5A.8.8 0 0 0 6 4.2Z"/></svg>
+                    <svg viewBox="0 0 20 20" class="size-5" fill="currentColor" aria-hidden="true" data-icon-pause><rect x="5" y="4" width="3.5" height="12" rx="1"/><rect x="11.5" y="4" width="3.5" height="12" rx="1"/></svg>
+                    <svg viewBox="0 0 20 20" class="size-5 rtl:-scale-x-100" fill="currentColor" aria-hidden="true" data-icon-play hidden><path d="M6 4.2v11.6a.8.8 0 0 0 1.2.7l9.3-5.8a.8.8 0 0 0 0-1.4L7.2 3.5A.8.8 0 0 0 6 4.2Z"/></svg>
                 </button>
-                <button type="button" class="grid size-8 place-items-center rounded-full text-zinc-500 hover:bg-white/70 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-indigo-400 dark:hover:bg-white/5 dark:hover:text-white"
+                <button type="button" class="grid size-10 place-items-center rounded-full text-zinc-700 hover:bg-white/70 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-indigo-400 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white"
                     data-marquee-expand aria-expanded="false" aria-controls="{{ $barId }}-all" data-label-expand="{{ __('time_bar.bar.expand') }}" data-label-collapse="{{ __('time_bar.bar.collapse') }}" aria-label="{{ __('time_bar.bar.expand') }}" title="{{ __('time_bar.bar.expand') }}">
-                    <svg viewBox="0 0 20 20" class="size-4 transition-transform" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-icon-expand><path d="m5 8 5 5 5-5"/></svg>
+                    <svg viewBox="0 0 20 20" class="size-5 transition-transform" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-icon-expand><path d="m5 8 5 5 5-5"/></svg>
                 </button>
             </div>
+        @endif
+        @if ($canEditTexts)
+            <a href="{{ route('platform.day-texts') }}" wire:navigate class="ms-auto grid size-10 shrink-0 place-items-center rounded-full text-zinc-700 hover:bg-white/70 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-indigo-400 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white"
+                aria-label="{{ __('time_bar.bar.edit_texts') }}" title="{{ __('time_bar.bar.edit_texts') }}" data-time-bar-edit>
+                <svg viewBox="0 0 20 20" class="size-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5z"/></svg>
+            </a>
         @endif
     </div>
 
