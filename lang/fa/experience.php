@@ -25,6 +25,7 @@ return [
         'category-review' => 'پیشنهاد دسته‌بندی',
         'messages' => 'پیام‌ها',
         'message-reports' => 'گزارش پیام‌ها',
+        'day-texts' => 'متن روز',
     ],
     'navigation' => [
         'needs_offers' => 'نیازها و ارائه‌ها',

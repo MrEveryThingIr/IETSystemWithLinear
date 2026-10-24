@@ -25,6 +25,7 @@ return [
         'category-review' => 'اقتراحات التصنيفات',
         'messages' => 'الرسائل',
         'message-reports' => 'بلاغات الرسائل',
+        'day-texts' => 'نصّ اليوم',
     ],
     'navigation' => [
         'needs_offers' => 'الاحتياجات والعروض',

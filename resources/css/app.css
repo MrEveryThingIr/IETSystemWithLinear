@@ -99,3 +99,103 @@ body {
     background: rgb(63 63 70 / 0.9);
     color: rgb(250 250 250);
 }
+
+/*
+ * Live clocks (top time bar, home page). The clock script turns the hands;
+ * transitions start only after the first position is set (data-ready), so
+ * the hands never sweep in from twelve o'clock.
+ */
+.iet-analog {
+    overflow: visible;
+}
+.iet-analog .iet-bezel { fill: rgb(228 228 231); }
+.iet-analog .iet-dial { fill: #fff; }
+.iet-analog .iet-dial-ring { fill: none; stroke: rgb(244 244 245); stroke-width: 1; }
+.iet-analog line { stroke-linecap: round; }
+.iet-analog .iet-tick-minute { stroke: rgb(212 212 216); stroke-width: 1; }
+.iet-analog .iet-tick-hour { stroke: rgb(113 113 122); stroke-width: 2.4; }
+.iet-analog .iet-tick-quarter { stroke: rgb(24 24 27); stroke-width: 3.4; }
+.iet-analog:not(.iet-analog-detailed) .iet-tick-hour,
+.iet-analog:not(.iet-analog-detailed) .iet-tick-quarter { stroke: rgb(113 113 122); stroke-width: 12; }
+.iet-analog .iet-numeral { fill: rgb(39 39 42); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.iet-analog .iet-wordmark { fill: rgb(161 161 170); font-size: 6px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+.iet-analog .iet-date-window rect { fill: rgb(244 244 245); stroke: rgb(212 212 216); stroke-width: 0.8; }
+.iet-analog .iet-date-window text { fill: rgb(67 56 202); font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.iet-analog .iet-hand { transform-box: view-box; transform-origin: 100px 100px; }
+.iet-analog .iet-hand-hour rect,
+.iet-analog .iet-hand-minute rect { fill: rgb(24 24 27); }
+.iet-analog .iet-hand-second line { stroke: rgb(225 29 72); stroke-width: 1.6; }
+.iet-analog:not(.iet-analog-detailed) .iet-hand-second line { stroke-width: 4; }
+.iet-analog .iet-hand-second circle,
+.iet-analog .iet-cap { fill: rgb(225 29 72); }
+.iet-analog .iet-cap-inner { fill: #fff; }
+.iet-analog-detailed { filter: drop-shadow(0 18px 40px rgb(79 70 229 / 0.16)) drop-shadow(0 2px 6px rgb(24 24 27 / 0.08)); }
+
+.dark .iet-analog .iet-bezel { fill: rgb(63 63 70); }
+.dark .iet-analog .iet-dial { fill: rgb(24 24 27); }
+.dark .iet-analog .iet-dial-ring { stroke: rgb(39 39 42); }
+.dark .iet-analog .iet-tick-minute { stroke: rgb(63 63 70); }
+.dark .iet-analog .iet-tick-hour { stroke: rgb(161 161 170); }
+.dark .iet-analog .iet-tick-quarter { stroke: rgb(250 250 250); }
+.dark .iet-analog:not(.iet-analog-detailed) .iet-tick-hour,
+.dark .iet-analog:not(.iet-analog-detailed) .iet-tick-quarter { stroke: rgb(212 212 216); }
+.dark .iet-analog .iet-numeral { fill: rgb(228 228 231); }
+.dark .iet-analog .iet-wordmark { fill: rgb(113 113 122); }
+.dark .iet-analog .iet-date-window rect { fill: rgb(39 39 42); stroke: rgb(63 63 70); }
+.dark .iet-analog .iet-date-window text { fill: rgb(165 180 252); }
+.dark .iet-analog .iet-hand-hour rect,
+.dark .iet-analog .iet-hand-minute rect { fill: rgb(250 250 250); }
+.dark .iet-analog .iet-hand-second line { stroke: rgb(251 113 133); }
+.dark .iet-analog .iet-hand-second circle,
+.dark .iet-analog .iet-cap { fill: rgb(251 113 133); }
+.dark .iet-analog .iet-cap-inner { fill: rgb(24 24 27); }
+.dark .iet-analog-detailed { filter: drop-shadow(0 18px 50px rgb(99 102 241 / 0.25)); }
+
+[data-iet-clock][data-ready] .iet-hand-hour,
+[data-iet-clock][data-ready] .iet-hand-minute { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+[data-iet-clock][data-ready] .iet-hand-second { transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* The full-screen clock stage keeps its own background. */
+[data-clock-stage]:fullscreen { width: 100vw; height: 100vh; min-height: 100vh; }
+[data-clock-stage]:fullscreen [data-clock-face-size] { width: min(86vw, 68vh); height: min(86vw, 68vh); }
+
+/* The moving "text of the day". */
+.iet-marquee { overflow: hidden; }
+.iet-marquee-viewport {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
+}
+.iet-marquee-track { display: flex; width: max-content; will-change: transform; }
+.iet-marquee[data-moving] .iet-marquee-track { animation: iet-marquee var(--iet-marquee-duration, 40s) linear infinite; }
+[dir='rtl'] .iet-marquee[data-moving] .iet-marquee-track { animation-name: iet-marquee-rtl; }
+.iet-marquee[data-paused] .iet-marquee-track,
+.iet-marquee:hover .iet-marquee-track,
+.iet-marquee:focus-within .iet-marquee-track { animation-play-state: paused; }
+.iet-marquee-group { display: flex; flex-shrink: 0; align-items: center; gap: 3rem; padding-inline-end: 3rem; white-space: nowrap; }
+.iet-marquee-item { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: inherit; text-decoration: none; }
+a.iet-marquee-item:hover span[dir] { text-decoration: underline; text-underline-offset: 2px; }
+.iet-marquee-kind {
+    flex-shrink: 0; border-radius: 9999px; padding: 0.1rem 0.5rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em;
+    background: rgb(224 231 255); color: rgb(55 48 163);
+}
+.iet-kind-news { background: rgb(224 242 254); color: rgb(7 89 133); }
+.iet-kind-info { background: rgb(209 250 229); color: rgb(6 95 70); }
+.iet-kind-motto { background: rgb(254 243 199); color: rgb(146 64 14); }
+.dark .iet-marquee-kind { background: rgb(49 46 129 / 0.7); color: rgb(199 210 254); }
+.dark .iet-kind-news { background: rgb(12 74 110 / 0.7); color: rgb(186 230 253); }
+.dark .iet-kind-info { background: rgb(6 78 59 / 0.7); color: rgb(167 243 208); }
+.dark .iet-kind-motto { background: rgb(120 53 15 / 0.6); color: rgb(253 230 138); }
+/* Fits, reduced motion, or paused by the script before it measured: no movement, cut with an ellipsis. */
+.iet-marquee:not([data-moving]) .iet-marquee-viewport { mask-image: none; }
+.iet-marquee:not([data-moving]) .iet-marquee-group { overflow: hidden; text-overflow: ellipsis; display: block; max-width: 100%; padding-inline-end: 0; }
+.iet-marquee:not([data-moving]) .iet-marquee-track { width: auto; }
+.iet-marquee:not([data-moving]) .iet-marquee-item { display: inline; }
+.iet-marquee:not([data-moving]) .iet-marquee-item + .iet-marquee-item { margin-inline-start: 2rem; }
+
+@keyframes iet-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes iet-marquee-rtl { from { transform: translateX(0); } to { transform: translateX(50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .iet-marquee[data-moving] .iet-marquee-track { animation: none; }
+    [data-iet-clock][data-ready] .iet-hand { transition: none; }
+}

@@ -25,6 +25,7 @@ return [
         'category-review' => 'Category suggestions',
         'messages' => 'Messages',
         'message-reports' => 'Message reports',
+        'day-texts' => 'Text of the day',
     ],
     'navigation' => [
         'needs_offers' => 'Needs & Offers',

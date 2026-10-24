@@ -47,6 +47,7 @@ return [
         'state_off' => 'Off for this phone or computer.',
         'state_blocked' => 'Blocked in this browser\'s settings. Allow notifications for this site there, then try again.',
         'state_unsupported' => 'This browser cannot receive notifications. Try Chrome, Edge or Firefox.',
+        'state_unavailable' => 'Device notifications are currently unavailable on this server.',
         'state_ios' => 'On iPhone/iPad: Share → Add to Home Screen, open the site from there, then turn this on.',
         'enable' => 'Turn on',
         'disable' => 'Turn off',

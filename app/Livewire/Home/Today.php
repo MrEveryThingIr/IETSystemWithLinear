@@ -9,11 +9,9 @@ use App\Support\HomeGuidanceService;
 use App\Support\HomeTodayProjection;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Today')]
 class Today extends Component
 {
     /** Today renders a bounded preview; the full day is only rendered on request. */
@@ -44,6 +42,6 @@ class Today extends Component
         return view('livewire.home.today', [
             ...$today,
             ...$guidance->build($user, $today),
-        ]);
+        ])->title(__('home.title'));
     }
 }
