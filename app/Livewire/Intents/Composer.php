@@ -348,7 +348,7 @@ class Composer extends Component
             'capabilities' => $this->intent === null ? Capability::query()->heldBy($this->publisher())->active()->with('concept.labels')->limit(12)->get() : collect(),
             'templates' => in_array($this->publisher()->kind, [Party::ACTOR, Party::BUSINESS], true)
                 ? IntentDetailTemplate::query()->where($this->publisher()->kind === Party::BUSINESS ? 'owner_business_id' : 'owner_actor_id', $this->publisher()->id)->get()
-                : collect()]);
+                : collect()])->title(__('composer.title'));
     }
 
     private function hasLegacyPrice(): bool

@@ -30,8 +30,8 @@ those milestones now. Repository compass and development circuit were read.
 | Checkpoint | Code | Engineering | Browser | Owner |
 |---|---|---|---|---|
 | C1 Typed details/version foundations | Implemented | 34 tests / 182 assertions; retry regression 7 / 27; PHPStan clean; SQLite and MySQL rollback/reapply passed | Not applicable to storage | Not accepted |
-| C2 Composer | Implemented component, not yet routed | 6 interaction tests, translation parity, PHPStan; integration still pending | Not run | Not accepted |
-| C3 Media/preview | Planned | Not run | Not run | Not accepted |
+| C2 Composer | Implemented and routed at `intents.compose` / `intents.compose.edit` beside the legacy forms (legacy untouched) | 7 interaction tests incl. route/authorization; translation parity; PHPStan | Oct 25: describe → draft (URL moves to the draft) → publish, desktop/mobile/dark/Persian RTL on a disposable SQLite DB | Not accepted |
+| C3 Media/preview | Implemented: media upload/order/visibility in composer, shared audience-aware presentation (`intents.show`), media history migration | ComposerMediaTest + ComposerPresentationTest passed (Market suite 23 tests / 93 assertions) | Live preview verified; real file upload not yet driven in browser | Not accepted |
 | C4 Publishing/history | Foundations only | Initial immutable-version tests passed | Not run | Not accepted |
 | C5 Discovery/Business | Catalog whitelist foundation only | Not accepted | Not run | Not accepted |
 | C6 Acceptance/hardening | Planned | Not run | Not run | Not accepted |
@@ -103,6 +103,13 @@ Shared exact preview, media, historical presentation and discovery are outstandi
 Latest compatibility run: 40 tests / 210 assertions passed; subsequent focused
 foundation run: 9 tests / 33 assertions passed (adds Deal version pinning and
 legacy pending-publication regression cases). PHPStan clean; touched PHP Pint clean.
+
+## Next (as of Oct 25 checkpoint)
+
+C2 routed but legacy entry points (`intents.create` links) still open the old form by design.
+Remaining: C4 publish-history UI and legacy-edit adapter, C5 typed filters in Directory and
+Business catalog/property adapters, C6 full regression, remote exact-head CI, browser upload
+scenario, MariaDB rehearsal, and PR creation targeting `feat/m1-one-home`.
 
 ## Continuation
 

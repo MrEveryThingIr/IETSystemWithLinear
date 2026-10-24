@@ -130,10 +130,10 @@
             <div class="mt-4"><x-market.intention-presentation :presentation="$presentation" /></div>
         </aside>
     </div>
-    <div class="sticky bottom-20 z-20 flex flex-wrap items-end gap-3 rounded-2xl border bg-white/95 p-4 shadow-lg backdrop-blur dark:bg-zinc-900/95 lg:bottom-4" aria-label="{{ __('composer.publish_controls') }}">
+    <div class="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-end gap-2 rounded-2xl border bg-white/95 p-3 pe-20 shadow-lg backdrop-blur dark:bg-zinc-900/95 sm:gap-3 sm:p-4 lg:bottom-4 lg:pe-4 [&>[data-flux-field]]:w-full sm:[&>[data-flux-field]]:w-auto [&>button]:h-auto [&>button]:min-h-11 [&>button]:flex-1 sm:[&>button]:flex-none" aria-label="{{ __('composer.publish_controls') }}">
         <flux:select wire:model.live="core.visibility" :label="__('composer.audience')"><option value="private">{{ __('composer.only_me') }}</option><option value="authenticated">{{ __('composer.signed_in') }}</option><option value="public">{{ __('composer.everyone') }}</option>@if($publisher->kind !== \App\Support\Parties\Party::ACTOR)<option value="members">{{ __('intents.visibility.members') }}</option>@endif @if(($core['visibility'] ?? '') === 'inherited')<option value="inherited">{{ __('ui.profile.item_visibility_options.inherited') }}</option>@endif</flux:select>
         <flux:button wire:click="saveDraft" wire:loading.attr="disabled">{{ __('composer.save_draft') }}</flux:button>
-        <flux:button wire:click="publish" variant="primary" wire:loading.attr="disabled">{{ __('composer.publish_to') }} {{ __('composer.audiences.'.($core['visibility'] ?? 'authenticated')) }}</flux:button>
+        <flux:button wire:click="publish" variant="primary" wire:loading.attr="disabled"><span class="sm:hidden">{{ __('composer.publish') }}</span><span class="hidden sm:inline">{{ __('composer.publish_to') }} {{ __('composer.audiences.'.($core['visibility'] ?? 'authenticated')) }}</span></flux:button>
         <span wire:loading role="status">{{ __('composer.saving') }}</span>
     </div>
 </section>
