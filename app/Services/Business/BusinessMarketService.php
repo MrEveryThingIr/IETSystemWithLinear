@@ -2,6 +2,7 @@
 
 namespace App\Services\Business;
 
+use App\Actions\Market\PublishIntent;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
 use App\Actions\Profile\SetActorProfileIntentStatus;
@@ -12,6 +13,7 @@ use App\Models\BusinessContact;
 use App\Models\BusinessListing;
 use App\Models\BusinessListingVersion;
 use App\Models\BusinessPriceVersion;
+use App\Models\BusinessPropertyDetails;
 use App\Models\User;
 use App\ProfileIntentArrangementKind;
 use App\ProfileIntentExchangePreference;
@@ -22,8 +24,12 @@ use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use App\Support\BusinessAccess;
 use App\Support\Categories\CategoryCatalog;
+use App\Support\Market\IntentDetailCatalog;
+use App\Support\Market\IntentSnapshot;
+use App\Support\Market\NormalizeIntentDetails;
 use App\Support\MoneyAmount;
 use App\Support\Parties\Party;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class BusinessMarketService
@@ -79,6 +85,8 @@ final class BusinessMarketService
             $unit = 'm2';
         }
 
+        // Property facts become typed, filterable details; the catalog stays the owner of the data.
+        $mapped = $this->propertyDetails($details);
         $intent = $this->createIntent->execute(
             $user,
             $profile,
@@ -108,7 +116,13 @@ final class BusinessMarketService
                 'business_listing_id' => $listing->id,
                 'business_listing_version_id' => $version->id,
             ],
+            draft: $mapped !== [],
         );
+        if ($mapped !== []) {
+            $core = IntentSnapshot::fromRecord(DB::table('actor_profile_intents')->where('id', $intent->id)->first())['core'];
+            $intent->forceFill(['working_copy' => ['core' => $core, 'details' => app(NormalizeIntentDetails::class)->execute($user, $mapped)]])->save();
+            app(PublishIntent::class)->execute($user, $intent);
+        }
 
         $intent->update([
             'metadata' => [
@@ -121,6 +135,20 @@ final class BusinessMarketService
         ]);
 
         return $intent->refresh()->load('concept.labels');
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function propertyDetails(?BusinessPropertyDetails $details): array
+    {
+        $map = ['construction_area' => 'floor_area', 'bedrooms' => 'rooms', 'floor_number' => 'floor'];
+        $rows = [];
+        foreach ($map as $column => $key) {
+            if ($details?->{$column} !== null) {
+                $rows[] = ['canonical_key' => $key, 'type' => IntentDetailCatalog::all()[$key]['type'], 'visibility' => 'same', 'value' => (string) $details->{$column}];
+            }
+        }
+
+        return $rows;
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Actions\Profile\EnsureActorProfile;
 use App\Models\ActorProfileIntent;
 use App\Models\ActorProfileIntentMedia;
 use App\Models\BusinessListing;
+use App\Models\BusinessListingVersion;
 use App\Models\Capability;
 use App\Models\Group;
 use App\Models\IntentDetailTemplate;
@@ -18,6 +19,7 @@ use App\Models\SpaceContent;
 use App\Models\User;
 use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
+use App\Services\Business\BusinessMarketService;
 use App\Support\LocalizedNumber;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentPresentation;
@@ -222,6 +224,30 @@ class Composer extends Component
         $this->notice = __('composer.restored', ['version' => $version->version]);
     }
 
+    public function useNewCatalogVersion(): void
+    {
+        $catalog = $this->catalog();
+        abort_unless($catalog !== null && $catalog['newer'], 404);
+        $listing = $this->intent->businessListing;
+        $fresh = app(BusinessMarketService::class)->publishListingOffer($listing->business, $listing, $this->user());
+        $this->redirectRoute('intents.compose.edit', $fresh, navigate: true);
+    }
+
+    /** @return array{title: string, version: int, newer: bool, edit: string}|null */
+    private function catalog(): ?array
+    {
+        $listing = $this->intent?->businessListing;
+        if ($listing === null) {
+            return null;
+        }
+        $linked = BusinessListingVersion::query()->findOrFail($this->intent->business_listing_version_id);
+        $latest = $listing->publishedVersion;
+
+        return ['title' => (string) $linked->title, 'version' => (int) $linked->version_number,
+            'newer' => $latest !== null && $latest->id !== $linked->id,
+            'edit' => route('businesses.catalog.listings.edit', [$listing->business, $listing])];
+    }
+
     public function uploadMedia(): void
     {
         $this->validate(['upload' => ['required', 'file', 'max:'.MediaLimits::kilobytes('asset')],
@@ -302,12 +328,16 @@ class Composer extends Component
         $core['exchange_preference'] = match ($this->priceMode) {
             'free' => 'free', 'exchange' => 'open_hybrid', 'fixed', 'range', 'per_unit' => 'cash_only', default => 'discuss_later'
         };
-        $preserveLegacyPrice = $this->hasLegacyPrice() && ! $this->replaceLegacyPrice;
+        $fromCatalog = $this->intent?->business_listing_version_id !== null;
+        if ($fromCatalog) {
+            $this->priceMode = 'ask';
+        }
+        $preserveLegacyPrice = $fromCatalog || ($this->hasLegacyPrice() && ! $this->replaceLegacyPrice);
         $core['cash_min'] = ! $preserveLegacyPrice && in_array($this->priceMode, ['fixed', 'range', 'per_unit'], true) ? (string) MarketMoney::parse($this->price, 'price') : null;
         $core['cash_max'] = ! $preserveLegacyPrice && $this->priceMode === 'range' ? (string) MarketMoney::parse($this->maximumPrice, 'maximumPrice') : $core['cash_min'];
         $core['currency_code'] = MarketMoney::currency();
         if ($preserveLegacyPrice) {
-            foreach (['cash_min', 'cash_max', 'cash_basis', 'currency_code', 'exchange_preference'] as $field) {
+            foreach (['cash_min', 'cash_max', 'cash_basis', 'currency_code', 'exchange_preference', ...($fromCatalog ? ['title', 'description', 'quantity', 'unit', 'location_text'] : [])] as $field) {
                 $core[$field] = $this->intent->getAttribute($field);
                 if ($core[$field] instanceof \BackedEnum) {
                     $core[$field] = $core[$field]->value;
@@ -353,6 +383,7 @@ class Composer extends Component
             'detailTypes' => NormalizeIntentDetails::TYPES, 'legacyPrice' => $this->hasLegacyPrice(),
             'publisher' => $this->publisher(),
             'versions' => $this->intent?->versions()->reorder('version', 'desc')->limit(50)->get() ?? collect(),
+            'catalog' => $this->catalog(),
             'mediaItems' => $this->intent?->media()->with('asset')->get() ?? collect(),
             'referenceChoices' => $this->referenceChoices(),
             'presentation' => app(IntentPresentation::class)->build($this->previewSnapshot(), $this->previewAudience === 'owner' ? $user : null, $this->previewAudience === 'owner', $this->intent),

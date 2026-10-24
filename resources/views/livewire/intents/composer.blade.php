@@ -8,14 +8,21 @@
             <button type="button" wire:click="choose('{{ $choice }}')" aria-pressed="{{ $intention === $choice ? 'true' : 'false' }}" class="min-h-11 rounded-full border px-4 py-2 text-sm {{ $intention === $choice ? 'bg-indigo-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">{{ __('composer.intentions.'.$choice) }}</button>
         @endforeach
     </div>
+    @if($catalog)
+        <div class="space-y-2 rounded-2xl border p-4" role="region" aria-label="{{ __('composer.catalog.title') }}" data-catalog-card>
+            <p class="font-medium">{{ __('composer.catalog.title') }}: {{ $catalog['title'] }} <span class="text-sm text-zinc-500">({{ __('composer.catalog.version', ['version' => $catalog['version']]) }})</span></p>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('composer.catalog.read_only') }}</p>
+            <div class="flex flex-wrap gap-2"><flux:button size="sm" :href="$catalog['edit']">{{ __('composer.catalog.edit') }}</flux:button>@if($catalog['newer'])<flux:button size="sm" variant="primary" wire:click="useNewCatalogVersion" wire:confirm="{{ __('composer.catalog.use_new_confirm') }}">{{ __('composer.catalog.use_new') }}</flux:button>@endif</div>
+        </div>
+    @endif
     <div class="flex gap-2 lg:hidden"><flux:button x-on:click="screen='write'">{{ __('composer.write') }}</flux:button><flux:button x-on:click="screen='preview'">{{ __('composer.preview') }}</flux:button></div>
     <div class="grid items-start gap-6 lg:grid-cols-2">
         <div class="space-y-5" x-show="screen === 'write' || wide">
             @if($intent === null)<flux:select wire:model.live="ownerKey" :label="__('intents.fields.publisher')">@foreach($parties as $entry)<option value="{{ $entry['party']->key() }}">{{ $entry['label'] }}</option>@endforeach</flux:select>@endif
             <div class="space-y-4 rounded-2xl border p-5">
                 <h2 class="text-lg font-semibold">{{ __('composer.describe') }}</h2>
-                <flux:input wire:model.live.debounce.400ms="core.title" :label="__('composer.heading')" dir="auto" />
-                <flux:textarea wire:model.live.debounce.400ms="core.description" :label="__('composer.description')" rows="5" dir="auto" />
+                <flux:input wire:model.live.debounce.400ms="core.title" :disabled="$catalog !== null" :label="__('composer.heading')" dir="auto" />
+                <flux:textarea wire:model.live.debounce.400ms="core.description" :disabled="$catalog !== null" :label="__('composer.description')" rows="5" dir="auto" />
                 @if($intent === null)
                     <details><summary class="cursor-pointer py-2 text-sm">{{ __('composer.topic_optional') }}</summary>
                         <livewire:categories.picker wire:model.live="conceptId" :owner="$publisher->key()" :kinds="\App\Support\Categories\CategoryKind::values()" :allow-create="true" :key="'composer-picker-'.$publisher->key()" />
@@ -41,9 +48,9 @@
                             @elseif($detail['type'] === 'date_range')
                                 <x-app.calendar-date-input :model="'details.'.$index.'.value.start'" :label="__('composer.starts_on')" /><x-app.calendar-date-input :model="'details.'.$index.'.value.end'" :label="__('composer.ends_on')" />
                             @elseif($detail['type'] === 'multiple_choice')
-                                @foreach($detail['options'] ?? [] as $option)<flux:checkbox wire:model="details.{{ $index }}.value" :value="$option" :label="$option" />@endforeach
+                                @foreach($detail['options'] ?? [] as $option)<flux:checkbox wire:model="details.{{ $index }}.value" :value="$option" :label="\Illuminate\Support\Facades\Lang::has('composer.options.'.$option) ? __('composer.options.'.$option) : $option" />@endforeach
                             @elseif($detail['type'] === 'choice' && !empty($detail['options']))
-                                <flux:select wire:model="details.{{ $index }}.value" :label="__('composer.value')"><option value="">{{ __('composer.select') }}</option>@foreach($detail['options'] as $option)<option value="{{ $option }}">{{ $option }}</option>@endforeach</flux:select>
+                                <flux:select wire:model="details.{{ $index }}.value" :label="__('composer.value')"><option value="">{{ __('composer.select') }}</option>@foreach($detail['options'] as $option)<option value="{{ $option }}">{{ \Illuminate\Support\Facades\Lang::has('composer.options.'.$option) ? __('composer.options.'.$option) : $option }}</option>@endforeach</flux:select>
                             @elseif($detail['type'] === 'reference')
                                 <p>{{ __('composer.reference_help') }}</p>
                                 <flux:select wire:model.live="details.{{ $index }}.value.type" :label="__('composer.reference_type')"><option value="">{{ __('composer.select') }}</option><option value="content">{{ __('ui.content.tab') }}</option><option value="group">{{ __('ui.groups.title') }}</option><option value="catalog">{{ __('business.catalog.title') }}</option></flux:select>
@@ -90,13 +97,13 @@
                 <div class="mt-4 space-y-4">
                     @if($legacyPrice)<p class="rounded-xl border p-3">{{ __('composer.legacy_price') }}</p><flux:checkbox wire:model.live="replaceLegacyPrice" :label="__('composer.replace_price')" />@endif
                     <div @if($legacyPrice && !$replaceLegacyPrice) inert class="space-y-4 opacity-50" @else class="space-y-4" @endif>
-                    <flux:select wire:model.live="priceMode" :label="__('composer.price_type')">@foreach(['free','fixed','per_unit','range','ask','exchange'] as $mode)<option value="{{ $mode }}">{{ __('composer.prices.'.$mode) }}</option>@endforeach</flux:select>
+                    <flux:select wire:model.live="priceMode" :disabled="$catalog !== null" :label="__('composer.price_type')">@foreach(['free','fixed','per_unit','range','ask','exchange'] as $mode)<option value="{{ $mode }}">{{ __('composer.prices.'.$mode) }}</option>@endforeach</flux:select>
                     @if(in_array($priceMode, ['fixed','per_unit','range'], true))<flux:input wire:model="price" :label="__('composer.amount_toman')" inputmode="decimal" />@endif
                     @if($priceMode === 'range')<flux:input wire:model="maximumPrice" :label="__('composer.maximum_toman')" inputmode="decimal" />@endif
                     @if($priceMode === 'per_unit')<flux:select wire:model="core.cash_basis" :label="__('composer.per')">@foreach(\App\Support\Market\RateBasis::cases() as $basis)<option value="{{ $basis->value }}">{{ __('intents.rate_basis.'.$basis->value) }}</option>@endforeach</flux:select>@endif
                     </div>
-                    <flux:input wire:model="core.quantity" :label="__('composer.quantity')" inputmode="decimal" /><flux:input wire:model="core.unit" :label="__('composer.unit')" />
-                    <flux:input wire:model="core.location_text" :label="__('composer.where')" dir="auto" />
+                    <flux:input wire:model="core.quantity" :disabled="$catalog !== null" :label="__('composer.quantity')" inputmode="decimal" /><flux:input wire:model="core.unit" :disabled="$catalog !== null" :label="__('composer.unit')" />
+                    <flux:input wire:model="core.location_text" :disabled="$catalog !== null" :label="__('composer.where')" dir="auto" />
                     <x-app.calendar-date-input model="core.starts_on" :label="__('composer.starts_on')" /><x-app.calendar-date-input model="core.ends_on" :label="__('composer.ends_on')" />
                 </div>
             </details>
