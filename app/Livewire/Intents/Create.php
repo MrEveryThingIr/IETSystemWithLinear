@@ -75,6 +75,10 @@ class Create extends Component
     #[Url(as: 'as')]
     public string $ownerKey = '';
 
+    /** "need" or "offer" when opened from an intention ("I need…", "I can offer…"): shows only those starts. */
+    #[Url(as: 'side', except: '')]
+    public string $side = '';
+
     public ?int $conceptId = null;
 
     public bool $typeInstead = false;
@@ -210,29 +214,7 @@ class Create extends Component
             'pickerKinds' => $this->pickerKinds(),
             'conceptPath' => $this->conceptId !== null && ! $this->typeInstead ? implode(' › ', array_column($catalog->path($this->conceptId, $publisher), 'label')) : '',
             'rateBases' => RateBasis::cases(),
-            'journeyGroups' => [
-                'exchange' => [
-                    IntentJourneyPreset::Buy,
-                    IntentJourneyPreset::Sell,
-                    IntentJourneyPreset::Rent,
-                    IntentJourneyPreset::RentOut,
-                ],
-                'services_work' => [
-                    IntentJourneyPreset::NeedService,
-                    IntentJourneyPreset::OfferService,
-                    IntentJourneyPreset::Hire,
-                    IntentJourneyPreset::FindWork,
-                ],
-                'capital_collaboration' => [
-                    IntentJourneyPreset::SeekCapital,
-                    IntentJourneyPreset::OfferCapital,
-                    IntentJourneyPreset::SeekCollaboration,
-                    IntentJourneyPreset::OfferCollaboration,
-                ],
-                'other' => [
-                    IntentJourneyPreset::Other,
-                ],
-            ],
+            'journeyGroups' => $this->journeyGroups(),
             'journey' => $journey,
             'journeySubjectKinds' => $journey?->subjectKinds() ?? ProfileIntentSubjectKind::cases(),
             'subjectKinds' => ProfileIntentSubjectKind::cases(),
@@ -350,5 +332,42 @@ class Create extends Component
         abort_unless(is_array($entry), 403);
 
         return $entry['party'];
+    }
+
+    /** @return array<string, list<IntentJourneyPreset>> */
+    private function journeyGroups(): array
+    {
+        $groups = [
+            'exchange' => [
+                IntentJourneyPreset::Buy,
+                IntentJourneyPreset::Sell,
+                IntentJourneyPreset::Rent,
+                IntentJourneyPreset::RentOut,
+            ],
+            'services_work' => [
+                IntentJourneyPreset::NeedService,
+                IntentJourneyPreset::OfferService,
+                IntentJourneyPreset::Hire,
+                IntentJourneyPreset::FindWork,
+            ],
+            'capital_collaboration' => [
+                IntentJourneyPreset::SeekCapital,
+                IntentJourneyPreset::OfferCapital,
+                IntentJourneyPreset::SeekCollaboration,
+                IntentJourneyPreset::OfferCollaboration,
+            ],
+            'other' => [
+                IntentJourneyPreset::Other,
+            ],
+        ];
+        $side = in_array($this->side, [ProfileIntentKind::Need->value, ProfileIntentKind::Offer->value], true) ? $this->side : null;
+        if ($side === null) {
+            return $groups;
+        }
+
+        return array_filter(
+            array_map(fn (array $presets): array => array_values(array_filter($presets, fn (IntentJourneyPreset $preset): bool => $preset->kind()->value === $side)), $groups),
+            fn (array $presets): bool => $presets !== [],
+        );
     }
 }

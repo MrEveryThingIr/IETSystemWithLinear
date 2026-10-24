@@ -9,6 +9,7 @@ use App\Http\Controllers\Business\BusinessTeamController;
 use App\Http\Controllers\Business\PublicBusinessController;
 use App\Http\Controllers\PublicIntake\PublicRealEstateIntakeController;
 use App\Http\Middleware\RequireFeatureSurface;
+use App\Livewire\Items\Index as ItemsIndex;
 use App\Livewire\Profile\Capabilities;
 use App\Models\Business;
 use Illuminate\Support\Facades\Route;
@@ -74,7 +75,9 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     });
 
     Route::middleware(RequireFeatureSurface::class.':profile')->group(function (): void {
-        // "What I can do" (capabilities). The old skill forms no longer write; the old records are kept and copied.
+        // My items: one home for interests, abilities, offers and needs.
+        Route::livewire('/me/items', ItemsIndex::class)->name('items.index');
+        // Abilities of a business or group the user manages ("?for=business:3"); a person's own redirect to My items.
         Route::livewire('/profile/professions', Capabilities::class)->name('profile.professions.index');
         Route::post('/profile/professions', fn () => redirect()->route('profile.professions.index'))->name('profile.professions.store');
         Route::delete('/profile/professions/{actorProfession}', fn () => redirect()->route('profile.professions.index'))->name('profile.professions.destroy');

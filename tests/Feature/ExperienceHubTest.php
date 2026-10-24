@@ -32,17 +32,17 @@ class ExperienceHubTest extends TestCase
         $navigation = app(ExperienceNavigation::class)->for($actor->user);
         $primary = collect($navigation['primary'])->keyBy('key');
 
-        $this->assertSame('experience.needs-offers', $primary['needs-offers']['route']);
-        $this->assertSame('experience.work', $primary['work']['route']);
-        $this->assertSame('experience.organizations', $primary['organizations']['route']);
+        $spaces = collect($navigation['spaces'])->keyBy('key');
+
+        $this->assertSame('experience.needs-offers', $primary['market']['route']);
+        $this->assertSame('deals.index', $primary['deals']['route']);
+        $this->assertSame('planner.index', $primary['planner']['route']);
         $this->assertSame('bookkeeping.index', $primary['money']['route']);
-        $this->assertSame('experience.content', $primary['content']['route']);
+        $this->assertSame('experience.organizations', $spaces['organizations']['route']);
+        $this->assertSame('experience.content', $spaces['content']['route']);
 
         $this->assertSame(['help'], collect($navigation['help'])->pluck('key')->all());
         $this->assertSame('experience.help', $navigation['help'][0]['route']);
-
-        $this->assertContains('deals', collect($primary['work']['items'])->pluck('key')->all());
-        $this->assertContains('planner', collect($primary['work']['items'])->pluck('key')->all());
     }
 
     public function test_hubs_respect_publication_and_do_not_leak_unpublished_facilities(): void
@@ -84,45 +84,18 @@ class ExperienceHubTest extends TestCase
             ->assertSee(route('intents.index'), false);
     }
 
-    public function test_work_hub_composes_deals_and_planner_without_replacing_either_kernel(): void
+    public function test_old_work_links_land_on_deals_or_the_planner_and_nothing_it_showed_is_lost(): void
     {
-        $actor = Actor::factory()->create();
+        $both = Actor::factory()->create();
+        $this->publishSurfaces($both->user, ['deals', 'planner']);
+        $this->actingAs($both->user)->get(route('experience.work'))->assertRedirect(route('deals.index'));
 
-        $this->publishSurfaces($actor->user, ['deals', 'planner']);
+        $plannerOnly = Actor::factory()->create();
+        $this->publishSurfaces($plannerOnly->user, ['planner']);
+        $this->actingAs($plannerOnly->user)->get(route('experience.work'))->assertRedirect(route('planner.index'));
 
-        $this->actingAs($actor->user)
-            ->get(route('experience.work'))
-            ->assertOk()
-            ->assertSee('Needs my attention')
-            ->assertSee('Active work')
-            ->assertSee('Schedule')
-            ->assertSee(route('deals.index'), false)
-            ->assertSee(route('planner.index'), false);
-    }
-
-    public function test_work_hub_hides_unpublished_deal_or_planner_sections(): void
-    {
-        $plannerActor = Actor::factory()->create();
-        $this->publishSurfaces($plannerActor->user, ['planner']);
-
-        $this->actingAs($plannerActor->user)
-            ->get(route('experience.work'))
-            ->assertOk()
-            ->assertSee('Schedule')
-            ->assertSee(route('planner.index'), false)
-            ->assertDontSee('Active work')
-            ->assertDontSee(route('deals.index'), false);
-
-        $dealActor = Actor::factory()->create();
-        $this->publishSurfaces($dealActor->user, ['deals']);
-
-        $this->actingAs($dealActor->user)
-            ->get(route('experience.work'))
-            ->assertOk()
-            ->assertSee('Active work')
-            ->assertSee(route('deals.index'), false)
-            ->assertDontSee('Schedule')
-            ->assertDontSee(route('planner.index'), false);
+        // What the Work page listed under deals now heads the Deals page.
+        $this->actingAs($both->user)->get(route('deals.index'))->assertOk()->assertSee(__('deals.title'));
     }
 
     public function test_money_destination_opens_bookkeeping_and_the_old_finance_pages_are_gone(): void

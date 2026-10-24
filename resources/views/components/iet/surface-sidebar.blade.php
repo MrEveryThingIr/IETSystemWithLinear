@@ -4,6 +4,14 @@
     $notificationsVisible = $legacyItems->contains(fn (array $item): bool => $item['key'] === 'notifications');
 @endphp
 
+@if (app(\App\Support\IntentionLauncher::class)->choicesFor(auth()->user()) !== [])
+    <div class="mb-2 px-1">
+        <flux:modal.trigger name="intention-launcher">
+            <flux:button variant="primary" icon="plus" class="w-full justify-start" data-launcher-open>{{ __('launcher.button') }}</flux:button>
+        </flux:modal.trigger>
+    </div>
+@endif
+
 <flux:sidebar.item
     wire:navigate
     :href="route('dashboard')"
@@ -23,6 +31,7 @@
         :href="route($destination['route'])"
         :current="request()->routeIs(...$destination['patterns'])"
         :icon="$destination['icon']"
+        data-nav-primary="{{ $destination['key'] }}"
     >
         {{ $destination['label'] }}
         @if ($destination['key'] === 'messages')
@@ -30,6 +39,24 @@
         @endif
     </flux:sidebar.item>
 @endforeach
+
+@if($navigation['spaces'] !== [])
+    <div class="mt-4 border-t border-zinc-200 pt-3 dark:border-zinc-800" data-nav-spaces>
+        <div class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            {{ __('experience.navigation.spaces') }}
+        </div>
+        @foreach($navigation['spaces'] as $destination)
+            <flux:sidebar.item
+                wire:navigate
+                :href="route($destination['route'])"
+                :current="request()->routeIs(...$destination['patterns'])"
+                :icon="$destination['icon']"
+            >
+                {{ $destination['label'] }}
+            </flux:sidebar.item>
+        @endforeach
+    </div>
+@endif
 
 @if($navigation['account'] !== [])
     <div class="mt-4 border-t border-zinc-200 pt-3 dark:border-zinc-800">

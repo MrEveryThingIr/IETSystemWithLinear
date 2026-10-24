@@ -67,6 +67,13 @@
         </article>
     @endif
 
+    <x-items.public-list :abilities="$abilities" :interests="$interestItems" :labels="$itemLabels" />
+    @if ($owner)
+        <div class="text-sm">
+            <a href="{{ route('items.index') }}" wire:navigate class="font-medium underline-offset-4 hover:underline" data-profile-edit-items>{{ __('items.edit_in_my_items') }}</a>
+        </div>
+    @endif
+
     @if ($skills->isNotEmpty() || $interests->isNotEmpty() || $learningGoals->isNotEmpty())
         <section class="grid gap-4 lg:grid-cols-3">
             @foreach ([

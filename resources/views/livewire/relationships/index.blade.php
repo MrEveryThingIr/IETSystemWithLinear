@@ -9,6 +9,29 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    @if ($attention !== [] || $due !== [])
+        <div class="grid gap-4 lg:grid-cols-2" data-deals-overview>
+            @foreach (['attention' => $attention, 'due' => $due] as $block => $entries)
+                @if ($entries !== [])
+                    <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900" data-deals-{{ $block }}>
+                        <h2 class="font-semibold">{{ $block === 'attention' ? __('experience.hubs.work.attention') : __('work.hub.commitments') }}</h2>
+                        <p class="mt-1 text-sm text-zinc-500">{{ $block === 'attention' ? __('experience.hubs.work.attention_help') : __('work.hub.commitments_help') }}</p>
+                        <ul class="mt-3 divide-y divide-zinc-100 dark:divide-zinc-800">
+                            @foreach ($entries as $entry)
+                                <li>
+                                    <a href="{{ $entry['href'] }}" wire:navigate class="block py-2.5 hover:underline">
+                                        <span class="block font-medium [overflow-wrap:anywhere]" dir="auto">{{ $entry['title'] }}</span>
+                                        <span class="block text-sm text-zinc-500 [overflow-wrap:anywhere]" dir="auto">{{ $entry['meta'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </section>
+                @endif
+            @endforeach
+        </div>
+    @endif
+
     <flux:callout>
         {{ __('deals.boundary') }}
     </flux:callout>

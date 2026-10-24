@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Profile;
 
+use App\Actions\Items\ConsolidateLegacyProfileItems;
 use App\Actions\Messaging\OpenDirectConversation;
 use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
@@ -9,11 +10,14 @@ use App\ConceptAssertionVisibility;
 use App\Models\Actor;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
+use App\Models\Capability;
 use App\Models\ConceptAssertion;
+use App\Models\Interest;
 use App\Models\User;
 use App\Policies\ActorProfileIntentPolicy;
 use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
+use App\Support\Categories\CategoryCatalog;
 use App\Support\Localization;
 use App\Support\Messaging\MessagingPrivacy;
 use App\Support\TemporalPreferences;
@@ -54,8 +58,26 @@ class Show extends Component
                 ! $owner,
                 fn ($query) => $query->where('visibility', '!=', ConceptAssertionVisibility::Private->value),
             )
+            // Tags already copied into an ability or interest are shown through the copy.
+            ->whereNotExists(fn ($query) => $query->from('legacy_item_links as l')
+                ->where('l.source_type', ConsolidateLegacyProfileItems::SOURCE)
+                ->whereColumn('l.source_id', 'concept_assertions.id'))
             ->with('concept.labels')
             ->orderBy('predicate')
+            ->orderBy('id')
+            ->get();
+
+        $abilities = Capability::query()
+            ->where('holder_actor_id', $this->profile->actor_id)
+            ->active()
+            // Everyone, the owner included, sees what the holder chose to show; the owner edits in My items.
+            ->whereIn('visibility', $user instanceof User ? ['public', 'members'] : ['public'])
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->get();
+        $interests = Interest::query()
+            ->heldBy((int) $this->profile->actor_id)
+            ->onProfile()
             ->orderBy('id')
             ->get();
 
@@ -76,6 +98,12 @@ class Show extends Component
             'skills' => $assertions->where('predicate', ConceptAssertionPredicate::HasSkill)->values(),
             'interests' => $assertions->where('predicate', ConceptAssertionPredicate::InterestedIn)->values(),
             'learningGoals' => $assertions->where('predicate', ConceptAssertionPredicate::WantsToLearn)->values(),
+            'abilities' => $abilities,
+            'interestItems' => $interests,
+            'itemLabels' => app(CategoryCatalog::class)->labels(
+                $abilities->pluck('concept_id')->merge($interests->pluck('concept_id'))->map(fn ($id): int => (int) $id)->unique()->values()->all()
+            ),
+            'owner' => $owner,
             'needs' => $intents->where('kind.value', 'need')->values(),
             'offers' => $intents->where('kind.value', 'offer')->values(),
             'calendar' => TemporalPreferences::calendarFor($user)->value,

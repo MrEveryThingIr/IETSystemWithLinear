@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Items\ConsolidateLegacyProfileItems;
 use App\Actions\Profile\AddProfileConceptAssertion;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\CreateProfileDisclosureGrant;
@@ -15,6 +16,8 @@ use App\ConceptAssertionVisibility;
 use App\Livewire\Profile\Sharing;
 use App\Models\Actor;
 use App\Models\ActorProfileDisclosureGrant;
+use App\Models\Capability;
+use App\Models\Interest;
 use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
@@ -111,13 +114,16 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
             'visibility' => ProfileVisibility::Private->value,
         ]);
 
-        $assertion = app(AddProfileConceptAssertion::class)->execute(
+        // An old private skill tag, carried into an ability.
+        app(AddProfileConceptAssertion::class)->execute(
             $owner->user,
             $profile,
             'Laravel',
             ConceptAssertionPredicate::HasSkill,
             ConceptAssertionVisibility::Private,
         );
+        app(ConsolidateLegacyProfileItems::class)->execute();
+        $ability = Capability::query()->where('holder_actor_id', $owner->id)->sole();
 
         $intent = app(CreateActorProfileIntent::class)->execute(
             $owner->user,
@@ -139,7 +145,7 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
             $owner->user,
             $profile,
             $recipientProfile,
-            ['field:display_name', 'assertion:'.$assertion->uuid, 'intent:'.$intent->uuid],
+            ['field:display_name', 'ability:'.$ability->uuid, 'intent:'.$intent->uuid],
             'Collaboration introduction',
             30,
         );
@@ -190,13 +196,15 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
             UploadedFile::fake()->image('shared-avatar.jpg', 400, 400),
         );
 
-        $assertion = app(AddProfileConceptAssertion::class)->execute(
+        app(AddProfileConceptAssertion::class)->execute(
             $owner->user,
             $profile,
             'Selective Skill',
             ConceptAssertionPredicate::HasSkill,
             ConceptAssertionVisibility::Private,
         );
+        app(ConsolidateLegacyProfileItems::class)->execute();
+        $ability = Capability::query()->where('holder_actor_id', $owner->id)->sole();
 
         $recipient = Actor::factory()->create();
         $recipientProfile = app(EnsureActorProfile::class)->execute($recipient->user);
@@ -204,7 +212,7 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
             $owner->user,
             $profile,
             $recipientProfile,
-            ['assertion:'.$assertion->uuid],
+            ['ability:'.$ability->uuid],
         );
 
         $this->actingAs($recipient->user)
@@ -232,13 +240,15 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
 
         $other = Actor::factory()->create();
         $otherProfile = app(EnsureActorProfile::class)->execute($other->user);
-        $foreign = app(AddProfileConceptAssertion::class)->execute(
+        app(AddProfileConceptAssertion::class)->execute(
             $other->user,
             $otherProfile,
             'Secret Foreign Concept',
             ConceptAssertionPredicate::InterestedIn,
             ConceptAssertionVisibility::Private,
         );
+        app(ConsolidateLegacyProfileItems::class)->execute();
+        $foreign = Interest::query()->where('holder_actor_id', $other->id)->sole();
 
         $recipient = Actor::factory()->create();
         $recipientProfile = app(EnsureActorProfile::class)->execute($recipient->user);
@@ -248,7 +258,7 @@ class ActorProfileSharingAndCompletenessTest extends TestCase
                 $owner->user,
                 $profile,
                 $recipientProfile,
-                ['field:email', 'assertion:'.$foreign->uuid],
+                ['field:email', 'interest:'.$foreign->uuid],
             );
             $this->fail('Invalid disclosure items were accepted.');
         } catch (ValidationException $exception) {

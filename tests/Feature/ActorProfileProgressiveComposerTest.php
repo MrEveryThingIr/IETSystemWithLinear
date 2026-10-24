@@ -2,15 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Profile\AddProfileConceptAssertion;
 use App\Actions\Profile\EnsureActorProfile;
+use App\ConceptAssertionPredicate;
+use App\Livewire\Items\Interests;
 use App\Livewire\Profile\Intents;
 use App\Livewire\Profile\Manage;
-use App\Livewire\Profile\Semantics;
 use App\Livewire\Profile\TemporalPreferences;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\Concept;
-use App\Models\ConceptAssertion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -45,13 +46,14 @@ class ActorProfileProgressiveComposerTest extends TestCase
             ->call('cancelEditor')
             ->assertSet('editorOpen', false);
 
+        // Interests and abilities open in place in My items (one editor each).
         Livewire::actingAs($actor->user)
-            ->test(Semantics::class, ['profile' => $profile])
-            ->assertSet('composerOpen', false)
-            ->call('openComposer')
-            ->assertSet('composerOpen', true)
-            ->call('cancelComposer')
-            ->assertSet('composerOpen', false);
+            ->test(Interests::class)
+            ->assertSet('formOpen', false)
+            ->call('add')
+            ->assertSet('formOpen', true)
+            ->call('cancel')
+            ->assertSet('formOpen', false);
 
         Livewire::actingAs($actor->user)
             ->test(Intents::class, ['profile' => $profile])
@@ -98,34 +100,6 @@ class ActorProfileProgressiveComposerTest extends TestCase
         $this->assertSame(88, ActorProfileIntent::query()->sole()->importance_percent);
     }
 
-    public function test_skill_proficiency_can_be_added_and_edited_on_demand(): void
-    {
-        $actor = Actor::factory()->create();
-        $profile = app(EnsureActorProfile::class)->execute($actor->user);
-
-        Livewire::actingAs($actor->user)
-            ->test(Semantics::class, ['profile' => $profile])
-            ->call('openComposer')
-            ->set('conceptLabel', 'Laravel')
-            ->set('predicate', 'has_skill')
-            ->set('proficiencyPercent', '72')
-            ->call('add')
-            ->assertHasNoErrors();
-
-        $assertion = ConceptAssertion::query()->sole();
-        $this->assertSame('0.7200', $assertion->weight);
-
-        Livewire::actingAs($actor->user)
-            ->test(Semantics::class, ['profile' => $profile])
-            ->call('openProficiencyEditor', $assertion->id)
-            ->assertSet('editingProficiencyPercent', '72')
-            ->set('editingProficiencyPercent', '91')
-            ->call('saveProficiency')
-            ->assertHasNoErrors();
-
-        $this->assertSame('0.9100', $assertion->fresh()->weight);
-    }
-
     public function test_minimal_need_requires_only_relationship_and_concept(): void
     {
         $actor = Actor::factory()->create();
@@ -154,12 +128,7 @@ class ActorProfileProgressiveComposerTest extends TestCase
         $actor = Actor::factory()->create();
         $profile = app(EnsureActorProfile::class)->execute($actor->user);
 
-        Livewire::actingAs($actor->user)
-            ->test(Semantics::class, ['profile' => $profile])
-            ->set('conceptLabel', 'Weekend Robotics')
-            ->set('predicate', 'interested_in')
-            ->call('add')
-            ->assertHasNoErrors();
+        app(AddProfileConceptAssertion::class)->execute($actor->user, $profile, 'Weekend Robotics', ConceptAssertionPredicate::InterestedIn);
 
         $this->assertSame(1, Concept::query()->count());
 

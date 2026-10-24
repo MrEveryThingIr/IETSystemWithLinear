@@ -327,7 +327,7 @@
     @if ($canOperate)
         <x-app.panel id="team-settings" :title="__('business.show.team.title')" :help="__('business.show.team.help')" icon="user-group">
             <x-slot:actions>
-                <flux:button size="sm" variant="ghost" :href="route('profile.professions.index')">{{ __('capabilities.title') }}</flux:button>
+                <flux:button size="sm" variant="ghost" :href="route('profile.professions.index', ['for' => 'business:'.$business->id])">{{ __('items.abilities.business_abilities') }}</flux:button>
             </x-slot:actions>
 
             @if ($capabilitySummary->isNotEmpty())
