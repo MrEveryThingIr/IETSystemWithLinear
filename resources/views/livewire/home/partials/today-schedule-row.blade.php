@@ -8,6 +8,6 @@
         </span>
         <span class="size-2 shrink-0 rounded-full" style="background: {{ (new \App\Support\Planner\PlanAppearance)->of($occurrence->plan)['color'] }}" aria-hidden="true"></span>
         <span class="min-w-0 flex-1 truncate font-medium" dir="auto">{{ $occurrence->plan->title }}</span>
-        <span class="max-w-[35%] truncate text-xs text-zinc-500">{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</span>
+        <span class="max-w-[35%] truncate text-xs text-zinc-500">{{ __('planner.occurrence_phase.'.$occurrence->executionPhase()) }}</span>
     </a>
 </li>

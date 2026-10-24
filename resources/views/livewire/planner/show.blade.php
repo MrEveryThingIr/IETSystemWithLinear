@@ -1,5 +1,8 @@
 <section class="mx-auto max-w-6xl space-y-6">
     <x-app.flash-message />
+    @if (session('planner_status'))
+        <flux:callout variant="success" icon="check-circle" data-planner-status>{{ session('planner_status') }}</flux:callout>
+    @endif
 
     <x-app.page-header :title="$plan->title" :description="$plan->description ?: __('planner.help')">
         <x-slot:actions>
@@ -73,6 +76,10 @@
         </flux:callout>
     @endif
 
+    @if ($showHabit)
+        @include('livewire.planner.partials.habit-board')
+    @endif
+
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
             <flux:card class="space-y-4">
@@ -116,6 +123,7 @@
                 @endif
             </flux:card>
 
+            @if (! ($replaces && $plan->occurrences->isEmpty()))
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('planner.plan.occurrences') }}</flux:heading>
 
@@ -166,48 +174,34 @@
                                             @if ($occurrence->actual_end_at)<x-app.local-time :value="$occurrence->actual_end_at" />@else … @endif
                                         </div>
                                     @endif
-
-                                    @error('execution.'.$occurrence->id)
-                                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
-                                    @enderror
                                 </div>
 
-                                @if ($canParticipate && $plan->status === \App\PlanStatus::Active)
-                                    <div class="flex flex-wrap gap-2">
-                                        @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
-                                            @if (in_array($phase, ['ready', 'late'], true) && $remainingPrerequisites === 0)
-                                                <flux:button wire:click="startOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.start') }}</flux:button>
-                                            @endif
-                                            <flux:button wire:click="markOccurrenceDone({{ $occurrence->id }})" size="sm" variant="ghost" icon="check" data-occurrence-done>{{ __('planner.reminders.done') }}</flux:button>
-                                            <flux:button wire:click="skipOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.skip') }}</flux:button>
-                                            <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
-                                        @elseif ($occurrence->status === \App\PlanOccurrenceStatus::InProgress)
-                                            <flux:button wire:click="completeOccurrence({{ $occurrence->id }})" size="sm" variant="primary">{{ __('planner.plan.finish') }}</flux:button>
-                                            <flux:button wire:click="chooseExpenseOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.record_expense') }}</flux:button>
-                                            <flux:button wire:click="cancelOccurrence({{ $occurrence->id }})" size="sm" variant="danger">{{ __('planner.plan.cancel_occurrence') }}</flux:button>
-                                        @elseif ($occurrence->status === \App\PlanOccurrenceStatus::Completed)
-                                            <flux:button wire:click="chooseExpenseOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.record_expense') }}</flux:button>
+                                @if ($canParticipate)
+                                    <div class="flex flex-col items-start gap-2 sm:items-end">
+                                        @include('livewire.planner.partials.occurrence-actions', ['occurrence' => $occurrence, 'prerequisitesLeft' => $remainingPrerequisites])
+                                        @if ($plan->status === \App\PlanStatus::Active)
+                                            <div class="flex flex-wrap gap-2">
+                                                @if (in_array($occurrence->status, [\App\PlanOccurrenceStatus::InProgress, \App\PlanOccurrenceStatus::Completed], true))
+                                                    <flux:button wire:click="chooseExpenseOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.record_expense') }}</flux:button>
+                                                @endif
+                                                <flux:button wire:click="chooseEvidenceOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.attach_evidence') }}</flux:button>
+                                            </div>
                                         @endif
-                                        <flux:button wire:click="chooseEvidenceOccurrence({{ $occurrence->id }})" size="sm" variant="ghost">{{ __('planner.plan.attach_evidence') }}</flux:button>
                                     </div>
                                 @endif
                             </div>
 
-                            @if ($occurrence->status === \App\PlanOccurrenceStatus::Scheduled)
-                                <div class="mt-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-900">
-                                    @if ($phase === 'upcoming')
-                                        {{ __('planner.execution.upcoming') }}
-                                        <x-app.local-datetime :value="$occurrence->window_start_at" />
-                                    @elseif (in_array($phase, ['ready', 'late'], true) && $remainingPrerequisites > 0)
-                                        {{ trans_choice('planner.execution.prerequisites_remaining', $remainingPrerequisites, ['count' => $remainingPrerequisites]) }}
-                                    @elseif ($phase === 'ready')
-                                        {{ __('planner.execution.ready') }}
-                                    @elseif ($phase === 'late')
-                                        {{ __('planner.execution.late') }}
-                                    @else
-                                        {{ __('planner.execution.missed') }}
-                                    @endif
-                                </div>
+                            <div class="mt-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-900" data-phase-help="{{ $phase }}">
+                                @if (in_array($phase, ['now', 'late', 'overdue'], true) && $remainingPrerequisites > 0)
+                                    {{ trans_choice('planner.execution.prerequisites_remaining', $remainingPrerequisites, ['count' => $remainingPrerequisites]) }}
+                                @else
+                                    {{ \App\Support\Planner\HabitText::phaseHelp($occurrence, $phase) }}
+                                @endif
+                                @if ($occurrence->reason)<span class="text-zinc-500"> · {{ __('habits.reasons.'.$occurrence->reason) }}</span>@endif
+                                @if ($occurrence->note)<span class="mt-1 block text-zinc-600 [overflow-wrap:anywhere] dark:text-zinc-300" dir="auto">“{{ $occurrence->note }}”</span>@endif
+                            </div>
+                            @if ($reportUuid === $occurrence->uuid)
+                                <div class="mt-3">@include('livewire.planner.partials.report-form', ['occurrence' => $occurrence])</div>
                             @endif
 
                             @if ($plan->prerequisites->isNotEmpty())
@@ -221,7 +215,7 @@
                                                 $canToggle = $canParticipate
                                                     && $plan->status === \App\PlanStatus::Active
                                                     && $occurrence->status === \App\PlanOccurrenceStatus::Scheduled
-                                                    && $phase !== 'missed';
+                                                    && ! in_array($phase, ['awaiting_report', 'no_report'], true);
                                             @endphp
                                             <button
                                                 type="button"
@@ -346,6 +340,7 @@
                     @endif
                 @endforeach
             </flux:card>
+            @endif
 
             @if ($evidenceOccurrenceId !== null)
                 <flux:card class="space-y-5">
@@ -504,6 +499,7 @@
                 </flux:card>
             @endif
 
+            @if ($plan->scheduleRules->isNotEmpty())
             <flux:card class="space-y-4">
                 <flux:heading>{{ __('planner.plan.schedule_rules') }}</flux:heading>
                 @foreach ($plan->scheduleRules as $rule)
@@ -524,6 +520,7 @@
                     </div>
                 @endforeach
             </flux:card>
+            @endif
 
             <flux:callout>{{ __('planner.create.non_authority') }}</flux:callout>
             <flux:callout>{{ __('planner.create.expense_non_authority') }}</flux:callout>

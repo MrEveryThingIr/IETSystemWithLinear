@@ -161,7 +161,7 @@
                                     <x-app.local-datetime :value="$occurrence->scheduled_start_at" />
                                     → <x-app.local-time :value="$occurrence->scheduled_end_at" />
                                 </span>
-                                <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                                <flux:badge>{{ __('planner.occurrence_phase.'.$occurrence->executionPhase()) }}</flux:badge>
                             </div>
                         @endforeach
                     </div>
