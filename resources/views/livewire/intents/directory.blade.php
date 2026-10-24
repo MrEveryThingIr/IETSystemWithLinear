@@ -57,7 +57,10 @@
     <div class="grid gap-4 lg:grid-cols-2">
         @forelse ($intents as $intent)
             @php
-                $cover = $intent->media->first();
+                $publishedMedia = collect($intent->publishedVersion?->snapshot['media'] ?? [])->where('visibility', 'same')->pluck('uuid')->all();
+                $cover = $intent->media->first(fn ($item) => $item->visibility !== 'private' && in_array($item->uuid, $publishedMedia, true)
+                    && in_array($item->asset?->mediaKind(), ['image', 'video'], true)
+                    && $item->asset?->isPublishable() && $item->asset?->isReadyForPublication());
                 $coverUrl = $cover ? route('intents.media.show', [$intent, $cover]) : (isset($listingCovers[(int) $intent->business_listing_version_id]) ? route('intents.media.listing-cover', $intent) : null);
                 $coverIsVideo = $cover?->asset?->mediaKind() === 'video';
             @endphp

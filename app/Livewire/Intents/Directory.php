@@ -78,7 +78,7 @@ class Directory extends Component
 
         $query = ActorProfileIntent::query()
             ->where('status', ProfileIntentStatus::Active->value)
-            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup', 'media' => fn ($media) => $media->with('asset')]);
+            ->with(['publishedVersion', 'concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup', 'media' => fn ($media) => $media->with('asset')]);
 
         $this->applyQuickFilter($query);
 

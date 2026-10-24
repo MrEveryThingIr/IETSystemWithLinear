@@ -181,8 +181,8 @@ class MarketPublishersTest extends TestCase
             $this->assertSame(1, $offer->media()->count());
         }
 
-        $this->expectException(ValidationException::class);
-        app(ManageIntentMedia::class)->add($this->owner->user, $offer, UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'));
+        $document = app(ManageIntentMedia::class)->add($this->owner->user, $offer, UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'));
+        $this->assertSame('application/pdf', $document->asset->mime_type);
     }
 
     public function test_wizard_publishes_for_a_managed_business_and_refuses_other_publishers(): void

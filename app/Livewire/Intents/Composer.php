@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Intents;
 
+use App\Actions\Market\ManageIntentMedia;
 use App\Actions\Market\PublishIntent;
 use App\Actions\Market\SaveIntentWorkingCopy;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
 use App\Models\ActorProfileIntent;
+use App\Models\ActorProfileIntentMedia;
 use App\Models\BusinessListing;
 use App\Models\Capability;
 use App\Models\Group;
@@ -17,9 +19,11 @@ use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
 use App\Support\LocalizedNumber;
 use App\Support\Market\IntentDetailCatalog;
+use App\Support\Market\IntentPresentation;
 use App\Support\Market\IntentSnapshot;
 use App\Support\Market\MarketMoney;
 use App\Support\Market\NormalizeIntentDetails;
+use App\Support\MediaLimits;
 use App\Support\Parties\Party;
 use App\Support\Parties\PartyAuthority;
 use App\Support\TemporalPreferences;
@@ -32,10 +36,21 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 class Composer extends Component
 {
+    use WithFileUploads;
+
+    public $upload = null;
+
+    public bool $rights = false;
+
+    public string $uploadCaption = '';
+
+    public string $uploadVisibility = 'same';
+
     #[Locked]
     public ?ActorProfileIntent $intent = null;
 
@@ -64,6 +79,8 @@ class Composer extends Component
     public string $capabilityUuid = '';
 
     public string $referenceSearch = '';
+
+    public string $previewAudience = 'public';
 
     public string $detailType = 'text';
 
@@ -195,6 +212,40 @@ class Composer extends Component
         $this->notice = __('composer.discarded');
     }
 
+    public function uploadMedia(): void
+    {
+        $this->validate(['upload' => ['required', 'file', 'max:'.MediaLimits::kilobytes('asset')],
+            'rights' => ['accepted'], 'uploadCaption' => ['nullable', 'string', 'max:500'], 'uploadVisibility' => ['in:same,private']]);
+        $this->saveWorking();
+        app(ManageIntentMedia::class)->add($this->user(), $this->intent, $this->upload, $this->uploadCaption, $this->uploadVisibility, publish: false);
+        $this->reset('upload', 'uploadCaption', 'rights');
+    }
+
+    public function removeMedia(string $uuid): void
+    {
+        $this->saveWorking();
+        app(ManageIntentMedia::class)->remove($this->user(), $this->mediaItem($uuid), publish: false);
+    }
+
+    public function moveMediaUp(string $uuid): void
+    {
+        $this->saveWorking();
+        app(ManageIntentMedia::class)->moveUp($this->user(), $this->mediaItem($uuid), publish: false);
+    }
+
+    public function setMediaVisibility(string $uuid, string $visibility): void
+    {
+        $this->saveWorking();
+        app(ManageIntentMedia::class)->setVisibility($this->user(), $this->mediaItem($uuid), $visibility);
+    }
+
+    private function mediaItem(string $uuid): ActorProfileIntentMedia
+    {
+        abort_unless($this->intent !== null, 404);
+
+        return $this->intent->media()->where('uuid', $uuid)->firstOrFail();
+    }
+
     public function saveTemplate(): void
     {
         $this->validate(['templateName' => ['required', 'string', 'max:120']]);
@@ -289,7 +340,9 @@ class Composer extends Component
             'suggestions' => IntentDetailCatalog::suggestions($this->core['subject_kind'] ?? 'other'),
             'detailTypes' => NormalizeIntentDetails::TYPES, 'legacyPrice' => $this->hasLegacyPrice(),
             'publisher' => $this->publisher(),
+            'mediaItems' => $this->intent?->media()->with('asset')->get() ?? collect(),
             'referenceChoices' => $this->referenceChoices(),
+            'presentation' => app(IntentPresentation::class)->build($this->previewSnapshot(), $this->previewAudience === 'owner' ? $user : null, $this->previewAudience === 'owner', $this->intent),
             'capabilities' => $this->intent === null ? Capability::query()->heldBy($this->publisher())->active()->with('concept.labels')->limit(12)->get() : collect(),
             'templates' => in_array($this->publisher()->kind, [Party::ACTOR, Party::BUSINESS], true)
                 ? IntentDetailTemplate::query()->where($this->publisher()->kind === Party::BUSINESS ? 'owner_business_id' : 'owner_actor_id', $this->publisher()->id)->get()
@@ -300,6 +353,24 @@ class Composer extends Component
     {
         return $this->intent !== null && $this->intent->currency_code !== MarketMoney::currency()
             && ($this->intent->cash_min !== null || $this->intent->cash_max !== null);
+    }
+
+    private function previewSnapshot(): array
+    {
+        $core = $this->core;
+        if (! $this->hasLegacyPrice() || $this->replaceLegacyPrice) {
+            $core['currency_code'] = MarketMoney::currency();
+            $core['exchange_preference'] = $this->priceMode === 'free' ? 'free' : 'discuss_later';
+            try {
+                $core['cash_min'] = in_array($this->priceMode, ['fixed', 'range', 'per_unit'], true) ? (string) MarketMoney::parse($this->price) : null;
+                $core['cash_max'] = $this->priceMode === 'range' ? (string) MarketMoney::parse($this->maximumPrice) : $core['cash_min'];
+            } catch (ValidationException) {
+                $core['cash_min'] = $core['cash_max'] = null;
+            }
+        }
+
+        return ['core' => $core, 'details' => array_map(fn ($detail): array => [...$detail, 'payload' => ['value' => $detail['value'] ?? null]], $this->details),
+            'media' => $this->intent === null ? [] : $this->intent->media()->get(['uuid', 'visibility', 'caption'])->toArray()];
     }
 
     private function referenceChoices(): array

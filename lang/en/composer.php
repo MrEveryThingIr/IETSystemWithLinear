@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'media_title' => 'Photos, video and documents (up to 12)',
+    'retry_upload' => 'Try the upload again',
     'title' => 'Describe what you need or offer',
     'help' => 'Start with a few words. Add details when useful.',
     'choose' => 'Your intention',

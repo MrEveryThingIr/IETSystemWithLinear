@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'media_title' => '照片、视频和文档（最多12个文件）',
+    'retry_upload' => '重试上传',
     'title' => '描述您的需求或供给',
     'help' => '先写几句话，按需补充详情。',
     'choose' => '您的意向',

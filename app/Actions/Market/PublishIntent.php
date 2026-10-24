@@ -75,6 +75,26 @@ final class PublishIntent
         DB::transaction(function () use ($user, $intent): void {
             $locked = ActorProfileIntent::query()->lockForUpdate()->findOrFail($intent->id);
             Gate::forUser($user)->authorize('update', $locked);
+            $snapshot = $locked->publishedVersion?->snapshot;
+            if (is_array($snapshot)) {
+                $media = $snapshot['media'] ?? [];
+                $uuids = array_column($media, 'uuid');
+                $locked->media()->whereNotIn('uuid', $uuids)->delete();
+                foreach ($media as $item) {
+                    $existing = $locked->media()->withTrashed()->where('uuid', $item['uuid'])->first();
+                    // Discard restores content/order, but never silently widens a file's privacy.
+                    $visibility = $existing?->visibility === 'private' ? 'private' : ($item['visibility'] ?? 'same');
+                    if ($existing !== null) {
+                        $existing->restore();
+                        $existing->update(['position' => $item['position'], 'caption' => $item['caption'], 'visibility' => $visibility]);
+                    } else {
+                        $restored = $locked->media()->make(['asset_id' => $item['asset_id'], 'position' => $item['position'],
+                            'caption' => $item['caption'], 'visibility' => $visibility, 'created_by_actor_id' => $user->actor->id]);
+                        $restored->uuid = $item['uuid'];
+                        $restored->save();
+                    }
+                }
+            }
             $locked->forceFill(['working_copy' => null])->save();
         });
     }

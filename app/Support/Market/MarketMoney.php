@@ -34,9 +34,11 @@ final class MarketMoney
         return $digits.($fraction === '' ? '' : '.'.$fraction);
     }
 
-    public static function format(int $amount): string
+    public static function format(int|string $amount): string
     {
-        $formatted = Toman::format($amount);
+        [$whole, $fraction] = array_pad(explode('.', (string) $amount, 2), 2, '');
+        $fraction = rtrim($fraction, '0');
+        $formatted = Toman::format((int) $whole).($fraction === '' ? '' : '.'.$fraction);
         $locale = app()->getLocale();
         if (in_array($locale, ['fa', 'ar'], true)) {
             $formatted = strtr($formatted, array_combine(range(0, 9), preg_split('//u', $locale === 'fa' ? '۰۱۲۳۴۵۶۷۸۹' : '٠١٢٣٤٥٦٧٨٩', -1, PREG_SPLIT_NO_EMPTY)));

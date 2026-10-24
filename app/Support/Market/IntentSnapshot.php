@@ -4,6 +4,7 @@ namespace App\Support\Market;
 
 use App\Support\SpaceContentSchema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /** Shared snapshot/backfill shape; unknown legacy metadata stays untouched on its source record. */
 final class IntentSnapshot
@@ -32,8 +33,12 @@ final class IntentSnapshot
 
                 return $data;
             })->all();
-        $media = DB::table('actor_profile_intent_media')->where('actor_profile_intent_id', $record->id)
-            ->orderBy('position')->orderBy('id')->get(['uuid', 'asset_id', 'position', 'caption', 'visibility'])->map(fn ($row): array => (array) $row)->all();
+        $mediaQuery = DB::table('actor_profile_intent_media')->where('actor_profile_intent_id', $record->id);
+        // C1's backfill also runs before the subsequent media-history migration.
+        if (Schema::hasColumn('actor_profile_intent_media', 'deleted_at')) {
+            $mediaQuery->whereNull('deleted_at');
+        }
+        $media = $mediaQuery->orderBy('position')->orderBy('id')->get(['uuid', 'asset_id', 'position', 'caption', 'visibility'])->map(fn ($row): array => (array) $row)->all();
 
         return ['core' => $core, 'details' => $details, 'media' => $media, 'kind' => $record->kind,
             'concept_id' => $record->concept_id,
