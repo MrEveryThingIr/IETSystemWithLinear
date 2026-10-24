@@ -82,6 +82,7 @@ use App\Livewire\Notifications\Index as NotificationIndex;
 use App\Livewire\Planner\BasicCreate as PlannerBasicCreate;
 use App\Livewire\Planner\BasicEdit as PlannerBasicEdit;
 use App\Livewire\Planner\Create as PlannerCreate;
+use App\Livewire\Planner\HabitCreate;
 use App\Livewire\Planner\Index as PlannerIndex;
 use App\Livewire\Planner\Meetings\GuestRespond;
 use App\Livewire\Planner\Show as PlannerShow;
@@ -203,6 +204,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/commitments/{commitment}', CommitmentShow::class)->can('view', 'commitment')->name('commitments.show');
     Route::livewire('/planner', PlannerIndex::class)->name('planner.index');
     Route::livewire('/planner/tools/repeat', PlannerRepeatWindow::class)->name('planner.tools.repeat');
+    Route::livewire('/planner/habits/create', HabitCreate::class)->name('planner.habits.create');
     Route::livewire('/planner/create', config('release.profile') === 'planning_baseline' ? PlannerBasicCreate::class : PlannerCreate::class)->name('planner.create');
     Route::livewire('/planner/meetings/{meeting}', App\Livewire\Planner\Meetings\Show::class)->name('planner.meetings.show');
     Route::get('/planner/meetings/{meeting}/calendar.ics', [MeetingCalendarController::class, 'member'])->name('planner.meetings.ics');

@@ -26,6 +26,10 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    @if (session('planner_status'))
+        <flux:callout variant="success" icon="check-circle" data-planner-status>{{ session('planner_status') }}</flux:callout>
+    @endif
+
     @if (session('email_verified_now'))
         <flux:callout variant="success">{{ __('ui.dashboard.verified') }}</flux:callout>
     @endif
@@ -103,6 +107,67 @@
                     </div>
                 </div>
             @endif
+        </flux:card>
+    @endif
+
+    @if ($followUps->isNotEmpty())
+        <flux:card class="space-y-3 border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20" data-today-follow-ups>
+            <div class="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                    <flux:heading size="lg">{{ __('habits.follow_up.title') }}</flux:heading>
+                    <flux:text class="mt-1 text-sm">{{ __('habits.follow_up.help') }}</flux:text>
+                </div>
+                @if ($reportStats['total'] >= 3)
+                    <span class="rounded-full bg-white/80 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-300" data-report-stats>{{ __('habits.follow_up.stats', ['told' => \App\Support\Planner\HabitText::number($reportStats['told']), 'total' => \App\Support\Planner\HabitText::number($reportStats['total'])]) }}</span>
+                @endif
+            </div>
+            <ul class="divide-y divide-amber-100 dark:divide-amber-900/60">
+                @foreach ($followUps as $waiting)
+                    <li wire:key="follow-{{ $waiting->uuid }}" class="space-y-2 py-3" data-follow-up="{{ $waiting->uuid }}">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <a href="{{ route('planner.show', $waiting->plan) }}#occurrence-{{ $waiting->uuid }}" wire:navigate class="min-w-0">
+                                <span class="block truncate font-medium" dir="auto">{{ $waiting->plan->title }}</span>
+                                <span class="text-xs text-zinc-500"><x-app.local-date :value="$waiting->local_date" /> · {{ __('habits.report.expected') }} <x-app.local-time :value="$waiting->scheduled_start_at" /></span>
+                            </a>
+                            <div class="flex flex-wrap gap-2">
+                                <flux:button size="sm" variant="primary" icon="check" wire:click="quickDoneAsPlanned('{{ $waiting->uuid }}')" data-follow-done>{{ __('habits.follow_up.done_as_planned') }}</flux:button>
+                                <flux:button size="sm" variant="ghost" wire:click="openReport('{{ $waiting->uuid }}')" data-follow-other>{{ __('habits.follow_up.other_time') }}</flux:button>
+                                <flux:button size="sm" variant="ghost" wire:click="openReport('{{ $waiting->uuid }}', 'not_done')" data-follow-not>{{ __('habits.report.outcomes.not_done') }}</flux:button>
+                            </div>
+                        </div>
+                        @error('execution.'.$waiting->id)<div class="text-sm text-red-600" role="alert">{{ $message }}</div>@enderror
+                        @if ($reportUuid === $waiting->uuid)
+                            @include('livewire.planner.partials.report-form', ['occurrence' => $waiting])
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+            @if ($followUpCount > $followUps->count())
+                <flux:text class="text-sm">{{ trans_choice('habits.follow_up.more', $followUpCount - $followUps->count(), ['count' => $followUpCount - $followUps->count()]) }}</flux:text>
+            @endif
+        </flux:card>
+    @endif
+
+    @if ($changingHabits->isNotEmpty())
+        <flux:card class="space-y-3" data-today-habits>
+            <flux:heading size="lg">{{ __('habits.today.title') }}</flux:heading>
+            <div class="grid gap-3 md:grid-cols-2">
+                @foreach ($changingHabits as $habitPlan)
+                    @php
+                        $habitPeriod = $habitPlan->periods->first(fn ($period) => $period->verdict === null);
+                        $todayUrges = \App\Support\Planner\RoutineProgress::urges($habitPlan, $today, $today);
+                    @endphp
+                    <div wire:key="habit-{{ $habitPlan->uuid }}" class="space-y-2 rounded-xl border border-teal-200 p-3 dark:border-teal-900">
+                        <a href="{{ route('planner.show', $habitPlan) }}" wire:navigate class="block font-medium hover:underline" dir="auto">{{ $habitPlan->title }}</a>
+                        <div class="text-xs text-zinc-500" dir="auto">{{ __('habits.loop.instead_of', ['habit' => $habitPlan->habit->replaces]) }}</div>
+                        <div class="flex flex-wrap gap-2">
+                            <flux:button size="sm" variant="primary" wire:click="logUrge('{{ $habitPlan->uuid }}', 'replaced')" data-today-urge="replaced">{{ __('habits.today.did', ['routine' => \Illuminate\Support\Str::limit($habitPeriod?->focus ?? __('habits.urges.the_new_routine'), 40)]) }}</flux:button>
+                            <flux:button size="sm" variant="ghost" wire:click="logUrge('{{ $habitPlan->uuid }}', 'gave_in')" data-today-urge="gave_in">{{ __('habits.urges.gave_in_short') }}</flux:button>
+                        </div>
+                        <div class="text-xs text-zinc-500">{{ __('habits.urges.today', ['replaced' => $todayUrges['replaced'], 'gave_in' => $todayUrges['gave_in']]) }}</div>
+                    </div>
+                @endforeach
+            </div>
         </flux:card>
     @endif
 

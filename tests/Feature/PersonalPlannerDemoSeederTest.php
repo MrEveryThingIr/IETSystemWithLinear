@@ -87,7 +87,8 @@ class PersonalPlannerDemoSeederTest extends TestCase
         $missedOccurrence = $missed?->occurrences->first();
         $this->assertNotNull($missedOccurrence);
         $this->assertSame(PlanOccurrenceStatus::Scheduled, $missedOccurrence?->status);
-        $this->assertSame('missed', $missedOccurrence?->executionPhase());
+        // A past occurrence nobody told about is asked about, never counted as not done.
+        $this->assertContains($missedOccurrence?->executionPhase(), ['awaiting_report', 'no_report']);
 
         $groceries = $plans->firstWhere('title', 'Groceries and simple meal preparation');
         $this->assertNotNull($groceries);
