@@ -123,6 +123,19 @@
                     @endif
                 </div>
             </details>
+            @if($versions->isNotEmpty())
+                <details class="rounded-2xl border p-5" data-composer-history>
+                    <summary class="cursor-pointer text-lg font-semibold">{{ __('composer.history') }} ({{ $versions->count() }})</summary>
+                    <ul class="mt-3 divide-y">
+                        @foreach($versions as $version)
+                            <li class="flex flex-wrap items-center justify-between gap-2 py-3">
+                                <span>{{ __('composer.version', ['version' => $version->version]) }} · <time datetime="{{ $version->published_at->toIso8601String() }}">{{ $version->published_at->locale(app()->getLocale())->isoFormat('LLL') }}</time>@if($version->id === $intent->published_version_id) <span class="text-xs text-zinc-500">({{ __('composer.current') }})</span>@endif</span>
+                                <span class="flex gap-2"><flux:button size="sm" :href="route('intents.versions.show', [$intent, $version])" target="_blank">{{ __('composer.view_version') }}</flux:button>@if($version->id !== $intent->published_version_id)<flux:button size="sm" wire:click="restoreVersion('{{ $version->uuid }}')" wire:confirm="{{ __('composer.restore_confirm') }}">{{ __('composer.restore') }}</flux:button>@endif</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </details>
+            @endif
         </div>
         <aside x-show="screen === 'preview' || wide" class="min-w-0 rounded-2xl border p-5 lg:sticky lg:top-24" role="region" aria-label="{{ __('composer.preview') }}">
             <h2 class="mb-4 text-lg font-semibold">{{ __('composer.preview') }}</h2>

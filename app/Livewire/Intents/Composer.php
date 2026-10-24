@@ -4,6 +4,7 @@ namespace App\Livewire\Intents;
 
 use App\Actions\Market\ManageIntentMedia;
 use App\Actions\Market\PublishIntent;
+use App\Actions\Market\RestoreIntentVersion;
 use App\Actions\Market\SaveIntentWorkingCopy;
 use App\Actions\Profile\CreateActorProfileIntent;
 use App\Actions\Profile\EnsureActorProfile;
@@ -212,6 +213,15 @@ class Composer extends Component
         $this->notice = __('composer.discarded');
     }
 
+    public function restoreVersion(string $uuid): void
+    {
+        abort_unless($this->intent !== null, 404);
+        $version = $this->intent->versions()->where('uuid', $uuid)->firstOrFail();
+        app(RestoreIntentVersion::class)->execute($this->user(), $this->intent, $version);
+        $this->mount($this->intent->fresh());
+        $this->notice = __('composer.restored', ['version' => $version->version]);
+    }
+
     public function uploadMedia(): void
     {
         $this->validate(['upload' => ['required', 'file', 'max:'.MediaLimits::kilobytes('asset')],
@@ -342,6 +352,7 @@ class Composer extends Component
             'suggestions' => IntentDetailCatalog::suggestions($this->core['subject_kind'] ?? 'other'),
             'detailTypes' => NormalizeIntentDetails::TYPES, 'legacyPrice' => $this->hasLegacyPrice(),
             'publisher' => $this->publisher(),
+            'versions' => $this->intent?->versions()->reorder('version', 'desc')->limit(50)->get() ?? collect(),
             'mediaItems' => $this->intent?->media()->with('asset')->get() ?? collect(),
             'referenceChoices' => $this->referenceChoices(),
             'presentation' => app(IntentPresentation::class)->build($this->previewSnapshot(), $this->previewAudience === 'owner' ? $user : null, $this->previewAudience === 'owner', $this->intent),

@@ -10,6 +10,7 @@ use App\Models\IntentDetailTemplate;
 use App\ProfileIntentStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
@@ -99,5 +100,42 @@ class ComposerInteractionTest extends TestCase
         $this->publishSurfaces($other, ['market']);
         $this->actingAs($other)->get(route('intents.compose.edit', $post))->assertForbidden();
         $this->actingAs($owner)->get(route('intents.create'))->assertOk();
+    }
+
+    public function test_history_restores_an_old_version_as_a_draft_without_touching_history(): void
+    {
+        $owner = Actor::factory()->create()->user;
+        $this->publishSurfaces($owner, ['market']);
+        $component = Livewire::actingAs($owner)->test(Composer::class)->set('core.description', 'First wording')->call('publish');
+        $component->set('core.description', 'Second wording')->call('publish');
+        $post = ActorProfileIntent::query()->sole();
+        $this->assertSame(2, $post->versions()->count());
+        $first = $post->versions()->first();
+        $hash = $first->content_hash;
+
+        $component->call('restoreVersion', $first->uuid)->assertSet('core.description', 'First wording');
+        $post->refresh();
+        $this->assertNotNull($post->working_copy);
+        $this->assertSame('Second wording', DB::table('actor_profile_intents')->where('id', $post->id)->value('description'));
+        $this->assertSame($hash, $first->fresh()->content_hash);
+        $this->assertSame(2, $post->versions()->count());
+
+        $component->call('publish');
+        $this->assertSame(3, $post->versions()->count());
+        $this->assertSame('First wording', $post->fresh()->publishedVersion->snapshot['core']['description']);
+        $this->actingAs($owner)->get(route('intents.versions.show', [$post, $first]))->assertOk()->assertSee('First wording');
+    }
+
+    public function test_history_is_private_to_managers_and_scoped_to_the_post(): void
+    {
+        $owner = Actor::factory()->create()->user;
+        $this->publishSurfaces($owner, ['market']);
+        Livewire::actingAs($owner)->test(Composer::class)->set('core.description', 'Mine')->call('publish');
+        $post = ActorProfileIntent::query()->sole();
+        $version = $post->versions()->sole();
+        $other = Actor::factory()->create()->user;
+        $this->publishSurfaces($other, ['market']);
+        $this->actingAs($other)->get(route('intents.versions.show', [$post, $version]))->assertForbidden();
+        Livewire::actingAs($other)->test(Composer::class, ['intent' => $post])->assertForbidden();
     }
 }

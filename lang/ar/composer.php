@@ -126,4 +126,11 @@ return [
         'delivery_mode' => 'عن بُعد أو حضورياً',
         'availability' => 'التوفر',
     ],
+    'history' => 'السجل',
+    'version' => 'الإصدار :version',
+    'current' => 'الحالي',
+    'view_version' => 'عرض',
+    'restore' => 'استعادة كمسودة',
+    'restore_confirm' => 'استبدال تغييراتك غير المنشورة بهذا الإصدار؟ لن يُنشر شيء حتى تنشر.',
+    'restored' => 'تمت استعادة الإصدار :version كمسودة.',
 ];

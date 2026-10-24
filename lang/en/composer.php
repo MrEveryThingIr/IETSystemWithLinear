@@ -126,4 +126,11 @@ return [
         'delivery_mode' => 'Online or in person',
         'availability' => 'Availability',
     ],
+    'history' => 'History',
+    'version' => 'Version :version',
+    'current' => 'Current',
+    'view_version' => 'View',
+    'restore' => 'Restore as draft',
+    'restore_confirm' => 'Replace your unpublished changes with this version? Nothing is published until you publish.',
+    'restored' => 'Version :version restored as a draft.',
 ];

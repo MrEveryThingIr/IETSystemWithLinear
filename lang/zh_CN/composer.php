@@ -126,4 +126,11 @@ return [
         'delivery_mode' => '线上或线下',
         'availability' => '可用时间',
     ],
+    'history' => '历史',
+    'version' => '版本 :version',
+    'current' => '当前',
+    'view_version' => '查看',
+    'restore' => '恢复为草稿',
+    'restore_confirm' => '用此版本替换您未发布的更改？在您发布之前不会公开任何内容。',
+    'restored' => '版本 :version 已恢复为草稿。',
 ];

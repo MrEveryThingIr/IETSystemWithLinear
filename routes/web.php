@@ -204,6 +204,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
     Route::livewire('/intents/compose', IntentComposer::class)->name('intents.compose');
     Route::livewire('/intents/{intent}/compose', IntentComposer::class)->whereUuid('intent')->can('update', 'intent')->name('intents.compose.edit');
+    Route::get('/intents/{intent}/versions/{version:uuid}', [IntentPresentationController::class, 'version'])->whereUuid('intent')->can('update', 'intent')->scopeBindings()->name('intents.versions.show');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');
     Route::livewire('/intents/{intent}/photos', Photos::class)->can('update', 'intent')->name('intents.photos');
     Route::livewire('/journeys', JourneyIndex::class)->name('journeys.index');
