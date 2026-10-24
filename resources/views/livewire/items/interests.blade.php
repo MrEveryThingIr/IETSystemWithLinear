@@ -1,5 +1,5 @@
 <section class="space-y-5 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900" id="interests" aria-labelledby="interests-heading" data-interests>
-    <header class="flex flex-wrap items-start justify-between gap-3">
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0 flex-1 space-y-1">
             <div class="flex items-center gap-2">
                 <flux:icon name="heart" class="size-5 text-zinc-500" />
@@ -9,7 +9,7 @@
             <flux:text size="sm">{{ __('items.interests.help') }}</flux:text>
         </div>
         @unless ($formOpen)
-            <flux:button variant="primary" size="sm" icon="plus" wire:click="add" data-interest-add>{{ __('items.interests.add') }}</flux:button>
+            <flux:button variant="primary" size="sm" icon="plus" wire:click="add" class="self-start" data-interest-add>{{ __('items.interests.add') }}</flux:button>
         @endunless
     </header>
 

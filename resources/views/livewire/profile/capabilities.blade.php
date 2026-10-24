@@ -3,7 +3,7 @@
     'mx-auto max-w-4xl' => ! $embedded,
     'rounded-2xl border border-zinc-200 bg-white p-4 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900' => $embedded,
 ]) data-capabilities-page id="abilities" aria-labelledby="abilities-heading">
-    <header class="flex flex-wrap items-start justify-between gap-3">
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0 flex-1 space-y-1">
             @if ($embedded)
                 <div class="flex items-center gap-2">
@@ -18,7 +18,7 @@
             @endif
         </div>
         @unless ($formOpen)
-            <flux:button variant="primary" size="sm" icon="plus" wire:click="add" data-capability-add>{{ __('capabilities.add') }}</flux:button>
+            <flux:button variant="primary" size="sm" icon="plus" wire:click="add" class="self-start" data-capability-add>{{ __('capabilities.add') }}</flux:button>
         @endunless
     </header>
 
