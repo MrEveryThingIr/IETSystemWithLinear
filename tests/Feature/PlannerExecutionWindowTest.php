@@ -39,10 +39,13 @@ class PlannerExecutionWindowTest extends TestCase
             $this->assertRejected(fn () => $transition->start($occurrence, $actor->user));
             $this->assertNull($occurrence->fresh()->actual_start_at);
 
+            // Nothing can be done before its time.
+            $this->assertRejected(fn () => $transition->complete($occurrence, $actor->user));
+            $this->assertRejected(fn () => $transition->markDone($occurrence, $actor->user));
+            $this->assertNull($occurrence->fresh()->actual_start_at);
+
             CarbonImmutable::setTestNow('2026-09-25 05:45:00 UTC');
             $this->assertSame(PlanOccurrenceWindowState::Ready, $occurrence->windowState());
-            $this->assertRejected(fn () => $transition->complete($occurrence, $actor->user));
-            $this->assertNull($occurrence->fresh()->actual_start_at);
 
             CarbonImmutable::setTestNow('2026-09-25 06:05:00 UTC');
             $this->assertSame(PlanOccurrenceWindowState::Late, $occurrence->windowState());
@@ -67,7 +70,8 @@ class PlannerExecutionWindowTest extends TestCase
         try {
             $actor = Actor::factory()->create();
             $context = app(EnsurePersonalContext::class)->execute($actor->user);
-            $plan = app(CreatePlan::class)->execute($context, $actor->user, 'Study', timezone: 'Europe/Berlin');
+            // A meeting-like plan: it can only be started inside its window.
+            $plan = app(CreatePlan::class)->execute($context, $actor->user, 'Study', timezone: 'Europe/Berlin', metadata: ['kind' => 'meeting']);
             $rule = app(CreatePlanScheduleRule::class)->execute(
                 $plan, $actor->user, PlanScheduleFrequency::Once, '2026-09-25', '08:00', 60,
                 windowBeforeMinutes: 15, windowAfterMinutes: 10,

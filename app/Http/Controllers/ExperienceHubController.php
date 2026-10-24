@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\FulfillmentStatus;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\BusinessMembership;
+use App\Models\Commitment;
 use App\Models\GroupMembership;
 use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\HomeTodayProjection;
+use App\Support\QuantityAmount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -130,6 +133,39 @@ class ExperienceHubController extends Controller
                 'primary' => ['label' => __('experience.hubs.work.open_deals'), 'href' => route('deals.index')],
                 'items' => $activeWork,
                 'empty' => __('experience.hubs.work.active_empty'),
+            ];
+        }
+
+        if ($canDeals && $user->actor !== null) {
+            $actorId = (int) $user->actor->id;
+            $commitments = Commitment::query()
+                ->where('status', 'active')
+                ->where(fn ($query) => $query->where('obligor_actor_id', $actorId)->orWhere('beneficiary_actor_id', $actorId))
+                ->with(['planBinding', 'fulfillments:id,commitment_id,quantity,status'])
+                ->latest('updated_at')
+                ->limit(6)
+                ->get();
+            $sections[] = [
+                'title' => __('work.hub.commitments'),
+                'help' => __('work.hub.commitments_help'),
+                'count' => $commitments->count(),
+                'items' => $commitments->map(function (Commitment $commitment) use ($actorId): array {
+                    $accepted = $commitment->fulfillments->where('status', FulfillmentStatus::Accepted)
+                        ->reduce(fn (string $sum, $f): string => QuantityAmount::add($sum, (string) $f->quantity), QuantityAmount::normalize('0'));
+                    $waiting = $commitment->fulfillments->whereIn('status', [FulfillmentStatus::Submitted, FulfillmentStatus::ClarificationRequested])->count();
+
+                    return [
+                        'title' => $commitment->title,
+                        'meta' => implode(' · ', array_filter([
+                            (int) $commitment->obligor_actor_id === $actorId ? __('work.hub.i_do') : __('work.hub.for_me'),
+                            __('work.hub.progress', ['done' => self::quantity($accepted), 'total' => self::quantity((string) $commitment->quantity), 'unit' => (string) $commitment->unit]),
+                            $commitment->planBinding ? __('work.hub.planned') : __('work.hub.not_planned'),
+                            $waiting > 0 ? trans_choice('work.hub.waiting_review', $waiting, ['count' => $waiting]) : null,
+                        ])),
+                        'href' => route('commitments.show', $commitment),
+                    ];
+                })->all(),
+                'empty' => __('work.hub.commitments_empty'),
             ];
         }
 
@@ -281,5 +317,12 @@ class ExperienceHubController extends Controller
         abort_unless($user instanceof User, 403);
 
         return $user;
+    }
+
+    private static function quantity(string $value): string
+    {
+        $normalized = QuantityAmount::normalize($value);
+
+        return str_contains($normalized, '.') ? rtrim(rtrim($normalized, '0'), '.') : $normalized;
     }
 }

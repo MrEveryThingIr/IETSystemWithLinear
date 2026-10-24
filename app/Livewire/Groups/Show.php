@@ -11,6 +11,7 @@ use App\Actions\Groups\TransitionGroupMembership;
 use App\Exceptions\CannotLeaveGroupWithoutOwner;
 use App\GroupPermission;
 use App\Models\Actor;
+use App\Models\ActorProfileIntent;
 use App\Models\Admission;
 use App\Models\Group;
 use App\Models\GroupMembership;
@@ -18,6 +19,9 @@ use App\Models\GroupRoleChangeRequest;
 use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\User;
+use App\Services\Surfaces\FeatureSurfaceAccess;
+use App\Support\Parties\Party;
+use App\Support\Parties\PartyAuthority;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -261,7 +265,17 @@ class Show extends Component
         $recentContent = $publishedContent->filter(fn (SpaceContent $content): bool => $content->pinned_at === null)->take(6)->values();
         $canManageAnything = $canManageGroup || $canManageRoles || $canManageMembers || $canApproveRoleChanges || $canTransferOwnership || $admissions->isNotEmpty();
 
+        $user = request()->user();
+        $canUseMarket = $user instanceof User && app(FeatureSurfaceAccess::class)->allows($user, 'market');
+        $groupMarket = $canUseMarket
+            ? ActorProfileIntent::query()->visibleTo($user)->where('publisher_group_id', $this->group->id)->with('concept.labels')->latest('updated_at')->limit(5)->get()
+            : collect();
+        $canPublishForGroup = $canUseMarket && app(PartyAuthority::class)->canActFor($user, Party::of($this->group));
+
         return view('livewire.groups.show', compact(
+            'canUseMarket',
+            'groupMarket',
+            'canPublishForGroup',
             'memberships',
             'roles',
             'availableRoles',

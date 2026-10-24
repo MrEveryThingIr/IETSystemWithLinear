@@ -2,176 +2,153 @@
 @section('title', __('business.catalog.title').' — '.$business->name)
 
 @section('content')
-<style>
-.cat{max-width:1220px;margin:auto;padding:26px 16px 70px}.cat-head{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}.cat-head h1{font-size:32px;margin:4px 0}.muted{color:#667085;line-height:1.8}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:0;border-radius:14px;padding:10px 14px;font-weight:900;cursor:pointer}.primary{background:#4f46e5;color:#fff}.light{background:#fff;color:#334155;border:1px solid #cbd5e1}.green{background:#047857;color:#fff}
-.panel{background:#fff;border:1px solid #e4e7ec;border-radius:24px;margin-top:18px;padding:20px;box-shadow:0 7px 24px rgba(15,23,42,.04)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.listings{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:14px}.listing{border:1px solid #e2e8f0;border-radius:20px;padding:18px;background:#fff}.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:850}.listing h3{font-size:20px;margin:10px 0 6px}.prices{margin-top:12px;display:grid;gap:5px}.price{font-size:14px;color:#334155}.price-form{margin-top:14px;padding-top:14px;border-top:1px dashed #cbd5e1}.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-label span{display:block;font-size:13px;font-weight:850;margin-bottom:6px}input,select,textarea{width:100%;border:1.5px solid #aab4c4;border-radius:12px;padding:11px;background:#fff}.empty{border:2px dashed #cbd5e1;border-radius:20px;padding:30px;text-align:center;color:#64748b}
-@media(max-width:800px){.grid,.price-grid{grid-template-columns:1fr}}
-</style>
-<main class="cat">
-    @if(session('status'))<div class="panel" style="background:#ecfdf5;color:#065f46;font-weight:900">✓ {{ session('status') }}</div>@endif
-    @if($errors->any())<div class="panel" style="background:#fff1f2;color:#9f1239"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-
-    <header class="cat-head">
-        <div>
-            <a href="{{ route('businesses.show',$business) }}" style="text-decoration:none;color:#4f46e5;font-weight:900">← {{ $business->name }}</a>
-            <h1>{{ __('business.catalog.heading') }}</h1>
-            <p class="muted">{{ __('business.catalog.intro') }}</p>
-        </div>
-        @if($canUsePlanner && $business->contextBinding?->context)
-            <a class="btn light" href="{{ route('planner.index',['context'=>$business->contextBinding->context->uuid]) }}">{{ __('business.catalog.routines') }}</a>
-        @endif
-    </header>
-
-    @if($canManage)
-        <section class="panel">
-            <h2 style="margin-top:0">{{ __('business.catalog.taxonomy') }}</h2>
-            <p class="muted">{{ __('business.catalog.taxonomy_help') }}</p>
-            <form method="POST" action="{{ route('businesses.catalog.categories.store',$business) }}">
-                @csrf
-                <div class="grid">
-                    <label><span>{{ __('business.catalog.category_name') }}</span><input name="name" required maxlength="180"></label>
-                    <label><span>{{ __('business.catalog.slug_optional') }}</span><input name="slug" maxlength="180"></label>
-                    <label><span>{{ __('business.catalog.parent_category') }}</span>
-                        <select name="parent_id">
-                            <option value="">{{ __('business.catalog.root') }}</option>
-                            @foreach($business->categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                </div>
-                <button class="btn light" style="margin-top:12px">＋ {{ __('business.catalog.add_category') }}</button>
-            </form>
-        </section>
-
-        <section class="panel">
-            <h2 style="margin-top:0">＋ {{ __('business.catalog.new_listing') }}</h2>
-            <p class="muted">{{ __('business.catalog.new_listing_help') }}</p>
-            <form method="POST" action="{{ route('businesses.catalog.listings.store',$business) }}">
-                @csrf
-                <div class="grid">
-                    <label><span>{{ __('business.catalog.listing_type') }}</span>
-                        <select name="listing_type" required>
-                            <option value="good">{{ __('business.catalog.types.good') }}</option>
-                            <option value="service">{{ __('business.catalog.types.service') }}</option>
-                            <option value="property">{{ __('business.catalog.types.property') }}</option>
-                            <option value="other">{{ __('business.catalog.types.other') }}</option>
-                        </select>
-                    </label>
-                    <label><span>{{ __('business.catalog.category') }}</span>
-                        <select name="category_id">
-                            <option value="">{{ __('business.catalog.no_category') }}</option>
-                            @foreach($business->categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <label><span>{{ __('business.catalog.visibility') }}</span>
-                        <select name="visibility"><option value="private">{{ __('business.catalog.visibilities.private') }}</option><option value="members">{{ __('business.catalog.visibilities.members') }}</option><option value="public">{{ __('business.catalog.visibilities.public') }}</option></select>
-                    </label>
-                </div>
-                <label style="display:block;margin-top:12px"><span>{{ __('business.catalog.listing_title') }}</span><input name="title" required maxlength="220"></label>
-                <label style="display:block;margin-top:12px"><span>{{ __('business.catalog.short_description') }}</span><input name="short_description" maxlength="500"></label>
-                <label style="display:block;margin-top:12px"><span>{{ __('business.catalog.description') }}</span><textarea name="description" rows="4"></textarea></label>
-                <button class="btn primary" style="margin-top:12px">{{ __('business.catalog.create_draft') }}</button>
-            </form>
-        </section>
+@php
+    $item = 'min-w-0 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50';
+    $categoryOptions = $business->categories->mapWithKeys(fn ($category) => [$category->id => $category->name])->all();
+    $sharedLabels = app(\App\Support\Categories\CategoryCatalog::class)->labels($business->categories->pluck('concept_id')->filter()->map(fn ($id) => (int) $id)->unique()->values()->all());
+@endphp
+<div class="mx-auto max-w-6xl space-y-6" data-business-catalog>
+    @if (session('status'))<flux:callout variant="success" icon="check-circle">{{ session('status') }}</flux:callout>@endif
+    @if ($errors->any())
+        <flux:callout variant="danger" icon="exclamation-triangle"><ul class="list-disc ps-5">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></flux:callout>
     @endif
 
-    <section class="panel">
-        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-            <div><h2 style="margin:0">{{ __('business.catalog.listings') }}</h2><p class="muted" style="margin:5px 0 0">{{ __('business.catalog.versions_help') }}</p></div>
-            <span class="badge">{{ $business->listings->count() }}</span>
-        </div>
-        <div class="listings">
-            @forelse($business->listings as $listing)
-                @php($version = $listing->currentVersion)
-                <article class="listing">
-                    <div class="badges">
-                        <span class="badge">{{ $listing->listing_type }}</span>
-                        <span class="badge">{{ $listing->status }}</span>
-                        <span class="badge">{{ $listing->visibility }}</span>
-                        @if($listing->category)<span class="badge">{{ $listing->category->name }}</span>@endif
-                    </div>
-                    <h3>{{ $version?->title ?? __('business.catalog.untitled') }}</h3>
-                    @if($version?->short_description)<p class="muted">{{ $version->short_description }}</p>@endif
+    <div>
+        <flux:button :href="route('businesses.show', $business)" variant="ghost" size="sm" icon="arrow-left" class="rtl:[&_svg]:rotate-180">{{ $business->name }}</flux:button>
+    </div>
+    <x-app.page-header :title="__('business.catalog.heading')" :description="__('business.catalog.intro')">
+        @if ($canUsePlanner && $business->contextBinding?->context)
+            <x-slot:actions>
+                <flux:button :href="route('planner.index', ['context' => $business->contextBinding->context->uuid])" variant="ghost">{{ __('business.catalog.routines') }}</flux:button>
+            </x-slot:actions>
+        @endif
+    </x-app.page-header>
 
-                    @if($version?->propertyDetails)
-                        <div class="badges">
-                            @if($version->propertyDetails->transaction_mode)<span class="badge">{{ $version->propertyDetails->transaction_mode }}</span>@endif
-                            @if($version->propertyDetails->property_class)<span class="badge">{{ $version->propertyDetails->property_class }}</span>@endif
-                            @if($version->propertyDetails->construction_area)<span class="badge">{{ $version->propertyDetails->construction_area }} m²</span>@endif
-                            @if($version->propertyDetails->bedrooms !== null)<span class="badge">{{ $version->propertyDetails->bedrooms }} {{ __('business.catalog.bed') }}</span>@endif
+    @if ($canManage)
+        <div class="grid gap-6 lg:grid-cols-2">
+            <x-app.panel :title="__('business.catalog.taxonomy')" :help="__('business.catalog.taxonomy_help')" icon="folder">
+                @if ($business->categories->isNotEmpty())
+                    <div class="flex flex-wrap gap-2" data-business-categories>
+                        @foreach ($business->categories as $category)
+                            <flux:badge size="sm" :color="$category->concept_id ? 'indigo' : 'zinc'" class="max-w-full">
+                                <span class="min-w-0 [overflow-wrap:anywhere]">{{ $category->name }}</span>
+                                @if ($category->concept_id && ($sharedLabels[(int) $category->concept_id] ?? '') !== '')
+                                    <span class="ms-1 opacity-75">↔ {{ $sharedLabels[(int) $category->concept_id] }}</span>
+                                @endif
+                            </flux:badge>
+                        @endforeach
+                    </div>
+                    <flux:text class="text-xs">{{ __('business.catalog.shared_link_help') }}</flux:text>
+                @endif
+                <form method="POST" action="{{ route('businesses.catalog.categories.store', $business) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <x-form.input name="name" required maxlength="180" :label="__('business.catalog.category_name')" />
+                        <x-form.input name="slug" maxlength="180" :label="__('business.catalog.slug_optional')" />
+                    </div>
+                    <x-form.select name="parent_id" :label="__('business.catalog.parent_category')" :placeholder="__('business.catalog.root')" :options="$categoryOptions" />
+                    <flux:button type="submit" icon="plus">{{ __('business.catalog.add_category') }}</flux:button>
+                </form>
+            </x-app.panel>
+
+            <x-app.panel :title="__('business.catalog.new_listing')" :help="__('business.catalog.new_listing_help')" icon="plus-circle">
+                <form method="POST" action="{{ route('businesses.catalog.listings.store', $business) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid gap-4 sm:grid-cols-3">
+                        <x-form.select name="listing_type" required :label="__('business.catalog.listing_type')" :options="collect(['good', 'service', 'property', 'other'])->mapWithKeys(fn ($type) => [$type => __('business.catalog.types.'.$type)])->all()" />
+                        <x-form.select name="category_id" :label="__('business.catalog.category')" :placeholder="__('business.catalog.no_category')" :options="$categoryOptions" />
+                        <x-form.select name="visibility" :label="__('business.catalog.visibility')" :options="collect(['private', 'members', 'public'])->mapWithKeys(fn ($visibility) => [$visibility => __('business.catalog.visibilities.'.$visibility)])->all()" />
+                    </div>
+                    <x-form.input name="title" required maxlength="220" :label="__('business.catalog.listing_title')" />
+                    <x-form.input name="short_description" maxlength="500" :label="__('business.catalog.short_description')" />
+                    <x-form.textarea name="description" :label="__('business.catalog.description')" />
+                    <flux:button type="submit" variant="primary">{{ __('business.catalog.create_draft') }}</flux:button>
+                </form>
+            </x-app.panel>
+        </div>
+    @endif
+
+    <x-app.panel :title="__('business.catalog.listings')" :help="__('business.catalog.versions_help')" icon="rectangle-stack">
+        <x-slot:actions><flux:badge>{{ $business->listings->count() }}</flux:badge></x-slot:actions>
+        <div class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
+            @forelse ($business->listings as $listing)
+                @php($version = $listing->currentVersion)
+                <article class="flex flex-col gap-3 {{ $item }}" wire:key="listing-{{ $listing->uuid }}">
+                    <div class="flex flex-wrap gap-1">
+                        <flux:badge size="sm">{{ $listing->listing_type }}</flux:badge>
+                        <flux:badge size="sm" color="zinc">{{ $listing->status }}</flux:badge>
+                        <flux:badge size="sm" color="zinc">{{ $listing->visibility }}</flux:badge>
+                        @if ($listing->category)<flux:badge size="sm" color="indigo" class="max-w-full"><span class="min-w-0 [overflow-wrap:anywhere]">{{ $listing->category->name }}</span></flux:badge>@endif
+                    </div>
+                    <div class="min-w-0">
+                        <flux:heading size="lg" level="3" class="[overflow-wrap:anywhere]" dir="auto">{{ $version?->title ?? __('business.catalog.untitled') }}</flux:heading>
+                        @if ($version?->short_description)<flux:text class="mt-1 [overflow-wrap:anywhere]" dir="auto">{{ $version->short_description }}</flux:text>@endif
+                    </div>
+
+                    @if ($version?->propertyDetails)
+                        <div class="flex flex-wrap gap-1">
+                            @if ($version->propertyDetails->transaction_mode)<flux:badge size="sm" color="zinc">{{ $version->propertyDetails->transaction_mode }}</flux:badge>@endif
+                            @if ($version->propertyDetails->property_class)<flux:badge size="sm" color="zinc">{{ $version->propertyDetails->property_class }}</flux:badge>@endif
+                            @if ($version->propertyDetails->construction_area)<flux:badge size="sm" color="zinc">{{ $version->propertyDetails->construction_area }} m²</flux:badge>@endif
+                            @if ($version->propertyDetails->bedrooms !== null)<flux:badge size="sm" color="zinc">{{ $version->propertyDetails->bedrooms }} {{ __('business.catalog.bed') }}</flux:badge>@endif
                         </div>
                     @endif
 
-                    <div class="prices">
-                        @foreach($listing->prices->take(4) as $price)
-                            <div class="price">
-                                <strong>{{ $price->price_type }}</strong>:
-                                {{ \App\Support\MoneyAmount::format((int)$price->amount_minor, (int)$price->monetaryUnit->exponent) }}
-                                {{ $price->monetaryUnit->code }}
-                                @if($price->basis) / {{ $price->basis }} @endif
-                                <span class="badge">{{ $price->visibility }}</span>
-                                @if($price->reason)<div class="muted" style="font-size:12px">{{ $price->reason }}</div>@endif
-                            </div>
-                        @endforeach
+                    @if ($listing->prices->isNotEmpty())
+                        <ul class="space-y-1 text-sm">
+                            @foreach ($listing->prices->take(4) as $price)
+                                <li class="min-w-0 [overflow-wrap:anywhere]">
+                                    <strong>{{ $price->price_type }}</strong>:
+                                    {{ \App\Support\MoneyAmount::format((int) $price->amount_minor, (int) $price->monetaryUnit->exponent) }} {{ $price->monetaryUnit->code }}
+                                    @if ($price->basis) / {{ $price->basis }} @endif
+                                    <flux:badge size="sm" color="zinc">{{ $price->visibility }}</flux:badge>
+                                    @if ($price->reason)<div class="text-xs text-zinc-500">{{ $price->reason }}</div>@endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    <div class="mt-auto flex flex-wrap gap-2">
+                        @if ($canManage)
+                            <flux:button size="sm" variant="primary" :href="route('businesses.catalog.listings.edit', [$business, $listing])">{{ __('business.catalog.manage_listing') }}</flux:button>
+                        @endif
+                        <flux:button size="sm" variant="ghost" :href="route('businesses.catalog.listings.preview', [$business, $listing])">{{ __('business_listing.preview') }}</flux:button>
                     </div>
 
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-                        @if($canManage)
-                            <a class="btn primary" href="{{ route('businesses.catalog.listings.edit',[$business,$listing]) }}">
-                                {{ __('business.catalog.manage_listing') }}
-                            </a>
-                        @endif
-                        <a class="btn light" href="{{ route('businesses.catalog.listings.preview',[$business,$listing]) }}">
-                            {{ __('business_listing.preview') }}
-                        </a>
-                    </div>
-                    @if($listing->publishedVersion)
-                        <div style="margin-top:13px;color:#047857;font-weight:850">✓ {{ __('business.catalog.published_version') }} #{{ $listing->publishedVersion->version_number }}</div>
+                    @if ($listing->publishedVersion)
+                        <div class="text-sm font-medium text-emerald-700 dark:text-emerald-400">✓ {{ __('business.catalog.published_version') }} #{{ $listing->publishedVersion->version_number }}</div>
                         @php($marketOffer = $marketOffersByListing->get($listing->uuid))
-                        @if($marketOffer && $canUseMarket)
-                            <div style="margin-top:10px;padding:10px 12px;border-radius:13px;background:#ecfdf5;color:#065f46">
+                        @if ($marketOffer && $canUseMarket)
+                            <div class="flex flex-wrap items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
                                 <strong>{{ __('business.catalog.active_market') }}</strong>
-                                <a href="{{ route('intents.matches',$marketOffer) }}" style="margin-inline-start:8px;color:inherit;font-weight:900">
-                                    {{ __('business.catalog.review_matches') }}
-                                </a>
+                                <a href="{{ route('intents.matches', $marketOffer) }}" class="inline-block py-1 font-semibold underline">{{ __('business.catalog.review_matches') }}</a>
                             </div>
-                        @elseif($canManage && $canUseMarket)
-                            <form method="POST" action="{{ route('businesses.catalog.listings.market.store',[$business,$listing]) }}" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1">
+                        @elseif ($canManage && $canUseMarket)
+                            <form method="POST" action="{{ route('businesses.catalog.listings.market.store', [$business, $listing]) }}" class="space-y-2 border-t border-dashed border-zinc-300 pt-3 dark:border-zinc-700">
                                 @csrf
-                                <label>
-                                    <span>{{ __('business.catalog.market_concept_optional') }}</span>
-                                    <input name="concept_label" placeholder="{{ __('business.catalog.market_concept_placeholder') }}">
-                                </label>
-                                <button class="btn green" style="margin-top:8px">
-                                    {{ __('business.catalog.publish_market') }}
-                                </button>
+                                <x-form.input name="concept_label" :label="__('business.catalog.market_concept_optional')" :placeholder="__('business.catalog.market_concept_placeholder')" />
+                                <flux:button type="submit" size="sm" variant="primary">{{ __('business.catalog.publish_market') }}</flux:button>
                             </form>
                         @endif
                     @endif
                 </article>
             @empty
-                <div class="empty">{{ __('business.catalog.empty') }}</div>
+                <flux:text>{{ __('business.catalog.empty') }}</flux:text>
             @endforelse
         </div>
-    </section>
+    </x-app.panel>
 
-    @if($business->kind === 'real_estate' && $business->publicIntakePortals->isNotEmpty())
-        <section class="panel">
-            <h2 style="margin-top:0">{{ __('business.catalog.real_estate_channels') }}</h2>
-            <p class="muted">{{ __('business.catalog.real_estate_help') }}</p>
-            @foreach($business->publicIntakePortals as $portal)
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-                    <a class="btn light" href="{{ route('office.real-estate.index',['portal'=>$portal->uuid]) }}">{{ __('business.catalog.office_cases') }}</a>
-                    @if($business->visibility === 'public')
-                        <a class="btn light" target="_blank" rel="noopener" href="{{ route('public.businesses.show', ['business' => $business->slug]) }}">{{ __('business.catalog.public_website') }}</a>
+    @if ($business->kind === 'real_estate' && $business->publicIntakePortals->isNotEmpty())
+        <x-app.panel :title="__('business.catalog.real_estate_channels')" :help="__('business.catalog.real_estate_help')" icon="home-modern">
+            @foreach ($business->publicIntakePortals as $portal)
+                <div class="flex flex-wrap gap-2">
+                    <flux:button size="sm" variant="ghost" :href="route('office.real-estate.index', ['portal' => $portal->uuid])">{{ __('business.catalog.office_cases') }}</flux:button>
+                    @if ($business->visibility === 'public')
+                        <flux:button size="sm" variant="ghost" target="_blank" rel="noopener" :href="route('public.businesses.show', ['business' => $business->slug])">{{ __('business.catalog.public_website') }}</flux:button>
                     @endif
                 </div>
             @endforeach
-        </section>
+        </x-app.panel>
     @endif
-</main>
+</div>
 @endsection

@@ -5,11 +5,13 @@ namespace App\Livewire\Contracts;
 use App\Actions\Contracts\CreateContractFromProposal;
 use App\Models\Actor;
 use App\Models\Contract;
+use App\Models\PlanTemplate;
 use App\Models\Proposal;
 use App\Models\User;
 use App\ProposalStatus;
 use App\Support\LocalizedNumber;
 use App\Support\MonetaryUnitCatalog;
+use App\Support\Parties\PartyAuthority;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -83,6 +85,11 @@ class Create extends Component
 
     public bool $serviceAutoCreatePlan = true;
 
+    /** new = create the shared plan from the times above when accepted; template = fill the times from a template; later = connect a plan on the work page; none = no plan. */
+    public string $servicePlanChoice = 'new';
+
+    public string $serviceTemplateUuid = '';
+
     public bool $serviceAutoRecognizeObligation = true;
 
     public function mount(): mixed
@@ -141,12 +148,43 @@ class Create extends Component
         return $this->redirectRoute('contracts.show', $contract);
     }
 
+    /** Fills the work times from a template; the person can still change them before sending. */
+    public function updatedServiceTemplateUuid(): void
+    {
+        $user = request()->user();
+        abort_unless($user instanceof User, 403);
+        $template = PlanTemplate::query()
+            ->ownedByAny(app(PartyAuthority::class)->partiesFor($user)->pluck('party')->all())
+            ->where('uuid', $this->serviceTemplateUuid)
+            ->whereIn('frequency', ['once', 'daily', 'weekly'])
+            ->first();
+        if ($template === null) {
+            return;
+        }
+        $this->serviceFrequency = $template->frequency->value;
+        $this->serviceStartTime = $template->start_time;
+        $this->serviceDurationMinutes = $template->duration_minutes;
+        $this->serviceInterval = $template->interval;
+        $this->serviceWeekdays = $template->weekdays ?? [];
+        $this->serviceOccurrenceLimit = $template->occurrence_limit !== null ? (string) $template->occurrence_limit : '';
+        $this->serviceWindowBeforeMinutes = $template->window_before_minutes;
+        $this->serviceWindowAfterMinutes = $template->window_after_minutes;
+        $this->serviceReminderOffsets = implode(',', $template->reminder_offsets ?? []);
+    }
+
     public function render(): View
     {
         return view('livewire.contracts.create', [
             'proposal' => $this->proposal(),
             'monetaryUnits' => MonetaryUnitCatalog::selectable(),
             'weekdayOrder' => TemporalPreferences::weekdayOrder($this->user()->locale),
+            'planTemplates' => $this->serviceWorkflow
+                ? PlanTemplate::query()
+                    ->ownedByAny(app(PartyAuthority::class)->partiesFor($this->user())->pluck('party')->all())
+                    ->whereIn('frequency', ['once', 'daily', 'weekly'])
+                    ->orderBy('name')
+                    ->get()
+                : collect(),
         ]);
     }
 
@@ -187,6 +225,7 @@ class Create extends Component
             'serviceWindowAfterMinutes' => ['integer', 'min:0', 'max:10080'],
             'serviceReminderOffsets' => ['nullable', 'string', 'max:500'],
             'serviceAutoCreatePlan' => ['boolean'],
+            'servicePlanChoice' => ['required', 'in:new,template,later,none'],
             'serviceAutoRecognizeObligation' => ['boolean'],
         ]);
 
@@ -221,7 +260,7 @@ class Create extends Component
             'monetary_unit_code' => $data['serviceMonetaryUnit'],
             'settlement_cycle' => $data['serviceSettlementCycle'],
             'payment_due_days' => $data['servicePaymentDueDays'],
-            'auto_create_plan' => $data['serviceAutoCreatePlan'],
+            'auto_create_plan' => in_array($data['servicePlanChoice'], ['new', 'template'], true),
             'auto_recognize_obligation' => $data['serviceAutoRecognizeObligation'],
             'plan_frequency' => $data['serviceFrequency'],
             'plan_starts_on' => $data['serviceStartsOn'],

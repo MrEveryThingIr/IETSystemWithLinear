@@ -189,11 +189,17 @@
     <flux:card class="space-y-4" data-history>
         <div class="flex flex-wrap items-center justify-between gap-2">
             <flux:heading size="lg">{{ __('bookkeeping.book_show.history') }}</flux:heading>
-            <div class="inline-flex rounded-lg bg-zinc-100 p-1 text-sm dark:bg-zinc-800">
+            <div class="inline-flex max-w-full flex-wrap rounded-lg bg-zinc-100 p-1 text-sm dark:bg-zinc-800">
                 @foreach (['all', 'waiting', 'debts', 'payments'] as $option)
                     <button type="button" wire:click="$set('filter', '{{ $option }}')" class="rounded-md px-3 py-1 {{ $filter === $option ? 'bg-white shadow dark:bg-zinc-900' : 'text-zinc-600 dark:text-zinc-300' }}">{{ __('bookkeeping.filters.'.$option) }}</button>
                 @endforeach
             </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-sm" data-origin-filter>
+            <span class="text-zinc-500">{{ __('bookkeeping.origin.filter') }}</span>
+            @foreach (['all', 'manual', 'iet_workflow', 'import', 'correction'] as $option)
+                <button type="button" wire:click="$set('origin', '{{ $option }}')" aria-pressed="{{ $origin === $option ? 'true' : 'false' }}" class="min-h-9 rounded-full border px-3 py-1 {{ $origin === $option ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900' : 'border-zinc-300 dark:border-zinc-700' }}">{{ __('bookkeeping.origin.'.$option) }}</button>
+            @endforeach
         </div>
 
         <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -208,12 +214,18 @@
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <flux:badge size="sm" color="zinc">{{ __('bookkeeping.types.'.$entry->type->value) }}</flux:badge>
+                                @if ($entry->origin !== \App\Enums\Bookkeeping\EntryOrigin::Manual)
+                                    <flux:badge size="sm" :color="$entry->origin === \App\Enums\Bookkeeping\EntryOrigin::IetWorkflow ? 'indigo' : 'zinc'" data-entry-origin="{{ $entry->origin->value }}">{{ __('bookkeeping.origin.'.$entry->origin->value) }}</flux:badge>
+                                @endif
                                 <span class="font-medium" dir="auto">{{ $sentence($entry) }}</span>
                             </div>
                             <div class="mt-1 text-xs text-zinc-500" dir="auto">
                                 <x-app.local-date :value="$entry->occurred_on" />
                                 · {{ __('bookkeeping.book_show.recorded_by', ['who' => $entry->recorder?->user?->username ?? '']) }}
                                 @if ($entry->description) · {{ $entry->description }} @endif
+                                @if ($entry->source_type === 'fulfillment' && ($source = $workSources->get($entry->source_uuid)) && $source->commitment)
+                                    · <a href="{{ route('commitments.show', $source->commitment) }}#fulfillment-{{ $entry->source_uuid }}" class="inline-block py-1 underline">{{ __('bookkeeping.origin.open_work') }}</a>
+                                @endif
                                 @if ($entry->wallet && (int) $entry->wallet->ledger->owner_actor_id === (int) auth()->user()->actor?->id)
                                     · {{ __('bookkeeping.book_show.from_my_wallet', ['wallet' => $entry->wallet->name]) }}
                                 @endif

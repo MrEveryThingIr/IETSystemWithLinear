@@ -4,6 +4,7 @@ namespace App\Livewire\Groups;
 
 use App\Actions\Conversations\ReviseConversationMessage;
 use App\Actions\Groups\PostGroupSpaceMessage;
+use App\Actions\Messaging\ManageConversation;
 use App\Models\Context;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
@@ -71,6 +72,10 @@ class SpaceChat extends Component
 
         $this->group = $group;
         $this->space = $space;
+        $conversation = Conversation::query()->where('context_id', $this->context()->id)->where('key', 'main')->first();
+        if ($conversation instanceof Conversation) {
+            app(ManageConversation::class)->markRead($user, $conversation);
+        }
     }
 
     public function send(PostGroupSpaceMessage $postMessage): void

@@ -12,6 +12,7 @@ use App\Models\GroupMembership;
 use App\Models\MembershipAgreementAcceptance;
 use App\Models\User;
 use App\PlatformCapability;
+use App\Support\RequestMemo;
 
 class GroupPolicy
 {
@@ -98,7 +99,15 @@ class GroupPolicy
 
     private function allows(User $user, Group $group, string $permission): bool
     {
-        $current = $user->fresh();
+        return (bool) RequestMemo::remember(
+            'group-allows:'.$user->getKey().':'.$group->getKey().':'.$permission,
+            fn (): bool => $this->checkAllows($user, $group, $permission),
+        );
+    }
+
+    private function checkAllows(User $user, Group $group, string $permission): bool
+    {
+        $current = RequestMemo::user($user);
         if (! $current instanceof User || $current->status !== 'active' || ! $current->actor instanceof Actor) {
             return false;
         }

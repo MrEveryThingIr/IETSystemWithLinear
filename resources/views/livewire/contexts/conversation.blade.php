@@ -1,6 +1,9 @@
 <section class="mx-auto max-w-5xl space-y-6">
     <x-app.page-header :title="__('collaboration.conversation.title')" :description="__('collaboration.conversation.help')">
         <x-slot:actions>
+            @if ($conversationUuid && \App\Support\Messaging\MessagingAccess::canUseMessages(auth()->user()))
+                <flux:button :href="route('messages.index', ['c' => $conversationUuid])" variant="ghost" icon="chat-bubble-left-right">{{ __('messages.open_in_messages') }}</flux:button>
+            @endif
             <flux:button :href="route('contexts.timeline', $context)" variant="ghost">
                 {{ __('collaboration.tabs.timeline') }}
             </flux:button>

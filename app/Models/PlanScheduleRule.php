@@ -5,6 +5,7 @@ namespace App\Models;
 use App\PlanScheduleFrequency;
 use App\PlanScheduleRuleStatus;
 use App\PlanTimingMode;
+use App\Support\Planner\OccurrenceTiming;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +34,7 @@ use LogicException;
     'status',
     'month_day',
     'calendar',
+    'close_policy',
 ])]
 class PlanScheduleRule extends Model
 {
@@ -53,6 +55,13 @@ class PlanScheduleRule extends Model
     {
         static::creating(function (self $rule): void {
             $rule->uuid ??= (string) Str::uuid();
+            // How long an occurrence stays possible follows what the plan is,
+            // fixed when the rule is made so later relabelling changes nothing.
+            if (! in_array($rule->close_policy, OccurrenceTiming::POLICIES, true)) {
+                $kind = Plan::query()->whereKey($rule->plan_id)->value('metadata');
+                $kind = is_array($kind) ? $kind : json_decode((string) $kind, true);
+                $rule->close_policy = OccurrenceTiming::policyForKind(is_array($kind) ? ($kind['kind'] ?? null) : null);
+            }
         });
 
         static::updating(function (self $rule): void {
@@ -73,6 +82,7 @@ class PlanScheduleRule extends Model
                 'window_before_minutes',
                 'window_after_minutes',
                 'timezone',
+                'close_policy',
             ])) {
                 throw new LogicException('Schedule rules are immutable; cancel and replace the rule instead.');
             }

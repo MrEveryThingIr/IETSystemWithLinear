@@ -16,6 +16,7 @@ use App\Models\ReferenceContext;
 use App\Models\Relationship;
 use App\Models\User;
 use App\Support\BusinessAccess;
+use App\Support\Messaging\MessagingPrivacy;
 use App\Support\RequestMemo;
 
 class ContextPolicy
@@ -53,6 +54,7 @@ class ContextPolicy
             ContextKind::Reference => $this->reference($context) instanceof ReferenceContext,
             ContextKind::System => false,
             ContextKind::Ledger => $this->ledgerRole($current, $context) !== null,
+            ContextKind::Direct => $this->directMember($current, $context),
         };
     }
 
@@ -82,6 +84,7 @@ class ContextPolicy
             ContextKind::Reference => $this->isReferenceManager($current, $context),
             ContextKind::System => false,
             ContextKind::Ledger => $this->ledgerRole($current, $context)?->canRecord() ?? false,
+            ContextKind::Direct => $this->canWriteDirect($current, $context),
         };
     }
 
@@ -117,6 +120,7 @@ class ContextPolicy
             ContextKind::Reference => $this->isReferenceManager($current, $context),
             ContextKind::System => false,
             ContextKind::Ledger => $this->ledgerRole($current, $context)?->canManage() ?? false,
+            ContextKind::Direct => false,
         };
     }
 
@@ -144,6 +148,7 @@ class ContextPolicy
             ContextKind::Reference => $this->isReferenceManager($current, $context),
             ContextKind::System => false,
             ContextKind::Ledger => $this->ledgerRole($current, $context)?->canManage() ?? false,
+            ContextKind::Direct => false,
         };
     }
 
@@ -165,6 +170,20 @@ class ContextPolicy
     public function manageInteractions(User $user, Context $context): bool
     {
         return $this->manageContent($user, $context);
+    }
+
+    private function directMember(User $current, Context $context): bool
+    {
+        $context->loadMissing('directBinding');
+
+        return $context->directBinding !== null && $current->actor !== null && $context->directBinding->includes((int) $current->actor->id);
+    }
+
+    private function canWriteDirect(User $current, Context $context): bool
+    {
+        return $this->directMember($current, $context)
+            && $current->actor !== null
+            && app(MessagingPrivacy::class)->canSend($current->actor, $context->directBinding);
     }
 
     private function currentUser(User $user): ?User

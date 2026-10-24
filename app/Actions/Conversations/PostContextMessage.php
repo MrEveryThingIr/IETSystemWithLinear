@@ -8,6 +8,7 @@ use App\Models\ContentEvidenceReference;
 use App\Models\Context;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\ConversationParticipant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -26,9 +27,14 @@ class PostContextMessage
         ?int $replyToMessageId = null,
         array $assetIds = [],
         array $evidenceReferenceIds = [],
+        string $kind = 'text',
+        ?array $meta = null,
+        ?string $clientUuid = null,
     ): ConversationMessage {
         $body = trim($body);
-        abort_if($body === '', 422, 'A message cannot be empty.');
+        abort_unless(in_array($kind, ConversationMessage::KINDS, true), 422, 'Unknown message kind.');
+        abort_if($body === '' && $kind === 'text' && $assetIds === [], 422, 'A message cannot be empty.');
+        abort_if($clientUuid !== null && ! Str::isUuid($clientUuid), 422, 'Invalid client message id.');
         abort_if(mb_strlen($body) > 4000, 422, 'A message may not be longer than 4000 characters.');
         abort_if(count($assetIds) > 10 || count($evidenceReferenceIds) > 10, 422, 'A message may reference at most ten Assets and ten evidence references.');
 
@@ -44,7 +50,18 @@ class PostContextMessage
             $replyToMessageId,
             $assetIds,
             $evidenceReferenceIds,
+            $kind,
+            $meta,
+            $clientUuid,
         ): ConversationMessage {
+            // The same send retried (double tap, flaky network) returns the first message.
+            if ($clientUuid !== null) {
+                $existing = ConversationMessage::query()->where('author_actor_id', $current->actor->id)->where('client_uuid', $clientUuid)->first();
+                if ($existing instanceof ConversationMessage) {
+                    return $existing->fresh(['conversation.context', 'author.user', 'replyTo.author.user', 'assets', 'evidenceReferences.content', 'evidenceReferences.revision']);
+                }
+            }
+
             $now = now();
 
             DB::table('conversations')->insertOrIgnore([
@@ -94,7 +111,16 @@ class PostContextMessage
                 'author_actor_id' => $current->actor->id,
                 'reply_to_message_id' => $replyTo?->id,
                 'body' => $body,
+                'kind' => $kind,
+                'meta' => $meta,
+                'client_uuid' => $clientUuid,
             ]);
+
+            // The author takes part in this conversation (read state, inbox).
+            ConversationParticipant::query()->updateOrCreate(
+                ['conversation_id' => $conversation->id, 'actor_id' => $current->actor->id],
+                ['last_read_message_id' => $message->id, 'last_seen_at' => $now],
+            );
 
             if ($assets->isNotEmpty()) {
                 $message->assets()->attach(

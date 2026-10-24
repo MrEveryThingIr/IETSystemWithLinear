@@ -13,6 +13,7 @@ use App\Models\Context;
 use App\Models\Plan;
 use App\Models\User;
 use App\PlanScheduleFrequency;
+use App\PlanTimingMode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -43,6 +44,8 @@ class CreateCommitmentPlan
         int $windowBeforeMinutes = 0,
         int $windowAfterMinutes = 0,
         array $reminderOffsets = [],
+        PlanTimingMode $timingMode = PlanTimingMode::Fixed,
+        ?int $monthDay = null,
     ): Plan {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('manage', $commitment);
@@ -62,6 +65,8 @@ class CreateCommitmentPlan
             $windowBeforeMinutes,
             $windowAfterMinutes,
             $reminderOffsets,
+            $timingMode,
+            $monthDay,
         ): Plan {
             $locked = Commitment::query()
                 ->with([
@@ -69,7 +74,6 @@ class CreateCommitmentPlan
                     'obligor.user',
                     'beneficiary.user',
                     'serviceTerm.monetaryUnit',
-                    'serviceTerm.referenceMonetaryUnit',
                     'planBinding',
                 ])
                 ->lockForUpdate()
@@ -133,6 +137,8 @@ class CreateCommitmentPlan
                 $windowBeforeMinutes,
                 $windowAfterMinutes,
                 $reminderOffsets,
+                $timingMode,
+                $monthDay,
             );
 
             $binding = CommitmentPlanBinding::query()->create([

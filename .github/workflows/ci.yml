@@ -216,8 +216,14 @@ jobs:
       - name: Composer security audit
         shell: bash
         run: |
-          composer audit --locked --no-interaction 2>&1 | tee "$RUNNER_TEMP/composer-audit.log"
-          echo "::notice title=composer audit::$(tail -n 2 "$RUNNER_TEMP/composer-audit.log" | tr '\n' ' ')"
+          set +e
+          composer audit --locked --no-interaction --format=json > "$RUNNER_TEMP/composer-audit.json"
+          status=$?
+          set -e
+          # Name every affected package in the run's annotations (the log itself is not always reachable).
+          php -r '$d = json_decode((string) file_get_contents($argv[1]), true) ?: []; foreach (($d["advisories"] ?? []) as $pkg => $list) { foreach ($list as $a) { echo "::error title=composer audit::".$pkg." ".($a["affectedVersions"] ?? "")." — ".($a["title"] ?? "")." (".($a["cve"] ?? $a["advisoryId"] ?? "").")\n"; } } foreach (($d["abandoned"] ?? []) as $pkg => $by) { echo "::warning title=composer audit::abandoned ".$pkg."\n"; }' "$RUNNER_TEMP/composer-audit.json"
+          echo "::notice title=composer audit::exit status $status"
+          exit $status
 
       - name: CI evidence
         if: always()

@@ -17,6 +17,7 @@ use App\ProfileIntentStatus;
 use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
 use App\Support\Localization;
+use App\Support\Market\RateBasis;
 use App\Support\TemporalPreferences;
 use App\TimezoneMode;
 use Illuminate\Contracts\View\View;
@@ -416,7 +417,7 @@ class Intents extends Component
             'cashMin' => ['nullable', 'numeric', 'min:0'],
             'cashMax' => ['nullable', 'numeric', 'min:0', 'gte:cashMin'],
             'currencyCode' => [Rule::requiredIf(fn (): bool => filled($this->cashMin) || filled($this->cashMax)), 'nullable', 'string', 'size:3', 'regex:/^[A-Za-z]{3}$/'],
-            'cashBasis' => ['nullable', Rule::in(['total', 'hour', 'day', 'week', 'month', 'year'])],
+            'cashBasis' => ['nullable', Rule::in(RateBasis::values())],
             'exchangeNotes' => ['nullable', 'string', 'max:2000'],
             'title' => ['nullable', 'string', 'max:180'],
             'description' => ['nullable', 'string', 'max:3000'],

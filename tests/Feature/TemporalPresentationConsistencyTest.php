@@ -76,7 +76,7 @@ class TemporalPresentationConsistencyTest extends TestCase
             ->assertOk()
             ->assertSee('data-calendar="persian"', false)
             ->assertSee('data-timezone="Asia/Tehran"', false)
-            ->assertSee('data-ambient-equivalent', false);
+            ->assertSee('data-clock-gregorian', false);
     }
 
     public function test_date_only_values_never_shift_when_profile_timezone_changes(): void

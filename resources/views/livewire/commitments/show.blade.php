@@ -67,33 +67,90 @@
                 @if (! $plan && $commitment->serviceTerm?->auto_create_plan)
                     <flux:callout>{{ __('commitments.show.auto_plan_expected') }}</flux:callout>
                 @elseif (! $plan && $canManage)
-                    <form wire:submit="createPlan" class="space-y-4">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <flux:select wire:model="planFrequency" :label="__('commitments.planner.frequency')">
-                                <flux:select.option value="once">{{ __('commitments.planner.once') }}</flux:select.option>
-                                <flux:select.option value="daily">{{ __('commitments.planner.daily') }}</flux:select.option>
-                                <flux:select.option value="selected_dates">{{ __('commitments.planner.selected_dates') }}</flux:select.option>
-                            </flux:select>
-                            <x-app.calendar-date-input model="planStartsOn" :label="__('commitments.planner.starts_on')" />
-                            <flux:input wire:model="planStartTime" type="time" :label="__('commitments.planner.start_time')" />
-                            <flux:input wire:model="planDurationMinutes" type="number" min="1" :label="__('commitments.planner.duration')" />
-                            @if ($planFrequency === 'daily')
-                                <flux:input wire:model="planOccurrenceLimit" type="number" min="1" :label="__('planner.create.occurrence_limit')" />
-                            @endif
+                    <fieldset class="space-y-2" data-plan-choice>
+                        <legend class="mb-2 text-sm font-medium">{{ __('work.plans.choice') }}</legend>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            @foreach (['new', 'template', 'existing', 'none'] as $option)
+                                <label @class([
+                                    'flex min-h-11 cursor-pointer gap-3 rounded-xl border p-3 text-sm',
+                                    'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-zinc-800' => $planChoice === $option,
+                                    'border-zinc-200 dark:border-zinc-700' => $planChoice !== $option,
+                                ])>
+                                    <input type="radio" wire:model.live="planChoice" value="{{ $option }}" class="mt-1">
+                                    <span class="min-w-0">
+                                        <span class="block font-medium">{{ __('work.plans.choices.'.$option.'.title') }}</span>
+                                        <span class="block text-zinc-500">{{ __('work.plans.choices.'.$option.'.help') }}</span>
+                                    </span>
+                                </label>
+                            @endforeach
                         </div>
+                    </fieldset>
 
-                        @if ($planFrequency === 'selected_dates')
-                            <flux:textarea
-                                wire:model="planSelectedDates"
-                                :label="__('commitments.planner.selected_dates_field')"
-                                :description="__('commitments.planner.selected_dates_help')"
-                                rows="3"
-                            />
+                    @if ($planChoice === 'new')
+                        <form wire:submit="createPlan" class="space-y-4">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <flux:select wire:model="planFrequency" :label="__('commitments.planner.frequency')">
+                                    <flux:select.option value="once">{{ __('commitments.planner.once') }}</flux:select.option>
+                                    <flux:select.option value="daily">{{ __('commitments.planner.daily') }}</flux:select.option>
+                                    <flux:select.option value="selected_dates">{{ __('commitments.planner.selected_dates') }}</flux:select.option>
+                                </flux:select>
+                                <x-app.calendar-date-input model="planStartsOn" :label="__('commitments.planner.starts_on')" />
+                                <flux:input wire:model="planStartTime" type="time" :label="__('commitments.planner.start_time')" />
+                                <flux:input wire:model="planDurationMinutes" type="number" min="1" :label="__('commitments.planner.duration')" />
+                                @if ($planFrequency === 'daily')
+                                    <flux:input wire:model="planOccurrenceLimit" type="number" min="1" :label="__('planner.create.occurrence_limit')" />
+                                @endif
+                            </div>
+
+                            @if ($planFrequency === 'selected_dates')
+                                <flux:textarea
+                                    wire:model="planSelectedDates"
+                                    :label="__('commitments.planner.selected_dates_field')"
+                                    :description="__('commitments.planner.selected_dates_help')"
+                                    rows="3"
+                                />
+                            @endif
+
+                            <flux:input wire:model="planReminderOffsets" :label="__('commitments.planner.reminders')" />
+                            <flux:button type="submit" variant="primary">{{ __('commitments.show.create_plan') }}</flux:button>
+                        </form>
+                    @elseif ($planChoice === 'template')
+                        @if ($templates->isEmpty())
+                            <flux:text>{{ __('work.templates.none') }}</flux:text>
+                        @else
+                            <form wire:submit="applyTemplate" class="space-y-4">
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <flux:select wire:model="templateUuid" :label="__('work.templates.choose')">
+                                        <flux:select.option value="">—</flux:select.option>
+                                        @foreach ($templates as $template)
+                                            <flux:select.option :value="$template->uuid">{{ $template->name }} · {{ __('work.templates.frequency.'.$template->frequency->value) }} · {{ $template->start_time }}</flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                    <x-app.calendar-date-input model="planStartsOn" :label="__('commitments.planner.starts_on')" />
+                                </div>
+                                <flux:text class="text-xs">{{ __('work.templates.applies_shape') }}</flux:text>
+                                <flux:button type="submit" variant="primary">{{ __('work.templates.apply') }}</flux:button>
+                            </form>
                         @endif
-
-                        <flux:input wire:model="planReminderOffsets" :label="__('commitments.planner.reminders')" />
-                        <flux:button type="submit" variant="primary">{{ __('commitments.show.create_plan') }}</flux:button>
-                    </form>
+                    @elseif ($planChoice === 'existing')
+                        @if ($existingPlans->isEmpty())
+                            <flux:text>{{ __('work.plans.no_existing') }}</flux:text>
+                        @else
+                            <form wire:submit="bindExisting" class="space-y-4">
+                                <flux:select wire:model="existingPlanUuid" :label="__('work.plans.existing')">
+                                    <flux:select.option value="">—</flux:select.option>
+                                    @foreach ($existingPlans as $existing)
+                                        <flux:select.option :value="$existing->uuid">{{ $existing->title }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                                @error('existingPlanUuid') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+                                <flux:text class="text-xs">{{ __('work.plans.existing_help') }}</flux:text>
+                                <flux:button type="submit" variant="primary">{{ __('work.plans.connect') }}</flux:button>
+                            </form>
+                        @endif
+                    @else
+                        <flux:text>{{ __('work.plans.choices.none.later') }}</flux:text>
+                    @endif
                 @elseif (! $plan)
                     <flux:text>{{ __('commitments.show.no_plan') }}</flux:text>
                 @else
@@ -104,10 +161,28 @@
                                     <x-app.local-datetime :value="$occurrence->scheduled_start_at" />
                                     → <x-app.local-time :value="$occurrence->scheduled_end_at" />
                                 </span>
-                                <flux:badge>{{ __('planner.occurrence_status.'.$occurrence->status->value) }}</flux:badge>
+                                <flux:badge>{{ __('planner.occurrence_phase.'.$occurrence->executionPhase()) }}</flux:badge>
                             </div>
                         @endforeach
                     </div>
+                    @if ($canManage)
+                        <details class="rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-700" data-save-template>
+                            <summary class="cursor-pointer py-1 font-medium">{{ __('work.templates.save_title') }}</summary>
+                            <form wire:submit="saveTemplate" class="mt-3 space-y-3">
+                                <flux:text class="text-xs">{{ __('work.templates.save_help') }}</flux:text>
+                                <flux:input wire:model="templateName" :label="__('work.templates.name')" :placeholder="$plan->title" maxlength="160" />
+                                @if ($templateOwners->count() > 1)
+                                    <flux:select wire:model="templateOwner" :label="__('work.templates.owner')">
+                                        @foreach ($templateOwners as $party)
+                                            <flux:select.option :value="$party['party']->key()">{{ $party['label'] }}</flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                @endif
+                                @error('template') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+                                <flux:button type="submit" size="sm" variant="primary">{{ __('work.templates.save') }}</flux:button>
+                            </form>
+                        </details>
+                    @endif
                 @endif
             </flux:card>
 
@@ -181,6 +256,41 @@
                                         {{ $reference->revision->title }}
                                     </a>
                                 @endforeach
+                            </div>
+                        @endif
+
+                        @if ($fulfillment->status === \App\FulfillmentStatus::Accepted && ($work['isParty'] || ($work['entries'][$fulfillment->id] ?? null)))
+                            @php($entry = $work['entries'][$fulfillment->id] ?? null)
+                            <div class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800" data-work-books>
+                                <flux:heading size="sm">{{ __('work.books.title') }}</flux:heading>
+                                @if ($entry)
+                                    <div class="flex flex-wrap items-center gap-2 text-sm">
+                                        <flux:badge :color="$entry->status->value === 'confirmed' ? 'green' : 'amber'">{{ __('work.books.status.'.$entry->status->value) }}</flux:badge>
+                                        <span>{{ \App\Support\Bookkeeping\Toman::format($entry->amount) }}</span>
+                                        @can('view', $entry->ledger)
+                                            <a href="{{ route('bookkeeping.books.show', $entry->ledger) }}" class="inline-block py-1 underline [overflow-wrap:anywhere]" dir="auto">{{ $entry->ledger->name }}</a>
+                                        @endcan
+                                    </div>
+                                @elseif (($work['amounts'][$fulfillment->id] ?? null) === null)
+                                    <flux:text class="text-sm">{{ __('work.books.no_amount') }}</flux:text>
+                                @elseif ($work['books']->isEmpty())
+                                    <flux:text class="text-sm">{{ __('work.books.no_shared_book') }}</flux:text>
+                                    <flux:button wire:click="createBook" size="sm" variant="ghost">{{ __('work.books.create') }}</flux:button>
+                                @else
+                                    <flux:text class="text-sm">{{ __('work.books.propose_help', ['amount' => \App\Support\Bookkeeping\Toman::format($work['amounts'][$fulfillment->id])]) }}</flux:text>
+                                    <div class="flex flex-wrap items-end gap-2">
+                                        <div class="min-w-0 flex-1">
+                                            <flux:select wire:model="bookChoice.{{ $fulfillment->id }}" :label="__('work.books.book')">
+                                                <flux:select.option value="">—</flux:select.option>
+                                                @foreach ($work['books'] as $book)
+                                                    <flux:select.option :value="$book->uuid">{{ $book->name }}</flux:select.option>
+                                                @endforeach
+                                            </flux:select>
+                                        </div>
+                                        <flux:button wire:click="proposeEntry({{ $fulfillment->id }})" size="sm" variant="primary">{{ __('work.books.propose') }}</flux:button>
+                                    </div>
+                                    @error('bookChoice.'.$fulfillment->id) <div class="text-sm text-red-600">{{ $message }}</div> @enderror
+                                @endif
                             </div>
                         @endif
 

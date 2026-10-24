@@ -12,6 +12,7 @@ use App\Services\Contacts\BusinessContactResolver;
 use App\Services\Contacts\ContactDirectoryService;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\BusinessAccess;
+use App\Support\Market\RateBasis;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -144,7 +145,7 @@ class BusinessClientController extends Controller
             'cash_min' => ['nullable', 'numeric', 'min:0'],
             'cash_max' => ['nullable', 'numeric', 'min:0', 'gte:cash_min'],
             'currency_code' => ['nullable', 'string', 'size:3'],
-            'cash_basis' => ['nullable', Rule::in(['total', 'hour', 'day', 'week', 'month', 'year'])],
+            'cash_basis' => ['nullable', Rule::in(RateBasis::values())],
         ]);
 
         $user = $request->user();

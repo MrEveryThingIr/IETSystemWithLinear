@@ -9,11 +9,18 @@ use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
 use App\ProfileIntentSubjectKind;
 use App\ProfileItemVisibility;
+use App\ProfileVisibility;
+use App\Support\Parties\Party;
+use App\Support\Parties\PartyAuthority;
+use App\Support\RequestMemo;
 use Database\Factories\ActorProfileIntentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -47,6 +54,13 @@ use LogicException;
     'time_window_end',
     'visibility',
     'metadata',
+    'publisher_actor_id',
+    'publisher_business_id',
+    'publisher_group_id',
+    'capability_id',
+    'business_listing_id',
+    'business_listing_version_id',
+    'negotiable',
 ])]
 class ActorProfileIntent extends Model
 {
@@ -79,6 +93,9 @@ class ActorProfileIntent extends Model
                 'concept_id',
                 'kind',
                 'created_by_actor_id',
+                'publisher_actor_id',
+                'publisher_business_id',
+                'publisher_group_id',
             ])) {
                 throw new LogicException('Profile intent semantic identity and provenance cannot be reassigned.');
             }
@@ -108,6 +125,125 @@ class ActorProfileIntent extends Model
     public function concept(): BelongsTo
     {
         return $this->belongsTo(Concept::class);
+    }
+
+    /** Who publishes it: the person, or the business or group they acted for. */
+    public function publisher(): Party
+    {
+        return Party::fromRecord($this, 'publisher')
+            ?? Party::make(Party::ACTOR, (int) $this->profile->actor_id);
+    }
+
+    /** @return BelongsTo<Actor, $this> */
+    public function publisherActor(): BelongsTo
+    {
+        return $this->belongsTo(Actor::class, 'publisher_actor_id');
+    }
+
+    /** @return BelongsTo<Business, $this> */
+    public function publisherBusiness(): BelongsTo
+    {
+        return $this->belongsTo(Business::class, 'publisher_business_id');
+    }
+
+    /** @return BelongsTo<Group, $this> */
+    public function publisherGroup(): BelongsTo
+    {
+        return $this->belongsTo(Group::class, 'publisher_group_id');
+    }
+
+    /** @return BelongsTo<Capability, $this> */
+    public function capability(): BelongsTo
+    {
+        return $this->belongsTo(Capability::class);
+    }
+
+    /** @return BelongsTo<BusinessListing, $this> */
+    public function businessListing(): BelongsTo
+    {
+        return $this->belongsTo(BusinessListing::class);
+    }
+
+    /** @return BelongsTo<BusinessListingVersion, $this> */
+    public function businessListingVersion(): BelongsTo
+    {
+        return $this->belongsTo(BusinessListingVersion::class);
+    }
+
+    /** @return HasMany<ActorProfileIntentMedia, $this> photos and short videos, in order */
+    public function media(): HasMany
+    {
+        return $this->hasMany(ActorProfileIntentMedia::class)->orderBy('position')->orderBy('id');
+    }
+
+    /**
+     * The single rule for who can see a Need or Offer (also used by the policy):
+     * its creator and those who may act for its publisher always; others only
+     * while it is active and its visibility allows them.
+     *
+     * @param  Builder<ActorProfileIntent>  $query
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): void
+    {
+        $current = $user instanceof User ? RequestMemo::user($user) : null;
+        $actorId = $current?->actor?->id;
+        $verified = $current instanceof User && $current->status === 'active' && $current->email_verified_at !== null;
+        $memberships = $actorId !== null ? self::membershipsOf((int) $actorId) : ['businesses' => [], 'managed_businesses' => [], 'groups' => [], 'managed_groups' => []];
+
+        $query->where(function (Builder $visible) use ($actorId, $verified, $memberships): void {
+            if ($actorId !== null) {
+                $visible->whereHas('profile', fn (Builder $profile) => $profile->where('actor_id', $actorId))
+                    ->orWhere('publisher_actor_id', $actorId)
+                    ->orWhereIn('publisher_business_id', $memberships['managed_businesses'])
+                    ->orWhereIn('publisher_group_id', $memberships['managed_groups']);
+            }
+
+            $visible->orWhere(function (Builder $discoverable) use ($verified, $memberships): void {
+                $discoverable->where('status', ProfileIntentStatus::Active->value)
+                    ->where(function (Builder $publisher): void {
+                        $publisher->where(fn (Builder $person) => $person->whereNull('publisher_business_id')->whereNull('publisher_group_id')
+                            ->whereHas('profile.actor', fn (Builder $actor) => $actor->where('status', 'active')))
+                            ->orWhereHas('publisherBusiness', fn (Builder $business) => $business->where('status', 'active'))
+                            ->orWhereNotNull('publisher_group_id');
+                    })
+                    ->where(function (Builder $rule) use ($verified, $memberships): void {
+                        $rule->where('visibility', ProfileItemVisibility::Public->value);
+                        if ($verified) {
+                            $rule->orWhere('visibility', ProfileItemVisibility::Authenticated->value);
+                        }
+                        $rule->orWhere(fn (Builder $members) => $members->where('visibility', ProfileItemVisibility::Members->value)
+                            ->where(fn (Builder $of) => $of->whereIn('publisher_business_id', $memberships['businesses'])
+                                ->orWhereIn('publisher_group_id', $memberships['groups'])));
+                        $rule->orWhere(fn (Builder $inherited) => $inherited->where('visibility', ProfileItemVisibility::Inherited->value)
+                            ->whereHas('profile', function (Builder $profile) use ($verified): void {
+                                $profile->where('visibility', ProfileVisibility::Public->value);
+                                if ($verified) {
+                                    $profile->orWhere('visibility', ProfileVisibility::Authenticated->value);
+                                }
+                            }));
+                    });
+            });
+        });
+    }
+
+    /** @return array{businesses: list<int>, managed_businesses: list<int>, groups: list<int>, managed_groups: list<int>} */
+    public static function membershipsOf(int $actorId): array
+    {
+        return RequestMemo::remember('intent-memberships:'.$actorId, function () use ($actorId): array {
+            $business = DB::table('business_memberships')->where('actor_id', $actorId)->where('status', 'active')->get(['business_id', 'role']);
+            $groups = DB::table('group_memberships')->where('actor_id', $actorId)->where('status', 'active')->pluck('group_id')->map(fn ($id): int => (int) $id)->all();
+            $user = User::query()->whereHas('actor', fn (Builder $actor) => $actor->whereKey($actorId))->first();
+            $managedGroups = $user instanceof User
+                ? array_values(array_filter($groups, fn (int $groupId): bool => app(PartyAuthority::class)->canActFor($user, Party::make(Party::GROUP, $groupId))))
+                : [];
+
+            return [
+                'businesses' => $business->pluck('business_id')->map(fn ($id): int => (int) $id)->all(),
+                'managed_businesses' => $business->whereIn('role', ['owner', 'manager'])->pluck('business_id')->map(fn ($id): int => (int) $id)->values()->all(),
+                'groups' => $groups,
+                'managed_groups' => $managedGroups,
+            ];
+        });
     }
 
     /** @return BelongsTo<Actor, $this> */
@@ -153,6 +289,7 @@ class ActorProfileIntent extends Model
             'return_after_days' => 'integer',
             'closed_at' => 'datetime',
             'metadata' => 'array',
+            'negotiable' => 'boolean',
         ];
     }
 }

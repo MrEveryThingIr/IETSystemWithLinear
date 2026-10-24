@@ -9,13 +9,17 @@ use App\Policies\ActorProfileIntentPolicy;
 use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
+use App\Support\Categories\CategoryCatalog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class IntentMatchFinder
 {
-    public function __construct(private readonly ActorProfileIntentPolicy $policy) {}
+    public function __construct(
+        private readonly ActorProfileIntentPolicy $policy,
+        private readonly CategoryCatalog $catalog,
+    ) {}
 
     /**
      * @return Collection<int, IntentMatchResult>
@@ -31,16 +35,18 @@ class IntentMatchFinder
             ? ProfileIntentKind::Offer
             : ProfileIntentKind::Need;
 
+        $publisher = $source->publisher();
+
         return ActorProfileIntent::query()
+            ->visibleTo($user)
             ->where('status', ProfileIntentStatus::Active->value)
             ->where('kind', $opposite->value)
-            ->whereHas('profile', fn ($query) => $query
-                ->where('actor_id', '!=', $source->profile->actor_id))
-            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset'])
+            ->where('actor_profile_id', '!=', $source->actor_profile_id)
+            ->where(fn ($query) => $query->whereNull($publisher->column('publisher'))->orWhere($publisher->column('publisher'), '!=', $publisher->id))
+            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup'])
             ->latest('updated_at')
             ->limit(500)
             ->get()
-            ->filter(fn (ActorProfileIntent $candidate): bool => $this->policy->view($user, $candidate))
             ->map(fn (ActorProfileIntent $candidate): ?IntentMatchResult => $this->compare($source, $candidate))
             ->filter()
             ->sort(function (IntentMatchResult $left, IntentMatchResult $right): int {
@@ -67,7 +73,8 @@ class IntentMatchFinder
         if ($source->status !== ProfileIntentStatus::Active
             || $candidate->status !== ProfileIntentStatus::Active
             || $source->kind === $candidate->kind
-            || (int) $source->profile->actor_id === (int) $candidate->profile->actor_id
+            || (int) $source->actor_profile_id === (int) $candidate->actor_profile_id
+            || $source->publisher()->key() === $candidate->publisher()->key()
             || ! $this->policy->view($user, $candidate)) {
             return null;
         }
@@ -372,9 +379,23 @@ class IntentMatchFinder
             ->map(fn ($label): string => mb_strtolower(trim((string) $label)))
             ->unique();
 
-        return $leftLabels->intersect($rightLabels)->isNotEmpty()
-            ? 'concept-label'
-            : null;
+        if ($leftLabels->intersect($rightLabels)->isNotEmpty()) {
+            return 'concept-label';
+        }
+
+        // Category tree: one is inside the other, or both sit in the same
+        // subcategory (siblings directly under an area are too broad to count).
+        $leftAncestors = $this->catalog->ancestorIds((int) $left->id);
+        $rightAncestors = $this->catalog->ancestorIds((int) $right->id);
+        if (in_array((int) $right->id, $leftAncestors, true) || in_array((int) $left->id, $rightAncestors, true)) {
+            return 'category-within';
+        }
+        $leftParent = $leftAncestors[0] ?? null;
+        if ($leftParent !== null && $leftParent === ($rightAncestors[0] ?? null) && count($leftAncestors) > 1) {
+            return 'category-sibling';
+        }
+
+        return null;
     }
 
     private function enumCompatible(string $left, string $right): bool

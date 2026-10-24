@@ -163,10 +163,11 @@ class HomeGuidanceService
             );
         }
 
+        // Only something that can still be done: a window that has closed is asked about, not suggested.
         $occurrence = $projection['todayOccurrences']
             ->first(fn (PlanOccurrence $candidate): bool => in_array(
-                $candidate->status,
-                [PlanOccurrenceStatus::InProgress, PlanOccurrenceStatus::Scheduled],
+                $candidate->executionPhase(),
+                ['in_progress', 'now', 'late', 'overdue', 'upcoming'],
                 true,
             ));
 

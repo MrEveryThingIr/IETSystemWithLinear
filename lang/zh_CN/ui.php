@@ -399,7 +399,6 @@ return [
         'request_create_access' => '申请创建群组权限',
         'pending_creation_requests' => '待审核的群组创建权限申请',
         'pending_creation_help' => '审核希望获得群组创建权限的用户申请。',
-
         'your_groups' => '您的群组',
         'no_memberships' => '暂无有效成员身份',
         'no_memberships_help' => '打开一个群组邀请以开始加入申请。',
@@ -461,6 +460,11 @@ return [
         'description_help' => '可选。说明此群组的用途。',
         'timezone' => '群组时区',
         'timezone_help' => '计划时间按此 IANA 时区输入和显示，数据仍以 UTC 存储。',
+        'market' => [
+            'title' => '需求与供给',
+            'add' => '以群组名义发布',
+            'empty' => '本群组尚未发布任何内容。',
+        ],
     ],
     'admission' => [
         'agreement_progress' => '已接受的必要协议：:accepted / :total。',
@@ -556,7 +560,6 @@ return [
         'secret_not_recoverable' => '出于安全考虑，私密链接创建后将被隐藏。',
         'uses' => '已使用 :used/:maximum 次',
         'expires' => '过期于',
-
         'created' => '创建于',
         'created_expires' => '创建于 :created · 过期于 :expires',
         'never' => '永不过期',
@@ -586,7 +589,10 @@ return [
         'actions' => '操作',
         'accountless' => '无账户',
         'status' => '状态',
-        'statuses' => ['active' => '有效', 'archived' => '已归档'],
+        'statuses' => [
+            'active' => '有效',
+            'archived' => '已归档',
+        ],
         'actor_number' => '参与者 #:id',
         'all' => '所有参与者',
         'view' => '查看',
@@ -730,7 +736,9 @@ return [
         'type_select' => '选择',
         'select_options' => '选择项',
         'select_options_help' => '每行一个选项，格式为 value|Label。',
-        'select_options_placeholder' => "on_track|按计划\ndelayed|延迟\nblocked|受阻",
+        'select_options_placeholder' => 'on_track|按计划
+delayed|延迟
+blocked|受阻',
         'remove_field' => '移除字段',
         'add_field' => '添加字段',
         'update_definition' => '更新草稿定义',
@@ -850,7 +858,6 @@ return [
         'shared_help' => '此视图只包含资料所有者明确共享给您的信息。',
         'profile_owner' => '资料所有者',
         'expires_label' => '访问权限过期时间',
-
         'expires_at' => '访问将在 :date 过期',
         'no_expiry' => '除非被撤销，否则访问不会过期。',
         'semantic' => '共享的语义陈述',

@@ -112,6 +112,18 @@ class Plan extends Model
         return $this->belongsTo(Actor::class, 'created_by_actor_id');
     }
 
+    /** @return HasOne<Planner\PlanHabit, $this> */
+    public function habit(): HasOne
+    {
+        return $this->hasOne(Planner\PlanHabit::class);
+    }
+
+    /** @return HasMany<Planner\PlanPeriod, $this> */
+    public function periods(): HasMany
+    {
+        return $this->hasMany(Planner\PlanPeriod::class)->orderBy('number');
+    }
+
     /** @return HasMany<PlanParticipant, $this> */
     public function participants(): HasMany
     {

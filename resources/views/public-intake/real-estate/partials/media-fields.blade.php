@@ -1,5 +1,5 @@
 <style>
-    .media-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:14px}
+    .media-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,110px),1fr));gap:10px;margin-top:14px}
     .media-preview img{width:100%;height:95px;object-fit:cover;border-radius:12px;border:1px solid #cbd5e1}
     .recorder-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
     .recorder{border:1px solid #cbd5e1;background:#f8fafc;border-radius:18px;padding:16px}

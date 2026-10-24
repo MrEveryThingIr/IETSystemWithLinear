@@ -22,6 +22,10 @@ return [
         'development-origins' => 'Development Origins',
         'actors' => 'Actors',
         'publication-control' => 'Publication control',
+        'category-review' => 'Category suggestions',
+        'messages' => 'Messages',
+        'message-reports' => 'Message reports',
+        'day-texts' => 'Text of the day',
     ],
     'navigation' => [
         'needs_offers' => 'Needs & Offers',
@@ -33,6 +37,7 @@ return [
         'help' => 'Help & learning',
         'labs' => 'Labs',
         'admin' => 'Administration',
+        'messages' => 'Messages',
     ],
     'hubs' => [
         'boundary' => 'These pages organize existing IET capabilities. Opening a card never creates, accepts, publishes, starts, pays, or settles anything by itself.',

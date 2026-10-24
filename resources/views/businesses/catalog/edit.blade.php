@@ -9,278 +9,212 @@
     $currentPrices = $listing->prices
         ->where('business_listing_version_id', $version?->id)
         ->values();
+    $published = (bool) $version?->published_at;
+    $visibilities = ['private' => 'private', 'members' => 'members', 'public' => 'public'];
+    $item = 'min-w-0 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50';
 @endphp
+<div class="mx-auto max-w-5xl space-y-6" data-listing-editor>
+    @if (session('status'))<flux:callout variant="success" icon="check-circle">{{ session('status') }}</flux:callout>@endif
+    @if ($errors->any())
+        <flux:callout variant="danger" icon="exclamation-triangle"><ul class="list-disc ps-5">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></flux:callout>
+    @endif
 
-<style>
-.bl{max-width:1220px;margin:auto;padding:24px 16px 72px}.bl-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap}.bl-head h1{font-size:30px;margin:6px 0}.muted{color:#64748b;line-height:1.75}.panel{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:20px;margin-top:16px}.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:18px}.step{padding:10px;border:1px solid #cbd5e1;border-radius:14px;text-align:center;font-size:13px;font-weight:800;background:#f8fafc}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.field span{display:block;font-size:13px;font-weight:800;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;border:1.5px solid #aab4c4;border-radius:12px;padding:10px 12px;background:#fff}.privacy{background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;color:#9a3412}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:0;border-radius:13px;padding:10px 14px;font-weight:850;cursor:pointer}.primary{background:#4f46e5;color:#fff}.green{background:#047857;color:#fff}.light{background:#fff;color:#334155;border:1px solid #cbd5e1}.danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}.badge{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:800}.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}.media-card{border:1px solid #e2e8f0;border-radius:18px;overflow:hidden}.media-preview{height:170px;background:#0f172a;display:flex;align-items:center;justify-content:center}.media-preview img,.media-preview video{width:100%;height:100%;object-fit:cover}.media-body{padding:12px}.status{padding:12px 14px;background:#ecfdf5;color:#065f46;border-radius:14px;font-weight:800}.errors{padding:12px 14px;background:#fff1f2;color:#9f1239;border-radius:14px}.advanced summary{cursor:pointer;font-weight:900}.price-row{border-top:1px solid #e2e8f0;padding:9px 0}.footer-stick{position:sticky;bottom:10px;z-index:10;background:rgba(255,255,255,.96);border:1px solid #e2e8f0;border-radius:18px;padding:10px;box-shadow:0 10px 35px rgba(15,23,42,.12)}
-@media(max-width:850px){.steps{grid-template-columns:repeat(2,1fr)}.grid2,.grid3{grid-template-columns:1fr}}
-</style>
-
-<main class="bl">
-    @if(session('status'))<div class="status">{{ session('status') }}</div>@endif
-    @if($errors->any())<div class="errors"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-
-    <header class="bl-head">
-        <div>
-            <a href="{{ route('businesses.catalog.index',$business) }}" style="text-decoration:none;color:#4f46e5;font-weight:850">← {{ __('business_listing.back_catalog') }}</a>
-            <h1>{{ $version?->title ?? __('business_listing.editor_title') }}</h1>
-            <div class="actions">
-                <span class="badge">{{ __('business_listing.version',['version'=>$version?->version_number]) }}</span>
-                <span class="badge">{{ $listing->listing_type }}</span>
-                <span class="badge">{{ __('business_listing.availability.'.$listing->availability_status) }}</span>
-                @if($version?->published_at)<span class="badge">✓ {{ __('business_listing.published') }}</span>@endif
-            </div>
-            <p class="muted">{{ __('business_listing.editor_help') }}</p>
-        </div>
-        <div class="actions">
-            <a class="btn light" href="{{ route('businesses.catalog.listings.preview',[$business,$listing]) }}">{{ __('business_listing.preview') }}</a>
-            @if($version?->presentationContent)
-                <a class="btn light" href="{{ route('contexts.contents.studio',[$business->contextBinding->context,$version->presentationContent]) }}">{{ __('business_listing.advanced_content') }}</a>
+    <div>
+        <flux:button :href="route('businesses.catalog.index', $business)" variant="ghost" size="sm" icon="arrow-left" class="rtl:[&_svg]:rotate-180">{{ __('business_listing.back_catalog') }}</flux:button>
+    </div>
+    <x-app.page-header :title="$version?->title ?? __('business_listing.editor_title')" :description="__('business_listing.editor_help')">
+        <x-slot:actions>
+            <flux:button :href="route('businesses.catalog.listings.preview', [$business, $listing])" variant="ghost">{{ __('business_listing.preview') }}</flux:button>
+            @if ($version?->presentationContent)
+                <flux:button :href="route('contexts.contents.studio', [$business->contextBinding->context, $version->presentationContent])" variant="ghost">{{ __('business_listing.advanced_content') }}</flux:button>
             @endif
-        </div>
-    </header>
-
-    <div class="steps">
-        @foreach(__('business_listing.steps') as $label)<div class="step">{{ $label }}</div>@endforeach
+        </x-slot:actions>
+    </x-app.page-header>
+    <div class="-mt-3 flex flex-wrap gap-1">
+        <flux:badge size="sm">{{ __('business_listing.version', ['version' => $version?->version_number]) }}</flux:badge>
+        <flux:badge size="sm" color="zinc">{{ $listing->listing_type }}</flux:badge>
+        <flux:badge size="sm" color="zinc">{{ __('business_listing.availability.'.$listing->availability_status) }}</flux:badge>
+        @if ($published)<flux:badge size="sm" color="green">✓ {{ __('business_listing.published') }}</flux:badge>@endif
     </div>
 
-    <div class="panel muted">{{ __('business_listing.history_notice') }}</div>
+    <ol class="flex flex-wrap gap-2 text-sm" aria-label="{{ __('business_listing.editor_title') }}">
+        @foreach (__('business_listing.steps') as $label)
+            <li class="rounded-full border border-zinc-200 px-3 py-1 dark:border-zinc-700">{{ $label }}</li>
+        @endforeach
+    </ol>
 
-    <form method="POST" action="{{ route('businesses.catalog.listings.update',[$business,$listing]) }}">
+    <flux:callout icon="information-circle">{{ __('business_listing.history_notice') }}</flux:callout>
+
+    <form method="POST" action="{{ route('businesses.catalog.listings.update', [$business, $listing]) }}" class="space-y-6">
         @csrf
         @method('PUT')
 
-        <section class="panel" id="client">
-            <h2>{{ __('business_listing.client.title') }}</h2>
-            <p class="muted">{{ __('business_listing.client.help') }}</p>
-            <label class="field"><span>{{ __('business_listing.client.title') }}</span>
-                <select name="business_contact_id">
-                    <option value="">{{ __('business_listing.client.none') }}</option>
-                    @foreach($business->businessContacts as $contact)
-                        <option value="{{ $contact->id }}" @selected((string)old('business_contact_id',$listing->business_contact_id)===(string)$contact->id)>
-                            {{ $contact->display_name }}
-                        </option>
-                    @endforeach
-                </select>
-            </label>
-        </section>
+        <x-app.panel id="client" :title="__('business_listing.client.title')" :help="__('business_listing.client.help')" icon="user">
+            <x-form.select remember name="business_contact_id" :label="__('business_listing.client.title')" :placeholder="__('business_listing.client.none')" :selected="$listing->business_contact_id"
+                :options="$business->businessContacts->mapWithKeys(fn ($contact) => [$contact->id => $contact->display_name])->all()" />
+        </x-app.panel>
 
-        <section class="panel" id="purpose">
-            <h2>{{ __('business_listing.basics.title') }}</h2>
-            <div class="grid2">
-                <label class="field"><span>{{ __('business_listing.basics.listing_title') }}</span><input name="title" required maxlength="220" value="{{ old('title',$version?->title) }}"></label>
-                <label class="field"><span>{{ __('business_listing.basics.category') }}</span>
-                    <select name="business_category_id">
-                        <option value="">—</option>
-                        @foreach($business->categories as $category)
-                            <option value="{{ $category->id }}" @selected((string)old('business_category_id',$listing->business_category_id)===(string)$category->id)>{{ $category->name }}</option>
-                        @endforeach
-                    </select>
-                </label>
-                <label class="field"><span>{{ __('business_listing.basics.visibility') }}</span>
-                    <select name="visibility">
-                        @foreach(['private','members','public'] as $visibility)<option value="{{ $visibility }}" @selected(old('visibility',$listing->visibility)===$visibility)>{{ $visibility }}</option>@endforeach
-                    </select>
-                </label>
-                <label class="field"><span>{{ __('business_listing.basics.availability') }}</span>
-                    <select name="availability_status">
-                        @foreach($availabilityStatuses as $key=>$label)<option value="{{ $key }}" @selected(old('availability_status',$listing->availability_status)===$key)>{{ $label }}</option>@endforeach
-                    </select>
-                </label>
+        <x-app.panel id="purpose" :title="__('business_listing.basics.title')" icon="document-text">
+            <div class="grid gap-4 sm:grid-cols-2">
+                <x-form.input remember name="title" required maxlength="220" :value="$version?->title" :label="__('business_listing.basics.listing_title')" />
+                <x-form.select remember name="business_category_id" placeholder="—" :selected="$listing->business_category_id" :label="__('business_listing.basics.category')"
+                    :options="$business->categories->mapWithKeys(fn ($category) => [$category->id => $category->name])->all()" />
+                <x-form.select remember name="visibility" :options="$visibilities" :selected="$listing->visibility" :label="__('business_listing.basics.visibility')" />
+                <x-form.select remember name="availability_status" :options="$availabilityStatuses" :selected="$listing->availability_status" :label="__('business_listing.basics.availability')" />
             </div>
-            <label class="field" style="display:block;margin-top:12px"><span>{{ __('business_listing.basics.short_description') }}</span><input name="short_description" maxlength="500" value="{{ old('short_description',$version?->short_description) }}"></label>
-            <label class="field" style="display:block;margin-top:12px"><span>{{ __('business_listing.basics.description') }}</span><textarea name="description" rows="5">{{ old('description',$version?->description) }}</textarea></label>
-            @if($isProperty)
-                <label style="display:flex;gap:8px;align-items:center;margin-top:14px;font-weight:800">
-                    <input type="hidden" name="simple_office_mode" value="0">
-                    <input type="checkbox" name="simple_office_mode" value="1" @checked(old('simple_office_mode',$listing->simple_office_mode))>
-                    {{ __('business_listing.basics.simple_mode') }}
-                </label>
-                <div class="muted">{{ __('business_listing.basics.simple_mode_help') }}</div>
+            <x-form.input remember name="short_description" maxlength="500" :value="$version?->short_description" :label="__('business_listing.basics.short_description')" />
+            <x-form.textarea remember name="description" rows="5" :value="$version?->description" :label="__('business_listing.basics.description')" />
+            @if ($isProperty)
+                <input type="hidden" name="simple_office_mode" value="0">
+                <x-form.checkbox name="simple_office_mode" :checked="(bool) old('simple_office_mode', $listing->simple_office_mode)" :label="__('business_listing.basics.simple_mode')" />
+                <flux:text class="-mt-2 text-sm">{{ __('business_listing.basics.simple_mode_help') }}</flux:text>
             @endif
-        </section>
+        </x-app.panel>
 
-        @if($isProperty)
-            <section class="panel" id="property">
-                <h2>{{ __('business_listing.property.title') }}</h2>
-                <div class="privacy">{{ __('business_listing.property.privacy_help') }}</div>
-                <div class="grid3" style="margin-top:14px">
-                    <label class="field"><span>{{ __('business_listing.property.transaction_mode') }}</span>
-                        <select name="transaction_mode">
-                            <option value="">—</option>
-                            @foreach(['sale','rent','sale_or_rent'] as $mode)<option value="{{ $mode }}" @selected(old('transaction_mode',$p?->transaction_mode)===$mode)>{{ __('business_listing.property.'.$mode) }}</option>@endforeach
-                        </select>
-                    </label>
-                    <label class="field"><span>{{ __('business_listing.property.property_class') }}</span>
-                        <select name="property_class">
-                            <option value="">—</option>
-                            @foreach(['residential','commercial','office','land','industrial','agricultural','mixed','other'] as $class)<option value="{{ $class }}" @selected(old('property_class',$p?->property_class)===$class)>{{ __('business_listing.property.classes.'.$class) }}</option>@endforeach
-                        </select>
-                    </label>
-                    <label class="field"><span>{{ __('business_listing.property.property_subtype') }}</span><input name="property_subtype" value="{{ old('property_subtype',$p?->property_subtype) }}"></label>
-                    <label class="field" style="grid-column:span 2"><span>{{ __('business_listing.property.public_area') }}</span><input name="public_area" value="{{ old('public_area',$p?->public_area) }}"></label>
-                    <label class="field" style="grid-column:1/-1"><span>{{ __('business_listing.property.exact_address') }}</span><textarea name="exact_address" rows="2">{{ old('exact_address',$p?->exact_address) }}</textarea></label>
-                    @foreach([
-                        'land_area'=>'land_area','construction_area'=>'construction_area','width'=>'width','length'=>'length',
-                        'frontage_count'=>'frontage_count','built_year'=>'built_year','building_age_years'=>'building_age_years',
-                        'bedrooms'=>'bedrooms','floor_number'=>'floor_number','total_floors'=>'total_floors',
-                        'unit_number'=>'unit_number','units_per_floor'=>'units_per_floor',
-                    ] as $name=>$key)
-                        <label class="field"><span>{{ __('business_listing.property.'.$key) }}</span><input name="{{ $name }}" inputmode="decimal" value="{{ old($name,$p?->{$name}) }}"></label>
+        @if ($isProperty)
+            <x-app.panel id="property" :title="__('business_listing.property.title')" icon="home-modern">
+                <flux:callout variant="warning" icon="lock-closed">{{ __('business_listing.property.privacy_help') }}</flux:callout>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <x-form.select remember name="transaction_mode" placeholder="—" :selected="$p?->transaction_mode" :label="__('business_listing.property.transaction_mode')"
+                        :options="collect(['sale', 'rent', 'sale_or_rent'])->mapWithKeys(fn ($mode) => [$mode => __('business_listing.property.'.$mode)])->all()" />
+                    <x-form.select remember name="property_class" placeholder="—" :selected="$p?->property_class" :label="__('business_listing.property.property_class')"
+                        :options="collect(['residential', 'commercial', 'office', 'land', 'industrial', 'agricultural', 'mixed', 'other'])->mapWithKeys(fn ($class) => [$class => __('business_listing.property.classes.'.$class)])->all()" />
+                    <x-form.input remember name="property_subtype" :value="$p?->property_subtype" :label="__('business_listing.property.property_subtype')" />
+                    <div class="sm:col-span-2 lg:col-span-3"><x-form.input remember name="public_area" :value="$p?->public_area" :label="__('business_listing.property.public_area')" /></div>
+                    <div class="sm:col-span-2 lg:col-span-3"><x-form.textarea remember name="exact_address" rows="2" :value="$p?->exact_address" :label="__('business_listing.property.exact_address')" /></div>
+                    @foreach (['land_area', 'construction_area', 'width', 'length', 'frontage_count', 'built_year', 'building_age_years', 'bedrooms', 'floor_number', 'total_floors', 'unit_number', 'units_per_floor'] as $name)
+                        <x-form.input remember :name="$name" inputmode="decimal" :value="$p?->{$name}" :label="__('business_listing.property.'.$name)" />
                     @endforeach
-                    <label class="field"><span>{{ __('business_listing.property.built_year_calendar') }}</span>
-                        <select name="built_year_calendar"><option value="">—</option><option value="jalali" @selected(old('built_year_calendar',$p?->built_year_calendar)==='jalali')>{{ __('business_listing.property.calendars.jalali') }}</option><option value="gregorian" @selected(old('built_year_calendar',$p?->built_year_calendar)==='gregorian')>{{ __('business_listing.property.calendars.gregorian') }}</option></select>
-                    </label>
-                    <label class="field"><span>{{ __('business_listing.property.building_condition') }}</span>
-                        <select name="building_condition"><option value="">—</option>@foreach(['new','excellent','good','renovated','needs_renovation','old','teardown'] as $v)<option value="{{ $v }}" @selected(old('building_condition',$p?->building_condition)===$v)>{{ __('business_listing.property.conditions.'.$v) }}</option>@endforeach</select>
-                    </label>
-                    @foreach(['orientation','deed_type','usage_type','occupancy_status'] as $name)
-                        <label class="field"><span>{{ __('business_listing.property.'.$name) }}</span><input name="{{ $name }}" value="{{ old($name,$p?->{$name}) }}"></label>
+                    <x-form.select remember name="built_year_calendar" placeholder="—" :selected="$p?->built_year_calendar" :label="__('business_listing.property.built_year_calendar')"
+                        :options="['jalali' => __('business_listing.property.calendars.jalali'), 'gregorian' => __('business_listing.property.calendars.gregorian')]" />
+                    <x-form.select remember name="building_condition" placeholder="—" :selected="$p?->building_condition" :label="__('business_listing.property.building_condition')"
+                        :options="collect(['new', 'excellent', 'good', 'renovated', 'needs_renovation', 'old', 'teardown'])->mapWithKeys(fn ($v) => [$v => __('business_listing.property.conditions.'.$v)])->all()" />
+                    @foreach (['orientation', 'deed_type', 'usage_type', 'occupancy_status'] as $name)
+                        <x-form.input remember :name="$name" :value="$p?->{$name}" :label="__('business_listing.property.'.$name)" />
                     @endforeach
-                    <label class="field"><span>{{ __('business_listing.property.latitude') }}</span><input name="latitude" inputmode="decimal" value="{{ old('latitude',$p?->latitude) }}"></label>
-                    <label class="field"><span>{{ __('business_listing.property.longitude') }}</span><input name="longitude" inputmode="decimal" value="{{ old('longitude',$p?->longitude) }}"></label>
-                    <label class="field" style="grid-column:1/-1"><span>{{ __('business_listing.property.public_notes') }}</span><textarea name="public_notes" rows="3">{{ old('public_notes',$p?->public_notes) }}</textarea></label>
-                    <label class="field" style="grid-column:1/-1"><span>{{ __('business_listing.property.private_notes') }}</span><textarea name="private_notes" rows="3">{{ old('private_notes',$p?->private_notes) }}</textarea></label>
+                    <x-form.input remember name="latitude" inputmode="decimal" dir="ltr" :value="$p?->latitude" :label="__('business_listing.property.latitude')" />
+                    <x-form.input remember name="longitude" inputmode="decimal" dir="ltr" :value="$p?->longitude" :label="__('business_listing.property.longitude')" />
+                    <div class="sm:col-span-2 lg:col-span-3"><x-form.textarea remember name="public_notes" rows="3" :value="$p?->public_notes" :label="__('business_listing.property.public_notes')" /></div>
+                    <div class="sm:col-span-2 lg:col-span-3"><x-form.textarea remember name="private_notes" rows="3" :value="$p?->private_notes" :label="__('business_listing.property.private_notes')" /></div>
                 </div>
-            </section>
+            </x-app.panel>
 
-            <section class="panel" id="facilities">
-                <h2>{{ __('business_listing.facilities.title') }}</h2>
-                <details class="advanced" @unless($listing->simple_office_mode) open @endunless>
-                    <summary>{{ __('business_listing.facilities.advanced') }}</summary>
-                    <div class="grid3" style="margin-top:14px">
-                        @foreach([
-                            'cabinet_type'=>'cabinet_type','heating_system'=>'heating','cooling_system'=>'cooling',
-                            'yard_finish'=>'yard','flooring_type'=>'flooring','parking_type'=>'parking_type',
-                            'parking_spaces'=>'parking_spaces','car_capacity'=>'car_capacity','motorbike_capacity'=>'motorbike_capacity',
-                            'roof_finish'=>'roof_finish','storage_area'=>'storage_area','balcony_area'=>'balcony_area',
-                        ] as $name=>$label)
-                            <label class="field"><span>{{ __('business_listing.facilities.'.$label) }}</span><input name="{{ $name }}" value="{{ old($name,$p?->{$name}) }}"></label>
+            <x-app.panel id="facilities" :title="__('business_listing.facilities.title')" icon="wrench-screwdriver">
+                <details @unless ($listing->simple_office_mode) open @endunless>
+                    <summary class="cursor-pointer py-1 font-medium">{{ __('business_listing.facilities.advanced') }}</summary>
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach (['cabinet_type' => 'cabinet_type', 'heating_system' => 'heating', 'cooling_system' => 'cooling', 'yard_finish' => 'yard', 'flooring_type' => 'flooring', 'parking_type' => 'parking_type', 'parking_spaces' => 'parking_spaces', 'car_capacity' => 'car_capacity', 'motorbike_capacity' => 'motorbike_capacity', 'roof_finish' => 'roof_finish', 'storage_area' => 'storage_area', 'balcony_area' => 'balcony_area'] as $name => $label)
+                            <x-form.input remember :name="$name" :value="$p?->{$name}" :label="__('business_listing.facilities.'.$label)" />
                         @endforeach
-                        @foreach([
-                            'has_false_ceiling'=>'false_ceiling','has_parking'=>'parking','roof_has_parapet'=>'roof_parapet',
-                            'has_western_toilet'=>'western_toilet','has_iranian_toilet'=>'iranian_toilet',
-                            'has_elevator'=>'elevator','has_storage'=>'storage','has_balcony'=>'balcony',
-                        ] as $name=>$label)
-                            <label class="field"><span>{{ __('business_listing.facilities.'.$label) }}</span>
-                                <select name="{{ $name }}">
-                                    <option value="">{{ __('business_listing.facilities.unknown') }}</option>
-                                    <option value="1" @selected((string)old($name,$bool($p?->{$name}))==='1')>{{ __('business_listing.facilities.yes') }}</option>
-                                    <option value="0" @selected((string)old($name,$bool($p?->{$name}))==='0')>{{ __('business_listing.facilities.no') }}</option>
-                                </select>
-                            </label>
+                        @foreach (['has_false_ceiling' => 'false_ceiling', 'has_parking' => 'parking', 'roof_has_parapet' => 'roof_parapet', 'has_western_toilet' => 'western_toilet', 'has_iranian_toilet' => 'iranian_toilet', 'has_elevator' => 'elevator', 'has_storage' => 'storage', 'has_balcony' => 'balcony'] as $name => $label)
+                            <x-form.select remember :name="$name" :placeholder="__('business_listing.facilities.unknown')" :selected="$bool($p?->{$name})" :label="__('business_listing.facilities.'.$label)"
+                                :options="['1' => __('business_listing.facilities.yes'), '0' => __('business_listing.facilities.no')]" />
                         @endforeach
-                        <label class="field" style="grid-column:1/-1"><span>{{ __('business_listing.facilities.utilities') }}</span><input name="utilities_text" value="{{ old('utilities_text',implode(', ', $p?->utilities ?? [])) }}"></label>
-                        <label class="field" style="grid-column:1/-1"><span>{{ __('business_listing.facilities.facilities') }}</span><input name="facilities_text" value="{{ old('facilities_text',implode(', ', $p?->facilities ?? [])) }}"></label>
+                        <div class="sm:col-span-2 lg:col-span-3"><x-form.input remember name="utilities_text" :value="implode(', ', $p?->utilities ?? [])" :label="__('business_listing.facilities.utilities')" /></div>
+                        <div class="sm:col-span-2 lg:col-span-3"><x-form.input remember name="facilities_text" :value="implode(', ', $p?->facilities ?? [])" :label="__('business_listing.facilities.facilities')" /></div>
                     </div>
                 </details>
-            </section>
+            </x-app.panel>
         @endif
 
-        <div class="footer-stick actions">
-            <button class="btn primary" type="submit">{{ __('business_listing.save') }}</button>
-            <a class="btn light" href="{{ route('businesses.catalog.listings.preview',[$business,$listing]) }}">{{ __('business_listing.preview') }}</a>
+        <div class="sticky bottom-3 z-10 flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-white/95 p-3 shadow-lg backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95">
+            <flux:button type="submit" variant="primary">{{ __('business_listing.save') }}</flux:button>
+            <flux:button :href="route('businesses.catalog.listings.preview', [$business, $listing])" variant="ghost">{{ __('business_listing.preview') }}</flux:button>
         </div>
     </form>
 
-    <section class="panel" id="price">
-        <h2>{{ __('business_listing.price.title') }}</h2>
-        <p class="muted">{{ __('business_listing.price.help') }}</p>
-        @foreach($currentPrices as $price)
-            <div class="price-row">
+    <x-app.panel id="price" :title="__('business_listing.price.title')" :help="__('business_listing.price.help')" icon="banknotes">
+        @foreach ($currentPrices as $price)
+            <div class="flex flex-wrap items-center gap-2 {{ $item }}">
                 <strong>{{ $price->price_type }}</strong> ·
-                {{ \App\Support\MoneyAmount::format((int)$price->amount_minor,(int)$price->monetaryUnit->exponent) }} {{ $price->monetaryUnit->code }}
-                @if($price->basis) / {{ $price->basis }} @endif
-                <span class="badge">{{ $price->visibility }}</span>
+                <span>{{ \App\Support\MoneyAmount::format((int) $price->amount_minor, (int) $price->monetaryUnit->exponent) }} {{ $price->monetaryUnit->code }}</span>
+                @if ($price->basis)<span>/ {{ $price->basis }}</span>@endif
+                <flux:badge size="sm" color="zinc">{{ $price->visibility }}</flux:badge>
             </div>
         @endforeach
-        @if(!$version?->published_at)
-            <form method="POST" action="{{ route('businesses.catalog.listings.prices.store',[$business,$listing]) }}" class="grid3" style="margin-top:12px">
+        @unless ($published)
+            <form method="POST" action="{{ route('businesses.catalog.listings.prices.store', [$business, $listing]) }}" class="space-y-4">
                 @csrf
-                <label class="field"><span>{{ __('business_listing.price.type') }}</span>
-                    <select name="price_type">
-                        @foreach(['asking_sale','deposit','monthly_rent','retail','service','hourly','daily','monthly','wholesale','cost'] as $type)<option value="{{ $type }}">{{ $type }}</option>@endforeach
-                    </select>
-                </label>
-                <label class="field"><span>{{ __('business_listing.price.unit') }}</span>
-                    <select name="unit_code">@foreach($unitCatalog as $code=>$meta)<option value="{{ $code }}" @selected($code===($business->defaultMonetaryUnit?->code ?? 'IET'))>{{ $code }} — {{ $meta['name'] }}</option>@endforeach</select>
-                </label>
-                <label class="field"><span>{{ __('business_listing.price.amount') }}</span><input name="amount" inputmode="decimal" required></label>
-                <label class="field"><span>{{ __('business_listing.price.basis') }}</span><input name="basis"></label>
-                <label class="field"><span>{{ __('business_listing.price.visibility') }}</span><select name="visibility"><option value="public">public</option><option value="members">members</option><option value="private">private</option></select></label>
-                <label class="field"><span>{{ __('business_listing.price.reason') }}</span><input name="reason"></label>
-                <div><button class="btn light">{{ __('business_listing.price.add') }}</button></div>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <x-form.select name="price_type" :label="__('business_listing.price.type')" :options="collect(['asking_sale', 'deposit', 'monthly_rent', 'retail', 'service', 'hourly', 'daily', 'monthly', 'wholesale', 'cost'])->mapWithKeys(fn ($type) => [$type => $type])->all()" />
+                    <x-form.select name="unit_code" :label="__('business_listing.price.unit')" :selected="$business->defaultMonetaryUnit?->code ?? 'IET'"
+                        :options="collect($unitCatalog)->mapWithKeys(fn ($meta, $code) => [$code => $code.' — '.$meta['name']])->all()" />
+                    <x-form.input name="amount" inputmode="decimal" required :label="__('business_listing.price.amount')" />
+                    <x-form.input name="basis" :label="__('business_listing.price.basis')" />
+                    <x-form.select name="visibility" :options="['public' => 'public', 'members' => 'members', 'private' => 'private']" :label="__('business_listing.price.visibility')" />
+                    <x-form.input name="reason" :label="__('business_listing.price.reason')" />
+                </div>
+                <flux:button type="submit" icon="plus">{{ __('business_listing.price.add') }}</flux:button>
             </form>
-        @endif
-    </section>
+        @endunless
+    </x-app.panel>
 
-    <section class="panel" id="media">
-        <h2>{{ __('business_listing.media.title') }}</h2>
-        <p class="muted">{{ __('business_listing.media.help') }}</p>
-
-        @if(!$version?->published_at)
-            <form method="POST" enctype="multipart/form-data" action="{{ route('businesses.catalog.listings.media.store',[$business,$listing]) }}" class="grid3">
+    <x-app.panel id="media" :title="__('business_listing.media.title')" :help="__('business_listing.media.help')" icon="photo">
+        @unless ($published)
+            <form method="POST" enctype="multipart/form-data" action="{{ route('businesses.catalog.listings.media.store', [$business, $listing]) }}" class="space-y-4">
                 @csrf
-                <label class="field"><span>{{ __('business_listing.media.file') }}</span><input type="file" name="media" accept="image/*,video/*,audio/*" required></label>
-                <label class="field"><span>{{ __('business_listing.media.rights') }}</span><select name="rights_status">@foreach($rightsStatuses as $status)<option value="{{ $status }}" @selected($status==='owned')>{{ $status }}</option>@endforeach</select></label>
-                <label class="field"><span>{{ __('business_listing.media.visibility') }}</span><select name="visibility"><option value="public">public</option><option value="members">members</option><option value="private">private</option></select></label>
-                <label class="field" style="grid-column:span 2"><span>{{ __('business_listing.media.caption') }}</span><input name="caption"></label>
-                <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="cover" value="1"> {{ __('business_listing.media.cover') }}</label>
-                <div><button class="btn light">{{ __('business_listing.media.upload') }}</button></div>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <x-form.input type="file" name="media" accept="image/*,video/*,audio/*" required :label="__('business_listing.media.file')" />
+                    <x-form.select name="rights_status" selected="owned" :options="array_combine($rightsStatuses, $rightsStatuses)" :label="__('business_listing.media.rights')" />
+                    <x-form.select name="visibility" :options="['public' => 'public', 'members' => 'members', 'private' => 'private']" :label="__('business_listing.media.visibility')" />
+                </div>
+                <x-form.input name="caption" :label="__('business_listing.media.caption')" />
+                <x-form.checkbox name="cover" :label="__('business_listing.media.cover')" />
+                <flux:button type="submit" icon="arrow-up-tray">{{ __('business_listing.media.upload') }}</flux:button>
             </form>
-        @endif
+        @endunless
 
-        <div class="media-grid" style="margin-top:14px">
-            @forelse($version?->media ?? [] as $media)
-                <article class="media-card">
-                    <div class="media-preview">
-                        @if(str_starts_with($media->asset->mime_type,'image/'))
-                            <img src="{{ route('businesses.catalog.listings.media.show',[$business,$listing,$media]) }}" alt="{{ $media->caption ?: $media->asset->alt_text }}">
-                        @elseif(str_starts_with($media->asset->mime_type,'video/'))
-                            <video controls preload="metadata" src="{{ route('businesses.catalog.listings.media.show',[$business,$listing,$media]) }}"></video>
-                        @elseif(str_starts_with($media->asset->mime_type,'audio/'))
-                            <audio controls src="{{ route('businesses.catalog.listings.media.show',[$business,$listing,$media]) }}"></audio>
+        <div class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,16rem),1fr))]">
+            @forelse ($version?->media ?? [] as $media)
+                <article class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700" wire:key="media-{{ $media->id }}">
+                    <div class="flex aspect-[4/3] items-center justify-center bg-zinc-900">
+                        @php($src = route('businesses.catalog.listings.media.show', [$business, $listing, $media]))
+                        @if (str_starts_with($media->asset->mime_type, 'image/'))
+                            <img src="{{ $src }}" alt="{{ $media->caption ?: $media->asset->alt_text }}" loading="lazy" decoding="async" class="h-full w-full object-cover">
+                        @elseif (str_starts_with($media->asset->mime_type, 'video/'))
+                            <video controls preload="metadata" playsinline src="{{ $src }}" class="h-full w-full object-contain"></video>
+                        @elseif (str_starts_with($media->asset->mime_type, 'audio/'))
+                            <audio controls src="{{ $src }}" class="w-full px-2"></audio>
                         @else
-                            <span style="color:white">{{ $media->asset->original_filename }}</span>
+                            <span class="px-3 text-white [overflow-wrap:anywhere]">{{ $media->asset->original_filename }}</span>
                         @endif
                     </div>
-                    <div class="media-body">
-                        <div class="actions"><span class="badge">{{ $media->role }}</span><span class="badge">{{ $media->visibility }}</span><span class="badge">#{{ $media->position }}</span></div>
-                        @if(!$version?->published_at)
-                            <form method="POST" action="{{ route('businesses.catalog.listings.media.update',[$business,$listing,$media]) }}" style="margin-top:10px">
+                    <div class="space-y-3 p-3">
+                        <div class="flex flex-wrap gap-1"><flux:badge size="sm">{{ $media->role }}</flux:badge><flux:badge size="sm" color="zinc">{{ $media->visibility }}</flux:badge><flux:badge size="sm" color="zinc">#{{ $media->position }}</flux:badge></div>
+                        @unless ($published)
+                            <form method="POST" action="{{ route('businesses.catalog.listings.media.update', [$business, $listing, $media]) }}" class="space-y-3">
                                 @csrf @method('PUT')
-                                <div class="grid2">
-                                    <label class="field"><span>{{ __('business_listing.media.position') }}</span><input name="position" type="number" min="0" value="{{ $media->position }}"></label>
-                                    <label class="field"><span>{{ __('business_listing.media.visibility') }}</span><select name="visibility">@foreach(['public','members','private'] as $v)<option value="{{ $v }}" @selected($media->visibility===$v)>{{ $v }}</option>@endforeach</select></label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <x-form.input name="position" type="number" min="0" :value="$media->position" :label="__('business_listing.media.position')" />
+                                    <x-form.select name="visibility" :options="['public' => 'public', 'members' => 'members', 'private' => 'private']" :selected="$media->visibility" :label="__('business_listing.media.visibility')" />
                                 </div>
-                                <label class="field" style="display:block;margin-top:8px"><span>{{ __('business_listing.media.caption') }}</span><input name="caption" value="{{ $media->caption }}"></label>
-                                <label style="display:flex;gap:8px;margin-top:8px"><input type="checkbox" name="cover" value="1" @checked($media->role==='cover')> {{ __('business_listing.media.cover') }}</label>
-                                <button class="btn light" style="margin-top:8px">{{ __('business_listing.media.update') }}</button>
+                                <x-form.input name="caption" :value="$media->caption" :label="__('business_listing.media.caption')" />
+                                <x-form.checkbox name="cover" :checked="$media->role === 'cover'" :label="__('business_listing.media.cover')" />
+                                <flux:button type="submit" size="sm">{{ __('business_listing.media.update') }}</flux:button>
                             </form>
-                            <form method="POST" action="{{ route('businesses.catalog.listings.media.destroy',[$business,$listing,$media]) }}" style="margin-top:8px">@csrf @method('DELETE')<button class="btn danger">{{ __('business_listing.media.remove') }}</button></form>
+                            <form method="POST" action="{{ route('businesses.catalog.listings.media.destroy', [$business, $listing, $media]) }}">@csrf @method('DELETE')<flux:button type="submit" size="sm" variant="danger">{{ __('business_listing.media.remove') }}</flux:button></form>
                         @else
-                            @if($media->caption)<p class="muted">{{ $media->caption }}</p>@endif
-                        @endif
+                            @if ($media->caption)<flux:text class="text-sm">{{ $media->caption }}</flux:text>@endif
+                        @endunless
                     </div>
                 </article>
             @empty
-                <p class="muted">{{ __('business_listing.media.empty') }}</p>
+                <flux:text>{{ __('business_listing.media.empty') }}</flux:text>
             @endforelse
         </div>
-    </section>
+    </x-app.panel>
 
-    <section class="panel" id="preview">
-        <h2>{{ __('business_listing.steps.preview') }} / {{ __('business_listing.steps.publish') }}</h2>
-        <div class="actions">
-            <a class="btn light" href="{{ route('businesses.catalog.listings.preview',[$business,$listing]) }}">{{ __('business_listing.preview') }}</a>
-            @if(!$version?->published_at)
-                <form method="POST" action="{{ route('businesses.catalog.listings.presentation.sync',[$business,$listing]) }}">@csrf<button class="btn light">{{ __('business_listing.sync_content') }}</button></form>
-                <form method="POST" action="{{ route('businesses.catalog.listings.publish',[$business,$listing]) }}">@csrf<button class="btn green">{{ __('business_listing.publish') }}</button></form>
-            @endif
-            @if($version?->presentationContent)
-                <a class="btn light" href="{{ route('contexts.contents.studio',[$business->contextBinding->context,$version->presentationContent]) }}">{{ __('business_listing.advanced_content') }}</a>
+    <x-app.panel id="preview" :title="__('business_listing.steps.preview').' / '.__('business_listing.steps.publish')" icon="eye">
+        <div class="flex flex-wrap gap-2">
+            <flux:button :href="route('businesses.catalog.listings.preview', [$business, $listing])" variant="ghost">{{ __('business_listing.preview') }}</flux:button>
+            @unless ($published)
+                <form method="POST" action="{{ route('businesses.catalog.listings.presentation.sync', [$business, $listing]) }}">@csrf<flux:button type="submit">{{ __('business_listing.sync_content') }}</flux:button></form>
+                <form method="POST" action="{{ route('businesses.catalog.listings.publish', [$business, $listing]) }}">@csrf<flux:button type="submit" variant="primary">{{ __('business_listing.publish') }}</flux:button></form>
+            @endunless
+            @if ($version?->presentationContent)
+                <flux:button :href="route('contexts.contents.studio', [$business->contextBinding->context, $version->presentationContent])" variant="ghost">{{ __('business_listing.advanced_content') }}</flux:button>
             @endif
         </div>
-    </section>
-</main>
+    </x-app.panel>
+</div>
 @endsection

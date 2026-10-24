@@ -114,14 +114,15 @@ class BusinessFoundationTest extends TestCase
 
         $electrician = Profession::query()->where('code', 'electrician')->sole();
 
+        // Member skills are capabilities now; the old form only redirects and writes nothing.
         $this->actingAs($owner)
             ->post(route('businesses.members.professions.store', [$business, $membership]), [
                 'profession_id' => $electrician->getKey(),
                 'is_primary' => 1,
             ])
-            ->assertRedirect();
+            ->assertRedirect(route('businesses.show', $business).'#team-settings');
 
-        $this->assertTrue($membership->fresh()->professions->contains($electrician));
+        $this->assertFalse($membership->fresh()->professions->contains($electrician));
     }
 
     public function test_ordinary_member_cannot_manage_business(): void

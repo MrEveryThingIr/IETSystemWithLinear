@@ -70,7 +70,7 @@ class PlannerReadinessLifecycleTest extends TestCase
         }
     }
 
-    public function test_unstarted_occurrence_cannot_start_after_late_start_window_closes(): void
+    public function test_unstarted_appointment_cannot_start_after_its_window_closes(): void
     {
         CarbonImmutable::setTestNow('2026-09-27 12:31:00 UTC');
 
@@ -81,11 +81,13 @@ class PlannerReadinessLifecycleTest extends TestCase
                 durationMinutes: 60,
                 beforeMinutes: 15,
                 afterMinutes: 30,
+                kind: 'event',
             );
 
             $this->assertSame('2026-09-27 11:45:00', $occurrence->window_start_at->utc()->format('Y-m-d H:i:s'));
             $this->assertSame('2026-09-27 12:30:00', $occurrence->window_end_at->utc()->format('Y-m-d H:i:s'));
-            $this->assertSame('missed', $occurrence->executionPhase());
+            // An appointment closes with its window; afterwards the person can only tell what happened.
+            $this->assertSame('awaiting_report', $occurrence->executionPhase());
 
             $this->assertHttp422(
                 fn () => app(TransitionPlanOccurrence::class)->start($occurrence, $bob->user),
@@ -111,16 +113,23 @@ class PlannerReadinessLifecycleTest extends TestCase
                 afterMinutes: 30,
             );
 
-            $this->assertSame('ready', $occurrence->executionPhase());
-
-            CarbonImmutable::setTestNow('2026-09-27 12:15:00 UTC');
-            $this->assertSame('late', $occurrence->executionPhase());
+            $this->assertSame('now', $occurrence->executionPhase());
 
             CarbonImmutable::setTestNow('2026-09-27 12:30:00 UTC');
-            $this->assertSame('late', $occurrence->executionPhase());
+            $this->assertSame('now', $occurrence->executionPhase());
 
+            // After the allowed window a routine or task is late but still possible that day ...
             CarbonImmutable::setTestNow('2026-09-27 12:30:01 UTC');
-            $this->assertSame('missed', $occurrence->executionPhase());
+            $this->assertSame('late', $occurrence->executionPhase());
+            $this->assertTrue($occurrence->canStart());
+
+            // ... then it closes and waits for a report for a week, never becoming "not done" by itself.
+            CarbonImmutable::setTestNow('2026-09-28 00:00:01 UTC');
+            $this->assertSame('awaiting_report', $occurrence->executionPhase());
+            $this->assertFalse($occurrence->canStart());
+
+            CarbonImmutable::setTestNow('2026-10-05 00:00:01 UTC');
+            $this->assertSame('no_report', $occurrence->executionPhase());
         } finally {
             CarbonImmutable::setTestNow();
         }
@@ -307,10 +316,11 @@ class PlannerReadinessLifecycleTest extends TestCase
         int $durationMinutes,
         int $beforeMinutes = 0,
         int $afterMinutes = 0,
+        ?string $kind = null,
     ): array {
         $bob = Actor::factory()->create();
         $context = app(EnsurePersonalContext::class)->execute($bob->user);
-        $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Timed work', timezone: 'UTC');
+        $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Timed work', timezone: 'UTC', metadata: $kind ? ['kind' => $kind] : []);
 
         $rule = app(CreatePlanScheduleRule::class)->execute(
             $plan,

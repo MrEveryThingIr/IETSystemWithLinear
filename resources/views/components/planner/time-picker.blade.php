@@ -79,7 +79,7 @@
     <div class="space-y-2">
         <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
             <span>{{ __('planner.picker.drag_help') }}</span>
-            <span class="flex items-center gap-1">
+            <span class="flex flex-wrap items-center gap-1">
                 <template x-for="minutes in presets" :key="minutes">
                     <button type="button" x-on:click="preset(minutes)" class="rounded-md border border-zinc-200 px-1.5 py-0.5 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         x-bind:class="end - start === minutes ? 'border-violet-500 text-violet-700 dark:text-violet-300' : ''"

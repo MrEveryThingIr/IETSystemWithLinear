@@ -25,6 +25,9 @@
         :icon="$destination['icon']"
     >
         {{ $destination['label'] }}
+        @if ($destination['key'] === 'messages')
+            <span x-data="messageBadge({ url: {{ \Illuminate\Support\Js::from(route('messages.unread')) }}, count: 0 })" x-show="count > 0" x-cloak x-text="count > 99 ? '99+' : count" class="ms-1 inline-flex min-w-5 items-center justify-center rounded-full bg-zinc-900 px-1.5 text-xs font-semibold text-white dark:bg-white dark:text-zinc-900" data-message-badge></span>
+        @endif
     </flux:sidebar.item>
 @endforeach
 

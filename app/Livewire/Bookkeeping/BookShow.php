@@ -15,6 +15,7 @@ use App\Actions\Bookkeeping\WithdrawEntry;
 use App\Enums\Bookkeeping\AdjustmentDirection;
 use App\Enums\Bookkeeping\DisputeOutcome;
 use App\Enums\Bookkeeping\DisputeStatus;
+use App\Enums\Bookkeeping\EntryOrigin;
 use App\Enums\Bookkeeping\LedgerKind;
 use App\Enums\Bookkeeping\LedgerStatus;
 use App\Enums\Bookkeeping\PartyRole;
@@ -26,6 +27,7 @@ use App\Models\Bookkeeping\Ledger;
 use App\Models\Bookkeeping\LedgerParty;
 use App\Models\Bookkeeping\Transaction;
 use App\Models\Bookkeeping\Wallet;
+use App\Models\Fulfillment;
 use App\Models\User;
 use App\Support\Bookkeeping\BalanceCalculator;
 use App\Support\Bookkeeping\BookkeepingRecorder;
@@ -120,6 +122,9 @@ class BookShow extends Component
     public $extraEvidence = null;
 
     public string $filter = 'all';
+
+    /** all / manual / iet_workflow / import / correction */
+    public string $origin = 'all';
 
     public function mount(Ledger $ledger): void
     {
@@ -331,6 +336,7 @@ class BookShow extends Component
             ->where('ledger_id', $ledger->id)
             ->when($this->filter === 'waiting', fn ($query) => $query->where('status', TransactionStatus::Pending->value))
             ->when($this->filter === 'debts', fn ($query) => $query->where('type', TransactionType::Obligation->value))
+            ->when(in_array($this->origin, array_column(EntryOrigin::cases(), 'value'), true), fn ($query) => $query->where('origin', $this->origin))
             ->when($this->filter === 'payments', fn ($query) => $query->whereIn('type', [TransactionType::Payment->value, TransactionType::Refund->value, TransactionType::WriteOff->value, TransactionType::SettlementInKind->value]))
             ->with(['fromParty.actor.user', 'toParty.actor.user', 'recorder.user', 'confirmations.actor.user', 'disputes.raisedBy.user', 'allocations.obligation', 'assets', 'related', 'wallet.ledger'])
             ->orderByDesc('occurred_on')
@@ -364,7 +370,14 @@ class BookShow extends Component
             ? app(EnsurePersonalLedger::class)->execute($user)->wallets()->whereNull('archived_at')->get()
             : collect();
 
+        $workSources = Fulfillment::query()
+            ->whereIn('uuid', $entries->where('source_type', 'fulfillment')->pluck('source_uuid')->filter()->unique()->values())
+            ->with('commitment:id,uuid,title')
+            ->get(['id', 'uuid', 'commitment_id'])
+            ->keyBy('uuid');
+
         return view('livewire.bookkeeping.book-show', [
+            'workSources' => $workSources,
             'ledger' => $ledger,
             'me' => $me,
             'parties' => $parties,

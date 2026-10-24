@@ -111,7 +111,7 @@ class FirstPublicationExperienceTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('iet-ambient-status', false)
+            ->assertSee('data-time-bar', false)
             ->assertSee(__('home.title'))
             ->assertDontSee('home.title', false);
     }

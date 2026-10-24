@@ -47,6 +47,7 @@ return [
         'state_off' => '此手机或电脑未开启。',
         'state_blocked' => '已在此浏览器设置中被阻止。请在那里允许本网站的通知后重试。',
         'state_unsupported' => '此浏览器无法接收通知。请尝试 Chrome、Edge 或 Firefox。',
+        'state_unavailable' => '此服务器目前无法提供设备通知。',
         'state_ios' => 'iPhone/iPad：分享 → 添加到主屏幕，从那里打开网站后再开启。',
         'enable' => '开启',
         'disable' => '关闭',

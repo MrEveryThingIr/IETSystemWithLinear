@@ -56,7 +56,7 @@
             ? route('public.businesses.real-estate.store', ['business' => $business->slug])
             : route('public.real-estate.store', $portal) }}" class="body">
             @csrf
-            <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+            <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);opacity:0;pointer-events:none">
 
             @if($errors->any())
                 <div class="errors">

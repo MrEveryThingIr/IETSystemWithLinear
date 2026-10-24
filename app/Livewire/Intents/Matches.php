@@ -9,11 +9,9 @@ use App\Support\IntentMatchFinder;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Intent matches')]
 class Matches extends Component
 {
     #[Locked]
@@ -32,7 +30,7 @@ class Matches extends Component
 
         return view('livewire.intents.matches', [
             'matches' => $matches->find($this->user(), $this->intent),
-        ]);
+        ])->title(__('intents.matches.title'));
     }
 
     private function user(): User

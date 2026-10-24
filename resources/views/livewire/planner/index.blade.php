@@ -305,7 +305,7 @@
                         </div>
                         <div class="shrink-0 text-sm sm:text-end">
                             <div class="font-medium"><x-app.local-datetime :value="$items->first()->scheduled_start_at" /></div>
-                            <div class="text-xs text-zinc-500">→ <x-app.local-time :value="$items->first()->scheduled_end_at" /> · {{ __('planner.occurrence_status.'.$items->first()->status->value) }}</div>
+                            <div class="text-xs text-zinc-500">→ <x-app.local-time :value="$items->first()->scheduled_end_at" /> · {{ __('planner.occurrence_phase.'.$items->first()->executionPhase()) }}</div>
                         </div>
                     </div>
                     @if ($items->count() > 1)

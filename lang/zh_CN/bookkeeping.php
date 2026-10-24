@@ -331,4 +331,13 @@ return [
         'same_wallet' => '请选择两个不同的钱包。',
         'name_required' => '请输入名称。',
     ],
+    'origin' => [
+        'filter' => '来源：',
+        'all' => '全部',
+        'manual' => '手动',
+        'iet_workflow' => '来自 IET 工作',
+        'import' => '导入',
+        'correction' => '更正',
+        'open_work' => '打开工作',
+    ],
 ];

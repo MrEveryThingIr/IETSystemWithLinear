@@ -9,7 +9,8 @@
         @fluxAppearance
     </head>
     <body class="min-h-dvh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-        <div class="fixed end-4 top-4 z-10">
+<x-app.time-bar />
+        <div class="absolute end-4 top-14 z-10">
             <x-app.locale-switcher />
         </div>
         <main class="mx-auto flex min-h-dvh max-w-2xl items-center px-4 py-8 sm:px-6">

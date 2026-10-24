@@ -72,6 +72,10 @@
                         </button>
                     @endforeach
                 </div>
+                <a href="{{ route('planner.habits.create') }}" wire:navigate class="flex items-start gap-3 rounded-xl border border-dashed border-teal-300 p-3 text-start hover:bg-teal-50 dark:border-teal-800 dark:hover:bg-teal-950/30" data-plan-kind-habit>
+                    <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-white"><flux:icon name="arrow-path-rounded-square" class="size-4" /></span>
+                    <span class="min-w-0"><span class="block font-medium">{{ __('habits.create.title') }}</span><span class="block text-xs text-zinc-500">{{ __('habits.create.card_help') }}</span></span>
+                </a>
                 <flux:input wire:model="title" :label="__('planner.create.activity_title')" maxlength="180" :placeholder="__('planner.kinds.'.$kind.'.example')" autofocus />
                 <details class="group" @if ($description !== '') open @endif>
                     <summary class="cursor-pointer text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">{{ __('planner.wizard.add_description') }}</summary>

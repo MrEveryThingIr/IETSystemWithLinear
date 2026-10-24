@@ -5,6 +5,7 @@ namespace App\Models;
 use App\PlanOccurrenceStatus;
 use App\PlanOccurrenceWindowState;
 use App\PlanTimingMode;
+use App\Support\Planner\OccurrenceTiming;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,6 +18,14 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use LogicException;
 
+/**
+ * @property ?CarbonImmutable $closes_at When doing it stops being possible (null: open until handled).
+ * @property ?int $completion_percent Below 100: partly done.
+ * @property ?string $reason Why it was not done, as told.
+ * @property ?string $note
+ * @property ?int $difficulty 1 (very easy) to 5 (very hard), as told.
+ * @property ?CarbonImmutable $reported_at When the person told the outcome.
+ */
 #[Fillable([
     'uuid',
     'plan_id',
@@ -34,6 +43,7 @@ use LogicException;
     'origin_type',
     'origin_uuid',
     'metadata',
+    'closes_at',
 ])]
 class PlanOccurrence extends Model
 {
@@ -49,6 +59,15 @@ class PlanOccurrence extends Model
     {
         static::creating(function (self $occurrence): void {
             $occurrence->uuid ??= (string) Str::uuid();
+            // Every occurrence knows from birth when it stops being possible.
+            if ($occurrence->getAttribute('closes_at') === null && $occurrence->getAttribute('scheduled_start_at') !== null && $occurrence->getAttribute('window_end_at') !== null) {
+                $occurrence->closes_at = OccurrenceTiming::closesAt(
+                    OccurrenceTiming::policyOf($occurrence),
+                    $occurrence->scheduled_start_at,
+                    $occurrence->window_end_at,
+                    (string) ($occurrence->timezone ?: 'UTC'),
+                );
+            }
         });
 
         static::updating(function (self $occurrence): void {
@@ -65,6 +84,7 @@ class PlanOccurrence extends Model
                 'origin_type',
                 'origin_uuid',
                 'metadata',
+                'closes_at',
             ])) {
                 throw new LogicException('Occurrence schedule and provenance are immutable.');
             }
@@ -74,6 +94,11 @@ class PlanOccurrence extends Model
                 'actual_start_at',
                 'actual_end_at',
                 'completed_at',
+                'completion_percent',
+                'reason',
+                'note',
+                'difficulty',
+                'reported_at',
             ]) && ! $occurrence->applyingLifecycle) {
                 throw new LogicException('Occurrence lifecycle changes require a dedicated Action.');
             }
@@ -89,28 +114,41 @@ class PlanOccurrence extends Model
         return 'uuid';
     }
 
+    /**
+     * @param  array<string, mixed>  $told  What the person told: completion_percent, reason, note, difficulty, reported_at.
+     */
     public function transition(
         PlanOccurrenceStatus $status,
         ?CarbonInterface $actualStartAt = null,
         ?CarbonInterface $actualEndAt = null,
         ?CarbonInterface $completedAt = null,
+        array $told = [],
+        bool $correction = false,
     ): void {
         $current = $this->status;
 
-        $allowed = match ($current) {
-            PlanOccurrenceStatus::Scheduled => [
-                PlanOccurrenceStatus::InProgress,
-                PlanOccurrenceStatus::Skipped,
-                PlanOccurrenceStatus::Cancelled,
-            ],
-            PlanOccurrenceStatus::InProgress => [
+        $allowed = $correction
+            // An earlier answer may be changed (the action checks the time limit); the history keeps both.
+            ? (in_array($current, [PlanOccurrenceStatus::Completed, PlanOccurrenceStatus::Skipped], true)
+                ? [PlanOccurrenceStatus::Completed, PlanOccurrenceStatus::Skipped]
+                : [])
+            : match ($current) {
+                PlanOccurrenceStatus::Scheduled => [
+                    PlanOccurrenceStatus::InProgress,
+                    // Told afterwards: "I did it at 06:48".
+                    PlanOccurrenceStatus::Completed,
+                    PlanOccurrenceStatus::Skipped,
+                    PlanOccurrenceStatus::Cancelled,
+                ],
+                PlanOccurrenceStatus::InProgress => [
+                    PlanOccurrenceStatus::Completed,
+                    PlanOccurrenceStatus::Skipped,
+                    PlanOccurrenceStatus::Cancelled,
+                ],
                 PlanOccurrenceStatus::Completed,
-                PlanOccurrenceStatus::Cancelled,
-            ],
-            PlanOccurrenceStatus::Completed,
-            PlanOccurrenceStatus::Skipped,
-            PlanOccurrenceStatus::Cancelled => [],
-        };
+                PlanOccurrenceStatus::Skipped,
+                PlanOccurrenceStatus::Cancelled => [],
+            };
 
         if (! in_array($status, $allowed, true)) {
             throw new LogicException("Occurrence cannot transition from {$current->value} to {$status->value}.");
@@ -128,6 +166,13 @@ class PlanOccurrence extends Model
 
         if ($completedAt !== null) {
             $attributes['completed_at'] = $completedAt;
+        }
+
+        if ($correction || $told !== []) {
+            $attributes += array_intersect_key($told + ['completion_percent' => null, 'reason' => null, 'note' => null, 'difficulty' => null], array_flip(['completion_percent', 'reason', 'note', 'difficulty', 'reported_at']));
+        }
+        if ($correction && $status === PlanOccurrenceStatus::Skipped) {
+            $attributes += ['actual_start_at' => null, 'actual_end_at' => null, 'completed_at' => null];
         }
 
         $this->applyingLifecycle = true;
@@ -150,17 +195,15 @@ class PlanOccurrence extends Model
         };
     }
 
+    /** What this occurrence means now, in the words people see (see OccurrenceTiming). */
     public function executionPhase(?CarbonInterface $at = null): string
     {
-        return $this->windowState($at)->value;
+        return OccurrenceTiming::phase($this, $at);
     }
 
     public function canStart(?CarbonInterface $at = null): bool
     {
-        return in_array($this->windowState($at), [
-            PlanOccurrenceWindowState::Ready,
-            PlanOccurrenceWindowState::Late,
-        ], true);
+        return OccurrenceTiming::allows($this, 'start', $at);
     }
 
     public function canStartAt(CarbonInterface $at): bool
@@ -303,6 +346,10 @@ class PlanOccurrence extends Model
             'actual_start_at' => 'immutable_datetime',
             'actual_end_at' => 'immutable_datetime',
             'completed_at' => 'immutable_datetime',
+            'closes_at' => 'immutable_datetime',
+            'reported_at' => 'immutable_datetime',
+            'completion_percent' => 'integer',
+            'difficulty' => 'integer',
             'metadata' => 'array',
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Bookkeeping;
 
+use App\Enums\Bookkeeping\EntryOrigin;
 use App\Enums\Bookkeeping\LedgerKind;
 use App\Enums\Bookkeeping\LedgerStatus;
 use App\Enums\Bookkeeping\PartyStatus;
@@ -18,6 +19,7 @@ use App\Support\Bookkeeping\BalanceCalculator;
 use App\Support\Bookkeeping\BookkeepingRecorder;
 use App\Support\Bookkeeping\ConfirmationRules;
 use App\Support\Bookkeeping\EntryDate;
+use App\Support\Bookkeeping\EntrySource;
 use App\Support\Bookkeeping\Toman;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -59,6 +61,7 @@ class RecordSharedEntry
         ?array $allocations = null,
         ?Wallet $wallet = null,
         ?string $idempotencyKey = null,
+        ?EntrySource $source = null,
     ): Transaction {
         abort_unless(in_array($type, TransactionType::shared(), true) && $type !== TransactionType::Adjustment, 422, 'Use the adjustment action to correct a debt.');
         abort_if($ledger->kind === LedgerKind::Personal, 422, 'Personal books record income and expenses.');
@@ -79,7 +82,7 @@ class RecordSharedEntry
             $this->assertOwnWallet($wallet, $actor);
         }
 
-        return DB::transaction(function () use ($ledger, $actor, $type, $from, $to, $amount, $occurred, $due, $description, $allocations, $wallet, $idempotencyKey): Transaction {
+        return DB::transaction(function () use ($ledger, $actor, $type, $from, $to, $amount, $occurred, $due, $description, $allocations, $wallet, $idempotencyKey, $source): Transaction {
             $locked = Ledger::query()->lockForUpdate()->findOrFail($ledger->id);
             abort_unless($locked->status === LedgerStatus::Active, 422, 'This book is archived.');
 
@@ -96,7 +99,8 @@ class RecordSharedEntry
                 'wallet_id' => $wallet?->id,
                 'recorded_by_actor_id' => $actor->id,
                 'idempotency_key' => $idempotencyKey,
-                'meta' => ['source' => 'manual'],
+                'meta' => ['source' => $source?->origin->value ?? 'manual'],
+                ...($source?->columns() ?? []),
             ]);
 
             if ($type->settlesObligations()) {
@@ -104,6 +108,9 @@ class RecordSharedEntry
             }
 
             $this->recorder->audit($locked, $actor, 'entry.recorded', $transaction, after: BookkeepingRecorder::snapshot($transaction));
+
+            // An entry an IET workflow proposes is never confirmed on anyone's behalf.
+            abort_if($source !== null && $source->origin === EntryOrigin::IetWorkflow && $this->rules->required($transaction)->isEmpty(), 422, 'The other side must be able to confirm this entry.');
 
             if ($this->rules->required($transaction)->isEmpty()) {
                 $transaction->transitionTo(TransactionStatus::Confirmed, ['confirmed_at' => now()]);
