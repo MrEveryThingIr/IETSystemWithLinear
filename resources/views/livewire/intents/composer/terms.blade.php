@@ -18,6 +18,7 @@
                     </div>
                 @endif
                 <flux:checkbox wire:model="core.negotiable" :label="__('intents.fields.negotiable')" />
+                <flux:textarea wire:model="core.exchange_notes" :label="__('intents.fields.exchange_notes')" rows="2" dir="auto" />
             </div>
         </x-market.term>
     @elseif($block === 'place')

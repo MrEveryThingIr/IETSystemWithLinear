@@ -705,4 +705,10 @@ return [
         'vehicle_class' => 'سيارة أم دراجة نارية أم فان أم شاحنة وهكذا.',
         'body_style' => 'شكل الهيكل، مثل سيدان أو هاتشباك.',
     ],
+    'key_details' => 'أهم التفاصيل',
+    'more_details_count' => ':count تفاصيل أخرى',
+    'edit_post' => 'تعديل',
+    'sign_in_to_respond' => 'سجّل الدخول للرد',
+    'published_state' => 'منشور كإصدار :version',
+    'picker_abilities' => 'ابدأ من إحدى قدراتي',
 ];

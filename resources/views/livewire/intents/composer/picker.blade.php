@@ -55,6 +55,12 @@
                         @endforeach
                     </section>
                 @endif
+                @if($capabilities->isNotEmpty() && $intent === null)
+                    <section aria-label="{{ __('composer.picker_abilities') }}">
+                        <h3 class="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('composer.picker_abilities') }}</h3>
+                        @foreach($capabilities as $capability)<button type="button" wire:click="useCapability('{{ $capability->uuid }}')" class="{{ $row }}" wire:key="ability-{{ $capability->uuid }}"><span dir="auto">{{ $capability->title ?: $capability->concept?->displayLabel(app()->getLocale()) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach
+                    </section>
+                @endif
                 @if(count($picker['terms']))
                     <section aria-label="{{ __('composer.picker.terms') }}">
                         <h3 class="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('composer.picker.terms') }}</h3>

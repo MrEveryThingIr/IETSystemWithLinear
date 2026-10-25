@@ -705,4 +705,10 @@ return [
         'vehicle_class' => 'Whether it is a car, motorcycle, van, truck and so on.',
         'body_style' => 'The shape of the body, such as sedan or hatchback.',
     ],
+    'key_details' => 'Key details',
+    'more_details_count' => ':count more details',
+    'edit_post' => 'Edit',
+    'sign_in_to_respond' => 'Sign in to respond',
+    'published_state' => 'Published as version :version',
+    'picker_abilities' => 'Start from one of my abilities',
 ];

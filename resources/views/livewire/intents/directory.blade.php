@@ -1,7 +1,7 @@
 <section class="mx-auto max-w-7xl space-y-6" @if($highlight) x-data x-init="requestAnimationFrame(() => document.getElementById('intent-{{ $highlight }}')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))" @endif>
     <x-app.page-header :title="__('intents.directory.title')" :description="__('intents.directory.help')">
         <x-slot:actions>
-            <flux:button :href="route('intents.create')" variant="primary" icon="plus">{{ __('intents.directory.add') }}</flux:button>
+            <flux:button :href="route('intents.compose')" variant="primary" icon="plus">{{ __('intents.directory.add') }}</flux:button>
         </x-slot:actions>
     </x-app.page-header>
 
@@ -101,39 +101,7 @@
                         @endif
                     </div>
                 @endif
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <div class="flex flex-wrap gap-2">
-                            <flux:badge :color="$intent->kind->value === 'need' ? 'amber' : 'green'">{{ __('intents.kinds.'.$intent->kind->value) }}</flux:badge>
-                            <flux:badge>{{ __('intents.subjects.'.$intent->subject_kind->value) }}</flux:badge>
-                            <flux:badge color="zinc">{{ __('intents.arrangements.'.$intent->kind->value.'.'.$intent->arrangement_kind->value) }}</flux:badge>
-                        </div>
-                        <h2 class="mt-3 text-lg font-semibold [overflow-wrap:anywhere]" dir="auto">{{ $intent->title ?: $intent->concept->displayLabel() }}</h2>
-                        <div class="mt-1 text-sm text-zinc-500 [overflow-wrap:anywhere]" dir="auto">{{ ($paths[$intent->id] ?? '') !== '' ? $paths[$intent->id] : $intent->concept->displayLabel() }}</div>
-                    </div>
-                    <span class="font-mono text-xs text-zinc-400">INT-{{ str_pad((string) $intent->id, 6, '0', STR_PAD_LEFT) }}</span>
-                </div>
-
-                @if ($intent->description)<p class="mt-3 whitespace-pre-line text-sm leading-6 text-zinc-700 dark:text-zinc-200" dir="auto">{{ $intent->description }}</p>@endif
-
-                <dl class="mt-4 grid gap-2 text-sm">
-                    @if ($intent->location_text)<div><dt class="inline font-medium">{{ __('intents.fields.location') }}:</dt> <dd class="inline" dir="auto">{{ $intent->location_text }}</dd></div>@endif
-                    @if ($intent->cash_min !== null || $intent->cash_max !== null)
-                        <div>
-                            <dt class="inline font-medium">{{ __('intents.directory.cash') }}:</dt>
-                            <dd class="inline">
-                                @if ($intent->cash_min !== null && $intent->cash_max !== null){{ $intent->cash_min }}–{{ $intent->cash_max }}
-                                @elseif ($intent->cash_min !== null){{ __('intents.directory.from') }} {{ $intent->cash_min }}
-                                @else{{ __('intents.directory.up_to') }} {{ $intent->cash_max }}@endif
-                                {{ $intent->currency_code }}
-                                @if ($intent->cash_basis && $intent->cash_basis !== 'total') · {{ __('intents.cash_basis.'.$intent->cash_basis) }}@endif
-                                · {{ $intent->negotiable ? __('intents.directory.negotiable') : __('intents.directory.fixed') }}
-                            </dd>
-                        </div>
-                    @endif
-                    <div><dt class="inline font-medium">{{ __('intents.fields.exchange_preference') }}:</dt> <dd class="inline">{{ __('intents.exchange.'.$intent->exchange_preference->value.'.title') }}</dd></div>
-                    @if ($intent->exchange_notes)<div><dt class="inline font-medium">{{ __('intents.fields.exchange_notes') }}:</dt> <dd class="inline" dir="auto">{{ $intent->exchange_notes }}</dd></div>@endif
-                </dl>
+                <x-market.intention-presentation :presentation="$cards[$intent->id]" density="card" />
 
                 <div class="mt-4 flex flex-col gap-3 border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
                     <div class="min-w-0 [overflow-wrap:anywhere]">
@@ -164,7 +132,7 @@
                             >
                                 {{ __('intents.matches.find') }}
                             </flux:button>
-                            <flux:button :href="route('intents.photos', $intent)" size="sm" variant="ghost">{{ __('intents.media.title') }}</flux:button>
+                            <flux:button :href="route('intents.compose.edit', $intent)" size="sm" variant="ghost">{{ __('composer.edit_post') }}</flux:button>
                         @else
                             <flux:button
                                 :href="route('relationships.create', ['intent' => $intent->uuid])"

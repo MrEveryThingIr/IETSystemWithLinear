@@ -202,7 +202,9 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/contacts', Contacts::class)->name('contacts.index');
 
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
-    Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
+    // The adaptive composer is the way in; old links and bookmarks land there with their side and owner.
+    Route::get('/intents/create', fn (Request $request) => redirect()->route('intents.compose', $request->only(['side', 'as'])))->name('intents.create');
+    Route::livewire('/intents/create/classic', IntentCreate::class)->name('intents.create.classic');
     Route::livewire('/intents/compose', IntentComposer::class)->name('intents.compose');
     Route::livewire('/intents/{intent}/compose', IntentComposer::class)->whereUuid('intent')->can('update', 'intent')->name('intents.compose.edit');
     Route::get('/intents/{intent}/versions/{version:uuid}', [IntentPresentationController::class, 'version'])->whereUuid('intent')->can('update', 'intent')->scopeBindings()->name('intents.versions.show');

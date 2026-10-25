@@ -46,7 +46,7 @@ class ExperienceHubController extends Controller
                     'title' => __('experience.hubs.needs-offers.mine'),
                     'help' => __('experience.hubs.needs-offers.mine_help'),
                     'count' => $mineCount,
-                    'primary' => ['label' => __('experience.hubs.needs-offers.create'), 'href' => route('intents.create')],
+                    'primary' => ['label' => __('experience.hubs.needs-offers.create'), 'href' => route('intents.compose')],
                     'secondary' => ['label' => __('experience.hubs.needs-offers.open_all'), 'href' => route('intents.index')],
                     'items' => $mine->map(fn (ActorProfileIntent $intent): array => [
                         'title' => $intent->title ?: $intent->concept->displayLabel(),

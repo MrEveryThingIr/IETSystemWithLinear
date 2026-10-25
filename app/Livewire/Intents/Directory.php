@@ -8,6 +8,7 @@ use App\ProfileIntentStatus;
 use App\Support\Categories\CategoryCatalog;
 use App\Support\LocalizedNumber;
 use App\Support\Market\IntentDetailCatalog;
+use App\Support\Market\IntentPresentation;
 use App\Support\Market\YearSpan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -158,6 +159,11 @@ class Directory extends Component
         foreach ($intents->getCollection() as $intent) {
             $paths[$intent->id] = implode(' › ', array_column($catalog->path((int) $intent->concept_id, null), 'label'));
         }
+        $presenter = app(IntentPresentation::class);
+        $cards = [];
+        foreach ($intents->getCollection() as $intent) {
+            $cards[$intent->id] = $presenter->forVersion($intent, $user, (string) ($paths[$intent->id] ?? ''));
+        }
 
         $versionIds = $intents->getCollection()->pluck('business_listing_version_id')->filter()->unique()->values()->all();
         $listingCovers = $versionIds === [] ? [] : array_flip(DB::table('business_listing_media')
@@ -169,6 +175,7 @@ class Directory extends Component
             'listingCovers' => $listingCovers,
             'areas' => $catalog->areas(),
             'paths' => $paths,
+            'cards' => $cards,
             'detailCatalog' => IntentDetailCatalog::searchable(),
         ])->title(__('intents.directory.title'));
     }

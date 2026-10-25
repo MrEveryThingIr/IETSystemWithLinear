@@ -134,7 +134,7 @@
         <x-app.panel :title="__('business.show.market.title')" :help="__('business.show.market.help')" icon="megaphone" data-business-market>
             <x-slot:actions>
                 @if ($canManage)
-                    <flux:button :href="route('intents.create', ['as' => 'business:'.$business->id])" size="sm" variant="primary" icon="plus">{{ __('business.show.market.add') }}</flux:button>
+                    <flux:button :href="route('intents.compose', ['as' => 'business:'.$business->id])" size="sm" variant="primary" icon="plus">{{ __('business.show.market.add') }}</flux:button>
                 @endif
                 <flux:button :href="route('intents.index', ['scope' => 'mine'])" size="sm" variant="ghost">{{ __('business.show.market.all') }}</flux:button>
             </x-slot:actions>

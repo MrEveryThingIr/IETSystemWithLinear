@@ -7,6 +7,7 @@ use App\Models\ActorProfileIntent;
 use App\Models\Asset;
 use App\Models\BusinessListing;
 use App\Models\Group;
+use App\Models\IntentVersion;
 use App\Models\SpaceContent;
 use App\Models\User;
 use App\Support\TemporalPreferences;
@@ -24,11 +25,29 @@ final class IntentPresentation
     }
 
     /** The caller authorizes access to the source; this method only reduces it for a viewer. */
-    public function build(array $snapshot, ?User $viewer, bool $canManage = false, ?ActorProfileIntent $intent = null): array
+    /** Presentation of an already-published version, for lists where visibility was applied by the query. */
+    public function forVersion(ActorProfileIntent $intent, ?User $viewer, string $category = ''): array
+    {
+        $version = $intent->publishedVersion;
+        $snapshot = $version instanceof IntentVersion ? $version->snapshot : IntentSnapshot::fromRecord((object) $intent->getAttributes());
+        $card = $this->build($snapshot, $viewer, false, $intent);
+        $card['category'] = $category !== '' ? $category : (string) $intent->concept?->displayLabel();
+        $core = $snapshot['core'] ?? [];
+        if ($card['price'] === null && isset($core['cash_min']) && ! in_array($core['currency_code'] ?? null, ['IRT', 'IRR', null], true)) {
+            // The directory keeps showing a legacy amount in another currency as it was written, never converted.
+            $plain = fn ($amount): string => str_contains((string) $amount, '.') ? rtrim(rtrim((string) $amount, '0'), '.') : (string) $amount;
+            $card['price'] = $plain($core['cash_min']).(isset($core['cash_max']) && $core['cash_max'] != $core['cash_min'] ? ' – '.$plain($core['cash_max']) : '').' '.$core['currency_code'];
+        }
+
+        return $card;
+    }
+
+    public function build(array $snapshot, ?User $viewer, bool $canManage = false, ?ActorProfileIntent $intent = null, ?string $kind = null, ?string $topic = null): array
     {
         $core = $snapshot['core'] ?? [];
         $details = [];
-        $topic = $intent?->metadata['composer_topic'] ?? null;
+        $topic ??= $intent?->metadata['composer_topic'] ?? null;
+        $kind ??= $intent?->kind->value;
         $viewCalendar = TemporalPreferences::calendarFor($viewer) === CalendarSystem::Persian ? YearSpan::PERSIAN : YearSpan::GREGORIAN;
         foreach ($snapshot['details'] ?? [] as $detail) {
             if (($detail['visibility'] ?? 'same') === 'private' && ! $canManage) {
@@ -103,7 +122,13 @@ final class IntentPresentation
         return ['title' => $core['title'] ?? '', 'description' => $core['description'] ?? '', 'details' => $details,
             'price' => $price, 'basis' => $core['cash_basis'] ?? null, 'location' => $core['location_text'] ?? null,
             'quantity' => $core['quantity'] ?? null, 'unit' => $core['unit'] ?? null,
-            'starts_on' => $core['starts_on'] ?? null, 'ends_on' => $core['ends_on'] ?? null, 'media' => $media];
+            'starts_on' => $core['starts_on'] ?? null, 'ends_on' => $core['ends_on'] ?? null, 'media' => $media,
+            'kind' => $kind, 'topic' => $topic ?: null, 'topicLabel' => $topic ? (string) __('composer.topics.'.$topic) : null,
+            'arrangement' => $kind !== null && in_array($core['arrangement_kind'] ?? '', ['ownership_transfer', 'temporary_use'], true) ? (string) __('composer.arrangements.'.$core['arrangement_kind'].'.'.$kind) : null,
+            'priceLabel' => (string) __('composer.terms.price.'.($kind === 'need' ? 'need' : 'label')), 'placeLabel' => (string) __('composer.terms.place.'.($kind === 'need' ? 'need' : 'label')),
+            'highlightKeys' => IntentProfiles::highlights((string) $topic), 'negotiable' => (bool) ($core['negotiable'] ?? false),
+            'route' => ! empty($core['origin_text']) || ! empty($core['destination_text']) ? trim(($core['origin_text'] ?? '').' → '.($core['destination_text'] ?? ''), ' →') : null,
+            'category' => '', 'owner' => null];
     }
 
     private function reference(array $value, ?User $viewer): ?array

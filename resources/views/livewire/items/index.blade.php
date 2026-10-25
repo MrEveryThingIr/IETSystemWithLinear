@@ -25,8 +25,8 @@
                     <flux:text size="sm">{{ __('items.offers_needs.help') }}</flux:text>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <flux:button size="sm" icon="plus" :href="route('intents.create', ['side' => 'offer'])" wire:navigate data-items-new-offer>{{ __('items.offers_needs.new_offer') }}</flux:button>
-                    <flux:button size="sm" icon="plus" :href="route('intents.create', ['side' => 'need'])" wire:navigate data-items-new-need>{{ __('items.offers_needs.new_need') }}</flux:button>
+                    <flux:button size="sm" icon="plus" :href="route('intents.compose', ['side' => 'offer'])" wire:navigate data-items-new-offer>{{ __('items.offers_needs.new_offer') }}</flux:button>
+                    <flux:button size="sm" icon="plus" :href="route('intents.compose', ['side' => 'need'])" wire:navigate data-items-new-need>{{ __('items.offers_needs.new_need') }}</flux:button>
                 </div>
             </header>
 

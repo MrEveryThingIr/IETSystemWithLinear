@@ -285,6 +285,7 @@ class Composer extends Component
         if (trim((string) ($this->core['title'] ?? '')) === '') {
             $this->core['title'] = $capability->title ?? '';
         }
+        $this->addTerm('category');
     }
 
     public function addDetail(?string $key = null): void
@@ -740,7 +741,7 @@ class Composer extends Component
             'catalog' => $this->catalog(),
             'mediaItems' => $this->intent?->media()->with('asset')->get() ?? collect(),
             'referenceChoices' => $this->referenceChoices(),
-            'presentation' => app(IntentPresentation::class)->build($this->previewSnapshot(), $this->previewAudience === 'owner' ? $user : null, $this->previewAudience === 'owner', $this->intent),
+            'presentation' => app(IntentPresentation::class)->build($this->previewSnapshot(), $this->previewAudience === 'owner' ? $user : null, $this->previewAudience === 'owner', $this->intent, $this->isNeedSide() ? 'need' : 'offer', $this->topic),
             'capabilities' => $this->intent === null ? Capability::query()->heldBy($this->publisher())->active()->with('concept.labels')->limit(12)->get() : collect(),
             'templates' => $this->savedTemplates('')])->title(__('composer.title'));
     }

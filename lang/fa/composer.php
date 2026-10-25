@@ -705,4 +705,10 @@ return [
         'vehicle_class' => 'سواری، موتورسیکلت، ون، کامیون و مانند آن.',
         'body_style' => 'شکل بدنه، مثل سدان یا هاچ‌بک.',
     ],
+    'key_details' => 'جزئیات مهم',
+    'more_details_count' => ':count جزئیات دیگر',
+    'edit_post' => 'ویرایش',
+    'sign_in_to_respond' => 'برای پاسخ دادن وارد شوید',
+    'published_state' => 'منتشرشده به‌عنوان نسخهٔ :version',
+    'picker_abilities' => 'شروع از یکی از توانایی‌هایم',
 ];

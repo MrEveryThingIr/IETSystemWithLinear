@@ -705,4 +705,10 @@ return [
         'vehicle_class' => '轿车、摩托车、厢式货车、卡车等。',
         'body_style' => '车身样式，如三厢或两厢。',
     ],
+    'key_details' => '关键信息',
+    'more_details_count' => '另有 :count 项细节',
+    'edit_post' => '编辑',
+    'sign_in_to_respond' => '登录后回应',
+    'published_state' => '已发布为版本 :version',
+    'picker_abilities' => '从我的某项能力开始',
 ];

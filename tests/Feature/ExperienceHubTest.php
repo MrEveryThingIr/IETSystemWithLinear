@@ -80,7 +80,7 @@ class ExperienceHubTest extends TestCase
             ->assertSee('Mine')
             ->assertSee('Discover')
             ->assertSee('Matches')
-            ->assertSee(route('intents.create'), false)
+            ->assertSee(route('intents.compose'), false)
             ->assertSee(route('intents.index'), false);
     }
 
