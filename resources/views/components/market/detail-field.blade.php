@@ -1,7 +1,7 @@
 @props(['index', 'detail'])
 @php
     $key = $detail['canonical_key'];
-    $label = __('composer.details.'.$key);
+    $label = \App\Support\Market\IntentDetailCatalog::label($key);
     $unit = \App\Support\Market\IntentDetailCatalog::unitLabel($detail['unit'] ?? null);
     $labelWithUnit = $unit && $detail['type'] !== 'amount' ? $label.' ('.$unit.')' : $label;
     $model = 'details.'.$index.'.value';

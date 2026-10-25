@@ -23,6 +23,7 @@ return [
         'actors' => 'الجهات الفاعلة',
         'publication-control' => 'التحكم في النشر',
         'category-review' => 'اقتراحات التصنيفات',
+        'field-review' => 'مراجعة مكتبة الحقول',
         'messages' => 'الرسائل',
         'message-reports' => 'بلاغات الرسائل',
         'day-texts' => 'نصّ اليوم',

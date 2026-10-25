@@ -94,6 +94,7 @@ use App\Livewire\Platform\AccessInvitations;
 use App\Livewire\Platform\CategorySuggestions;
 use App\Livewire\Platform\DayTexts;
 use App\Livewire\Platform\DevelopmentOrigins;
+use App\Livewire\Platform\FieldProposals;
 use App\Livewire\Platform\MessageReports;
 use App\Livewire\Profile\BasicManage as ProfileBasicManage;
 use App\Livewire\Profile\Manage as ProfileManage;
@@ -293,6 +294,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/platform/access-invitations', AccessInvitations::class)->name('platform.access-invitations');
     Route::livewire('/platform/development-origins', DevelopmentOrigins::class)->name('platform.development-origins');
     Route::livewire('/platform/categories', CategorySuggestions::class)->name('platform.categories');
+    Route::livewire('/platform/fields', FieldProposals::class)->name('platform.fields');
     Route::livewire('/platform/message-reports', MessageReports::class)->name('platform.message-reports');
     Route::livewire('/platform/day-texts', DayTexts::class)->name('platform.day-texts');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');

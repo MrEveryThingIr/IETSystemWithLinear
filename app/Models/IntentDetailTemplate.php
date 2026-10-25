@@ -11,7 +11,7 @@ class IntentDetailTemplate extends Model
 
     protected function casts(): array
     {
-        return ['fields' => 'array'];
+        return ['fields' => 'array', 'terms' => 'array'];
     }
 
     protected static function booted(): void

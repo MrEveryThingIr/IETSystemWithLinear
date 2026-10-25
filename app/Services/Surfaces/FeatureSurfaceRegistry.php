@@ -84,6 +84,10 @@ class FeatureSurfaceRegistry
                 'Category suggestions', 'پیشنهاد دسته‌بندی', 'tag', 'platform', [],
                 ['platform.categories'], ['platform.categories']
             ),
+            'field-review' => $this->surface(
+                'Field library review', 'بازبینی کتابخانه فیلدها', 'adjustments-horizontal', 'platform', [],
+                ['platform.fields'], ['platform.fields']
+            ),
             'message-reports' => $this->surface(
                 'Message reports', 'گزارش پیام‌ها', 'flag', 'platform', [],
                 ['platform.message-reports'], ['platform.message-reports']

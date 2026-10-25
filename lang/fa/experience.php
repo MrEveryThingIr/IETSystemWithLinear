@@ -23,6 +23,7 @@ return [
         'actors' => 'کنشگران',
         'publication-control' => 'انتشار قابلیت‌ها',
         'category-review' => 'پیشنهاد دسته‌بندی',
+        'field-review' => 'بازبینی کتابخانه فیلدها',
         'messages' => 'پیام‌ها',
         'message-reports' => 'گزارش پیام‌ها',
         'day-texts' => 'متن روز',

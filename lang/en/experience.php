@@ -23,6 +23,7 @@ return [
         'actors' => 'Actors',
         'publication-control' => 'Publication control',
         'category-review' => 'Category suggestions',
+        'field-review' => 'Field library review',
         'messages' => 'Messages',
         'message-reports' => 'Message reports',
         'day-texts' => 'Text of the day',

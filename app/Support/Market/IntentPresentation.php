@@ -61,7 +61,7 @@ final class IntentPresentation
             } elseif (is_array($value)) {
                 $value = implode(', ', array_filter($value, 'is_scalar'));
             }
-            $details[] = ['label' => $detail['label'] ?? '', 'value' => (string) $value, 'url' => $url,
+            $details[] = ['label' => ! empty($detail['canonical_key']) ? IntentDetailCatalog::label($detail['canonical_key']) : ($detail['label'] ?? ''), 'value' => (string) $value, 'url' => $url,
                 'unit' => $type === 'amount' ? null : IntentDetailCatalog::unitLabel($detail['unit'] ?? null), 'group' => $detail['group_label'] ?? null,
                 'private' => ($detail['visibility'] ?? 'same') === 'private', 'informational' => $type === 'amount'];
         }

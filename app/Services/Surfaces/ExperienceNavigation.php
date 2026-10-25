@@ -133,7 +133,7 @@ class ExperienceNavigation
             $item('ai'),
         ]);
 
-        $adminKeys = ['access-invitations', 'development-origins', 'actors', 'category-review', 'message-reports'];
+        $adminKeys = ['access-invitations', 'development-origins', 'actors', 'category-review', 'field-review', 'message-reports'];
         $admin = array_values(array_filter(array_map($item, $adminKeys)));
 
         foreach (['day-texts', 'publication-control'] as $rootKey) {

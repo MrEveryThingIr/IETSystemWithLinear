@@ -53,7 +53,10 @@ final class PublishIntent
                 if ($detail['visibility'] !== 'same' || $key === null || ! isset(IntentDetailCatalog::all()[$key])) {
                     continue;
                 }
-                $column = IntentDetailCatalog::all()[$key]['filter'];
+                $column = IntentDetailCatalog::all()[$key]['filter'] ?? null;
+                if ($column === null) {
+                    continue;
+                }
                 $value = $detail['payload']['value'];
                 DB::table('intent_search_values')->insert(['intent_version_id' => $version->id, 'canonical_key' => $key, $column => $value]);
             }

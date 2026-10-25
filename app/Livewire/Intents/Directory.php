@@ -168,7 +168,7 @@ class Directory extends Component
             'listingCovers' => $listingCovers,
             'areas' => $catalog->areas(),
             'paths' => $paths,
-            'detailCatalog' => IntentDetailCatalog::all(),
+            'detailCatalog' => IntentDetailCatalog::searchable(),
         ])->title(__('intents.directory.title'));
     }
 
@@ -179,7 +179,7 @@ class Directory extends Component
      */
     private function applyDetailFilter(Builder $query): void
     {
-        $spec = IntentDetailCatalog::all()[$this->detail] ?? null;
+        $spec = IntentDetailCatalog::searchable()[$this->detail] ?? null;
         if ($spec === null) {
             return;
         }

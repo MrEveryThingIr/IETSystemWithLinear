@@ -67,7 +67,7 @@ class ExperienceCompositionNavigationTest extends TestCase
         $this->assertNotContains('development-origins', $primarySurfaceKeys);
 
         $this->assertEqualsCanonicalizing(
-            ['access-invitations', 'development-origins', 'actors', 'category-review', 'message-reports', 'day-texts', 'publication-control'],
+            ['access-invitations', 'development-origins', 'actors', 'category-review', 'field-review', 'message-reports', 'day-texts', 'publication-control'],
             collect($navigation['admin'])->pluck('key')->all()
         );
     }

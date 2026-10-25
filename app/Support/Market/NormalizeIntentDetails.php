@@ -40,7 +40,7 @@ final class NormalizeIntentDetails
                 $seen[$key] = true;
                 $spec = IntentDetailCatalog::all()[$key];
                 $data['type'] = $spec['type'];
-                $data['label'] = __('composer.details.'.$key);
+                $data['label'] = IntentDetailCatalog::label($key);
                 $data['unit'] = $spec['unit'] ?? null;
                 $data['options'] = $spec['options'] ?? [];
             } else {

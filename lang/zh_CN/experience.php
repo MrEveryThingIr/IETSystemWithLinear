@@ -23,6 +23,7 @@ return [
         'actors' => '参与者',
         'publication-control' => '发布控制',
         'category-review' => '分类建议',
+        'field-review' => '字段库审核',
         'messages' => '消息',
         'message-reports' => '消息举报',
         'day-texts' => '每日寄语',

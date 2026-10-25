@@ -3,6 +3,7 @@
 namespace App\Livewire\Intents;
 
 use App\Actions\Market\ManageIntentMedia;
+use App\Actions\Market\ProposeIntentField;
 use App\Actions\Market\PublishIntent;
 use App\Actions\Market\RestoreIntentVersion;
 use App\Actions\Market\SaveIntentWorkingCopy;
@@ -22,9 +23,11 @@ use App\ProfileIntentStatus;
 use App\Services\Business\BusinessMarketService;
 use App\Support\LocalizedNumber;
 use App\Support\Market\IntentDetailCatalog;
+use App\Support\Market\IntentFieldLibrary;
 use App\Support\Market\IntentPresentation;
 use App\Support\Market\IntentProfiles;
 use App\Support\Market\IntentSnapshot;
+use App\Support\Market\IntentTerms;
 use App\Support\Market\MarketMoney;
 use App\Support\Market\NormalizeIntentDetails;
 use App\Support\MediaLimits;
@@ -32,6 +35,7 @@ use App\Support\Parties\Party;
 use App\Support\Parties\PartyAuthority;
 use App\Support\TemporalPreferences;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -96,6 +100,21 @@ class Composer extends Component
 
     public string $topic = '';
 
+    /** @var list<string> the term blocks (price, place, ...) this composition has chosen to use */
+    public array $terms = [];
+
+    public bool $pickerOpen = false;
+
+    public string $pickerSearch = '';
+
+    public string $customLabel = '';
+
+    public string $groupName = '';
+
+    public string $renaming = '';
+
+    public string $renameTo = '';
+
     public bool $replaceLegacyPrice = false;
 
     public function mount(?ActorProfileIntent $intent = null): void
@@ -117,6 +136,7 @@ class Composer extends Component
             $this->maximumPrice = MarketMoney::legacyToman($this->core['cash_max'] ?? null, $this->core['currency_code'] ?? null) ?? '';
             $this->topic = (string) ($intent->metadata['composer_topic'] ?? '');
             $this->priceMode = ($this->core['exchange_preference'] ?? '') === 'free' ? 'free' : ($this->price === '' ? 'ask' : ($this->maximumPrice !== '' && $this->maximumPrice !== $this->price ? 'range' : 'fixed'));
+            $this->terms = IntentTerms::populated($this->core, $this->priceMode !== 'ask' || $this->hasLegacyPrice(), (bool) $this->conceptId, $intent->media()->exists());
         } else {
             $this->core = ['title' => '', 'description' => '', 'schedule_kind' => 'ongoing', 'visibility' => 'authenticated',
                 'timezone' => TemporalPreferences::timezoneFor($user), 'subject_kind' => 'other', 'arrangement_kind' => 'other',
@@ -126,7 +146,6 @@ class Composer extends Component
             }
             $this->choose(in_array($this->side, ['need', 'offer'], true) ? $this->side : 'need');
         }
-        $this->syncProfileRows();
     }
 
     public function choose(string $intention): void
@@ -137,6 +156,7 @@ class Composer extends Component
             $kind = in_array($intention, ['offer', 'service', 'sell'], true) ? 'offer' : 'need';
             abort_unless($kind === $this->intent->kind->value, 422, __('composer.identity_fixed'));
         }
+        $previousArrangement = (string) ($this->core['arrangement_kind'] ?? 'other');
         $this->intention = $intention;
         $this->core['subject_kind'] = match ($intention) {
             'service' => 'service', 'sell' => 'good', 'rent' => 'property', 'activity', 'person' => 'collaboration', default => 'other'
@@ -146,6 +166,7 @@ class Composer extends Component
         };
         if ($intention === 'exchange') {
             $this->priceMode = 'exchange';
+            $this->addTerm('price');
         }
         $topics = IntentProfiles::topics($intention);
         if (count($topics) === 1) {
@@ -157,6 +178,9 @@ class Composer extends Component
             $this->topic = '';
         }
         $this->chooseTopic($this->topic);
+        if (in_array($previousArrangement, IntentProfiles::all()[$this->topic]['arrangements'] ?? [], true)) {
+            $this->core['arrangement_kind'] = $previousArrangement;
+        }
     }
 
     public function chooseTopic(string $topic): void
@@ -168,7 +192,6 @@ class Composer extends Component
             $this->core['subject_kind'] = $profile['subject'];
             $this->core['arrangement_kind'] = IntentProfiles::arrangement($topic, (string) ($this->core['arrangement_kind'] ?? 'other'));
         }
-        $this->syncProfileRows();
     }
 
     public function chooseArrangement(string $arrangement): void
@@ -184,28 +207,25 @@ class Composer extends Component
             $this->priceMode = 'fixed';
             $this->core['cash_basis'] = 'total';
         }
-        $this->syncProfileRows();
     }
 
-    /** Keep exactly the profile's questions: add missing essentials, drop empty rows that no longer apply. */
-    private function syncProfileRows(): void
+    /**
+     * Only the term blocks the person chose contribute canonical values.
+     *
+     * @param  array<string, mixed>  $core
+     * @return array<string, mixed>
+     */
+    private function scopedCore(array $core, bool $fromCatalog): array
     {
-        $answers = [];
-        foreach ($this->details as $row) {
-            if (! empty($row['canonical_key'])) {
-                $answers[$row['canonical_key']] = $row['value'] ?? null;
+        foreach (IntentTerms::BLOCKS as $block) {
+            if (! in_array($block, $this->terms, true) && ! ($fromCatalog && in_array($block, ['price', 'place', 'quantity'], true))) {
+                foreach (IntentTerms::owned($block) as $field) {
+                    $core[$field] = in_array($field, ['round_trip', 'negotiable'], true) ? false : null;
+                }
             }
         }
-        $fields = IntentProfiles::fields($this->topic, $this->intention, (string) ($this->core['arrangement_kind'] ?? 'other'), $answers);
-        $visible = [...$fields['essential'], ...$fields['suggested']];
-        $this->details = array_values(array_filter($this->details, fn (array $row): bool => empty($row['canonical_key'])
-            || in_array($row['canonical_key'], $visible, true) || ! self::emptyAnswer($row['value'] ?? null)));
-        $present = array_column($this->details, 'canonical_key');
-        foreach ($fields['essential'] as $key) {
-            if (! in_array($key, $present, true)) {
-                $this->details[] = $this->newRow($key);
-            }
-        }
+
+        return $core;
     }
 
     private static function emptyAnswer(mixed $value): bool
@@ -219,7 +239,7 @@ class Composer extends Component
         $spec = $key === null ? null : (IntentDetailCatalog::all()[$key] ?? abort(422));
         $type = $spec['type'] ?? $this->detailType;
 
-        return ['editor_key' => (string) Str::uuid(), 'canonical_key' => $key, 'label' => $key === null ? '' : __('composer.details.'.$key),
+        return ['editor_key' => (string) Str::uuid(), 'canonical_key' => $key, 'label' => $key === null ? '' : IntentDetailCatalog::label($key),
             'type' => $type, 'value' => match ($type) {
                 'date_range', 'reference', 'multiple_choice' => [], 'boolean' => $key === null ? '' : false, default => ''
             }, 'visibility' => 'same', 'unit' => $spec['unit'] ?? '', 'group_label' => '', 'options' => $spec['options'] ?? []];
@@ -251,6 +271,95 @@ class Composer extends Component
         abort_if(count($this->details) >= 50, 422);
         $this->details[] = $this->newRow($key);
         $this->dispatch('composer-detail-added', index: count($this->details) - 1);
+    }
+
+    /** Insert a library field the person picked; never inserted automatically, never twice. */
+    public function addField(string $key): void
+    {
+        abort_unless(isset(IntentDetailCatalog::all()[$key]), 422);
+        if (! in_array($key, array_column($this->details, 'canonical_key'), true)) {
+            abort_if(count($this->details) >= 50, 422);
+            $this->details[] = $this->newRow($key);
+            $this->dispatch('composer-detail-added', index: count($this->details) - 1);
+        }
+        $this->pickerOpen = false;
+        $this->pickerSearch = '';
+    }
+
+    public function addTerm(string $block): void
+    {
+        abort_unless(in_array($block, IntentTerms::BLOCKS, true), 422);
+        if (! in_array($block, $this->terms, true)) {
+            $this->terms[] = $block;
+            if ($block === 'price' && $this->priceMode === 'ask') {
+                $this->priceMode = ($this->core['arrangement_kind'] ?? '') === 'temporary_use' ? 'per_unit' : 'fixed';
+                $this->core['cash_basis'] = $this->priceMode === 'per_unit' ? 'month' : 'total';
+            }
+        }
+        $this->pickerOpen = false;
+        $this->pickerSearch = '';
+    }
+
+    /** Removing a term clears what it owned, so nothing hidden is ever published. */
+    public function removeTerm(string $block): void
+    {
+        abort_if($block === 'media' && $this->intent?->media()->exists(), 422);
+        abort_if($block === 'category' && $this->intent !== null, 422);
+        abort_if($this->catalog() !== null && in_array($block, ['price', 'place', 'quantity'], true), 422);
+        $this->terms = array_values(array_diff($this->terms, [$block]));
+        foreach (IntentTerms::owned($block) as $field) {
+            $this->core[$field] = in_array($field, ['round_trip', 'negotiable'], true) ? false : null;
+        }
+        if ($block === 'price') {
+            $this->priceMode = 'ask';
+            $this->price = $this->maximumPrice = '';
+        }
+        if ($block === 'category') {
+            $this->conceptId = null;
+        }
+        if ($block === 'when') {
+            $this->core['schedule_kind'] = 'ongoing';
+        }
+    }
+
+    public function openPicker(): void
+    {
+        $this->pickerOpen = true;
+    }
+
+    public function closePicker(): void
+    {
+        $this->pickerOpen = false;
+        $this->pickerSearch = '';
+    }
+
+    public function createCustom(): void
+    {
+        $label = trim($this->customLabel !== '' ? $this->customLabel : $this->pickerSearch);
+        if ($label === '') {
+            return;
+        }
+        abort_if(count($this->details) >= 50, 422);
+        $row = $this->newRow(null);
+        $row['label'] = mb_substr($label, 0, 120);
+        $this->details[] = $row;
+        $this->customLabel = $this->pickerSearch = '';
+        $this->pickerOpen = false;
+        $this->dispatch('composer-detail-added', index: count($this->details) - 1);
+    }
+
+    /** Offer a custom field to everyone. Only its name, kind, unit and choices are sent, never an answer. */
+    public function suggestStandard(int $index): void
+    {
+        abort_unless(isset($this->details[$index]) && empty($this->details[$index]['canonical_key']), 404);
+        app(ProposeIntentField::class)->execute($this->user(), $this->details[$index], app()->getLocale());
+        $this->notice = __('composer.suggestion_sent');
+    }
+
+    public function toggleDetailPrivacy(int $index): void
+    {
+        abort_unless(isset($this->details[$index]), 404);
+        $this->details[$index]['visibility'] = ($this->details[$index]['visibility'] ?? 'same') === 'private' ? 'same' : 'private';
     }
 
     public function removeDetail(int $index): void
@@ -358,33 +467,104 @@ class Composer extends Component
         return $this->intent->media()->where('uuid', $uuid)->firstOrFail();
     }
 
-    public function saveTemplate(): void
+    /**
+     * Saves structure only, never answers or files. composition = fields + chosen terms + topic,
+     * group = just the selected fields.
+     */
+    public function saveTemplate(string $kind = 'composition'): void
     {
-        $this->validate(['templateName' => ['required', 'string', 'max:120']]);
+        abort_unless(in_array($kind, ['composition', 'group'], true), 422);
+        $name = trim($kind === 'group' ? $this->groupName : $this->templateName);
+        $this->validate([($kind === 'group' ? 'groupName' : 'templateName') => ['required', 'string', 'max:120']]);
+        $this->storeTemplate($kind, $name, $this->editableDetails(shape: true), $kind === 'composition' ? $this->terms : [], $kind === 'composition' ? $this->topic : '');
+        $this->templateName = $this->groupName = '';
+        $this->notice = __('composer.template_saved');
+    }
+
+    /** Keep one personal field (usually a custom one) to reuse in later compositions. */
+    public function saveField(int $index): void
+    {
+        abort_unless(isset($this->details[$index]), 404);
+        $row = $this->details[$index];
+        $label = trim((string) ($row['label'] ?? ''));
+        abort_if($label === '', 422);
+        $this->storeTemplate('field', mb_substr($label, 0, 120), [$row], [], '');
+        $this->notice = __('composer.field_saved');
+    }
+
+    /** @param list<array<string, mixed>> $rows @param list<string> $terms */
+    private function storeTemplate(string $kind, string $name, array $rows, array $terms, string $topic): void
+    {
         $publisher = $this->publisher();
         abort_unless(in_array($publisher->kind, [Party::ACTOR, Party::BUSINESS], true), 422);
-        $rows = app(NormalizeIntentDetails::class)->execute($this->user(), $this->editableDetails(shape: true), shapeOnly: true);
+        $shaped = app(NormalizeIntentDetails::class)->execute($this->user(), $rows, shapeOnly: true);
         $fields = array_map(function ($row): array {
             $options = $row['payload']['options'] ?? [];
             unset($row['payload']);
 
             return [...$row, 'options' => $options];
-        }, $rows);
+        }, $shaped);
         IntentDetailTemplate::query()->create(['owner_actor_id' => $publisher->kind === Party::ACTOR ? $publisher->id : null,
-            'owner_business_id' => $publisher->kind === Party::BUSINESS ? $publisher->id : null, 'name' => $this->templateName, 'fields' => $fields]);
-        $this->notice = __('composer.template_saved');
+            'owner_business_id' => $publisher->kind === Party::BUSINESS ? $publisher->id : null, 'name' => $name, 'kind' => $kind,
+            'topic' => $topic === '' ? null : $topic, 'terms' => $terms, 'fields' => $fields]);
     }
 
-    public function applyTemplate(string $uuid): void
+    private function ownedTemplate(string $uuid): IntentDetailTemplate
     {
         $publisher = $this->publisher();
         $template = IntentDetailTemplate::query()->where('uuid', $uuid)->firstOrFail();
         abort_unless(($publisher->kind === Party::ACTOR && $template->owner_actor_id === $publisher->id)
             || ($publisher->kind === Party::BUSINESS && $template->owner_business_id === $publisher->id), 403);
-        abort_if(count($this->details) + count($template->fields) > 50, 422);
+
+        return $template;
+    }
+
+    /** Adds what is missing; answers already given are never touched. */
+    public function applyTemplate(string $uuid): void
+    {
+        $template = $this->ownedTemplate($uuid);
+        $added = 0;
         foreach ($template->fields as $field) {
-            $this->details[] = [...$field, 'editor_key' => (string) Str::uuid(), 'value' => in_array($field['type'], ['multiple_choice', 'date_range', 'reference'], true) ? [] : ''];
+            $key = $field['canonical_key'] ?? null;
+            $exists = collect($this->details)->contains(fn (array $row): bool => $key !== null
+                ? ($row['canonical_key'] ?? null) === $key
+                : empty($row['canonical_key']) && ($row['label'] ?? '') === ($field['label'] ?? '') && ($row['type'] ?? '') === ($field['type'] ?? ''));
+            if ($exists) {
+                continue;
+            }
+            abort_if(count($this->details) >= 50, 422);
+            $this->details[] = [...$field, 'editor_key' => (string) Str::uuid(), 'value' => in_array($field['type'], ['multiple_choice', 'date_range', 'reference'], true) ? [] : ($field['type'] === 'boolean' && $key !== null ? false : '')];
+            $added++;
         }
+        foreach ($template->terms ?? [] as $block) {
+            if (in_array($block, IntentTerms::BLOCKS, true)) {
+                $this->addTerm($block);
+            }
+        }
+        if ($this->topic === '' && ! empty($template->topic) && in_array($template->topic, IntentProfiles::topics($this->intention), true)) {
+            $this->chooseTopic($template->topic);
+        }
+        $this->pickerOpen = false;
+        $this->notice = __('composer.template_applied', ['count' => $added]);
+    }
+
+    public function startRename(string $uuid): void
+    {
+        $this->renaming = $uuid;
+        $this->renameTo = $this->ownedTemplate($uuid)->name;
+    }
+
+    public function saveRename(): void
+    {
+        $this->validate(['renameTo' => ['required', 'string', 'max:120']]);
+        $this->ownedTemplate($this->renaming)->update(['name' => $this->renameTo]);
+        $this->renaming = $this->renameTo = '';
+    }
+
+    public function deleteTemplate(string $uuid): void
+    {
+        $this->ownedTemplate($uuid)->delete();
+        $this->notice = __('composer.template_deleted');
     }
 
     public function updatedDetails(mixed $value, ?string $key = null): void
@@ -392,7 +572,6 @@ class Composer extends Component
         if ($key !== null && preg_match('/^(\d+)\.optionsText$/D', $key, $match) && is_string($value)) {
             $this->details[(int) $match[1]]['options'] = array_values(array_unique(array_filter(array_map('trim', explode(',', $value)))));
         }
-        $this->syncProfileRows();
     }
 
     private function saveWorking(): void
@@ -401,17 +580,18 @@ class Composer extends Component
         if (trim((string) ($this->core['title'] ?? '')) === '' && trim((string) ($this->core['description'] ?? '')) === '') {
             throw ValidationException::withMessages(['core.description' => __('composer.describe_required')]);
         }
-        $core = $this->core;
-        $core['exchange_preference'] = match ($this->priceMode) {
+        $fromCatalog = $this->intent?->business_listing_version_id !== null;
+        $priceMode = in_array('price', $this->terms, true) || $fromCatalog ? $this->priceMode : 'ask';
+        $core = $this->scopedCore($this->core, $fromCatalog);
+        $core['exchange_preference'] = match ($priceMode) {
             'free' => 'free', 'exchange' => 'open_hybrid', 'fixed', 'range', 'per_unit' => 'cash_only', default => 'discuss_later'
         };
-        $fromCatalog = $this->intent?->business_listing_version_id !== null;
         if ($fromCatalog) {
-            $this->priceMode = 'ask';
+            $priceMode = 'ask';
         }
         $preserveLegacyPrice = $fromCatalog || ($this->hasLegacyPrice() && ! $this->replaceLegacyPrice);
-        $core['cash_min'] = ! $preserveLegacyPrice && in_array($this->priceMode, ['fixed', 'range', 'per_unit'], true) ? (string) MarketMoney::parse($this->price, 'price') : null;
-        $core['cash_max'] = ! $preserveLegacyPrice && $this->priceMode === 'range' ? (string) MarketMoney::parse($this->maximumPrice, 'maximumPrice') : $core['cash_min'];
+        $core['cash_min'] = ! $preserveLegacyPrice && in_array($priceMode, ['fixed', 'range', 'per_unit'], true) ? (string) MarketMoney::parse($this->price, 'price') : null;
+        $core['cash_max'] = ! $preserveLegacyPrice && $priceMode === 'range' ? (string) MarketMoney::parse($this->maximumPrice, 'maximumPrice') : $core['cash_min'];
         $core['currency_code'] = MarketMoney::currency();
         if ($preserveLegacyPrice) {
             foreach (['cash_min', 'cash_max', 'cash_basis', 'currency_code', 'exchange_preference', ...($fromCatalog ? ['title', 'description', 'quantity', 'unit', 'location_text'] : [])] as $field) {
@@ -470,13 +650,11 @@ class Composer extends Component
             'referenceChoices' => $this->referenceChoices(),
             'presentation' => app(IntentPresentation::class)->build($this->previewSnapshot(), $this->previewAudience === 'owner' ? $user : null, $this->previewAudience === 'owner', $this->intent),
             'capabilities' => $this->intent === null ? Capability::query()->heldBy($this->publisher())->active()->with('concept.labels')->limit(12)->get() : collect(),
-            'templates' => in_array($this->publisher()->kind, [Party::ACTOR, Party::BUSINESS], true)
-                ? IntentDetailTemplate::query()->where($this->publisher()->kind === Party::BUSINESS ? 'owner_business_id' : 'owner_actor_id', $this->publisher()->id)->get()
-                : collect()])->title(__('composer.title'));
+            'templates' => $this->savedTemplates('')])->title(__('composer.title'));
     }
 
-    /** @return array{topics: list<string>, arrangements: list<string>, essential: list<string>, suggested: list<string>, open: list<string>} */
-    private function profileView(): array
+    /** @return array<string, mixed> */
+    private function answers(): array
     {
         $answers = [];
         foreach ($this->details as $row) {
@@ -484,14 +662,104 @@ class Composer extends Component
                 $answers[$row['canonical_key']] = $row['value'] ?? null;
             }
         }
+
+        return $answers;
+    }
+
+    /** @return list<string> */
+    private function inapplicableKeys(): array
+    {
+        return IntentProfiles::inapplicable($this->topic, $this->intention, (string) ($this->core['arrangement_kind'] ?? 'other'), $this->answers());
+    }
+
+    /** @return array<string, mixed> */
+    private function profileView(): array
+    {
+        $answers = $this->answers();
         $arrangement = (string) ($this->core['arrangement_kind'] ?? 'other');
         $fields = IntentProfiles::fields($this->topic, $this->intention, $arrangement, $answers);
-        $present = array_column($this->details, 'canonical_key');
+        $selected = array_filter(array_column($this->details, 'canonical_key'));
         $profile = IntentProfiles::all()[$this->topic] ?? null;
+        $termsLeft = array_values(array_diff(IntentProfiles::terms($this->topic, $answers), $this->terms));
+        $fieldsLeft = array_values(array_diff([...$fields['essential'], ...$fields['suggested']], $selected));
 
-        return ['topics' => IntentProfiles::topics($this->intention), 'arrangements' => count($profile['arrangements'] ?? []) > 1 ? $profile['arrangements'] : [],
-            'essential' => $fields['essential'], 'suggested' => array_values(array_diff($fields['suggested'], $present)),
-            'open' => $profile['open'] ?? []];
+        return ['topics' => IntentProfiles::topics($this->intention),
+            'arrangements' => count($profile['arrangements'] ?? []) > 1 ? $profile['arrangements'] : [],
+            'recommendedFields' => $fieldsLeft, 'recommendedTerms' => $termsLeft,
+            'inapplicable' => $this->inapplicableKeys(), 'hint' => $this->topicHint(),
+            'picker' => $this->pickerOpen ? $this->pickerView($fieldsLeft, $termsLeft, $selected) : null];
+    }
+
+    /** The topic whose words appear in what was written, if none is chosen yet. */
+    private function topicHint(): ?string
+    {
+        $text = IntentFieldLibrary::normalize((string) ($this->core['title'] ?? '').' '.(string) ($this->core['description'] ?? ''));
+        if ($this->topic !== '' || mb_strlen($text) < 3) {
+            return null;
+        }
+        foreach (IntentProfiles::topics($this->intention) as $topic) {
+            foreach (explode(',', (string) __('composer.topic_words.'.$topic)) as $word) {
+                $word = IntentFieldLibrary::normalize($word);
+                if ($word !== '' && preg_match('/(^|\s)'.preg_quote($word, '/').'/u', $text) === 1) {
+                    return $topic;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<string>  $fieldsLeft
+     * @param  list<string>  $termsLeft
+     * @param  array<int, string>  $selected
+     * @return array<string, mixed>
+     */
+    private function pickerView(array $fieldsLeft, array $termsLeft, array $selected): array
+    {
+        $taken = array_values($selected);
+        $query = trim($this->pickerSearch);
+        $terms = array_values(array_diff(IntentTerms::BLOCKS, $this->terms));
+        if ($query !== '') {
+            $needle = IntentFieldLibrary::normalize($query);
+            $terms = array_values(array_filter($terms, fn (string $block): bool => str_contains(IntentFieldLibrary::normalize((string) __('composer.terms.'.$block.'.label')), $needle)
+                || str_contains(IntentFieldLibrary::normalize((string) __('composer.terms.'.$block.'.words')), $needle)));
+
+            return ['query' => $query, 'terms' => $terms, 'matches' => IntentFieldLibrary::search($query, $taken),
+                'saved' => $this->savedTemplates($query)];
+        }
+
+        return ['query' => '', 'terms' => $terms, 'recommendedFields' => array_slice($fieldsLeft, 0, 8), 'recommendedTerms' => $termsLeft,
+            'recent' => array_values(array_diff($this->recentKeys(), $taken)), 'saved' => $this->savedTemplates(''),
+            'groups' => IntentFieldLibrary::grouped($taken)];
+    }
+
+    /** @return list<string> */
+    private function recentKeys(): array
+    {
+        $publisher = $this->publisher();
+        $column = match ($publisher->kind) {
+            Party::ACTOR => 'publisher_actor_id', Party::BUSINESS => 'publisher_business_id', default => 'publisher_group_id',
+        };
+        $keys = DB::table('intent_details')->join('actor_profile_intents', 'intent_details.actor_profile_intent_id', '=', 'actor_profile_intents.id')
+            ->where('actor_profile_intents.'.$column, $publisher->id)->whereNotNull('intent_details.canonical_key')
+            ->orderByDesc('intent_details.id')->limit(60)->pluck('intent_details.canonical_key')->unique()->values()->all();
+
+        return array_slice(array_values(array_filter($keys, fn ($key): bool => isset(IntentDetailCatalog::all()[$key]))), 0, 8);
+    }
+
+    /** @return Collection<int, IntentDetailTemplate> */
+    private function savedTemplates(string $query): Collection
+    {
+        $publisher = $this->publisher();
+        if (! in_array($publisher->kind, [Party::ACTOR, Party::BUSINESS], true)) {
+            return collect();
+        }
+        $templates = IntentDetailTemplate::query()->where($publisher->kind === Party::BUSINESS ? 'owner_business_id' : 'owner_actor_id', $publisher->id)
+            ->orderBy('name')->get();
+        $needle = IntentFieldLibrary::normalize($query);
+
+        return $needle === '' ? $templates : $templates->filter(fn (IntentDetailTemplate $template): bool => str_contains(IntentFieldLibrary::normalize($template->name), $needle))->values();
     }
 
     private function hasLegacyPrice(): bool
@@ -502,13 +770,14 @@ class Composer extends Component
 
     private function previewSnapshot(): array
     {
-        $core = $this->core;
+        $core = $this->scopedCore($this->core, $this->intent?->business_listing_version_id !== null);
+        $priceMode = in_array('price', $this->terms, true) ? $this->priceMode : 'ask';
         if (! $this->hasLegacyPrice() || $this->replaceLegacyPrice) {
             $core['currency_code'] = MarketMoney::currency();
-            $core['exchange_preference'] = $this->priceMode === 'free' ? 'free' : 'discuss_later';
+            $core['exchange_preference'] = $priceMode === 'free' ? 'free' : 'discuss_later';
             try {
-                $core['cash_min'] = in_array($this->priceMode, ['fixed', 'range', 'per_unit'], true) ? (string) MarketMoney::parse($this->price) : null;
-                $core['cash_max'] = $this->priceMode === 'range' ? (string) MarketMoney::parse($this->maximumPrice) : $core['cash_min'];
+                $core['cash_min'] = in_array($priceMode, ['fixed', 'range', 'per_unit'], true) ? (string) MarketMoney::parse($this->price) : null;
+                $core['cash_max'] = $priceMode === 'range' ? (string) MarketMoney::parse($this->maximumPrice) : $core['cash_min'];
             } catch (ValidationException) {
                 $core['cash_min'] = $core['cash_max'] = null;
             }
@@ -550,7 +819,9 @@ class Composer extends Component
     /** Published answers are only the filled ones; a template keeps every row's shape. */
     private function editableDetails(bool $shape = false): array
     {
-        $answered = $shape ? $this->details : array_filter($this->details, fn (array $detail): bool => ! self::emptyAnswer($detail['value'] ?? null));
+        $skip = $shape ? [] : $this->inapplicableKeys();
+        $answered = $shape ? $this->details : array_filter($this->details, fn (array $detail): bool => ! self::emptyAnswer($detail['value'] ?? null)
+            && ! in_array($detail['canonical_key'] ?? null, $skip, true));
 
         return array_map(function (array $detail): array {
             if (isset($detail['optionsText'])) {
