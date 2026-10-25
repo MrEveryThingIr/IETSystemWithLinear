@@ -1,6 +1,6 @@
 # M3 — Deals and Agreed Terms: evidence-based plan
 
-Status: **branch prepared, no feature code yet.** Branch `feat/m3-deals-terms` is based on the verified `integration/v2` head `a90cb92d`
+Status: **C1 complete** (see [M3-C1-ARCHITECTURE.md](M3-C1-ARCHITECTURE.md) and [handoff](M3-DEALS-TERMS-HANDOFF.md)); C2–C5 not started. Branch `feat/m3-deals-terms` is based on the verified `integration/v2` head `a90cb92d`
 (M1 and M2 merged and verified; see the M2 handoff). One agent per branch.
 
 Target journey: Need/Offer → Discussion → Deal → Negotiated Terms → acceptance by all required parties → Active Agreement.
