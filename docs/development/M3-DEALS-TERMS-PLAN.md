@@ -1,7 +1,7 @@
 # M3 — Deals and Agreed Terms: evidence-based plan
 
-Status: **planned, not started.** Code starts only after the owner explicitly accepts M2 and the integration chain is merged
-(see the M2 handoff). Roadmap, not code, is changed by this file.
+Status: **branch prepared, no feature code yet.** Branch `feat/m3-deals-terms` is based on the verified `integration/v2` head `a90cb92d`
+(M1 and M2 merged and verified; see the M2 handoff). One agent per branch.
 
 Target journey: Need/Offer → Discussion → Deal → Negotiated Terms → acceptance by all required parties → Active Agreement.
 
@@ -64,3 +64,33 @@ may go to Codex on a separate branch once interfaces and acceptance tests are wr
 ## 6. Out of scope for M3
 
 Work reporting and delivery confirmation (M4), Deal subledgers and settlement (M5), broader Business integration (M6).
+
+## 7. Assumptions verified against the integrated code (a90cb92d)
+
+Confirmed: `ProposalVersion`, `ContractVersion`, `ContractAcceptance` and `ProposalDecision` have model-level guards (updates throw,
+`ProposalVersion` cannot be deleted); `RespondToProposal`/`ProposeTermsVersion`/`AcceptContractVersion` lock rows and run in
+transactions with retries; `ProposalPolicy` resolves the viewer's *Actor* to a `ProposalParty` (actor-only authority, so a Business
+or Group cannot be a party); `relationships` carries `originating_intent_version_id`. Existing coverage to extend, not replace:
+`CanonicalDealPipelineTest`, `ProposalNegotiationKernelTest`, `ProposalExperienceTest`, `ContractKernelTest`, `ContractExperienceTest`,
+`RelationshipContextKernelTest`, `RelationshipExperienceTest`. Still to verify in C1: how `Relationship\Create` and the intent
+detail/matches/directory "respond" buttons start a Deal, whether any path creates a Contract without an accepted Proposal besides
+`CreateDirectContract` (kept for trusted imports), and how `FinalizeContractVersionAcceptance` behaves under two simultaneous accepts.
+
+## 8. C1 deliverable (next session starts here)
+
+1. Entry-point map: every route/button that starts or shows a Deal, Proposal or Contract, with the policy that guards it.
+2. Design note (appended here): party reference model for Actor/Business/Group (additive columns on `proposal_parties`,
+   `contract_version_parties`, `relationship_participants`, who may bind a Business, several signers); one-step "Agree" over the
+   two acceptance records; withdrawal and renegotiation states; structured Terms schema derived from the pinned intent version.
+3. Test inventory and the concurrency tests to add. No behavior change in C1.
+
+## 9. Work suitable for Codex (separate branches, interfaces first, never the same branch as Claude)
+
+Each is self-contained and testable without touching UI; start them only after C1's design note fixes the interfaces.
+- **T-A:** pure service that turns a pinned `IntentVersion` into canonical structured Deal Terms (price/budget, place, time, quantity,
+  route, category, typed field answers; privacy-safe, reusing `IntentPresentation`/`IntentTerms`) with unit tests. Branch `codex/m3-terms-from-intent`.
+- **T-B:** pure service that diffs two Terms versions into added/changed/removed rows with unit tests. Branch `codex/m3-terms-diff`.
+- **T-C:** concurrency/race test harness (simultaneous accept, accept vs new version, accept vs withdraw) against the existing actions,
+  reporting failures only. Branch `codex/m3-concurrency-tests`.
+- Not for Codex: party-authority migration and policy changes (C3 design, high risk), Deal page UX (C4).
+

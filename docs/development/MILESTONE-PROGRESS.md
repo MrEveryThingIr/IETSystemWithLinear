@@ -8,16 +8,16 @@ Lifecycle: Planned → In progress → Engineering-complete → Awaiting owner a
 
 | Milestone | Scope | Current evidence-backed status | Dependency |
 |---|---|---|---|
-| M1 | Navigation, Interests, Abilities, My Items | Engineering-complete reported; PR #85 open. Owner acceptance not established | None |
-| M2 | Adaptive Composer, Needs and Offers | **Engineering:** complete on `feat/m2-adaptive-intention-composer` (PR #86) plus the refinement branch `feat/m2-category-aware-composer` (field library, typed constraints, suggestions, taxonomy, groups/templates, published cards, Composer as the only Need/Offer editor). **Owner acceptance:** in progress — both M2 migrations executed on the owner's Laragon `EveryThing-system` and saved templates verified present (Oct 25). **Merge:** none; refinement PR not yet open. **Release:** none | Unmerged M1 |
-| M3 | Deals, negotiation, Terms and agreement | Planned. Domain audit done ([M3 plan](M3-DEALS-TERMS-PLAN.md)); implementation waits for explicit M2 acceptance and integration | M2 prefilling |
+| M1 | Navigation, Interests, Abilities, My Items | **Engineering:** complete. **Owner acceptance:** accepted. **Merge:** merged to `integration/v2` via PR #85 (merge commit `2b438857`). **Release:** not released | None |
+| M2 | Adaptive Composer, Needs and Offers | **Engineering:** complete (foundation + category-aware refinement). **Owner acceptance:** UX-approved by the owner; both M2 migrations ran on the owner's Laragon database. **Merge:** merged to `integration/v2` via PR #86 (`c5ea9afe`) and PR #87 (`a90cb92d`); integration verified (see handoff). **Release:** not released | M1 |
+| M3 | Deals, negotiation, Terms and agreement | **Engineering:** not started; branch `feat/m3-deals-terms` prepared from `integration/v2` `a90cb92d`, plan verified against integrated code ([plan](M3-DEALS-TERMS-PLAN.md)). **Acceptance / merge / release:** none | M2 prefilling |
 | M4 | Deal-linked Planner execution and Deliveries | Planned | M3; preserve independent Planner workstream |
 | M5 | Deal accounts, obligations, settlement | Planned | M4 |
 | M6 | Unified Business integration | Planned | M5 |
 | M7 | Evidence-based Proven Records | Planned | M5 |
 | M8 | Introductions/referrals/incentives | Planned; monetary incentives need legal approval | M5 and later approvals |
 
-Living Planner v2 remains independent: draft PR #80; its presence is not inferred
+Living Planner v2 remains independent: draft PR #80 (not merged here); its presence is not inferred
 from M1's navigation. Production releases are separate owner decisions.
 
 Each milestone tracks four separate statuses: engineering, owner acceptance, merge, release.
