@@ -99,7 +99,8 @@ class ComposerInteractionTest extends TestCase
         $other = Actor::factory()->create()->user;
         $this->publishSurfaces($other, ['market']);
         $this->actingAs($other)->get(route('intents.compose.edit', $post))->assertForbidden();
-        $this->actingAs($owner)->get(route('intents.create'))->assertOk();
+        $this->actingAs($owner)->get(route('intents.create', ['side' => 'offer']))->assertRedirect(route('intents.compose', ['side' => 'offer']));
+        $this->actingAs($owner)->get(route('intents.create.classic'))->assertOk();
     }
 
     public function test_history_restores_an_old_version_as_a_draft_without_touching_history(): void

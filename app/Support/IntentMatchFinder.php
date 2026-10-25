@@ -10,6 +10,8 @@ use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileIntentStatus;
 use App\Support\Categories\CategoryCatalog;
+use App\Support\Market\DetailValue;
+use App\Support\Market\IntentDetailCatalog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -43,7 +45,7 @@ class IntentMatchFinder
             ->where('kind', $opposite->value)
             ->where('actor_profile_id', '!=', $source->actor_profile_id)
             ->where(fn ($query) => $query->whereNull($publisher->column('publisher'))->orWhere($publisher->column('publisher'), '!=', $publisher->id))
-            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup'])
+            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup', 'publishedVersion'])
             ->latest('updated_at')
             ->limit(500)
             ->get()
@@ -155,7 +157,66 @@ class IntentMatchFinder
             $aligned++;
         }
 
-        return new IntentMatchResult($candidate, $reasons, $aligned);
+        $unknown = [];
+        if (! $this->detailsCompatible($need, $offer, $reasons, $aligned, $unknown)) {
+            return null;
+        }
+
+        return new IntentMatchResult($candidate, $reasons, $aligned, $unknown);
+    }
+
+    /**
+     * A Need's stated wishes about typed details (year range, minimum insurance, acceptable choices)
+     * against what the Offer states. A satisfied wish counts as alignment, a violated one rules the Offer
+     * out, and a detail the Offer never stated stays unknown: it is neither a match nor a mismatch.
+     *
+     * @param  list<string>  $reasons
+     * @param  list<string>  $unknown
+     */
+    private function detailsCompatible(ActorProfileIntent $need, ActorProfileIntent $offer, array &$reasons, int &$aligned, array &$unknown): bool
+    {
+        $wanted = $this->details($need);
+        if ($wanted === []) {
+            return true;
+        }
+        $offered = $this->details($offer);
+        $library = IntentDetailCatalog::all();
+        foreach ($wanted as $key => $payload) {
+            $type = (string) ($library[$key]['type'] ?? '');
+            if ($type === '' || ! in_array($type, ['number', 'amount', 'year', 'date', 'choice', 'boolean'], true)) {
+                continue;
+            }
+            $verdict = isset($offered[$key]) ? DetailValue::satisfies($type, $payload, $offered[$key]) : null;
+            if ($verdict === false) {
+                return false;
+            }
+            if ($verdict === true) {
+                $reasons[] = 'detail:'.$key;
+                $aligned++;
+            } else {
+                $unknown[] = $key;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Published, non-private canonical detail payloads of an intent, by key.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function details(ActorProfileIntent $intent): array
+    {
+        $intent->loadMissing('publishedVersion');
+        $details = [];
+        foreach ($intent->publishedVersion?->snapshot['details'] ?? [] as $detail) {
+            if (! empty($detail['canonical_key']) && ($detail['visibility'] ?? 'same') === 'same') {
+                $details[$detail['canonical_key']] = $detail['payload'] ?? [];
+            }
+        }
+
+        return $details;
     }
 
     /**

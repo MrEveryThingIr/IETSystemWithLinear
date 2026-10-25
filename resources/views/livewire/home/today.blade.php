@@ -18,7 +18,7 @@
                     </flux:button>
                 @endif
                 @if ($hasActor)
-                    <flux:button :href="route('intents.create')" :variant="$officeAlpha ? 'primary' : 'ghost'">
+                    <flux:button :href="route('intents.compose')" :variant="$officeAlpha ? 'primary' : 'ghost'">
                         {{ __('home.new_intent') }}
                     </flux:button>
                 @endif

@@ -2,35 +2,366 @@
 
 namespace App\Support\Market;
 
-/** Canonical keys and filter columns are code-owned, never derived from submitted labels. */
+use App\Models\IntentFieldDefinition;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * The field library: one definition per meaning (brand, condition, experience), shared by every
+ * profile. Code owns the built-ins (type, unit and filter column never change under a key); approved
+ * shared definitions from the database either add new keys or overlay labels, aliases and options.
+ * Canonical money, schedule, place and Deal terms are NOT fields: see IntentTerms.
+ *
+ * Spec: type, filter (value_text | value_number | value_boolean | value_date | null = not searchable),
+ * options, unit, domain, source (research, schema, house, community), since.
+ */
 final class IntentDetailCatalog
 {
-    /** @return array<string, array{type: string, filter: string, options?: list<string>, unit?: string}> */
-    public static function all(): array
+    public const DOMAINS = ['general', 'property', 'vehicle', 'device', 'service', 'lesson', 'transport', 'work', 'activity',
+        'hospitality', 'events', 'creative', 'agriculture', 'industry'];
+
+    /** @return array<string, array<string, mixed>> */
+    public static function codeDefinitions(): array
     {
+        $text = ['type' => 'text', 'filter' => 'value_text'];
+        $number = ['type' => 'number', 'filter' => 'value_number'];
+        $toggle = ['type' => 'boolean', 'filter' => 'value_boolean'];
+        $date = ['type' => 'date', 'filter' => 'value_date'];
+        $choice = fn (array $options): array => ['type' => 'choice', 'filter' => 'value_text', 'options' => $options];
+        $d = fn (string $domain, array $spec, string $source = 'house'): array => [...$spec, 'domain' => $domain, 'source' => $source, 'since' => 1];
+
         return [
-            'service_area' => ['type' => 'text', 'filter' => 'value_text'],
-            'experience_years' => ['type' => 'number', 'filter' => 'value_number'],
-            'condition' => ['type' => 'choice', 'filter' => 'value_text', 'options' => ['new', 'used', 'refurbished']],
-            'brand' => ['type' => 'text', 'filter' => 'value_text'],
-            'floor_area' => ['type' => 'number', 'filter' => 'value_number', 'unit' => 'm²'],
-            'rooms' => ['type' => 'number', 'filter' => 'value_number'],
-            'floor' => ['type' => 'number', 'filter' => 'value_number'],
-            'deposit' => ['type' => 'amount', 'filter' => 'value_number', 'unit' => 'IRT'],
-            'monthly_rent' => ['type' => 'amount', 'filter' => 'value_number', 'unit' => 'IRT'],
-            'session_minutes' => ['type' => 'number', 'filter' => 'value_number', 'unit' => 'minute'],
-            'delivery_mode' => ['type' => 'choice', 'filter' => 'value_text', 'options' => ['online', 'in_person', 'either']],
-            'availability' => ['type' => 'text', 'filter' => 'value_text'],
+            // General
+            'brand' => $d('general', $text, 'research'),
+            'model' => $d('general', $text, 'research'),
+            'color' => $d('general', $text, 'research'),
+            'condition' => $d('general', $choice(['new', 'like_new', 'used', 'refurbished', 'needs_repair']), 'research'),
+            'warranty' => $d('general', $toggle, 'research'),
+            'size' => $d('general', $text),
+            'weight_kg' => $d('general', [...$number, 'unit' => 'kg']),
+            'material' => $d('general', $text),
+            'handover' => $d('general', $choice(['collect', 'delivery', 'either'])),
+            'includes' => $d('general', ['type' => 'long_text', 'filter' => null]),
+            'spoken_languages' => $d('general', $text),
+            'licensed' => $d('general', $toggle),
+            'certification' => $d('general', $text),
+            // Property
+            'property_type' => $d('property', $choice(['apartment', 'house_villa', 'land', 'office', 'shop', 'other']), 'schema'),
+            'floor_area' => $d('property', [...$number, 'unit' => 'm²'], 'schema'),
+            'land_area' => $d('property', [...$number, 'unit' => 'm²']),
+            'rooms' => $d('property', $number, 'schema'),
+            'bathrooms' => $d('property', $number, 'schema'),
+            'floor' => $d('property', $number, 'schema'),
+            'building_age' => $d('property', [...$number, 'unit' => 'year'], 'research'),
+            'orientation' => $d('property', $choice(['north', 'south', 'east', 'west']), 'research'),
+            'parking' => $d('property', $toggle, 'research'),
+            'elevator' => $d('property', $toggle, 'research'),
+            'storage' => $d('property', $toggle, 'research'),
+            'balcony' => $d('property', $toggle, 'research'),
+            'furnished' => $d('property', $toggle),
+            'heating' => $d('property', $text, 'research'),
+            'cooling' => $d('property', $text, 'research'),
+            'pets_allowed' => $d('property', $toggle, 'schema'),
+            'deposit' => $d('property', ['type' => 'amount', 'filter' => 'value_number', 'unit' => 'IRT'], 'research'),
+            'monthly_rent' => $d('property', ['type' => 'amount', 'filter' => 'value_number', 'unit' => 'IRT']),
+            // Vehicles
+            'model_year' => $d('vehicle', ['type' => 'year', 'filter' => 'value_date'], 'research'),
+            'mileage_km' => $d('vehicle', [...$number, 'unit' => 'km'], 'research'),
+            'fuel_type' => $d('vehicle', $choice(['petrol', 'diesel', 'hybrid', 'electric', 'gas']), 'research'),
+            'gearbox' => $d('vehicle', $choice(['manual', 'automatic']), 'research'),
+            'trim' => $d('vehicle', $text, 'research'),
+            'vehicle_class' => $d('vehicle', $choice(['car', 'motorcycle', 'van', 'pickup_truck', 'truck', 'bus', 'other']), 'schema'),
+            'body_style' => $d('vehicle', $choice(['sedan', 'hatchback', 'suv', 'coupe', 'wagon', 'convertible', 'minivan', 'other_body']), 'schema'),
+            // Superseded: it mixed vehicle class and body style. Kept so earlier posts still read correctly.
+            'body_type' => [...$d('vehicle', $choice(['sedan', 'hatchback', 'suv', 'pickup_truck', 'van', 'truck', 'motorcycle', 'other']), 'schema'), 'retired' => true, 'superseded_by' => 'body_style'],
+            'doors' => $d('vehicle', $number, 'schema'),
+            'previous_owners' => $d('vehicle', $number, 'schema'),
+            'insurance_months' => $d('vehicle', [...$number, 'unit' => 'month'], 'research'),
+            // Devices
+            'storage_gb' => $d('device', [...$number, 'unit' => 'GB'], 'research'),
+            'ram_gb' => $d('device', [...$number, 'unit' => 'GB'], 'research'),
+            'screen_size_inch' => $d('device', [...$number, 'unit' => 'inch'], 'research'),
+            'sim_count' => $d('device', $number, 'research'),
+            // Services
+            'service_area' => $d('service', $text),
+            'experience_years' => $d('service', [...$number, 'unit' => 'year'], 'research'),
+            'availability' => $d('service', $text),
+            'delivery_mode' => $d('service', $choice(['online', 'in_person', 'either'])),
+            'urgency' => $d('service', $choice(['today', 'this_week', 'flexible'])),
+            'materials_included' => $d('service', $toggle),
+            'skills' => $d('service', $text, 'schema'),
+            // Lessons
+            'lesson_subject' => $d('lesson', $text),
+            'level' => $d('lesson', $choice(['beginner', 'intermediate', 'advanced', 'all_levels'])),
+            'group_format' => $d('lesson', $choice(['private', 'small_group', 'class'])),
+            'teaching_language' => $d('lesson', $text, 'schema'),
+            'session_minutes' => $d('lesson', [...$number, 'unit' => 'minute']),
+            'certificate' => $d('lesson', $toggle),
+            'age_group' => $d('lesson', $text),
+            // Transport
+            'vehicle_type' => $d('transport', $choice(['any', 'car', 'van', 'truck', 'motorcycle'])),
+            'passengers' => $d('transport', $number),
+            'cargo_type' => $d('transport', $choice(['parcel', 'furniture', 'vehicle', 'other'])),
+            'cargo_weight_kg' => $d('transport', [...$number, 'unit' => 'kg']),
+            // Work
+            'employment_type' => $d('work', $choice(['full_time', 'part_time', 'contract', 'internship', 'project']), 'schema'),
+            'work_mode' => $d('work', $choice(['on_site', 'remote', 'mixed']), 'schema'),
+            'pay_period' => $d('work', $choice(['hour', 'day', 'month', 'per_project', 'commission', 'agreed']), 'research'),
+            'pay' => $d('work', ['type' => 'amount', 'filter' => 'value_number', 'unit' => 'IRT']),
+            'insurance' => $d('work', $toggle, 'research'),
+            'education_level' => $d('work', $choice(['none', 'diploma', 'bachelor', 'master', 'doctorate']), 'schema'),
+            'start_date' => $d('work', $date, 'schema'),
+            'openings' => $d('work', $number, 'schema'),
+            'benefits' => $d('work', ['type' => 'long_text', 'filter' => null], 'schema'),
+            // Activities and collaboration
+            'participants' => $d('activity', $number),
+            'cost_sharing' => $d('activity', $choice(['free', 'shared', 'paid'])),
+            'time_commitment' => $d('activity', $choice(['one_time', 'weekly', 'flexible'])),
+            'interests' => $d('activity', $text),
+            'age_range' => $d('activity', $text),
+            // Hospitality
+            'capacity' => $d('hospitality', $number),
+            'cuisine' => $d('hospitality', $text),
+            'meals_included' => $d('hospitality', $toggle),
+            // Events
+            'event_type' => $d('events', $choice(['wedding', 'birthday', 'conference', 'workshop', 'concert', 'party', 'other'])),
+            'guest_count' => $d('events', $number),
+            'venue_type' => $d('events', $choice(['indoor', 'outdoor', 'either'])),
+            'catering_needed' => $d('events', $toggle),
+            'equipment_provided' => $d('events', $toggle),
+            // Creative work
+            'creative_discipline' => $d('creative', $choice(['design', 'photo', 'video', 'music', 'writing', 'illustration', 'animation', 'other'])),
+            'deliverables' => $d('creative', ['type' => 'long_text', 'filter' => null]),
+            'revisions_included' => $d('creative', $number),
+            'turnaround_days' => $d('creative', [...$number, 'unit' => 'day']),
+            'portfolio_link' => $d('creative', ['type' => 'link', 'filter' => null]),
+            // Agriculture
+            'crop_type' => $d('agriculture', $text),
+            'organic' => $d('agriculture', $toggle),
+            'harvest_date' => $d('agriculture', $date),
+            'grade' => $d('agriculture', $text),
+            // Industry
+            'power_kw' => $d('industry', [...$number, 'unit' => 'kW']),
+            'minimum_order' => $d('industry', $number),
+            'lead_time_days' => $d('industry', [...$number, 'unit' => 'day']),
+            'dimensions' => $d('industry', $text),
         ];
     }
 
-    /** @return list<string> */
-    public static function suggestions(string $subject): array
+    /**
+     * Built-ins plus approved shared definitions. A shared definition may add a key, or extend a
+     * built-in choice with more options; it never changes a built-in's type, unit or filter.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function all(): array
     {
-        return match ($subject) {
-            'property' => ['floor_area', 'rooms', 'floor', 'deposit', 'monthly_rent'],
-            'service' => ['service_area', 'experience_years', 'availability', 'delivery_mode', 'session_minutes'],
-            default => ['condition', 'brand', 'delivery_mode'],
+        $all = self::codeDefinitions();
+        foreach (self::published() as $key => $definition) {
+            if (isset($all[$key])) {
+                if (($all[$key]['type'] ?? '') === 'choice' && $definition['options'] !== []) {
+                    $all[$key]['options'] = array_values(array_unique([...$all[$key]['options'], ...$definition['options']]));
+                }
+                if ($definition['hidden_options'] !== []) {
+                    $all[$key]['hidden_options'] = $definition['hidden_options'];
+                }
+                if ($definition['retired']) {
+                    // A superseded built-in leaves the library but keeps resolving for published content.
+                    $all[$key]['retired'] = true;
+                    $all[$key]['superseded_by'] = $definition['superseded_by'];
+                }
+
+                continue;
+            }
+            $spec = ['type' => $definition['type'], 'filter' => $definition['filter'], 'domain' => $definition['domains'][0] ?? 'general',
+                'source' => 'community', 'since' => $definition['version'], 'retired' => $definition['retired'], 'superseded_by' => $definition['superseded_by'], 'hidden_options' => $definition['hidden_options']];
+            if ($definition['unit'] !== null) {
+                $spec['unit'] = $definition['unit'];
+            }
+            if ($definition['options'] !== []) {
+                $spec['options'] = $definition['options'];
+            }
+            $all[$key] = $spec;
+        }
+
+        return $all;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public static function published(): array
+    {
+        if (! self::hasTable('intent_field_definitions')) {
+            return [];
+        }
+
+        return Cache::remember('intent-fields:published:'.self::version(), 3600, function (): array {
+            $rows = [];
+            foreach (IntentFieldDefinition::query()->latestVersion()->get() as $row) {
+                $rows[$row->field_key] = ['type' => $row->type, 'filter' => $row->filter, 'unit' => $row->unit, 'options' => $row->options ?? [],
+                    'domains' => $row->domains ?? [], 'labels' => $row->labels ?? [], 'descriptions' => $row->descriptions ?? [],
+                    'aliases' => $row->aliases ?? [], 'version' => $row->version, 'retired' => $row->status === 'retired',
+                    'hidden_options' => $row->hidden_options ?? [], 'superseded_by' => $row->superseded_by];
+            }
+
+            return $rows;
+        });
+    }
+
+    public static function version(): int
+    {
+        return (int) Cache::get('intent-fields:version', 1);
+    }
+
+    public static function bumpVersion(): void
+    {
+        Cache::forever('intent-fields:version', self::version() + 1);
+    }
+
+    /**
+     * Choices a person may pick now. A choice an editor retired stays valid for old posts, and is kept
+     * visible when it is the value already selected.
+     *
+     * @return list<string>
+     */
+    public static function selectableOptions(string $key, mixed $current = null): array
+    {
+        $spec = self::all()[$key] ?? [];
+        $hidden = $spec['hidden_options'] ?? [];
+        $options = array_values(array_filter($spec['options'] ?? [], fn (string $option): bool => ! in_array($option, $hidden, true) || $option === $current));
+
+        return $options;
+    }
+
+    /** Fields offered to people now: everything except retired definitions. */
+    public static function offered(): array
+    {
+        return array_filter(self::all(), fn (array $spec): bool => empty($spec['retired']));
+    }
+
+    /** Keys a viewer can filter the Directory by (dates and unsearchable fields are excluded). */
+    public static function searchable(): array
+    {
+        return array_filter(self::offered(), fn (array $spec): bool => in_array($spec['filter'] ?? null, ['value_text', 'value_number', 'value_boolean'], true) || ($spec['type'] ?? '') === 'year');
+    }
+
+    /** Text for a key, preferring wording written for the topic (a vehicle's "Model" differs from a phone's). */
+    private static function contextual(string $key, string $part, string $locale, ?string $topic): ?string
+    {
+        if ($topic === null || $topic === '') {
+            return null;
+        }
+        $path = 'composer.field_context.'.$topic.'.'.$key.'.'.$part;
+
+        return Lang::has($path, $locale, false) ? (string) __($path, [], $locale) : null;
+    }
+
+    public static function label(string $key, ?string $locale = null, ?string $topic = null): string
+    {
+        $locale ??= app()->getLocale();
+        $context = self::contextual($key, 'label', $locale, $topic);
+        if ($context !== null) {
+            return $context;
+        }
+        $shared = self::published()[$key]['labels'] ?? [];
+        if (($shared[$locale] ?? '') !== '') {
+            return (string) $shared[$locale];
+        }
+        $path = 'composer.details.'.$key;
+        if (Lang::has($path, $locale, false)) {
+            return (string) __($path, [], $locale);
+        }
+
+        return (string) (($shared['en'] ?? '') !== '' ? $shared['en'] : (Lang::has($path, 'en', false) ? __($path, [], 'en') : $key));
+    }
+
+    /** The one-sentence clarification of a field, if it has one. */
+    public static function description(string $key, ?string $locale = null, ?string $topic = null): ?string
+    {
+        $locale ??= app()->getLocale();
+        $context = self::contextual($key, 'help', $locale, $topic);
+        if ($context !== null) {
+            return $context;
+        }
+        $shared = self::published()[$key]['descriptions'] ?? [];
+        if (($shared[$locale] ?? '') !== '') {
+            return (string) $shared[$locale];
+        }
+        $path = 'composer.field_help.'.$key;
+
+        return Lang::has($path, $locale, false) ? (string) __($path, [], $locale) : null;
+    }
+
+    public static function example(string $key, ?string $locale = null, ?string $topic = null): ?string
+    {
+        $locale ??= app()->getLocale();
+        $context = self::contextual($key, 'example', $locale, $topic);
+        if ($context !== null) {
+            return $context;
+        }
+        $path = 'composer.examples.'.$key;
+
+        return Lang::has($path, $locale, false) ? (string) __($path, [], $locale) : null;
+    }
+
+    /**
+     * What the field expects, said before any error: its kind, unit and an example.
+     *
+     * @return array{help: ?string, format: string}
+     */
+    public static function hint(string $key, ?string $topic = null): array
+    {
+        $spec = self::all()[$key] ?? ['type' => 'text'];
+        $type = (string) $spec['type'];
+        $example = self::example($key, null, $topic);
+        $unit = self::unitLabel($spec['unit'] ?? null);
+        $format = match (true) {
+            in_array($type, ['number', 'quantity'], true) && $unit !== null => (string) __('composer.hints.number', ['unit' => $unit, 'example' => $example ?? '10']),
+            in_array($type, ['number', 'quantity'], true) => (string) __('composer.hints.number_plain', ['example' => $example ?? '10']),
+            $type === 'year' => (string) __('composer.hints.year', ['example' => $example ?? '1396']),
+            // Short text shows its example as the placeholder; repeating it under the field is noise.
+            $type === 'text' => '',
+            in_array($type, ['amount', 'choice', 'boolean', 'date', 'long_text', 'link'], true) => (string) __('composer.hints.'.$type),
+            default => '',
         };
+
+        return ['help' => self::description($key, null, $topic), 'format' => $format];
+    }
+
+    /** @return list<string> */
+    public static function aliases(string $key, ?string $locale = null): array
+    {
+        $locale ??= app()->getLocale();
+        $path = 'composer.aliases.'.$key;
+        $builtin = Lang::has($path, $locale, false) ? explode(',', (string) __($path, [], $locale)) : [];
+        $shared = self::published()[$key]['aliases'][$locale] ?? [];
+
+        return array_values(array_filter(array_map('trim', [...$builtin, ...$shared])));
+    }
+
+    /** A person-readable label for a stored choice value; free-text and custom options pass through. */
+    public static function optionLabel(string $option): string
+    {
+        return Lang::has('composer.options.'.$option) ? (string) __('composer.options.'.$option) : $option;
+    }
+
+    public static function unitLabel(?string $unit): ?string
+    {
+        if ($unit === null || $unit === '') {
+            return null;
+        }
+
+        return Lang::has('composer.units.'.$unit) ? (string) __('composer.units.'.$unit) : $unit;
+    }
+
+    /** Whether an optional library table exists; asked once per request because the schema check is a database round trip. */
+    public static function hasTable(string $table): bool
+    {
+        $key = 'iet.schema.'.$table;
+        if (! app()->bound($key)) {
+            app()->instance($key, Schema::hasTable($table));
+        }
+
+        return (bool) app($key);
     }
 }

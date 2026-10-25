@@ -285,7 +285,7 @@ class HomeGuidanceService
                 title: (string) __('home.goals.need_offer_title'),
                 summary: (string) __('home.goals.need_offer_help'),
                 consequence: (string) __('home.goals.need_offer_consequence'),
-                url: route('intents.create'),
+                url: route('intents.compose'),
                 cta: (string) __('home.goals.need_offer_cta'),
             );
         }

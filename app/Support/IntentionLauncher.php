@@ -15,8 +15,8 @@ final class IntentionLauncher
 {
     /** Each choice: the surface it needs, and where it opens. */
     private const CHOICES = [
-        'need' => ['surface' => 'market', 'icon' => 'magnifying-glass', 'route' => 'intents.create', 'params' => ['side' => 'need']],
-        'offer' => ['surface' => 'market', 'icon' => 'megaphone', 'route' => 'intents.create', 'params' => ['side' => 'offer']],
+        'need' => ['surface' => 'market', 'icon' => 'magnifying-glass', 'route' => 'intents.compose', 'params' => ['side' => 'need']],
+        'offer' => ['surface' => 'market', 'icon' => 'megaphone', 'route' => 'intents.compose', 'params' => ['side' => 'offer']],
         'ability' => ['surface' => 'profile', 'icon' => 'wrench-screwdriver', 'route' => 'items.index', 'params' => ['add' => 'ability']],
         'interest' => ['surface' => 'profile', 'icon' => 'heart', 'route' => 'items.index', 'params' => ['add' => 'interest']],
         'plan' => ['surface' => 'planner', 'icon' => 'calendar-days', 'route' => 'planner.create', 'params' => []],

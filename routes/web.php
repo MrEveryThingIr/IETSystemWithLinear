@@ -79,6 +79,7 @@ use App\Livewire\Intents\Photos;
 use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Journeys\Index as JourneyIndex;
+use App\Livewire\Market\FieldSuggestions;
 use App\Livewire\Messages\Contacts;
 use App\Livewire\Notifications\Index as NotificationIndex;
 use App\Livewire\Planner\BasicCreate as PlannerBasicCreate;
@@ -94,6 +95,7 @@ use App\Livewire\Platform\AccessInvitations;
 use App\Livewire\Platform\CategorySuggestions;
 use App\Livewire\Platform\DayTexts;
 use App\Livewire\Platform\DevelopmentOrigins;
+use App\Livewire\Platform\FieldProposals;
 use App\Livewire\Platform\MessageReports;
 use App\Livewire\Profile\BasicManage as ProfileBasicManage;
 use App\Livewire\Profile\Manage as ProfileManage;
@@ -201,8 +203,11 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/contacts', Contacts::class)->name('contacts.index');
 
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
-    Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
+    // The adaptive composer is the way in; old links and bookmarks land there with their side and owner.
+    Route::get('/intents/create', fn (Request $request) => redirect()->route('intents.compose', $request->only(['side', 'as'])))->name('intents.create');
+    Route::livewire('/intents/create/classic', IntentCreate::class)->name('intents.create.classic');
     Route::livewire('/intents/compose', IntentComposer::class)->name('intents.compose');
+    Route::livewire('/intents/field-suggestions', FieldSuggestions::class)->name('intents.field-suggestions');
     Route::livewire('/intents/{intent}/compose', IntentComposer::class)->whereUuid('intent')->can('update', 'intent')->name('intents.compose.edit');
     Route::get('/intents/{intent}/versions/{version:uuid}', [IntentPresentationController::class, 'version'])->whereUuid('intent')->can('update', 'intent')->scopeBindings()->name('intents.versions.show');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');
@@ -293,6 +298,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/platform/access-invitations', AccessInvitations::class)->name('platform.access-invitations');
     Route::livewire('/platform/development-origins', DevelopmentOrigins::class)->name('platform.development-origins');
     Route::livewire('/platform/categories', CategorySuggestions::class)->name('platform.categories');
+    Route::livewire('/platform/fields', FieldProposals::class)->name('platform.fields');
     Route::livewire('/platform/message-reports', MessageReports::class)->name('platform.message-reports');
     Route::livewire('/platform/day-texts', DayTexts::class)->name('platform.day-texts');
     Route::livewire('/actors', Index::class)->can('viewAny', Actor::class)->name('actors.index');

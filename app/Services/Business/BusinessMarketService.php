@@ -127,6 +127,10 @@ final class BusinessMarketService
         $intent->update([
             'metadata' => [
                 'source' => 'business_listing_version',
+                // The composer reopens the post under the same profile as its catalog kind.
+                'composer_topic' => match ($listing->listing_type) {
+                    'property' => 'home', 'good' => 'goods', 'service' => 'repair', default => '',
+                },
                 'business_uuid' => $business->uuid,
                 'business_listing_uuid' => $listing->uuid,
                 'business_listing_version_uuid' => $version->uuid,

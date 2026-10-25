@@ -77,7 +77,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <flux:heading size="lg">{{ __('ui.groups.market.title') }}</flux:heading>
                         @if ($canPublishForGroup)
-                            <flux:button :href="route('intents.create', ['as' => 'group:'.$group->id])" size="sm" variant="ghost" icon="plus">{{ __('ui.groups.market.add') }}</flux:button>
+                            <flux:button :href="route('intents.compose', ['as' => 'group:'.$group->id])" size="sm" variant="ghost" icon="plus">{{ __('ui.groups.market.add') }}</flux:button>
                         @endif
                     </div>
                     @forelse ($groupMarket as $intent)

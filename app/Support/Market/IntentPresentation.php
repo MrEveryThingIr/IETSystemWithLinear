@@ -2,12 +2,15 @@
 
 namespace App\Support\Market;
 
+use App\CalendarSystem;
 use App\Models\ActorProfileIntent;
 use App\Models\Asset;
 use App\Models\BusinessListing;
 use App\Models\Group;
+use App\Models\IntentVersion;
 use App\Models\SpaceContent;
 use App\Models\User;
+use App\Support\TemporalPreferences;
 use Illuminate\Support\Facades\Gate;
 
 /** One audience-aware view model for a post, its preview and its historical versions. */
@@ -22,21 +25,45 @@ final class IntentPresentation
     }
 
     /** The caller authorizes access to the source; this method only reduces it for a viewer. */
-    public function build(array $snapshot, ?User $viewer, bool $canManage = false, ?ActorProfileIntent $intent = null): array
+    /** Presentation of an already-published version, for lists where visibility was applied by the query. */
+    public function forVersion(ActorProfileIntent $intent, ?User $viewer, string $category = ''): array
+    {
+        $version = $intent->publishedVersion;
+        $snapshot = $version instanceof IntentVersion ? $version->snapshot : IntentSnapshot::fromRecord((object) $intent->getAttributes());
+        $card = $this->build($snapshot, $viewer, false, $intent);
+        $card['category'] = $category !== '' ? $category : (string) $intent->concept?->displayLabel();
+        $core = $snapshot['core'] ?? [];
+        if ($card['price'] === null && isset($core['cash_min']) && ! in_array($core['currency_code'] ?? null, ['IRT', 'IRR', null], true)) {
+            // The directory keeps showing a legacy amount in another currency as it was written, never converted.
+            $plain = fn ($amount): string => str_contains((string) $amount, '.') ? rtrim(rtrim((string) $amount, '0'), '.') : (string) $amount;
+            $card['price'] = $plain($core['cash_min']).(isset($core['cash_max']) && $core['cash_max'] != $core['cash_min'] ? ' – '.$plain($core['cash_max']) : '').' '.$core['currency_code'];
+        }
+
+        return $card;
+    }
+
+    public function build(array $snapshot, ?User $viewer, bool $canManage = false, ?ActorProfileIntent $intent = null, ?string $kind = null, ?string $topic = null): array
     {
         $core = $snapshot['core'] ?? [];
         $details = [];
+        $topic ??= $intent?->metadata['composer_topic'] ?? null;
+        $kind ??= $intent?->kind->value;
+        $viewCalendar = TemporalPreferences::calendarFor($viewer) === CalendarSystem::Persian ? YearSpan::PERSIAN : YearSpan::GREGORIAN;
         foreach ($snapshot['details'] ?? [] as $detail) {
             if (($detail['visibility'] ?? 'same') === 'private' && ! $canManage) {
                 continue;
             }
-            $value = $detail['payload']['value'] ?? $detail['value'] ?? null;
-            if ($value === null || $value === '' || $value === []) {
+            $payload = $detail['payload'] ?? ['value' => $detail['value'] ?? null];
+            $value = $payload['value'] ?? null;
+            $constraint = $payload['constraint'] ?? null;
+            if (($value === null || $value === '' || $value === []) && $constraint === null) {
                 continue;
             }
             $url = null;
             $type = $detail['type'] ?? 'text';
-            if ($type === 'reference') {
+            if ($constraint !== null || (! empty($detail['canonical_key']) && in_array($type, ['number', 'amount', 'year', 'choice'], true))) {
+                $value = DetailValue::describe($type, $payload, $viewCalendar);
+            } elseif ($type === 'reference') {
                 $reference = $this->reference(is_array($value) ? $value : [], $viewer);
                 if ($reference === null) {
                     continue;
@@ -48,6 +75,10 @@ final class IntentPresentation
                 }
                 $url = $value;
                 $value = parse_url($value, PHP_URL_HOST);
+            } elseif ($type === 'choice' && is_string($value)) {
+                $value = IntentDetailCatalog::optionLabel($value);
+            } elseif ($type === 'multiple_choice' && is_array($value)) {
+                $value = implode(', ', array_map(fn ($option): string => IntentDetailCatalog::optionLabel((string) $option), $value));
             } elseif ($type === 'boolean') {
                 $value = $value ? __('composer.yes') : __('composer.no');
             } elseif ($type === 'amount' && is_numeric($value)) {
@@ -57,8 +88,9 @@ final class IntentPresentation
             } elseif (is_array($value)) {
                 $value = implode(', ', array_filter($value, 'is_scalar'));
             }
-            $details[] = ['label' => $detail['label'] ?? '', 'value' => (string) $value, 'url' => $url,
-                'unit' => $type === 'amount' ? null : ($detail['unit'] ?? null), 'group' => $detail['group_label'] ?? null,
+            $details[] = ['key' => $detail['canonical_key'] ?? null, 'note' => $payload['note'] ?? null, 'wish' => $constraint !== null,
+                'label' => ! empty($detail['canonical_key']) ? IntentDetailCatalog::label($detail['canonical_key'], null, $topic) : ($detail['label'] ?? ''), 'value' => (string) $value, 'url' => $url,
+                'unit' => $type === 'amount' ? null : IntentDetailCatalog::unitLabel($detail['unit'] ?? null), 'group' => $detail['group_label'] ?? null,
                 'private' => ($detail['visibility'] ?? 'same') === 'private', 'informational' => $type === 'amount'];
         }
         $minimum = MarketMoney::legacyToman(isset($core['cash_min']) ? (string) $core['cash_min'] : null, $core['currency_code'] ?? null);
@@ -90,7 +122,13 @@ final class IntentPresentation
         return ['title' => $core['title'] ?? '', 'description' => $core['description'] ?? '', 'details' => $details,
             'price' => $price, 'basis' => $core['cash_basis'] ?? null, 'location' => $core['location_text'] ?? null,
             'quantity' => $core['quantity'] ?? null, 'unit' => $core['unit'] ?? null,
-            'starts_on' => $core['starts_on'] ?? null, 'ends_on' => $core['ends_on'] ?? null, 'media' => $media];
+            'starts_on' => $core['starts_on'] ?? null, 'ends_on' => $core['ends_on'] ?? null, 'media' => $media,
+            'kind' => $kind, 'topic' => $topic ?: null, 'topicLabel' => $topic ? (string) __('composer.topics.'.$topic) : null,
+            'arrangement' => $kind !== null && in_array($core['arrangement_kind'] ?? '', ['ownership_transfer', 'temporary_use'], true) ? (string) __('composer.arrangements.'.$core['arrangement_kind'].'.'.$kind) : null,
+            'priceLabel' => (string) __('composer.terms.price.'.($kind === 'need' ? 'need' : 'label')), 'placeLabel' => (string) __('composer.terms.place.'.($kind === 'need' ? 'need' : 'label')),
+            'highlightKeys' => IntentProfiles::highlights((string) $topic), 'negotiable' => (bool) ($core['negotiable'] ?? false),
+            'route' => ! empty($core['origin_text']) || ! empty($core['destination_text']) ? trim(($core['origin_text'] ?? '').' → '.($core['destination_text'] ?? ''), ' →') : null,
+            'category' => '', 'owner' => null];
     }
 
     private function reference(array $value, ?User $viewer): ?array

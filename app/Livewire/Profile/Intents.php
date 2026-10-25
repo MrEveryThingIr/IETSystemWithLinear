@@ -111,13 +111,10 @@ class Intents extends Component
         $this->timezoneAutomatic = $user->timezone_mode === TimezoneMode::Auto;
         $this->timezone = TemporalPreferences::timezoneFor($user);
 
-        // Opened from My items: go straight to that need or offer.
+        // Old links (from My items or bookmarks) land in the canonical Composer for that need or offer.
         $requested = request()->query('intent');
-        if (is_string($requested) && $requested !== '') {
-            $intentId = $this->editableIntents()->where('uuid', $requested)->value('id');
-            if ($intentId !== null) {
-                $this->edit((int) $intentId);
-            }
+        if (is_string($requested) && $requested !== '' && $this->editableIntents()->where('uuid', $requested)->exists()) {
+            $this->redirectRoute('intents.compose.edit', ['intent' => $requested], navigate: true);
         }
     }
 

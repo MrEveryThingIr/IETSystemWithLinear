@@ -18,8 +18,15 @@ final class NormalizeIntentDetails
     public const TYPES = ['text', 'long_text', 'number', 'quantity', 'date', 'time', 'date_range', 'place',
         'boolean', 'choice', 'multiple_choice', 'amount', 'link', 'reference'];
 
-    /** @param list<array<string, mixed>> $details @return list<array<string, mixed>> */
-    public function execute(User $user, array $details, bool $shapeOnly = false): array
+    /** Library-only types that custom fields cannot pick. */
+    private const LIBRARY_TYPES = ['year'];
+
+    /**
+     * @param  list<array<string, mixed>>  $details
+     * @param  bool  $need  a Need may state a range or set; an Offer states a fact
+     * @return list<array<string, mixed>>
+     */
+    public function execute(User $user, array $details, bool $shapeOnly = false, bool $need = false): array
     {
         Validator::make(['details' => $details], ['details' => ['array', 'max:50'], 'details.*' => ['required', 'array']])->validate();
         $result = [];
@@ -27,9 +34,9 @@ final class NormalizeIntentDetails
         foreach ($details as $position => $input) {
             $data = Validator::make($input, [
                 'canonical_key' => ['nullable', Rule::in(array_keys(IntentDetailCatalog::all()))],
-                'label' => ['nullable', 'string', 'max:120'], 'type' => ['required', Rule::in(self::TYPES)],
+                'label' => ['nullable', 'string', 'max:120'], 'type' => ['required', Rule::in([...self::TYPES, ...self::LIBRARY_TYPES])],
                 'visibility' => ['required', 'in:same,private'], 'unit' => ['nullable', 'string', 'max:64'],
-                'group_label' => ['nullable', 'string', 'max:120'], 'options' => ['sometimes', 'array', 'max:50'],
+                'group_label' => ['nullable', 'string', 'max:120'], 'options' => ['sometimes', 'array', 'max:50'], 'note' => ['nullable', 'string', 'max:280'],
                 'options.*' => ['string', 'max:120'],
             ])->validate();
             $key = $data['canonical_key'] ?? null;
@@ -40,7 +47,7 @@ final class NormalizeIntentDetails
                 $seen[$key] = true;
                 $spec = IntentDetailCatalog::all()[$key];
                 $data['type'] = $spec['type'];
-                $data['label'] = __('composer.details.'.$key);
+                $data['label'] = IntentDetailCatalog::label($key);
                 $data['unit'] = $spec['unit'] ?? null;
                 $data['options'] = $spec['options'] ?? [];
             } else {
@@ -59,6 +66,24 @@ final class NormalizeIntentDetails
             }
             $value = $input['value'] ?? null;
             $type = $data['type'];
+            $op = ! empty($key) && $need ? (string) ($input['op'] ?? 'exact') : 'exact';
+            $constraint = null;
+            $calendar = null;
+            if ($type === 'year') {
+                $first = collect([$input['min'] ?? null, $input['max'] ?? null, $value])->first(fn ($candidate): bool => ! DetailValue::blank($candidate));
+                $calendar = $first === null ? null : YearSpan::guessCalendar((int) LocalizedNumber::decimal((string) $first));
+            }
+            if ($op !== 'exact') {
+                $constraint = DetailValue::constraint($type, $op, $input, $data['options'] ?? [], $calendar);
+                $value = null;
+                $options = $data['options'] ?? [];
+                unset($data['options']);
+                $payload = ['value' => null, 'constraint' => $constraint, 'options' => $options];
+                $payload = $this->decorate($payload, $input, $calendar);
+                $result[] = [...$data, 'payload' => $payload, 'position' => $position];
+
+                continue;
+            }
             if (in_array($type, ['number', 'quantity'], true) && is_string($value)) {
                 $value = LocalizedNumber::decimal($value);
             }
@@ -74,6 +99,9 @@ final class NormalizeIntentDetails
                 $definition = SpaceContentSchema::normalizeDefinitionFields([['key' => 'value', 'label' => $data['label'], 'type' => $baseType,
                     'required' => true, 'options' => $type === 'choice' ? $options : []]]);
                 $value = SpaceContentSchema::normalizePayload($definition, ['value' => $value])['value'];
+            }
+            if ($type === 'year') {
+                $value = DetailValue::scalar('year', $value, $calendar);
             }
             if (in_array($type, ['number', 'quantity'], true)) {
                 Validator::make(['value' => $value], ['value' => ['numeric', 'between:-999999999999999999,999999999999999999']])->validate();
@@ -110,9 +138,29 @@ final class NormalizeIntentDetails
             }
             $options = $data['options'] ?? [];
             unset($data['options']);
-            $result[] = [...$data, 'payload' => ['value' => $value, 'options' => $options], 'position' => $position];
+            $result[] = [...$data, 'payload' => $this->decorate(['value' => $value, 'options' => $options], $input, $calendar), 'position' => $position];
         }
 
         return $result;
+    }
+
+    /**
+     * Adds the optional note and the year's explicit calendar to a payload.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function decorate(array $payload, array $input, ?string $calendar): array
+    {
+        $note = trim((string) ($input['note'] ?? ''));
+        if ($note !== '') {
+            $payload['note'] = $note;
+        }
+        if ($calendar !== null) {
+            $payload['calendar'] = $calendar;
+        }
+
+        return $payload;
     }
 }

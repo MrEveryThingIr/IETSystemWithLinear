@@ -255,12 +255,12 @@ class MyItemsTest extends TestCase
     {
         $owner = $this->person();
 
-        $this->actingAs($owner->user)->get(route('intents.create', ['side' => 'offer']))
+        $this->actingAs($owner->user)->get(route('intents.create.classic', ['side' => 'offer']))
             ->assertOk()
             ->assertSee(__('intents.journeys.offer_service.title'))
             ->assertDontSee(__('intents.journeys.need_service.title'));
 
-        $this->actingAs($owner->user)->get(route('intents.create', ['side' => 'need']))
+        $this->actingAs($owner->user)->get(route('intents.create.classic', ['side' => 'need']))
             ->assertOk()
             ->assertSee(__('intents.journeys.need_service.title'))
             ->assertDontSee(__('intents.journeys.offer_service.title'));

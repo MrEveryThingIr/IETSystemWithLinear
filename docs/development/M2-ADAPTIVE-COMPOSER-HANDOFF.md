@@ -155,6 +155,159 @@ at low effort for mechanical edits, translation parity, doc updates and simple c
 for design decisions, data-integrity or authorization changes. Run focused tests while building and the
 full suite only at gates.
 
+## Usability refinement: field library and minimal composer (branch `feat/m2-category-aware-composer`)
+
+Owner feedback (twice): the composer still felt like a long predefined form. Branched from verified M2 head
+`d94df0be`; PR #86 is untouched and no refinement PR is open. Roadmap unchanged (an M2 refinement, not a milestone).
+
+**Principle:** a rich library, a minimal form. Nothing is inserted automatically; the person chooses.
+
+- **Initial form:** Need/Offer, title, description, topic (optional), audience, Save draft, Publish. Nothing else.
+- **Three separate ideas:** *suggested* (chips, from topic, Need/Offer, arrangement and what is already chosen),
+  *selected* (what is actually in this post), *applicable* (a rule: a rent-only question on a sale is flagged
+  "does not apply" and excluded from publication and search, but stays in the draft; nothing is deleted).
+- **Topic hint:** words in the title/description (four languages) suggest a topic as a chip; the person applies it.
+  Recommendations lean on the hinted topic without choosing it.
+- **Add field:** one entry point opening a searchable picker (modal; bottom sheet on phones; Escape and keyboard work):
+  recommended, recently used (from the publisher's past posts), my saved items, price/place/time terms, all fields by
+  domain, create your own. Search matches localized names, synonyms, domain names and English in other languages;
+  Persian/Arabic digits and letter variants are normalised.
+- **One meaning per concept (`IntentTerms`):** price (budget for a Need), place (one "where"), when, route, quantity,
+  category, media, importance are optional blocks the person adds; each owns specific core columns, removing a block
+  clears them, and blocks never chosen are never published. The duplicated "advanced" section is gone (subject and
+  arrangement come from topic and sale/rent). Catalog-linked posts keep price/place/quantity locked.
+- **Library:** `IntentDetailCatalog` now holds 96 typed fields in 14 domains (general, property, vehicle, device, service,
+  lesson, transport, work, activity, hospitality, events, creative, agriculture, industry) with type, unit, options,
+  search eligibility (`filter`, null = not searchable), domain, provenance (`research`, `schema`, `house`, `community`)
+  and since-version. Labels, synonyms, options, units and domain names are in the four languages with parity tests.
+  `IntentProfiles` is purely a relevance policy (fields and terms per topic with conditions). Money, schedule, place and
+  Deal terms stay canonical columns, never fields.
+- **My fields, groups, templates:** save one personal field, a group of fields, or a whole composition (fields + chosen
+  terms + topic) as structure only (no answers, no files); apply adds only what is missing and never overwrites
+  answers; rename and delete; owner-scoped (person or business).
+- **Per-field privacy** (private fields never reach search or public presentation); reorder; remove.
+- **Community fields and approval:** a custom field can be suggested to everyone (only name, kind, unit, choices are sent,
+  never an answer; 20 open suggestions per person). Lifecycle proposed, reviewed, approved/rejected, published.
+  Superadmin page `platform/fields` (capability `ManageConcepts`, like category review): duplicate detection by name/synonym
+  in any language, edit names and synonyms in four languages, domains and choices, approve and publish as an immutable
+  numbered version (the previous version is retired), reject with required note (optionally as duplicate of an existing
+  field), retire a community field (hidden from pickers; posts using it keep working). The search column is derived from the
+  type, never from the request. A built-in key keeps its type, unit and filter forever; review may improve its words and add
+  choices only. Published posts keep their snapshot, so earlier meaning is preserved. Proposals cannot touch canonical terms.
+- **Schema (additive, `2026_11_11_000000`):** `intent_field_definitions`, `intent_field_proposals`, and `kind`, `topic`,
+  `terms` on `intent_detail_templates` (existing templates become `composition`). Rollback drops only these.
+- **Reuse elsewhere:** the picker, field renderer, library, search and approval flow are generic components over
+  `IntentDetailCatalog`; profiles, Business Catalog, content or intake forms can adopt them without replacing specialist
+  financial, contractual or scheduling models (not done in this branch).
+- **Evidence (Oct 25):** full suite 1131 tests / 12387 assertions passed (OpenSSL config set); Pint and PHPStan clean; new tests cover the library, search in four languages, minimal initial form, suggestions versus selection, applicability, terms, templates, privacy, governance and the review page. Browser on a disposable SQLite database: Offer vehicle (hint, conditional Mileage, picker search "kilo" finds Mileage and Power), Need plumber (Budget, Preferred location, When as separate blocks), Persian RTL phone picker (bottom sheet, hint from Persian words), admin review with duplicate detection. Not browser-checked: light/dark of every screen, Arabic and Chinese screens, real upload in this branch (unchanged from M2 evidence).
+- **Limits:** community choice options display as typed (no per-option translation); proposer cannot yet see status
+  of their suggestions; no admin editing of built-in profiles or terms; one Directory detail filter at a time; the reference
+  picker still scans the latest 100 candidates; Arabic and Chinese screens are covered by parity tests, not screenshots.
+
+## Semantic field intelligence, community improvements and final UX refinement
+
+Same branch (`feat/m2-category-aware-composer`); PR #86 untouched, no new PR. M2 is **not** marked accepted.
+
+- **Meaning:** vehicle fields are unambiguous (Make, Model, Year of manufacture, Trim; vehicle class vs body style;
+  `body_type` retired in favour of `body_style`). Examples are localized (e.g. «مدل خودرو: پژو ۲۰۶، تیپ ۵»,
+  «سال ساخت: ۱۳۹۶»). Year is its own type (`YearSpan`: Persian/Gregorian aware, legacy values guessed by magnitude).
+- **Typed constraints (`DetailValue`):** exactly / at least / at most / between / one of, only where the type and side
+  allow. A Need wish that a post violates excludes it; an unknown value never counts as a match and is listed in
+  `IntentMatchResult::$unknown`. Canonical Deal terms (price, place, time) stay separate columns.
+- **Notes and validation:** optional per-field note ("Add note"). Free text such as "at least 8 months" is offered back as a
+  structured reading ("Use “at least 8 months”") and applied only on confirmation (browser-verified, including the input
+  showing 8 afterwards).
+- **Suggest an improvement:** discreet entry in the field menu, group menu and library; structure only (never answers or
+  files). Types cover wording, ambiguity, type/unit, options, synonyms, new category/group, group membership, conditional
+  visibility, Need/Offer applicability, input control, example, duplicates, templates. People see their own suggestions and
+  statuses at `/intents/field-suggestions`. Moderation in `platform/fields`: original vs proposed, context, aliases,
+  compatibility notes, approve/reject with feedback; approval writes a new immutable version (type/unit changes become
+  successor keys; duplicates merge via aliases + retire).
+- **Shared taxonomy:** domain → group → field by stable keys; a field may sit in several groups with one definition;
+  append-only memberships (latest row wins).
+- **Field / Group / Template:** Add field only finds or creates fields; groups are personal (add, remove, reorder, one
+  nesting level, reusable); “Save as template” is on the main actions and “Use template” near the start. Templates and
+  groups never hold answers, files or private data; applying never overwrites answers.
+- **Published cards:** one presentation strategy (`IntentPresentation`, `x-market.intention-presentation`, full/card
+  density) for detail page, directory and related lists; privacy and version snapshots respected.
+- **Legacy entry points:** `/intents/create` now redirects to the composer; the classic form stays at
+  `/intents/create/classic`; nothing was deleted. Services, Interests, Businesses and Deals keep their specialist models.
+- **Schema (additive, pending on the owner's database):** `2026_11_11_000000_create_intent_field_library`,
+  `2026_11_12_000000_add_constraint_columns_and_field_taxonomy`. Rehearsed on populated disposable MySQL. Rollback caveat:
+  `intent_detail_templates.kind` rollback collapses kinds. Back up first and run `php artisan migrate --pretend`.
+- **Evidence:** full suite 1164 tests / 13742 assertions passed (OpenSSL config set), focused suites 185 passed, Pint and PHPStan clean (code at `736cecd3`).
+  Browser (disposable SQLite): offer vehicle, need with interpretation chip, picker and search, suggestions.
+- **Limits:** picker opening is slow on the dev server; community option text is not per-option translated; Arabic and
+  Chinese verified by parity tests, not screenshots.
+
+## Navigation and reuse acceptance fixes
+
+Owner found two defects; both fixed on the same branch (PR #86 untouched, no new PR, M2 not accepted).
+
+- **One editor for Needs and Offers.** My Items "Change" opened the legacy profile editor. Audit result: the only
+  edit entry points left on the old editor were My Items (`profile.edit?intent=`) and the Needs/Offers card on the profile
+  page. Now: My Items, the profile card and the directory all open `intents.compose.edit`; the old
+  `profile?intent=<uuid>` link redirects (owner-checked) to the Composer; "Add" on the profile card opens the Composer.
+  The legacy component, its pause/close actions, `intents.create.classic`, photos and all data stay. Interests, Abilities
+  and Business Catalog keep their specialist editors.
+- **Where things are (My Items, one page, no new menu entries):** *Offers and needs* has a filter —
+  Published / Drafts / Paused / Closed, each with a count (`?show=`); drafts open in the Composer, closed items open
+  their read-only page. *Saved templates and groups* (`#saved`) lists composition templates and field groups with side/topic,
+  field count, preview, "Start a post", rename and delete. Saved single fields stay in the Add-field picker.
+- **Templates are findable.** "Use a template" is a visible button directly under the page title on every new
+  composition (it explains itself when none are saved), listing all saved templates (current side first) with side/topic
+  badges, preview and "Use"; a template from the other side asks, then switches side. "Save as template" stays among the
+  main actions. Starting from My Items (`/intents/compose?template=<uuid>`) applies it once; someone else's uuid is ignored.
+  Answers, notes and files are never saved or overwritten.
+- **Field picker speed:** the taxonomy tree issued a schema query per group; checks are now memoized per request
+  (tree build 2.2 s → ~0.1 s on the Laragon MySQL; picker opens in ~1.5 s on the single-threaded dev server, down from 2.3 s).
+- **Evidence:** `NavigationIntegrationTest` (5 tests) plus adjusted `PersonalGroupsTest`; browser (disposable SQLite):
+  save template → leave → My Items shows it → Start a post applies 2 fields and topic; draft listed under Drafts and "Change"
+  opens the Composer; mobile + dark template menu without horizontal scroll; suggestion modal opens from the library.
+  Full suite 1169 tests passed, Pint and PHPStan clean. Not browser-checked: admin review page this round (covered by tests; the browser user is not an admin), Persian screens.
+
+## Owner migration evidence and final M2 gate (Oct 25)
+
+- **Owner database:** the owner ran `2026_11_11_000000_create_intent_field_library` and
+  `2026_11_12_000000_add_constraint_columns_and_field_taxonomy` on the normal Laragon MySQL `EveryThing-system`; both reported DONE.
+  The earlier "templates don't save" symptom was the schema being behind the code and is resolved; saved templates are present.
+  Read-only verification afterwards (no data changed): `migrate:status` has 0 pending; `intent_detail_templates` has `kind`,
+  `topic`, `terms`, `parent_id`, `context`; the five library tables exist; `intent_search_values.value_number_min` exists;
+  the 5 existing templates were classified `composition` by the migration. These migrations were not repeated.
+- **No false success:** `Composer::storeTemplate` now reports success only for a row that is really stored; a vetoed insert or a
+  database error raises a validation error (`composer.template_failed`, four languages) and no notice. Regression:
+  `NavigationIntegrationTest::test_a_template_that_fails_to_store_is_never_reported_as_saved`.
+- **Journey verification** (code at the exact pushed head; browser runs used a disposable SQLite database and clearly named test
+  records, never `EveryThing-system`):
+
+| Journey | Evidence |
+|---|---|
+| Create and save a draft | Browser (draft "Peugeot 206 for sale" saved) + `ComposerInteractionTest` |
+| Edit from My Items in the Composer | Browser (Drafts filter → Change → composer URL) + `NavigationIntegrationTest` |
+| Publish and view the page | Browser (Published, page shows "Published as version 1", Edit/Find matches) + `PublishedCardTest` (audience, density, privacy) |
+| Save, find, apply templates | Browser (save → My Items → Start a post applied fields and topic) + `PersonalGroupsTest`, `NavigationIntegrationTest` |
+| Reuse groups and typed fields | Tests only (`PersonalGroupsTest`, `FieldConstraintsTest`); groups menu not re-run in the browser this round |
+| Historical versions preserved | Tests only (`ComposerFoundationTest` immutable versions, history restore) |
+| Suggest a field improvement | Browser: modal opens from the library; submission, moderation and "my suggestions" covered by `FieldSuggestionsTest`/`FieldGovernanceTest` |
+| Permissions and privacy | Tests only (owner-only templates/groups, private fields excluded from search and cards, composer routes refuse others) |
+| Legacy routes | Browser (`/profile?intent=<uuid>` redirects to the Composer) + tests (`/intents/create` redirect, `create.classic` kept) |
+
+- **Gate:** full suite 1170 tests / 13988 assertions passed, Pint and PHPStan clean.
+- **Not browser-verified:** admin review page, Persian/Arabic/Chinese screens this round, concurrency of two editors.
+
+## M2 integration chain (GitHub state Oct 25)
+
+Linear and clean (each branch is a strict extension of its parent; no unrelated commits):
+`integration/v2` (e2f6afe6) → `feat/m1-one-home` (afc52dc2, 2 commits, PR #85) → `feat/m2-adaptive-intention-composer`
+(d94df0be, 9 commits, PR #86 — its base is currently `feat/m1-one-home`) → `feat/m2-category-aware-composer`
+(10 commits, 96 files). CI is green on the refinement head `f9fb1fdc` (4 checks including shared-host MariaDB and Windows).
+No refinement PR exists. Draft PR to open: head `feat/m2-category-aware-composer` → base `feat/m2-adaptive-intention-composer`
+(body in `docs/development/M2-REFINEMENT-PR-BODY.md`). Independent Living Planner v2 (PR #80) is untouched.
+
+**Proposed merge plan (after owner approval only):** 1) merge PR #85 into `integration/v2`; 2) retarget #86 to `integration/v2`
+and merge; 3) retarget the refinement PR to `integration/v2` and merge; 4) on `integration/v2` run the full suite and the
+Laragon walkthrough; 5) never auto-merge or deploy; Living Planner v2 merges separately.
+
 ## Continuation
 
 1. Fetch origin and inspect status/worktrees before switching; preserve local work.

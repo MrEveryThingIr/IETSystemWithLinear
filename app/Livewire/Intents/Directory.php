@@ -8,6 +8,8 @@ use App\ProfileIntentStatus;
 use App\Support\Categories\CategoryCatalog;
 use App\Support\LocalizedNumber;
 use App\Support\Market\IntentDetailCatalog;
+use App\Support\Market\IntentPresentation;
+use App\Support\Market\YearSpan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -157,6 +159,11 @@ class Directory extends Component
         foreach ($intents->getCollection() as $intent) {
             $paths[$intent->id] = implode(' › ', array_column($catalog->path((int) $intent->concept_id, null), 'label'));
         }
+        $presenter = app(IntentPresentation::class);
+        $cards = [];
+        foreach ($intents->getCollection() as $intent) {
+            $cards[$intent->id] = $presenter->forVersion($intent, $user, (string) ($paths[$intent->id] ?? ''));
+        }
 
         $versionIds = $intents->getCollection()->pluck('business_listing_version_id')->filter()->unique()->values()->all();
         $listingCovers = $versionIds === [] ? [] : array_flip(DB::table('business_listing_media')
@@ -168,7 +175,8 @@ class Directory extends Component
             'listingCovers' => $listingCovers,
             'areas' => $catalog->areas(),
             'paths' => $paths,
-            'detailCatalog' => IntentDetailCatalog::all(),
+            'cards' => $cards,
+            'detailCatalog' => IntentDetailCatalog::searchable(),
         ])->title(__('intents.directory.title'));
     }
 
@@ -179,24 +187,49 @@ class Directory extends Component
      */
     private function applyDetailFilter(Builder $query): void
     {
-        $spec = IntentDetailCatalog::all()[$this->detail] ?? null;
+        $spec = IntentDetailCatalog::searchable()[$this->detail] ?? null;
         if ($spec === null) {
             return;
         }
-        $numeric = $spec['filter'] === 'value_number';
+        $year = $spec['type'] === 'year';
+        $numeric = $spec['filter'] === 'value_number' || $year;
+        $boolean = $spec['filter'] === 'value_boolean';
         $text = trim($this->detailText);
         $min = $numeric && trim($this->detailMin) !== '' ? LocalizedNumber::decimal($this->detailMin) : null;
         $max = $numeric && trim($this->detailMax) !== '' ? LocalizedNumber::decimal($this->detailMax) : null;
-        if (($numeric && $min === null && $max === null) || (! $numeric && $text === '')) {
+        if (($numeric && $min === null && $max === null) || (! $numeric && $text === '') || ($boolean && $text !== '1')) {
             return;
         }
-        $query->whereExists(function ($values) use ($spec, $numeric, $text, $min, $max): void {
+        if (($min !== null && ! is_numeric($min)) || ($max !== null && ! is_numeric($max))) {
+            return;
+        }
+        $query->whereExists(function ($values) use ($spec, $year, $numeric, $boolean, $text, $min, $max): void {
             $values->selectRaw('1')->from('intent_search_values')
                 ->whereColumn('intent_search_values.intent_version_id', 'actor_profile_intents.published_version_id')
                 ->where('intent_search_values.canonical_key', $this->detail);
-            if ($numeric) {
-                $min !== null && $values->where('intent_search_values.value_number', '>=', $min);
-                $max !== null && $values->where('intent_search_values.value_number', '<=', $max);
+            if ($year) {
+                // A year is a span of days; a wish and an offer match when their spans overlap.
+                $from = $min === null ? null : YearSpan::range((int) $min, YearSpan::guessCalendar((int) $min))[0]->format('Y-m-d');
+                $to = $max === null ? null : YearSpan::range((int) $max, YearSpan::guessCalendar((int) $max))[1]->format('Y-m-d');
+                $values->where(fn ($known) => $known->whereNotNull('intent_search_values.value_date')->orWhereNotNull('intent_search_values.value_date_end'));
+                $to !== null && $values->where(fn ($q) => $q->whereNull('intent_search_values.value_date')->orWhere('intent_search_values.value_date', '<=', $to));
+                $from !== null && $values->where(fn ($q) => $q->whereNull('intent_search_values.value_date_end')->orWhere('intent_search_values.value_date_end', '>=', $from));
+            } elseif ($numeric) {
+                // An exact value sits inside the asked range; a wish overlaps it. Missing values never match.
+                $values->where(function ($either) use ($min, $max): void {
+                    $either->where(function ($exact) use ($min, $max): void {
+                        $exact->whereNotNull('intent_search_values.value_number');
+                        $min !== null && $exact->where('intent_search_values.value_number', '>=', $min);
+                        $max !== null && $exact->where('intent_search_values.value_number', '<=', $max);
+                    })->orWhere(function ($wish) use ($min, $max): void {
+                        $wish->whereNull('intent_search_values.value_number')
+                            ->where(fn ($bounded) => $bounded->whereNotNull('intent_search_values.value_number_min')->orWhereNotNull('intent_search_values.value_number_max'));
+                        $max !== null && $wish->where(fn ($q) => $q->whereNull('intent_search_values.value_number_min')->orWhere('intent_search_values.value_number_min', '<=', $max));
+                        $min !== null && $wish->where(fn ($q) => $q->whereNull('intent_search_values.value_number_max')->orWhere('intent_search_values.value_number_max', '>=', $min));
+                    });
+                });
+            } elseif ($boolean) {
+                $values->where('intent_search_values.value_boolean', true);
             } elseif ($spec['type'] === 'choice') {
                 $values->where('intent_search_values.value_text', $text);
             } else {

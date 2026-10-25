@@ -1,7 +1,7 @@
 <section class="mx-auto max-w-7xl space-y-6" @if($highlight) x-data x-init="requestAnimationFrame(() => document.getElementById('intent-{{ $highlight }}')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))" @endif>
     <x-app.page-header :title="__('intents.directory.title')" :description="__('intents.directory.help')">
         <x-slot:actions>
-            <flux:button :href="route('intents.create')" variant="primary" icon="plus">{{ __('intents.directory.add') }}</flux:button>
+            <flux:button :href="route('intents.compose')" variant="primary" icon="plus">{{ __('intents.directory.add') }}</flux:button>
         </x-slot:actions>
     </x-app.page-header>
 
@@ -52,21 +52,26 @@
                 <label for="intent-detail" class="mb-2 block text-sm font-medium">{{ __('composer.filter_detail') }}</label>
                 <select id="intent-detail" wire:model.live="detail" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
                     <option value="">{{ __('composer.filter_any') }}</option>
-                    @foreach ($detailCatalog as $key => $spec)<option value="{{ $key }}">{{ __('composer.details.'.$key) }}</option>@endforeach
+                    @foreach ($detailCatalog as $key => $spec)<option value="{{ $key }}">{{ \App\Support\Market\IntentDetailCatalog::label($key) }}</option>@endforeach
                 </select>
                 @if (isset($detailCatalog[$detail]))
-                    @if ($detailCatalog[$detail]['filter'] === 'value_number')
+                    @if ($detailCatalog[$detail]['filter'] === 'value_number' || ($detailCatalog[$detail]['type'] ?? '') === 'year')
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMin" aria-label="{{ __('composer.filter_min') }}" placeholder="{{ __('composer.filter_min') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
                             <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMax" aria-label="{{ __('composer.filter_max') }}" placeholder="{{ __('composer.filter_max') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
                         </div>
-                    @elseif (($detailCatalog[$detail]['type'] ?? '') === 'choice')
-                        <select wire:model.live="detailText" aria-label="{{ __('composer.details.'.$detail) }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                    @elseif ($detailCatalog[$detail]['filter'] === 'value_boolean')
+                        <select wire:model.live="detailText" aria-label="{{ \App\Support\Market\IntentDetailCatalog::label($detail) }}" class="mt-2 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
                             <option value="">{{ __('intents.filters.all') }}</option>
-                            @foreach ($detailCatalog[$detail]['options'] as $option)<option value="{{ $option }}">{{ \Illuminate\Support\Facades\Lang::has('composer.options.'.$option) ? __('composer.options.'.$option) : $option }}</option>@endforeach
+                            <option value="1">{{ __('composer.yes') }}</option>
+                        </select>
+                    @elseif (($detailCatalog[$detail]['type'] ?? '') === 'choice')
+                        <select wire:model.live="detailText" aria-label="{{ \App\Support\Market\IntentDetailCatalog::label($detail) }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            <option value="">{{ __('intents.filters.all') }}</option>
+                            @foreach ($detailCatalog[$detail]['options'] as $option)<option value="{{ $option }}">{{ \App\Support\Market\IntentDetailCatalog::optionLabel($option) }}</option>@endforeach
                         </select>
                     @else
-                        <input type="text" wire:model.live.debounce.500ms="detailText" aria-label="{{ __('composer.details.'.$detail) }}" placeholder="{{ __('composer.filter_contains') }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
+                        <input type="text" wire:model.live.debounce.500ms="detailText" aria-label="{{ \App\Support\Market\IntentDetailCatalog::label($detail) }}" placeholder="{{ __('composer.filter_contains') }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
                     @endif
                 @endif
             </div>
@@ -96,39 +101,7 @@
                         @endif
                     </div>
                 @endif
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <div class="flex flex-wrap gap-2">
-                            <flux:badge :color="$intent->kind->value === 'need' ? 'amber' : 'green'">{{ __('intents.kinds.'.$intent->kind->value) }}</flux:badge>
-                            <flux:badge>{{ __('intents.subjects.'.$intent->subject_kind->value) }}</flux:badge>
-                            <flux:badge color="zinc">{{ __('intents.arrangements.'.$intent->kind->value.'.'.$intent->arrangement_kind->value) }}</flux:badge>
-                        </div>
-                        <h2 class="mt-3 text-lg font-semibold [overflow-wrap:anywhere]" dir="auto">{{ $intent->title ?: $intent->concept->displayLabel() }}</h2>
-                        <div class="mt-1 text-sm text-zinc-500 [overflow-wrap:anywhere]" dir="auto">{{ ($paths[$intent->id] ?? '') !== '' ? $paths[$intent->id] : $intent->concept->displayLabel() }}</div>
-                    </div>
-                    <span class="font-mono text-xs text-zinc-400">INT-{{ str_pad((string) $intent->id, 6, '0', STR_PAD_LEFT) }}</span>
-                </div>
-
-                @if ($intent->description)<p class="mt-3 whitespace-pre-line text-sm leading-6 text-zinc-700 dark:text-zinc-200" dir="auto">{{ $intent->description }}</p>@endif
-
-                <dl class="mt-4 grid gap-2 text-sm">
-                    @if ($intent->location_text)<div><dt class="inline font-medium">{{ __('intents.fields.location') }}:</dt> <dd class="inline" dir="auto">{{ $intent->location_text }}</dd></div>@endif
-                    @if ($intent->cash_min !== null || $intent->cash_max !== null)
-                        <div>
-                            <dt class="inline font-medium">{{ __('intents.directory.cash') }}:</dt>
-                            <dd class="inline">
-                                @if ($intent->cash_min !== null && $intent->cash_max !== null){{ $intent->cash_min }}–{{ $intent->cash_max }}
-                                @elseif ($intent->cash_min !== null){{ __('intents.directory.from') }} {{ $intent->cash_min }}
-                                @else{{ __('intents.directory.up_to') }} {{ $intent->cash_max }}@endif
-                                {{ $intent->currency_code }}
-                                @if ($intent->cash_basis && $intent->cash_basis !== 'total') · {{ __('intents.cash_basis.'.$intent->cash_basis) }}@endif
-                                · {{ $intent->negotiable ? __('intents.directory.negotiable') : __('intents.directory.fixed') }}
-                            </dd>
-                        </div>
-                    @endif
-                    <div><dt class="inline font-medium">{{ __('intents.fields.exchange_preference') }}:</dt> <dd class="inline">{{ __('intents.exchange.'.$intent->exchange_preference->value.'.title') }}</dd></div>
-                    @if ($intent->exchange_notes)<div><dt class="inline font-medium">{{ __('intents.fields.exchange_notes') }}:</dt> <dd class="inline" dir="auto">{{ $intent->exchange_notes }}</dd></div>@endif
-                </dl>
+                <x-market.intention-presentation :presentation="$cards[$intent->id]" density="card" />
 
                 <div class="mt-4 flex flex-col gap-3 border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
                     <div class="min-w-0 [overflow-wrap:anywhere]">
@@ -159,7 +132,7 @@
                             >
                                 {{ __('intents.matches.find') }}
                             </flux:button>
-                            <flux:button :href="route('intents.photos', $intent)" size="sm" variant="ghost">{{ __('intents.media.title') }}</flux:button>
+                            <flux:button :href="route('intents.compose.edit', $intent)" size="sm" variant="ghost">{{ __('composer.edit_post') }}</flux:button>
                         @else
                             <flux:button
                                 :href="route('relationships.create', ['intent' => $intent->uuid])"

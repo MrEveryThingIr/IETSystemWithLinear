@@ -66,13 +66,13 @@ class BusinessGroupCoherenceTest extends TestCase
             ->assertOk()
             ->assertSee('Panel upgrades')
             ->assertSee('Electrical installation &amp; repair', false)
-            ->assertSee(route('intents.create', ['as' => 'business:'.$business->id]), false)
+            ->assertSee(route('intents.compose', ['as' => 'business:'.$business->id]), false)
             ->assertDontSee('class="hero"', false);
 
         $this->actingAs($this->member->user)->get(route('businesses.show', $business))
             ->assertOk()
             ->assertSee('Panel upgrades')
-            ->assertDontSee(route('intents.create', ['as' => 'business:'.$business->id]), false);
+            ->assertDontSee(route('intents.compose', ['as' => 'business:'.$business->id]), false);
     }
 
     public function test_business_categories_link_to_shared_categories_by_exact_name(): void
@@ -117,6 +117,6 @@ class BusinessGroupCoherenceTest extends TestCase
 
         Livewire::actingAs($this->owner->user)->test(GroupShow::class, ['group' => $group])
             ->assertSee('Fix the street lights')
-            ->assertSee(route('intents.create', ['as' => 'group:'.$group->id]), false);
+            ->assertSee(route('intents.compose', ['as' => 'group:'.$group->id]), false);
     }
 }
