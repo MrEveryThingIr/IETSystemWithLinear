@@ -204,6 +204,42 @@ Owner feedback (twice): the composer still felt like a long predefined form. Bra
   of their suggestions; no admin editing of built-in profiles or terms; one Directory detail filter at a time; the reference
   picker still scans the latest 100 candidates; Arabic and Chinese screens are covered by parity tests, not screenshots.
 
+## Semantic field intelligence, community improvements and final UX refinement
+
+Same branch (`feat/m2-category-aware-composer`); PR #86 untouched, no new PR. M2 is **not** marked accepted.
+
+- **Meaning:** vehicle fields are unambiguous (Make, Model, Year of manufacture, Trim; vehicle class vs body style;
+  `body_type` retired in favour of `body_style`). Examples are localized (e.g. «مدل خودرو: پژو ۲۰۶، تیپ ۵»,
+  «سال ساخت: ۱۳۹۶»). Year is its own type (`YearSpan`: Persian/Gregorian aware, legacy values guessed by magnitude).
+- **Typed constraints (`DetailValue`):** exactly / at least / at most / between / one of, only where the type and side
+  allow. A Need wish that a post violates excludes it; an unknown value never counts as a match and is listed in
+  `IntentMatchResult::$unknown`. Canonical Deal terms (price, place, time) stay separate columns.
+- **Notes and validation:** optional per-field note ("Add note"). Free text such as "at least 8 months" is offered back as a
+  structured reading ("Use “at least 8 months”") and applied only on confirmation (browser-verified, including the input
+  showing 8 afterwards).
+- **Suggest an improvement:** discreet entry in the field menu, group menu and library; structure only (never answers or
+  files). Types cover wording, ambiguity, type/unit, options, synonyms, new category/group, group membership, conditional
+  visibility, Need/Offer applicability, input control, example, duplicates, templates. People see their own suggestions and
+  statuses at `/intents/field-suggestions`. Moderation in `platform/fields`: original vs proposed, context, aliases,
+  compatibility notes, approve/reject with feedback; approval writes a new immutable version (type/unit changes become
+  successor keys; duplicates merge via aliases + retire).
+- **Shared taxonomy:** domain → group → field by stable keys; a field may sit in several groups with one definition;
+  append-only memberships (latest row wins).
+- **Field / Group / Template:** Add field only finds or creates fields; groups are personal (add, remove, reorder, one
+  nesting level, reusable); “Save as template” is on the main actions and “Use template” near the start. Templates and
+  groups never hold answers, files or private data; applying never overwrites answers.
+- **Published cards:** one presentation strategy (`IntentPresentation`, `x-market.intention-presentation`, full/card
+  density) for detail page, directory and related lists; privacy and version snapshots respected.
+- **Legacy entry points:** `/intents/create` now redirects to the composer; the classic form stays at
+  `/intents/create/classic`; nothing was deleted. Services, Interests, Businesses and Deals keep their specialist models.
+- **Schema (additive, pending on the owner's database):** `2026_11_11_000000_create_intent_field_library`,
+  `2026_11_12_000000_add_constraint_columns_and_field_taxonomy`. Rehearsed on populated disposable MySQL. Rollback caveat:
+  `intent_detail_templates.kind` rollback collapses kinds. Back up first and run `php artisan migrate --pretend`.
+- **Evidence:** full suite 1164 tests / 13742 assertions passed (OpenSSL config set), focused suites 185 passed, Pint and PHPStan clean (code at `736cecd3`).
+  Browser (disposable SQLite): offer vehicle, need with interpretation chip, picker and search, suggestions.
+- **Limits:** picker opening is slow on the dev server; community option text is not per-option translated; Arabic and
+  Chinese verified by parity tests, not screenshots.
+
 ## Continuation
 
 1. Fetch origin and inspect status/worktrees before switching; preserve local work.
