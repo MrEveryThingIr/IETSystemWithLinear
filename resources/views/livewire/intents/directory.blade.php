@@ -55,7 +55,7 @@
                     @foreach ($detailCatalog as $key => $spec)<option value="{{ $key }}">{{ \App\Support\Market\IntentDetailCatalog::label($key) }}</option>@endforeach
                 </select>
                 @if (isset($detailCatalog[$detail]))
-                    @if ($detailCatalog[$detail]['filter'] === 'value_number')
+                    @if ($detailCatalog[$detail]['filter'] === 'value_number' || ($detailCatalog[$detail]['type'] ?? '') === 'year')
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMin" aria-label="{{ __('composer.filter_min') }}" placeholder="{{ __('composer.filter_min') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
                             <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMax" aria-label="{{ __('composer.filter_max') }}" placeholder="{{ __('composer.filter_max') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />

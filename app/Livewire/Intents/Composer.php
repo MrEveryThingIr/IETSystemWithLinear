@@ -22,6 +22,8 @@ use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
 use App\Services\Business\BusinessMarketService;
 use App\Support\LocalizedNumber;
+use App\Support\Market\ConstraintParser;
+use App\Support\Market\DetailValue;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentFieldLibrary;
 use App\Support\Market\IntentPresentation;
@@ -30,6 +32,7 @@ use App\Support\Market\IntentSnapshot;
 use App\Support\Market\IntentTerms;
 use App\Support\Market\MarketMoney;
 use App\Support\Market\NormalizeIntentDetails;
+use App\Support\Market\YearSpan;
 use App\Support\MediaLimits;
 use App\Support\Parties\Party;
 use App\Support\Parties\PartyAuthority;
@@ -128,7 +131,9 @@ class Composer extends Component
             $snapshot = IntentSnapshot::fromRecord(DB::table('actor_profile_intents')->where('id', $intent->id)->first());
             $working = $intent->working_copy ?? $snapshot;
             $this->core = $working['core'];
-            $this->details = array_map(fn ($row): array => [...$row, 'editor_key' => (string) Str::uuid(), 'value' => $row['payload']['value'] ?? null, 'options' => $row['payload']['options'] ?? []], $working['details']);
+            $this->details = array_map(fn ($row): array => [...$row, 'editor_key' => (string) Str::uuid(), 'value' => $row['payload']['value'] ?? null, 'options' => $row['payload']['options'] ?? [],
+                'op' => $row['payload']['constraint']['op'] ?? 'exact', 'min' => $row['payload']['constraint']['min'] ?? '', 'max' => $row['payload']['constraint']['max'] ?? '',
+                'values' => $row['payload']['constraint']['values'] ?? [], 'note' => $row['payload']['note'] ?? '', 'showNote' => ! empty($row['payload']['note'])], $working['details']);
             $this->intention = $intent->kind->value;
             $this->conceptId = $intent->concept_id;
             $this->conceptLabel = $intent->concept?->labels()->where('locale', $user->locale)->value('label') ?? '';
@@ -157,7 +162,11 @@ class Composer extends Component
             abort_unless($kind === $this->intent->kind->value, 422, __('composer.identity_fixed'));
         }
         $previousArrangement = (string) ($this->core['arrangement_kind'] ?? 'other');
+        $wasNeed = $this->isNeedSide();
         $this->intention = $intention;
+        if ($wasNeed && ! $this->isNeedSide()) {
+            $this->resetConstraints();
+        }
         $this->core['subject_kind'] = match ($intention) {
             'service' => 'service', 'sell' => 'good', 'rent' => 'property', 'activity', 'person' => 'collaboration', default => 'other'
         };
@@ -228,6 +237,17 @@ class Composer extends Component
         return $core;
     }
 
+    /** A row counts once it carries a value, or a wish (range, minimum, maximum, accepted set). */
+    private static function answered(array $detail): bool
+    {
+        if (! self::emptyAnswer($detail['value'] ?? null)) {
+            return true;
+        }
+
+        return ($detail['op'] ?? 'exact') !== 'exact'
+            && (! self::emptyAnswer($detail['min'] ?? null) || ! self::emptyAnswer($detail['max'] ?? null) || ! self::emptyAnswer($detail['values'] ?? null));
+    }
+
     private static function emptyAnswer(mixed $value): bool
     {
         return $value === null || $value === '' || $value === [] || $value === false;
@@ -242,7 +262,8 @@ class Composer extends Component
         return ['editor_key' => (string) Str::uuid(), 'canonical_key' => $key, 'label' => $key === null ? '' : IntentDetailCatalog::label($key),
             'type' => $type, 'value' => match ($type) {
                 'date_range', 'reference', 'multiple_choice' => [], 'boolean' => $key === null ? '' : false, default => ''
-            }, 'visibility' => 'same', 'unit' => $spec['unit'] ?? '', 'group_label' => '', 'options' => $spec['options'] ?? []];
+            }, 'visibility' => 'same', 'unit' => $spec['unit'] ?? '', 'group_label' => '', 'options' => $spec['options'] ?? [],
+            'op' => 'exact', 'min' => '', 'max' => '', 'values' => [], 'note' => '', 'showNote' => false];
     }
 
     public function updatedOwnerKey(): void
@@ -271,6 +292,21 @@ class Composer extends Component
         abort_if(count($this->details) >= 50, 422);
         $this->details[] = $this->newRow($key);
         $this->dispatch('composer-detail-added', index: count($this->details) - 1);
+    }
+
+    private function isNeedSide(): bool
+    {
+        return ! in_array($this->intention, ['offer', 'service', 'sell'], true);
+    }
+
+    /** An Offer states one fact: ranges and sets from a Need become empty plain values to fill in. */
+    private function resetConstraints(): void
+    {
+        foreach ($this->details as $index => $row) {
+            if (($row['op'] ?? 'exact') !== 'exact') {
+                $this->details[$index] = [...$row, 'op' => 'exact', 'min' => '', 'max' => '', 'values' => [], 'value' => in_array($row['type'], ['boolean'], true) ? false : ''];
+            }
+        }
     }
 
     /** Insert a library field the person picked; never inserted automatically, never twice. */
@@ -569,9 +605,65 @@ class Composer extends Component
 
     public function updatedDetails(mixed $value, ?string $key = null): void
     {
+        if ($key !== null && preg_match('/^(\d+)\.(value|min|max)$/D', $key, $match)) {
+            $this->checkRow((int) $match[1]);
+        }
         if ($key !== null && preg_match('/^(\d+)\.optionsText$/D', $key, $match) && is_string($value)) {
             $this->details[(int) $match[1]]['options'] = array_values(array_unique(array_filter(array_map('trim', explode(',', $value)))));
         }
+    }
+
+    /** Checks a typed value as it is entered; sets an expected-input message or a structured reading to confirm. */
+    private function checkRow(int $index): void
+    {
+        $row = $this->details[$index] ?? null;
+        $spec = $row === null || empty($row['canonical_key']) ? null : (IntentDetailCatalog::all()[$row['canonical_key']] ?? null);
+        $this->details[$index]['error'] = null;
+        $this->details[$index]['suggestion'] = null;
+        if ($spec === null || ! in_array($spec['type'], ['number', 'amount', 'year'], true)) {
+            return;
+        }
+        $type = (string) $spec['type'];
+        $unit = $spec['unit'] ?? null;
+        $example = IntentDetailCatalog::example($row['canonical_key'], null, $this->topic) ?? '10';
+        foreach (['value', 'min', 'max'] as $field) {
+            $text = trim((string) ($row[$field] ?? ''));
+            if ($text === '') {
+                continue;
+            }
+            try {
+                DetailValue::scalar($type, $text);
+            } catch (ValidationException $exception) {
+                $names = array_values(array_filter([$unit, IntentDetailCatalog::unitLabel($unit), $unit === null ? null : (string) __('composer.units.'.$unit, [], 'en')]));
+                $parsed = $type === 'amount' ? null : ConstraintParser::parse($text, $names);
+                if ($parsed !== null && $this->isNeedSide() && in_array($parsed['op'], DetailValue::operators($type, true), true)) {
+                    $suffix = $unit === null ? '' : ' '.IntentDetailCatalog::unitLabel($unit);
+                    $this->details[$index]['suggestion'] = [...$parsed, 'meaning' => DetailValue::describe($type, ['constraint' => $parsed]).$suffix];
+                } else {
+                    $this->details[$index]['error'] = $parsed !== null ? (string) __('composer.interpret_offer', ['example' => $example]) : (string) __('composer.interpret_text', ['example' => $example]);
+                    if ($type === 'year') {
+                        $this->details[$index]['error'] = (string) ($exception->errors()['details'][0] ?? __('composer.errors.year'));
+                    }
+                }
+
+                return;
+            }
+        }
+    }
+
+    /** The person confirmed the structured reading of what they typed. */
+    public function applySuggestion(int $index): void
+    {
+        $suggestion = $this->details[$index]['suggestion'] ?? null;
+        abort_unless(is_array($suggestion) && $this->isNeedSide(), 422);
+        $this->details[$index] = [...$this->details[$index], 'op' => $suggestion['op'], 'min' => $suggestion['min'] ?? '', 'max' => $suggestion['max'] ?? '',
+            'value' => '', 'suggestion' => null, 'error' => null];
+    }
+
+    public function toggleNote(int $index): void
+    {
+        abort_unless(isset($this->details[$index]), 404);
+        $this->details[$index]['showNote'] = ! ($this->details[$index]['showNote'] ?? false);
     }
 
     private function saveWorking(): void
@@ -641,7 +733,7 @@ class Composer extends Component
         }
 
         return view('livewire.intents.composer', ['parties' => app(PartyAuthority::class)->partiesFor($user),
-            'profile' => $this->profileView(),
+            'profile' => $this->profileView(), 'needSide' => $this->isNeedSide(),
             'detailTypes' => NormalizeIntentDetails::TYPES, 'legacyPrice' => $this->hasLegacyPrice(),
             'publisher' => $this->publisher(),
             'versions' => $this->intent?->versions()->reorder('version', 'desc')->limit(50)->get() ?? collect(),
@@ -786,8 +878,30 @@ class Composer extends Component
             }
         }
 
-        return ['core' => $core, 'details' => array_map(fn ($detail): array => [...$detail, 'payload' => ['value' => $detail['value'] ?? null]], $this->details),
+        return ['core' => $core, 'details' => array_map(fn ($detail): array => [...$detail, 'payload' => $this->previewPayload($detail)], $this->details),
             'media' => $this->intent === null ? [] : $this->intent->media()->get(['uuid', 'visibility', 'caption'])->toArray()];
+    }
+
+    /** @param array<string, mixed> $detail @return array<string, mixed> */
+    private function previewPayload(array $detail): array
+    {
+        $payload = ['value' => $detail['value'] ?? null];
+        $op = $this->isNeedSide() && ! empty($detail['canonical_key']) ? ($detail['op'] ?? 'exact') : 'exact';
+        if ($op !== 'exact') {
+            try {
+                $payload = ['value' => null, 'constraint' => DetailValue::constraint((string) $detail['type'], $op, $detail, $detail['options'] ?? [])];
+            } catch (ValidationException) {
+                return ['value' => null];
+            }
+        }
+        if (trim((string) ($detail['note'] ?? '')) !== '') {
+            $payload['note'] = trim((string) $detail['note']);
+        }
+        if (($detail['type'] ?? '') === 'year' && ! DetailValue::blank($detail['value'] ?? ($detail['min'] ?? null))) {
+            $payload['calendar'] = YearSpan::guessCalendar((int) ($detail['value'] ?: ($detail['min'] ?: $detail['max'])));
+        }
+
+        return $payload;
     }
 
     private function referenceChoices(): array
@@ -823,7 +937,7 @@ class Composer extends Component
     private function editableDetails(bool $shape = false): array
     {
         $skip = $shape ? [] : $this->inapplicableKeys();
-        $answered = $shape ? $this->details : array_filter($this->details, fn (array $detail): bool => ! self::emptyAnswer($detail['value'] ?? null)
+        $answered = $shape ? $this->details : array_filter($this->details, fn (array $detail): bool => self::answered($detail)
             && ! in_array($detail['canonical_key'] ?? null, $skip, true));
 
         return array_map(function (array $detail): array {

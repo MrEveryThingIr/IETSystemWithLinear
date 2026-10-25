@@ -66,11 +66,15 @@ final class IntentDetailCatalog
             'deposit' => $d('property', ['type' => 'amount', 'filter' => 'value_number', 'unit' => 'IRT'], 'research'),
             'monthly_rent' => $d('property', ['type' => 'amount', 'filter' => 'value_number', 'unit' => 'IRT']),
             // Vehicles
-            'model_year' => $d('vehicle', $number, 'research'),
+            'model_year' => $d('vehicle', ['type' => 'year', 'filter' => 'value_date'], 'research'),
             'mileage_km' => $d('vehicle', [...$number, 'unit' => 'km'], 'research'),
             'fuel_type' => $d('vehicle', $choice(['petrol', 'diesel', 'hybrid', 'electric', 'gas']), 'research'),
             'gearbox' => $d('vehicle', $choice(['manual', 'automatic']), 'research'),
-            'body_type' => $d('vehicle', $choice(['sedan', 'hatchback', 'suv', 'pickup_truck', 'van', 'truck', 'motorcycle', 'other']), 'schema'),
+            'trim' => $d('vehicle', $text, 'research'),
+            'vehicle_class' => $d('vehicle', $choice(['car', 'motorcycle', 'van', 'pickup_truck', 'truck', 'bus', 'other']), 'schema'),
+            'body_style' => $d('vehicle', $choice(['sedan', 'hatchback', 'suv', 'coupe', 'wagon', 'convertible', 'minivan', 'other_body']), 'schema'),
+            // Superseded: it mixed vehicle class and body style. Kept so earlier posts still read correctly.
+            'body_type' => [...$d('vehicle', $choice(['sedan', 'hatchback', 'suv', 'pickup_truck', 'van', 'truck', 'motorcycle', 'other']), 'schema'), 'retired' => true, 'superseded_by' => 'body_style'],
             'doors' => $d('vehicle', $number, 'schema'),
             'previous_owners' => $d('vehicle', $number, 'schema'),
             'insurance_months' => $d('vehicle', [...$number, 'unit' => 'month'], 'research'),
@@ -214,12 +218,27 @@ final class IntentDetailCatalog
     /** Keys a viewer can filter the Directory by (dates and unsearchable fields are excluded). */
     public static function searchable(): array
     {
-        return array_filter(self::offered(), fn (array $spec): bool => in_array($spec['filter'] ?? null, ['value_text', 'value_number', 'value_boolean'], true));
+        return array_filter(self::offered(), fn (array $spec): bool => in_array($spec['filter'] ?? null, ['value_text', 'value_number', 'value_boolean'], true) || ($spec['type'] ?? '') === 'year');
     }
 
-    public static function label(string $key, ?string $locale = null): string
+    /** Text for a key, preferring wording written for the topic (a vehicle's "Model" differs from a phone's). */
+    private static function contextual(string $key, string $part, string $locale, ?string $topic): ?string
+    {
+        if ($topic === null || $topic === '') {
+            return null;
+        }
+        $path = 'composer.field_context.'.$topic.'.'.$key.'.'.$part;
+
+        return Lang::has($path, $locale, false) ? (string) __($path, [], $locale) : null;
+    }
+
+    public static function label(string $key, ?string $locale = null, ?string $topic = null): string
     {
         $locale ??= app()->getLocale();
+        $context = self::contextual($key, 'label', $locale, $topic);
+        if ($context !== null) {
+            return $context;
+        }
         $shared = self::published()[$key]['labels'] ?? [];
         if (($shared[$locale] ?? '') !== '') {
             return (string) $shared[$locale];
@@ -232,16 +251,56 @@ final class IntentDetailCatalog
         return (string) (($shared['en'] ?? '') !== '' ? $shared['en'] : (Lang::has($path, 'en', false) ? __($path, [], 'en') : $key));
     }
 
-    public static function description(string $key, ?string $locale = null): ?string
+    /** The one-sentence clarification of a field, if it has one. */
+    public static function description(string $key, ?string $locale = null, ?string $topic = null): ?string
     {
         $locale ??= app()->getLocale();
+        $context = self::contextual($key, 'help', $locale, $topic);
+        if ($context !== null) {
+            return $context;
+        }
         $shared = self::published()[$key]['descriptions'] ?? [];
         if (($shared[$locale] ?? '') !== '') {
             return (string) $shared[$locale];
         }
-        $path = 'composer.help.'.$key;
+        $path = 'composer.field_help.'.$key;
 
         return Lang::has($path, $locale, false) ? (string) __($path, [], $locale) : null;
+    }
+
+    public static function example(string $key, ?string $locale = null, ?string $topic = null): ?string
+    {
+        $locale ??= app()->getLocale();
+        $context = self::contextual($key, 'example', $locale, $topic);
+        if ($context !== null) {
+            return $context;
+        }
+        $path = 'composer.examples.'.$key;
+
+        return Lang::has($path, $locale, false) ? (string) __($path, [], $locale) : null;
+    }
+
+    /**
+     * What the field expects, said before any error: its kind, unit and an example.
+     *
+     * @return array{help: ?string, format: string}
+     */
+    public static function hint(string $key, ?string $topic = null): array
+    {
+        $spec = self::all()[$key] ?? ['type' => 'text'];
+        $type = (string) $spec['type'];
+        $example = self::example($key, null, $topic);
+        $unit = self::unitLabel($spec['unit'] ?? null);
+        $format = match (true) {
+            in_array($type, ['number', 'quantity'], true) && $unit !== null => (string) __('composer.hints.number', ['unit' => $unit, 'example' => $example ?? '10']),
+            in_array($type, ['number', 'quantity'], true) => (string) __('composer.hints.number_plain', ['example' => $example ?? '10']),
+            $type === 'year' => (string) __('composer.hints.year', ['example' => $example ?? '1396']),
+            $type === 'text' && $example !== null => (string) __('composer.hints.text', ['example' => $example]),
+            in_array($type, ['amount', 'choice', 'boolean', 'date', 'long_text', 'link'], true) => (string) __('composer.hints.'.$type),
+            default => '',
+        };
+
+        return ['help' => self::description($key, null, $topic), 'format' => $format];
     }
 
     /** @return list<string> */

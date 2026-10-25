@@ -20,7 +20,7 @@ final class SaveIntentWorkingCopy
     {
         Gate::forUser($user)->authorize('update', $intent);
         $data = app(NormalizeProfileIntentData::class)->execute($user, $core);
-        $normalized = app(NormalizeIntentDetails::class)->execute($user, $details);
+        $normalized = app(NormalizeIntentDetails::class)->execute($user, $details, need: ($kind ?? $intent->kind) === ProfileIntentKind::Need);
 
         return DB::transaction(function () use ($user, $intent, $data, $normalized, $kind): ActorProfileIntent {
             $locked = ActorProfileIntent::query()->lockForUpdate()->findOrFail($intent->id);

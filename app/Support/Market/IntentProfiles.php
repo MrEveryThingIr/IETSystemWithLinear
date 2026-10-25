@@ -33,9 +33,10 @@ final class IntentProfiles
                 ['furnished', 'suggested', ['arrangement' => self::USE]],
             ]],
             'vehicle' => ['subject' => 'good', 'arrangements' => [self::OWNERSHIP, self::USE], 'fields' => [
-                ['brand', 'essential'], ['model', 'essential', ['need' => 'suggested']], ['model_year', 'essential', ['need' => 'suggested']],
+                ['brand', 'essential'], ['model', 'essential', ['need' => 'suggested']], ['model_year', 'essential'], ['trim', 'suggested'],
                 ['condition', 'essential', ['arrangement' => self::OWNERSHIP]],
                 ['mileage_km', 'essential', ['only' => ['condition' => $used], 'need' => 'suggested', 'arrangement' => self::OWNERSHIP]],
+                ['vehicle_class', 'suggested'], ['body_style', 'suggested'], ['insurance_months', 'suggested', ['arrangement' => self::OWNERSHIP]],
                 ['fuel_type', 'suggested'], ['gearbox', 'suggested'], ['color', 'suggested'],
             ]],
             'device' => ['subject' => 'good', 'arrangements' => [self::OWNERSHIP, self::USE], 'fields' => [
@@ -139,6 +140,23 @@ final class IntentProfiles
 
         // Only arrangement-bound fields are ever inapplicable; everything else is merely not recommended.
         return array_keys(array_filter($constrained, fn (bool $bound, string $key): bool => $bound && ! isset($applicable[$key]), ARRAY_FILTER_USE_BOTH));
+    }
+
+    /** Details worth showing first on a published card for a topic, most telling first. */
+    public static function highlights(string $topic): array
+    {
+        return match ($topic) {
+            'home' => ['property_type', 'floor_area', 'rooms', 'floor', 'building_age'],
+            'vehicle' => ['brand', 'model', 'trim', 'model_year', 'condition', 'mileage_km'],
+            'device' => ['brand', 'model', 'condition', 'storage_gb', 'ram_gb'],
+            'goods' => ['condition', 'brand', 'size', 'material'],
+            'repair' => ['urgency', 'service_area', 'availability', 'materials_included'],
+            'lesson' => ['lesson_subject', 'level', 'delivery_mode', 'group_format', 'session_minutes'],
+            'transport' => ['vehicle_type', 'cargo_type', 'passengers', 'cargo_weight_kg', 'urgency'],
+            'job' => ['employment_type', 'work_mode', 'pay_period', 'pay', 'experience_years'],
+            'activity' => ['participants', 'cost_sharing', 'time_commitment', 'level'],
+            default => [],
+        };
     }
 
     /** Topics worth offering for an intention, most likely first; empty means ask nothing extra. */

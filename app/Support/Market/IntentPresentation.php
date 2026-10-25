@@ -2,12 +2,14 @@
 
 namespace App\Support\Market;
 
+use App\CalendarSystem;
 use App\Models\ActorProfileIntent;
 use App\Models\Asset;
 use App\Models\BusinessListing;
 use App\Models\Group;
 use App\Models\SpaceContent;
 use App\Models\User;
+use App\Support\TemporalPreferences;
 use Illuminate\Support\Facades\Gate;
 
 /** One audience-aware view model for a post, its preview and its historical versions. */
@@ -26,17 +28,23 @@ final class IntentPresentation
     {
         $core = $snapshot['core'] ?? [];
         $details = [];
+        $topic = $intent?->metadata['composer_topic'] ?? null;
+        $viewCalendar = TemporalPreferences::calendarFor($viewer) === CalendarSystem::Persian ? YearSpan::PERSIAN : YearSpan::GREGORIAN;
         foreach ($snapshot['details'] ?? [] as $detail) {
             if (($detail['visibility'] ?? 'same') === 'private' && ! $canManage) {
                 continue;
             }
-            $value = $detail['payload']['value'] ?? $detail['value'] ?? null;
-            if ($value === null || $value === '' || $value === []) {
+            $payload = $detail['payload'] ?? ['value' => $detail['value'] ?? null];
+            $value = $payload['value'] ?? null;
+            $constraint = $payload['constraint'] ?? null;
+            if (($value === null || $value === '' || $value === []) && $constraint === null) {
                 continue;
             }
             $url = null;
             $type = $detail['type'] ?? 'text';
-            if ($type === 'reference') {
+            if ($constraint !== null || (! empty($detail['canonical_key']) && in_array($type, ['number', 'amount', 'year', 'choice'], true))) {
+                $value = DetailValue::describe($type, $payload, $viewCalendar);
+            } elseif ($type === 'reference') {
                 $reference = $this->reference(is_array($value) ? $value : [], $viewer);
                 if ($reference === null) {
                     continue;
@@ -61,7 +69,8 @@ final class IntentPresentation
             } elseif (is_array($value)) {
                 $value = implode(', ', array_filter($value, 'is_scalar'));
             }
-            $details[] = ['label' => ! empty($detail['canonical_key']) ? IntentDetailCatalog::label($detail['canonical_key']) : ($detail['label'] ?? ''), 'value' => (string) $value, 'url' => $url,
+            $details[] = ['key' => $detail['canonical_key'] ?? null, 'note' => $payload['note'] ?? null, 'wish' => $constraint !== null,
+                'label' => ! empty($detail['canonical_key']) ? IntentDetailCatalog::label($detail['canonical_key'], null, $topic) : ($detail['label'] ?? ''), 'value' => (string) $value, 'url' => $url,
                 'unit' => $type === 'amount' ? null : IntentDetailCatalog::unitLabel($detail['unit'] ?? null), 'group' => $detail['group_label'] ?? null,
                 'private' => ($detail['visibility'] ?? 'same') === 'private', 'informational' => $type === 'amount'];
         }

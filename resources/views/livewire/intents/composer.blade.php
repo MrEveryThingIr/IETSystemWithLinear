@@ -58,7 +58,7 @@
                                 @php($custom = empty($detail['canonical_key']))
                                 @php($misfit = ! $custom && in_array($detail['canonical_key'], $profile['inapplicable'], true))
                                 <div class="min-w-0 space-y-1.5 {{ $custom ? 'sm:col-span-2 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800/40' : '' }}" wire:key="detail-{{ ($detail['editor_key'] ?? $index) }}" data-composer-detail>
-                                    @if($custom)@include('livewire.intents.composer.custom-row')@else<x-market.detail-field :index="$index" :detail="$detail" />@endif
+                                    @if($custom)@include('livewire.intents.composer.custom-row')@else<x-market.detail-field :index="$index" :detail="$detail" :need="$needSide" :topic="$topic" />@endif
                                     @if($misfit)<p class="text-xs text-amber-700 dark:text-amber-400" role="status">{{ __('composer.does_not_apply') }}</p>@endif
                                     @if(($detail['visibility'] ?? 'same') === 'private')<p class="text-xs text-zinc-500">{{ __('composer.only_me') }}</p>@endif
                                     <div class="flex flex-wrap items-center gap-0.5 text-zinc-500">
@@ -82,7 +82,7 @@
                         <div class="flex flex-wrap items-center gap-2" role="group" aria-label="{{ __('composer.suggested') }}" data-composer-suggestions>
                             <span class="text-xs text-zinc-500">{{ __('composer.suggested') }}</span>
                             @foreach($chips as [$kind, $key])
-                                @if($kind === 'field')<x-market.chip dashed wire:click="addField('{{ $key }}')" wire:key="suggest-field-{{ $key }}">+ {{ \App\Support\Market\IntentDetailCatalog::label($key) }}</x-market.chip>
+                                @if($kind === 'field')<x-market.chip dashed wire:click="addField('{{ $key }}')" wire:key="suggest-field-{{ $key }}">+ {{ \App\Support\Market\IntentDetailCatalog::label($key, null, $topic ?: null) }}</x-market.chip>
                                 @else<x-market.chip dashed wire:click="addTerm('{{ $key }}')" wire:key="suggest-term-{{ $key }}">+ {{ __('composer.terms.'.$key.'.'.(! $isOffer && in_array($key, ['price', 'place'], true) ? 'need' : 'label')) }}</x-market.chip>@endif
                             @endforeach
                         </div>

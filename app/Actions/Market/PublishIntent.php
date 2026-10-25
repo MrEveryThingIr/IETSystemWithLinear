@@ -7,6 +7,7 @@ use App\Models\ActorProfileIntent;
 use App\Models\IntentVersion;
 use App\Models\User;
 use App\ProfileIntentStatus;
+use App\Support\Market\DetailSearchRows;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentSnapshot;
 use App\Support\SpaceContentSchema;
@@ -53,12 +54,9 @@ final class PublishIntent
                 if ($detail['visibility'] !== 'same' || $key === null || ! isset(IntentDetailCatalog::all()[$key])) {
                     continue;
                 }
-                $column = IntentDetailCatalog::all()[$key]['filter'] ?? null;
-                if ($column === null) {
-                    continue;
+                foreach (DetailSearchRows::rows(IntentDetailCatalog::all()[$key], $detail['payload']) as $row) {
+                    DB::table('intent_search_values')->insert(['intent_version_id' => $version->id, 'canonical_key' => $key, ...$row]);
                 }
-                $value = $detail['payload']['value'];
-                DB::table('intent_search_values')->insert(['intent_version_id' => $version->id, 'canonical_key' => $key, $column => $value]);
             }
             $locked->forceFill(['published_version_id' => $version->id, 'working_copy' => null])->save();
             if ($locked->status === ProfileIntentStatus::Draft) {

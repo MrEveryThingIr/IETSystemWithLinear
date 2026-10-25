@@ -17,7 +17,7 @@
                     <button type="button" wire:click="addTerm('{{ $block }}')" class="{{ $row }}"><span>{{ $termName($block) }}</span><span class="text-xs text-zinc-500">{{ __('composer.picker.terms') }}</span></button>
                 @endforeach
                 @foreach($picker['matches'] as $key)
-                    <button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="match-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key) }}</span><span class="text-xs text-zinc-500">{{ $kindOf($key) }}</span></button>
+                    <button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="match-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key, null, $topic ?: null) }}</span><span class="text-xs text-zinc-500">{{ $kindOf($key) }}</span></button>
                 @endforeach
                 @foreach($picker['saved'] as $saved)
                     <button type="button" wire:click="applyTemplate('{{ $saved->uuid }}')" class="{{ $row }}" wire:key="saved-match-{{ $saved->uuid }}"><span dir="auto">{{ $saved->name }}</span><span class="text-xs text-zinc-500">{{ __('composer.saved_kinds.'.$saved->kind) }}</span></button>
@@ -29,13 +29,13 @@
                     <section aria-label="{{ __('composer.picker.recommended') }}">
                         <h3 class="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('composer.picker.recommended') }}</h3>
                         @foreach($picker['recommendedTerms'] as $block)<button type="button" wire:click="addTerm('{{ $block }}')" class="{{ $row }}"><span>{{ $termName($block) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach
-                        @foreach($picker['recommendedFields'] as $key)<button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="rec-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach
+                        @foreach($picker['recommendedFields'] as $key)<button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="rec-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key, null, $topic ?: null) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach
                     </section>
                 @endif
                 @if(count($picker['recent']))
                     <section aria-label="{{ __('composer.picker.recent') }}">
                         <h3 class="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">{{ __('composer.picker.recent') }}</h3>
-                        @foreach($picker['recent'] as $key)<button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="recent-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach
+                        @foreach($picker['recent'] as $key)<button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="recent-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key, null, $topic ?: null) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach
                     </section>
                 @endif
                 @if($picker['saved']->isNotEmpty())
@@ -66,7 +66,7 @@
                     @foreach($picker['groups'] as $domain => $keys)
                         <details class="rounded-lg" wire:key="domain-{{ $domain }}">
                             <summary class="{{ $row }} cursor-pointer font-medium"><span>{{ __('composer.domains.'.$domain) }}</span><span class="text-xs text-zinc-500">{{ count($keys) }}</span></summary>
-                            <div class="ms-3 border-s ps-2">@foreach($keys as $key)<button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="lib-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach</div>
+                            <div class="ms-3 border-s ps-2">@foreach($keys as $key)<button type="button" wire:click="addField('{{ $key }}')" class="{{ $row }}" wire:key="lib-{{ $key }}"><span>{{ \App\Support\Market\IntentDetailCatalog::label($key, null, $topic ?: null) }}</span><flux:icon.plus class="size-4 text-zinc-400" /></button>@endforeach</div>
                         </details>
                     @endforeach
                 </section>
