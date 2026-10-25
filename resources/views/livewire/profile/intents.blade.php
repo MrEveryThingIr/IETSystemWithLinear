@@ -12,7 +12,7 @@
             <p class="mt-1 text-sm text-zinc-500">{{ __('ui.profile.intents.help') }}</p>
         </div>
         @unless ($editorOpen)
-            <flux:button wire:click="openCreate" size="sm" variant="ghost" icon="plus" class="w-full shrink-0 sm:w-auto">
+            <flux:button :href="route('intents.compose')" wire:navigate size="sm" variant="ghost" icon="plus" class="w-full shrink-0 sm:w-auto">
                 {{ __('ui.profile.intents.add') }}
             </flux:button>
         @endunless
@@ -366,7 +366,7 @@
 
                     @if ($intent->status->value !== 'closed')
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                            <flux:button wire:click="edit({{ $intent->id }})" size="xs" variant="ghost" class="w-full sm:w-auto">{{ __('ui.common.edit') }}</flux:button>
+                            <flux:button :href="route('intents.compose.edit', $intent)" size="xs" variant="ghost" class="w-full sm:w-auto" wire:navigate>{{ __('ui.common.edit') }}</flux:button>
                             <flux:button :href="route('intents.photos', $intent)" size="xs" variant="ghost" class="w-full sm:w-auto" wire:navigate>{{ __('intents.media.title') }}</flux:button>
                             @if ($intent->status->value === 'active')
                                 <flux:button wire:click="setStatus({{ $intent->id }}, 'paused')" size="xs" variant="ghost" class="w-full sm:w-auto">{{ __('ui.profile.intents.pause') }}</flux:button>

@@ -191,7 +191,7 @@ final class IntentDetailCatalog
     /** @return array<string, array<string, mixed>> */
     public static function published(): array
     {
-        if (! Schema::hasTable('intent_field_definitions')) {
+        if (! self::hasTable('intent_field_definitions')) {
             return [];
         }
 
@@ -352,5 +352,16 @@ final class IntentDetailCatalog
         }
 
         return Lang::has('composer.units.'.$unit) ? (string) __('composer.units.'.$unit) : $unit;
+    }
+
+    /** Whether an optional library table exists; asked once per request because the schema check is a database round trip. */
+    public static function hasTable(string $table): bool
+    {
+        $key = 'iet.schema.'.$table;
+        if (! app()->bound($key)) {
+            app()->instance($key, Schema::hasTable($table));
+        }
+
+        return (bool) app($key);
     }
 }

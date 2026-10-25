@@ -10,6 +10,37 @@
             <div class="flex flex-wrap gap-2"><flux:button size="sm" :href="$catalog['edit']">{{ __('composer.catalog.edit') }}</flux:button>@if($catalog['newer'])<flux:button size="sm" variant="primary" wire:click="useNewCatalogVersion" wire:confirm="{{ __('composer.catalog.use_new_confirm') }}">{{ __('composer.catalog.use_new') }}</flux:button>@endif</div>
         </div>
     @endif
+    @if($intent === null)
+        <div class="relative flex flex-wrap items-center gap-2" x-data="{open: false, look: null}" x-on:keydown.escape="open = false" x-on:click.outside="open = false" data-template-bar>
+            <flux:button size="sm" icon="document-duplicate" x-on:click="open = ! open" aria-haspopup="menu" x-bind:aria-expanded="open.toString()" data-use-template>{{ __('composer.use_template') }}@if($compositions->isNotEmpty()) <span class="text-zinc-500">({{ $compositions->count() }})</span>@endif</flux:button>
+            <span class="text-sm text-zinc-500">{{ __('composer.template_bar_hint') }}</span>
+            <div x-show="open" x-cloak role="menu" class="absolute start-0 top-full z-30 mt-1 w-96 max-w-[92vw] space-y-1 rounded-xl border bg-white p-2 shadow-lg dark:bg-zinc-900" data-template-menu>
+                @forelse($compositions as $template)
+                    @php
+                        $ownSide = ($template->context['side'] ?? null) ?: ($needSide ? 'need' : 'offer');
+                    @endphp
+                    <div class="rounded-lg border border-transparent p-2 hover:border-zinc-200 dark:hover:border-zinc-700" data-template="{{ $template->uuid }}">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="min-w-0 flex-1 font-medium [overflow-wrap:anywhere]" dir="auto">{{ $template->name }}</span>
+                            <flux:badge size="sm">{{ __('composer.kind.'.$ownSide) }}</flux:badge>
+                            @if($template->topic)<flux:badge size="sm">{{ __('composer.topics.'.$template->topic) }}</flux:badge>@endif
+                        </div>
+                        <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                            <button type="button" class="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-300" x-on:click="look = look === '{{ $template->uuid }}' ? null : '{{ $template->uuid }}'" data-template-preview>{{ __('composer.template_preview') }}</button>
+                            <button type="button" role="menuitem" class="font-medium text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300" wire:click="applyTemplate('{{ $template->uuid }}')" @if($ownSide !== ($needSide ? 'need' : 'offer')) wire:confirm="{{ __('composer.confirm_side') }}" @elseif($topic !== '' && $template->topic && $template->topic !== $topic) wire:confirm="{{ __('composer.confirm_topic') }}" @endif x-on:click="open = false" data-template-apply>{{ __('composer.template_apply') }}</button>
+                        </div>
+                        <ul x-show="look === '{{ $template->uuid }}'" x-cloak class="mt-2 list-inside list-disc text-sm text-zinc-600 dark:text-zinc-400">
+                            @foreach($template->fields as $field)<li dir="auto">{{ empty($field['canonical_key']) ? ($field['label'] ?? '') : \App\Support\Market\IntentDetailCatalog::label($field['canonical_key'], null, $template->topic) }}</li>@endforeach
+                            @foreach($template->terms ?? [] as $block)<li>{{ __('composer.terms.'.$block.'.label') }}</li>@endforeach
+                        </ul>
+                    </div>
+                @empty
+                    <p class="p-2 text-sm text-zinc-600 dark:text-zinc-400" data-template-empty>{{ __('composer.template_empty') }}</p>
+                @endforelse
+                <a href="{{ route('items.index') }}#saved" wire:navigate class="block border-t px-2 pt-2 text-sm text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-300" data-template-manage>{{ __('composer.template_manage') }}</a>
+            </div>
+        </div>
+    @endif
     <div class="flex gap-2 lg:hidden"><flux:button x-on:click="screen='write'">{{ __('composer.write') }}</flux:button><flux:button x-on:click="screen='preview'">{{ __('composer.preview') }}</flux:button></div>
     @php
         $isOffer = in_array($intention, ['offer', 'service', 'sell'], true);
@@ -40,16 +71,6 @@
                             </div>
                         </div>
                         @if($profile['hint'])<x-market.chip dashed wire:click="chooseTopic('{{ $profile['hint'] }}')" data-topic-hint>{{ __('composer.topic_hint', ['topic' => __('composer.topics.'.$profile['hint'])]) }}</x-market.chip>@endif
-                        @if($compositions->isNotEmpty())
-                            <div class="relative" x-data="{open: false}" x-on:keydown.escape="open = false" x-on:click.outside="open = false">
-                                <x-market.chip dashed x-on:click="open = ! open" aria-haspopup="menu" x-bind:aria-expanded="open.toString()" data-use-template>{{ __('composer.use_template') }} <flux:icon.chevron-down class="size-3.5" /></x-market.chip>
-                                <div x-show="open" x-cloak role="menu" class="absolute start-0 z-30 mt-1 w-64 max-w-[85vw] rounded-xl border bg-white p-1 shadow-lg dark:bg-zinc-900">
-                                    @foreach($compositions as $template)
-                                        <button type="button" role="menuitem" wire:click="applyTemplate('{{ $template->uuid }}')" @if($topic !== '' && $template->topic && $template->topic !== $topic) wire:confirm="{{ __('composer.confirm_topic') }}" @endif x-on:click="open = false" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"><span dir="auto">{{ $template->name }}</span>@if($template->topic)<span class="text-xs text-zinc-500">{{ __('composer.topics.'.$template->topic) }}</span>@endif</button>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
                         @foreach($profile['arrangements'] as $choice)
                             <x-market.chip :active="($core['arrangement_kind'] ?? '') === $choice" wire:click="chooseArrangement('{{ $choice }}')" data-arrangement="{{ $choice }}">{{ __('composer.arrangements.'.$choice.'.'.($isOffer ? 'offer' : 'need')) }}</x-market.chip>
                         @endforeach

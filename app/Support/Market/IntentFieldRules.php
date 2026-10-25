@@ -4,7 +4,6 @@ namespace App\Support\Market;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * Approved applicability rules layered over the code profiles: where a field is hidden, belongs to
@@ -16,7 +15,7 @@ final class IntentFieldRules
     /** @return list<array<string, mixed>> */
     public static function all(): array
     {
-        if (! Schema::hasTable('intent_field_rules')) {
+        if (! IntentDetailCatalog::hasTable('intent_field_rules')) {
             return [];
         }
 

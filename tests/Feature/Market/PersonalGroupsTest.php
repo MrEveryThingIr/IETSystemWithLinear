@@ -104,7 +104,9 @@ class PersonalGroupsTest extends TestCase
         $this->assertStringContainsString(__('composer.confirm_topic'), $this->composer($user)->call('choose', 'offer')->call('chooseTopic', 'vehicle')->html(), 'a different topic asks first');
 
         $need = $this->composer($user)->call('choose', 'need');
-        $need->assertDontSeeHtml('data-use-template');
+        $need->assertSeeHtml('data-use-template')->assertSeeHtml('data-template-preview')->assertSee('Phone post');
+        $need->call('applyTemplate', $template->uuid);
+        $this->assertSame('offer', $need->get('intention'), 'a template from the other side opens on its own side');
     }
 
     public function test_the_library_is_navigated_by_domain_and_group_and_offers_suggestions_in_place(): void

@@ -240,6 +240,32 @@ Same branch (`feat/m2-category-aware-composer`); PR #86 untouched, no new PR. M2
 - **Limits:** picker opening is slow on the dev server; community option text is not per-option translated; Arabic and
   Chinese verified by parity tests, not screenshots.
 
+## Navigation and reuse acceptance fixes
+
+Owner found two defects; both fixed on the same branch (PR #86 untouched, no new PR, M2 not accepted).
+
+- **One editor for Needs and Offers.** My Items "Change" opened the legacy profile editor. Audit result: the only
+  edit entry points left on the old editor were My Items (`profile.edit?intent=`) and the Needs/Offers card on the profile
+  page. Now: My Items, the profile card and the directory all open `intents.compose.edit`; the old
+  `profile?intent=<uuid>` link redirects (owner-checked) to the Composer; "Add" on the profile card opens the Composer.
+  The legacy component, its pause/close actions, `intents.create.classic`, photos and all data stay. Interests, Abilities
+  and Business Catalog keep their specialist editors.
+- **Where things are (My Items, one page, no new menu entries):** *Offers and needs* has a filter —
+  Published / Drafts / Paused / Closed, each with a count (`?show=`); drafts open in the Composer, closed items open
+  their read-only page. *Saved templates and groups* (`#saved`) lists composition templates and field groups with side/topic,
+  field count, preview, "Start a post", rename and delete. Saved single fields stay in the Add-field picker.
+- **Templates are findable.** "Use a template" is a visible button directly under the page title on every new
+  composition (it explains itself when none are saved), listing all saved templates (current side first) with side/topic
+  badges, preview and "Use"; a template from the other side asks, then switches side. "Save as template" stays among the
+  main actions. Starting from My Items (`/intents/compose?template=<uuid>`) applies it once; someone else's uuid is ignored.
+  Answers, notes and files are never saved or overwritten.
+- **Field picker speed:** the taxonomy tree issued a schema query per group; checks are now memoized per request
+  (tree build 2.2 s → ~0.1 s on the Laragon MySQL; picker opens in ~1.5 s on the single-threaded dev server, down from 2.3 s).
+- **Evidence:** `NavigationIntegrationTest` (5 tests) plus adjusted `PersonalGroupsTest`; browser (disposable SQLite):
+  save template → leave → My Items shows it → Start a post applies 2 fields and topic; draft listed under Drafts and "Change"
+  opens the Composer; mobile + dark template menu without horizontal scroll; suggestion modal opens from the library.
+  Full suite 1169 tests passed, Pint and PHPStan clean. Not browser-checked: admin review page this round (covered by tests; the browser user is not an admin), Persian screens.
+
 ## Continuation
 
 1. Fetch origin and inspect status/worktrees before switching; preserve local work.

@@ -72,6 +72,10 @@ class Composer extends Component
     #[Url]
     public string $side = '';
 
+    /** A saved template to start from, e.g. from My Items; applied once when a new composition opens. */
+    #[Url(as: 'template', except: '')]
+    public string $template = '';
+
     public string $intention = 'need';
 
     public array $core = [];
@@ -155,6 +159,14 @@ class Composer extends Component
                 $this->ownerKey = $parties->first()['party']->key();
             }
             $this->choose(in_array($this->side, ['need', 'offer'], true) ? $this->side : 'need');
+            if ($this->template !== '') {
+                $found = IntentDetailTemplate::query()->where('uuid', $this->template)->first();
+                $this->template = '';
+                // A link to someone else's template simply starts an empty composition.
+                if ($found !== null && $this->ownsTemplate($found) && in_array($found->kind, ['composition', 'group'], true)) {
+                    $this->applyTemplate($found->uuid);
+                }
+            }
         }
     }
 
@@ -575,10 +587,17 @@ class Composer extends Component
     {
         $publisher = $this->publisher();
         $template = IntentDetailTemplate::query()->where('uuid', $uuid)->firstOrFail();
-        abort_unless(($publisher->kind === Party::ACTOR && $template->owner_actor_id === $publisher->id)
-            || ($publisher->kind === Party::BUSINESS && $template->owner_business_id === $publisher->id), 403);
+        abort_unless($this->ownsTemplate($template), 403);
 
         return $template;
+    }
+
+    private function ownsTemplate(IntentDetailTemplate $template): bool
+    {
+        $publisher = $this->publisher();
+
+        return ($publisher->kind === Party::ACTOR && $template->owner_actor_id === $publisher->id)
+            || ($publisher->kind === Party::BUSINESS && $template->owner_business_id === $publisher->id);
     }
 
     /**
@@ -603,6 +622,12 @@ class Composer extends Component
     {
         $template = $this->ownedTemplate($uuid);
         $added = 0;
+        // A template saved from the other side opens on its own side (only before a post is published).
+        $side = $template->kind === 'composition' ? ($template->context['side'] ?? null) : null;
+        if (in_array($side, ['need', 'offer'], true) && $side !== ($this->isNeedSide() ? 'need' : 'offer')
+            && ($this->intent === null || $this->intent->status === ProfileIntentStatus::Draft)) {
+            $this->choose($side);
+        }
         foreach ($this->templateFields($template) as $field) {
             $key = $field['canonical_key'] ?? null;
             $exists = collect($this->details)->contains(fn (array $row): bool => $key !== null
@@ -950,13 +975,13 @@ class Composer extends Component
             'tree' => IntentFieldTaxonomy::tree()];
     }
 
-    /** Saved whole-post templates that fit what is being written (Need or Offer). */
+    /** Saved whole-post templates, those for the side being written first. */
     private function compositionsForSide(): Collection
     {
         $side = $this->isNeedSide() ? 'need' : 'offer';
 
-        return $this->savedTemplates('')->filter(fn (IntentDetailTemplate $template): bool => $template->kind === 'composition'
-            && (($template->context['side'] ?? $side) === $side))->values();
+        return $this->savedTemplates('')->filter(fn (IntentDetailTemplate $template): bool => $template->kind === 'composition')
+            ->sortBy(fn (IntentDetailTemplate $template): int => (($template->context['side'] ?? $side) === $side) ? 0 : 1)->values();
     }
 
     /** @return list<string> */

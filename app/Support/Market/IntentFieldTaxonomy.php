@@ -5,7 +5,6 @@ namespace App\Support\Market;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * The shared field tree: domains (code) containing groups that may contain groups. Fields are
@@ -123,7 +122,7 @@ final class IntentFieldTaxonomy
     /** @return array{groups: array<string, array<string, mixed>>, added: array<string, list<string>>, removed: array<string, list<string>>} */
     public static function stored(): array
     {
-        if (! Schema::hasTable('intent_field_groups')) {
+        if (! IntentDetailCatalog::hasTable('intent_field_groups')) {
             return ['groups' => [], 'added' => [], 'removed' => []];
         }
 

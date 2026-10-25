@@ -868,4 +868,10 @@ return [
             'template' => '请为组合命名并至少选择两个字段。',
         ],
     ],
+    'template_bar_hint' => '从已保存的组合开始。',
+    'template_preview' => '预览',
+    'template_apply' => '使用',
+    'template_empty' => '还没有已保存的模板。组合准备好后，选择“另存为模板”。',
+    'template_manage' => '管理已保存的模板',
+    'confirm_side' => '此模板属于另一侧（需求/供给）。切换并使用吗？',
 ];

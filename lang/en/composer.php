@@ -868,4 +868,10 @@ return [
             'template' => 'Give the group a name and pick at least two fields.',
         ],
     ],
+    'template_bar_hint' => 'Start from a saved composition.',
+    'template_preview' => 'Preview',
+    'template_apply' => 'Use',
+    'template_empty' => 'No saved templates yet. When a composition is ready, choose “Save as template”.',
+    'template_manage' => 'Manage saved templates',
+    'confirm_side' => 'This template is for the other side (Need/Offer). Switch and use it?',
 ];
