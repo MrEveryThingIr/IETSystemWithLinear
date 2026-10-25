@@ -319,7 +319,8 @@ final class IntentDetailCatalog
             in_array($type, ['number', 'quantity'], true) && $unit !== null => (string) __('composer.hints.number', ['unit' => $unit, 'example' => $example ?? '10']),
             in_array($type, ['number', 'quantity'], true) => (string) __('composer.hints.number_plain', ['example' => $example ?? '10']),
             $type === 'year' => (string) __('composer.hints.year', ['example' => $example ?? '1396']),
-            $type === 'text' && $example !== null => (string) __('composer.hints.text', ['example' => $example]),
+            // Short text shows its example as the placeholder; repeating it under the field is noise.
+            $type === 'text' => '',
             in_array($type, ['amount', 'choice', 'boolean', 'date', 'long_text', 'link'], true) => (string) __('composer.hints.'.$type),
             default => '',
         };

@@ -81,11 +81,11 @@
                     </div>
                     @include('livewire.intents.composer.terms')
                     @if(count($details))
-                        <div class="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+                        <div class="@container"><div class="grid gap-x-4 gap-y-5 @lg:grid-cols-2">
                             @foreach($details as $index => $detail)
                                 @php($custom = empty($detail['canonical_key']))
                                 @php($misfit = ! $custom && in_array($detail['canonical_key'], $profile['inapplicable'], true))
-                                <div class="min-w-0 space-y-1.5 {{ $custom ? 'sm:col-span-2 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800/40' : '' }}" wire:key="detail-{{ ($detail['editor_key'] ?? $index) }}" data-composer-detail>
+                                <div class="min-w-0 space-y-1.5 {{ $custom ? '@lg:col-span-2 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800/40' : '' }}" wire:key="detail-{{ ($detail['editor_key'] ?? $index) }}" data-composer-detail>
                                     @if($custom)@include('livewire.intents.composer.custom-row')@else<x-market.detail-field :index="$index" :detail="$detail" :need="$needSide" :topic="$topic" />@endif
                                     @if($misfit)<p class="text-xs text-amber-700 dark:text-amber-400" role="status">{{ __('composer.does_not_apply') }}</p>@endif
                                     @if(($detail['visibility'] ?? 'same') === 'private')<p class="text-xs text-zinc-500">{{ __('composer.only_me') }}</p>@endif
@@ -114,7 +114,7 @@
                                     </div>
                                 </div>
                             @endforeach
-                        </div>
+                        </div></div>
                     @elseif(! count($terms))
                         <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('composer.empty_hint') }}</p>
                     @endif

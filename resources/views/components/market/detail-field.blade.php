@@ -39,10 +39,10 @@
                 @endif
             @elseif(in_array($type, ['number', 'amount', 'year'], true))
                 @if($op === 'between')
-                    <input type="text" inputmode="decimal" wire:model.blur="{{ $model }}.min" aria-label="{{ $label }}: {{ __('composer.between_from') }}" placeholder="{{ __('composer.between_from') }}" class="{{ $box }} !w-32">
-                    <input type="text" inputmode="decimal" wire:model.blur="{{ $model }}.max" aria-label="{{ $label }}: {{ __('composer.between_to') }}" placeholder="{{ __('composer.between_to') }}" class="{{ $box }} !w-32">
+                    <input type="text" inputmode="decimal" wire:key="{{ $model }}-{{ $op }}-min" wire:model.live.blur="{{ $model }}.min" aria-label="{{ $label }}: {{ __('composer.between_from') }}" placeholder="{{ __('composer.between_from') }}" class="{{ $box }} !w-32">
+                    <input type="text" inputmode="decimal" wire:key="{{ $model }}-{{ $op }}-max" wire:model.live.blur="{{ $model }}.max" aria-label="{{ $label }}: {{ __('composer.between_to') }}" placeholder="{{ __('composer.between_to') }}" class="{{ $box }} !w-32">
                 @else
-                    <input type="text" inputmode="decimal" wire:model.blur="{{ $model }}.{{ $op === 'exact' ? 'value' : $op }}" aria-label="{{ $labelWithUnit }}" @if($example) placeholder="{{ $example }}" @endif class="{{ $box }} !w-44" @if(! empty($detail['error'])) aria-invalid="true" @endif>
+                    <input type="text" inputmode="decimal" wire:key="{{ $model }}-{{ $op }}-single" wire:model.live.blur="{{ $model }}.{{ $op === 'exact' ? 'value' : $op }}" aria-label="{{ $labelWithUnit }}" @if($example) placeholder="{{ $example }}" @endif class="{{ $box }} !w-44" @if(! empty($detail['error'])) aria-invalid="true" @endif>
                 @endif
             @elseif($type === 'long_text')
                 <textarea wire:model="{{ $model }}.value" aria-label="{{ $label }}" rows="2" dir="auto" class="{{ $box }}"></textarea>
@@ -60,7 +60,7 @@
     @endif
     @if(! empty($detail['showNote']))
         <div class="space-y-1">
-            <textarea wire:model.blur="{{ $model }}.note" rows="2" maxlength="280" aria-label="{{ __('composer.note_label') }}" placeholder="{{ __('composer.note_label') }}" dir="auto" class="{{ $box }}" data-field-note></textarea>
+            <textarea wire:model.live.blur="{{ $model }}.note" rows="2" maxlength="280" aria-label="{{ __('composer.note_label') }}" placeholder="{{ __('composer.note_label') }}" dir="auto" class="{{ $box }}" data-field-note></textarea>
             <p class="text-xs text-zinc-500">{{ __('composer.note_hint') }}</p>
         </div>
     @else
