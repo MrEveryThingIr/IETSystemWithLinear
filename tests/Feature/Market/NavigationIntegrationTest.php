@@ -93,6 +93,17 @@ class NavigationIntegrationTest extends TestCase
         $this->composer($user)->call('choose', 'need')->assertSeeHtml('data-use-template')->assertSeeHtml('data-template-empty')->assertSeeHtml('data-save-template');
     }
 
+    public function test_a_template_that_fails_to_store_is_never_reported_as_saved(): void
+    {
+        $user = $this->user();
+        // A vetoed insert makes create() return an unsaved model without an exception: the false-success case.
+        IntentDetailTemplate::creating(fn (): bool => false);
+        $component = $this->composer($user)->call('choose', 'offer')->call('addField', 'brand')->set('templateName', 'Lost post')->call('saveTemplate', 'composition');
+        $component->assertHasErrors('templateName')->assertSet('notice', null)->assertDontSee(__('composer.template_saved'));
+        $component->set('groupName', 'Lost group')->call('saveTemplate', 'group')->assertHasErrors('templateName')->assertSet('notice', null);
+        $this->assertDatabaseCount('intent_detail_templates', 0);
+    }
+
     private function user(): User
     {
         $actor = Actor::factory()->create();

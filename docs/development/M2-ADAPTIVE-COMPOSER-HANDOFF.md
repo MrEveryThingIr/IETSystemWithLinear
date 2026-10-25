@@ -266,6 +266,48 @@ Owner found two defects; both fixed on the same branch (PR #86 untouched, no new
   opens the Composer; mobile + dark template menu without horizontal scroll; suggestion modal opens from the library.
   Full suite 1169 tests passed, Pint and PHPStan clean. Not browser-checked: admin review page this round (covered by tests; the browser user is not an admin), Persian screens.
 
+## Owner migration evidence and final M2 gate (Oct 25)
+
+- **Owner database:** the owner ran `2026_11_11_000000_create_intent_field_library` and
+  `2026_11_12_000000_add_constraint_columns_and_field_taxonomy` on the normal Laragon MySQL `EveryThing-system`; both reported DONE.
+  The earlier "templates don't save" symptom was the schema being behind the code and is resolved; saved templates are present.
+  Read-only verification afterwards (no data changed): `migrate:status` has 0 pending; `intent_detail_templates` has `kind`,
+  `topic`, `terms`, `parent_id`, `context`; the five library tables exist; `intent_search_values.value_number_min` exists;
+  the 5 existing templates were classified `composition` by the migration. These migrations were not repeated.
+- **No false success:** `Composer::storeTemplate` now reports success only for a row that is really stored; a vetoed insert or a
+  database error raises a validation error (`composer.template_failed`, four languages) and no notice. Regression:
+  `NavigationIntegrationTest::test_a_template_that_fails_to_store_is_never_reported_as_saved`.
+- **Journey verification** (code at the exact pushed head; browser runs used a disposable SQLite database and clearly named test
+  records, never `EveryThing-system`):
+
+| Journey | Evidence |
+|---|---|
+| Create and save a draft | Browser (draft "Peugeot 206 for sale" saved) + `ComposerInteractionTest` |
+| Edit from My Items in the Composer | Browser (Drafts filter → Change → composer URL) + `NavigationIntegrationTest` |
+| Publish and view the page | Browser (Published, page shows "Published as version 1", Edit/Find matches) + `PublishedCardTest` (audience, density, privacy) |
+| Save, find, apply templates | Browser (save → My Items → Start a post applied fields and topic) + `PersonalGroupsTest`, `NavigationIntegrationTest` |
+| Reuse groups and typed fields | Tests only (`PersonalGroupsTest`, `FieldConstraintsTest`); groups menu not re-run in the browser this round |
+| Historical versions preserved | Tests only (`ComposerFoundationTest` immutable versions, history restore) |
+| Suggest a field improvement | Browser: modal opens from the library; submission, moderation and "my suggestions" covered by `FieldSuggestionsTest`/`FieldGovernanceTest` |
+| Permissions and privacy | Tests only (owner-only templates/groups, private fields excluded from search and cards, composer routes refuse others) |
+| Legacy routes | Browser (`/profile?intent=<uuid>` redirects to the Composer) + tests (`/intents/create` redirect, `create.classic` kept) |
+
+- **Gate:** full suite 1170 tests / 13988 assertions passed, Pint and PHPStan clean.
+- **Not browser-verified:** admin review page, Persian/Arabic/Chinese screens this round, concurrency of two editors.
+
+## M2 integration chain (GitHub state Oct 25)
+
+Linear and clean (each branch is a strict extension of its parent; no unrelated commits):
+`integration/v2` (e2f6afe6) → `feat/m1-one-home` (afc52dc2, 2 commits, PR #85) → `feat/m2-adaptive-intention-composer`
+(d94df0be, 9 commits, PR #86 — its base is currently `feat/m1-one-home`) → `feat/m2-category-aware-composer`
+(10 commits, 96 files). CI is green on the refinement head `f9fb1fdc` (4 checks including shared-host MariaDB and Windows).
+No refinement PR exists. Draft PR to open: head `feat/m2-category-aware-composer` → base `feat/m2-adaptive-intention-composer`
+(body in `docs/development/M2-REFINEMENT-PR-BODY.md`). Independent Living Planner v2 (PR #80) is untouched.
+
+**Proposed merge plan (after owner approval only):** 1) merge PR #85 into `integration/v2`; 2) retarget #86 to `integration/v2`
+and merge; 3) retarget the refinement PR to `integration/v2` and merge; 4) on `integration/v2` run the full suite and the
+Laragon walkthrough; 5) never auto-merge or deploy; Living Planner v2 merges separately.
+
 ## Continuation
 
 1. Fetch origin and inspect status/worktrees before switching; preserve local work.

@@ -39,6 +39,7 @@ use App\Support\Parties\Party;
 use App\Support\Parties\PartyAuthority;
 use App\Support\TemporalPreferences;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -560,9 +561,20 @@ class Composer extends Component
         $publisher = $this->publisher();
         abort_unless(in_array($publisher->kind, [Party::ACTOR, Party::BUSINESS], true), 422);
 
-        return IntentDetailTemplate::query()->create(['owner_actor_id' => $publisher->kind === Party::ACTOR ? $publisher->id : null,
-            'owner_business_id' => $publisher->kind === Party::BUSINESS ? $publisher->id : null, 'name' => $name, 'kind' => $kind,
-            'topic' => $topic === '' ? null : $topic, 'terms' => $terms, 'context' => $context === [] ? null : $context, 'fields' => $this->shapes($rows)]);
+        // Success is only reported for a row that is really stored: a vetoed or failed insert must never look saved.
+        try {
+            $template = IntentDetailTemplate::query()->create(['owner_actor_id' => $publisher->kind === Party::ACTOR ? $publisher->id : null,
+                'owner_business_id' => $publisher->kind === Party::BUSINESS ? $publisher->id : null, 'name' => $name, 'kind' => $kind,
+                'topic' => $topic === '' ? null : $topic, 'terms' => $terms, 'context' => $context === [] ? null : $context, 'fields' => $this->shapes($rows)]);
+        } catch (QueryException $exception) {
+            report($exception);
+            $template = null;
+        }
+        if ($template === null || ! $template->exists || ! IntentDetailTemplate::query()->whereKey($template->getKey())->exists()) {
+            throw ValidationException::withMessages(['templateName' => __('composer.template_failed')]);
+        }
+
+        return $template;
     }
 
     /**

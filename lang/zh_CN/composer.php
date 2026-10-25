@@ -874,4 +874,5 @@ return [
     'template_empty' => '还没有已保存的模板。组合准备好后，选择“另存为模板”。',
     'template_manage' => '管理已保存的模板',
     'confirm_side' => '此模板属于另一侧（需求/供给）。切换并使用吗？',
+    'template_failed' => '模板未能保存，没有存储任何内容，请重试。',
 ];
