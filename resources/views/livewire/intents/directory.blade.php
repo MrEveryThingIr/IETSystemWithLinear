@@ -60,10 +60,15 @@
                             <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMin" aria-label="{{ __('composer.filter_min') }}" placeholder="{{ __('composer.filter_min') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
                             <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMax" aria-label="{{ __('composer.filter_max') }}" placeholder="{{ __('composer.filter_max') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
                         </div>
+                    @elseif ($detailCatalog[$detail]['filter'] === 'value_boolean')
+                        <select wire:model.live="detailText" aria-label="{{ __('composer.details.'.$detail) }}" class="mt-2 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            <option value="">{{ __('intents.filters.all') }}</option>
+                            <option value="1">{{ __('composer.yes') }}</option>
+                        </select>
                     @elseif (($detailCatalog[$detail]['type'] ?? '') === 'choice')
                         <select wire:model.live="detailText" aria-label="{{ __('composer.details.'.$detail) }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
                             <option value="">{{ __('intents.filters.all') }}</option>
-                            @foreach ($detailCatalog[$detail]['options'] as $option)<option value="{{ $option }}">{{ \Illuminate\Support\Facades\Lang::has('composer.options.'.$option) ? __('composer.options.'.$option) : $option }}</option>@endforeach
+                            @foreach ($detailCatalog[$detail]['options'] as $option)<option value="{{ $option }}">{{ \App\Support\Market\IntentDetailCatalog::optionLabel($option) }}</option>@endforeach
                         </select>
                     @else
                         <input type="text" wire:model.live.debounce.500ms="detailText" aria-label="{{ __('composer.details.'.$detail) }}" placeholder="{{ __('composer.filter_contains') }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />

@@ -48,6 +48,10 @@ final class IntentPresentation
                 }
                 $url = $value;
                 $value = parse_url($value, PHP_URL_HOST);
+            } elseif ($type === 'choice' && is_string($value)) {
+                $value = IntentDetailCatalog::optionLabel($value);
+            } elseif ($type === 'multiple_choice' && is_array($value)) {
+                $value = implode(', ', array_map(fn ($option): string => IntentDetailCatalog::optionLabel((string) $option), $value));
             } elseif ($type === 'boolean') {
                 $value = $value ? __('composer.yes') : __('composer.no');
             } elseif ($type === 'amount' && is_numeric($value)) {
@@ -58,7 +62,7 @@ final class IntentPresentation
                 $value = implode(', ', array_filter($value, 'is_scalar'));
             }
             $details[] = ['label' => $detail['label'] ?? '', 'value' => (string) $value, 'url' => $url,
-                'unit' => $type === 'amount' ? null : ($detail['unit'] ?? null), 'group' => $detail['group_label'] ?? null,
+                'unit' => $type === 'amount' ? null : IntentDetailCatalog::unitLabel($detail['unit'] ?? null), 'group' => $detail['group_label'] ?? null,
                 'private' => ($detail['visibility'] ?? 'same') === 'private', 'informational' => $type === 'amount'];
         }
         $minimum = MarketMoney::legacyToman(isset($core['cash_min']) ? (string) $core['cash_min'] : null, $core['currency_code'] ?? null);

@@ -23,6 +23,7 @@ use App\Services\Business\BusinessMarketService;
 use App\Support\LocalizedNumber;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentPresentation;
+use App\Support\Market\IntentProfiles;
 use App\Support\Market\IntentSnapshot;
 use App\Support\Market\MarketMoney;
 use App\Support\Market\NormalizeIntentDetails;
@@ -93,6 +94,8 @@ class Composer extends Component
 
     public string $screen = 'write';
 
+    public string $topic = '';
+
     public bool $replaceLegacyPrice = false;
 
     public function mount(?ActorProfileIntent $intent = null): void
@@ -112,6 +115,7 @@ class Composer extends Component
             $this->conceptLabel = $intent->concept?->labels()->where('locale', $user->locale)->value('label') ?? '';
             $this->price = MarketMoney::legacyToman($this->core['cash_min'] ?? null, $this->core['currency_code'] ?? null) ?? '';
             $this->maximumPrice = MarketMoney::legacyToman($this->core['cash_max'] ?? null, $this->core['currency_code'] ?? null) ?? '';
+            $this->topic = (string) ($intent->metadata['composer_topic'] ?? '');
             $this->priceMode = ($this->core['exchange_preference'] ?? '') === 'free' ? 'free' : ($this->price === '' ? 'ask' : ($this->maximumPrice !== '' && $this->maximumPrice !== $this->price ? 'range' : 'fixed'));
         } else {
             $this->core = ['title' => '', 'description' => '', 'schedule_kind' => 'ongoing', 'visibility' => 'authenticated',
@@ -122,6 +126,7 @@ class Composer extends Component
             }
             $this->choose(in_array($this->side, ['need', 'offer'], true) ? $this->side : 'need');
         }
+        $this->syncProfileRows();
     }
 
     public function choose(string $intention): void
@@ -142,6 +147,82 @@ class Composer extends Component
         if ($intention === 'exchange') {
             $this->priceMode = 'exchange';
         }
+        $topics = IntentProfiles::topics($intention);
+        if (count($topics) === 1) {
+            $this->chooseTopic($topics[0]);
+
+            return;
+        }
+        if ($this->topic !== '' && ! in_array($this->topic, $topics, true)) {
+            $this->topic = '';
+        }
+        $this->chooseTopic($this->topic);
+    }
+
+    public function chooseTopic(string $topic): void
+    {
+        abort_unless($topic === '' || in_array($topic, IntentProfiles::TOPICS, true), 422);
+        $this->topic = $topic;
+        $profile = IntentProfiles::all()[$topic] ?? null;
+        if ($profile !== null) {
+            $this->core['subject_kind'] = $profile['subject'];
+            $this->core['arrangement_kind'] = IntentProfiles::arrangement($topic, (string) ($this->core['arrangement_kind'] ?? 'other'));
+        }
+        $this->syncProfileRows();
+    }
+
+    public function chooseArrangement(string $arrangement): void
+    {
+        $allowed = IntentProfiles::all()[$this->topic]['arrangements'] ?? [];
+        abort_unless(in_array($arrangement, $allowed, true), 422);
+        $this->core['arrangement_kind'] = $arrangement;
+        // Renting is priced per month and selling is a total; never overwrite a price the person set.
+        if ($arrangement === 'temporary_use' && $this->priceMode === 'ask') {
+            $this->priceMode = 'per_unit';
+            $this->core['cash_basis'] = 'month';
+        } elseif ($arrangement !== 'temporary_use' && $this->priceMode === 'per_unit' && ($this->core['cash_basis'] ?? '') === 'month') {
+            $this->priceMode = 'fixed';
+            $this->core['cash_basis'] = 'total';
+        }
+        $this->syncProfileRows();
+    }
+
+    /** Keep exactly the profile's questions: add missing essentials, drop empty rows that no longer apply. */
+    private function syncProfileRows(): void
+    {
+        $answers = [];
+        foreach ($this->details as $row) {
+            if (! empty($row['canonical_key'])) {
+                $answers[$row['canonical_key']] = $row['value'] ?? null;
+            }
+        }
+        $fields = IntentProfiles::fields($this->topic, $this->intention, (string) ($this->core['arrangement_kind'] ?? 'other'), $answers);
+        $visible = [...$fields['essential'], ...$fields['suggested']];
+        $this->details = array_values(array_filter($this->details, fn (array $row): bool => empty($row['canonical_key'])
+            || in_array($row['canonical_key'], $visible, true) || ! self::emptyAnswer($row['value'] ?? null)));
+        $present = array_column($this->details, 'canonical_key');
+        foreach ($fields['essential'] as $key) {
+            if (! in_array($key, $present, true)) {
+                $this->details[] = $this->newRow($key);
+            }
+        }
+    }
+
+    private static function emptyAnswer(mixed $value): bool
+    {
+        return $value === null || $value === '' || $value === [] || $value === false;
+    }
+
+    /** @return array<string, mixed> */
+    private function newRow(?string $key): array
+    {
+        $spec = $key === null ? null : (IntentDetailCatalog::all()[$key] ?? abort(422));
+        $type = $spec['type'] ?? $this->detailType;
+
+        return ['editor_key' => (string) Str::uuid(), 'canonical_key' => $key, 'label' => $key === null ? '' : __('composer.details.'.$key),
+            'type' => $type, 'value' => match ($type) {
+                'date_range', 'reference', 'multiple_choice' => [], 'boolean' => $key === null ? '' : false, default => ''
+            }, 'visibility' => 'same', 'unit' => $spec['unit'] ?? '', 'group_label' => '', 'options' => $spec['options'] ?? []];
     }
 
     public function updatedOwnerKey(): void
@@ -168,12 +249,7 @@ class Composer extends Component
     public function addDetail(?string $key = null): void
     {
         abort_if(count($this->details) >= 50, 422);
-        $spec = $key === null ? null : (IntentDetailCatalog::all()[$key] ?? abort(422));
-        $this->details[] = ['editor_key' => (string) Str::uuid(), 'canonical_key' => $key, 'label' => $key === null ? '' : __('composer.details.'.$key),
-            'type' => $spec['type'] ?? $this->detailType, 'value' => match ($spec['type'] ?? $this->detailType) {
-                'date_range', 'reference' => [], 'multiple_choice' => [], default => ''
-            }, 'visibility' => 'same', 'unit' => $spec['unit'] ?? '',
-            'group_label' => '', 'options' => $spec['options'] ?? []];
+        $this->details[] = $this->newRow($key);
         $this->dispatch('composer-detail-added', index: count($this->details) - 1);
     }
 
@@ -287,7 +363,7 @@ class Composer extends Component
         $this->validate(['templateName' => ['required', 'string', 'max:120']]);
         $publisher = $this->publisher();
         abort_unless(in_array($publisher->kind, [Party::ACTOR, Party::BUSINESS], true), 422);
-        $rows = app(NormalizeIntentDetails::class)->execute($this->user(), $this->editableDetails(), shapeOnly: true);
+        $rows = app(NormalizeIntentDetails::class)->execute($this->user(), $this->editableDetails(shape: true), shapeOnly: true);
         $fields = array_map(function ($row): array {
             $options = $row['payload']['options'] ?? [];
             unset($row['payload']);
@@ -316,6 +392,7 @@ class Composer extends Component
         if ($key !== null && preg_match('/^(\d+)\.optionsText$/D', $key, $match) && is_string($value)) {
             $this->details[(int) $match[1]]['options'] = array_values(array_unique(array_filter(array_map('trim', explode(',', $value)))));
         }
+        $this->syncProfileRows();
     }
 
     private function saveWorking(): void
@@ -365,7 +442,12 @@ class Composer extends Component
 
             $kind = in_array($this->intention, ['offer', 'service', 'sell'], true) ? ProfileIntentKind::Offer : ProfileIntentKind::Need;
 
-            return app(SaveIntentWorkingCopy::class)->execute($user, $intent, $core, $this->editableDetails(), $kind);
+            $saved = app(SaveIntentWorkingCopy::class)->execute($user, $intent, $core, $this->editableDetails(), $kind);
+            if (($saved->metadata['composer_topic'] ?? '') !== $this->topic) {
+                $saved->forceFill(['metadata' => [...($saved->metadata ?? []), 'composer_topic' => $this->topic]])->save();
+            }
+
+            return $saved;
         }, 3);
         // Keep a reload on this draft instead of an empty composer.
         $this->js('history.replaceState(null, "", '.json_encode(route('intents.compose.edit', $this->intent, false), JSON_UNESCAPED_SLASHES).')');
@@ -379,7 +461,7 @@ class Composer extends Component
         }
 
         return view('livewire.intents.composer', ['parties' => app(PartyAuthority::class)->partiesFor($user),
-            'suggestions' => IntentDetailCatalog::suggestions($this->core['subject_kind'] ?? 'other'),
+            'profile' => $this->profileView(),
             'detailTypes' => NormalizeIntentDetails::TYPES, 'legacyPrice' => $this->hasLegacyPrice(),
             'publisher' => $this->publisher(),
             'versions' => $this->intent?->versions()->reorder('version', 'desc')->limit(50)->get() ?? collect(),
@@ -391,6 +473,25 @@ class Composer extends Component
             'templates' => in_array($this->publisher()->kind, [Party::ACTOR, Party::BUSINESS], true)
                 ? IntentDetailTemplate::query()->where($this->publisher()->kind === Party::BUSINESS ? 'owner_business_id' : 'owner_actor_id', $this->publisher()->id)->get()
                 : collect()])->title(__('composer.title'));
+    }
+
+    /** @return array{topics: list<string>, arrangements: list<string>, essential: list<string>, suggested: list<string>, open: list<string>} */
+    private function profileView(): array
+    {
+        $answers = [];
+        foreach ($this->details as $row) {
+            if (! empty($row['canonical_key'])) {
+                $answers[$row['canonical_key']] = $row['value'] ?? null;
+            }
+        }
+        $arrangement = (string) ($this->core['arrangement_kind'] ?? 'other');
+        $fields = IntentProfiles::fields($this->topic, $this->intention, $arrangement, $answers);
+        $present = array_column($this->details, 'canonical_key');
+        $profile = IntentProfiles::all()[$this->topic] ?? null;
+
+        return ['topics' => IntentProfiles::topics($this->intention), 'arrangements' => count($profile['arrangements'] ?? []) > 1 ? $profile['arrangements'] : [],
+            'essential' => $fields['essential'], 'suggested' => array_values(array_diff($fields['suggested'], $present)),
+            'open' => $profile['open'] ?? []];
     }
 
     private function hasLegacyPrice(): bool
@@ -446,15 +547,18 @@ class Composer extends Component
         return $choices;
     }
 
-    private function editableDetails(): array
+    /** Published answers are only the filled ones; a template keeps every row's shape. */
+    private function editableDetails(bool $shape = false): array
     {
+        $answered = $shape ? $this->details : array_filter($this->details, fn (array $detail): bool => ! self::emptyAnswer($detail['value'] ?? null));
+
         return array_map(function (array $detail): array {
             if (isset($detail['optionsText'])) {
                 $detail['options'] = array_values(array_unique(array_filter(array_map('trim', explode(',', $detail['optionsText'])))));
             }
 
             return $detail;
-        }, $this->details);
+        }, array_values($answered));
     }
 
     private function publisher(): Party

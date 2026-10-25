@@ -184,19 +184,22 @@ class Directory extends Component
             return;
         }
         $numeric = $spec['filter'] === 'value_number';
+        $boolean = $spec['filter'] === 'value_boolean';
         $text = trim($this->detailText);
         $min = $numeric && trim($this->detailMin) !== '' ? LocalizedNumber::decimal($this->detailMin) : null;
         $max = $numeric && trim($this->detailMax) !== '' ? LocalizedNumber::decimal($this->detailMax) : null;
-        if (($numeric && $min === null && $max === null) || (! $numeric && $text === '')) {
+        if (($numeric && $min === null && $max === null) || (! $numeric && $text === '') || ($boolean && $text !== '1')) {
             return;
         }
-        $query->whereExists(function ($values) use ($spec, $numeric, $text, $min, $max): void {
+        $query->whereExists(function ($values) use ($spec, $numeric, $boolean, $text, $min, $max): void {
             $values->selectRaw('1')->from('intent_search_values')
                 ->whereColumn('intent_search_values.intent_version_id', 'actor_profile_intents.published_version_id')
                 ->where('intent_search_values.canonical_key', $this->detail);
             if ($numeric) {
                 $min !== null && $values->where('intent_search_values.value_number', '>=', $min);
                 $max !== null && $values->where('intent_search_values.value_number', '<=', $max);
+            } elseif ($boolean) {
+                $values->where('intent_search_values.value_boolean', true);
             } elseif ($spec['type'] === 'choice') {
                 $values->where('intent_search_values.value_text', $text);
             } else {

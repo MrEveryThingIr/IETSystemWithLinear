@@ -40,6 +40,7 @@ class ComposerBusinessCatalogTest extends TestCase
         $this->assertSame(['floor_area', 'rooms'], collect($version->snapshot['details'])->pluck('canonical_key')->sort()->values()->all());
         $this->assertDatabaseHas('intent_search_values', ['intent_version_id' => $version->id, 'canonical_key' => 'floor_area', 'value_number' => '100.000000']);
         $this->assertSame($listing->fresh()->publishedVersion->id, (int) $post->business_listing_version_id);
+        $this->assertSame('home', $post->metadata['composer_topic']);
 
         $viewer = Actor::factory()->create()->user;
         $this->publishSurfaces($viewer, ['market']);

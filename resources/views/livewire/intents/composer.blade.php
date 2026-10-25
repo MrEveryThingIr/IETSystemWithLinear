@@ -8,6 +8,24 @@
             <button type="button" wire:click="choose('{{ $choice }}')" aria-pressed="{{ $intention === $choice ? 'true' : 'false' }}" class="min-h-11 rounded-full border px-4 py-2 text-sm {{ $intention === $choice ? 'bg-indigo-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">{{ __('composer.intentions.'.$choice) }}</button>
         @endforeach
     </div>
+    @if(count($profile['topics']) > 1)
+        <div class="space-y-2" data-composer-topics>
+            <p class="text-sm font-medium">{{ __('composer.about') }}</p>
+            <div class="flex flex-wrap gap-2" role="group" aria-label="{{ __('composer.about') }}">
+                @foreach($profile['topics'] as $choice)
+                    <button type="button" wire:click="chooseTopic('{{ $choice }}')" aria-pressed="{{ $topic === $choice ? 'true' : 'false' }}" class="min-h-11 rounded-full border px-4 py-2 text-sm {{ $topic === $choice ? 'bg-indigo-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">{{ __('composer.topics.'.$choice) }}</button>
+                @endforeach
+                <button type="button" wire:click="chooseTopic('')" aria-pressed="{{ $topic === '' ? 'true' : 'false' }}" class="min-h-11 rounded-full border px-4 py-2 text-sm {{ $topic === '' ? 'bg-indigo-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">{{ __('composer.topics.other') }}</button>
+            </div>
+        </div>
+    @endif
+    @if(count($profile['arrangements']))
+        <div class="flex flex-wrap gap-2" role="group" aria-label="{{ __('composer.arrangement') }}" data-composer-arrangement>
+            @foreach($profile['arrangements'] as $choice)
+                <button type="button" wire:click="chooseArrangement('{{ $choice }}')" aria-pressed="{{ ($core['arrangement_kind'] ?? '') === $choice ? 'true' : 'false' }}" class="min-h-11 rounded-full border px-4 py-2 text-sm {{ ($core['arrangement_kind'] ?? '') === $choice ? 'bg-indigo-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800' }}">{{ __('composer.arrangements.'.$choice.'.'.(in_array($intention, ['need','person'], true) ? 'need' : 'offer')) }}</button>
+            @endforeach
+        </div>
+    @endif
     @if($catalog)
         <div class="space-y-2 rounded-2xl border p-4" role="region" aria-label="{{ __('composer.catalog.title') }}" data-catalog-card>
             <p class="font-medium">{{ __('composer.catalog.title') }}: {{ $catalog['title'] }} <span class="text-sm text-zinc-500">({{ __('composer.catalog.version', ['version' => $catalog['version']]) }})</span></p>
@@ -31,12 +49,33 @@
                     @if($capabilities->isNotEmpty())<details><summary class="cursor-pointer py-2">{{ __('intents.create.from_capability') }}</summary><div class="flex flex-wrap gap-2">@foreach($capabilities as $capability)<flux:button wire:click="useCapability('{{ $capability->uuid }}')" size="sm">{{ $capability->title ?: $capability->concept?->displayLabel(app()->getLocale()) }}</flux:button>@endforeach</div></details>@endif
                 @endif
             </div>
-            <details class="rounded-2xl border p-5" @if(count($details)) open @endif>
-                <summary class="cursor-pointer text-lg font-semibold">{{ __('composer.details_title') }} ({{ count($details) }})</summary>
+            @if(count($profile['essential']))
+                <div class="space-y-4 rounded-2xl border p-5" data-composer-basics>
+                    <h2 class="text-lg font-semibold">{{ __('composer.topics.'.$topic) }}</h2>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        @foreach($profile['essential'] as $key)
+                            @foreach($details as $index => $detail)
+                                @if(($detail['canonical_key'] ?? null) === $key)<x-market.detail-field :index="$index" :detail="$detail" wire:key="field-{{ $detail['editor_key'] }}" />@endif
+                            @endforeach
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+            @php($extra = collect($details)->reject(fn ($row) => in_array($row['canonical_key'] ?? null, $profile['essential'], true))->count())
+            <details class="rounded-2xl border p-5" @if($extra) open @endif>
+                <summary class="cursor-pointer text-lg font-semibold">{{ $topic === '' ? __('composer.details_title') : __('composer.more_details') }} ({{ $extra }})</summary>
                 <div class="mt-4 space-y-4">
-                    <p class="text-sm text-zinc-500">{{ __('composer.suggested') }}</p>
-                    <div class="flex flex-wrap gap-2">@foreach($suggestions as $key)<flux:button wire:click="addDetail('{{ $key }}')" size="sm">+ {{ __('composer.details.'.$key) }}</flux:button>@endforeach</div>
+                    @if(count($profile['suggested']))<p class="text-sm text-zinc-500">{{ __('composer.suggested') }}</p>@endif
+                    <div class="flex flex-wrap gap-2">@foreach($profile['suggested'] as $key)<flux:button wire:click="addDetail('{{ $key }}')" size="sm">+ {{ __('composer.details.'.$key) }}</flux:button>@endforeach</div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        @foreach($details as $index => $detail)
+                            @if(!empty($detail['canonical_key']) && !in_array($detail['canonical_key'], $profile['essential'], true))
+                                <div class="flex items-end gap-2" wire:key="extra-{{ $detail['editor_key'] }}"><div class="min-w-0 flex-1"><x-market.detail-field :index="$index" :detail="$detail" /></div><flux:button size="sm" wire:click="removeDetail({{ $index }})" :aria-label="__('composer.remove').' '.__('composer.details.'.$detail['canonical_key'])">{{ __('composer.remove') }}</flux:button></div>
+                            @endif
+                        @endforeach
+                    </div>
                     @foreach($details as $index => $detail)
+                        @continue(!empty($detail['canonical_key']))
                         <div class="space-y-3 rounded-xl border p-4" wire:key="detail-{{ $detail['editor_key'] ?? $index }}" data-composer-detail>
                             @if(empty($detail['canonical_key']))<flux:input wire:model="details.{{ $index }}.label" :label="__('composer.detail_name')" dir="auto" />@else<p class="font-medium">{{ __('composer.details.'.$detail['canonical_key']) }}</p>@endif
                             @if(in_array($detail['type'], ['long_text','place'], true))
@@ -71,7 +110,7 @@
                     <details><summary class="cursor-pointer py-2">{{ __('composer.templates') }}</summary><div class="space-y-3"><flux:input wire:model="templateName" :label="__('composer.template_name')" /><flux:button wire:click="saveTemplate">{{ __('composer.save_template') }}</flux:button>@foreach($templates as $template)<flux:button wire:click="applyTemplate('{{ $template->uuid }}')">{{ $template->name }}</flux:button>@endforeach</div></details>
                 </div>
             </details>
-            <details class="rounded-2xl border p-5">
+            <details class="rounded-2xl border p-5" @if(in_array('terms', $profile['open'], true)) open @endif>
                 <summary class="cursor-pointer text-lg font-semibold">{{ __('composer.advanced_terms') }}</summary>
                 <div class="mt-4 space-y-4">
                     <flux:select wire:model="core.subject_kind" :label="__('intents.fields.subject_kind')">@foreach(\App\ProfileIntentSubjectKind::cases() as $option)<option value="{{ $option->value }}">{{ __('intents.subjects.'.$option->value) }}</option>@endforeach</flux:select>
@@ -92,7 +131,7 @@
                     @if(($core['schedule_kind'] ?? '') === 'monthly')<flux:input wire:model="core.recurrence_day_of_month" :label="__('ui.profile.intents.day_of_month')" inputmode="numeric" />@endif
                 </div>
             </details>
-            <details class="rounded-2xl border p-5" @if(in_array($intention, ['service','sell','rent'], true)) open @endif>
+            <details class="rounded-2xl border p-5" @if(in_array($intention, ['service','sell','rent'], true) || in_array('price', $profile['open'], true)) open @endif>
                 <summary class="cursor-pointer text-lg font-semibold">{{ __('composer.price_terms') }}</summary>
                 <div class="mt-4 space-y-4">
                     @if($legacyPrice)<p class="rounded-xl border p-3">{{ __('composer.legacy_price') }}</p><flux:checkbox wire:model.live="replaceLegacyPrice" :label="__('composer.replace_price')" />@endif
