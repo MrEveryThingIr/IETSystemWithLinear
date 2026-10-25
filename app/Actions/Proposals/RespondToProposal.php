@@ -2,6 +2,7 @@
 
 namespace App\Actions\Proposals;
 
+use App\Actions\Contracts\CreateContractFromProposal;
 use App\Models\Actor;
 use App\Models\Proposal;
 use App\Models\ProposalDecision;
@@ -12,11 +13,14 @@ use App\Models\User;
 use App\ProposalDecisionKind;
 use App\ProposalEventType;
 use App\ProposalStatus;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class RespondToProposal
 {
+    public function __construct(private readonly CreateContractFromProposal $agreements) {}
+
     public function execute(
         Proposal $proposal,
         User $user,
@@ -89,6 +93,7 @@ class RespondToProposal
                 $locked->applyStatus(ProposalStatus::Rejected);
             } elseif ($decision === ProposalDecisionKind::Accepted && $this->allRequiredAccepted($locked, $version)) {
                 $locked->applyStatus(ProposalStatus::Accepted);
+                $this->agree($locked, $version, $current);
             }
 
             return $record->fresh([
@@ -97,6 +102,29 @@ class RespondToProposal
                 'decidedByUser',
             ]);
         }, attempts: 3);
+    }
+
+    /**
+     * Structured Terms carry their own effective date, so the last required acceptance completes the Agreement:
+     * Contract and derived acceptances are written in this same transaction. Free-text Proposals keep the explicit Contract form.
+     */
+    private function agree(Proposal $proposal, ProposalVersion $version, User $current): void
+    {
+        if ($version->terms_data === null) {
+            return;
+        }
+
+        $effective = $version->terms_data['effective'] ?? ['mode' => 'on_acceptance'];
+        $now = CarbonImmutable::now();
+        $at = ($effective['mode'] ?? 'on_acceptance') === 'at' ? CarbonImmutable::parse($effective['at']) : $now;
+
+        $this->agreements->execute(
+            $proposal,
+            $current,
+            $at->lt($now) ? $now : $at,
+            $effective['timezone'] ?? 'UTC',
+            deriveAcceptances: true,
+        );
     }
 
     private function allRequiredAccepted(Proposal $proposal, ProposalVersion $version): bool

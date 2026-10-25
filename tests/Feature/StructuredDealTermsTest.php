@@ -6,7 +6,11 @@ use App\Actions\Contracts\CreateContractFromProposal;
 use App\Actions\Proposals\CreateProposal;
 use App\Actions\Proposals\ProposeTermsVersion;
 use App\Actions\Proposals\RespondToProposal;
+use App\ContractVersionStatus;
 use App\Models\Actor;
+use App\Models\Commitment;
+use App\Models\Contract;
+use App\Models\ContractAcceptance;
 use App\ProposalDecisionKind;
 use App\ProposalStatus;
 use App\Support\Deals\DealTerms;
@@ -97,10 +101,28 @@ class StructuredDealTermsTest extends TestCase
         $this->assertSame(DealTerms::hash(DealTerms::normalize($this->terms())), $version->terms_hash);
         $this->assertStringContainsString('Place: Tehran', (string) $version->termsRevision->payload['terms']);
 
+        $this->assertSame(0, Contract::query()->count());
         app(RespondToProposal::class)->execute($proposal, $bob->user, ProposalDecisionKind::Accepted, null, 1);
-        $contract = app(CreateContractFromProposal::class)->execute($proposal->fresh(), $alice->user, now()->addMinutes(5), 'UTC');
 
-        $this->assertSame($version->terms_content_revision_id, $contract->versions->sole()->terms_content_revision_id);
+        // Single Agree: Bob's one decision completed the Agreement on the same sealed Terms.
+        $contract = Contract::query()->sole();
+        $contractVersion = $contract->versions()->sole();
+        $this->assertSame($version->terms_content_revision_id, $contractVersion->terms_content_revision_id);
+        $this->assertSame(ContractVersionStatus::Active, $contractVersion->status);
+        $this->assertSame(2, ContractAcceptance::query()->count());
+        foreach (ContractAcceptance::query()->with('party', 'sourceDecision')->get() as $acceptance) {
+            $this->assertNotNull($acceptance->source_proposal_decision_id);
+            $this->assertSame($acceptance->sourceDecision->decided_by_user_id, $acceptance->accepted_by_user_id);
+            $this->assertSame($acceptance->sourceDecision->proposal_party_id, $acceptance->party->source_proposal_party_id);
+        }
+        $this->assertSame(0, Commitment::query()->count(), 'accepted Terms create no obligations');
+
+        try {
+            app(CreateContractFromProposal::class)->execute($proposal->fresh(), $alice->user, now()->addMinutes(5), 'UTC');
+            $this->fail('a second Contract for the same Terms must be refused');
+        } catch (HttpException $e) {
+            $this->assertSame(422, $e->getStatusCode());
+        }
 
         $this->expectException(LogicException::class);
         $version->update(['terms_hash' => str_repeat('0', 64)]);

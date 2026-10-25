@@ -13,6 +13,7 @@ use LogicException;
 #[Fillable([
     'uuid',
     'contract_version_party_id',
+    'source_proposal_decision_id',
     'accepted_by_user_id',
     'accepted_at',
 ])]
@@ -34,6 +35,12 @@ class ContractAcceptance extends Model
         static::deleting(function (): never {
             throw new LogicException('Contract acceptances preserve exact-version acceptance evidence.');
         });
+    }
+
+    /** @return BelongsTo<ProposalDecision, $this> */
+    public function sourceDecision(): BelongsTo
+    {
+        return $this->belongsTo(ProposalDecision::class, 'source_proposal_decision_id');
     }
 
     /** @return BelongsTo<ContractVersionParty, $this> */

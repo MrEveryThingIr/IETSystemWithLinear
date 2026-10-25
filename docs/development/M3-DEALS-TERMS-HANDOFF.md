@@ -9,13 +9,15 @@ Rules: one agent per branch; additive reversible migrations; tests on in-memory 
 |---|---|
 | C1 audit + architecture + contracts | **Done** (docs + `tests/Feature/M3DealAuthorityBaselineTest.php`, 3 passing) |
 | C2 structured Terms + G1 | **Engineering-complete** (see below) |
-| C3–C5 | Not started |
+| C3a single Agree (structured Terms) | **Engineering-complete**; C3b principals (Business/Group parties) not started |
+| C4–C5 | Not started |
 
 ### C2 delivered
 - `proposal_versions.terms_data` (JSON) + `terms_hash` (sha256 of canonical JSON), migration `2026_11_13_000000`; written at creation only, immutable by the model guard; `ProposalVersion::termsIntegrityOk()`.
 - `App\Support\Deals\DealTerms`: `normalize` (schema v1, unknown keys rejected, decimals as strings, fields sorted), `canonicalJson`, `hash`, `render` (locale text sealed into the existing content revision, so ContractVersion keeps the same revision). `deals.terms.*` strings in en/ar/fa/zh_CN.
 - `ProposeTermsVersion` / `CreateProposal` accept `?array $termsData`; origin must equal the Deal's pinned `originating_intent_version_id`.
 - **G1 fixed:** `RespondToProposal(..., ?int $expectedVersion)` checks the version inside the locked transaction (409 on mismatch); structured versions *require* it (422 if omitted). Only caller audited: `Livewire\Proposals\Show` (always sends the rendered version; shows a message on 409). Pre-M3 free-text versions keep the old null behaviour. C3's single-Agree must call with the version it rendered.
+- **C3a:** when the last required party accepts a *structured* version, `RespondToProposal` calls `CreateContractFromProposal(..., deriveAcceptances: true)` in the same transaction: Contract + ContractVersion on the same sealed revision, one `ContractAcceptance` per accepting party with `source_proposal_decision_id` (signer and time copied from the decision), then the existing idempotent finalize/activate. Effective = `terms.effective` (`at` is clamped to now if already past). Free-text Proposals and pre-M3 accepted ones keep the explicit Contract form. Accepted Terms create no commitments (tested). Migration `2026_11_14_000000`. No UI authors structured Terms yet (C4).
 - Party identity corrected in C1 doc §2.4a (principal key, signer ≠ principal); implemented in C3.
 - Not duplicated for Codex: `DealTermsFromIntent` (T-A) and `DealTermsDiff` (T-B) are still unassigned/unstarted; they depend only on `DealTerms::normalize` output (T-A should return a value that passes `DealTerms::normalize`).
 
