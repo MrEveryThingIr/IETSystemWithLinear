@@ -48,6 +48,28 @@
                     <option value="mine">{{ __('intents.directory.scope_mine') }}</option>
                 </select>
             </div>
+            <div class="min-w-0">
+                <label for="intent-detail" class="mb-2 block text-sm font-medium">{{ __('composer.filter_detail') }}</label>
+                <select id="intent-detail" wire:model.live="detail" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                    <option value="">{{ __('composer.filter_any') }}</option>
+                    @foreach ($detailCatalog as $key => $spec)<option value="{{ $key }}">{{ __('composer.details.'.$key) }}</option>@endforeach
+                </select>
+                @if (isset($detailCatalog[$detail]))
+                    @if ($detailCatalog[$detail]['filter'] === 'value_number')
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMin" aria-label="{{ __('composer.filter_min') }}" placeholder="{{ __('composer.filter_min') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
+                            <input type="text" inputmode="decimal" wire:model.live.debounce.500ms="detailMax" aria-label="{{ __('composer.filter_max') }}" placeholder="{{ __('composer.filter_max') }}" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
+                        </div>
+                    @elseif (($detailCatalog[$detail]['type'] ?? '') === 'choice')
+                        <select wire:model.live="detailText" aria-label="{{ __('composer.details.'.$detail) }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                            <option value="">{{ __('intents.filters.all') }}</option>
+                            @foreach ($detailCatalog[$detail]['options'] as $option)<option value="{{ $option }}">{{ \Illuminate\Support\Facades\Lang::has('composer.options.'.$option) ? __('composer.options.'.$option) : $option }}</option>@endforeach
+                        </select>
+                    @else
+                        <input type="text" wire:model.live.debounce.500ms="detailText" aria-label="{{ __('composer.details.'.$detail) }}" placeholder="{{ __('composer.filter_contains') }}" class="mt-2 block w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base sm:text-sm dark:border-zinc-700 dark:bg-zinc-900" />
+                    @endif
+                @endif
+            </div>
             <div class="flex items-end">
                 <flux:button wire:click="clearFilters" variant="ghost" class="w-full">{{ __('intents.filters.clear') }}</flux:button>
             </div>
@@ -57,7 +79,10 @@
     <div class="grid gap-4 lg:grid-cols-2">
         @forelse ($intents as $intent)
             @php
-                $cover = $intent->media->first();
+                $publishedMedia = collect($intent->publishedVersion?->snapshot['media'] ?? [])->where('visibility', 'same')->pluck('uuid')->all();
+                $cover = $intent->media->first(fn ($item) => $item->visibility !== 'private' && in_array($item->uuid, $publishedMedia, true)
+                    && in_array($item->asset?->mediaKind(), ['image', 'video'], true)
+                    && $item->asset?->isPublishable() && $item->asset?->isReadyForPublication());
                 $coverUrl = $cover ? route('intents.media.show', [$intent, $cover]) : (isset($listingCovers[(int) $intent->business_listing_version_id]) ? route('intents.media.listing-cover', $intent) : null);
                 $coverIsVideo = $cover?->asset?->mediaKind() === 'video';
             @endphp

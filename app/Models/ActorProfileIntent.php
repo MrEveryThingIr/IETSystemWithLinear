@@ -91,13 +91,17 @@ class ActorProfileIntent extends Model
                 'uuid',
                 'actor_profile_id',
                 'concept_id',
-                'kind',
                 'created_by_actor_id',
                 'publisher_actor_id',
                 'publisher_business_id',
                 'publisher_group_id',
             ])) {
                 throw new LogicException('Profile intent semantic identity and provenance cannot be reassigned.');
+            }
+
+            if ($intent->isDirty('kind') && ($intent->getRawOriginal('status') !== ProfileIntentStatus::Draft->value
+                || $intent->published_version_id !== null || $intent->status !== ProfileIntentStatus::Draft)) {
+                throw new LogicException('A published profile intent keeps its semantic kind.');
             }
 
             if ($intent->isDirty(['status', 'closed_at']) && ! $intent->applyingStatus) {
@@ -174,6 +178,24 @@ class ActorProfileIntent extends Model
     public function media(): HasMany
     {
         return $this->hasMany(ActorProfileIntentMedia::class)->orderBy('position')->orderBy('id');
+    }
+
+    /** @return HasMany<IntentDetail, $this> */
+    public function details(): HasMany
+    {
+        return $this->hasMany(IntentDetail::class)->orderBy('position')->orderBy('id');
+    }
+
+    /** @return HasMany<IntentVersion, $this> */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(IntentVersion::class)->orderBy('version');
+    }
+
+    /** @return BelongsTo<IntentVersion, $this> */
+    public function publishedVersion(): BelongsTo
+    {
+        return $this->belongsTo(IntentVersion::class, 'published_version_id');
     }
 
     /**
@@ -269,6 +291,7 @@ class ActorProfileIntent extends Model
     protected function casts(): array
     {
         return [
+            'working_copy' => 'array',
             'kind' => ProfileIntentKind::class,
             'subject_kind' => ProfileIntentSubjectKind::class,
             'arrangement_kind' => ProfileIntentArrangementKind::class,

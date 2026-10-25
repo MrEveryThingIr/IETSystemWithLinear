@@ -2,6 +2,7 @@
 
 namespace App\Actions\Profile;
 
+use App\Actions\Market\PublishIntent;
 use App\Models\ActorProfileIntent;
 use App\Models\User;
 use App\ProfileIntentStatus;
@@ -39,6 +40,7 @@ class UpdateActorProfileIntent
 
             Gate::forUser($user)->authorize('update', $locked);
             abort_if($locked->status === ProfileIntentStatus::Closed, 409, 'Closed Profile declarations cannot be edited.');
+            abort_if($locked->working_copy !== null, 409, __('composer.pending'));
 
             $locked->fill($data);
             $locked->save();
@@ -50,6 +52,12 @@ class UpdateActorProfileIntent
                     $locked->concept,
                     $locked->kind,
                 );
+            }
+
+            // Legacy callers publish immediately. The composer stages edits through
+            // SaveIntentWorkingCopy and calls PublishIntent only after explicit consent.
+            if ($locked->status !== ProfileIntentStatus::Draft) {
+                app(PublishIntent::class)->execute($user, $locked);
             }
 
             return $locked->refresh()->load('concept.labels');

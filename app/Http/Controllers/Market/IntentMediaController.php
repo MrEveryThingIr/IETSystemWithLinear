@@ -18,6 +18,13 @@ class IntentMediaController extends Controller
     {
         abort_unless((int) $media->actor_profile_intent_id === (int) $intent->id, 404);
         Gate::forUser($request->user())->authorize('view', $intent);
+        if ($media->visibility === 'private') {
+            Gate::forUser($request->user())->authorize('update', $intent);
+        }
+        if (! Gate::forUser($request->user())->allows('update', $intent) && $intent->published_version_id !== null) {
+            $published = collect($intent->publishedVersion->snapshot['media'] ?? [])->firstWhere('uuid', $media->uuid);
+            abort_unless($published !== null && ($published['visibility'] ?? 'same') === 'same', 404);
+        }
 
         return $this->private(AssetHttpResponse::inline($media->asset()->firstOrFail()));
     }
@@ -41,7 +48,7 @@ class IntentMediaController extends Controller
 
     private function private(Response $response): Response
     {
-        $response->headers->set('Cache-Control', 'private, max-age=300');
+        $response->headers->set('Cache-Control', 'private, no-store');
 
         return $response;
     }

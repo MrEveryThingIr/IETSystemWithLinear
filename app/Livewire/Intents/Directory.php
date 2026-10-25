@@ -6,6 +6,8 @@ use App\Models\ActorProfileIntent;
 use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Support\Categories\CategoryCatalog;
+use App\Support\LocalizedNumber;
+use App\Support\Market\IntentDetailCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +40,14 @@ class Directory extends Component
 
     public string $scope = 'all';
 
+    public string $detail = '';
+
+    public string $detailText = '';
+
+    public string $detailMin = '';
+
+    public string $detailMax = '';
+
     protected array $queryString = [
         'quick' => ['except' => 'all'],
         'kind' => ['except' => 'all'],
@@ -49,18 +59,27 @@ class Directory extends Component
         'highlight' => ['except' => null],
         'area' => ['except' => 0],
         'scope' => ['except' => 'all'],
+        'detail' => ['except' => ''],
+        'detailText' => ['except' => ''],
+        'detailMin' => ['except' => ''],
+        'detailMax' => ['except' => ''],
     ];
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location', 'area', 'scope'], true)) {
+        if (in_array($property, ['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location', 'area', 'scope', 'detail', 'detailText', 'detailMin', 'detailMax'], true)) {
             $this->resetPage();
         }
     }
 
+    public function updatedDetail(): void
+    {
+        $this->reset('detailText', 'detailMin', 'detailMax');
+    }
+
     public function clearFilters(): void
     {
-        $this->reset(['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location', 'area', 'scope']);
+        $this->reset(['quick', 'kind', 'subject', 'arrangement', 'exchange', 'search', 'location', 'area', 'scope', 'detail', 'detailText', 'detailMin', 'detailMax']);
         $this->quick = 'all';
         $this->kind = 'all';
         $this->subject = 'all';
@@ -78,7 +97,7 @@ class Directory extends Component
 
         $query = ActorProfileIntent::query()
             ->where('status', ProfileIntentStatus::Active->value)
-            ->with(['concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup', 'media' => fn ($media) => $media->with('asset')]);
+            ->with(['publishedVersion', 'concept.labels', 'profile.actor.user', 'profile.displayImage.asset', 'publisherBusiness', 'publisherGroup', 'media' => fn ($media) => $media->with('asset')]);
 
         $this->applyQuickFilter($query);
 
@@ -114,6 +133,7 @@ class Directory extends Component
         }
 
         $query->visibleTo($user);
+        $this->applyDetailFilter($query);
 
         if ($this->area > 0) {
             $query->whereIn('concept_id', $this->areaConceptIds($this->area));
@@ -148,7 +168,41 @@ class Directory extends Component
             'listingCovers' => $listingCovers,
             'areas' => $catalog->areas(),
             'paths' => $paths,
+            'detailCatalog' => IntentDetailCatalog::all(),
         ])->title(__('intents.directory.title'));
+    }
+
+    /**
+     * One typed filter over the values a published version chose to make searchable.
+     *
+     * @param  Builder<ActorProfileIntent>  $query
+     */
+    private function applyDetailFilter(Builder $query): void
+    {
+        $spec = IntentDetailCatalog::all()[$this->detail] ?? null;
+        if ($spec === null) {
+            return;
+        }
+        $numeric = $spec['filter'] === 'value_number';
+        $text = trim($this->detailText);
+        $min = $numeric && trim($this->detailMin) !== '' ? LocalizedNumber::decimal($this->detailMin) : null;
+        $max = $numeric && trim($this->detailMax) !== '' ? LocalizedNumber::decimal($this->detailMax) : null;
+        if (($numeric && $min === null && $max === null) || (! $numeric && $text === '')) {
+            return;
+        }
+        $query->whereExists(function ($values) use ($spec, $numeric, $text, $min, $max): void {
+            $values->selectRaw('1')->from('intent_search_values')
+                ->whereColumn('intent_search_values.intent_version_id', 'actor_profile_intents.published_version_id')
+                ->where('intent_search_values.canonical_key', $this->detail);
+            if ($numeric) {
+                $min !== null && $values->where('intent_search_values.value_number', '>=', $min);
+                $max !== null && $values->where('intent_search_values.value_number', '<=', $max);
+            } elseif ($spec['type'] === 'choice') {
+                $values->where('intent_search_values.value_text', $text);
+            } else {
+                $values->where('intent_search_values.value_text', 'like', '%'.addcslashes($text, '%_\\').'%');
+            }
+        });
     }
 
     /** @param Builder<ActorProfileIntent> $query */

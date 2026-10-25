@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['actor_profile_intent_id', 'asset_id', 'position', 'caption', 'created_by_actor_id'])]
+#[Fillable(['actor_profile_intent_id', 'asset_id', 'position', 'caption', 'visibility', 'created_by_actor_id'])]
 class ActorProfileIntentMedia extends Model
 {
-    public const MAX_PER_INTENT = 6;
+    use SoftDeletes;
+
+    public const MAX_PER_INTENT = 12;
 
     protected $table = 'actor_profile_intent_media';
 

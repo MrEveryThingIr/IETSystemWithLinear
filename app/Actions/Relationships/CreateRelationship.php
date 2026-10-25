@@ -162,6 +162,7 @@ class CreateRelationship
                 'title' => $this->normalizeTitle($title),
                 'purpose_concept_id' => $canonicalPurpose->id,
                 'originating_intent_id' => $lockedIntent?->id,
+                'originating_intent_version_id' => $lockedIntent?->published_version_id,
                 'matched_intent_id' => $lockedMatchedIntent?->id,
                 'domain_blueprint_version_id' => $lockedBlueprintVersion?->id,
                 'created_by_actor_id' => $creator->id,

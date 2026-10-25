@@ -19,6 +19,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegacyGroupContentRedirectController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Market\IntentMediaController;
+use App\Http\Controllers\Market\IntentPresentationController;
 use App\Http\Controllers\MediaUploadSessionController;
 use App\Http\Controllers\MeetingCalendarController;
 use App\Http\Controllers\Messaging\MessagingController;
@@ -70,6 +71,7 @@ use App\Livewire\Groups\SpaceChat;
 use App\Livewire\Groups\SpaceManagement;
 use App\Livewire\Home\PlanningWorkspace;
 use App\Livewire\Home\Today as HomeToday;
+use App\Livewire\Intents\Composer as IntentComposer;
 use App\Livewire\Intents\Create as IntentCreate;
 use App\Livewire\Intents\Directory as IntentDirectory;
 use App\Livewire\Intents\Matches as IntentMatches;
@@ -119,6 +121,10 @@ Route::get('/join/{token}', [AccessInvitationController::class, 'show'])->name('
 Route::post('/locale', LocaleController::class)->name('locale.update');
 Route::get('/people/{actor}', ActorProfileReferenceController::class)->name('actors.profile.reference');
 Route::get('/people/{actor}/avatar', ActorAvatarController::class)->name('actors.avatar');
+Route::get('/intents/{intent}', [IntentPresentationController::class, 'show'])
+    ->whereUuid('intent')->middleware('throttle:120,1')->name('intents.show');
+Route::get('/intents/{intent}/media/{media}', [IntentMediaController::class, 'show'])->scopeBindings()->middleware('throttle:120,1')->name('intents.media.show');
+Route::get('/intents/{intent}/listing-cover', [IntentMediaController::class, 'listingCover'])->middleware('throttle:120,1')->name('intents.media.listing-cover');
 Route::livewire('/profiles/{profile}', ProfileShow::class)->name('profiles.show');
 Route::get('/profiles/{profile}/images/{image}', [ActorProfileImageController::class, 'show'])
     ->name('profiles.images.show');
@@ -196,10 +202,11 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
 
     Route::livewire('/intents', IntentDirectory::class)->name('intents.index');
     Route::livewire('/intents/create', IntentCreate::class)->name('intents.create');
+    Route::livewire('/intents/compose', IntentComposer::class)->name('intents.compose');
+    Route::livewire('/intents/{intent}/compose', IntentComposer::class)->whereUuid('intent')->can('update', 'intent')->name('intents.compose.edit');
+    Route::get('/intents/{intent}/versions/{version:uuid}', [IntentPresentationController::class, 'version'])->whereUuid('intent')->can('update', 'intent')->scopeBindings()->name('intents.versions.show');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');
     Route::livewire('/intents/{intent}/photos', Photos::class)->can('update', 'intent')->name('intents.photos');
-    Route::get('/intents/{intent}/media/{media}', [IntentMediaController::class, 'show'])->scopeBindings()->name('intents.media.show');
-    Route::get('/intents/{intent}/listing-cover', [IntentMediaController::class, 'listingCover'])->name('intents.media.listing-cover');
     Route::livewire('/journeys', JourneyIndex::class)->name('journeys.index');
     Route::livewire('/deals', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('deals.index');
     Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
