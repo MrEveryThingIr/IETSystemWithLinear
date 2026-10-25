@@ -34,7 +34,7 @@ those milestones now. Repository compass and development circuit were read.
 | C3 Media/preview | Implemented: media upload/order/visibility in composer, shared audience-aware presentation (`intents.show`), media history migration | ComposerMediaTest + ComposerPresentationTest passed (Market suite 23 tests / 93 assertions) | Live preview verified; real file upload not yet driven in browser | Not accepted |
 | C4 Publishing/history | Implemented: owner-only history list and version view (`intents.versions.show`), restore-as-draft (`RestoreIntentVersion`), versions immutable, Deal source versions untouched, legacy edit refuses to overwrite pending composer work | Market suite incl. restore/authorization/immutability tests | Restore not yet driven in browser; history list renders | Not accepted |
 | C5 Discovery/Business | Implemented: one typed Directory filter over published search values (whitelisted keys, bound values), property facts of a catalog offer become details (floor area, rooms, floor), read-only From-your-catalog card, catalog-owned terms enforced server-side, explicit Use the new catalog version | ComposerBusinessCatalogTest (3 tests) + Business/Market/Directory/Intent filter run 190 tests passed | Filter UI verified light theme desktop | Not accepted |
-| C6 Acceptance/hardening | In progress: full regression, real browser upload, MySQL rehearsal done; MariaDB rehearsal pending (no MariaDB on this machine) | See Evidence below | Upload, preview, draft/publish, mobile dark, Persian RTL, light desktop; accessible-name sweep of composer clean | Not accepted |
+| C6 Acceptance/hardening | In progress: full regression, real browser upload, MySQL rehearsal done; MariaDB covered by the CI legacy-mariadb job rather than a local install | See Evidence below | Upload, preview, draft/publish, mobile dark, Persian RTL, light desktop; accessible-name sweep of composer clean | Not accepted |
 
 ## Inventory and compatibility boundary
 
@@ -76,8 +76,8 @@ No file-storage replacement is planned. Monetary abstractions outside Market sta
 C1's populated rehearsal passed on MySQL 8.4.3: 119 migrations, original fields
 preserved, Deal source version backfilled, rollback/reapply successful, all tables
 InnoDB. Evidence: ignored `storage/release-acceptance/m2/mysql-rehearsal.json`.
-SQLite populated rollback/reapply also passed. MariaDB and remote exact-head CI
-remain pending. The rehearsal created a new `iet_m2_rehearsal_*` database; the
+SQLite populated rollback/reapply also passed. MariaDB and remote CI are covered in
+the acceptance runbook below. The rehearsal created a new `iet_m2_rehearsal_*` database; the
 owner's configured database was not modified. Publication retry compares content
 without generated detail UUIDs, with a regression assertion.
 
@@ -107,9 +107,53 @@ legacy pending-publication regression cases). PHPStan clean; touched PHP Pint cl
 ## Evidence (Oct 25, branch head in git log)
 
 - Full suite: 1105 tests, 1105 passed, 10490 assertions (with OPENSSL_CONF set). PlannerRemindersTest: 3 failures without it were environmental. PHP OpenSSL on this Windows machine cannot create EC keys without `openssl.cnf` (`error:80000003`); with `OPENSSL_CONF=<php dir>/extras/ssl/openssl.cnf` all 6 pass. Not caused by M2 code.
-- Migrations: MySQL 8.4.3 disposable `iet_m2_rehearsal_c6` migrate / rollback 2 / reapply passed, all InnoDB, then dropped. MariaDB not available locally; needs a download and owner approval.
+- Migrations: MySQL 8.4.3 disposable `iet_m2_rehearsal_c6` migrate / rollback 2 / reapply passed, all InnoDB, then dropped. MariaDB 10.6 (MyISAM default) is verified by the CI job, not locally.
 - Browser (disposable SQLite DB, never the Laragon database): describe, draft, URL moves to the draft, real PNG upload with progress, publish, shared preview, anonymous media blocked for a signed-in-only post, mobile dark, Persian RTL, desktop light, Directory detail filter.
 - Known limits: single typed filter at a time; Arabic/Chinese screens covered by parity tests only; legacy create/edit forms remain by design until owner accepts equivalence; reference picker still scans the latest 100 candidates.
+
+## Owner acceptance runbook (Laragon, existing database)
+
+Production engine: MySQL/MariaDB on shared hosting with a MyISAM server default and legacy
+TIMESTAMP defaults (`docs/PRODUCTION_DEPLOYMENT.md`). CI already carries a
+`legacy-mariadb-portability` job (MariaDB 10.6, MyISAM default); no local MariaDB is needed.
+
+**Remote CI at head `214b8b46` (GitHub check runs, read Oct 25 after push):** PHP 8.4 / Node 22,
+Release blockers ubuntu and windows, and Shared-host MariaDB all completed `success`.
+Local evidence (above) and CI evidence are separate; CI re-verifies only commits that are pushed.
+Each later doc-only commit needs its own CI read before acceptance.
+
+**Migration risk before you run `php artisan migrate`:**
+
+- Two new migrations, both additive: `2026_11_10_000000` creates `intent_details`, `intent_versions`,
+  `intent_search_values`, `intent_detail_templates` and adds nullable columns to `actor_profile_intents`
+  (`published_version_id`, `working_copy`), `actor_profile_intent_media` (`visibility`) and
+  `relationships` (`originating_intent_version_id`); `2026_11_10_000100` adds `deleted_at` to intent media.
+- It backfills one version 1 for each existing active, paused or closed post and pins existing Deals to it.
+  No amounts, timestamps or files change. Expect a pause proportional to the number of posts.
+- Rollback drops the new tables and columns, so it deletes version history, working copies and
+  detail values created after migrating. Treat it as a development tool, not a way back after acceptance.
+- Before migrating: back up (`mysqldump --single-transaction --routines <db> > backup.sql`), then run
+  `php artisan migrate --pretend` to read the SQL, then `php artisan migrate`.
+- Draft posts are new rows with status draft; they stay out of the Directory, matching and Deals until published.
+
+**Browser acceptance (about 10 minutes).** Pull the branch, `composer install`, `npm ci && npm run build`,
+migrate as above, enable the market surface, sign in, then:
+
+1. `/intents/compose`: type one sentence, Save draft. The address moves to the draft; reload keeps it.
+2. Details: add Floor area and one custom detail; set one detail to Only me; check the preview audience switch.
+3. Photos: upload a photo, tick the rights box, save; reorder or remove it.
+4. Publish, open `/intents/{id}`, then sign out and confirm the audience rule and private detail are respected.
+5. Edit and publish again; History shows two versions; View one; Restore the first as a draft; Discard it.
+6. `/intents`: Detail, Floor area, minimum, and check it narrows results; Clear filters.
+7. Business owners: Offer a property catalog item to the market; the catalog card is read-only; edit the
+   catalog item and publish it; the post offers Use the new catalog version.
+8. Repeat steps 1 and 3 at phone width, in dark theme and in Persian.
+9. Existing `/intents/create` and the profile editor still work (legacy forms remain by design).
+
+**Working-cost guidance for the next sessions.** Sonnet is fine for implementation and review. Use Haiku
+at low effort for mechanical edits, translation parity, doc updates and simple checks. Keep higher effort
+for design decisions, data-integrity or authorization changes. Run focused tests while building and the
+full suite only at gates.
 
 ## Continuation
 
