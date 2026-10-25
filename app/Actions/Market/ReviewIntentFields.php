@@ -66,9 +66,12 @@ final class ReviewIntentFields
     }
 
     /** Approve and publish as the next version of the key. @param array<string, mixed> $edit */
-    public function approve(User $admin, IntentFieldProposal $proposal, array $edit): IntentFieldDefinition
+    public function approve(User $admin, IntentFieldProposal $proposal, array $edit): ?IntentFieldDefinition
     {
         $this->authorize($admin, $proposal);
+        if ($proposal->change_type !== null) {
+            return app(ApplyFieldChange::class)->apply($admin, $proposal, $edit);
+        }
         $payload = $this->merge($proposal, $edit);
         $key = (string) ($edit['key'] ?? $proposal->target_key ?? '');
         $builtin = IntentDetailCatalog::codeDefinitions()[$key] ?? null;
@@ -126,9 +129,12 @@ final class ReviewIntentFields
     public function retire(User $admin, string $key): void
     {
         abort_unless($this->canReview($admin), 403);
-        $latest = IntentFieldDefinition::query()->where('field_key', $key)->orderByDesc('id')->firstOrFail();
-        abort_if(isset(IntentDetailCatalog::codeDefinitions()[$key]), 422);
-        $latest->update(['status' => 'retired', 'retired_at' => now()]);
+        if (isset(IntentDetailCatalog::codeDefinitions()[$key])) {
+            // A built-in is hidden by an overlay version; the code definition itself never changes.
+            app(ApplyFieldChange::class)->retire($admin, $key);
+        } else {
+            IntentFieldDefinition::query()->where('field_key', $key)->orderByDesc('id')->firstOrFail()->update(['status' => 'retired', 'retired_at' => now()]);
+        }
         IntentDetailCatalog::bumpVersion();
     }
 

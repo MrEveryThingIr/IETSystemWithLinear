@@ -16,7 +16,7 @@ class IntentFieldDefinition extends Model
 
     protected function casts(): array
     {
-        return ['options' => 'array', 'domains' => 'array', 'labels' => 'array', 'descriptions' => 'array', 'aliases' => 'array',
+        return ['options' => 'array', 'domains' => 'array', 'labels' => 'array', 'descriptions' => 'array', 'aliases' => 'array', 'hidden_options' => 'array',
             'published_at' => 'immutable_datetime', 'retired_at' => 'immutable_datetime', 'version' => 'integer'];
     }
 

@@ -79,6 +79,7 @@ use App\Livewire\Intents\Photos;
 use App\Livewire\Interactions\ReviewQueue;
 use App\Livewire\Interactions\ReviewShow;
 use App\Livewire\Journeys\Index as JourneyIndex;
+use App\Livewire\Market\FieldSuggestions;
 use App\Livewire\Messages\Contacts;
 use App\Livewire\Notifications\Index as NotificationIndex;
 use App\Livewire\Planner\BasicCreate as PlannerBasicCreate;
@@ -206,6 +207,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/intents/create', fn (Request $request) => redirect()->route('intents.compose', $request->only(['side', 'as'])))->name('intents.create');
     Route::livewire('/intents/create/classic', IntentCreate::class)->name('intents.create.classic');
     Route::livewire('/intents/compose', IntentComposer::class)->name('intents.compose');
+    Route::livewire('/intents/field-suggestions', FieldSuggestions::class)->name('intents.field-suggestions');
     Route::livewire('/intents/{intent}/compose', IntentComposer::class)->whereUuid('intent')->can('update', 'intent')->name('intents.compose.edit');
     Route::get('/intents/{intent}/versions/{version:uuid}', [IntentPresentationController::class, 'version'])->whereUuid('intent')->can('update', 'intent')->scopeBindings()->name('intents.versions.show');
     Route::livewire('/intents/{intent}/matches', IntentMatches::class)->can('update', 'intent')->name('intents.matches');

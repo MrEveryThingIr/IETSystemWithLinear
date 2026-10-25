@@ -122,24 +122,30 @@ final class IntentProfiles
      */
     public static function inapplicable(string $topic, string $intention, string $arrangement, array $answers): array
     {
-        $profile = self::all()[$topic] ?? null;
-        if ($profile === null) {
-            return [];
-        }
         $isNeed = in_array($intention, ['need', 'person'], true);
-        $applicable = [];
-        $constrained = [];
-        foreach ($profile['fields'] as $entry) {
-            $options = $entry[2] ?? [];
-            $constrained[$entry[0]] = ($constrained[$entry[0]] ?? false) || isset($options['arrangement']);
-            $tier = $isNeed && array_key_exists('need', $options) ? $options['need'] : $entry[1];
-            if ($tier !== null && (! isset($options['arrangement']) || $options['arrangement'] === $arrangement)) {
-                $applicable[$entry[0]] = true;
+        $bad = [];
+        $profile = self::all()[$topic] ?? null;
+        if ($profile !== null) {
+            $applicable = [];
+            $constrained = [];
+            foreach ($profile['fields'] as $entry) {
+                $options = $entry[2] ?? [];
+                $constrained[$entry[0]] = ($constrained[$entry[0]] ?? false) || isset($options['arrangement']);
+                $tier = $isNeed && array_key_exists('need', $options) ? $options['need'] : $entry[1];
+                if ($tier !== null && (! isset($options['arrangement']) || $options['arrangement'] === $arrangement)) {
+                    $applicable[$entry[0]] = true;
+                }
+            }
+            // Only arrangement-bound fields are ever inapplicable; everything else is merely not recommended.
+            $bad = array_keys(array_filter($constrained, fn (bool $bound, string $key): bool => $bound && ! isset($applicable[$key]), ARRAY_FILTER_USE_BOTH));
+        }
+        foreach (array_keys($answers) as $key) {
+            if (IntentFieldRules::hides((string) $key, $topic, $isNeed, $arrangement, $answers)) {
+                $bad[] = (string) $key;
             }
         }
 
-        // Only arrangement-bound fields are ever inapplicable; everything else is merely not recommended.
-        return array_keys(array_filter($constrained, fn (bool $bound, string $key): bool => $bound && ! isset($applicable[$key]), ARRAY_FILTER_USE_BOTH));
+        return array_values(array_unique($bad));
     }
 
     /** Details worth showing first on a published card for a topic, most telling first. */
@@ -192,7 +198,8 @@ final class IntentProfiles
             if ($isNeed && array_key_exists('need', $options)) {
                 $tier = $options['need'];
             }
-            if ($tier === null || ! self::conditionsHold($options, $answers)) {
+            if ($tier === null || ! self::conditionsHold($options, $answers)
+                || IntentFieldRules::hides($key, $topic, $isNeed, $arrangement, $answers)) {
                 continue;
             }
             $result[$tier][] = $key;
@@ -207,6 +214,12 @@ final class IntentProfiles
         $allowed = self::all()[$topic]['arrangements'] ?? [];
 
         return in_array($preferred, $allowed, true) ? $preferred : ($allowed[0] ?? $preferred);
+    }
+
+    /** @param array<string, mixed> $options */
+    public static function holds(array $options, array $answers): bool
+    {
+        return self::conditionsHold($options, $answers);
     }
 
     /** @param array<string, mixed> $options */

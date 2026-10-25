@@ -40,6 +40,16 @@
                             </div>
                         </div>
                         @if($profile['hint'])<x-market.chip dashed wire:click="chooseTopic('{{ $profile['hint'] }}')" data-topic-hint>{{ __('composer.topic_hint', ['topic' => __('composer.topics.'.$profile['hint'])]) }}</x-market.chip>@endif
+                        @if($compositions->isNotEmpty())
+                            <div class="relative" x-data="{open: false}" x-on:keydown.escape="open = false" x-on:click.outside="open = false">
+                                <x-market.chip dashed x-on:click="open = ! open" aria-haspopup="menu" x-bind:aria-expanded="open.toString()" data-use-template>{{ __('composer.use_template') }} <flux:icon.chevron-down class="size-3.5" /></x-market.chip>
+                                <div x-show="open" x-cloak role="menu" class="absolute start-0 z-30 mt-1 w-64 max-w-[85vw] rounded-xl border bg-white p-1 shadow-lg dark:bg-zinc-900">
+                                    @foreach($compositions as $template)
+                                        <button type="button" role="menuitem" wire:click="applyTemplate('{{ $template->uuid }}')" @if($topic !== '' && $template->topic && $template->topic !== $topic) wire:confirm="{{ __('composer.confirm_topic') }}" @endif x-on:click="open = false" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"><span dir="auto">{{ $template->name }}</span>@if($template->topic)<span class="text-xs text-zinc-500">{{ __('composer.topics.'.$template->topic) }}</span>@endif</button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                         @foreach($profile['arrangements'] as $choice)
                             <x-market.chip :active="($core['arrangement_kind'] ?? '') === $choice" wire:click="chooseArrangement('{{ $choice }}')" data-arrangement="{{ $choice }}">{{ __('composer.arrangements.'.$choice.'.'.($isOffer ? 'offer' : 'need')) }}</x-market.chip>
                         @endforeach
@@ -49,7 +59,25 @@
                 <div class="space-y-4 p-4 sm:p-5" data-composer-selected>
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="text-base font-semibold">{{ __('composer.details_title') }}</h2>
-                        <x-market.chip wire:click="openPicker" data-add-field><flux:icon.plus class="size-4" /> {{ __('composer.add_field') }}</x-market.chip>
+                        <div class="flex items-center gap-2">
+                            @if(count($details) || $groups->isNotEmpty())
+                                <div class="relative" x-data="{open: false}" x-on:keydown.escape="open = false" x-on:click.outside="open = false">
+                                    <x-market.chip x-on:click="open = ! open" aria-haspopup="menu" x-bind:aria-expanded="open.toString()" data-groups-menu><flux:icon.folder class="size-4" /> {{ __('composer.groups_menu') }}</x-market.chip>
+                                    <div x-show="open" x-cloak role="menu" class="absolute end-0 z-30 mt-1 w-72 max-w-[85vw] space-y-1 rounded-xl border bg-white p-2 shadow-lg dark:bg-zinc-900">
+                                        @foreach($groups->where('parent_id', null) as $group)
+                                            <button type="button" role="menuitem" wire:click="applyTemplate('{{ $group->uuid }}')" x-on:click="open = false" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"><span dir="auto">{{ $group->name }}</span><span class="text-xs text-zinc-500">{{ __('composer.add_group') }}</span></button>
+                                        @endforeach
+                                        @if(count($details))
+                                            <div class="space-y-2 border-t pt-2">
+                                                <flux:input wire:model="groupName" wire:keydown.enter="saveTemplate('group')" :placeholder="__('composer.group_name')" :aria-label="__('composer.group_name')" dir="auto" />
+                                                <flux:button size="sm" class="w-full" wire:click="saveTemplate('group')" x-on:click="open = false">{{ __('composer.save_group') }}</flux:button>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+                            <x-market.chip wire:click="openPicker" data-add-field><flux:icon.plus class="size-4" /> {{ __('composer.add_field') }}</x-market.chip>
+                        </div>
                     </div>
                     @include('livewire.intents.composer.terms')
                     @if(count($details))
@@ -65,10 +93,23 @@
                                         <button type="button" wire:click="toggleDetailPrivacy({{ $index }})" aria-pressed="{{ ($detail['visibility'] ?? 'same') === 'private' ? 'true' : 'false' }}" title="{{ __('composer.only_me') }}" aria-label="{{ __('composer.only_me') }}" class="grid size-8 place-items-center rounded-full hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:hover:bg-zinc-800 {{ ($detail['visibility'] ?? 'same') === 'private' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white' : '' }}">@if(($detail['visibility'] ?? 'same') === 'private')<flux:icon.lock-closed class="size-4" />@else<flux:icon.lock-open class="size-4" />@endif</button>
                                         <button type="button" wire:click="moveDetail({{ $index }}, -1)" class="grid size-8 place-items-center rounded-full hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:hover:bg-zinc-800" aria-label="{{ __('composer.up') }}"><flux:icon.chevron-up class="size-4" /></button>
                                         <button type="button" wire:click="moveDetail({{ $index }}, 1)" class="grid size-8 place-items-center rounded-full hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:hover:bg-zinc-800" aria-label="{{ __('composer.down') }}"><flux:icon.chevron-down class="size-4" /></button>
-                                        @if($custom)
-                                            <button type="button" wire:click="saveField({{ $index }})" class="inline-flex min-h-8 items-center rounded-full px-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800">{{ __('composer.save_field') }}</button>
-                                            <button type="button" wire:click="suggestStandard({{ $index }})" class="inline-flex min-h-8 items-center rounded-full px-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800">{{ __('composer.suggest_standard') }}</button>
-                                        @endif
+                                        <div class="relative" x-data="{open: false}" x-on:keydown.escape="open = false" x-on:click.outside="open = false">
+                                            <button type="button" x-on:click="open = ! open" aria-haspopup="menu" x-bind:aria-expanded="open.toString()" class="grid size-8 place-items-center rounded-full hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:hover:bg-zinc-800" aria-label="{{ __('composer.add_to_group') }}" title="{{ __('composer.add_to_group') }}"><flux:icon.folder-plus class="size-4" /></button>
+                                            <div x-show="open" x-cloak role="menu" class="absolute start-0 z-30 mt-1 w-56 max-w-[85vw] rounded-xl border bg-white p-1 shadow-lg dark:bg-zinc-900">
+                                                @foreach($groups as $group)<button type="button" role="menuitem" wire:click="addToGroup({{ $index }}, '{{ $group->uuid }}')" x-on:click="open = false" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800" wire:key="g{{ $index }}-{{ $group->uuid }}"><span dir="auto">{{ $group->name }}</span></button>@endforeach
+                                                <button type="button" role="menuitem" wire:click="addToGroup({{ $index }})" x-on:click="open = false" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 font-medium">{{ __('composer.new_group') }}</button>
+                                            </div>
+                                        </div>
+                                        <div class="relative" x-data="{open: false}" x-on:keydown.escape="open = false" x-on:click.outside="open = false">
+                                            <button type="button" x-on:click="open = ! open" aria-haspopup="menu" x-bind:aria-expanded="open.toString()" class="grid size-8 place-items-center rounded-full hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:hover:bg-zinc-800" aria-label="{{ __('composer.more_actions') }}" title="{{ __('composer.more_actions') }}" data-field-menu><flux:icon.ellipsis-horizontal class="size-4" /></button>
+                                            <div x-show="open" x-cloak role="menu" class="absolute start-0 z-30 mt-1 w-64 max-w-[85vw] rounded-xl border bg-white p-1 shadow-lg dark:bg-zinc-900">
+                                                @if(! $custom)<button type="button" role="menuitem" x-on:click="open = false; $dispatch('open-suggestion', {key: @js($detail['canonical_key']), topic: @js($topic), intention: @js($needSide ? 'need' : 'offer'), arrangement: @js($core['arrangement_kind'] ?? ''), selected: @js(array_values(array_filter(array_column($details, 'canonical_key'))))})" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800" data-suggest-field>{{ __('composer.suggest_improvement') }}</button>@endif
+                                                @if($custom)
+                                                    <button type="button" role="menuitem" wire:click="saveField({{ $index }})" x-on:click="open = false" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">{{ __('composer.save_field') }}</button>
+                                                    <button type="button" role="menuitem" wire:click="suggestStandard({{ $index }})" x-on:click="open = false" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">{{ __('composer.suggest_standard') }}</button>
+                                                @endif
+                                            </div>
+                                        </div>
                                         <button type="button" wire:click="removeDetail({{ $index }})" class="ms-auto grid size-8 place-items-center rounded-full hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:hover:bg-zinc-800" aria-label="{{ __('composer.remove') }}"><flux:icon.x-mark class="size-4" /></button>
                                     </div>
                                 </div>
@@ -114,8 +155,19 @@
     </div>
     <div class="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-end gap-2 rounded-2xl border bg-white/95 p-3 pe-20 shadow-lg backdrop-blur dark:bg-zinc-900/95 sm:gap-3 sm:p-4 lg:bottom-4 lg:pe-4 [&>[data-flux-field]]:w-full sm:[&>[data-flux-field]]:w-auto [&>button]:h-auto [&>button]:min-h-11 [&>button]:flex-1 sm:[&>button]:flex-none" aria-label="{{ __('composer.publish_controls') }}">
         <flux:select wire:model.live="core.visibility" :label="__('composer.audience')"><option value="private">{{ __('composer.only_me') }}</option><option value="authenticated">{{ __('composer.signed_in') }}</option><option value="public">{{ __('composer.everyone') }}</option>@if($publisher->kind !== \App\Support\Parties\Party::ACTOR)<option value="members">{{ __('intents.visibility.members') }}</option>@endif @if(($core['visibility'] ?? '') === 'inherited')<option value="inherited">{{ __('ui.profile.item_visibility_options.inherited') }}</option>@endif</flux:select>
-        <flux:button wire:click="saveDraft" wire:loading.attr="disabled">{{ __('composer.save_draft') }}</flux:button>
+        <flux:button wire:click="saveDraft" title="{{ __('composer.draft_explain') }}" wire:loading.attr="disabled">{{ __('composer.save_draft') }}</flux:button>
+        <div class="relative">
+            <flux:button wire:click="$toggle('templateOpen')" variant="ghost" aria-expanded="{{ $templateOpen ? 'true' : 'false' }}" title="{{ __('composer.template_explain') }}" data-save-template>{{ __('composer.save_as_template') }}</flux:button>
+            @if($templateOpen)
+                <div class="absolute bottom-full end-0 z-30 mb-2 w-80 max-w-[90vw] space-y-3 rounded-xl border bg-white p-4 shadow-lg dark:bg-zinc-900" role="dialog" aria-label="{{ __('composer.save_as_template') }}" x-on:keydown.escape="$wire.set('templateOpen', false)">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('composer.template_explain') }}</p>
+                    <flux:input wire:model="templateName" wire:keydown.enter="saveTemplate('composition')" :label="__('composer.template_name')" dir="auto" />
+                    <div class="flex justify-end gap-2"><flux:button size="sm" variant="ghost" wire:click="$set('templateOpen', false)">{{ __('field_review.cancel') }}</flux:button><flux:button size="sm" variant="primary" wire:click="saveTemplate('composition')">{{ __('composer.save_as_template') }}</flux:button></div>
+                </div>
+            @endif
+        </div>
         <flux:button wire:click="publish" variant="primary" wire:loading.attr="disabled"><span class="sm:hidden">{{ __('composer.publish') }}</span><span class="hidden sm:inline">{{ __('composer.publish_to') }} {{ __('composer.audiences.'.($core['visibility'] ?? 'authenticated')) }}</span></flux:button>
         <span wire:loading role="status">{{ __('composer.saving') }}</span>
     </div>
+    <livewire:market.suggest-improvement />
 </section>

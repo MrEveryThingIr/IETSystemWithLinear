@@ -26,6 +26,7 @@ use App\Support\Market\ConstraintParser;
 use App\Support\Market\DetailValue;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentFieldLibrary;
+use App\Support\Market\IntentFieldTaxonomy;
 use App\Support\Market\IntentPresentation;
 use App\Support\Market\IntentProfiles;
 use App\Support\Market\IntentSnapshot;
@@ -115,6 +116,10 @@ class Composer extends Component
     public string $groupName = '';
 
     public string $renaming = '';
+
+    public bool $templateOpen = false;
+
+    public string $managingGroup = '';
 
     public string $renameTo = '';
 
@@ -505,17 +510,21 @@ class Composer extends Component
     }
 
     /**
-     * Saves structure only, never answers or files. composition = fields + chosen terms + topic,
-     * group = just the selected fields.
+     * Saves structure only, never answers or files. A composition is the whole reusable arrangement for a
+     * post (fields in order with privacy defaults, chosen blocks, topic, side and arrangement); a group is
+     * just a few fields that belong together.
      */
     public function saveTemplate(string $kind = 'composition'): void
     {
         abort_unless(in_array($kind, ['composition', 'group'], true), 422);
         $name = trim($kind === 'group' ? $this->groupName : $this->templateName);
         $this->validate([($kind === 'group' ? 'groupName' : 'templateName') => ['required', 'string', 'max:120']]);
-        $this->storeTemplate($kind, $name, $this->editableDetails(shape: true), $kind === 'composition' ? $this->terms : [], $kind === 'composition' ? $this->topic : '');
+        $composition = $kind === 'composition';
+        $this->storeTemplate($kind, $name, $this->editableDetails(shape: true), $composition ? $this->terms : [], $composition ? $this->topic : '',
+            $composition ? ['side' => $this->isNeedSide() ? 'need' : 'offer', 'arrangement' => (string) ($this->core['arrangement_kind'] ?? 'other')] : []);
         $this->templateName = $this->groupName = '';
-        $this->notice = __('composer.template_saved');
+        $this->templateOpen = false;
+        $this->notice = __($composition ? 'composer.template_saved' : 'composer.group_saved');
     }
 
     /** Keep one personal field (usually a custom one) to reuse in later compositions. */
@@ -529,21 +538,37 @@ class Composer extends Component
         $this->notice = __('composer.field_saved');
     }
 
-    /** @param list<array<string, mixed>> $rows @param list<string> $terms */
-    private function storeTemplate(string $kind, string $name, array $rows, array $terms, string $topic): void
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @param  list<string>  $terms
+     * @param  array<string, string>  $context
+     */
+    private function storeTemplate(string $kind, string $name, array $rows, array $terms, string $topic, array $context = []): IntentDetailTemplate
     {
         $publisher = $this->publisher();
         abort_unless(in_array($publisher->kind, [Party::ACTOR, Party::BUSINESS], true), 422);
+
+        return IntentDetailTemplate::query()->create(['owner_actor_id' => $publisher->kind === Party::ACTOR ? $publisher->id : null,
+            'owner_business_id' => $publisher->kind === Party::BUSINESS ? $publisher->id : null, 'name' => $name, 'kind' => $kind,
+            'topic' => $topic === '' ? null : $topic, 'terms' => $terms, 'context' => $context === [] ? null : $context, 'fields' => $this->shapes($rows)]);
+    }
+
+    /**
+     * Rows reduced to their structure: no value, note or file ever enters a saved item.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function shapes(array $rows): array
+    {
         $shaped = app(NormalizeIntentDetails::class)->execute($this->user(), $rows, shapeOnly: true);
-        $fields = array_map(function ($row): array {
+
+        return array_map(function ($row): array {
             $options = $row['payload']['options'] ?? [];
             unset($row['payload']);
 
             return [...$row, 'options' => $options];
         }, $shaped);
-        IntentDetailTemplate::query()->create(['owner_actor_id' => $publisher->kind === Party::ACTOR ? $publisher->id : null,
-            'owner_business_id' => $publisher->kind === Party::BUSINESS ? $publisher->id : null, 'name' => $name, 'kind' => $kind,
-            'topic' => $topic === '' ? null : $topic, 'terms' => $terms, 'fields' => $fields]);
     }
 
     private function ownedTemplate(string $uuid): IntentDetailTemplate
@@ -556,12 +581,29 @@ class Composer extends Component
         return $template;
     }
 
-    /** Adds what is missing; answers already given are never touched. */
+    /**
+     * The fields of a saved item, including any groups nested inside it, in order.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function templateFields(IntentDetailTemplate $template, int $depth = 0): array
+    {
+        $fields = $template->fields;
+        if ($depth < 2) {
+            foreach (IntentDetailTemplate::query()->where('parent_id', $template->id)->orderBy('name')->get() as $child) {
+                array_push($fields, ...$this->templateFields($child, $depth + 1));
+            }
+        }
+
+        return $fields;
+    }
+
+    /** Adds what is missing; answers already given are never touched, and privacy defaults travel with the field. */
     public function applyTemplate(string $uuid): void
     {
         $template = $this->ownedTemplate($uuid);
         $added = 0;
-        foreach ($template->fields as $field) {
+        foreach ($this->templateFields($template) as $field) {
             $key = $field['canonical_key'] ?? null;
             $exists = collect($this->details)->contains(fn (array $row): bool => $key !== null
                 ? ($row['canonical_key'] ?? null) === $key
@@ -570,7 +612,8 @@ class Composer extends Component
                 continue;
             }
             abort_if(count($this->details) >= 50, 422);
-            $this->details[] = [...$field, 'editor_key' => (string) Str::uuid(), 'value' => in_array($field['type'], ['multiple_choice', 'date_range', 'reference'], true) ? [] : ($field['type'] === 'boolean' && $key !== null ? false : '')];
+            $this->details[] = [...$this->newRow($key), ...$field, 'editor_key' => (string) Str::uuid(),
+                'value' => in_array($field['type'], ['multiple_choice', 'date_range', 'reference'], true) ? [] : ($field['type'] === 'boolean' && $key !== null ? false : '')];
             $added++;
         }
         foreach ($template->terms ?? [] as $block) {
@@ -578,8 +621,14 @@ class Composer extends Component
                 $this->addTerm($block);
             }
         }
-        if ($this->topic === '' && ! empty($template->topic) && in_array($template->topic, IntentProfiles::topics($this->intention), true)) {
-            $this->chooseTopic($template->topic);
+        if ($template->kind === 'composition') {
+            if ($this->topic === '' && ! empty($template->topic) && in_array($template->topic, IntentProfiles::topics($this->intention), true)) {
+                $this->chooseTopic($template->topic);
+            }
+            $arrangement = (string) ($template->context['arrangement'] ?? '');
+            if ($arrangement !== '' && in_array($arrangement, IntentProfiles::all()[$this->topic]['arrangements'] ?? [], true)) {
+                $this->chooseArrangement($arrangement);
+            }
         }
         $this->pickerOpen = false;
         $this->notice = __('composer.template_applied', ['count' => $added]);
@@ -600,8 +649,78 @@ class Composer extends Component
 
     public function deleteTemplate(string $uuid): void
     {
-        $this->ownedTemplate($uuid)->delete();
+        $template = $this->ownedTemplate($uuid);
+        // Groups nested inside become top-level groups; nothing else is lost with it.
+        IntentDetailTemplate::query()->where('parent_id', $template->id)->update(['parent_id' => null]);
+        $template->delete();
         $this->notice = __('composer.template_deleted');
+    }
+
+    /** Put a selected field into one of my groups (or a new one), without copying its definition. */
+    public function addToGroup(int $index, string $uuid = ''): void
+    {
+        abort_unless(isset($this->details[$index]), 404);
+        $shape = $this->shapes([$this->details[$index]])[0];
+        if ($uuid === '') {
+            $name = trim($this->groupName) !== '' ? trim($this->groupName) : (string) ($shape['label'] ?? '');
+            abort_if($name === '', 422);
+            $this->storeTemplate('group', mb_substr($name, 0, 120), [$this->details[$index]], [], '');
+            $this->groupName = '';
+        } else {
+            $group = $this->ownedTemplate($uuid);
+            abort_unless($group->kind === 'group', 422);
+            $fields = $group->fields;
+            $key = $shape['canonical_key'] ?? null;
+            $has = collect($fields)->contains(fn (array $field): bool => $key !== null ? ($field['canonical_key'] ?? null) === $key
+                : empty($field['canonical_key']) && ($field['label'] ?? '') === ($shape['label'] ?? ''));
+            abort_if(count($fields) >= 50, 422);
+            if (! $has) {
+                $group->update(['fields' => [...$fields, $shape]]);
+            }
+        }
+        $this->notice = __('composer.group_saved');
+    }
+
+    public function removeFromGroup(string $uuid, int $position): void
+    {
+        $group = $this->ownedTemplate($uuid);
+        $fields = $group->fields;
+        abort_unless(isset($fields[$position]), 404);
+        unset($fields[$position]);
+        $group->update(['fields' => array_values($fields)]);
+    }
+
+    public function moveInGroup(string $uuid, int $position, int $direction): void
+    {
+        abort_unless(in_array($direction, [-1, 1], true), 422);
+        $group = $this->ownedTemplate($uuid);
+        $fields = $group->fields;
+        $next = $position + $direction;
+        if (isset($fields[$position], $fields[$next])) {
+            [$fields[$position], $fields[$next]] = [$fields[$next], $fields[$position]];
+            $group->update(['fields' => $fields]);
+        }
+    }
+
+    /** Nest a group inside another (one level), or bring it back to the top. */
+    public function nestGroup(string $uuid, string $parentUuid = ''): void
+    {
+        $group = $this->ownedTemplate($uuid);
+        abort_unless($group->kind === 'group', 422);
+        if ($parentUuid === '') {
+            $group->update(['parent_id' => null]);
+
+            return;
+        }
+        $parent = $this->ownedTemplate($parentUuid);
+        abort_unless($parent->kind === 'group' && $parent->id !== $group->id && $parent->parent_id === null
+            && ! IntentDetailTemplate::query()->where('parent_id', $group->id)->exists(), 422);
+        $group->update(['parent_id' => $parent->id]);
+    }
+
+    public function manageGroup(string $uuid): void
+    {
+        $this->managingGroup = $this->managingGroup === $uuid ? '' : $uuid;
     }
 
     public function updatedDetails(mixed $value, ?string $key = null): void
@@ -743,7 +862,8 @@ class Composer extends Component
             'referenceChoices' => $this->referenceChoices(),
             'presentation' => app(IntentPresentation::class)->build($this->previewSnapshot(), $this->previewAudience === 'owner' ? $user : null, $this->previewAudience === 'owner', $this->intent, $this->isNeedSide() ? 'need' : 'offer', $this->topic),
             'capabilities' => $this->intent === null ? Capability::query()->heldBy($this->publisher())->active()->with('concept.labels')->limit(12)->get() : collect(),
-            'templates' => $this->savedTemplates('')])->title(__('composer.title'));
+            'templates' => $this->savedTemplates(''), 'compositions' => $this->compositionsForSide(),
+            'groups' => $this->savedTemplates('')->where('kind', 'group')->values()])->title(__('composer.title'));
     }
 
     /** @return array<string, mixed> */
@@ -822,12 +942,21 @@ class Composer extends Component
                 || str_contains(IntentFieldLibrary::normalize((string) __('composer.terms.'.$block.'.words')), $needle)));
 
             return ['query' => $query, 'terms' => $terms, 'matches' => IntentFieldLibrary::search($query, $taken),
-                'saved' => $this->savedTemplates($query)];
+                'saved' => $this->savedTemplates($query, fieldsOnly: true)];
         }
 
         return ['query' => '', 'terms' => array_values(array_diff($terms, $termsLeft)), 'recommendedFields' => array_slice($fieldsLeft, 0, 8), 'recommendedTerms' => $termsLeft,
-            'recent' => array_values(array_diff($this->recentKeys(), $taken)), 'saved' => $this->savedTemplates(''),
-            'groups' => IntentFieldLibrary::grouped($taken)];
+            'recent' => array_values(array_diff($this->recentKeys(), $taken)), 'saved' => $this->savedTemplates('', fieldsOnly: true),
+            'tree' => IntentFieldTaxonomy::tree()];
+    }
+
+    /** Saved whole-post templates that fit what is being written (Need or Offer). */
+    private function compositionsForSide(): Collection
+    {
+        $side = $this->isNeedSide() ? 'need' : 'offer';
+
+        return $this->savedTemplates('')->filter(fn (IntentDetailTemplate $template): bool => $template->kind === 'composition'
+            && (($template->context['side'] ?? $side) === $side))->values();
     }
 
     /** @return list<string> */
@@ -845,7 +974,7 @@ class Composer extends Component
     }
 
     /** @return Collection<int, IntentDetailTemplate> */
-    private function savedTemplates(string $query): Collection
+    private function savedTemplates(string $query, bool $fieldsOnly = false): Collection
     {
         $publisher = $this->publisher();
         if (! in_array($publisher->kind, [Party::ACTOR, Party::BUSINESS], true)) {
@@ -854,6 +983,9 @@ class Composer extends Component
         $templates = IntentDetailTemplate::query()->where($publisher->kind === Party::BUSINESS ? 'owner_business_id' : 'owner_actor_id', $publisher->id)
             ->orderBy('name')->get();
         $needle = IntentFieldLibrary::normalize($query);
+        if ($fieldsOnly) {
+            $templates = $templates->filter(fn (IntentDetailTemplate $template): bool => in_array($template->kind, ['field', 'group'], true))->values();
+        }
 
         return $needle === '' ? $templates : $templates->filter(fn (IntentDetailTemplate $template): bool => str_contains(IntentFieldLibrary::normalize($template->name), $needle))->values();
     }

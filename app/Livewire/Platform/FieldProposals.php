@@ -8,6 +8,7 @@ use App\Models\IntentFieldProposal;
 use App\Models\User;
 use App\Support\Market\IntentDetailCatalog;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -49,6 +50,12 @@ class FieldProposals extends Component
             'domains' => $payload['domains'] ?? [],
             'options' => implode(', ', $payload['options'] ?? []),
             'unit' => $payload['unit'] ?? null,
+            'new_key' => '', 'group_key' => '',
+            'payload' => [
+                'labels' => array_replace(array_fill_keys(self::LOCALES, ''), $payload['labels'] ?? []),
+                'descriptions' => array_replace(array_fill_keys(self::LOCALES, ''), $payload['descriptions'] ?? []),
+                'aliases' => array_replace(array_fill_keys(self::LOCALES, ''), array_map(fn ($list): string => is_array($list) ? implode(', ', $list) : (string) $list, $payload['aliases'] ?? [])),
+            ],
         ];
         $this->resetErrorBag();
     }
@@ -103,6 +110,7 @@ class FieldProposals extends Component
             'duplicates' => $open === null ? [] : $review->duplicates($open),
             'definitions' => $this->status === 'library' ? IntentFieldDefinition::query()->latestVersion()->orderBy('field_key')->get() : collect(),
             'builtin' => IntentDetailCatalog::codeDefinitions(),
+            'original' => $open?->target_key !== null ? $this->original((string) $open->target_key) : null,
             'counts' => IntentFieldProposal::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'),
         ])->title(__('field_review.title'));
     }
@@ -112,8 +120,41 @@ class FieldProposals extends Component
     {
         $options = array_values(array_filter(array_map('trim', explode(',', (string) ($this->form['options'] ?? '')))));
 
+        $overrides = [];
+        foreach (['labels', 'descriptions'] as $field) {
+            $overrides[$field] = array_filter(array_map('trim', (array) ($this->form['payload'][$field] ?? [])));
+        }
+        $overrides['aliases'] = array_map(fn ($text): array => array_values(array_filter(array_map('trim', explode(',', (string) $text)))), (array) ($this->form['payload']['aliases'] ?? []));
+        $proposal = $this->reviewing === null ? null : IntentFieldProposal::query()->where('uuid', $this->reviewing)->first();
+        // Only the parts a proposal actually carries may be overridden by the reviewer.
+        $overrides = array_intersect_key($overrides, $proposal->payload ?? []);
+
         return ['key' => trim((string) ($this->form['key'] ?? '')), 'labels' => array_map('trim', (array) ($this->form['labels'] ?? [])),
-            'aliases' => (array) ($this->form['aliases'] ?? []), 'domains' => array_values((array) ($this->form['domains'] ?? [])), 'options' => $options];
+            'aliases' => (array) ($this->form['aliases'] ?? []), 'domains' => array_values((array) ($this->form['domains'] ?? [])), 'options' => $options,
+            'new_key' => trim((string) ($this->form['new_key'] ?? '')), 'group_key' => trim((string) ($this->form['group_key'] ?? '')), 'payload' => $overrides];
+    }
+
+    /**
+     * The definition a suggestion is about, as people see it today.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function original(string $key): ?array
+    {
+        $spec = IntentDetailCatalog::all()[$key] ?? null;
+        if ($spec === null) {
+            return null;
+        }
+        $labels = [];
+        $aliases = [];
+        foreach (self::LOCALES as $locale) {
+            $labels[$locale] = IntentDetailCatalog::label($key, $locale);
+            $aliases[$locale] = IntentDetailCatalog::aliases($key, $locale);
+        }
+
+        return ['key' => $key, 'type' => $spec['type'], 'unit' => $spec['unit'] ?? null, 'options' => $spec['options'] ?? [], 'hidden' => $spec['hidden_options'] ?? [],
+            'domain' => $spec['domain'] ?? 'general', 'source' => $spec['source'] ?? 'house', 'labels' => $labels, 'aliases' => $aliases, 'retired' => ! empty($spec['retired']),
+            'uses' => DB::table('intent_search_values')->where('canonical_key', $key)->distinct()->count('intent_version_id')];
     }
 
     private function proposal(): IntentFieldProposal

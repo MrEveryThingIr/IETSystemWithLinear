@@ -163,11 +163,19 @@ final class IntentDetailCatalog
                 if (($all[$key]['type'] ?? '') === 'choice' && $definition['options'] !== []) {
                     $all[$key]['options'] = array_values(array_unique([...$all[$key]['options'], ...$definition['options']]));
                 }
+                if ($definition['hidden_options'] !== []) {
+                    $all[$key]['hidden_options'] = $definition['hidden_options'];
+                }
+                if ($definition['retired']) {
+                    // A superseded built-in leaves the library but keeps resolving for published content.
+                    $all[$key]['retired'] = true;
+                    $all[$key]['superseded_by'] = $definition['superseded_by'];
+                }
 
                 continue;
             }
             $spec = ['type' => $definition['type'], 'filter' => $definition['filter'], 'domain' => $definition['domains'][0] ?? 'general',
-                'source' => 'community', 'since' => $definition['version'], 'retired' => $definition['retired']];
+                'source' => 'community', 'since' => $definition['version'], 'retired' => $definition['retired'], 'superseded_by' => $definition['superseded_by'], 'hidden_options' => $definition['hidden_options']];
             if ($definition['unit'] !== null) {
                 $spec['unit'] = $definition['unit'];
             }
@@ -192,7 +200,8 @@ final class IntentDetailCatalog
             foreach (IntentFieldDefinition::query()->latestVersion()->get() as $row) {
                 $rows[$row->field_key] = ['type' => $row->type, 'filter' => $row->filter, 'unit' => $row->unit, 'options' => $row->options ?? [],
                     'domains' => $row->domains ?? [], 'labels' => $row->labels ?? [], 'descriptions' => $row->descriptions ?? [],
-                    'aliases' => $row->aliases ?? [], 'version' => $row->version, 'retired' => $row->status === 'retired'];
+                    'aliases' => $row->aliases ?? [], 'version' => $row->version, 'retired' => $row->status === 'retired',
+                    'hidden_options' => $row->hidden_options ?? [], 'superseded_by' => $row->superseded_by];
             }
 
             return $rows;
@@ -207,6 +216,21 @@ final class IntentDetailCatalog
     public static function bumpVersion(): void
     {
         Cache::forever('intent-fields:version', self::version() + 1);
+    }
+
+    /**
+     * Choices a person may pick now. A choice an editor retired stays valid for old posts, and is kept
+     * visible when it is the value already selected.
+     *
+     * @return list<string>
+     */
+    public static function selectableOptions(string $key, mixed $current = null): array
+    {
+        $spec = self::all()[$key] ?? [];
+        $hidden = $spec['hidden_options'] ?? [];
+        $options = array_values(array_filter($spec['options'] ?? [], fn (string $option): bool => ! in_array($option, $hidden, true) || $option === $current));
+
+        return $options;
     }
 
     /** Fields offered to people now: everything except retired definitions. */

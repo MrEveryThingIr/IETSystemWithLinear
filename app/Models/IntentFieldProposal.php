@@ -22,7 +22,7 @@ class IntentFieldProposal extends Model
 
     protected function casts(): array
     {
-        return ['payload' => 'array', 'reviewed_at' => 'immutable_datetime'];
+        return ['payload' => 'array', 'context' => 'array', 'reviewed_at' => 'immutable_datetime'];
     }
 
     protected static function booted(): void

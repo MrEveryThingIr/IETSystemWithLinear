@@ -46,9 +46,25 @@ return new class extends Migration
             $table->string('superseded_by', 64)->nullable();
             $table->json('hidden_options')->nullable();
         });
-        // Personal groups may nest one level (a group inside a group).
+        // Personal groups may nest one level (a group inside a group); a composition remembers its side and arrangement.
         Schema::table('intent_detail_templates', function (Blueprint $table): void {
             $table->unsignedBigInteger('parent_id')->nullable();
+            $table->json('context')->nullable();
+        });
+        // Approved applicability rules: where a field should be hidden or belongs to one side only.
+        Schema::create('intent_field_rules', function (Blueprint $table): void {
+            $table->id();
+            $table->uuid('uuid')->unique();
+            $table->string('field_key', 64);
+            $table->string('topic', 24)->nullable();
+            $table->string('intention', 8)->nullable();
+            $table->string('arrangement', 24)->nullable();
+            $table->string('effect', 16);
+            $table->json('condition')->nullable();
+            $table->foreignId('proposal_id')->nullable();
+            $table->dateTime('created_at');
+            $table->dateTime('retired_at')->nullable();
+            $table->index(['field_key', 'retired_at'], 'intent_field_rule_field_idx');
         });
         // Proposals carry what kind of change they are and where they were made.
         Schema::table('intent_field_proposals', function (Blueprint $table): void {
@@ -60,7 +76,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach ([['intent_field_proposals', ['change_type', 'context', 'explanation']], ['intent_detail_templates', ['parent_id']],
+        Schema::dropIfExists('intent_field_rules');
+        foreach ([['intent_field_proposals', ['change_type', 'context', 'explanation']], ['intent_detail_templates', ['parent_id', 'context']],
             ['intent_field_definitions', ['superseded_by', 'hidden_options']], ['intent_search_values', ['value_number_min', 'value_number_max']]] as [$table, $columns]) {
             if (Schema::hasColumn($table, $columns[0])) {
                 Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropColumn($columns));
