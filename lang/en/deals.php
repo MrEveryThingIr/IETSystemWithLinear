@@ -41,4 +41,15 @@ return [
     'contract_requires_proposal' => 'Finalize a Contract from an accepted Proposal. Standalone contracts are not part of the normal workflow.',
     'proposal_parties_help' => 'Proposal parties come from the active Deal so negotiation cannot silently add unrelated people.',
     'market_response' => 'Respond / negotiate',
+    'terms' => [
+        'price' => 'Price',
+        'place' => 'Place',
+        'time' => 'Time',
+        'quantity' => 'Quantity',
+        'route' => 'Route',
+        'category' => 'Category',
+        'effective' => 'Takes effect',
+        'notes' => 'Notes',
+        'on_acceptance' => 'when everyone has agreed',
+    ],
 ];

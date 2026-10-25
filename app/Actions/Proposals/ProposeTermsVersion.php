@@ -12,6 +12,7 @@ use App\Models\User;
 use App\ProposalDecisionKind;
 use App\ProposalEventType;
 use App\ProposalStatus;
+use App\Support\Deals\DealTerms;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -28,6 +29,7 @@ class ProposeTermsVersion
         ?string $summary = null,
         ?string $notes = null,
         ?string $versionNote = null,
+        ?array $termsData = null,
     ): ProposalVersion {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('participate', $proposal);
@@ -36,7 +38,13 @@ class ProposeTermsVersion
         abort_if($title === '' || mb_strlen($title) > 255, 422, 'Proposal terms title is invalid.');
 
         $terms = trim($terms);
-        abort_if($terms === '' || mb_strlen($terms) > 50000, 422, 'Proposal terms are required and may not exceed 50000 characters.');
+        $termsData = $termsData === null ? null : DealTerms::normalize($termsData);
+        abort_if(mb_strlen($terms) > 50000 || ($terms === '' && $termsData === null), 422, 'Proposal terms are required and may not exceed 50000 characters.');
+        if ($termsData !== null) {
+            $terms = trim(DealTerms::render($termsData)."
+
+".$terms);
+        }
 
         $versionNote = trim((string) $versionNote);
         abort_if(mb_strlen($versionNote) > 1000, 422, 'Proposal version note may not exceed 1000 characters.');
@@ -49,6 +57,7 @@ class ProposeTermsVersion
             $summary,
             $notes,
             $versionNote,
+            $termsData,
         ): ProposalVersion {
             $locked = Proposal::query()
                 ->with('contextBinding.context')
@@ -62,6 +71,14 @@ class ProposeTermsVersion
                 ->where('actor_id', $current->actor->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            $pinned = $locked->relationship?->originating_intent_version_id;
+            abort_if(
+                $termsData !== null && $pinned !== null && isset($termsData['origin']['intent_version_id'])
+                    && (int) $termsData['origin']['intent_version_id'] !== (int) $pinned,
+                422,
+                'Deal Terms origin must be the Need or Offer version this Deal started from.',
+            );
 
             $context = $locked->contextBinding?->context;
             abort_unless($context !== null, 500, 'Proposal Negotiation Context is missing.');
@@ -87,6 +104,8 @@ class ProposeTermsVersion
                 'proposal_id' => $locked->id,
                 'version' => $nextVersion,
                 'terms_content_revision_id' => $revision->id,
+                'terms_data' => $termsData,
+                'terms_hash' => $termsData !== null ? DealTerms::hash($termsData) : null,
                 'proposed_by_actor_id' => $current->actor->id,
                 'note' => $versionNote !== '' ? $versionNote : null,
                 'proposed_at' => now(),
@@ -109,6 +128,7 @@ class ProposeTermsVersion
                 'payload' => [
                     'version' => $nextVersion,
                     'terms_content_revision_uuid' => $revision->uuid,
+                    'terms_hash' => $termsData !== null ? DealTerms::hash($termsData) : null,
                 ],
             ]);
 

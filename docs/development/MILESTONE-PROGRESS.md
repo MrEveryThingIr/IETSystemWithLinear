@@ -10,7 +10,7 @@ Lifecycle: Planned → In progress → Engineering-complete → Awaiting owner a
 |---|---|---|---|
 | M1 | Navigation, Interests, Abilities, My Items | **Engineering:** complete. **Owner acceptance:** accepted. **Merge:** merged to `integration/v2` via PR #85 (merge commit `2b438857`). **Release:** not released | None |
 | M2 | Adaptive Composer, Needs and Offers | **Engineering:** complete (foundation + category-aware refinement). **Owner acceptance:** UX-approved by the owner; both M2 migrations ran on the owner's Laragon database. **Merge:** merged to `integration/v2` via PR #86 (`c5ea9afe`) and PR #87 (`a90cb92d`); integration verified (see handoff). **Release:** not released | M1 |
-| M3 | Deals, negotiation, Terms and agreement | **Engineering:** in progress; C1 (audit, architecture, contracts) complete, C2–C5 not started ([plan](M3-DEALS-TERMS-PLAN.md), [architecture](M3-C1-ARCHITECTURE.md), [handoff](M3-DEALS-TERMS-HANDOFF.md)); branch `feat/m3-deals-terms` from `integration/v2` `a90cb92d`. **Acceptance / merge / release:** none | M2 prefilling |
+| M3 | Deals, negotiation, Terms and agreement | **Engineering:** in progress; C1 (audit, architecture, contracts) and C2 (structured Terms, stale-version fix) complete, C3–C5 not started ([plan](M3-DEALS-TERMS-PLAN.md), [architecture](M3-C1-ARCHITECTURE.md), [handoff](M3-DEALS-TERMS-HANDOFF.md)); branch `feat/m3-deals-terms` from `integration/v2` `a90cb92d`. **Acceptance / merge / release:** none | M2 prefilling |
 | M4 | Deal-linked Planner execution and Deliveries | Planned | M3; preserve independent Planner workstream |
 | M5 | Deal accounts, obligations, settlement | Planned | M4 |
 | M6 | Unified Business integration | Planned | M5 |

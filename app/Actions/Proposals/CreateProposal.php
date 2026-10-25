@@ -36,6 +36,7 @@ class CreateProposal
         ?string $notes = null,
         string $creatorRole = 'proposer',
         ?Relationship $relationship = null,
+        ?array $termsData = null,
     ): Proposal {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('create', Proposal::class);
@@ -53,6 +54,7 @@ class CreateProposal
             $notes,
             $creatorRole,
             $relationship,
+            $termsData,
         ): Proposal {
             $creator = Actor::query()->with('user')->lockForUpdate()->findOrFail($current->actor->id);
             $lockedRelationship = null;
@@ -155,6 +157,7 @@ class CreateProposal
                 $summary,
                 $notes,
                 'Initial proposal terms',
+                $termsData,
             );
 
             return $proposal->fresh([

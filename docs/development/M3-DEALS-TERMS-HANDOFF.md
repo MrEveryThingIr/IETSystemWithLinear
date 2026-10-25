@@ -8,7 +8,16 @@ Rules: one agent per branch; additive reversible migrations; tests on in-memory 
 | CP | State |
 |---|---|
 | C1 audit + architecture + contracts | **Done** (docs + `tests/Feature/M3DealAuthorityBaselineTest.php`, 3 passing) |
-| C2–C5 | Not started |
+| C2 structured Terms + G1 | **Engineering-complete** (see below) |
+| C3–C5 | Not started |
+
+### C2 delivered
+- `proposal_versions.terms_data` (JSON) + `terms_hash` (sha256 of canonical JSON), migration `2026_11_13_000000`; written at creation only, immutable by the model guard; `ProposalVersion::termsIntegrityOk()`.
+- `App\Support\Deals\DealTerms`: `normalize` (schema v1, unknown keys rejected, decimals as strings, fields sorted), `canonicalJson`, `hash`, `render` (locale text sealed into the existing content revision, so ContractVersion keeps the same revision). `deals.terms.*` strings in en/ar/fa/zh_CN.
+- `ProposeTermsVersion` / `CreateProposal` accept `?array $termsData`; origin must equal the Deal's pinned `originating_intent_version_id`.
+- **G1 fixed:** `RespondToProposal(..., ?int $expectedVersion)` checks the version inside the locked transaction (409 on mismatch); structured versions *require* it (422 if omitted). Only caller audited: `Livewire\Proposals\Show` (always sends the rendered version; shows a message on 409). Pre-M3 free-text versions keep the old null behaviour. C3's single-Agree must call with the version it rendered.
+- Party identity corrected in C1 doc §2.4a (principal key, signer ≠ principal); implemented in C3.
+- Not duplicated for Codex: `DealTermsFromIntent` (T-A) and `DealTermsDiff` (T-B) are still unassigned/unstarted; they depend only on `DealTerms::normalize` output (T-A should return a value that passes `DealTerms::normalize`).
 
 ## C2–C5 execution plan (Claude, this branch, in order)
 

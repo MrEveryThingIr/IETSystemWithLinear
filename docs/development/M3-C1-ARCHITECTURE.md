@@ -92,6 +92,20 @@ Manual `AcceptContractVersion` stays for amendments and for older accepted Propo
 - Prefill: when the Deal comes from an intent published by a Business/Group (`publisher_business_id/group_id`), that Business/Group is the counterparty party automatically; the responder chooses to act as self or as a Business/Group they manage (`PartyAuthority::partiesFor`).
 - Rule kept simple: one party per principal per Proposal; the same person cannot be two principals in one Proposal (existing `unique(proposal_id, actor_id)`).
 
+### 2.4a Party identity review (done before C3; **supersedes the "actor_id stays the key" bullet above**)
+
+Checked against `proposal_parties`, `contract_version_parties` and the actions that look parties up by `actor_id`:
+
+| Unsafe assumption in the first design | Failure | Correction |
+|---|---|---|
+| `unique(proposal_id, actor_id)` identifies a party | A manager representing Business B *and* acting personally collides on `actor_id`; two managers of the same Business cannot both be "the" representative | Principal ≠ signer. Uniqueness moves to the **principal**: new `principal_key` (`actor:ID`, `business:ID`, `group:ID`) with `unique(proposal_id, principal_key)` / `unique(contract_version_id, principal_key)`. `actor_id` stays only as the *contact/representative*, non-unique, and is never used for authority |
+| `RespondToProposal` / `AcceptContractVersion` find the party with `where actor_id = current actor` | A second manager of the Business gets `firstOrFail` 404; a representative could decide for a party they no longer manage | Resolve the party by principal: the parties of this proposal for which `PartyAuthority::canActFor(user, Party)` is true. The caller names the party (`actingAs`) when more than one qualifies; exactly one is chosen, never "all" |
+| Any one person may hold several parties | One person consents on both sides (self-dealing) or twice for one decision | A user who can act for more than one party of the same Proposal is refused at creation and at response (`Cannot act for both sides`) |
+| Authority is checked once at creation | Authority revoked before acceptance still decides | `canActFor` is evaluated again inside the response transaction; the decision stores the **signer** (`decided_by_user_id`) and the principal (via `proposal_party_id`), and the derived `ContractAcceptance` copies the signer |
+| Business/Group is an Actor-like row | There is no Actor for a Business/Group | None needed: `Party::of(Business|Group)` already is the identity; no new party model, no competing authority |
+
+Legacy rows: `principal_key` is backfilled as `actor:<actor_id>` by the C3 migration; behavior for Actor parties is unchanged. Participant visibility (who may *view* the Deal) stays `RelationshipParticipant`; binding authority is only `PartyAuthority`.
+
 ### 2.5 Version comparison
 
 Pure function over two `terms_data` arrays (+ notes) → ordered rows `{key, label, status: added|changed|removed, from, to}` and a one-line summary. Used by the Deal page ("what changed since you last looked") and event payloads. No DB access.

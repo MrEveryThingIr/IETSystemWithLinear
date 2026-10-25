@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Deals\DealTerms;
 use Database\Factories\ProposalVersionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,8 @@ use LogicException;
     'proposal_id',
     'version',
     'terms_content_revision_id',
+    'terms_data',
+    'terms_hash',
     'proposed_by_actor_id',
     'note',
     'proposed_at',
@@ -76,10 +79,17 @@ class ProposalVersion extends Model
         return $this->hasOne(Contract::class, 'source_proposal_version_id');
     }
 
+    /** True when the stored structured Terms still hash to the value sealed at creation (null for pre-M3 versions). */
+    public function termsIntegrityOk(): ?bool
+    {
+        return $this->terms_data === null ? null : hash_equals((string) $this->terms_hash, DealTerms::hash($this->terms_data));
+    }
+
     protected function casts(): array
     {
         return [
             'version' => 'integer',
+            'terms_data' => 'array',
             'proposed_at' => 'datetime',
         ];
     }

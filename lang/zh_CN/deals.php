@@ -41,4 +41,15 @@ return [
     'contract_requires_proposal' => '合同必须由已接受的提案生成。独立创建合同不属于正常流程。',
     'proposal_parties_help' => '提案参与方继承自当前交易，避免在协商中静默加入无关人员。',
     'market_response' => '回应 / 协商',
+    'terms' => [
+        'price' => '价格',
+        'place' => '地点',
+        'time' => '时间',
+        'quantity' => '数量',
+        'route' => '路线',
+        'category' => '类别',
+        'effective' => '生效时间',
+        'notes' => '备注',
+        'on_acceptance' => '所有各方同意后',
+    ],
 ];

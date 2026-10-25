@@ -13,6 +13,7 @@ use App\Models\User;
 use App\ProposalDecisionKind;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -24,6 +25,9 @@ class Show extends Component
     public Proposal $proposal;
 
     public string $responseNote = '';
+
+    /** The Terms version number last shown to this person; every decision is bound to it. */
+    public ?int $viewedVersion = null;
 
     public string $revisionTitle = '';
 
@@ -43,46 +47,45 @@ class Show extends Component
 
     public function accept(RespondToProposal $respond): void
     {
-        $respond->execute(
-            $this->proposal,
-            $this->user(),
-            ProposalDecisionKind::Accepted,
-            $this->responseNote !== '' ? $this->responseNote : null,
-        );
-
-        $this->responseNote = '';
-        $this->refreshProposal();
-        session()->flash('status', __('proposals.messages.accepted'));
+        $this->respondWith($respond, ProposalDecisionKind::Accepted, 'accepted');
     }
 
     public function requestChanges(RespondToProposal $respond): void
     {
         $this->validate(['responseNote' => ['required', 'string', 'max:2000']]);
 
-        $respond->execute(
-            $this->proposal,
-            $this->user(),
-            ProposalDecisionKind::ChangesRequested,
-            $this->responseNote,
-        );
-
-        $this->responseNote = '';
-        $this->refreshProposal();
-        session()->flash('status', __('proposals.messages.changes_requested'));
+        $this->respondWith($respond, ProposalDecisionKind::ChangesRequested, 'changes_requested');
     }
 
     public function reject(RespondToProposal $respond): void
     {
-        $respond->execute(
-            $this->proposal,
-            $this->user(),
-            ProposalDecisionKind::Rejected,
-            $this->responseNote !== '' ? $this->responseNote : null,
-        );
+        $this->respondWith($respond, ProposalDecisionKind::Rejected, 'rejected');
+    }
+
+    /** Always answers for the version that was on screen; if Terms moved on meanwhile, nothing is recorded. */
+    private function respondWith(RespondToProposal $respond, ProposalDecisionKind $kind, string $message): void
+    {
+        try {
+            $respond->execute(
+                $this->proposal,
+                $this->user(),
+                $kind,
+                $this->responseNote !== '' ? $this->responseNote : null,
+                $this->viewedVersion,
+            );
+        } catch (HttpException $e) {
+            if ($e->getStatusCode() !== 409) {
+                throw $e;
+            }
+            $this->refreshProposal();
+            session()->flash('status', __('proposals.messages.terms_changed'));
+
+            return;
+        }
 
         $this->responseNote = '';
         $this->refreshProposal();
-        session()->flash('status', __('proposals.messages.rejected'));
+        session()->flash('status', __('proposals.messages.'.$message));
     }
 
     public function proposeVersion(ProposeTermsVersion $propose): void
@@ -131,6 +134,7 @@ class Show extends Component
 
         $currentVersion = $this->proposal->versions->sortByDesc('version')->first();
         abort_unless($currentVersion instanceof ProposalVersion, 500);
+        $this->viewedVersion = $currentVersion->version;
 
         $canRespond = Gate::forUser($user)->allows('respond', $this->proposal);
         $canParticipate = Gate::forUser($user)->allows('participate', $this->proposal);

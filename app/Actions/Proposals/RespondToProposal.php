@@ -22,6 +22,7 @@ class RespondToProposal
         User $user,
         ProposalDecisionKind $decision,
         ?string $note = null,
+        ?int $expectedVersion = null,
     ): ProposalDecision {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('respond', $proposal);
@@ -29,7 +30,7 @@ class RespondToProposal
         $note = trim((string) $note);
         abort_if(mb_strlen($note) > 2000, 422, 'Proposal response note may not exceed 2000 characters.');
 
-        return DB::transaction(function () use ($proposal, $current, $decision, $note): ProposalDecision {
+        return DB::transaction(function () use ($proposal, $current, $decision, $note, $expectedVersion): ProposalDecision {
             $locked = Proposal::query()->lockForUpdate()->findOrFail($proposal->id);
             abort_unless($locked->status === ProposalStatus::Negotiating, 422, 'This Proposal is no longer open for responses.');
 
@@ -38,6 +39,15 @@ class RespondToProposal
                 ->latest('version')
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            // The decision binds the exact version the person reviewed. Structured-Terms versions require it;
+            // only pre-M3 free-text versions may still be answered without one.
+            abort_if($expectedVersion === null && $version->terms_data !== null, 422, 'The reviewed Terms version is required.');
+            abort_if(
+                $expectedVersion !== null && (int) $version->version !== $expectedVersion,
+                409,
+                'The Terms changed since you reviewed them. Review the new version first.',
+            );
 
             $party = ProposalParty::query()
                 ->where('proposal_id', $locked->id)
