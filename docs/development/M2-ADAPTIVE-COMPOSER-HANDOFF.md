@@ -155,32 +155,54 @@ at low effort for mechanical edits, translation parity, doc updates and simple c
 for design decisions, data-integrity or authorization changes. Run focused tests while building and the
 full suite only at gates.
 
-## Usability refinement: category-aware composer (branch `feat/m2-category-aware-composer`)
+## Usability refinement: field library and minimal composer (branch `feat/m2-category-aware-composer`)
 
-Owner feedback after trying the composer: fields felt unnatural. Branched from verified M2 head
-`d94df0be`; PR #86 is untouched. Roadmap unchanged (this is an M2 refinement, not a new milestone).
+Owner feedback (twice): the composer still felt like a long predefined form. Branched from verified M2 head
+`d94df0be`; PR #86 is untouched and no refinement PR is open. Roadmap unchanged (an M2 refinement, not a milestone).
 
-- **Research:** [research/CATEGORY-FIELD-RESEARCH.md](research/CATEGORY-FIELD-RESEARCH.md): directly observed Divar
-  filters (rent, cars, phones, jobs, services), Torob and Achareh pages, schema.org and eBay/Airbnb documentation, with
-  provenance and a list of what could not be obtained (sign-in forms, eBay/Airbnb/Snapp flows, Achareh order form).
-- **Why fields felt wrong:** suggestions came from three buckets (property, service, everything else), so teamwork and
-  activities were offered brand and condition; every answer lived in a collapsed "Details" box labelled "Value"; choices
-  showed raw keys; price, schedule and route were equally prominent for every kind of post.
-- **Design (no new authority):** `IntentProfiles` (code-owned) picks the few questions per "what is it about" topic
-  (home, vehicle, phone/electronics, other item, repairs, lessons, transport, work, activity, something else), per
-  Need/Offer and per arrangement (sale/rent), with conditional questions. Answers are the same typed `intent_details`
-  on the one record; keys live in `IntentDetailCatalog` (one key, one meaning). The topic is remembered in the record's
-  `metadata.composer_topic` (UI memory only, never a published term). Unanswered questions are never saved or indexed.
-  Answered details survive topic switches; empty ones from the old topic disappear. Standard answers are public search
-  facets; private information belongs in custom details. Custom details remain for anything unlisted.
-- **Search:** Directory detail filter now covers toggles (yes) and localized choices; business catalog property facts and
-  catalog kind map to the same keys and topic. Arbitrary custom details are never searchable or Deal terms.
-- **Localization:** labels, options, units, topics and arrangements in four languages with parity tests.
-- **Evidence:** full suite 1111 tests / 11069 assertions passed (OpenSSL config set); Market suite 34 tests / 703 assertions; registry test checks every key and option is labelled in all four
-  languages; browser (disposable SQLite): English desktop light home profile, Persian RTL dark phone vehicle profile.
-- **Limits:** profiles are code-owned (no admin editing yet); transport, work and activity profiles come from filters and
-  schema.org rather than observed posting forms; one Directory detail filter at a time; the eight intention chips remain
-  above the topic chips by design (layout preserved) and could be merged later if owner finds it busy.
+**Principle:** a rich library, a minimal form. Nothing is inserted automatically; the person chooses.
+
+- **Initial form:** Need/Offer, title, description, topic (optional), audience, Save draft, Publish. Nothing else.
+- **Three separate ideas:** *suggested* (chips, from topic, Need/Offer, arrangement and what is already chosen),
+  *selected* (what is actually in this post), *applicable* (a rule: a rent-only question on a sale is flagged
+  "does not apply" and excluded from publication and search, but stays in the draft; nothing is deleted).
+- **Topic hint:** words in the title/description (four languages) suggest a topic as a chip; the person applies it.
+  Recommendations lean on the hinted topic without choosing it.
+- **Add field:** one entry point opening a searchable picker (modal; bottom sheet on phones; Escape and keyboard work):
+  recommended, recently used (from the publisher's past posts), my saved items, price/place/time terms, all fields by
+  domain, create your own. Search matches localized names, synonyms, domain names and English in other languages;
+  Persian/Arabic digits and letter variants are normalised.
+- **One meaning per concept (`IntentTerms`):** price (budget for a Need), place (one "where"), when, route, quantity,
+  category, media, importance are optional blocks the person adds; each owns specific core columns, removing a block
+  clears them, and blocks never chosen are never published. The duplicated "advanced" section is gone (subject and
+  arrangement come from topic and sale/rent). Catalog-linked posts keep price/place/quantity locked.
+- **Library:** `IntentDetailCatalog` now holds 96 typed fields in 14 domains (general, property, vehicle, device, service,
+  lesson, transport, work, activity, hospitality, events, creative, agriculture, industry) with type, unit, options,
+  search eligibility (`filter`, null = not searchable), domain, provenance (`research`, `schema`, `house`, `community`)
+  and since-version. Labels, synonyms, options, units and domain names are in the four languages with parity tests.
+  `IntentProfiles` is purely a relevance policy (fields and terms per topic with conditions). Money, schedule, place and
+  Deal terms stay canonical columns, never fields.
+- **My fields, groups, templates:** save one personal field, a group of fields, or a whole composition (fields + chosen
+  terms + topic) as structure only (no answers, no files); apply adds only what is missing and never overwrites
+  answers; rename and delete; owner-scoped (person or business).
+- **Per-field privacy** (private fields never reach search or public presentation); reorder; remove.
+- **Community fields and approval:** a custom field can be suggested to everyone (only name, kind, unit, choices are sent,
+  never an answer; 20 open suggestions per person). Lifecycle proposed, reviewed, approved/rejected, published.
+  Superadmin page `platform/fields` (capability `ManageConcepts`, like category review): duplicate detection by name/synonym
+  in any language, edit names and synonyms in four languages, domains and choices, approve and publish as an immutable
+  numbered version (the previous version is retired), reject with required note (optionally as duplicate of an existing
+  field), retire a community field (hidden from pickers; posts using it keep working). The search column is derived from the
+  type, never from the request. A built-in key keeps its type, unit and filter forever; review may improve its words and add
+  choices only. Published posts keep their snapshot, so earlier meaning is preserved. Proposals cannot touch canonical terms.
+- **Schema (additive, `2026_11_11_000000`):** `intent_field_definitions`, `intent_field_proposals`, and `kind`, `topic`,
+  `terms` on `intent_detail_templates` (existing templates become `composition`). Rollback drops only these.
+- **Reuse elsewhere:** the picker, field renderer, library, search and approval flow are generic components over
+  `IntentDetailCatalog`; profiles, Business Catalog, content or intake forms can adopt them without replacing specialist
+  financial, contractual or scheduling models (not done in this branch).
+- **Evidence (Oct 25):** full suite 1131 tests / 12387 assertions passed (OpenSSL config set); Pint and PHPStan clean; new tests cover the library, search in four languages, minimal initial form, suggestions versus selection, applicability, terms, templates, privacy, governance and the review page. Browser on a disposable SQLite database: Offer vehicle (hint, conditional Mileage, picker search "kilo" finds Mileage and Power), Need plumber (Budget, Preferred location, When as separate blocks), Persian RTL phone picker (bottom sheet, hint from Persian words), admin review with duplicate detection. Not browser-checked: light/dark of every screen, Arabic and Chinese screens, real upload in this branch (unchanged from M2 evidence).
+- **Limits:** community choice options display as typed (no per-option translation); proposer cannot yet see status
+  of their suggestions; no admin editing of built-in profiles or terms; one Directory detail filter at a time; the reference
+  picker still scans the latest 100 candidates; Arabic and Chinese screens are covered by parity tests, not screenshots.
 
 ## Continuation
 

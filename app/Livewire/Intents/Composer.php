@@ -676,17 +676,20 @@ class Composer extends Component
     private function profileView(): array
     {
         $answers = $this->answers();
-        $arrangement = (string) ($this->core['arrangement_kind'] ?? 'other');
-        $fields = IntentProfiles::fields($this->topic, $this->intention, $arrangement, $answers);
+        $hint = $this->topicHint();
+        // Recommendations may lean on the topic the words suggest, but nothing is chosen for the person.
+        $lean = $this->topic !== '' ? $this->topic : (string) $hint;
+        $arrangement = $this->topic !== '' ? (string) ($this->core['arrangement_kind'] ?? 'other') : IntentProfiles::arrangement($lean, (string) ($this->core['arrangement_kind'] ?? 'other'));
+        $fields = IntentProfiles::fields($lean, $this->intention, $arrangement, $answers);
         $selected = array_filter(array_column($this->details, 'canonical_key'));
         $profile = IntentProfiles::all()[$this->topic] ?? null;
-        $termsLeft = array_values(array_diff(IntentProfiles::terms($this->topic, $answers), $this->terms));
+        $termsLeft = array_values(array_diff(IntentProfiles::terms($lean, $answers), $this->terms));
         $fieldsLeft = array_values(array_diff([...$fields['essential'], ...$fields['suggested']], $selected));
 
         return ['topics' => IntentProfiles::topics($this->intention),
             'arrangements' => count($profile['arrangements'] ?? []) > 1 ? $profile['arrangements'] : [],
             'recommendedFields' => $fieldsLeft, 'recommendedTerms' => $termsLeft,
-            'inapplicable' => $this->inapplicableKeys(), 'hint' => $this->topicHint(),
+            'inapplicable' => $this->inapplicableKeys(), 'hint' => $hint,
             'picker' => $this->pickerOpen ? $this->pickerView($fieldsLeft, $termsLeft, $selected) : null];
     }
 
@@ -729,7 +732,7 @@ class Composer extends Component
                 'saved' => $this->savedTemplates($query)];
         }
 
-        return ['query' => '', 'terms' => $terms, 'recommendedFields' => array_slice($fieldsLeft, 0, 8), 'recommendedTerms' => $termsLeft,
+        return ['query' => '', 'terms' => array_values(array_diff($terms, $termsLeft)), 'recommendedFields' => array_slice($fieldsLeft, 0, 8), 'recommendedTerms' => $termsLeft,
             'recent' => array_values(array_diff($this->recentKeys(), $taken)), 'saved' => $this->savedTemplates(''),
             'groups' => IntentFieldLibrary::grouped($taken)];
     }
