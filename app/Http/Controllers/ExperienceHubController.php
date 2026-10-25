@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\FulfillmentStatus;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
 use App\Models\BusinessMembership;
-use App\Models\Commitment;
 use App\Models\GroupMembership;
 use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
-use App\Support\HomeTodayProjection;
-use App\Support\QuantityAmount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -74,114 +70,6 @@ class ExperienceHubController extends Controller
                 ],
             ],
         );
-    }
-
-    public function work(Request $request): View
-    {
-        $user = $this->user($request);
-        $this->requireAny($user, ['deals', 'planner']);
-
-        $projection = $this->today()->build($user);
-        $canDeals = $this->access()->allows($user, 'deals');
-        $canPlanner = $this->access()->allows($user, 'planner');
-
-        $attention = $projection['waitingOnMe']
-            ->filter(fn ($item): bool => $canDeals && in_array($item->kind, [
-                'relationship',
-                'proposal',
-                'contract',
-                'fulfillment',
-                'settlement',
-            ], true))
-            ->take(5)
-            ->map(fn ($item): array => [
-                'title' => $item->title,
-                'meta' => $item->summary,
-                'href' => $item->url,
-            ])
-            ->all();
-
-        $activeWork = $canDeals
-            ? $projection['activeRelationships']->take(6)->map(fn ($relationship): array => [
-                'title' => $relationship->title ?: $relationship->purposeConcept->displayLabel(),
-                'meta' => __('experience.hubs.work.deal_meta'),
-                'href' => route('relationships.show', $relationship),
-            ])->all()
-            : [];
-
-        $schedule = $canPlanner
-            ? $projection['todayOccurrences']->take(6)->map(fn ($occurrence): array => [
-                'title' => $occurrence->plan->title,
-                'meta' => __('experience.hubs.work.plan_meta', ['status' => $occurrence->status->value]),
-                'href' => route('planner.show', $occurrence->plan).'#occurrence-'.$occurrence->uuid,
-            ])->all()
-            : [];
-
-        $sections = [[
-            'title' => __('experience.hubs.work.attention'),
-            'help' => __('experience.hubs.work.attention_help'),
-            'count' => count($attention),
-            'items' => $attention,
-            'empty' => __('experience.hubs.work.attention_empty'),
-        ]];
-
-        if ($canDeals) {
-            $sections[] = [
-                'title' => __('experience.hubs.work.active'),
-                'help' => __('experience.hubs.work.active_help'),
-                'count' => count($activeWork),
-                'primary' => ['label' => __('experience.hubs.work.open_deals'), 'href' => route('deals.index')],
-                'items' => $activeWork,
-                'empty' => __('experience.hubs.work.active_empty'),
-            ];
-        }
-
-        if ($canDeals && $user->actor !== null) {
-            $actorId = (int) $user->actor->id;
-            $commitments = Commitment::query()
-                ->where('status', 'active')
-                ->where(fn ($query) => $query->where('obligor_actor_id', $actorId)->orWhere('beneficiary_actor_id', $actorId))
-                ->with(['planBinding', 'fulfillments:id,commitment_id,quantity,status'])
-                ->latest('updated_at')
-                ->limit(6)
-                ->get();
-            $sections[] = [
-                'title' => __('work.hub.commitments'),
-                'help' => __('work.hub.commitments_help'),
-                'count' => $commitments->count(),
-                'items' => $commitments->map(function (Commitment $commitment) use ($actorId): array {
-                    $accepted = $commitment->fulfillments->where('status', FulfillmentStatus::Accepted)
-                        ->reduce(fn (string $sum, $f): string => QuantityAmount::add($sum, (string) $f->quantity), QuantityAmount::normalize('0'));
-                    $waiting = $commitment->fulfillments->whereIn('status', [FulfillmentStatus::Submitted, FulfillmentStatus::ClarificationRequested])->count();
-
-                    return [
-                        'title' => $commitment->title,
-                        'meta' => implode(' · ', array_filter([
-                            (int) $commitment->obligor_actor_id === $actorId ? __('work.hub.i_do') : __('work.hub.for_me'),
-                            __('work.hub.progress', ['done' => self::quantity($accepted), 'total' => self::quantity((string) $commitment->quantity), 'unit' => (string) $commitment->unit]),
-                            $commitment->planBinding ? __('work.hub.planned') : __('work.hub.not_planned'),
-                            $waiting > 0 ? trans_choice('work.hub.waiting_review', $waiting, ['count' => $waiting]) : null,
-                        ])),
-                        'href' => route('commitments.show', $commitment),
-                    ];
-                })->all(),
-                'empty' => __('work.hub.commitments_empty'),
-            ];
-        }
-
-        if ($canPlanner) {
-            $sections[] = [
-                'title' => __('experience.hubs.work.schedule'),
-                'help' => __('experience.hubs.work.schedule_help'),
-                'count' => count($schedule),
-                'primary' => ['label' => __('experience.hubs.work.open_planner'), 'href' => route('planner.index')],
-                'secondary' => ['label' => __('experience.hubs.work.plan_something'), 'href' => route('planner.create')],
-                'items' => $schedule,
-                'empty' => __('experience.hubs.work.schedule_empty'),
-            ];
-        }
-
-        return $this->renderHub('work', $sections);
     }
 
     public function organizations(Request $request): View
@@ -306,23 +194,11 @@ class ExperienceHubController extends Controller
         return app(FeatureSurfaceAccess::class);
     }
 
-    private function today(): HomeTodayProjection
-    {
-        return app(HomeTodayProjection::class);
-    }
-
     private function user(Request $request): User
     {
         $user = $request->user();
         abort_unless($user instanceof User, 403);
 
         return $user;
-    }
-
-    private static function quantity(string $value): string
-    {
-        $normalized = QuantityAmount::normalize($value);
-
-        return str_contains($normalized, '.') ? rtrim(rtrim($normalized, '0'), '.') : $normalized;
     }
 }

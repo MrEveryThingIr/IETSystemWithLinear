@@ -22,6 +22,8 @@ return [
         'help' => '帮助 / 反馈',
         'actors' => '参与者',
         'account_menu' => '账户菜单',
+        'bottom' => '快速导航',
+        'more' => '更多',
     ],
     'appearance' => [
         'label' => '外观',

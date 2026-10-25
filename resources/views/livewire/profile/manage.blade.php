@@ -263,6 +263,6 @@
     <livewire:profile.account-email />
     <livewire:profile.temporal-preferences />
     <livewire:profile.sharing :profile="$profile" />
-    <livewire:profile.semantics :profile="$profile" />
+    <x-items.summary-card :actor-id="$profile->actor_id" />
     <livewire:profile.intents :profile="$profile" />
 </section>

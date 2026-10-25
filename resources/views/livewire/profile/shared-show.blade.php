@@ -33,6 +33,8 @@
         </div>
     @endif
 
+    <x-items.public-list :abilities="$disclosure['abilities']" :interests="$disclosure['interests']" :labels="$disclosure['labels']" />
+
     @if ($disclosure['assertions']->isNotEmpty())
         <div class="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <h2 class="text-lg font-semibold">{{ __('ui.profile_sharing.semantic') }}</h2>
@@ -93,7 +95,7 @@
         </div>
     @endif
 
-    @if ($disclosure['fields'] === [] && $disclosure['assertions']->isEmpty() && $disclosure['intents']->isEmpty())
+    @if ($disclosure['fields'] === [] && $disclosure['assertions']->isEmpty() && $disclosure['intents']->isEmpty() && $disclosure['abilities']->isEmpty() && $disclosure['interests']->isEmpty())
         <div class="rounded-xl border border-zinc-200 bg-white p-5 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
             {{ __('ui.profile_sharing.nothing_current') }}
         </div>

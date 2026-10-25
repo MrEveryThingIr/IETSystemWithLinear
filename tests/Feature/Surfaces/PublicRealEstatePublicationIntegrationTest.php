@@ -67,7 +67,7 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
 
         $this->assertNotContains('real-estate', $primary->pluck('key')->all());
 
-        $organizations = $primary->firstWhere('key', 'organizations');
+        $organizations = collect($navigation['spaces'])->firstWhere('key', 'organizations');
         $this->assertNotNull($organizations);
         $this->assertContains('business', collect($organizations['items'])->pluck('key')->all());
         $this->assertNotContains('real-estate', collect($organizations['items'])->pluck('key')->all());
@@ -136,7 +136,7 @@ class PublicRealEstatePublicationIntegrationTest extends TestCase
         );
         $this->assertNotContains('real-estate', $primary->pluck('key')->all());
 
-        $organizations = $primary->firstWhere('key', 'organizations');
+        $organizations = collect($navigation['spaces'])->firstWhere('key', 'organizations');
         $this->assertNotNull($organizations);
         $this->assertContains('business', collect($organizations['items'])->pluck('key')->all());
 

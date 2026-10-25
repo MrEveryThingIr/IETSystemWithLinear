@@ -5,6 +5,7 @@ namespace App\Livewire\Relationships;
 use App\Models\Relationship;
 use App\Models\User;
 use App\Support\DealPipeline;
+use App\Support\Work\DealsOverview;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -42,7 +43,13 @@ class Index extends Component
         }
 
         $relationships = $query->limit(100)->get();
+        $overview = app(DealsOverview::class);
 
-        return view('livewire.relationships.index', compact('relationships', 'pipeline'));
+        return view('livewire.relationships.index', [
+            'relationships' => $relationships,
+            'pipeline' => $pipeline,
+            'attention' => $overview->attention($user),
+            'due' => $overview->due($user),
+        ]);
     }
 }

@@ -15,7 +15,7 @@ class FeatureSurfaceRegistry
             'profile' => $this->surface(
                 'Profile', 'پروفایل', 'user-circle', 'identity', [],
                 ['profile.edit'],
-                ['profile.edit', 'profile.contacts.*', 'profile.professions.*', 'profiles.show', 'profiles.images.*', 'profiles.shares.*']
+                ['profile.edit', 'profile.contacts.*', 'profile.professions.*', 'items.*', 'profiles.show', 'profiles.images.*', 'profiles.shares.*']
             ),
             'market' => $this->surface(
                 'Needs, offers & services', 'نیازها، ارائه‌ها و خدمات', 'magnifying-glass', 'market', ['profile'],

@@ -110,6 +110,15 @@ class Intents extends Component
 
         $this->timezoneAutomatic = $user->timezone_mode === TimezoneMode::Auto;
         $this->timezone = TemporalPreferences::timezoneFor($user);
+
+        // Opened from My items: go straight to that need or offer.
+        $requested = request()->query('intent');
+        if (is_string($requested) && $requested !== '') {
+            $intentId = $this->editableIntents()->where('uuid', $requested)->value('id');
+            if ($intentId !== null) {
+                $this->edit((int) $intentId);
+            }
+        }
     }
 
     public function openCreate(): void

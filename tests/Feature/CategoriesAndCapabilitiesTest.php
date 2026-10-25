@@ -277,7 +277,8 @@ class CategoriesAndCapabilitiesTest extends TestCase
         $this->publishSurfaces($me->user, ['profile']);
         app(CategoryCatalog::class)->sharedVocabularyId();
 
-        $this->actingAs($me->user)->get(route('profile.professions.index'))->assertOk()->assertSee(__('capabilities.title'));
+        $this->actingAs($me->user)->get(route('profile.professions.index'))->assertRedirect(route('items.index').'#abilities');
+        $this->actingAs($me->user)->get(route('items.index'))->assertOk()->assertSee(__('items.abilities.title'));
         $this->actingAs($me->user)->post(route('profile.professions.store'), ['profession_id' => 1])->assertRedirect(route('profile.professions.index'));
         $this->assertSame(0, DB::table('actor_professions')->count());
 
@@ -297,7 +298,7 @@ class CategoriesAndCapabilitiesTest extends TestCase
         // A forged owner is refused.
         Livewire::actingAs($me->user)->test(Picker::class, ['owner' => 'actor:'.$other->id])->assertForbidden();
 
-        Livewire::actingAs($me->user)->test(Capabilities::class)
+        Livewire::actingAs($me->user)->test(Capabilities::class, ['embedded' => true])
             ->call('add')
             ->set('conceptId', $created)
             ->set('confidence', 85)

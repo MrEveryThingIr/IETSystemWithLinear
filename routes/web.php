@@ -110,6 +110,8 @@ use App\Models\Contract;
 use App\Models\Group;
 use App\Models\Proposal;
 use App\Models\Relationship;
+use App\Services\Surfaces\FeatureSurfaceAccess;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class);
@@ -166,7 +168,16 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/profile', config('release.profile') === 'planning_baseline' ? ProfileBasicManage::class : ProfileManage::class)->name('profile.edit');
     Route::livewire('/notifications', NotificationIndex::class)->name('notifications.index');
     Route::get('/needs-offers', [ExperienceHubController::class, 'needsOffers'])->name('experience.needs-offers');
-    Route::get('/work', [ExperienceHubController::class, 'work'])->name('experience.work');
+    // Work used to combine deals and plans; each has its own place now. Old links land on the right one.
+    Route::get('/work', function (Request $request) {
+        $access = app(FeatureSurfaceAccess::class);
+
+        return match (true) {
+            $access->allows($request->user(), 'deals') => redirect()->route('deals.index'),
+            $access->allows($request->user(), 'planner') => redirect()->route('planner.index'),
+            default => abort(403),
+        };
+    })->name('experience.work');
     Route::get('/organizations', [ExperienceHubController::class, 'organizations'])->name('experience.organizations');
     Route::livewire('/content', ContentWorkspace::class)->name('experience.content');
     Route::get('/help', [ExperienceHubController::class, 'help'])->name('experience.help');

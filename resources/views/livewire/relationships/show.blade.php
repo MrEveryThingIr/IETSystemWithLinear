@@ -63,7 +63,7 @@
                 @endif
             @endif
 
-            <flux:button :href="route('experience.work')" variant="ghost">
+            <flux:button :href="route('deals.index')" variant="ghost" wire:navigate>
                 {{ __('workflow.back') }}
             </flux:button>
         </x-slot:actions>

@@ -29,21 +29,24 @@ class ExperienceCompositionNavigationTest extends TestCase
         $navigation = app(ExperienceNavigation::class)->for($user);
         $primary = collect($navigation['primary'])->keyBy('key');
 
+        // Daily destinations, one task each; the Planner stands on its own.
         $this->assertSame(
-            ['needs-offers', 'work', 'organizations', 'money', 'content'],
+            ['market', 'deals', 'planner', 'money'],
             collect($navigation['primary'])->pluck('key')->all()
         );
-        $this->assertSame('experience.needs-offers', $primary['needs-offers']['route']);
-        $this->assertSame('experience.work', $primary['work']['route']);
-        $this->assertSame('experience.organizations', $primary['organizations']['route']);
+        $this->assertSame('experience.needs-offers', $primary['market']['route']);
+        $this->assertSame('deals.index', $primary['deals']['route']);
+        $this->assertSame('planner.index', $primary['planner']['route']);
         $this->assertSame('bookkeeping.index', $primary['money']['route']);
-        $this->assertSame('experience.content', $primary['content']['route']);
-
-        $this->assertSame(['deals', 'planner'], collect($primary['work']['items'])->pluck('key')->all());
-        $this->assertSame(['business', 'groups'], collect($primary['organizations']['items'])->pluck('key')->all());
+        $this->assertSame(['planner'], collect($primary['planner']['items'])->pluck('key')->all());
         $this->assertSame(['money'], collect($primary['money']['items'])->pluck('key')->all());
 
-        $this->assertSame(['profile'], collect($navigation['account'])->pluck('key')->all());
+        $spaces = collect($navigation['spaces'])->keyBy('key');
+        $this->assertSame(['organizations', 'content'], $spaces->keys()->all());
+        $this->assertSame(['business', 'groups'], collect($spaces['organizations']['items'])->pluck('key')->all());
+
+        $this->assertSame(['items', 'profile'], collect($navigation['account'])->pluck('key')->all());
+        $this->assertSame('items.index', $navigation['account'][0]['route']);
         $this->assertSame([], $navigation['admin']);
     }
 
@@ -83,6 +86,7 @@ class ExperienceCompositionNavigationTest extends TestCase
         $navigation = app(ExperienceNavigation::class)->for($user);
 
         $this->assertSame([], $navigation['primary']);
-        $this->assertSame(['profile'], collect($navigation['account'])->pluck('key')->all());
+        $this->assertSame([], $navigation['spaces']);
+        $this->assertSame(['items', 'profile'], collect($navigation['account'])->pluck('key')->all());
     }
 }

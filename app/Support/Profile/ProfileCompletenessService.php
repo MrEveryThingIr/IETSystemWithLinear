@@ -6,7 +6,9 @@ use App\ConceptAssertionPredicate;
 use App\ConceptAssertionSubject;
 use App\Models\ActorProfile;
 use App\Models\ActorProfileIntent;
+use App\Models\Capability;
 use App\Models\ConceptAssertion;
+use App\Models\Interest;
 use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
 use App\ProfileRequirementKind;
@@ -20,7 +22,7 @@ class ProfileCompletenessService
             ProfileRequirement::field('display_name', __('ui.profile.display_name')),
             ProfileRequirement::field('headline', __('ui.profile.headline')),
             ProfileRequirement::field('bio', __('ui.profile.bio')),
-            ProfileRequirement::concept(ConceptAssertionPredicate::HasSkill, __('ui.profile.semantics.types.has_skill')),
+            ProfileRequirement::concept(ConceptAssertionPredicate::HasSkill, __('items.abilities.one')),
             ProfileRequirement::activeIntent(ProfileIntentKind::Need, __('ui.profile.intents.kinds.need')),
             ProfileRequirement::activeIntent(ProfileIntentKind::Offer, __('ui.profile.intents.kinds.offer')),
         ];
@@ -46,6 +48,16 @@ class ProfileCompletenessService
             ->unique()
             ->values()
             ->all();
+
+        // Abilities and interests are the home of what used to be skill and interest tags.
+        if (Capability::query()->where('holder_actor_id', $profile->actor_id)->active()->exists()) {
+            $predicates[] = ConceptAssertionPredicate::HasSkill->value;
+        }
+        foreach (Interest::query()->heldBy((int) $profile->actor_id)->get(['purposes']) as $interest) {
+            $predicates[] = $interest->hasPurpose('learn')
+                ? ConceptAssertionPredicate::WantsToLearn->value
+                : ConceptAssertionPredicate::InterestedIn->value;
+        }
 
         $intentKinds = $profile->intents()
             ->where('status', ProfileIntentStatus::Active->value)

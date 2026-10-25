@@ -16,12 +16,16 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
- * "What I can do": capabilities of the person, or of a business or group they
- * manage. Ability only — prices and availability are set on Offers.
+ * Abilities: the one editing experience for what a person, business or group
+ * can do. Ability only — prices and availability are set on Offers.
+ *
+ * Used full-page (any party the user may act for, "?for=business:3") and
+ * embedded in My items (always the person themself).
  */
 #[Layout('layouts.app')]
 class Capabilities extends Component
@@ -47,23 +51,46 @@ class Capabilities extends Component
 
     public ?int $confidence = null;
 
-    public string $visibility = 'members';
+    public string $visibility = 'private';
 
     public bool $isPrimary = false;
 
     public string $membershipId = '';
 
-    public function mount(CopyLegacyProfessions $legacy): void
+    /** Embedded in My items: always the person themself, compact heading. */
+    #[Locked]
+    public bool $embedded = false;
+
+    /** Level, visibility and category are the simple form; the rest opens on request. */
+    public bool $showMore = false;
+
+    /** One-line result of the last action, shown in place. */
+    public ?string $notice = null;
+
+    public function mount(CopyLegacyProfessions $legacy, bool $embedded = false, bool $openForm = false): void
     {
         $legacy->ensureCopied();
+        $this->embedded = $embedded;
         $parties = $this->parties();
-        if ($this->ownerKey === '' || ! $parties->contains(fn (array $party): bool => $party['party']->key() === $this->ownerKey)) {
+        if ($embedded) {
             $this->ownerKey = $parties->first()['party']->key();
+        } elseif ($this->ownerKey === '' || ! $parties->contains(fn (array $party): bool => $party['party']->key() === $this->ownerKey)) {
+            $this->ownerKey = $parties->first()['party']->key();
+        }
+        if (! $embedded && $this->ownerParty()->kind === Party::ACTOR) {
+            // A person's own abilities live in My items.
+            $this->redirect(route('items.index').'#abilities', navigate: true);
+
+            return;
+        }
+        if ($openForm) {
+            $this->add();
         }
     }
 
     public function updatedOwnerKey(): void
     {
+        abort_if($this->embedded, 403);
         abort_unless($this->parties()->contains(fn (array $party): bool => $party['party']->key() === $this->ownerKey), 403);
         $this->cancel();
     }
@@ -88,12 +115,15 @@ class Capabilities extends Component
         $this->visibility = $capability->visibility;
         $this->isPrimary = $capability->is_primary;
         $this->membershipId = $capability->business_membership_id !== null ? (string) $capability->business_membership_id : '';
+        $this->showMore = filled($capability->title) || filled($capability->description) || $capability->years_experience !== null
+            || $capability->self_confidence_percent !== null || $capability->is_primary || $capability->business_membership_id !== null;
+        $this->notice = null;
     }
 
     public function cancel(): void
     {
-        $this->reset('formOpen', 'editing', 'conceptId', 'title', 'description', 'level', 'yearsExperience', 'confidence', 'isPrimary', 'membershipId');
-        $this->visibility = 'members';
+        $this->reset('formOpen', 'editing', 'conceptId', 'title', 'description', 'level', 'yearsExperience', 'confidence', 'isPrimary', 'membershipId', 'showMore');
+        $this->visibility = 'private';
         $this->resetErrorBag();
     }
 
@@ -118,18 +148,23 @@ class Capabilities extends Component
         }
 
         $this->cancel();
-        session()->flash('status', __('capabilities.saved'));
+        $this->notice = __('capabilities.saved_where', ['visibility' => __('capabilities.visibility.'.$input['visibility'])]);
+        $this->dispatch('items-changed');
     }
 
     public function archive(string $uuid, SaveCapability $save): void
     {
         $save->archive($this->user(), $this->find($uuid));
         $this->cancel();
+        $this->notice = __('capabilities.archived');
+        $this->dispatch('items-changed');
     }
 
     public function restore(string $uuid, SaveCapability $save): void
     {
         $save->restore($this->user(), $this->find($uuid));
+        $this->notice = __('capabilities.restored');
+        $this->dispatch('items-changed');
     }
 
     public function render(CategoryCatalog $catalog): View
@@ -153,6 +188,7 @@ class Capabilities extends Component
                 ? BusinessMembership::query()->where('actor_id', $owner->id)->where('status', 'active')->with('business')->get()
                 : collect(),
             'archivedCount' => Capability::query()->heldBy($owner)->where('status', Capability::STATUS_ARCHIVED)->count(),
+            'otherParties' => $this->parties()->filter(fn (array $party): bool => $party['party']->kind !== Party::ACTOR)->values(),
         ])->title(__('capabilities.title'));
     }
 

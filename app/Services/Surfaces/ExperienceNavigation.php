@@ -23,6 +23,7 @@ class ExperienceNavigation
         if (! $user) {
             return [
                 'primary' => [],
+                'spaces' => [],
                 'account' => [],
                 'help' => [],
                 'labs' => [],
@@ -83,17 +84,32 @@ class ExperienceNavigation
             ];
         };
 
+        // The daily destinations, one kind of task each. Planner stands on its own:
+        // a personal plan never sits under deals or work.
         $primary = array_values(array_filter([
             $destination('messages', 'experience.navigation.messages', 'chat-bubble-left-right', 'messages.index', ['messages']),
-            $destination('needs-offers', 'experience.navigation.needs_offers', 'magnifying-glass', 'experience.needs-offers', ['market']),
-            $destination('work', 'experience.navigation.work', 'briefcase', 'experience.work', ['deals', 'planner']),
-            $destination('organizations', 'experience.navigation.organizations', 'building-office-2', 'experience.organizations', ['business', 'groups']),
+            $destination('market', 'experience.navigation.market', 'magnifying-glass', 'experience.needs-offers', ['market']),
+            $destination('deals', 'experience.navigation.deals', 'arrows-right-left', 'deals.index', ['deals']),
+            $destination('planner', 'experience.navigation.planner', 'calendar-days', 'planner.index', ['planner']),
             $destination('money', 'experience.navigation.money', 'wallet', 'bookkeeping.index', ['money']),
+        ]));
+
+        // Places people go into, less often.
+        $spaces = array_values(array_filter([
+            $destination('organizations', 'experience.navigation.organizations', 'building-office-2', 'experience.organizations', ['business', 'groups']),
             $destination('content', 'experience.navigation.content', 'rectangle-stack', 'experience.content', ['content']),
         ]));
 
+        $profile = $item('profile');
         $account = array_values(array_filter([
-            $item('profile'),
+            $profile === null ? null : [
+                'key' => 'items',
+                'label' => __('experience.navigation.my_items'),
+                'icon' => 'squares-2x2',
+                'route' => 'items.index',
+                'patterns' => ['items.*', 'profile.professions.*'],
+            ],
+            $profile === null ? null : [...$profile, 'patterns' => array_values(array_diff($profile['patterns'], ['items.*', 'profile.professions.*']))],
             $item('vault'),
         ]));
 
@@ -133,6 +149,6 @@ class ExperienceNavigation
             }
         }
 
-        return compact('primary', 'account', 'help', 'labs', 'admin');
+        return compact('primary', 'spaces', 'account', 'help', 'labs', 'admin');
     }
 }

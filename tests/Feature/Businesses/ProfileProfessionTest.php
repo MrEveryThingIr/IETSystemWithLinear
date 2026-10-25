@@ -40,12 +40,13 @@ class ProfileProfessionTest extends TestCase
             ->assertRedirect(route('profile.professions.index'));
         $this->assertSame(0, ActorProfession::query()->count());
 
-        $this->actingAs($user)->get(route('profile.professions.index'))->assertOk();
+        $this->actingAs($user)->get(route('profile.professions.index'))->assertRedirect(route('items.index').'#abilities');
+        $this->actingAs($user)->get(route('items.index'))->assertOk();
         $plumbing = (int) DB::table('concepts')->where('slug', 'housing.plumbing')->value('id');
         $this->assertGreaterThan(0, $plumbing);
         $this->assertSame($plumbing, (int) $plumber->fresh()->concept_id);
 
-        Livewire::actingAs($user)->test(Capabilities::class)
+        Livewire::actingAs($user)->test(Capabilities::class, ['embedded' => true])
             ->call('add')
             ->set('conceptId', $plumbing)
             ->set('level', 'advanced')

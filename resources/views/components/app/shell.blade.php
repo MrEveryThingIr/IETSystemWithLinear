@@ -3,10 +3,14 @@
 <div {{ $attributes->class('min-h-dvh') }}>
     <x-app.sidebar />
     <x-app.navbar :title="$title" />
-    <flux:main class="min-w-0">
+    <flux:main class="min-w-0 pb-36 lg:pb-8">
         <main id="main-content" class="mx-auto w-full max-w-7xl space-y-6">
             <x-app.flash-message />
             {{ $slot }}
         </main>
     </flux:main>
+    @auth
+        <x-app.bottom-bar />
+        <x-app.launcher />
+    @endauth
 </div>

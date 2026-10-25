@@ -22,6 +22,8 @@ return [
         'help' => 'Help / feedback',
         'actors' => 'Actors',
         'account_menu' => 'Account menu',
+        'bottom' => 'Quick navigation',
+        'more' => 'More',
     ],
     'appearance' => [
         'label' => 'Appearance',
