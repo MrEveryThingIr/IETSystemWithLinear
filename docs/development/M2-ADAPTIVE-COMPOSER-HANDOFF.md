@@ -155,6 +155,33 @@ at low effort for mechanical edits, translation parity, doc updates and simple c
 for design decisions, data-integrity or authorization changes. Run focused tests while building and the
 full suite only at gates.
 
+## Usability refinement: category-aware composer (branch `feat/m2-category-aware-composer`)
+
+Owner feedback after trying the composer: fields felt unnatural. Branched from verified M2 head
+`d94df0be`; PR #86 is untouched. Roadmap unchanged (this is an M2 refinement, not a new milestone).
+
+- **Research:** [research/CATEGORY-FIELD-RESEARCH.md](research/CATEGORY-FIELD-RESEARCH.md): directly observed Divar
+  filters (rent, cars, phones, jobs, services), Torob and Achareh pages, schema.org and eBay/Airbnb documentation, with
+  provenance and a list of what could not be obtained (sign-in forms, eBay/Airbnb/Snapp flows, Achareh order form).
+- **Why fields felt wrong:** suggestions came from three buckets (property, service, everything else), so teamwork and
+  activities were offered brand and condition; every answer lived in a collapsed "Details" box labelled "Value"; choices
+  showed raw keys; price, schedule and route were equally prominent for every kind of post.
+- **Design (no new authority):** `IntentProfiles` (code-owned) picks the few questions per "what is it about" topic
+  (home, vehicle, phone/electronics, other item, repairs, lessons, transport, work, activity, something else), per
+  Need/Offer and per arrangement (sale/rent), with conditional questions. Answers are the same typed `intent_details`
+  on the one record; keys live in `IntentDetailCatalog` (one key, one meaning). The topic is remembered in the record's
+  `metadata.composer_topic` (UI memory only, never a published term). Unanswered questions are never saved or indexed.
+  Answered details survive topic switches; empty ones from the old topic disappear. Standard answers are public search
+  facets; private information belongs in custom details. Custom details remain for anything unlisted.
+- **Search:** Directory detail filter now covers toggles (yes) and localized choices; business catalog property facts and
+  catalog kind map to the same keys and topic. Arbitrary custom details are never searchable or Deal terms.
+- **Localization:** labels, options, units, topics and arrangements in four languages with parity tests.
+- **Evidence:** full suite 1111 tests / 11069 assertions passed (OpenSSL config set); Market suite 34 tests / 703 assertions; registry test checks every key and option is labelled in all four
+  languages; browser (disposable SQLite): English desktop light home profile, Persian RTL dark phone vehicle profile.
+- **Limits:** profiles are code-owned (no admin editing yet); transport, work and activity profiles come from filters and
+  schema.org rather than observed posting forms; one Directory detail filter at a time; the eight intention chips remain
+  above the topic chips by design (layout preserved) and could be merged later if owner finds it busy.
+
 ## Continuation
 
 1. Fetch origin and inspect status/worktrees before switching; preserve local work.
