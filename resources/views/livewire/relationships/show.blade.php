@@ -46,9 +46,9 @@
 
     {{-- One workspace, four lenses. The chosen tab lives in Alpine, so a re-render never changes it. --}}
     <div x-data="dealTabs" data-key="{{ $relationship->uuid }}" data-start="{{ $startTab }}" class="space-y-3" data-deal-tabs>
-        <div role="tablist" class="flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
+        <div role="tablist" class="flex border-b border-zinc-200 dark:border-zinc-700">
             @foreach (['conversation', 'agreement', 'work', 'money'] as $name)
-                <button type="button" role="tab" x-on:click="tab = '{{ $name }}'" x-bind:aria-selected="tab === '{{ $name }}'" x-bind:class="tab === '{{ $name }}' ? 'border-b-2 border-zinc-900 font-semibold dark:border-zinc-100' : 'text-zinc-500'" class="whitespace-nowrap px-3 py-2 text-sm" data-tab="{{ $name }}">
+                <button type="button" role="tab" x-on:click="tab = '{{ $name }}'" x-bind:aria-selected="tab === '{{ $name }}'" x-bind:class="tab === '{{ $name }}' ? 'border-b-2 border-zinc-900 font-semibold dark:border-zinc-100' : 'text-zinc-500'" class="flex-1 whitespace-nowrap px-1 py-2 text-center text-sm sm:px-3" data-tab="{{ $name }}">
                     {{ __('deals.tabs.'.$name) }}
                     @if ($name === 'agreement' && ($needsMe || ($canDraft && ($hasDraft || $requests))))<span class="ms-1 inline-block size-2 rounded-full bg-sky-500" aria-hidden="true"></span>@endif
                 </button>
