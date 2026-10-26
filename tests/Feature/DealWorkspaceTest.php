@@ -357,6 +357,34 @@ class DealWorkspaceTest extends TestCase
         $this->assertStringNotContainsString('version: config.version', file_get_contents(resource_path('js/messages.js')));
     }
 
+    public function test_voice_upload_survives_the_recording_ui_and_failures_are_visible_and_logged(): void
+    {
+        // Root cause in a real Chrome (fake microphone, driven over DevTools): pressing "Send" removed the button's
+        // <template x-if> subtree, and the upload started through that subtree's $wire was dropped. No request was ever sent.
+        // The thread now keeps one root-bound $wire for everything asynchronous.
+        $js = file_get_contents(resource_path('js/messages.js'));
+        $this->assertStringContainsString('this.wire = this.$wire', $js);
+        $this->assertStringNotContainsString('this.$wire.upload', $js);
+        $this->assertStringNotContainsString('this.$wire.sendVoice', $js);
+
+        Storage::fake('local');
+        [$alice, $bob, $deal] = $this->activeDeal();
+        $this->show($alice, $deal);
+        $conversation = Conversation::query()->where('context_id', $deal->contextBinding->context_id)->firstOrFail();
+
+        // A refused file is shown to the person (and logged with its stage), not swallowed.
+        \Illuminate\Support\Facades\Log::spy();
+        $thread = Livewire::actingAs($alice->user)->test(Thread::class, ['conversation' => $conversation, 'embedded' => true]);
+        $thread->set('voice', UploadedFile::fake()->create('voice.bin', 20, 'application/x-msdownload'))->call('sendVoice', 3, (string) Str::uuid())
+            ->assertSee(__('messages.composer.voice_failed'));
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->with('messages.voice_failed', \Mockery::on(fn ($c) => $c['stage'] === 'store'))->once();
+        $this->assertSame(0, ConversationMessage::query()->where('kind', 'voice')->count());
+
+        // The browser can report any stage it failed at.
+        $thread->call('voiceFailed', 'upload', 'net::ERR_FAILED | audio/webm 4000B');
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->with('messages.voice_failed', \Mockery::on(fn ($c) => $c['stage'] === 'upload'))->once();
+    }
+
     public function test_the_workspace_is_one_page_with_lightweight_work_and_money_and_stable_details(): void
     {
         [$alice, $bob, $deal] = $this->activeDeal();

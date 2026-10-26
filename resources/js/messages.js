@@ -20,6 +20,8 @@ document.addEventListener('alpine:init', () => {
     // from the x-data expression: a changed x-data expression makes Alpine rebuild the component, which used to
     // drop a recording in progress whenever a message arrived.
     window.Alpine.data('messageThread', () => ({
+        wire: null,
+        busy: '',
         stateUrl: '',
         version: '',
         timer: null,
@@ -35,6 +37,7 @@ document.addEventListener('alpine:init', () => {
         clientId: uuid(),
 
         init() {
+            this.wire = this.$wire // bound to the root element, which never goes away while the thread is open
             this.stateUrl = this.$el.dataset.stateUrl
             this.version = this.$el.dataset.version
             this.scrollToEnd()
@@ -43,8 +46,8 @@ document.addEventListener('alpine:init', () => {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') { this.lastActivity = Date.now(); this.check() } else { this.stop() }
             })
-            this.$wire.on('message-sent', () => { this.clientId = uuid(); this.$nextTick(() => this.scrollToEnd()) })
-            this.$wire.on('thread-updated', ({ version }) => {
+            this.wire.on('message-sent', () => { this.clientId = uuid(); this.$nextTick(() => this.scrollToEnd()) })
+            this.wire.on('thread-updated', ({ version }) => {
                 const atEnd = this.nearEnd()
                 this.version = version
                 this.$nextTick(() => { if (atEnd) this.scrollToEnd() })
@@ -72,7 +75,7 @@ document.addEventListener('alpine:init', () => {
                 this.failures = 0
                 if (state.version !== this.version) {
                     this.version = state.version
-                    await this.$wire.refreshThread()
+                    await this.wire.refreshThread()
                 }
             } catch (error) {
                 this.failures = Math.min(this.failures + 1, 4)
@@ -89,7 +92,7 @@ document.addEventListener('alpine:init', () => {
             if (box) box.scrollTop = box.scrollHeight
         },
 
-        send() { this.$wire.send(this.clientId) },
+        send() { this.wire.send(this.clientId) },
         sendOnEnter(event) {
             if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && window.matchMedia('(pointer: fine)').matches) {
                 event.preventDefault()
@@ -98,7 +101,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async startRecording() {
-            if (!navigator.mediaDevices || !window.MediaRecorder) { this.$wire.voiceUnsupported(); return }
+            if (!navigator.mediaDevices || !window.MediaRecorder) { this.wire.voiceUnsupported(); return }
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
                 const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find(t => window.MediaRecorder.isTypeSupported(t)) || ''
@@ -115,7 +118,7 @@ document.addEventListener('alpine:init', () => {
                     if (this.recordSeconds >= 300) this.finishRecording()
                 }, 500)
             } catch (error) {
-                this.$wire.voiceUnsupported()
+                this.wire.voiceUnsupported()
             }
         },
         stopRecording(discard = false) {
@@ -136,22 +139,33 @@ document.addEventListener('alpine:init', () => {
                 const type = (recorder.mimeType || 'audio/webm').split(';')[0]
                 const extension = type.includes('mp4') ? 'm4a' : (type.includes('ogg') ? 'ogg' : 'webm')
                 const file = new File(this.chunks, `voice-${Date.now()}.${extension}`, { type })
-                this.$wire.upload(
-                    'voice',
-                    file,
-                    () => Promise.resolve(this.$wire.sendVoice(seconds, uuid())).catch(() => this.$wire.voiceFailed()),
-                    () => this.$wire.voiceFailed(),
-                )
+                this.busy = 'uploading'
+                const fail = (stage, detail) => {
+                    this.busy = ''
+                    console.error('voice message failed at ' + stage, detail)
+                    this.wire.voiceFailed(stage, String(detail || '').slice(0, 300) + ' | ' + type + ' ' + file.size + 'B | ' + navigator.userAgent.slice(0, 120))
+                }
+                try {
+                    this.wire.upload(
+                        'voice',
+                        file,
+                        async () => {
+                            this.busy = 'sending'
+                            try { await this.wire.sendVoice(seconds, uuid()) } catch (error) { fail('send', error && error.message) } finally { this.busy = '' }
+                        },
+                        error => fail('upload', error),
+                    )
+                } catch (error) { fail('start', error && error.message) }
             }
             this.stopRecording()
         },
 
         shareLocation() {
-            if (!navigator.geolocation) { this.$wire.locationUnavailable(); return }
+            if (!navigator.geolocation) { this.wire.locationUnavailable(); return }
             this.locating = true
             navigator.geolocation.getCurrentPosition(
-                position => { this.locating = false; this.$wire.sendLocation(position.coords.latitude, position.coords.longitude, uuid()) },
-                () => { this.locating = false; this.$wire.locationUnavailable() },
+                position => { this.locating = false; this.wire.sendLocation(position.coords.latitude, position.coords.longitude, uuid()) },
+                () => { this.locating = false; this.wire.locationUnavailable() },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
             )
         },

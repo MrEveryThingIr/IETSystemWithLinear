@@ -276,6 +276,11 @@
                 </div>
             </template>
 
+            <div x-show="busy" x-cloak class="mb-1 flex items-center gap-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm dark:bg-zinc-800" role="status" data-voice-busy>
+                <span class="size-2 animate-pulse rounded-full bg-zinc-500"></span>
+                <span>{{ __('messages.composer.uploading') }}</span>
+            </div>
+
             <div x-show="!recording" class="flex items-end gap-1 sm:gap-2">
                 <flux:dropdown position="top" align="start">
                     <button type="button" class="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800" aria-label="{{ __('messages.composer.attach') }}">

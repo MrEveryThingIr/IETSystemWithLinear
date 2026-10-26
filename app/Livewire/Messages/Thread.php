@@ -25,6 +25,8 @@ use App\Support\RequestMemo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -119,7 +121,15 @@ class Thread extends Component
     public function sendVoice(int $seconds, string $clientId, SendMessage $send): void
     {
         $this->validate(['voice' => ['required', 'file', 'max:'.MediaLimits::kilobytes('asset')]], [], ['voice' => __('messages.composer.voice')]);
-        $assetId = $this->store($this->voice);
+        try {
+            $assetId = $this->store($this->voice);
+        } catch (HttpException $e) {
+            // A refused file (type, size, permission) is shown, never swallowed.
+            $this->reset('voice');
+            $this->voiceFailed('store', $e->getStatusCode().' '.$e->getMessage());
+
+            return;
+        }
         $send->execute($this->user(), $this->conversation, '', ['kind' => 'voice', 'asset_ids' => [$assetId], 'meta' => ['seconds' => $seconds], 'client_uuid' => $clientId, 'reply_to' => $this->replyTo]);
         $this->reset('voice', 'replyTo', 'notice');
         $this->dispatch('message-sent');
@@ -147,8 +157,15 @@ class Thread extends Component
         $this->notice = __('messages.composer.voice_unsupported');
     }
 
-    public function voiceFailed(): void
+    /** The browser reports the stage that failed so a silent failure always leaves a trace in the log. */
+    public function voiceFailed(string $stage = '', string $detail = ''): void
     {
+        Log::warning('messages.voice_failed', [
+            'stage' => mb_substr($stage, 0, 20),
+            'detail' => mb_substr($detail, 0, 400),
+            'user_id' => $this->user()->id,
+            'conversation' => $this->conversation->uuid,
+        ]);
         $this->notice = __('messages.composer.voice_failed');
     }
 
