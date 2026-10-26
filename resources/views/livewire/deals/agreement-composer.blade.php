@@ -2,13 +2,22 @@
     @if ($open)
         <flux:card class="space-y-5" data-agreement-composer>
             <div>
-                <flux:heading>{{ __('deals.composer.title') }}</flux:heading>
+                <flux:heading>{{ $mode === 'amend' ? __('deals.composer.amend_title') : __('deals.composer.title') }}</flux:heading>
                 <p class="mt-1 text-sm text-zinc-500">
-                    {{ $fromOrigin ? __('deals.composer.from_origin') : __('deals.composer.from_version', ['version' => $baseVersion]) }}
+                    @if ($mode === 'amend'){{ __('deals.composer.amend_help') }}@else{{ $fromOrigin ? __('deals.composer.from_origin') : __('deals.composer.from_version', ['version' => $baseVersion]) }}@endif
                 </p>
             </div>
 
             @error('draft') <flux:callout variant="danger">{{ $message }}</flux:callout> @enderror
+
+            @if ($mode === 'amend')
+                <div class="grid gap-2 sm:grid-cols-2" data-amend-effective>
+                    <x-app.calendar-datetime-input model="effectiveAt" :label="__('deals.composer.effective_at')" :timezone="$timezone" />
+                    <flux:select wire:model.live="timezone" :label="__('deals.composer.timezone')">
+                        @foreach ($timezones as $zone)<option value="{{ $zone }}">{{ $zone }}</option>@endforeach
+                    </flux:select>
+                </div>
+            @endif
 
             <flux:input wire:model="draft.title" :label="__('deals.composer.agreement_title')" maxlength="180" />
             <flux:textarea wire:model="draft.summary" rows="2" :label="__('deals.composer.summary')" :placeholder="__('deals.composer.summary_placeholder')" />
@@ -238,8 +247,8 @@
             <p class="text-xs text-zinc-500">{{ __('deals.composer.send_note') }}</p>
 
             <div class="flex flex-wrap items-center gap-2">
-                <flux:button wire:click="send" variant="primary" wire:loading.attr="disabled" wire:target="send">{{ __('deals.composer.send_review') }}</flux:button>
-                <flux:button wire:click="saveDraft" wire:loading.attr="disabled" wire:target="saveDraft">{{ __('deals.composer.save_draft') }}</flux:button>
+                <flux:button wire:click="send" variant="primary" wire:loading.attr="disabled" wire:target="send">{{ $mode === 'amend' ? __('deals.composer.send_amendment') : __('deals.composer.send_review') }}</flux:button>
+                @if ($mode === 'propose')<flux:button wire:click="saveDraft" wire:loading.attr="disabled" wire:target="saveDraft">{{ __('deals.composer.save_draft') }}</flux:button>@endif
                 <flux:button wire:click="close" variant="ghost">{{ __('studio.cancel') }}</flux:button>
                 @if ($savedAt !== '')
                     <flux:button wire:click="discardDraft" variant="ghost" size="sm" wire:confirm="{{ __('deals.composer.discard_confirm') }}">{{ __('deals.composer.discard') }}</flux:button>

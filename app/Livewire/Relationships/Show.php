@@ -25,6 +25,7 @@ use App\RelationshipStatus;
 use App\Support\DealPipeline;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementDrafter;
+use App\Support\Deals\AgreementTerms;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealOrigin;
 use App\Support\Deals\DealTermsDiff;
@@ -214,6 +215,11 @@ class Show extends Component
         $latestProposal = $relationship->proposals->sortByDesc('id')->first();
         $latestContract = $relationship->contracts->sortByDesc('id')->first();
         $pendingContractVersion = $latestContract?->pendingVersionRecord();
+        $activeContractVersion = $latestContract?->activeVersionRecord();
+        $activeContractVersion?->loadMissing(['contract.sourceProposalVersion', 'parties.business', 'parties.group', 'parties.actor.user', 'parties.acceptance.acceptedByUser', 'serviceTerm.worker.user', 'serviceTerm.employer.user', 'serviceTerm.monetaryUnit', 'serviceTerm.commitment.planBinding.plan']);
+        $pendingContractVersion?->loadMissing(['contract.sourceProposalVersion', 'termsRevision']);
+        $agreementTerms = $activeContractVersion instanceof ContractVersion ? AgreementTerms::of($activeContractVersion) : null;
+        $pendingTerms = $pendingContractVersion instanceof ContractVersion ? AgreementTerms::of($pendingContractVersion) : null;
         $commitments = $latestContract instanceof Contract
             ? Commitment::query()->whereHas('contractVersion', fn ($q) => $q->where('contract_id', $latestContract->id))
                 ->with(['obligor.user', 'beneficiary.user'])->orderBy('id')->get()
@@ -252,7 +258,14 @@ class Show extends Component
             'startTab' => in_array($this->tab, ['conversation', 'agreement', 'work', 'money'], true) ? $this->tab : $this->startTab($relationship, $tc, $user),
             'focusVersion' => $this->v,
             'commitments' => $commitments,
-            'canCreateCommitment' => $latestContract instanceof Contract && Gate::forUser($user)->allows('create', [Commitment::class, $latestContract]),
+            'activeVersion' => $activeContractVersion,
+            'pendingVersion' => $pendingContractVersion,
+            'agreementTerms' => $agreementTerms,
+            'agreementDoc' => $agreementTerms !== null ? AgreementDocument::sections($agreementTerms) : [],
+            'pendingTerms' => $pendingTerms,
+            'pendingDoc' => $pendingTerms !== null ? AgreementDocument::sections($pendingTerms) : [],
+            'canAmend' => $activeContractVersion instanceof ContractVersion && ! $pendingContractVersion && $activeContractVersion->serviceTerm === null
+                && Gate::forUser($user)->allows('amend', $latestContract) && AgreementDrafter::canDraft($relationship, $user),
             'canAcceptContract' => $pendingContractVersion instanceof ContractVersion && Gate::forUser($user)->allows('accept', [$latestContract, $pendingContractVersion]),
             'autostart' => $this->resume,
         ]);

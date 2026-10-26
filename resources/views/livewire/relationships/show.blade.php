@@ -11,6 +11,8 @@
         $partyNames = $tc['parties']->map(fn ($row) => $partyName($row['party']))->filter()->values()->all();
         $agreed = $latestContract && in_array($latestContract->status, [\App\ContractStatus::Active, \App\ContractStatus::Pending], true) && $tc['proposal']?->status === \App\ProposalStatus::Accepted;
         $needsMe = $tc['open'] && $tc['canRespond'];
+        $cur = $agreementTerms ?? $terms;
+        $curDoc = $agreementTerms !== null ? $agreementDoc : $doc;
     @endphp
 
     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -92,35 +94,72 @@
                 </flux:callout>
             @endif
 
-            @if ($canAcceptContract)
-                <flux:callout variant="warning" data-contract-accept>
+            @if ($pendingVersion)
+                <flux:card class="space-y-3 border-amber-300 dark:border-amber-700" data-contract-pending>
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span>{{ __('deals.contract_accept_help') }}</span>
-                        <flux:button wire:click="acceptContract" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="acceptContract">{{ __('deals.contract_accept') }}</flux:button>
+                        <flux:heading>{{ $activeVersion ? __('deals.amendment_pending') : __('deals.agreement') }}</flux:heading>
+                        <span class="text-xs text-zinc-500">{{ __('deals.effective_from') }} <x-app.local-datetime :value="$pendingVersion->effective_from" /></span>
                     </div>
-                </flux:callout>
+                    @if ($pendingTerms)
+                        <x-deals.document :sections="$pendingDoc" />
+                    @else
+                        <div class="whitespace-pre-wrap break-words rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900" dir="auto">{{ $pendingVersion->termsRevision->payload['terms'] ?? '' }}</div>
+                    @endif
+                    @if ($canAcceptContract)
+                        <div class="flex flex-wrap items-center justify-between gap-2" data-contract-accept>
+                            <span class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('deals.contract_accept_help') }}</span>
+                            <flux:button wire:click="acceptContract" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="acceptContract">{{ __('deals.contract_accept') }}</flux:button>
+                        </div>
+                    @else
+                        <p class="text-xs text-zinc-500">{{ __('deals.amendment_waiting') }}</p>
+                    @endif
+                </flux:card>
             @endif
 
             @if ($agreed && $version && $terms)
                 <flux:card class="space-y-3 border-emerald-300 dark:border-emerald-700" data-agreement-final>
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <flux:heading>{{ $terms['title'] ?? __('deals.agreement') }}</flux:heading>
+                        <flux:heading>{{ $cur['title'] ?? __('deals.agreement') }}@if ($activeVersion && $activeVersion->version > 1) <flux:badge size="sm" color="zinc">{{ __('deals.agreement_version', ['version' => $activeVersion->version]) }}</flux:badge>@endif</flux:heading>
                         <flux:badge color="emerald">{{ __('contracts.status.'.$latestContract->status->value) }}</flux:badge>
                     </div>
                     <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('deals.agreement_help') }}</p>
-                    @if (! empty($terms['summary']))<p class="text-sm" dir="auto">{{ $terms['summary'] }}</p>@endif
-                    <x-deals.document :sections="$doc" :parties="$partyNames" />
+                    @if (! empty($cur['summary']))<p class="text-sm" dir="auto">{{ $cur['summary'] }}</p>@endif
+                    <x-deals.document :sections="$curDoc" :parties="$partyNames" />
                     <ul class="space-y-1 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700" data-agreement-signers>
-                        @foreach ($tc['parties'] as $row)
-                            <li wire:key="sig-{{ $row['party']->id }}" class="flex flex-wrap justify-between gap-2">
-                                <span dir="auto">{{ $partyName($row['party']) }}</span>
-                                @if ($row['decision'])<span class="text-zinc-500">{{ __('deals.signed_by', ['name' => $row['decision']->decidedByUser?->username]) }} · <x-app.local-datetime :value="$row['decision']->decided_at" /></span>@endif
+                        @foreach (($activeVersion ?? $latestContract->versions->sortBy('version')->first())->parties as $cvp)
+                            <li wire:key="sig-{{ $cvp->id }}" class="flex flex-wrap justify-between gap-2">
+                                <span dir="auto">{{ $cvp->business?->name ?? $cvp->group?->name ?? $cvp->actor?->user?->username }}</span>
+                                @if ($cvp->acceptance)<span class="text-zinc-500">{{ __('deals.signed_by', ['name' => $cvp->acceptance->acceptedByUser?->username]) }} · <x-app.local-datetime :value="$cvp->acceptance->accepted_at" /></span>@endif
                             </li>
                         @endforeach
                     </ul>
+                    @if ($activeVersion?->serviceTerm)
+                        <div class="rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900" data-service-terms>
+                            <div class="font-medium">{{ __('contracts.service.active_title') }}</div>
+                            <div class="mt-1 text-zinc-600 dark:text-zinc-300">
+                                {{ $activeVersion->serviceTerm->worker->user?->username }} → {{ $activeVersion->serviceTerm->employer->user?->username }} ·
+                                {{ \App\Support\MoneyAmount::format($activeVersion->serviceTerm->unit_rate_minor, $activeVersion->serviceTerm->monetaryUnit->exponent) }} {{ $activeVersion->serviceTerm->monetaryUnit->code }} / {{ $activeVersion->serviceTerm->unit }} ·
+                                {{ __('contracts.service.cycles.'.$activeVersion->serviceTerm->settlement_cycle) }}
+                            </div>
+                            @if ($activeVersion->serviceTerm->commitment?->planBinding?->plan)
+                                <flux:button :href="route('planner.show', $activeVersion->serviceTerm->commitment->planBinding->plan)" size="xs" class="mt-2">{{ __('contracts.service.open_plan') }}</flux:button>
+                            @endif
+                        </div>
+                    @endif
                     <div class="flex flex-wrap gap-2">
                         <flux:button :href="route('relationships.agreement.print', $relationship)" target="_blank" size="sm" variant="primary" icon="printer">{{ __('deals.print.open') }}</flux:button>
+                        @if ($canAmend)
+                            <flux:button wire:click="$dispatchTo('deals.agreement-composer', 'open-amendment')" size="sm" data-amend>{{ __('deals.amend') }}</flux:button>
+                        @endif
                     </div>
+                    @if ($latestContract->versions->count() > 1)
+                        <div class="space-y-1 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700" data-agreement-versions>
+                            <div class="font-medium text-zinc-500">{{ __('deals.agreement_versions') }}</div>
+                            @foreach ($latestContract->versions->sortByDesc('version') as $cv)
+                                <div wire:key="cv-{{ $cv->id }}" class="flex flex-wrap justify-between gap-2"><span>{{ __('deals.agreement_version', ['version' => $cv->version]) }} · {{ __('contracts.version_status.'.$cv->status->value) }}</span><span class="text-zinc-500"><x-app.local-datetime :value="$cv->effective_from" /></span></div>
+                            @endforeach
+                        </div>
+                    @endif
                 </flux:card>
             @elseif ($tc['proposal'] && $version)
                 @php($proposalOpen = $tc['open'])
@@ -248,7 +287,8 @@
                 <p class="text-sm text-zinc-500">{{ __('deals.work_not_yet') }}</p>
                 @if ($latestContract)
                     <div class="space-y-2" data-work-commitments>
-                        @forelse ($commitments as $commitment)
+                        @if ($commitments->isNotEmpty())<div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('deals.recorded_obligations') }}</div>@endif
+                        @foreach ($commitments as $commitment)
                             <a href="{{ route('commitments.show', $commitment) }}" wire:key="commitment-{{ $commitment->id }}" class="block rounded-xl border border-zinc-200 p-3 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
                                 <div class="flex flex-wrap items-start justify-between gap-2">
                                     <span class="font-medium" dir="auto">{{ $commitment->title }}</span>
@@ -256,12 +296,7 @@
                                 </div>
                                 <div class="mt-1 text-xs text-zinc-500">{{ $commitment->quantity }} {{ $commitment->unit }} · {{ $commitment->obligor->user?->username }} → {{ $commitment->beneficiary->user?->username }}</div>
                             </a>
-                        @empty
-                            <p class="text-sm text-zinc-500">{{ __('deals.no_commitments') }}</p>
-                        @endforelse
-                        @if ($canCreateCommitment)
-                            <flux:button :href="route('commitments.create', $latestContract)" size="sm">{{ __('commitments.new') }}</flux:button>
-                        @endif
+                        @endforeach
                     </div>
                 @endif
                 @if ($agreed && $terms)
@@ -327,9 +362,6 @@
             <div class="flex flex-wrap gap-2">
                 @if ($context)
                     <flux:button :href="route('contexts.contents.index', $context)" size="sm" variant="ghost">{{ __('collaboration.tabs.content') }}</flux:button>
-                @endif
-                @if ($latestContract && $canPropose)
-                    <flux:button :href="route('contracts.show', ['contract' => $latestContract, 'tools' => 1])" size="sm" variant="ghost" data-contract-tools>{{ __('deals.contract_tools') }}</flux:button>
                 @endif
                 @if ($canCancel)
                     <flux:button wire:click="cancel" size="sm" variant="danger" wire:loading.attr="disabled" wire:target="cancel">{{ __('relationships.show.cancel') }}</flux:button>

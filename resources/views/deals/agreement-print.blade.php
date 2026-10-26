@@ -28,8 +28,9 @@
         @if (! empty($terms['summary']))<p dir="auto">{{ $terms['summary'] }}</p>@endif
         <p class="muted">
             {{ __('deals.print.reference', ['ref' => strtoupper(substr($contract->uuid, 0, 8))]) }} ·
-            {{ __('deals.terms_card', ['version' => $source->version]) }}
-            @if ($source->terms_hash) · {{ __('deals.print.fingerprint', ['hash' => substr($source->terms_hash, 0, 16)]) }}@endif
+            {{ __('deals.agreement_version', ['version' => $version->version]) }}
+            @php($hash = $version->terms_hash ?? $source->terms_hash)
+            @if ($hash) · {{ __('deals.print.fingerprint', ['hash' => substr($hash, 0, 16)]) }}@endif
             @if ($version->effective_from) · {{ __('deals.print.effective') }} <x-app.local-datetime :value="$version->effective_from" />@endif
         </p>
         @if ($originTitle)<p class="muted" dir="auto">{{ __('deals.print.origin', ['title' => $originTitle, 'version' => $originVersion]) }}</p>@endif
@@ -59,6 +60,17 @@
             <x-deals.document :sections="$sections" />
         @endif
     </section>
+
+    @if ($agreementVersions->count() > 1)
+        <section data-print-agreement-versions>
+            <h2 class="font-semibold">{{ __('deals.agreement_versions') }}</h2>
+            <table><tbody>
+                @foreach ($agreementVersions as $cv)
+                    <tr><td>{{ __('deals.agreement_version', ['version' => $cv->version]) }} @if ($cv->id === $version->id)<strong>· {{ __('deals.print.in_force') }}</strong>@endif</td><td>{{ __('contracts.version_status.'.$cv->status->value) }}</td><td><x-app.local-datetime :value="$cv->effective_from" /></td></tr>
+                @endforeach
+            </tbody></table>
+        </section>
+    @endif
 
     <section>
         <h2 class="font-semibold">{{ __('deals.print.versions') }}</h2>

@@ -15,6 +15,7 @@ use App\Models\ProposalParty;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Support\Deals\DealParties;
+use App\Support\Deals\DealTerms;
 use App\Support\Parties\Party;
 use App\Support\Parties\PartyAuthority;
 use Carbon\CarbonImmutable;
@@ -41,6 +42,7 @@ class CreateContractVersion
         string $effectiveTimezone,
         ?string $note = null,
         bool $acceptProposer = true,
+        ?array $termsData = null,
     ): ContractVersion {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('participate', $contract);
@@ -75,6 +77,7 @@ class CreateContractVersion
             $effectiveTimezone,
             $note,
             $acceptProposer,
+            $termsData,
         ): ContractVersion {
             $locked = Contract::query()
                 ->with(['contextBinding.context', 'sourceProposalVersion.proposal'])
@@ -147,6 +150,8 @@ class CreateContractVersion
                 'effective_from' => $effectiveAt,
                 'effective_timezone' => $effectiveTimezone,
                 'note' => $note !== '' ? $note : null,
+                'terms_data' => $termsData,
+                'terms_hash' => $termsData !== null ? DealTerms::hash($termsData) : null,
                 'proposed_at' => now(),
             ]);
 

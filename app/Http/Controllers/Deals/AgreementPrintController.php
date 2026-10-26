@@ -8,6 +8,7 @@ use App\Models\IntentVersion;
 use App\Models\Relationship;
 use App\ProposalStatus;
 use App\Support\Deals\AgreementDocument;
+use App\Support\Deals\AgreementTerms;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -34,8 +35,9 @@ class AgreementPrintController extends Controller
         abort_unless($contract instanceof Contract, 404, 'This Deal has no executed Agreement yet.');
 
         $source = $contract->sourceProposalVersion;
-        $version = $contract->versions->sortBy('version')->first();
-        $terms = $source->terms_data;
+        $version = $contract->activeVersionRecord() ?? $contract->versions->sortBy('version')->first();
+        $version->loadMissing(['contract.sourceProposalVersion', 'parties.business', 'parties.group', 'parties.actor.user', 'parties.acceptance.acceptedByUser', 'termsRevision']);
+        $terms = AgreementTerms::of($version);
         $origin = $relationship->originating_intent_version_id ? IntentVersion::query()->find($relationship->originating_intent_version_id) : null;
 
         return view('deals.agreement-print', [
@@ -44,7 +46,8 @@ class AgreementPrintController extends Controller
             'source' => $source,
             'terms' => $terms,
             'sections' => $terms !== null ? AgreementDocument::sections($terms) : [],
-            'legacyText' => $terms === null ? (string) ($source->termsRevision->payload['terms'] ?? '') : null,
+            'legacyText' => $terms === null ? (string) ($version->termsRevision->payload['terms'] ?? '') : null,
+            'agreementVersions' => $contract->versions->sortBy('version'),
             'parties' => $version->parties,
             'versions' => $source->proposal->versions->sortBy('version'),
             'originTitle' => $origin?->snapshot['core']['title'] ?? null,

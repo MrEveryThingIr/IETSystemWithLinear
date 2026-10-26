@@ -26,6 +26,7 @@ class ProposeContractAmendment
         ?string $summary = null,
         ?string $notes = null,
         ?string $versionNote = null,
+        ?array $termsData = null,
     ): ContractVersion {
         Gate::forUser($user)->authorize('amend', $contract);
 
@@ -72,6 +73,7 @@ class ProposeContractAmendment
             $effectiveFrom,
             $effectiveTimezone,
             $versionNote,
+            termsData: $termsData,
         );
     }
 }

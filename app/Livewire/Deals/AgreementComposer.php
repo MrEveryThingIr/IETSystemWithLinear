@@ -2,14 +2,18 @@
 
 namespace App\Livewire\Deals;
 
+use App\Actions\Deals\AmendAgreement;
 use App\Actions\Deals\ProposeDealTerms;
 use App\Models\Actor;
+use App\Models\Contract;
+use App\Models\ContractVersion;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Relationship;
 use App\Models\User;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementDrafter;
+use App\Support\Deals\AgreementTerms;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealPrincipals;
 use App\Support\Deals\DealTerms;
@@ -18,12 +22,14 @@ use App\Support\Deals\DealTermsDraft;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentProfiles;
 use App\Support\TemporalPreferences;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Throwable;
 
 /**
  * Drafts the next version of a Deal's Agreement as an ordered list of terms. Typed terms (price, payment rule, dates, place,
@@ -61,6 +67,13 @@ class AgreementComposer extends Component
 
     public string $savedAt = '';
 
+    /** 'propose' writes the next negotiation version; 'amend' changes an agreement everyone already accepted. */
+    public string $mode = 'propose';
+
+    public string $effectiveAt = '';
+
+    public string $timezone = 'UTC';
+
     /** What an earlier version said when it was priced in a currency new Agreements no longer use. Shown, never converted. */
     public string $legacyPrice = '';
 
@@ -87,17 +100,38 @@ class AgreementComposer extends Component
         $this->open = true;
     }
 
+    /** Amending an accepted Agreement: start from the version in force; the change takes effect later and only once everyone accepts it. */
+    #[On('open-amendment')]
+    public function startAmendment(): void
+    {
+        $this->authorizeDrafting();
+        $contract = Contract::query()->where('relationship_id', $this->relationship->id)->latest('id')->first();
+        $active = $contract?->activeVersionRecord();
+        abort_unless($contract instanceof Contract && $active instanceof ContractVersion, 422);
+        abort_if($contract->pendingVersionRecord() instanceof ContractVersion || $active->serviceTerm !== null, 422);
+
+        $terms = AgreementTerms::of($active->loadMissing('contract.sourceProposalVersion', 'termsRevision'));
+        $this->draft = $terms !== null ? DealTermsDraft::fromTerms($terms) : [...DealTermsDraft::blank(), 'notes' => (string) ($active->termsRevision->payload['terms'] ?? ''), 'items' => ['notes']];
+        $this->mode = 'amend';
+        $this->timezone = TemporalPreferences::timezoneFor($this->user());
+        $this->effectiveAt = CarbonImmutable::now($this->timezone)->addDay()->setTime(9, 0)->format('Y-m-d\TH:i');
+        $this->adoptSupportedCurrency();
+        $this->draft['core']['timezone'] = ($this->draft['core']['timezone'] ?? '') !== '' ? $this->draft['core']['timezone'] : $this->timezone;
+        $this->versionNote = '';
+        $this->open = true;
+    }
+
     public function close(): void
     {
-        $this->reset('open', 'picking', 'search', 'libraryOpen');
+        $this->reset('open', 'picking', 'search', 'libraryOpen', 'mode');
     }
 
     /** Keeps the working copy for later. It is visible only to people who may draft, and is not an Agreement. */
     public function saveDraft(): void
     {
         $this->authorizeDrafting();
-        if (! $this->open || $this->draft === []) {
-            return; // never store an empty working copy over a real one
+        if (! $this->open || $this->draft === [] || $this->mode !== 'propose') {
+            return; // never store an empty working copy over a real one; an amendment is sent or dropped, not kept
         }
         $this->relationship->refresh();
         $meta = $this->relationship->metadata ?? [];
@@ -247,6 +281,12 @@ class AgreementComposer extends Component
             return;
         }
 
+        if ($this->mode === 'amend') {
+            $this->sendAmendment($terms);
+
+            return;
+        }
+
         try {
             $version = $propose->execute($this->relationship, $this->user(), $terms, trim($this->versionNote) !== '' ? trim($this->versionNote) : null);
         } catch (HttpException $e) {
@@ -268,14 +308,47 @@ class AgreementComposer extends Component
         $this->dispatch('deal-changed');
     }
 
+    /** @param array<string, mixed> $terms */
+    private function sendAmendment(array $terms): void
+    {
+        try {
+            $effective = CarbonImmutable::parse($this->effectiveAt, $this->timezone)->utc();
+        } catch (Throwable) {
+            $this->addError('draft', __('deals.composer.future_only'));
+
+            return;
+        }
+        if (! $effective->isFuture()) {
+            $this->addError('draft', __('deals.composer.future_only'));
+
+            return;
+        }
+
+        $contract = Contract::query()->where('relationship_id', $this->relationship->id)->latest('id')->firstOrFail();
+        try {
+            app(AmendAgreement::class)->execute($contract, $this->user(), $terms, $effective, $this->timezone, trim($this->versionNote) !== '' ? trim($this->versionNote) : null);
+        } catch (HttpException $e) {
+            if ($e->getStatusCode() !== 422) {
+                throw $e;
+            }
+            $this->addError('draft', __('deals.terms_invalid').' '.$e->getMessage());
+
+            return;
+        }
+
+        DealNote::post($this->relationship->contextBinding?->context, $this->user(), 'amendment_proposed');
+        $this->reset('open', 'picking', 'search', 'versionNote', 'libraryOpen', 'draft', 'mode');
+        $this->dispatch('deal-changed');
+    }
+
     public function render(): View
     {
-        $latest = $this->open ? $this->latestVersion() : null;
+        $latest = $this->open && $this->mode === 'propose' ? $this->latestVersion() : null;
 
         return view('livewire.deals.agreement-composer', [
             'base' => $latest?->terms_data !== null ? DealTermsDiff::rows($latest->terms_data) : [],
             'baseVersion' => $latest?->version,
-            'fromOrigin' => $this->open && $latest === null,
+            'fromOrigin' => $this->open && $latest === null && $this->mode === 'propose',
             'library' => $this->open && $this->picking ? $this->fieldLibrary() : [],
             'partyNames' => $this->open ? $this->partyNames() : [],
             'categories' => self::LIBRARY,
@@ -328,7 +401,7 @@ class AgreementComposer extends Component
     /** A short, familiar list plus the person's own zone and any zone already in the draft. @return list<string> */
     private function timezones(): array
     {
-        $list = [TemporalPreferences::timezoneFor($this->user()), (string) ($this->draft['core']['timezone'] ?? ''), 'UTC', 'Asia/Tehran', 'Asia/Dubai', 'Europe/Istanbul', 'Europe/London', 'Europe/Berlin', 'Asia/Shanghai', 'America/New_York'];
+        $list = [TemporalPreferences::timezoneFor($this->user()), $this->timezone, (string) ($this->draft['core']['timezone'] ?? ''), 'UTC', 'Asia/Tehran', 'Asia/Dubai', 'Europe/Istanbul', 'Europe/London', 'Europe/Berlin', 'Asia/Shanghai', 'America/New_York'];
 
         return array_values(array_unique(array_filter($list)));
     }

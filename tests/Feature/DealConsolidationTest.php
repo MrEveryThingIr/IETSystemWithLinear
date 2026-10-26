@@ -7,6 +7,7 @@ use App\Actions\Deals\ProposeDealTerms;
 use App\Actions\Proposals\CreateProposal;
 use App\Actions\Proposals\RespondToProposal;
 use App\Actions\Relationships\RespondToRelationship;
+use App\ContractVersionStatus;
 use App\Livewire\Deals\AgreementComposer;
 use App\Livewire\Intents\Composer;
 use App\Livewire\Items\Index as MyItems;
@@ -14,6 +15,7 @@ use App\Livewire\Relationships\Create as DealStart;
 use App\Livewire\Relationships\Show as DealShow;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
+use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\ContractAcceptance;
 use App\Models\Proposal;
@@ -22,6 +24,7 @@ use App\Models\Relationship;
 use App\ProposalDecisionKind;
 use App\Services\Surfaces\ExperienceNavigation;
 use App\Support\Deals\AgreementDocument;
+use App\Support\Deals\AgreementTerms;
 use App\Support\Deals\DealLinks;
 use App\Support\Deals\DealTerms;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -114,7 +117,8 @@ class DealConsolidationTest extends TestCase
         app(RespondToProposal::class)->execute($proposal->fresh(), $bob->user, ProposalDecisionKind::Accepted, null, 2);
         $contract = Contract::query()->sole();
         $this->actingAs($bob->user)->get(route('contracts.show', $contract))->assertRedirect(DealLinks::workspace($deal, 'agreement', 2)); // the accepted version
-        $this->actingAs($bob->user)->get(route('contracts.show', ['contract' => $contract, 'tools' => 1]))->assertOk()->assertSee(route('relationships.agreement.print', $deal), false);
+        // There is no separate "tools" page any more: even that old address opens the Deal.
+        $this->actingAs($bob->user)->get(route('contracts.show', ['contract' => $contract, 'tools' => 1]))->assertRedirect(DealLinks::workspace($deal, 'agreement', 2));
         $this->assertSame(DealLinks::workspace($deal, 'agreement', 2), DealLinks::contract($contract->fresh('relationship', 'sourceProposalVersion')));
         $this->actingAs($eve->user)->get(route('contracts.show', $contract))->assertForbidden();
     }
@@ -244,8 +248,8 @@ class DealConsolidationTest extends TestCase
             ->assertSee('data-work-commitments', false)->assertDontSee(__('deals.open_contract'));
         $this->assertStringNotContainsString('href="'.route('contracts.show', $contract).'"', $page->getContent());
 
-        // The one advanced entry (amendments, service terms) is explicit; participants only.
-        $this->actingAs($bob->user)->get(route('contracts.show', ['contract' => $contract, 'tools' => 1]))->assertOk();
+        $this->assertStringNotContainsString('contracts/create', $page->getContent());
+        $this->assertStringNotContainsString('commitments/', $page->getContent().'', 'no commitment creation or navigation in the ordinary Deal');
         $this->actingAs($eve->user)->get(route('contracts.show', ['contract' => $contract, 'tools' => 1]))->assertForbidden();
 
         // A historical Contract that never had a Deal is not given one: its page stays.
@@ -253,6 +257,57 @@ class DealConsolidationTest extends TestCase
         $this->actingAs($bob->user)->get(route('contracts.show', $contract->fresh()))->assertOk();
         $this->assertSame(route('contracts.show', $contract), DealLinks::contract($contract->fresh('relationship', 'sourceProposalVersion')));
         $this->assertNull($contract->fresh()->relationship_id);
+    }
+
+    public function test_an_accepted_agreement_is_amended_inside_the_deal_and_every_version_is_kept(): void
+    {
+        [$alice, $bob, $deal] = $this->activeDeal();
+        $this->agreed($alice, $bob, $deal);
+        $contract = Contract::query()->sole();
+        $v1 = $contract->versions()->sole();
+        $this->assertSame(ContractVersionStatus::Active, $v1->fresh()->status);
+
+        // Only someone allowed to draft may amend; a stranger cannot.
+        $eve = $this->account();
+        Livewire::actingAs($bob->user)->test(AgreementComposer::class, ['relationship' => $deal])->call('startAmendment')->assertStatus(403);
+        $this->assertSame(1, $contract->versions()->count());
+
+        // Alice amends from the version in force; the amendment is a new ContractVersion with its own typed Terms.
+        $c = Livewire::actingAs($alice->user)->test(AgreementComposer::class, ['relationship' => $deal])->call('startAmendment')->assertSeeHtml('data-amend-effective')->assertSet('mode', 'amend');
+        $c->call('addItem', 'place')->set('draft.core.place', 'Karaj')->call('send')->assertHasNoErrors();
+        $v2 = $contract->versions()->where('version', 2)->sole();
+        $this->assertSame(ContractVersionStatus::Proposed, $v2->status);
+        $this->assertSame('Karaj', $v2->terms_data['place']);
+        $this->assertSame(DealTerms::hash($v2->terms_data), $v2->terms_hash);
+        $this->assertSame(ContractVersionStatus::Active, $v1->fresh()->status, 'the current version stays in force until the amendment is accepted');
+        $this->assertArrayNotHasKey('place', $v1->fresh()->contract->sourceProposalVersion->terms_data ?? []);
+
+        // The other side sees exactly what is proposed and accepts it from the Deal; a second amendment cannot be opened meanwhile.
+        $page = $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertOk();
+        $page->assertSee('data-contract-pending', false)->assertSee('Karaj')->assertSee('data-contract-accept', false);
+        Livewire::actingAs($alice->user)->test(AgreementComposer::class, ['relationship' => $deal])->call('startAmendment')->assertStatus(422);
+        Livewire::actingAs($bob->user)->test(DealShow::class, ['relationship' => $deal])->call('acceptContract');
+
+        // From its effective time the amendment is the Agreement in force; version 1 is superseded, not rewritten.
+        $this->travel(3)->days();
+        $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertOk()->assertSee('Karaj')->assertSee(__('deals.agreement_version', ['version' => 2]))->assertSee('data-agreement-versions', false);
+        $this->assertSame(ContractVersionStatus::Active, $v2->fresh()->status);
+        $this->assertSame(ContractVersionStatus::Superseded, $v1->fresh()->status);
+        $print = $this->actingAs($bob->user)->get(route('relationships.agreement.print', $deal))->assertOk();
+        $print->assertSee('Karaj')->assertSee('data-print-agreement-versions', false)->assertSee(substr($v2->terms_hash, 0, 16));
+        $this->assertSame('Karaj', AgreementTerms::of($v2->fresh('contract.sourceProposalVersion'))['place']);
+        $this->assertSame(0, Commitment::query()->count());
+    }
+
+    public function test_amendments_follow_the_same_money_rules_and_cannot_be_dated_in_the_past(): void
+    {
+        [$alice, $bob, $deal] = $this->activeDeal();
+        $this->agreed($alice, $bob, $deal);
+        $make = fn () => Livewire::actingAs($alice->user)->test(AgreementComposer::class, ['relationship' => $deal])->call('startAmendment');
+
+        $make()->call('addItem', 'price')->set('draft.core.price_min', '10')->set('draft.core.currency', 'USD')->call('send')->assertHasErrors('draft');
+        $make()->call('addItem', 'place')->set('draft.core.place', 'Rasht')->set('effectiveAt', now()->subDay()->format('Y-m-d\\TH:i'))->call('send')->assertHasErrors('draft')->assertSee(__('deals.composer.future_only'));
+        $this->assertSame(1, Contract::query()->sole()->versions()->count());
     }
 
     public function test_a_contract_created_before_single_agree_is_accepted_from_the_deal(): void

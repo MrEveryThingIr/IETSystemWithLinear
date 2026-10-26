@@ -46,7 +46,7 @@ class Show extends Component
         $this->contract = $contract;
         $this->reconcileDueActivation();
 
-        if (request()->routeIs('contracts.show') && ! request()->boolean('tools') && $this->contract->relationship_id !== null) {
+        if (request()->routeIs('contracts.show') && $this->contract->relationship_id !== null) {
             return $this->redirect(DealLinks::contract($this->contract), navigate: false);
         }
 
