@@ -13,7 +13,12 @@ final class DealTerms
 {
     public const SCHEMA = 1;
 
-    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'effective', 'notes'];
+    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes'];
+
+    /** Value kinds a negotiated field may carry; they mirror the Need/Offer field library. */
+    public const FIELD_TYPES = ['text', 'long_text', 'number', 'amount', 'boolean', 'choice', 'date', 'year'];
+
+    public const RECURRENCE_UNITS = ['day', 'week', 'month', 'year'];
 
     /**
      * @param  array<string, mixed>  $terms
@@ -77,11 +82,29 @@ final class DealTerms
                 abort_if(isset($fields[$key]), 422, 'Deal Terms field keys must be unique.');
                 $value = self::text($field['value'] ?? null, 1000, 'field value');
                 if ($value !== null) {
-                    $fields[$key] = ['key' => $key, 'label' => self::text($field['label'] ?? null, 120, 'field label') ?? $key, 'value' => $value];
+                    $type = self::text($field['type'] ?? null, 20, 'field type');
+                    abort_if($type !== null && ! in_array($type, self::FIELD_TYPES, true), 422, 'Deal Terms field type is invalid.');
+                    $fields[$key] = array_filter([
+                        'key' => $key,
+                        'label' => self::text($field['label'] ?? null, 120, 'field label') ?? $key,
+                        'value' => $value,
+                        'type' => $type,
+                        'unit' => self::text($field['unit'] ?? null, 40, 'field unit'),
+                    ], fn ($v) => $v !== null);
                 }
             }
             ksort($fields);
             $out['fields'] = array_values($fields);
+        }
+
+        if ($recurrence = self::section($terms, 'recurrence', ['every', 'unit', 'count'])) {
+            $unit = self::text($recurrence['unit'] ?? null, 10, 'recurrence unit');
+            abort_unless(in_array($unit, self::RECURRENCE_UNITS, true), 422, 'Deal Terms recurrence unit is invalid.');
+            $every = isset($recurrence['every']) && $recurrence['every'] !== '' ? self::integer($recurrence['every'], 'recurrence interval') : 1;
+            abort_unless($every >= 1 && $every <= 365, 422, 'Deal Terms recurrence interval is invalid.');
+            $count = isset($recurrence['count']) && $recurrence['count'] !== '' ? self::integer($recurrence['count'], 'recurrence count') : null;
+            abort_unless($count === null || ($count >= 1 && $count <= 1000), 422, 'Deal Terms recurrence count is invalid.');
+            $out['recurrence'] = ['every' => $every, 'unit' => $unit, 'count' => $count];
         }
 
         $effective = self::section($terms, 'effective', ['mode', 'at', 'timezone']) ?? [];
@@ -145,7 +168,11 @@ final class DealTerms
             $line('category', $terms['category']['label'] ?? null),
         ];
         foreach ($terms['fields'] ?? [] as $field) {
-            $lines[] = $field['label'].': '.$field['value'];
+            $lines[] = $field['label'].': '.self::displayValue($field);
+        }
+        if (isset($terms['recurrence'])) {
+            $r = $terms['recurrence'];
+            $lines[] = __('deals.terms.recurrence').': '.__('deals.recurrence_every', ['every' => $r['every'], 'unit' => __('deals.recurrence_units.'.$r['unit'])]).(isset($r['count']) ? ' × '.$r['count'] : '');
         }
         $lines[] = $line('effective', ($effective['mode'] ?? 'on_acceptance') === 'at'
             ? ($effective['at'] ?? '').' ('.($effective['timezone'] ?? 'UTC').')'
@@ -153,6 +180,19 @@ final class DealTerms
         $lines[] = $line('notes', $terms['notes'] ?? null);
 
         return implode("\n", array_filter($lines, fn (?string $l): bool => $l !== null));
+    }
+
+    /** A field value as a person reads it: Yes/No, the option's label, the unit after a number. */
+    public static function displayValue(array $field): string
+    {
+        $value = (string) ($field['value'] ?? '');
+
+        return match ($field['type'] ?? 'text') {
+            'boolean' => (string) __($value === 'true' ? 'composer.yes' : 'composer.no'),
+            'choice' => \App\Support\Market\IntentDetailCatalog::optionLabel($value),
+            'number', 'amount' => trim($value.' '.(isset($field['unit']) ? (string) (\App\Support\Market\IntentDetailCatalog::unitLabel($field['unit']) ?? $field['unit']) : '')),
+            default => $value,
+        };
     }
 
     /** @return array<string, mixed>|null */

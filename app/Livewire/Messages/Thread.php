@@ -57,6 +57,10 @@ class Thread extends Component
     /** @var TemporaryUploadedFile|null */
     public $voice = null;
 
+    /** Shown inside another page (a Deal): no inbox header, a fixed-height body. */
+    #[Locked]
+    public bool $embedded = false;
+
     public string $notice = '';
 
     public bool $reporting = false;
@@ -69,8 +73,9 @@ class Thread extends Component
 
     public bool $showShareContact = false;
 
-    public function mount(Conversation $conversation): void
+    public function mount(Conversation $conversation, bool $embedded = false): void
     {
+        $this->embedded = $embedded;
         abort_unless(Gate::allows('view', $this->context($conversation)), 403);
         $this->conversation = $conversation;
         app(ManageConversation::class)->markRead($this->user(), $conversation);
