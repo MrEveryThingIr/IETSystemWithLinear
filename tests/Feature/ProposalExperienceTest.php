@@ -110,7 +110,7 @@ class ProposalExperienceTest extends TestCase
         $this->actingAs($alice->user)
             ->get(route('contexts.conversation', $context))
             ->assertOk()
-            ->assertSee(__('collaboration.conversation.read_only'));
+            ->assertSee(__('messages.cannot_write'));
     }
 
     public function test_active_relationship_can_prefill_a_proposal_without_becoming_the_proposal_authority(): void
@@ -145,8 +145,7 @@ class ProposalExperienceTest extends TestCase
 
         $this->actingAs($alice->user)
             ->get(route('relationships.show', $relationship))
-            ->assertOk()
-            ->assertSee(route('proposals.create', ['relationship' => $relationship->uuid]), false);
+            ->assertOk(); // the Deal workspace drafts the Agreement itself; the long form below stays reachable for old links
 
         Livewire::actingAs($alice->user)
             ->withQueryParams(['relationship' => $relationship->uuid])

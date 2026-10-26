@@ -13,6 +13,7 @@ use App\Models\RelationshipParticipant;
 use App\Models\User;
 use App\ProposalStatus;
 use App\RelationshipParticipantStatus;
+use App\Support\Deals\AgreementDrafter;
 use App\Support\Deals\DealPrincipals;
 use Illuminate\Support\Facades\Gate;
 
@@ -29,9 +30,10 @@ class ProposeDealTerms
     {
         $deal = Relationship::query()->with(['originatingIntent.profile', 'matchedIntent.profile', 'participants'])->findOrFail($relationship->id);
         Gate::forUser($user)->authorize('participate', $deal);
+        abort_unless(AgreementDrafter::canDraft($deal, $user), 403); // others ask for an agreement or ask for changes
 
         $terms['origin'] = $this->origin($deal);
-        $title = $deal->title ?: ($terms['origin']['title'] ?? $deal->purposeConcept?->displayLabel() ?? 'Deal');
+        $title = ($terms['title'] ?? null) ?: $deal->title ?: ($terms['origin']['title'] ?? $deal->purposeConcept?->displayLabel() ?? 'Deal');
         unset($terms['origin']['title']);
 
         $proposal = Proposal::query()->where('relationship_id', $deal->id)->latest('id')->first();

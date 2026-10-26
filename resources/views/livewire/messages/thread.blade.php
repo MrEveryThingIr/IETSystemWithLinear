@@ -1,6 +1,8 @@
 <div
     class="flex h-full min-h-0 flex-col"
-    x-data="messageThread({ stateUrl: {{ \Illuminate\Support\Js::from(route('messages.state', $conversation)) }}, version: {{ \Illuminate\Support\Js::from($version) }} })"
+    x-data="messageThread"
+    data-state-url="{{ route('messages.state', $conversation) }}"
+    data-version="{{ $version }}"
     data-message-thread="{{ $conversation->uuid }}"
 >
     {{-- Header --}}
@@ -173,6 +175,12 @@
                                             <span class="min-w-0 truncate" dir="auto">{{ $asset->original_filename }}</span>
                                         </a>
                                     @endif
+                                @endforeach
+                                @foreach ($message->evidenceReferences as $reference)
+                                    <a href="{{ route('content-evidence.show', $reference) }}" class="mt-1 flex min-w-0 items-center gap-2 rounded-lg bg-black/5 px-2 py-1.5 text-sm underline-offset-2 hover:underline dark:bg-white/10" data-evidence-reference>
+                                        <flux:icon.document-text class="size-4 shrink-0" />
+                                        <span class="min-w-0 truncate" dir="auto">{{ $reference->revision?->title ?: $reference->content?->activeRevision?->title ?: __('ui.content.untitled') }}</span>
+                                    </a>
                                 @endforeach
                             @endif
                         </div>

@@ -259,7 +259,7 @@ class Thread extends Component
 
         $messages = ConversationMessage::query()
             ->where('conversation_id', $this->conversation->id)
-            ->with(['author.user', 'author.profile', 'latestRevision', 'replyTo.author.user', 'replyTo.latestRevision', 'assets', 'reactions'])
+            ->with(['author.user', 'author.profile', 'latestRevision', 'replyTo.author.user', 'replyTo.latestRevision', 'assets', 'reactions', 'evidenceReferences.content.activeRevision', 'evidenceReferences.revision'])
             ->latest('id')
             ->limit($this->limit + 1)
             ->get();

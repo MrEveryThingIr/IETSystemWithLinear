@@ -58,6 +58,8 @@ class Index extends Component
             $this->filter = 'unread';
         }
 
+        app(\App\Support\NotificationOutboxDispatcher::class)->deliverPendingFor($this->user());
+
         $query = $this->filter === 'unread'
             ? $this->user()->unreadNotifications()
             : $this->user()->notifications();

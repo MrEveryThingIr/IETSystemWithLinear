@@ -20,6 +20,8 @@ final class DealTermsDiff
             }
         };
 
+        $add('title', $terms['title'] ?? null);
+        $add('summary', $terms['summary'] ?? null);
         $p = $terms['price'] ?? [];
         $add('price_min', $p['min'] ?? null);
         $add('price_max', $p['max'] ?? null);
@@ -38,6 +40,16 @@ final class DealTermsDiff
         if (isset($terms['recurrence'])) {
             $r = $terms['recurrence'];
             $add('recurrence', __('deals.recurrence_every', ['every' => $r['every'], 'unit' => __('deals.recurrence_units.'.$r['unit'])]).(isset($r['count']) ? ' × '.$r['count'] : ''));
+        }
+        if (isset($terms['payment'])) {
+            $pay = $terms['payment'];
+            $add('payment', __('deals.payment_modes.'.$pay['mode']).(isset($pay['period']) ? ' ('.__('deals.recurrence_units.'.$pay['period']).')' : '').(isset($pay['note']) ? ' — '.$pay['note'] : ''));
+        }
+        if (isset($terms['completion'])) {
+            $add('completion', __('deals.completion_by.'.$terms['completion']['confirmed_by']));
+        }
+        foreach ($terms['clauses'] ?? [] as $clause) {
+            $add('clause:'.$clause['key'], $clause['text'] ?? null, $clause['title'] ?? __('deals.clauses.'.$clause['kind'].'.title'));
         }
         $add('notes', $terms['notes'] ?? null);
 

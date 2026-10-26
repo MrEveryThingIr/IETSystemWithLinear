@@ -13,7 +13,17 @@ final class DealTerms
 {
     public const SCHEMA = 1;
 
-    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes'];
+    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes', 'title', 'summary', 'clauses', 'payment', 'completion', 'order'];
+
+    /** Narrative clause kinds of the small clause library. Narrative clauses are text: they never become automation. */
+    public const CLAUSE_KINDS = ['scope', 'deliverables', 'duties', 'evidence', 'cancellation', 'disputes', 'confidentiality', 'special', 'custom'];
+
+    /** Typed sections a document may list in its order. */
+    public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes'];
+
+    public const PAYMENT_MODES = ['none', 'on_acceptance', 'after_confirmed_delivery', 'per_period'];
+
+    public const COMPLETION_CONFIRMERS = ['beneficiary', 'both', 'none'];
 
     /** Value kinds a negotiated field may carry; they mirror the Need/Offer field library. */
     public const FIELD_TYPES = ['text', 'long_text', 'number', 'amount', 'boolean', 'choice', 'date', 'year'];
@@ -31,6 +41,8 @@ final class DealTerms
         abort_unless(($terms['schema'] ?? null) === self::SCHEMA, 422, 'Deal Terms schema version must be 1.');
 
         $out = ['schema' => self::SCHEMA];
+        $out['title'] = self::text($terms['title'] ?? null, 180, 'title');
+        $out['summary'] = self::text($terms['summary'] ?? null, 2000, 'summary');
 
         if ($origin = self::section($terms, 'origin', ['intent_uuid', 'intent_version_id', 'kind'])) {
             $out['origin'] = [
@@ -107,6 +119,50 @@ final class DealTerms
             $out['recurrence'] = ['every' => $every, 'unit' => $unit, 'count' => $count];
         }
 
+        if (isset($terms['clauses'])) {
+            abort_unless(is_array($terms['clauses']) && array_is_list($terms['clauses']) && count($terms['clauses']) <= 40, 422, 'Deal Terms clauses must be a list of at most 40.');
+            $clauses = [];
+            foreach ($terms['clauses'] as $clause) {
+                abort_unless(is_array($clause), 422, 'Deal Terms clause is invalid.');
+                $key = self::text($clause['key'] ?? null, 60, 'clause key');
+                abort_if($key === null || preg_match('/^[a-z0-9_-]+$/', $key) !== 1 || isset($clauses[$key]), 422, 'Deal Terms clause key is invalid or repeated.');
+                $kind = self::text($clause['kind'] ?? 'custom', 40, 'clause kind');
+                abort_unless(in_array($kind, self::CLAUSE_KINDS, true), 422, 'Deal Terms clause kind is invalid.');
+                $title = self::text($clause['title'] ?? null, 120, 'clause title');
+                $text = self::text($clause['text'] ?? null, 4000, 'clause text');
+                if ($title === null && $text === null) {
+                    continue;
+                }
+                $clauses[$key] = array_filter(['key' => $key, 'kind' => $kind, 'title' => $title, 'text' => $text], fn ($v) => $v !== null);
+            }
+            $out['clauses'] = array_values($clauses);
+        }
+
+        if ($payment = self::section($terms, 'payment', ['mode', 'period', 'note'])) {
+            $mode = self::text($payment['mode'] ?? null, 40, 'payment mode');
+            abort_unless(in_array($mode, self::PAYMENT_MODES, true), 422, 'Deal Terms payment mode is invalid.');
+            $period = self::text($payment['period'] ?? null, 10, 'payment period');
+            abort_if($mode === 'per_period' && ! in_array($period, ['week', 'month'], true), 422, 'Deal Terms periodic payment needs a week or month period.');
+            $out['payment'] = ['mode' => $mode, 'period' => $mode === 'per_period' ? $period : null, 'note' => self::text($payment['note'] ?? null, 500, 'payment note')];
+        }
+
+        if ($completion = self::section($terms, 'completion', ['confirmed_by'])) {
+            $by = self::text($completion['confirmed_by'] ?? null, 20, 'completion confirmer');
+            abort_unless(in_array($by, self::COMPLETION_CONFIRMERS, true), 422, 'Deal Terms completion confirmer is invalid.');
+            $out['completion'] = ['confirmed_by' => $by];
+        }
+
+        if (isset($terms['order'])) {
+            abort_unless(is_array($terms['order']) && array_is_list($terms['order']) && count($terms['order']) <= 80, 422, 'Deal Terms order is invalid.');
+            $known = [...self::SECTION_IDS, ...array_map(fn ($c) => 'clause:'.$c['key'], $out['clauses'] ?? [])];
+            $order = [];
+            foreach ($terms['order'] as $id) {
+                abort_unless(is_string($id) && in_array($id, $known, true), 422, 'Deal Terms order refers to an unknown item.');
+                $order[$id] = $id;
+            }
+            $out['order'] = array_values($order);
+        }
+
         $effective = self::section($terms, 'effective', ['mode', 'at', 'timezone']) ?? [];
         $mode = $effective['mode'] ?? 'on_acceptance';
         abort_unless(in_array($mode, ['on_acceptance', 'at'], true), 422, 'Deal Terms effective mode is invalid.');
@@ -173,6 +229,16 @@ final class DealTerms
         if (isset($terms['recurrence'])) {
             $r = $terms['recurrence'];
             $lines[] = __('deals.terms.recurrence').': '.__('deals.recurrence_every', ['every' => $r['every'], 'unit' => __('deals.recurrence_units.'.$r['unit'])]).(isset($r['count']) ? ' × '.$r['count'] : '');
+        }
+        if (isset($terms['payment'])) {
+            $p = $terms['payment'];
+            $lines[] = __('deals.terms.payment').': '.__('deals.payment_modes.'.$p['mode']).(isset($p['period']) ? ' ('.__('deals.recurrence_units.'.$p['period']).')' : '').(isset($p['note']) ? ' — '.$p['note'] : '');
+        }
+        if (isset($terms['completion'])) {
+            $lines[] = __('deals.terms.completion').': '.__('deals.completion_by.'.$terms['completion']['confirmed_by']);
+        }
+        foreach ($terms['clauses'] ?? [] as $clause) {
+            $lines[] = ($clause['title'] ?? __('deals.clauses.'.$clause['kind'].'.title')).': '.($clause['text'] ?? '');
         }
         $lines[] = $line('effective', ($effective['mode'] ?? 'on_acceptance') === 'at'
             ? ($effective['at'] ?? '').' ('.($effective['timezone'] ?? 'UTC').')'
@@ -266,7 +332,7 @@ final class DealTerms
     private static function prune(array $data): array
     {
         foreach ($data as $key => $value) {
-            if (is_array($value) && $key !== 'fields') {
+            if (is_array($value) && ! in_array($key, ['fields', 'clauses', 'order'], true)) {
                 $value = self::prune($value);
             }
             if ($value === null || $value === []) {

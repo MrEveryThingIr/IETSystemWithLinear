@@ -9,7 +9,6 @@ use App\Actions\Relationships\EndRelationship;
 use App\Actions\Relationships\RespondToRelationship;
 use App\Models\Actor;
 use App\Models\Context;
-use App\Models\Conversation;
 use App\Models\IntentVersion;
 use App\Models\Proposal;
 use App\Models\Relationship;
@@ -17,14 +16,16 @@ use App\Models\RelationshipParticipant;
 use App\Models\User;
 use App\ProposalDecisionKind;
 use App\ProposalStatus;
+use App\RelationshipStatus;
+use App\Support\Deals\AgreementDocument;
+use App\Support\Deals\AgreementDrafter;
 use App\Support\DealPipeline;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealOrigin;
 use App\Support\Deals\DealTermsDiff;
+use App\Support\Messaging\ThreadFor;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -45,6 +46,8 @@ class Show extends Component
     public ?int $viewedVersion = null;
 
     public string $changeNote = '';
+
+    public string $requestNote = '';
 
     public function mount(Relationship $relationship): void
     {
@@ -78,6 +81,31 @@ class Show extends Component
     {
         $this->relationship = $end->execute($this->relationship, $this->user());
         session()->flash('status', __('relationships.messages.ended'));
+    }
+
+    /** Someone who may not draft asks the drafter to write the Agreement. It is a request, never a term. */
+    public function requestAgreement(): void
+    {
+        $deal = $this->freshDeal();
+        Gate::forUser($this->user())->authorize('participate', $deal);
+        abort_if(AgreementDrafter::canDraft($deal, $this->user()), 422);
+
+        $meta = $deal->metadata ?? [];
+        $requests = collect($meta['agreement_requests'] ?? [])->reject(fn ($r) => (int) $r['actor_id'] === (int) $this->user()->actor->id)->values()->all();
+        $requests[] = ['actor_id' => $this->user()->actor->id, 'note' => mb_substr(trim($this->requestNote), 0, 1000), 'at' => now()->toIso8601String()];
+        $meta['agreement_requests'] = $requests;
+        $deal->update(['metadata' => $meta]);
+
+        DealNote::post($this->context(), $this->user(), 'agreement_requested');
+        $this->reset('requestNote');
+        $this->relationship = $this->freshDeal();
+    }
+
+    /** The owner side lets another active participant write the Agreement (or takes drafting back with 0). */
+    public function delegateDrafting(int $actorId): void
+    {
+        AgreementDrafter::delegate($this->freshDeal(), $this->user(), $actorId > 0 ? $actorId : null);
+        $this->relationship = $this->freshDeal();
     }
 
     public function agree(RespondToProposal $respond): void
@@ -172,27 +200,36 @@ class Show extends Component
             'canEnd' => Gate::forUser($user)->allows('end', $relationship),
             'canPropose' => Gate::forUser($user)->allows('participate', $relationship),
             'context' => $context,
-            'conversation' => $context instanceof Context ? $this->conversation($context, $user) : null,
+            'conversation' => $context instanceof Context ? ThreadFor::conversation($context, $user) : null,
             'introAuthor' => $relationship->participants->firstWhere('actor_id', $relationship->created_by_actor_id)?->actor,
             'origin' => $origin,
             'tc' => $tc,
+            'doc' => $tc['version']?->terms_data !== null ? AgreementDocument::sections($tc['version']->terms_data) : [],
+            'canDraft' => AgreementDrafter::canDraft($relationship, $user) && $relationship->status === RelationshipStatus::Active,
+            'isOwnerSide' => AgreementDrafter::isOwnerSide($relationship, $user),
+            'drafterActorId' => AgreementDrafter::delegateActorId($relationship) ?? AgreementDrafter::ownerActorId($relationship),
+            'hasDraft' => isset($relationship->metadata['agreement_draft']),
+            'requests' => $this->requests($relationship),
+            'startTab' => $this->startTab($relationship, $tc, $user),
         ]);
     }
 
-    /** The one shared thread of this Deal (the same record the Messages inbox shows). */
-    private function conversation(Context $context, User $user): Conversation
+    /** @return list<array{actor: ?Actor, note: string}> */
+    private function requests(Relationship $deal): array
     {
-        DB::table('conversations')->insertOrIgnore([
-            'uuid' => (string) Str::uuid(),
-            'context_id' => $context->id,
-            'key' => 'main',
-            'status' => 'active',
-            'created_by_actor_id' => $user->actor->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        return collect($deal->metadata['agreement_requests'] ?? [])->map(fn ($r): array => [
+            'actor' => $deal->participants->firstWhere('actor_id', (int) $r['actor_id'])?->actor,
+            'note' => (string) ($r['note'] ?? ''),
+        ])->all();
+    }
 
-        return Conversation::query()->where('context_id', $context->id)->where('key', 'main')->firstOrFail();
+    /** Conversation unless something in the Agreement waits for this person. */
+    private function startTab(Relationship $deal, array $tc, User $user): string
+    {
+        $mine = $tc['open'] && $tc['canRespond'];
+        $drafting = $deal->status === RelationshipStatus::Active && AgreementDrafter::canDraft($deal, $user) && (isset($deal->metadata['agreement_draft']) || ! empty($deal->metadata['agreement_requests']));
+
+        return $mine || $drafting ? 'agreement' : 'conversation';
     }
 
     /** @return array<string, mixed> */
@@ -222,6 +259,11 @@ class Show extends Component
             'open' => $proposal->status === ProposalStatus::Negotiating,
             'history' => $versions->slice(0, -1)->reverse()->values(),
         ];
+    }
+
+    private function freshDeal(): Relationship
+    {
+        return Relationship::query()->with(['originatingIntent.profile', 'participants.actor.user', 'contextBinding.context'])->findOrFail($this->relationship->id);
     }
 
     private function context(): Context

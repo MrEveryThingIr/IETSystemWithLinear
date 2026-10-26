@@ -11,17 +11,28 @@ use App\Support\Market\MarketMoney;
 use Illuminate\Support\Str;
 
 /**
- * The editable shape of Deal Terms. A draft starts from the pinned Need/Offer, then from the latest
- * negotiated version, and always turns back into schema-1 Terms. Pure apart from reading the pinned version.
+ * The editable Agreement draft. It starts from the pinned Need/Offer, then from the latest negotiated version, and always
+ * turns back into schema-1 Terms. `items` is the ordered list of what the document contains: typed sections
+ * (price, payment, time, place, quantity, route, recurrence, completion, fields, notes) and narrative clauses ("clause:<key>").
+ * Pure apart from reading the pinned version.
  */
 final class DealTermsDraft
 {
     public const CORE = ['price_min', 'price_max', 'currency', 'basis', 'place', 'starts_on', 'ends_on', 'quantity', 'unit', 'from', 'to'];
 
-    /** @return array{core: array<string, string>, fields: list<array<string, string>>, recurrence: array<string, string>, notes: string} */
+    /** @return array<string, mixed> */
     public static function blank(): array
     {
-        return ['core' => array_fill_keys(self::CORE, ''), 'fields' => [], 'recurrence' => ['every' => '', 'unit' => '', 'count' => ''], 'notes' => ''];
+        return [
+            'title' => '', 'summary' => '', 'items' => [],
+            'core' => array_fill_keys(self::CORE, ''),
+            'fields' => [],
+            'recurrence' => ['every' => '', 'unit' => '', 'count' => ''],
+            'payment' => ['mode' => '', 'period' => '', 'note' => ''],
+            'completion' => ['confirmed_by' => ''],
+            'clauses' => [],
+            'notes' => '',
+        ];
     }
 
     /** The draft people see next: the latest negotiated version, or the pinned Need/Offer when nothing has been proposed. */
@@ -34,6 +45,8 @@ final class DealTermsDraft
     public static function fromTerms(array $t): array
     {
         $d = self::blank();
+        $d['title'] = (string) ($t['title'] ?? '');
+        $d['summary'] = (string) ($t['summary'] ?? '');
         $d['core'] = array_replace($d['core'], array_map('strval', array_filter([
             'price_min' => $t['price']['min'] ?? null, 'price_max' => $t['price']['max'] ?? null, 'currency' => $t['price']['currency'] ?? null,
             'basis' => $t['price']['basis'] ?? null, 'place' => $t['place'] ?? null,
@@ -45,7 +58,13 @@ final class DealTermsDraft
             $d['fields'][] = ['key' => $f['key'], 'label' => $f['label'], 'type' => $f['type'] ?? 'text', 'unit' => $f['unit'] ?? '', 'value' => $f['value']];
         }
         $d['recurrence'] = array_replace($d['recurrence'], array_map('strval', array_filter($t['recurrence'] ?? [], fn ($v) => $v !== null)));
+        $d['payment'] = array_replace($d['payment'], array_map('strval', array_filter($t['payment'] ?? [], fn ($v) => $v !== null)));
+        $d['completion'] = array_replace($d['completion'], array_map('strval', $t['completion'] ?? []));
+        foreach ($t['clauses'] ?? [] as $c) {
+            $d['clauses'][] = ['key' => $c['key'], 'kind' => $c['kind'], 'title' => $c['title'] ?? '', 'text' => $c['text'] ?? ''];
+        }
         $d['notes'] = (string) ($t['notes'] ?? '');
+        $d['items'] = $t['order'] ?? self::defaultItems($d);
 
         return $d;
     }
@@ -60,6 +79,7 @@ final class DealTermsDraft
 
         $snapshot = $version->snapshot;
         $core = $snapshot['core'] ?? [];
+        $d['title'] = (string) ($core['title'] ?? '');
         $min = MarketMoney::legacyToman(isset($core['cash_min']) ? (string) $core['cash_min'] : null, $core['currency_code'] ?? null);
         $max = MarketMoney::legacyToman(isset($core['cash_max']) ? (string) $core['cash_max'] : null, $core['currency_code'] ?? null);
         $d['core'] = array_replace($d['core'], array_map('strval', array_filter([
@@ -108,18 +128,53 @@ final class DealTermsDraft
             $d['fields'][] = ['key' => $fieldKey, 'label' => $label, 'type' => $type, 'unit' => (string) ($spec['unit'] ?? ''), 'value' => $text];
         }
 
+        $d['items'] = self::defaultItems($d);
+
         return $d;
+    }
+
+    /** Sections that already carry something, in the order a reader expects, then the narrative clauses. */
+    public static function defaultItems(array $d): array
+    {
+        $c = $d['core'];
+        $filled = fn (array $keys): bool => collect($keys)->contains(fn ($k) => trim((string) ($c[$k] ?? '')) !== '');
+        $items = [];
+        $on = [
+            'price' => $filled(['price_min', 'price_max', 'basis']),
+            'payment' => ($d['payment']['mode'] ?? '') !== '',
+            'time' => $filled(['starts_on', 'ends_on']),
+            'place' => $filled(['place']),
+            'quantity' => $filled(['quantity', 'unit']),
+            'route' => $filled(['from', 'to']),
+            'recurrence' => ($d['recurrence']['unit'] ?? '') !== '',
+            'completion' => ($d['completion']['confirmed_by'] ?? '') !== '',
+            'fields' => ($d['fields'] ?? []) !== [],
+            'notes' => trim((string) ($d['notes'] ?? '')) !== '',
+        ];
+        foreach (DealTerms::SECTION_IDS as $id) {
+            if ($on[$id]) {
+                $items[] = $id;
+            }
+        }
+        foreach ($d['clauses'] ?? [] as $clause) {
+            $items[] = 'clause:'.$clause['key'];
+        }
+
+        return $items;
     }
 
     /**
      * @param  array<string, mixed>  $d
-     * @return array<string, mixed> schema-1 Terms (origin is added by the action)
+     * @return array<string, mixed> schema-1 Terms (origin is added by the action). Only what is in `items` is included.
      */
     public static function toTerms(array $d): array
     {
+        $items = array_values(array_unique($d['items'] ?? []));
+        $has = fn (string $id): bool => in_array($id, $items, true);
         $c = fn (string $k): ?string => ($x = trim((string) ($d['core'][$k] ?? ''))) === '' ? null : $x;
+
         $fields = [];
-        foreach ($d['fields'] ?? [] as $row) {
+        foreach ($has('fields') ? ($d['fields'] ?? []) : [] as $row) {
             $value = trim((string) ($row['value'] ?? ''));
             if ($value === '') {
                 continue;
@@ -133,20 +188,42 @@ final class DealTermsDraft
                 'unit' => trim((string) ($row['unit'] ?? '')) ?: null,
             ], fn ($v) => $v !== null && $v !== '');
         }
+
+        $clauses = [];
+        foreach ($d['clauses'] ?? [] as $clause) {
+            if (! $has('clause:'.$clause['key'])) {
+                continue;
+            }
+            $clauses[] = array_filter([
+                'key' => $clause['key'], 'kind' => $clause['kind'],
+                'title' => trim((string) ($clause['title'] ?? '')) ?: null, 'text' => trim((string) ($clause['text'] ?? '')) ?: null,
+            ], fn ($v) => $v !== null);
+        }
+
         $r = $d['recurrence'] ?? [];
+        $p = $d['payment'] ?? [];
+        $present = array_filter($items, fn ($id) => str_starts_with($id, 'clause:') ? collect($clauses)->contains(fn ($cl) => 'clause:'.$cl['key'] === $id) : true);
 
         return array_filter([
             'schema' => DealTerms::SCHEMA,
-            'price' => $c('price_min') || $c('price_max') || $c('basis') ? ['min' => $c('price_min'), 'max' => $c('price_max'), 'currency' => $c('currency'), 'basis' => $c('basis')] : null,
-            'place' => $c('place'),
-            'time' => $c('starts_on') || $c('ends_on') ? ['starts_on' => $c('starts_on'), 'ends_on' => $c('ends_on')] : null,
-            'quantity' => $c('quantity') || $c('unit') ? ['value' => $c('quantity'), 'unit' => $c('unit')] : null,
-            'route' => $c('from') || $c('to') ? ['from' => $c('from'), 'to' => $c('to')] : null,
+            'title' => trim((string) ($d['title'] ?? '')) ?: null,
+            'summary' => trim((string) ($d['summary'] ?? '')) ?: null,
+            'price' => $has('price') && ($c('price_min') || $c('price_max') || $c('basis')) ? ['min' => $c('price_min'), 'max' => $c('price_max'), 'currency' => $c('currency'), 'basis' => $c('basis')] : null,
+            'payment' => $has('payment') && trim((string) ($p['mode'] ?? '')) !== ''
+                ? ['mode' => $p['mode'], 'period' => trim((string) ($p['period'] ?? '')) ?: null, 'note' => trim((string) ($p['note'] ?? '')) ?: null]
+                : null,
+            'place' => $has('place') ? $c('place') : null,
+            'time' => $has('time') && ($c('starts_on') || $c('ends_on')) ? ['starts_on' => $c('starts_on'), 'ends_on' => $c('ends_on')] : null,
+            'quantity' => $has('quantity') && ($c('quantity') || $c('unit')) ? ['value' => $c('quantity'), 'unit' => $c('unit')] : null,
+            'route' => $has('route') && ($c('from') || $c('to')) ? ['from' => $c('from'), 'to' => $c('to')] : null,
             'fields' => $fields ?: null,
-            'recurrence' => trim((string) ($r['unit'] ?? '')) !== ''
+            'recurrence' => $has('recurrence') && trim((string) ($r['unit'] ?? '')) !== ''
                 ? ['every' => trim((string) ($r['every'] ?? '')) ?: 1, 'unit' => $r['unit'], 'count' => trim((string) ($r['count'] ?? '')) ?: null]
                 : null,
-            'notes' => trim((string) ($d['notes'] ?? '')) ?: null,
+            'completion' => $has('completion') && trim((string) ($d['completion']['confirmed_by'] ?? '')) !== '' ? ['confirmed_by' => $d['completion']['confirmed_by']] : null,
+            'clauses' => $clauses ?: null,
+            'notes' => $has('notes') ? (trim((string) ($d['notes'] ?? '')) ?: null) : null,
+            'order' => array_values($present) ?: null,
         ], fn ($x) => $x !== null);
     }
 }

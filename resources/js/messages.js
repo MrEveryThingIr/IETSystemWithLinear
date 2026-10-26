@@ -16,9 +16,12 @@ const uuid = () => (window.crypto && window.crypto.randomUUID)
     })
 
 document.addEventListener('alpine:init', () => {
-    window.Alpine.data('messageThread', config => ({
-        stateUrl: config.stateUrl,
-        version: config.version,
+    // Everything that changes between renders (the thread version) is read from data-* attributes once, never
+    // from the x-data expression: a changed x-data expression makes Alpine rebuild the component, which used to
+    // drop a recording in progress whenever a message arrived.
+    window.Alpine.data('messageThread', () => ({
+        stateUrl: '',
+        version: '',
         timer: null,
         failures: 0,
         lastActivity: Date.now(),
@@ -32,6 +35,8 @@ document.addEventListener('alpine:init', () => {
         clientId: uuid(),
 
         init() {
+            this.stateUrl = this.$el.dataset.stateUrl
+            this.version = this.$el.dataset.version
             this.scrollToEnd()
             const mark = () => { this.lastActivity = Date.now() }
             ;['keydown', 'pointerdown', 'scroll', 'focus'].forEach(name => window.addEventListener(name, mark, { passive: true }))
@@ -131,7 +136,12 @@ document.addEventListener('alpine:init', () => {
                 const type = (recorder.mimeType || 'audio/webm').split(';')[0]
                 const extension = type.includes('mp4') ? 'm4a' : (type.includes('ogg') ? 'ogg' : 'webm')
                 const file = new File(this.chunks, `voice-${Date.now()}.${extension}`, { type })
-                this.$wire.upload('voice', file, () => this.$wire.sendVoice(seconds, uuid()), () => this.$wire.voiceFailed())
+                this.$wire.upload(
+                    'voice',
+                    file,
+                    () => Promise.resolve(this.$wire.sendVoice(seconds, uuid())).catch(() => this.$wire.voiceFailed()),
+                    () => this.$wire.voiceFailed(),
+                )
             }
             this.stopRecording()
         },
@@ -144,6 +154,19 @@ document.addEventListener('alpine:init', () => {
                 () => { this.locating = false; this.$wire.locationUnavailable() },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
             )
+        },
+    }))
+
+    // The Deal workspace lenses (Conversation | Agreement | Work | Money). The choice is remembered per Deal in the
+    // browser; a Livewire re-render never changes it because nothing about it lives in the server HTML.
+    window.Alpine.data('dealTabs', () => ({
+        tab: 'conversation',
+        init() {
+            const key = 'deal-tab-' + this.$el.dataset.key
+            let saved = null
+            try { saved = sessionStorage.getItem(key) } catch (error) { /* storage can be blocked */ }
+            this.tab = saved || this.$el.dataset.start || 'conversation'
+            this.$watch('tab', value => { try { sessionStorage.setItem(key, value) } catch (error) { /* ignore */ } })
         },
     }))
 

@@ -35,5 +35,16 @@
                 @endif
             </div>
         </footer>
+        @if (! empty($deals) && $deals->isNotEmpty())
+            <section class="mt-4 space-y-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" data-intent-deals>
+                <h2 class="text-sm font-semibold">{{ $canManage ? __('deals.on_this_post') : __('deals.your_conversation') }}</h2>
+                @foreach ($deals as $row)
+                    <a href="{{ route('relationships.show', $row['deal']) }}" class="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <span>{{ $row['deal']->title ?: __('deals.open') }}</span>
+                        @if ($row['waiting'])<flux:badge size="sm" color="amber">{{ __('deals.waiting_for_you') }}</flux:badge>@endif
+                    </a>
+                @endforeach
+            </section>
+        @endif
     </main>
 </x-public-content.layout>
