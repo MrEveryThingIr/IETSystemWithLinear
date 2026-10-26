@@ -15,12 +15,19 @@
                 @foreach ($section['lines'] as $line)
                     <div class="flex flex-wrap gap-x-2 ps-5">
                         @if ($line['label'])<span class="text-zinc-500" dir="auto">{{ $line['label'] }}</span>@endif
-                        <span class="font-medium" dir="auto">{{ $line['value'] }}</span>
+                        <span class="font-medium" dir="auto">@if (! empty($line['date']))<x-app.local-date :value="$line['value']" />@else{{ $line['value'] }}@endif</span>
                     </div>
                 @endforeach
                 @if ($section['text'])
                     <p class="whitespace-pre-wrap break-words ps-5" dir="auto">{{ $section['text'] }}</p>
                 @endif
+                @foreach ($section['clauses'] as $sub)
+                    <div class="ps-5" data-agreement-clause="{{ $sub['n'] }}">
+                        <span class="text-zinc-400">{{ $sub['n'] }}</span>
+                        @if ($sub['title'])<span class="font-medium" dir="auto">{{ $sub['title'] }}</span>@endif
+                        @if ($sub['text'])<p class="whitespace-pre-wrap break-words ps-8" dir="auto">{{ $sub['text'] }}</p>@endif
+                    </div>
+                @endforeach
             </li>
         @endforeach
     </ol>

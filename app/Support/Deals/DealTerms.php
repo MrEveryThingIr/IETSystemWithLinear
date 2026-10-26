@@ -21,6 +21,12 @@ final class DealTerms
     /** Typed sections a document may list in its order. */
     public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes'];
 
+    /** Currencies offered in the composer (any 3-5 letter code is still accepted from other writers). */
+    public const CURRENCIES = ['IRT', 'IRR', 'USD', 'EUR', 'GBP', 'AED', 'TRY', 'CNY'];
+
+    /** Units a price is quoted per. A basis outside this list is a custom text and is kept as written. */
+    public const PAYMENT_BASES = ['total', 'item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer'];
+
     public const PAYMENT_MODES = ['none', 'on_acceptance', 'after_confirmed_delivery', 'per_period'];
 
     public const COMPLETION_CONFIRMERS = ['beneficiary', 'both', 'none'];
@@ -64,12 +70,22 @@ final class DealTerms
 
         $out['place'] = self::text($terms['place'] ?? null, 255, 'place');
 
-        if ($time = self::section($terms, 'time', ['starts_on', 'ends_on', 'timezone'])) {
+        if ($time = self::section($terms, 'time', ['starts_on', 'ends_on', 'timezone', 'daily_from', 'daily_to'])) {
             foreach (['starts_on', 'ends_on'] as $key) {
                 abort_unless(! isset($time[$key]) || preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $time[$key]) === 1, 422, "Deal Terms time {$key} must be YYYY-MM-DD.");
             }
             abort_if(isset($time['starts_on'], $time['ends_on']) && $time['ends_on'] < $time['starts_on'], 422, 'Deal Terms time ends before it starts.');
-            $out['time'] = ['starts_on' => $time['starts_on'] ?? null, 'ends_on' => $time['ends_on'] ?? null, 'timezone' => self::timezone($time['timezone'] ?? null)];
+            foreach (['daily_from', 'daily_to'] as $key) {
+                abort_unless(! isset($time[$key]) || preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) $time[$key]) === 1, 422, "Deal Terms time {$key} must be HH:MM.");
+            }
+            abort_if(isset($time['daily_from']) xor isset($time['daily_to']), 422, 'Deal Terms working hours need both a start and an end.');
+            abort_if(isset($time['daily_from'], $time['daily_to']) && $time['daily_from'] === $time['daily_to'], 422, 'Deal Terms working hours start and end at the same time.');
+            $zone = self::timezone($time['timezone'] ?? null);
+            abort_if(isset($time['daily_from']) && $zone === null, 422, 'Deal Terms working hours need a timezone.');
+            $out['time'] = [
+                'starts_on' => $time['starts_on'] ?? null, 'ends_on' => $time['ends_on'] ?? null,
+                'daily_from' => $time['daily_from'] ?? null, 'daily_to' => $time['daily_to'] ?? null, 'timezone' => $zone,
+            ];
         }
 
         if ($quantity = self::section($terms, 'quantity', ['value', 'unit'])) {
@@ -218,7 +234,7 @@ final class DealTerms
         $lines = [
             $line('price', $priceText),
             $line('place', $terms['place'] ?? null),
-            $line('time', $range($time['starts_on'] ?? null, $time['ends_on'] ?? null)),
+            $line('time', trim(($range($time['starts_on'] ?? null, $time['ends_on'] ?? null) ?? '').(isset($time['daily_from']) ? ' '.$time['daily_from'].'–'.$time['daily_to'].' ('.($time['timezone'] ?? '').')' : ''))),
             $line('quantity', isset($quantity['value']) || isset($quantity['unit']) ? trim(($quantity['value'] ?? '').' '.($quantity['unit'] ?? '')) : null),
             $line('route', isset($route['from']) || isset($route['to']) ? trim(($route['from'] ?? '').' → '.($route['to'] ?? ''), ' →') : null),
             $line('category', $terms['category']['label'] ?? null),
@@ -246,6 +262,16 @@ final class DealTerms
         $lines[] = $line('notes', $terms['notes'] ?? null);
 
         return implode("\n", array_filter($lines, fn (?string $l): bool => $l !== null));
+    }
+
+    /** The unit a price is quoted per, in words: a known unit is translated, a custom one is shown as written. */
+    public static function basisLabel(?string $basis): ?string
+    {
+        if ($basis === null || $basis === '') {
+            return null;
+        }
+
+        return in_array($basis, self::PAYMENT_BASES, true) ? (string) __('deals.bases.'.$basis) : $basis;
     }
 
     /** A field value as a person reads it: Yes/No, the option's label, the unit after a number. */

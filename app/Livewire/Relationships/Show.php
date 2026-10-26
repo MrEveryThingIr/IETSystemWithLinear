@@ -28,6 +28,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -48,6 +49,17 @@ class Show extends Component
     public string $changeNote = '';
 
     public string $requestNote = '';
+
+    /** Deep links: ?tab=agreement&v=2 opens the Agreement tab with that version expanded. */
+    #[Url(as: 'tab')]
+    public string $tab = '';
+
+    #[Url(as: 'v')]
+    public ?int $v = null;
+
+    /** ?resume=1 reopens the saved Agreement draft right away (the Resume editing links). */
+    #[Url(as: 'resume', except: false)]
+    public bool $resume = false;
 
     public function mount(Relationship $relationship): void
     {
@@ -210,7 +222,9 @@ class Show extends Component
             'drafterActorId' => AgreementDrafter::delegateActorId($relationship) ?? AgreementDrafter::ownerActorId($relationship),
             'hasDraft' => isset($relationship->metadata['agreement_draft']),
             'requests' => $this->requests($relationship),
-            'startTab' => $this->startTab($relationship, $tc, $user),
+            'startTab' => in_array($this->tab, ['conversation', 'agreement', 'work', 'money'], true) ? $this->tab : $this->startTab($relationship, $tc, $user),
+            'focusVersion' => $this->v,
+            'autostart' => $this->resume,
         ]);
     }
 

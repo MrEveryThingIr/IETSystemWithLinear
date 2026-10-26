@@ -29,10 +29,11 @@
                         $clause = $ci !== null && $ci !== false ? $draft['clauses'][$ci] : null;
                         if ($isClause && ! $clause) { continue; }
                         $heading = $isClause ? __('deals.clauses.'.$clause['kind'].'.title') : __('deals.doc.sections.'.$id);
+                        $number = $numbers[$id] ?? ['no' => (string) ($position + 1), 'heading' => true];
                     @endphp
                     <li wire:key="item-{{ $id }}" class="space-y-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" data-agreement-item="{{ $id }}">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="text-sm font-medium"><span class="text-zinc-400">{{ $position + 1 }}.</span> {{ $heading }}</span>
+                            <span class="text-sm font-medium"><span class="text-zinc-400">{{ $number['no'] }}</span> @if ($number['heading']){{ $heading }}@else<span class="text-zinc-400" data-clause-continued>↳</span>@endif</span>
                             <span class="flex items-center gap-1">
                                 <button type="button" wire:click="move('{{ $id }}', -1)" @disabled($position === 0) class="rounded px-2 py-1 text-xs hover:bg-zinc-100 disabled:opacity-30 dark:hover:bg-zinc-800" aria-label="{{ __('deals.composer.up') }}">↑</button>
                                 <button type="button" wire:click="move('{{ $id }}', 1)" @disabled($position === count($draft['items']) - 1) class="rounded px-2 py-1 text-xs hover:bg-zinc-100 disabled:opacity-30 dark:hover:bg-zinc-800" aria-label="{{ __('deals.composer.down') }}">↓</button>
@@ -49,9 +50,25 @@
                                     <div class="grid gap-2 sm:grid-cols-4">
                                         <flux:input inputmode="decimal" wire:model="draft.core.price_min" :label="__('deals.change.price_min')" />
                                         <flux:input inputmode="decimal" wire:model="draft.core.price_max" :label="__('deals.change.price_max')" />
-                                        <flux:input wire:model="draft.core.currency" :label="__('deals.change.price_currency')" maxlength="5" />
-                                        <flux:input wire:model="draft.core.basis" :label="__('deals.change.price_basis')" />
+                                        <flux:select wire:model="draft.core.currency" :label="__('deals.change.price_currency')" data-currency>
+                                            @foreach ($currencies as $code)
+                                                <option value="{{ $code }}">{{ $code }} · {{ __('deals.currencies.'.$code) }}</option>
+                                            @endforeach
+                                            @if (! in_array($draft['core']['currency'] ?? '', $currencies, true) && ($draft['core']['currency'] ?? '') !== '')
+                                                <option value="{{ $draft['core']['currency'] }}">{{ $draft['core']['currency'] }}</option>
+                                            @endif
+                                        </flux:select>
+                                        <flux:select wire:model.live="draft.core.basis_choice" :label="__('deals.change.price_basis')" data-basis>
+                                            <option value="">—</option>
+                                            @foreach ($bases as $unit)
+                                                <option value="{{ $unit }}">{{ __('deals.bases.'.$unit) }}</option>
+                                            @endforeach
+                                            <option value="__other">{{ __('deals.bases.other') }}</option>
+                                        </flux:select>
                                     </div>
+                                    @if (($draft['core']['basis_choice'] ?? '') === '__other')
+                                        <flux:input wire:model="draft.core.basis_custom" :label="__('deals.composer.basis_custom')" maxlength="40" />
+                                    @endif
                                     @break
                                 @case('payment')
                                     <div class="grid gap-2 sm:grid-cols-2">
@@ -79,6 +96,16 @@
                                         <x-app.calendar-date-input model="draft.core.starts_on" :label="__('deals.change.time_starts_on')" />
                                         <x-app.calendar-date-input model="draft.core.ends_on" :label="__('deals.change.time_ends_on')" />
                                     </div>
+                                    <div class="grid gap-2 sm:grid-cols-3" data-working-hours>
+                                        <flux:input type="time" wire:model="draft.core.daily_from" :label="__('deals.composer.hours_from')" />
+                                        <flux:input type="time" wire:model="draft.core.daily_to" :label="__('deals.composer.hours_to')" />
+                                        <flux:select wire:model="draft.core.timezone" :label="__('deals.composer.timezone')">
+                                            @foreach ($timezones as $zone)
+                                                <option value="{{ $zone }}">{{ $zone }}</option>
+                                            @endforeach
+                                        </flux:select>
+                                    </div>
+                                    <p class="text-xs text-zinc-500">{{ __('deals.composer.hours_help') }}</p>
                                     @break
                                 @case('quantity')
                                     <div class="grid gap-2 sm:grid-cols-2">

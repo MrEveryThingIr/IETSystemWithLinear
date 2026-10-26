@@ -34,7 +34,7 @@ class ExperienceHubTest extends TestCase
 
         $spaces = collect($navigation['spaces'])->keyBy('key');
 
-        $this->assertSame('experience.needs-offers', $primary['market']['route']);
+        $this->assertSame('intents.index', $primary['market']['route']);
         $this->assertSame('deals.index', $primary['deals']['route']);
         $this->assertSame('planner.index', $primary['planner']['route']);
         $this->assertSame('bookkeeping.index', $primary['money']['route']);
@@ -67,21 +67,13 @@ class ExperienceHubTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_needs_and_offers_hub_is_the_simple_entry_before_the_market_directory(): void
+    public function test_the_old_needs_and_offers_landing_page_now_leads_to_the_market_directory(): void
     {
         $actor = Actor::factory()->create();
-
         $this->publishSurfaces($actor->user, ['market']);
 
-        $this->actingAs($actor->user)
-            ->get(route('experience.needs-offers'))
-            ->assertOk()
-            ->assertSee('Needs & Offers')
-            ->assertSee('Mine')
-            ->assertSee('Discover')
-            ->assertSee('Matches')
-            ->assertSee(route('intents.compose'), false)
-            ->assertSee(route('intents.index'), false);
+        // Market discovers, My Items manages, Deals negotiates; the three-column hub is gone but its address still works.
+        $this->actingAs($actor->user)->get(route('experience.needs-offers'))->assertRedirect(route('intents.index'));
     }
 
     public function test_old_work_links_land_on_deals_or_the_planner_and_nothing_it_showed_is_lost(): void

@@ -87,6 +87,9 @@ return [
         'empty_filter' => 'لا شيء هنا.',
         'empty_offers' => 'لم تعرض شيئاً بعد.',
         'empty_needs' => 'لا توجد احتياجات منشورة.',
+        'resume' => 'متابعة التحرير',
+        'conversations' => 'المحادثات (:count)',
+        'matches_optional' => 'البحث عن مطابقات (اختياري)',
     ],
     'saved' => [
         'title' => 'القوالب والمجموعات المحفوظة',

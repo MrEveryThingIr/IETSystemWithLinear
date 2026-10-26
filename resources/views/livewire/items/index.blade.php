@@ -55,14 +55,20 @@
                                         <flux:badge size="sm">{{ __('items.offers_needs.closed') }}</flux:badge>
                                     @endif
                                 </div>
-                                <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                                    @if ($intent->status->value === 'active' || $intent->status->value === 'paused')
-                                        <a href="{{ route('intents.matches', $intent) }}" wire:navigate class="font-medium text-zinc-800 underline-offset-4 hover:underline dark:text-zinc-100">{{ __('items.offers_needs.responses') }}</a>
-                                    @endif
-                                    @if ($intent->status->value === 'closed')
-                                        <a href="{{ route('intents.show', $intent) }}" class="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-300" data-items-view>{{ __('items.offers_needs.view') }}</a>
+                                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" data-items-actions>
+                                    @if ($intent->status->value === 'draft')
+                                        <a href="{{ route('intents.compose.edit', $intent) }}" wire:navigate class="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100" data-items-resume>{{ __('items.offers_needs.resume') }}</a>
                                     @else
-                                        <a href="{{ route('intents.compose.edit', $intent) }}" wire:navigate class="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-300" data-items-edit>{{ __('items.offers_needs.edit') }}</a>
+                                        <a href="{{ route('intents.show', $intent) }}" class="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100" data-items-view>{{ __('items.offers_needs.view') }}</a>
+                                        @if ($intent->status->value !== 'closed')
+                                            <a href="{{ route('intents.compose.edit', $intent) }}" wire:navigate class="text-zinc-700 underline-offset-4 hover:underline dark:text-zinc-300" data-items-edit>{{ __('items.offers_needs.edit') }}</a>
+                                        @endif
+                                        @if (($conversations[$intent->id] ?? 0) > 0)
+                                            <a href="{{ route('intents.show', $intent) }}#deals" class="text-sky-700 underline-offset-4 hover:underline dark:text-sky-300" data-items-conversations>{{ __('items.offers_needs.conversations', ['count' => $conversations[$intent->id]]) }}</a>
+                                        @endif
+                                        @if (in_array($intent->status->value, ['active', 'paused'], true))
+                                            <a href="{{ route('intents.matches', $intent) }}" wire:navigate class="text-xs text-zinc-500 underline-offset-4 hover:underline">{{ __('items.offers_needs.matches_optional') }}</a>
+                                        @endif
                                     @endif
                                 </div>
                             </article>

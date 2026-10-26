@@ -7,6 +7,7 @@ use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Relationship;
 use App\Models\User;
+use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementDrafter;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealTerms;
@@ -14,6 +15,7 @@ use App\Support\Deals\DealTermsDiff;
 use App\Support\Deals\DealTermsDraft;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentProfiles;
+use App\Support\TemporalPreferences;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
@@ -57,9 +59,12 @@ class AgreementComposer extends Component
 
     public string $savedAt = '';
 
-    public function mount(Relationship $relationship): void
+    public function mount(Relationship $relationship, bool $autostart = false): void
     {
         $this->relationship = $relationship;
+        if ($autostart) {
+            $this->start();
+        }
     }
 
     #[On('open-agreement')]
@@ -71,6 +76,8 @@ class AgreementComposer extends Component
         $this->draft = is_array($saved) ? array_replace_recursive(DealTermsDraft::blank(), $saved) : DealTermsDraft::start($this->relationship, $this->latestVersion());
         $this->draft['items'] = array_values($saved['items'] ?? $this->draft['items'] ?? []);
         $this->savedAt = (string) ($this->relationship->metadata['agreement_draft']['at'] ?? '');
+        $this->draft['core']['timezone'] = ($this->draft['core']['timezone'] ?? '') !== '' ? $this->draft['core']['timezone'] : TemporalPreferences::timezoneFor($this->user());
+        $this->draft['core']['currency'] = ($this->draft['core']['currency'] ?? '') !== '' ? $this->draft['core']['currency'] : 'IRT';
         $this->versionNote = '';
         $this->open = true;
     }
@@ -120,6 +127,7 @@ class AgreementComposer extends Component
             }
             $this->draft['clauses'][] = ['key' => $key, 'kind' => $kind, 'title' => '', 'text' => ''];
             $this->draft['items'][] = 'clause:'.$key;
+            $this->regroup();
         } elseif (! in_array($id, $this->draft['items'], true)) {
             $this->draft['items'][] = $id;
             $this->defaultsFor($id);
@@ -146,6 +154,19 @@ class AgreementComposer extends Component
         }
         [$items[$i], $items[$j]] = [$items[$j], $items[$i]];
         $this->draft['items'] = $items;
+        $this->regroup();
+    }
+
+    /** Clauses of one kind stay together under one heading, exactly as the document will print them. */
+    private function regroup(): void
+    {
+        $this->draft['items'] = AgreementDocument::arrange($this->draft['items'], $this->clauseKinds());
+    }
+
+    /** @return array<string, string> */
+    private function clauseKinds(): array
+    {
+        return collect($this->draft['clauses'] ?? [])->mapWithKeys(fn ($c) => [$c['key'] => $c['kind']])->all();
     }
 
     /** A library field, never twice. */
@@ -249,6 +270,10 @@ class AgreementComposer extends Component
             'partyNames' => $this->open ? $this->partyNames() : [],
             'categories' => self::LIBRARY,
             'present' => $this->draft['items'] ?? [],
+            'numbers' => AgreementDocument::numbering($this->draft['items'] ?? [], $this->clauseKinds()),
+            'currencies' => DealTerms::CURRENCIES,
+            'bases' => DealTerms::PAYMENT_BASES,
+            'timezones' => $this->timezones(),
         ]);
     }
 
@@ -288,6 +313,14 @@ class AgreementComposer extends Component
         }
 
         return array_values(array_filter($names));
+    }
+
+    /** A short, familiar list plus the person's own zone and any zone already in the draft. @return list<string> */
+    private function timezones(): array
+    {
+        $list = [TemporalPreferences::timezoneFor($this->user()), (string) ($this->draft['core']['timezone'] ?? ''), 'UTC', 'Asia/Tehran', 'Asia/Dubai', 'Europe/Istanbul', 'Europe/London', 'Europe/Berlin', 'Asia/Shanghai', 'America/New_York'];
+
+        return array_values(array_unique(array_filter($list)));
     }
 
     private function defaultsFor(string $id): void

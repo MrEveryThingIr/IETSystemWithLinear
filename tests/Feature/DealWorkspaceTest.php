@@ -406,7 +406,7 @@ class DealWorkspaceTest extends TestCase
         app(ProposeDealTerms::class)->execute($deal, $alice->user, ['schema' => 1, 'place' => 'Tehran']);
         $proposal = Proposal::query()->sole();
 
-        $this->actingAs($bob->user)->get(route('proposals.show', $proposal))->assertOk();
+        $this->actingAs($bob->user)->get(route('proposals.show', $proposal))->assertRedirect(\App\Support\Deals\DealLinks::workspace($deal, 'agreement', 1)); // the old address opens the Deal
         $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertOk();
         $this->actingAs($bob->user)->get(route('deals.index'))->assertOk();
     }

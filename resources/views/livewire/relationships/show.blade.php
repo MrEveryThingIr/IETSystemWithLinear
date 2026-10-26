@@ -110,8 +110,8 @@
                         @endforeach
                     </ul>
                     <div class="flex flex-wrap gap-2">
+                        <flux:button :href="route('relationships.agreement.print', $relationship)" target="_blank" size="sm" variant="primary" icon="printer">{{ __('deals.print.open') }}</flux:button>
                         <flux:button :href="route('contracts.show', $latestContract)" size="sm" variant="ghost">{{ __('deals.open_contract') }}</flux:button>
-                        @if ($tc['proposal'])<flux:button :href="route('proposals.show', $tc['proposal'])" size="sm" variant="ghost">{{ __('deals.evidence') }}</flux:button>@endif
                     </div>
                 </flux:card>
             @elseif ($tc['proposal'] && $version)
@@ -181,7 +181,7 @@
                 </flux:card>
             @elseif ($relationship->status === \App\RelationshipStatus::Active)
                 <flux:card class="space-y-3" data-agreement-start>
-                    <flux:heading>{{ __('deals.agreement') }}</flux:heading>
+                    <flux:heading>{{ __('deals.agreement') }}@if ($canDraft && $hasDraft) <flux:badge size="sm" color="sky" data-draft-badge>{{ __('deals.drafts.badge') }}</flux:badge>@endif</flux:heading>
                     @if ($canDraft)
                         <p class="text-sm text-zinc-500">{{ $hasDraft ? __('deals.draft_saved') : __('deals.start_agreement_help') }}</p>
                         <flux:button wire:click="$dispatchTo('deals.agreement-composer', 'open-agreement')" variant="primary" size="sm">{{ $hasDraft ? __('deals.continue_draft') : __('deals.start_agreement') }}</flux:button>
@@ -199,7 +199,7 @@
                 <div class="space-y-2">
                     <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('deals.earlier_versions') }}</div>
                     @foreach ($tc['history'] as $old)
-                        <details wire:key="old-{{ $old->id }}" x-data="{ open: false }" x-bind:open="open" x-on:toggle="open = $el.open" class="rounded-lg border border-zinc-200 p-2 text-sm dark:border-zinc-700">
+                        <details wire:key="old-{{ $old->id }}" id="version-{{ $old->version }}" x-data="{ open: {{ $focusVersion === $old->version ? 'true' : 'false' }} }" x-bind:open="open" x-on:toggle="open = $el.open" class="rounded-lg border border-zinc-200 p-2 text-sm dark:border-zinc-700">
                             <summary class="cursor-pointer">{{ __('deals.terms_card', ['version' => $old->version]) }}</summary>
                             <div class="mt-2">
                                 @if ($old->terms_data)<x-deals.document :sections="\App\Support\Deals\AgreementDocument::sections($old->terms_data)" />@else<div class="whitespace-pre-wrap break-words" dir="auto">{{ $old->termsRevision->payload['terms'] ?? '' }}</div>@endif
@@ -210,7 +210,7 @@
             @endif
 
             @if ($canPropose)
-                <livewire:deals.agreement-composer :relationship="$relationship" :key="'agreement-composer-'.$relationship->uuid" />
+                <livewire:deals.agreement-composer :relationship="$relationship" :autostart="$canDraft && $autostart" :key="'agreement-composer-'.$relationship->uuid" />
             @endif
 
             @if ($isOwnerSide && $relationship->status === \App\RelationshipStatus::Active)
@@ -286,12 +286,6 @@
                     @foreach ($relationship->domainBlueprintVersion->capabilities as $capability)
                         <flux:badge size="sm" color="zinc">{{ __('journeys.capabilities.'.$capability) }}</flux:badge>
                     @endforeach
-                </div>
-            @endif
-
-            @if ($tc['proposal'])
-                <div class="flex flex-wrap gap-2">
-                    <flux:button :href="route('proposals.show', $tc['proposal'])" size="sm" variant="ghost">{{ __('deals.evidence') }}</flux:button>
                 </div>
             @endif
 

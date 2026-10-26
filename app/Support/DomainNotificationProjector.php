@@ -16,6 +16,7 @@ use App\Models\User;
 use App\ProposalEventType;
 use App\RelationshipEventType;
 use App\RelationshipParticipantStatus;
+use App\Support\Deals\DealLinks;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
@@ -94,7 +95,7 @@ class DomainNotificationProjector
                     'title_params' => ['title' => $proposal->title],
                     'body_key' => 'notifications.messages.proposal_event_body',
                     'body_params' => ['event' => str_replace('_', ' ', $event->event_type->value)],
-                    'url' => route('proposals.show', $proposal),
+                    'url' => DealLinks::proposal($proposal),
                 ],
                 $context,
                 'proposal',

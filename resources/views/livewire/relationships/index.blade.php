@@ -9,6 +9,24 @@
         </x-slot:actions>
     </x-app.page-header>
 
+    @if ($drafts->isNotEmpty())
+        <section class="rounded-2xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-900 dark:bg-sky-950/30" data-agreement-drafts>
+            <h2 class="font-semibold">{{ __('deals.drafts.title', ['count' => $drafts->count()]) }}</h2>
+            <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{{ __('deals.drafts.help') }}</p>
+            <ul class="mt-3 divide-y divide-sky-100 dark:divide-sky-900">
+                @foreach ($drafts as $deal)
+                    <li class="flex flex-wrap items-center justify-between gap-2 py-2" wire:key="draft-{{ $deal->id }}">
+                        <span class="min-w-0">
+                            <span class="block font-medium [overflow-wrap:anywhere]" dir="auto">{{ $deal->metadata['agreement_draft']['draft']['title'] ?? '' ?: ($deal->title ?: __('deals.agreement')) }}</span>
+                            <span class="block text-xs text-zinc-500">{{ __('deals.drafts.saved') }} <x-app.local-datetime :value="$deal->metadata['agreement_draft']['at']" /></span>
+                        </span>
+                        <flux:button :href="route('relationships.show', ['relationship' => $deal, 'tab' => 'agreement', 'resume' => 1])" size="sm" variant="primary" wire:navigate>{{ __('deals.drafts.resume') }}</flux:button>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     @if ($attention !== [] || $due !== [])
         <div class="grid gap-4 lg:grid-cols-2" data-deals-overview>
             @foreach (['attention' => $attention, 'due' => $due] as $block => $entries)

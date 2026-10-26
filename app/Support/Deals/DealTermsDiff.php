@@ -26,10 +26,11 @@ final class DealTermsDiff
         $add('price_min', $p['min'] ?? null);
         $add('price_max', $p['max'] ?? null);
         $add('price_currency', $p['currency'] ?? null);
-        $add('price_basis', $p['basis'] ?? null);
+        $add('price_basis', DealTerms::basisLabel($p['basis'] ?? null));
         $add('place', $terms['place'] ?? null);
         $add('time_starts_on', $terms['time']['starts_on'] ?? null);
         $add('time_ends_on', $terms['time']['ends_on'] ?? null);
+        $add('time_hours', isset($terms['time']['daily_from']) ? $terms['time']['daily_from'].' – '.$terms['time']['daily_to'].' ('.($terms['time']['timezone'] ?? '').')' : null);
         $add('quantity_value', $terms['quantity']['value'] ?? null);
         $add('quantity_unit', $terms['quantity']['unit'] ?? null);
         $add('route_from', $terms['route']['from'] ?? null);

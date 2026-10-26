@@ -10,66 +10,17 @@ use App\Models\User;
 use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ExperienceHubController extends Controller
 {
-    public function needsOffers(Request $request): View
+    /** Retired landing page: Market (discover) lives at the directory, My Items (manage) and Deals (negotiate) have their own homes. */
+    public function needsOffers(Request $request): RedirectResponse
     {
-        $user = $this->user($request);
-        $this->requireAny($user, ['market']);
+        $this->requireAny($this->user($request), ['market']);
 
-        $actor = $user->actor;
-        abort_unless($actor instanceof Actor, 403);
-
-        $mineQuery = ActorProfileIntent::query()
-            ->whereHas('profile', fn ($query) => $query->where('actor_id', $actor->id))
-            ->where('status', ProfileIntentStatus::Active->value);
-
-        $mineCount = (clone $mineQuery)->count();
-        $mine = $mineQuery
-            ->with(['concept.labels'])
-            ->latest('updated_at')
-            ->limit(6)
-            ->get();
-
-        $matchItems = $mine->map(fn (ActorProfileIntent $intent): array => [
-            'title' => $intent->title ?: $intent->concept->displayLabel(),
-            'meta' => __('experience.hubs.needs-offers.match_item_meta'),
-            'href' => route('intents.matches', $intent),
-        ])->all();
-
-        return $this->renderHub(
-            'needs-offers',
-            [
-                [
-                    'title' => __('experience.hubs.needs-offers.mine'),
-                    'help' => __('experience.hubs.needs-offers.mine_help'),
-                    'count' => $mineCount,
-                    'primary' => ['label' => __('experience.hubs.needs-offers.create'), 'href' => route('intents.compose')],
-                    'secondary' => ['label' => __('experience.hubs.needs-offers.open_all'), 'href' => route('intents.index')],
-                    'items' => $mine->map(fn (ActorProfileIntent $intent): array => [
-                        'title' => $intent->title ?: $intent->concept->displayLabel(),
-                        'meta' => __('experience.hubs.needs-offers.kind_'.$intent->kind->value),
-                        'href' => route('intents.matches', $intent),
-                    ])->all(),
-                    'empty' => __('experience.hubs.needs-offers.mine_empty'),
-                ],
-                [
-                    'title' => __('experience.hubs.needs-offers.discover'),
-                    'help' => __('experience.hubs.needs-offers.discover_help'),
-                    'primary' => ['label' => __('experience.hubs.needs-offers.discover_action'), 'href' => route('intents.index')],
-                    'items' => [],
-                ],
-                [
-                    'title' => __('experience.hubs.needs-offers.matches'),
-                    'help' => __('experience.hubs.needs-offers.matches_help'),
-                    'count' => count($matchItems),
-                    'items' => $matchItems,
-                    'empty' => __('experience.hubs.needs-offers.matches_empty'),
-                ],
-            ],
-        );
+        return redirect()->route('intents.index');
     }
 
     public function organizations(Request $request): View

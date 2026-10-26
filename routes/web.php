@@ -217,6 +217,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
     Route::livewire('/relationships/create', RelationshipCreate::class)->can('create', Relationship::class)->name('relationships.create');
     Route::livewire('/relationships/{relationship}', RelationshipShow::class)->can('view', 'relationship')->name('relationships.show');
+    Route::get('/relationships/{relationship}/agreement/print', \App\Http\Controllers\Deals\AgreementPrintController::class)->can('view', 'relationship')->name('relationships.agreement.print');
     Route::livewire('/proposals', ProposalIndex::class)->can('viewAny', Proposal::class)->name('proposals.index');
     Route::livewire('/proposals/create', ProposalCreate::class)->can('create', Proposal::class)->name('proposals.create');
     Route::livewire('/proposals/{proposal}', ProposalShow::class)->can('view', 'proposal')->name('proposals.show');

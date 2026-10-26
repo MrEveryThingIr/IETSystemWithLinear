@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  */
 final class DealTermsDraft
 {
-    public const CORE = ['price_min', 'price_max', 'currency', 'basis', 'place', 'starts_on', 'ends_on', 'quantity', 'unit', 'from', 'to'];
+    public const CORE = ['price_min', 'price_max', 'currency', 'basis', 'place', 'starts_on', 'ends_on', 'daily_from', 'daily_to', 'timezone', 'quantity', 'unit', 'from', 'to', 'basis_choice', 'basis_custom'];
 
     /** @return array<string, mixed> */
     public static function blank(): array
@@ -51,9 +51,11 @@ final class DealTermsDraft
             'price_min' => $t['price']['min'] ?? null, 'price_max' => $t['price']['max'] ?? null, 'currency' => $t['price']['currency'] ?? null,
             'basis' => $t['price']['basis'] ?? null, 'place' => $t['place'] ?? null,
             'starts_on' => $t['time']['starts_on'] ?? null, 'ends_on' => $t['time']['ends_on'] ?? null,
+            'daily_from' => $t['time']['daily_from'] ?? null, 'daily_to' => $t['time']['daily_to'] ?? null, 'timezone' => $t['time']['timezone'] ?? null,
             'quantity' => $t['quantity']['value'] ?? null, 'unit' => $t['quantity']['unit'] ?? null,
             'from' => $t['route']['from'] ?? null, 'to' => $t['route']['to'] ?? null,
         ], fn ($v) => $v !== null)));
+        self::splitBasis($d);
         foreach ($t['fields'] ?? [] as $f) {
             $d['fields'][] = ['key' => $f['key'], 'label' => $f['label'], 'type' => $f['type'] ?? 'text', 'unit' => $f['unit'] ?? '', 'value' => $f['value']];
         }
@@ -88,6 +90,8 @@ final class DealTermsDraft
             'quantity' => $core['quantity'] ?? null, 'unit' => $core['unit'] ?? null,
             'from' => $core['origin_text'] ?? null, 'to' => $core['destination_text'] ?? null,
         ], fn ($v) => $v !== null && $v !== '')));
+
+        self::splitBasis($d);
 
         $catalog = IntentDetailCatalog::all();
         $topic = $deal->originatingIntent?->metadata['composer_topic'] ?? null;
@@ -133,6 +137,18 @@ final class DealTermsDraft
         return $d;
     }
 
+    /** The price unit is a pick from the known units, or a custom text kept as written. */
+    private static function splitBasis(array &$d): void
+    {
+        $basis = (string) ($d['core']['basis'] ?? '');
+        if ($basis === '') {
+            return;
+        }
+        $known = in_array($basis, DealTerms::PAYMENT_BASES, true);
+        $d['core']['basis_choice'] = $known ? $basis : '__other';
+        $d['core']['basis_custom'] = $known ? '' : $basis;
+    }
+
     /** Sections that already carry something, in the order a reader expects, then the narrative clauses. */
     public static function defaultItems(array $d): array
     {
@@ -142,7 +158,7 @@ final class DealTermsDraft
         $on = [
             'price' => $filled(['price_min', 'price_max', 'basis']),
             'payment' => ($d['payment']['mode'] ?? '') !== '',
-            'time' => $filled(['starts_on', 'ends_on']),
+            'time' => $filled(['starts_on', 'ends_on', 'daily_from', 'daily_to']),
             'place' => $filled(['place']),
             'quantity' => $filled(['quantity', 'unit']),
             'route' => $filled(['from', 'to']),
@@ -202,18 +218,19 @@ final class DealTermsDraft
 
         $r = $d['recurrence'] ?? [];
         $p = $d['payment'] ?? [];
+        $basis = $c('basis_choice') === '__other' ? $c('basis_custom') : ($c('basis_choice') ?: $c('basis'));
         $present = array_filter($items, fn ($id) => str_starts_with($id, 'clause:') ? collect($clauses)->contains(fn ($cl) => 'clause:'.$cl['key'] === $id) : true);
 
         return array_filter([
             'schema' => DealTerms::SCHEMA,
             'title' => trim((string) ($d['title'] ?? '')) ?: null,
             'summary' => trim((string) ($d['summary'] ?? '')) ?: null,
-            'price' => $has('price') && ($c('price_min') || $c('price_max') || $c('basis')) ? ['min' => $c('price_min'), 'max' => $c('price_max'), 'currency' => $c('currency'), 'basis' => $c('basis')] : null,
+            'price' => $has('price') && ($c('price_min') || $c('price_max') || $basis) ? ['min' => $c('price_min'), 'max' => $c('price_max'), 'currency' => $c('currency'), 'basis' => $basis] : null,
             'payment' => $has('payment') && trim((string) ($p['mode'] ?? '')) !== ''
                 ? ['mode' => $p['mode'], 'period' => trim((string) ($p['period'] ?? '')) ?: null, 'note' => trim((string) ($p['note'] ?? '')) ?: null]
                 : null,
             'place' => $has('place') ? $c('place') : null,
-            'time' => $has('time') && ($c('starts_on') || $c('ends_on')) ? ['starts_on' => $c('starts_on'), 'ends_on' => $c('ends_on')] : null,
+            'time' => $has('time') && ($c('starts_on') || $c('ends_on') || $c('daily_from')) ? ['starts_on' => $c('starts_on'), 'ends_on' => $c('ends_on'), 'daily_from' => $c('daily_from'), 'daily_to' => $c('daily_to'), 'timezone' => $c('daily_from') ? ($c('timezone') ?: 'UTC') : null] : null,
             'quantity' => $has('quantity') && ($c('quantity') || $c('unit')) ? ['value' => $c('quantity'), 'unit' => $c('unit')] : null,
             'route' => $has('route') && ($c('from') || $c('to')) ? ['from' => $c('from'), 'to' => $c('to')] : null,
             'fields' => $fields ?: null,

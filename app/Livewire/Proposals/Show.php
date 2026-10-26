@@ -8,6 +8,7 @@ use App\Actions\Proposals\RespondToProposal;
 use App\Models\Actor;
 use App\Models\Proposal;
 use App\Models\ProposalParty;
+use App\Support\Deals\DealLinks;
 use App\Support\Deals\DealParties;
 use App\Models\ProposalVersion;
 use App\Models\User;
@@ -40,10 +41,18 @@ class Show extends Component
 
     public string $versionNote = '';
 
-    public function mount(Proposal $proposal): void
+    public function mount(Proposal $proposal): mixed
     {
         Gate::forUser($this->user())->authorize('view', $proposal);
         $this->proposal = $proposal;
+
+        // The Deal workspace is the one home of a negotiation. Opening the old address (links, bookmarks, emails) lands
+        // on its Agreement tab at this version; a Proposal that never belonged to a Deal keeps this page.
+        if (request()->routeIs('proposals.show') && $proposal->relationship_id !== null) {
+            return $this->redirect(DealLinks::proposal($proposal->loadMissing('relationship')), navigate: false);
+        }
+
+        return null;
     }
 
     public function accept(RespondToProposal $respond): void
