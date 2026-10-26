@@ -11,7 +11,8 @@ Rules: one agent per branch; additive reversible migrations; tests on in-memory 
 | C2 structured Terms + G1 | **Engineering-complete** (see below) |
 | C3a single Agree (structured Terms) | **Engineering-complete** |
 | C3b Business/Group principals | **Engineering-complete** (see below) |
-| C4–C5 | Not started |
+| C4 conversation-first Deal workspace | **Engineering-complete** ([M3-C4-DEAL-WORKSPACE.md](M3-C4-DEAL-WORKSPACE.md)); not visually reviewed in a browser (RTL/mobile/dark) |
+| C5 acceptance + hardening | Not started |
 
 ### C2 delivered
 - `proposal_versions.terms_data` (JSON) + `terms_hash` (sha256 of canonical JSON), migration `2026_11_13_000000`; written at creation only, immutable by the model guard; `ProposalVersion::termsIntegrityOk()`.
@@ -84,3 +85,9 @@ Merge order for integration: T-A, T-B, T-C branches are merged into `feat/m3-dea
 
 ### C4 starting point
 Deal page: show party display name by principal (`business`/`group` name, representative as "signed by"), let the responder pick "as myself / as Business / as Group" from `PartyAuthority::partiesFor` and pass `creatorParty` / invitee `party`; prefill the counterparty from the intent's `publisher_business_id/group_id`; surface the 403/409/422 messages from `DealParties` and `RespondToProposal` in the four languages.
+
+### C4 delivered
+- Start: one message box on the existing `relationships.create?intent=` URL; roles inferred; optional Business/Group speaker; repeated starts reuse the open Deal; blank intro allowed.
+- Workspace (`relationships.show`): pinned Need/Offer card, conversation (existing messaging), Terms card with per-party status, what-changed list, Agree / Ask for changes / Decline on the viewed version, propose/revise form, Agreement card; participants, earlier versions, history, full conversation, old forms are under *Details*.
+- Tests: `tests/Feature/DealWorkspaceTest.php` (two-account journey incl. stale-agree refusal, reuse + privacy, direct proposal/decline/withdraw, Business publisher + Business responder); the Deal page no longer uses the explanatory workflow-shell (contract test amended on purpose).
+- C5 should: full regression, populated MySQL rehearsal (no new migration in C4), browser review in fa/ar RTL + mobile + dark, and a decision on letting all managers of a Business/Group open the Deal page.
