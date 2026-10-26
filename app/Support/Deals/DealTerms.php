@@ -2,6 +2,7 @@
 
 namespace App\Support\Deals;
 
+use App\Support\Market\IntentDetailCatalog;
 use DateTimeZone;
 use Exception;
 
@@ -21,8 +22,11 @@ final class DealTerms
     /** Typed sections a document may list in its order. */
     public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes'];
 
-    /** Currencies offered in the composer (any 3-5 letter code is still accepted from other writers). */
-    public const CURRENCIES = ['IRT', 'IRR', 'USD', 'EUR', 'GBP', 'AED', 'TRY', 'CNY'];
+    /**
+     * Currencies a NEW Agreement may be written in. Toman only for now; later exchange and valuation features widen this list.
+     * Stored versions are never re-validated or converted, so an older Agreement keeps whatever currency it was accepted in.
+     */
+    public const SUPPORTED_CURRENCIES = ['IRT'];
 
     /** Units a price is quoted per. A basis outside this list is a custom text and is kept as written. */
     public const PAYMENT_BASES = ['total', 'item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer'];
@@ -65,6 +69,7 @@ final class DealTerms
             $currency = self::text($price['currency'] ?? null, 5, 'currency');
             abort_if(($min !== null || $max !== null) && $currency === null, 422, 'Deal Terms price needs a currency.');
             abort_if($currency !== null && preg_match('/^[A-Za-z]{3,5}$/', $currency) !== 1, 422, 'Deal Terms currency is invalid.');
+            abort_if($currency !== null && ! in_array(strtoupper($currency), self::SUPPORTED_CURRENCIES, true), 422, 'Deal Terms currently support Toman (IRT) only.');
             $out['price'] = ['min' => $min, 'max' => $max, 'currency' => $currency !== null ? strtoupper($currency) : null, 'basis' => self::text($price['basis'] ?? null, 40, 'price basis')];
         }
 
@@ -281,8 +286,8 @@ final class DealTerms
 
         return match ($field['type'] ?? 'text') {
             'boolean' => (string) __($value === 'true' ? 'composer.yes' : 'composer.no'),
-            'choice' => \App\Support\Market\IntentDetailCatalog::optionLabel($value),
-            'number', 'amount' => trim($value.' '.(isset($field['unit']) ? (string) (\App\Support\Market\IntentDetailCatalog::unitLabel($field['unit']) ?? $field['unit']) : '')),
+            'choice' => IntentDetailCatalog::optionLabel($value),
+            'number', 'amount' => trim($value.' '.(isset($field['unit']) ? (string) (IntentDetailCatalog::unitLabel($field['unit']) ?? $field['unit']) : '')),
             default => $value,
         };
     }

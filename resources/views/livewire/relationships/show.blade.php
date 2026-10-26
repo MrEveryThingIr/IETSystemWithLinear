@@ -92,6 +92,15 @@
                 </flux:callout>
             @endif
 
+            @if ($canAcceptContract)
+                <flux:callout variant="warning" data-contract-accept>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span>{{ __('deals.contract_accept_help') }}</span>
+                        <flux:button wire:click="acceptContract" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="acceptContract">{{ __('deals.contract_accept') }}</flux:button>
+                    </div>
+                </flux:callout>
+            @endif
+
             @if ($agreed && $version && $terms)
                 <flux:card class="space-y-3 border-emerald-300 dark:border-emerald-700" data-agreement-final>
                     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -111,7 +120,6 @@
                     </ul>
                     <div class="flex flex-wrap gap-2">
                         <flux:button :href="route('relationships.agreement.print', $relationship)" target="_blank" size="sm" variant="primary" icon="printer">{{ __('deals.print.open') }}</flux:button>
-                        <flux:button :href="route('contracts.show', $latestContract)" size="sm" variant="ghost">{{ __('deals.open_contract') }}</flux:button>
                     </div>
                 </flux:card>
             @elseif ($tc['proposal'] && $version)
@@ -238,6 +246,24 @@
             <flux:card class="space-y-2">
                 <flux:heading>{{ __('deals.tabs.work') }}</flux:heading>
                 <p class="text-sm text-zinc-500">{{ __('deals.work_not_yet') }}</p>
+                @if ($latestContract)
+                    <div class="space-y-2" data-work-commitments>
+                        @forelse ($commitments as $commitment)
+                            <a href="{{ route('commitments.show', $commitment) }}" wire:key="commitment-{{ $commitment->id }}" class="block rounded-xl border border-zinc-200 p-3 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
+                                <div class="flex flex-wrap items-start justify-between gap-2">
+                                    <span class="font-medium" dir="auto">{{ $commitment->title }}</span>
+                                    <flux:badge size="sm" color="zinc">{{ __('commitments.kind.'.$commitment->kind->value) }}</flux:badge>
+                                </div>
+                                <div class="mt-1 text-xs text-zinc-500">{{ $commitment->quantity }} {{ $commitment->unit }} · {{ $commitment->obligor->user?->username }} → {{ $commitment->beneficiary->user?->username }}</div>
+                            </a>
+                        @empty
+                            <p class="text-sm text-zinc-500">{{ __('deals.no_commitments') }}</p>
+                        @endforelse
+                        @if ($canCreateCommitment)
+                            <flux:button :href="route('commitments.create', $latestContract)" size="sm">{{ __('commitments.new') }}</flux:button>
+                        @endif
+                    </div>
+                @endif
                 @if ($agreed && $terms)
                     <dl class="space-y-1 text-sm" data-work-hooks>
                         @foreach (['time' => __('deals.doc.sections.time'), 'recurrence' => __('deals.doc.sections.recurrence'), 'completion' => __('deals.doc.sections.completion')] as $id => $label)
@@ -301,6 +327,9 @@
             <div class="flex flex-wrap gap-2">
                 @if ($context)
                     <flux:button :href="route('contexts.contents.index', $context)" size="sm" variant="ghost">{{ __('collaboration.tabs.content') }}</flux:button>
+                @endif
+                @if ($latestContract && $canPropose)
+                    <flux:button :href="route('contracts.show', ['contract' => $latestContract, 'tools' => 1])" size="sm" variant="ghost" data-contract-tools>{{ __('deals.contract_tools') }}</flux:button>
                 @endif
                 @if ($canCancel)
                     <flux:button wire:click="cancel" size="sm" variant="danger" wire:loading.attr="disabled" wire:target="cancel">{{ __('relationships.show.cancel') }}</flux:button>

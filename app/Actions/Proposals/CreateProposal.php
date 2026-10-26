@@ -14,11 +14,11 @@ use App\Models\RelationshipParticipant;
 use App\Models\User;
 use App\ProposalEventType;
 use App\ProposalStatus;
+use App\RelationshipParticipantStatus;
+use App\RelationshipStatus;
 use App\Support\Deals\DealParties;
 use App\Support\Parties\Party;
 use App\Support\Parties\PartyAuthority;
-use App\RelationshipParticipantStatus;
-use App\RelationshipStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -136,7 +136,8 @@ class CreateProposal
             ProposalParty::query()->create([
                 'proposal_id' => $proposal->id,
                 'actor_id' => $creator->id,
-                ...$this->principalColumns($creatorParty),
+                'business_id' => $creatorParty->kind === Party::BUSINESS ? $creatorParty->id : null,
+                'group_id' => $creatorParty->kind === Party::GROUP ? $creatorParty->id : null,
                 'role' => $this->normalizeRole($creatorRole),
                 'required' => true,
                 'added_by_actor_id' => $creator->id,
@@ -146,7 +147,8 @@ class CreateProposal
                 ProposalParty::query()->create([
                     'proposal_id' => $proposal->id,
                     'actor_id' => $spec['actor']->id,
-                    ...$this->principalColumns($spec['party']),
+                    'business_id' => $spec['party']->kind === Party::BUSINESS ? $spec['party']->id : null,
+                    'group_id' => $spec['party']->kind === Party::GROUP ? $spec['party']->id : null,
                     'role' => $spec['role'],
                     'required' => $spec['required'],
                     'added_by_actor_id' => $creator->id,
@@ -192,15 +194,6 @@ class CreateProposal
                 'events.actor.user',
             ]);
         }, attempts: 3);
-    }
-
-    /** @return array<string, int|null> */
-    private function principalColumns(Party $party): array
-    {
-        return [
-            'business_id' => $party->kind === Party::BUSINESS ? $party->id : null,
-            'group_id' => $party->kind === Party::GROUP ? $party->id : null,
-        ];
     }
 
     private function normalizeRole(string $role): string

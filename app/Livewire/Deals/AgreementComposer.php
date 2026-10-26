@@ -3,6 +3,7 @@
 namespace App\Livewire\Deals;
 
 use App\Actions\Deals\ProposeDealTerms;
+use App\Models\Actor;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Relationship;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementDrafter;
 use App\Support\Deals\DealNote;
+use App\Support\Deals\DealPrincipals;
 use App\Support\Deals\DealTerms;
 use App\Support\Deals\DealTermsDiff;
 use App\Support\Deals\DealTermsDraft;
@@ -59,6 +61,9 @@ class AgreementComposer extends Component
 
     public string $savedAt = '';
 
+    /** What an earlier version said when it was priced in a currency new Agreements no longer use. Shown, never converted. */
+    public string $legacyPrice = '';
+
     public function mount(Relationship $relationship, bool $autostart = false): void
     {
         $this->relationship = $relationship;
@@ -77,7 +82,7 @@ class AgreementComposer extends Component
         $this->draft['items'] = array_values($saved['items'] ?? $this->draft['items'] ?? []);
         $this->savedAt = (string) ($this->relationship->metadata['agreement_draft']['at'] ?? '');
         $this->draft['core']['timezone'] = ($this->draft['core']['timezone'] ?? '') !== '' ? $this->draft['core']['timezone'] : TemporalPreferences::timezoneFor($this->user());
-        $this->draft['core']['currency'] = ($this->draft['core']['currency'] ?? '') !== '' ? $this->draft['core']['currency'] : 'IRT';
+        $this->adoptSupportedCurrency();
         $this->versionNote = '';
         $this->open = true;
     }
@@ -231,6 +236,11 @@ class AgreementComposer extends Component
         }
 
         $terms = DealTermsDraft::toTerms($this->draft);
+        if (isset($terms['price']['currency']) && ! in_array(strtoupper($terms['price']['currency']), DealTerms::SUPPORTED_CURRENCIES, true)) {
+            $this->addError('draft', __('deals.composer.toman_only'));
+
+            return;
+        }
         if (array_intersect(array_keys($terms), ['price', 'payment', 'place', 'time', 'quantity', 'route', 'fields', 'recurrence', 'completion', 'clauses', 'notes']) === []) {
             $this->addError('draft', __('deals.terms_empty'));
 
@@ -271,7 +281,7 @@ class AgreementComposer extends Component
             'categories' => self::LIBRARY,
             'present' => $this->draft['items'] ?? [],
             'numbers' => AgreementDocument::numbering($this->draft['items'] ?? [], $this->clauseKinds()),
-            'currencies' => DealTerms::CURRENCIES,
+            'currencies' => DealTerms::SUPPORTED_CURRENCIES,
             'bases' => DealTerms::PAYMENT_BASES,
             'timezones' => $this->timezones(),
         ]);
@@ -304,12 +314,12 @@ class AgreementComposer extends Component
     /** Who is party to the Agreement, inferred from the Deal and the pinned post, never typed in. @return list<string> */
     private function partyNames(): array
     {
-        $deal = Relationship::query()->with(['originatingIntent.profile', 'matchedIntent.profile', 'participants.actor.user'])->find($this->relationship->id);
+        $deal = Relationship::query()->with(['originatingIntent.profile', 'matchedIntent.profile', 'participants.actor.user'])->findOrFail($this->relationship->id);
         $names = [];
-        foreach ($deal?->participants ?? [] as $p) {
-            $party = \App\Support\Deals\DealPrincipals::forActor($deal, $p->actor);
+        foreach ($deal->participants as $p) {
+            $party = DealPrincipals::forActor($deal, $p->actor);
             $model = $party->model();
-            $names[] = $model instanceof \App\Models\Actor ? (string) ($model->user?->username ?? '') : (string) ($model->name ?? '');
+            $names[] = $model instanceof Actor ? (string) ($model->user->username ?? '') : (string) ($model->name ?? '');
         }
 
         return array_values(array_filter($names));
@@ -330,6 +340,26 @@ class AgreementComposer extends Component
             'recurrence' => $this->draft['recurrence'] = ['every' => '1', 'unit' => 'month', 'count' => ''],
             default => null,
         };
+    }
+
+    /**
+     * Opening an older version priced in another currency: the amounts are not carried over (nothing is converted).
+     * They are shown as a reference and the drafter enters the price in Toman, or removes the price term.
+     */
+    private function adoptSupportedCurrency(): void
+    {
+        $currency = strtoupper((string) ($this->draft['core']['currency'] ?? ''));
+        $this->legacyPrice = '';
+
+        if ($currency !== '' && ! in_array($currency, DealTerms::SUPPORTED_CURRENCIES, true)) {
+            $c = $this->draft['core'];
+            $range = trim(($c['price_min'] ?? '').(($c['price_max'] ?? '') !== '' && ($c['price_max'] ?? '') !== ($c['price_min'] ?? '') ? ' – '.$c['price_max'] : ''));
+            $this->legacyPrice = trim($range.' '.$currency.(($c['basis'] ?? '') !== '' ? ' / '.(DealTerms::basisLabel($c['basis']) ?? '') : ''));
+            $this->draft['core']['price_min'] = '';
+            $this->draft['core']['price_max'] = '';
+        }
+
+        $this->draft['core']['currency'] = DealTerms::SUPPORTED_CURRENCIES[0];
     }
 
     private function ensureItem(string $id): void

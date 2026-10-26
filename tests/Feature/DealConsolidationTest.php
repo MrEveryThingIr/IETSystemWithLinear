@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Contracts\CreateContractFromProposal;
 use App\Actions\Deals\ProposeDealTerms;
+use App\Actions\Proposals\CreateProposal;
 use App\Actions\Proposals\RespondToProposal;
 use App\Actions\Relationships\RespondToRelationship;
 use App\Livewire\Deals\AgreementComposer;
@@ -12,13 +14,18 @@ use App\Livewire\Relationships\Create as DealStart;
 use App\Livewire\Relationships\Show as DealShow;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
+use App\Models\Contract;
+use App\Models\ContractAcceptance;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Relationship;
 use App\ProposalDecisionKind;
+use App\Services\Surfaces\ExperienceNavigation;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\DealLinks;
+use App\Support\Deals\DealTerms;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\Concerns\PublishesFeatureSurfaces;
@@ -105,8 +112,9 @@ class DealConsolidationTest extends TestCase
         // The legal record stays reachable from the accepted Deal and links back to it.
         $this->compose($alice, $deal)->call('addItem', 'clause:special')->set('draft.clauses.1.text', 'v2')->call('send');
         app(RespondToProposal::class)->execute($proposal->fresh(), $bob->user, ProposalDecisionKind::Accepted, null, 2);
-        $contract = \App\Models\Contract::query()->sole();
-        $this->actingAs($bob->user)->get(route('contracts.show', $contract))->assertOk()->assertSee(route('relationships.agreement.print', $deal), false);
+        $contract = Contract::query()->sole();
+        $this->actingAs($bob->user)->get(route('contracts.show', $contract))->assertRedirect(DealLinks::workspace($deal, 'agreement', 2)); // the accepted version
+        $this->actingAs($bob->user)->get(route('contracts.show', ['contract' => $contract, 'tools' => 1]))->assertOk()->assertSee(route('relationships.agreement.print', $deal), false);
         $this->assertSame(DealLinks::workspace($deal, 'agreement', 2), DealLinks::contract($contract->fresh('relationship', 'sourceProposalVersion')));
         $this->actingAs($eve->user)->get(route('contracts.show', $contract))->assertForbidden();
     }
@@ -163,15 +171,100 @@ class DealConsolidationTest extends TestCase
     public function test_currency_and_price_unit_are_selected_and_custom_units_are_kept(): void
     {
         [$alice, $bob, $deal] = $this->activeDeal();
-        $c = $this->compose($alice, $deal)->call('addItem', 'price')->set('draft.core.price_min', '40')->set('draft.core.price_max', '')->set('draft.core.currency', 'EUR')->set('draft.core.basis_choice', 'hour');
-        $c->assertSee('EUR')->assertSee(__('deals.bases.milestone'))->call('send')->assertHasNoErrors();
-        $this->assertSame(['min' => '40', 'currency' => 'EUR', 'basis' => 'hour'], ProposalVersion::query()->latest('id')->first()->terms_data['price']);
-        $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertSee('40 EUR / '.__('deals.bases.hour'));
+        $c = $this->compose($alice, $deal)->call('addItem', 'price')->set('draft.core.price_min', '40')->set('draft.core.price_max', '')->set('draft.core.currency', 'IRT')->set('draft.core.basis_choice', 'hour');
+        $c->assertSee('IRT')->assertSee(__('deals.bases.milestone'))->call('send')->assertHasNoErrors();
+        $this->assertSame(['min' => '40', 'currency' => 'IRT', 'basis' => 'hour'], ProposalVersion::query()->latest('id')->first()->terms_data['price']);
+        $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertSee('40 IRT / '.__('deals.bases.hour'));
 
         $this->compose($alice, $deal)->set('draft.core.basis_choice', '__other')->set('draft.core.basis_custom', 'per bedroom')->call('send')->assertHasNoErrors();
         $this->assertSame('per bedroom', ProposalVersion::query()->latest('id')->first()->terms_data['price']['basis']);
         // Reopened, a custom unit is shown as custom, not lost.
         $this->compose($alice, $deal)->assertSet('draft.core.basis_choice', '__other')->assertSet('draft.core.basis_custom', 'per bedroom');
+    }
+
+    public function test_only_toman_is_accepted_for_new_terms_and_older_currencies_are_preserved(): void
+    {
+        [$alice, $bob, $deal] = $this->activeDeal();
+
+        // Server-side, whatever the form offered: other currencies and tampered values are refused; case is normalized.
+        foreach (['EUR', 'USD', 'IRR', 'XYZ'] as $code) {
+            $this->assertSame(422, $this->http(fn () => app(ProposeDealTerms::class)->execute($deal->fresh(), $alice->user, ['schema' => 1, 'price' => ['min' => '40', 'currency' => $code]])), $code);
+        }
+        $this->assertSame(422, $this->http(fn () => app(ProposeDealTerms::class)->execute($deal->fresh(), $alice->user, ['schema' => 1, 'price' => ['min' => '40']])), 'an amount needs a currency');
+        $this->assertSame(0, ProposalVersion::query()->count());
+        app(ProposeDealTerms::class)->execute($deal->fresh(), $alice->user, ['schema' => 1, 'price' => ['min' => '40', 'currency' => 'irt']]);
+        $this->assertSame('IRT', ProposalVersion::query()->sole()->terms_data['price']['currency']);
+
+        // Tampering with the composer state (a select cannot be trusted) is refused with a message and stores nothing.
+        $before = ProposalVersion::query()->count();
+        $this->compose($alice, $deal)->set('draft.core.currency', 'EUR')->call('send')->assertHasErrors('draft')->assertSee(__('deals.composer.toman_only'));
+        $this->assertSame($before, ProposalVersion::query()->count());
+        $this->compose($alice, $deal)->assertSeeHtml('data-currency')->assertDontSee('USD')->assertDontSee('EUR');
+    }
+
+    public function test_an_agreement_made_in_another_currency_stays_exactly_as_accepted_and_is_not_converted(): void
+    {
+        [$alice, $bob, $deal] = $this->activeDeal();
+        app(ProposeDealTerms::class)->execute($deal->fresh(), $alice->user, ['schema' => 1, 'price' => ['min' => '40', 'currency' => 'IRT', 'basis' => 'hour'], 'place' => 'Tehran']);
+        $version = ProposalVersion::query()->sole();
+
+        // Simulate history written before the rule (stored versions are immutable, so this bypasses the model on purpose).
+        $legacy = $version->terms_data;
+        $legacy['price']['currency'] = 'EUR';
+        $hash = DealTerms::hash($legacy);
+        DB::table('proposal_versions')->where('id', $version->id)->update(['terms_data' => json_encode($legacy), 'terms_hash' => $hash]);
+        app(RespondToProposal::class)->execute(Proposal::query()->sole(), $bob->user, ProposalDecisionKind::Accepted, null, 1);
+
+        // Everything that reads it shows the original currency and amount; nothing was rewritten.
+        $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertSee('40 EUR / '.__('deals.bases.hour'));
+        $this->actingAs($bob->user)->get(route('relationships.agreement.print', $deal))->assertOk()->assertSee('40 EUR / '.__('deals.bases.hour'))->assertSee(substr($hash, 0, 16));
+        $this->assertSame('EUR', ProposalVersion::query()->sole()->terms_data['price']['currency']);
+        $this->assertSame($hash, ProposalVersion::query()->sole()->terms_hash);
+
+        // Writing a new version over it: the old amount is shown for reference, not carried over or converted.
+        $c = $this->compose($alice, $deal)->assertSeeHtml('data-legacy-currency')->assertSet('draft.core.currency', 'IRT')->assertSet('draft.core.price_min', '')->assertSee('40 EUR');
+        $c->set('draft.core.price_min', '2000000')->call('send')->assertHasNoErrors();
+        $this->assertSame(['min' => '2000000', 'currency' => 'IRT', 'basis' => 'hour'], ProposalVersion::query()->latest('id')->first()->terms_data['price']);
+    }
+
+    public function test_the_contract_address_opens_the_deal_and_historical_contracts_without_a_deal_keep_their_page(): void
+    {
+        [$alice, $bob, $deal] = $this->activeDeal();
+        $this->agreed($alice, $bob, $deal);
+        $contract = Contract::query()->sole();
+        $eve = $this->account();
+
+        // Ordinary link: the Deal's Agreement tab at the accepted version. Same authorization as before.
+        $this->actingAs($bob->user)->get(route('contracts.show', $contract))->assertRedirect(DealLinks::workspace($deal, 'agreement', 1));
+        $this->actingAs($eve->user)->get(route('contracts.show', $contract))->assertForbidden();
+
+        // The Agreement tab has no second "open agreement" page; it offers the printable document and Work/Money in their own tabs.
+        $page = $this->actingAs($bob->user)->get(DealLinks::workspace($deal, 'agreement', 1))->assertOk();
+        $page->assertSee('data-agreement-final', false)->assertSee(route('relationships.agreement.print', $deal), false)->assertSee('data-panel="work"', false)->assertSee('data-panel="money"', false)
+            ->assertSee('data-work-commitments', false)->assertDontSee(__('deals.open_contract'));
+        $this->assertStringNotContainsString('href="'.route('contracts.show', $contract).'"', $page->getContent());
+
+        // The one advanced entry (amendments, service terms) is explicit; participants only.
+        $this->actingAs($bob->user)->get(route('contracts.show', ['contract' => $contract, 'tools' => 1]))->assertOk();
+        $this->actingAs($eve->user)->get(route('contracts.show', ['contract' => $contract, 'tools' => 1]))->assertForbidden();
+
+        // A historical Contract that never had a Deal is not given one: its page stays.
+        DB::table('contracts')->where('id', $contract->id)->update(['relationship_id' => null]);
+        $this->actingAs($bob->user)->get(route('contracts.show', $contract->fresh()))->assertOk();
+        $this->assertSame(route('contracts.show', $contract), DealLinks::contract($contract->fresh('relationship', 'sourceProposalVersion')));
+        $this->assertNull($contract->fresh()->relationship_id);
+    }
+
+    public function test_a_contract_created_before_single_agree_is_accepted_from_the_deal(): void
+    {
+        [$alice, $bob, $deal] = $this->activeDeal();
+        $proposal = app(CreateProposal::class)->execute($alice->user, 'Old style', [['actor' => $bob]], 'Plain text terms.', null, null, 'proposer', $deal);
+        app(RespondToProposal::class)->execute($proposal, $bob->user, ProposalDecisionKind::Accepted);
+        app(CreateContractFromProposal::class)->execute($proposal->fresh(), $alice->user, now()->addDay(), 'UTC');
+
+        Livewire::actingAs($bob->user)->test(DealShow::class, ['relationship' => $deal])->assertSeeHtml('data-contract-accept')->call('acceptContract');
+        $this->assertSame(2, ContractAcceptance::query()->count());
+        Livewire::actingAs($bob->user)->test(DealShow::class, ['relationship' => $deal])->assertDontSeeHtml('data-contract-accept');
     }
 
     public function test_working_hours_and_timezone_are_validated_and_stored_unambiguously(): void
@@ -217,7 +310,7 @@ class DealConsolidationTest extends TestCase
 
         // Market discovers, the old three-column page redirects, My Items manages, Deals negotiates.
         $this->actingAs($alice->user)->get(route('experience.needs-offers'))->assertRedirect(route('intents.index'));
-        $this->assertSame('intents.index', collect(app(\App\Services\Surfaces\ExperienceNavigation::class)->for($alice->user)['primary'])->keyBy('key')['market']['route']);
+        $this->assertSame('intents.index', collect(app(ExperienceNavigation::class)->for($alice->user)['primary'])->keyBy('key')['market']['route']);
 
         // My Items: view / edit / conversations first, matches only as an optional extra.
         Livewire::actingAs($alice->user)->test(MyItems::class)->assertSee(__('items.offers_needs.view'))->assertSee(__('items.offers_needs.edit'))

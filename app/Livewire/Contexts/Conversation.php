@@ -3,7 +3,6 @@
 namespace App\Livewire\Contexts;
 
 use App\Models\Context;
-use App\Models\Conversation as ConversationModel;
 use App\Models\Relationship;
 use App\Models\User;
 use App\Support\Messaging\ThreadFor;
@@ -39,10 +38,7 @@ class Conversation extends Component
 
     public function render(): View
     {
-        $conversation = ThreadFor::conversation($this->context, $this->user());
-        assert($conversation instanceof ConversationModel);
-
-        return view('livewire.contexts.conversation', ['conversation' => $conversation]);
+        return view('livewire.contexts.conversation', ['conversation' => ThreadFor::conversation($this->context, $this->user())]);
     }
 
     private function user(): User

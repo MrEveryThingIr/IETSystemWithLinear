@@ -9,10 +9,10 @@ use App\Models\Relationship;
 use App\Models\User;
 use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
-use Illuminate\Support\Collection;
 use App\Support\Market\IntentPresentation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 
 class IntentPresentationController extends Controller
 {

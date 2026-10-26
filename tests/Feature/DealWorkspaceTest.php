@@ -26,8 +26,12 @@ use App\ProposalStatus;
 use App\RelationshipStatus;
 use App\Services\Business\BusinessService;
 use App\Support\Deals\AgreementDocument;
+use App\Support\Deals\AgreementDrafter;
+use App\Support\Deals\DealLinks;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
@@ -185,7 +189,7 @@ class DealWorkspaceTest extends TestCase
 
         // A stranger cannot hand drafting to themself, and an outsider cannot read the Deal.
         $eve = $this->account();
-        $this->assertSame(403, $this->httpStatus(fn () => \App\Support\Deals\AgreementDrafter::delegate($deal->fresh(), $eve->user, $eve->id)));
+        $this->assertSame(403, $this->httpStatus(fn () => AgreementDrafter::delegate($deal->fresh(), $eve->user, $eve->id)));
         $this->actingAs($eve->user)->get(route('relationships.show', $deal))->assertForbidden();
     }
 
@@ -279,8 +283,8 @@ class DealWorkspaceTest extends TestCase
         app(RespondToRelationship::class)->execute($deal, $alice->user, true);
 
         // The Business manager (not a Deal participant) is on the owner side by authority, yet cannot open the Deal page.
-        $this->assertTrue(\App\Support\Deals\AgreementDrafter::isOwnerSide($deal->fresh()->load('originatingIntent.profile'), $manager->user));
-        $this->assertFalse(\App\Support\Deals\AgreementDrafter::isOwnerSide($deal->fresh()->load('originatingIntent.profile'), $bob->user));
+        $this->assertTrue(AgreementDrafter::isOwnerSide($deal->fresh()->load('originatingIntent.profile'), $manager->user));
+        $this->assertFalse(AgreementDrafter::isOwnerSide($deal->fresh()->load('originatingIntent.profile'), $bob->user));
 
         $this->compose($alice, $deal)->set('draft.core.place', 'Tehran')->call('send')->assertHasNoErrors();
         $keys = Proposal::query()->sole()->parties->pluck('principal_key')->all();
@@ -373,16 +377,16 @@ class DealWorkspaceTest extends TestCase
         $conversation = Conversation::query()->where('context_id', $deal->contextBinding->context_id)->firstOrFail();
 
         // A refused file is shown to the person (and logged with its stage), not swallowed.
-        \Illuminate\Support\Facades\Log::spy();
+        Log::spy();
         $thread = Livewire::actingAs($alice->user)->test(Thread::class, ['conversation' => $conversation, 'embedded' => true]);
         $thread->set('voice', UploadedFile::fake()->create('voice.bin', 20, 'application/x-msdownload'))->call('sendVoice', 3, (string) Str::uuid())
             ->assertSee(__('messages.composer.voice_failed'));
-        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->with('messages.voice_failed', \Mockery::on(fn ($c) => $c['stage'] === 'store'))->once();
+        Log::shouldHaveReceived('warning')->with('messages.voice_failed', \Mockery::on(fn ($c) => $c['stage'] === 'store'))->once();
         $this->assertSame(0, ConversationMessage::query()->where('kind', 'voice')->count());
 
         // The browser can report any stage it failed at.
         $thread->call('voiceFailed', 'upload', 'net::ERR_FAILED | audio/webm 4000B');
-        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->with('messages.voice_failed', \Mockery::on(fn ($c) => $c['stage'] === 'upload'))->once();
+        Log::shouldHaveReceived('warning')->with('messages.voice_failed', \Mockery::on(fn ($c) => $c['stage'] === 'upload'))->once();
     }
 
     public function test_the_workspace_is_one_page_with_lightweight_work_and_money_and_stable_details(): void
@@ -406,7 +410,7 @@ class DealWorkspaceTest extends TestCase
         app(ProposeDealTerms::class)->execute($deal, $alice->user, ['schema' => 1, 'place' => 'Tehran']);
         $proposal = Proposal::query()->sole();
 
-        $this->actingAs($bob->user)->get(route('proposals.show', $proposal))->assertRedirect(\App\Support\Deals\DealLinks::workspace($deal, 'agreement', 1)); // the old address opens the Deal
+        $this->actingAs($bob->user)->get(route('proposals.show', $proposal))->assertRedirect(DealLinks::workspace($deal, 'agreement', 1)); // the old address opens the Deal
         $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertOk();
         $this->actingAs($bob->user)->get(route('deals.index'))->assertOk();
     }
@@ -424,7 +428,7 @@ class DealWorkspaceTest extends TestCase
             $call();
         } catch (HttpException $e) {
             return $e->getStatusCode();
-        } catch (\Illuminate\Auth\Access\AuthorizationException) {
+        } catch (AuthorizationException) {
             return 403;
         }
 

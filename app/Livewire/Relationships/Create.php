@@ -16,15 +16,15 @@ use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
 use App\RelationshipStatus;
 use App\Support\Deals\DealOrigin;
-use App\Support\Parties\Party;
-use App\Support\Parties\PartyAuthority;
-use Illuminate\Support\Str;
 use App\Support\DomainBlueprintCatalog;
 use App\Support\IntentMatchFinder;
+use App\Support\Parties\Party;
+use App\Support\Parties\PartyAuthority;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -348,8 +348,8 @@ class Create extends Component
     private function say(Relationship $relationship, User $user): void
     {
         $text = trim($this->message);
-        $context = $relationship->contextBinding?->context ?? $relationship->load('contextBinding.context')->contextBinding?->context;
-        if ($text === '' || $context === null || $relationship->status !== RelationshipStatus::Active) {
+        $context = $relationship->load('contextBinding.context')->contextBinding->context;
+        if ($text === '' || $relationship->status !== RelationshipStatus::Active) {
             return;
         }
 

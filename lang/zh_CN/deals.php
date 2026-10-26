@@ -208,6 +208,8 @@ return [
         'hours_to' => '每天至',
         'timezone' => '时区',
         'hours_help' => '例如 08:00 – 17:00。日期遵循你的日历；时间按此处所选时区理解。',
+        'toman_only' => '目前新协议仅以土曼（IRT）书写。',
+        'legacy_currency' => '早先版本的定价为 :price。新版本仅支持土曼，请以土曼输入价格（不会进行任何换算），或删除价格条款。',
     ],
     'on_this_post' => '关于此发布的对话',
     'your_conversation' => '你关于此发布的对话',
@@ -352,4 +354,8 @@ return [
         'resume' => '继续编辑',
         'badge' => '草稿',
     ],
+    'contract_accept' => '接受此版本',
+    'contract_accept_help' => '此协议仍需要你接受其合同版本。',
+    'no_commitments' => '尚无承诺。',
+    'contract_tools' => '高级合同工具',
 ];

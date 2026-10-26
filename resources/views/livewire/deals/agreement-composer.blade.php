@@ -47,6 +47,9 @@
                         @else
                             @switch($id)
                                 @case('price')
+                                    @if ($legacyPrice !== '')
+                                        <flux:callout variant="warning" data-legacy-currency>{{ __('deals.composer.legacy_currency', ['price' => $legacyPrice]) }}</flux:callout>
+                                    @endif
                                     <div class="grid gap-2 sm:grid-cols-4">
                                         <flux:input inputmode="decimal" wire:model="draft.core.price_min" :label="__('deals.change.price_min')" />
                                         <flux:input inputmode="decimal" wire:model="draft.core.price_max" :label="__('deals.change.price_max')" />
@@ -54,9 +57,6 @@
                                             @foreach ($currencies as $code)
                                                 <option value="{{ $code }}">{{ $code }} · {{ __('deals.currencies.'.$code) }}</option>
                                             @endforeach
-                                            @if (! in_array($draft['core']['currency'] ?? '', $currencies, true) && ($draft['core']['currency'] ?? '') !== '')
-                                                <option value="{{ $draft['core']['currency'] }}">{{ $draft['core']['currency'] }}</option>
-                                            @endif
                                         </flux:select>
                                         <flux:select wire:model.live="draft.core.basis_choice" :label="__('deals.change.price_basis')" data-basis>
                                             <option value="">—</option>

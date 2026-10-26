@@ -219,7 +219,7 @@ class CreateContractVersion
     }
 
     /**
-     * @param  list<array{actor: Actor, role: string, required?: bool, source_proposal_party?: ?ProposalParty}>  $parties
+     * @param  list<array{actor: Actor, party?: Party, role: string, required?: bool, source_proposal_party?: ?ProposalParty}>  $parties
      * @return list<array{actor: Actor, party: Party, role: string, required: bool, source_proposal_party: ?ProposalParty}>
      */
     private function normalizeParties(Contract $contract, array $parties, User $proposer): array

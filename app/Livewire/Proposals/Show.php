@@ -8,17 +8,17 @@ use App\Actions\Proposals\RespondToProposal;
 use App\Models\Actor;
 use App\Models\Proposal;
 use App\Models\ProposalParty;
-use App\Support\Deals\DealLinks;
-use App\Support\Deals\DealParties;
 use App\Models\ProposalVersion;
 use App\Models\User;
 use App\ProposalDecisionKind;
+use App\Support\Deals\DealLinks;
+use App\Support\Deals\DealParties;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Layout('layouts.app')]
 #[Title('Proposal')]

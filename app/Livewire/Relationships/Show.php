@@ -2,13 +2,18 @@
 
 namespace App\Livewire\Relationships;
 
+use App\Actions\Contracts\AcceptContractVersion;
+use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Proposals\CancelProposal;
 use App\Actions\Proposals\RespondToProposal;
 use App\Actions\Relationships\CancelRelationship;
 use App\Actions\Relationships\EndRelationship;
 use App\Actions\Relationships\RespondToRelationship;
 use App\Models\Actor;
+use App\Models\Commitment;
 use App\Models\Context;
+use App\Models\Contract;
+use App\Models\ContractVersion;
 use App\Models\IntentVersion;
 use App\Models\Proposal;
 use App\Models\Relationship;
@@ -17,9 +22,9 @@ use App\Models\User;
 use App\ProposalDecisionKind;
 use App\ProposalStatus;
 use App\RelationshipStatus;
+use App\Support\DealPipeline;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementDrafter;
-use App\Support\DealPipeline;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealOrigin;
 use App\Support\Deals\DealTermsDiff;
@@ -28,8 +33,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -120,6 +125,17 @@ class Show extends Component
         $this->relationship = $this->freshDeal();
     }
 
+    /** Contracts created before single-Agree still need each party to accept the Contract version itself. */
+    public function acceptContract(AcceptContractVersion $accept): void
+    {
+        $contract = $this->freshDeal()->contracts()->latest('id')->first();
+        abort_unless($contract instanceof Contract, 404);
+        $version = $contract->pendingVersionRecord();
+        abort_unless($version instanceof ContractVersion, 422);
+
+        $accept->execute($version, $this->user());
+    }
+
     public function agree(RespondToProposal $respond): void
     {
         $this->decide($respond, ProposalDecisionKind::Accepted, 'agreed');
@@ -189,8 +205,19 @@ class Show extends Component
             ->where('actor_id', $user->actor->id)
             ->firstOrFail();
 
+        // A due, accepted Contract version becomes active whichever page the person opens first.
+        foreach ($relationship->contracts as $contractRecord) {
+            app(ActivateDueContractVersions::class)->executeForContract($contractRecord);
+        }
+        $relationship->load('contracts.versions');
+
         $latestProposal = $relationship->proposals->sortByDesc('id')->first();
         $latestContract = $relationship->contracts->sortByDesc('id')->first();
+        $pendingContractVersion = $latestContract?->pendingVersionRecord();
+        $commitments = $latestContract instanceof Contract
+            ? Commitment::query()->whereHas('contractVersion', fn ($q) => $q->where('contract_id', $latestContract->id))
+                ->with(['obligor.user', 'beneficiary.user'])->orderBy('id')->get()
+            : collect();
         $context = $relationship->contextBinding?->context;
 
         $origin = $relationship->originatingIntent && $relationship->originating_intent_version_id
@@ -224,6 +251,9 @@ class Show extends Component
             'requests' => $this->requests($relationship),
             'startTab' => in_array($this->tab, ['conversation', 'agreement', 'work', 'money'], true) ? $this->tab : $this->startTab($relationship, $tc, $user),
             'focusVersion' => $this->v,
+            'commitments' => $commitments,
+            'canCreateCommitment' => $latestContract instanceof Contract && Gate::forUser($user)->allows('create', [Commitment::class, $latestContract]),
+            'canAcceptContract' => $pendingContractVersion instanceof ContractVersion && Gate::forUser($user)->allows('accept', [$latestContract, $pendingContractVersion]),
             'autostart' => $this->resume,
         ]);
     }

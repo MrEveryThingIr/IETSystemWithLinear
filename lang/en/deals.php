@@ -208,6 +208,8 @@ return [
         'hours_to' => 'Daily until',
         'timezone' => 'Time zone',
         'hours_help' => 'For example 08:00 – 17:00. Dates follow your calendar; hours are read in the time zone chosen here.',
+        'toman_only' => 'New Agreements are written in Toman (IRT) only for now.',
+        'legacy_currency' => 'An earlier version was priced at :price. New versions use Toman only, so enter the price in Toman (nothing is converted), or remove the price term.',
     ],
     'on_this_post' => 'Conversations about this post',
     'your_conversation' => 'Your conversation about this post',
@@ -352,4 +354,8 @@ return [
         'resume' => 'Resume editing',
         'badge' => 'Draft',
     ],
+    'contract_accept' => 'Accept this version',
+    'contract_accept_help' => 'This agreement still needs your acceptance of its contract version.',
+    'no_commitments' => 'No commitments yet.',
+    'contract_tools' => 'Advanced contract tools',
 ];

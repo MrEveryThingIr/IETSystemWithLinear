@@ -23,10 +23,16 @@ use LogicException;
     'required',
     'source_proposal_party_id',
 ])]
+/**
+ * @property int|null $business_id
+ * @property int|null $group_id
+ * @property string $principal_key
+ */
 class ContractVersionParty extends Model
 {
     /** @use HasFactory<ContractVersionPartyFactory> */
     use HasFactory;
+
     use IsDealParty;
 
     protected $attributes = ['required' => true];

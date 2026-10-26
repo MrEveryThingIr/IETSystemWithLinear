@@ -9,6 +9,7 @@ use App\Models\Contract;
 use App\Models\ContractAcceptance;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
+use App\Models\ProposalParty;
 use App\Models\User;
 use App\Support\Deals\DealParties;
 use App\Support\RequestMemo;
@@ -107,7 +108,12 @@ class ContractPolicy
             && $this->represented($user, ContractVersionParty::query()->where('contract_version_id', $active->id))->isNotEmpty();
     }
 
-    /** @return Collection<int, ContractVersionParty> parties this person may act for now, by principal authority */
+    /**
+     * Parties this person may act for now, by principal authority.
+     *
+     * @param  Builder<ContractVersionParty>  $parties
+     * @return Collection<int, ContractVersionParty|ProposalParty>
+     */
     private function represented(User $user, Builder $parties): Collection
     {
         return DealParties::representedBy($parties->get(), RequestMemo::user($user));

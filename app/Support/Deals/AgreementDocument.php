@@ -10,7 +10,7 @@ namespace App\Support\Deals;
 final class AgreementDocument
 {
     /**
-     * @param  array<string, mixed>  $terms normalized Terms
+     * @param  array<string, mixed>  $terms  normalized Terms
      * @return list<array{n: int, id: string, title: string, lines: list<array{label: ?string, value: string, date?: bool}>, text: ?string, typed: bool, clauses: list<array{n: string, title: ?string, text: ?string}>}>
      */
     public static function sections(array $terms): array

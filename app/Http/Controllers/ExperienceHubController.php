@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actor;
-use App\Models\ActorProfileIntent;
 use App\Models\BusinessMembership;
 use App\Models\GroupMembership;
 use App\Models\User;
-use App\ProfileIntentStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;

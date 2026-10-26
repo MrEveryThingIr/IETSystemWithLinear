@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Actor;
+use App\Models\ContractVersionParty;
 use App\Models\Proposal;
 use App\Models\ProposalDecision;
 use App\Models\ProposalParty;
@@ -81,7 +82,7 @@ class ProposalPolicy
         return $parties->count() === 1 ? $parties->first() : null;
     }
 
-    /** @return Collection<int, ProposalParty> */
+    /** @return Collection<int, ProposalParty|ContractVersionParty> */
     private function represented(User $user, Proposal $proposal): Collection
     {
         if (! $this->currentActor($user) instanceof Actor) {

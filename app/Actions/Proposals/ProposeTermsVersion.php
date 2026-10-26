@@ -42,9 +42,9 @@ class ProposeTermsVersion
         $termsData = $termsData === null ? null : DealTerms::normalize($termsData);
         abort_if(mb_strlen($terms) > 50000 || ($terms === '' && $termsData === null), 422, 'Proposal terms are required and may not exceed 50000 characters.');
         if ($termsData !== null) {
-            $terms = trim(DealTerms::render($termsData)."
+            $terms = trim(DealTerms::render($termsData).'
 
-".$terms);
+'.$terms);
         }
 
         $versionNote = trim((string) $versionNote);

@@ -23,12 +23,12 @@ use App\ProposalStatus;
 use App\Services\Business\BusinessService;
 use App\Support\Parties\Party;
 use Illuminate\Auth\Access\AuthorizationException;
-use InvalidArgumentException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -118,7 +118,7 @@ class DealPartyPrincipalsTest extends TestCase
         $business = $this->business($owner, $manager);
 
         $proposal = $this->propose($owner, [['actor' => $carol]], Party::of($business));
-$this->assertNotNull($proposal->parties->firstWhere("business_id", $business->id));
+        $this->assertNotNull($proposal->parties->firstWhere('business_id', $business->id));
 
         app(CancelProposal::class)->execute($proposal, $manager->user);
         $this->assertSame(ProposalStatus::Cancelled, $proposal->fresh()->status);

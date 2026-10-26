@@ -134,7 +134,7 @@ class DomainNotificationProjector
                     'title_params' => ['title' => $contract->title],
                     'body_key' => 'notifications.messages.contract_event_body',
                     'body_params' => ['event' => str_replace('_', ' ', $event->event_type->value)],
-                    'url' => route('contracts.show', $contract),
+                    'url' => DealLinks::contract($contract),
                 ],
                 $context,
                 'contract',

@@ -13,10 +13,16 @@ use Illuminate\Support\Str;
 use LogicException;
 
 #[Fillable(['uuid', 'proposal_id', 'actor_id', 'business_id', 'group_id', 'principal_key', 'role', 'required', 'added_by_actor_id'])]
+/**
+ * @property int|null $business_id
+ * @property int|null $group_id
+ * @property string $principal_key
+ */
 class ProposalParty extends Model
 {
     /** @use HasFactory<ProposalPartyFactory> */
     use HasFactory;
+
     use IsDealParty;
 
     protected $attributes = ['required' => true];
