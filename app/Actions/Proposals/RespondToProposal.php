@@ -13,6 +13,7 @@ use App\Models\User;
 use App\ProposalDecisionKind;
 use App\ProposalEventType;
 use App\ProposalStatus;
+use App\Support\Deals\DealParties;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -36,6 +37,12 @@ class RespondToProposal
 
         return DB::transaction(function () use ($proposal, $current, $decision, $note, $expectedVersion): ProposalDecision {
             $locked = Proposal::query()->lockForUpdate()->findOrFail($proposal->id);
+            // Authority is re-read here, before any state-dependent answer, so a revoked representative learns nothing.
+            $party = DealParties::sole(
+                ProposalParty::query()->where('proposal_id', $locked->id)->lockForUpdate()->get(),
+                $current,
+            );
+
             abort_unless($locked->status === ProposalStatus::Negotiating, 422, 'This Proposal is no longer open for responses.');
 
             $version = ProposalVersion::query()
@@ -52,12 +59,6 @@ class RespondToProposal
                 409,
                 'The Terms changed since you reviewed them. Review the new version first.',
             );
-
-            $party = ProposalParty::query()
-                ->where('proposal_id', $locked->id)
-                ->where('actor_id', $current->actor->id)
-                ->lockForUpdate()
-                ->firstOrFail();
 
             abort_if(
                 ProposalDecision::query()

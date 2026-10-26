@@ -10,7 +10,10 @@ use App\Models\ContractAcceptance;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\User;
+use App\Support\Deals\DealParties;
 use App\Support\RequestMemo;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class ContractPolicy
 {
@@ -36,10 +39,8 @@ class ContractPolicy
             return true;
         }
 
-        return ContractVersionParty::query()
-            ->whereHas('contractVersion', fn ($query) => $query->where('contract_id', $contract->id))
-            ->where('actor_id', $actor->id)
-            ->exists();
+        return $this->represented($user, ContractVersionParty::query()
+            ->whereHas('contractVersion', fn ($query) => $query->where('contract_id', $contract->id)))->isNotEmpty();
     }
 
     public function participate(User $user, Contract $contract): bool
@@ -56,7 +57,7 @@ class ContractPolicy
             return (int) $current->created_by_actor_id === (int) $actor->id;
         }
 
-        return ContractVersionParty::query()
+        return $this->represented($user, ContractVersionParty::query()
             ->whereHas('contractVersion', function ($query) use ($current): void {
                 $query->where('contract_id', $current->id)
                     ->whereIn('status', [
@@ -64,9 +65,7 @@ class ContractPolicy
                         ContractVersionStatus::Accepted->value,
                         ContractVersionStatus::Active->value,
                     ]);
-            })
-            ->where('actor_id', $actor->id)
-            ->exists();
+            }))->isNotEmpty();
     }
 
     public function accept(User $user, Contract $contract, ContractVersion $version): bool
@@ -81,10 +80,8 @@ class ContractPolicy
             return false;
         }
 
-        $party = ContractVersionParty::query()
-            ->where('contract_version_id', $current->id)
-            ->where('actor_id', $actor->id)
-            ->first();
+        $mine = $this->represented($user, ContractVersionParty::query()->where('contract_version_id', $current->id));
+        $party = $mine->count() === 1 ? $mine->first() : null;
 
         return $party instanceof ContractVersionParty
             && ! ContractAcceptance::query()
@@ -107,10 +104,13 @@ class ContractPolicy
         $active = $current->activeVersionRecord();
 
         return $active instanceof ContractVersion
-            && ContractVersionParty::query()
-                ->where('contract_version_id', $active->id)
-                ->where('actor_id', $actor->id)
-                ->exists();
+            && $this->represented($user, ContractVersionParty::query()->where('contract_version_id', $active->id))->isNotEmpty();
+    }
+
+    /** @return Collection<int, ContractVersionParty> parties this person may act for now, by principal authority */
+    private function represented(User $user, Builder $parties): Collection
+    {
+        return DealParties::representedBy($parties->get(), RequestMemo::user($user));
     }
 
     private function currentActor(User $user): ?Actor

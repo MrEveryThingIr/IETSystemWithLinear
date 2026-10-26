@@ -9,7 +9,9 @@ use App\Models\ProposalParty;
 use App\Models\ProposalVersion;
 use App\Models\User;
 use App\ProposalStatus;
+use App\Support\Deals\DealParties;
 use App\Support\RequestMemo;
+use Illuminate\Support\Collection;
 
 class ProposalPolicy
 {
@@ -25,7 +27,7 @@ class ProposalPolicy
 
     public function view(User $user, Proposal $proposal): bool
     {
-        return $this->party($user, $proposal) instanceof ProposalParty;
+        return $this->represented($user, $proposal)->isNotEmpty();
     }
 
     public function participate(User $user, Proposal $proposal): bool
@@ -34,7 +36,7 @@ class ProposalPolicy
 
         return $current instanceof Proposal
             && $current->status === ProposalStatus::Negotiating
-            && $this->party($user, $current) instanceof ProposalParty;
+            && $this->represented($user, $current)->isNotEmpty();
     }
 
     public function respond(User $user, Proposal $proposal): bool
@@ -59,24 +61,34 @@ class ProposalPolicy
         $actor = $this->currentActor($user);
         $current = Proposal::query()->find($proposal->id);
 
-        return $actor instanceof Actor
-            && $current instanceof Proposal
-            && $current->status === ProposalStatus::Negotiating
-            && (int) $current->created_by_actor_id === (int) $actor->id;
-    }
-
-    private function party(User $user, Proposal $proposal): ?ProposalParty
-    {
-        $actor = $this->currentActor($user);
-
-        if (! $actor instanceof Actor) {
-            return null;
+        if (! $actor instanceof Actor || ! $current instanceof Proposal || $current->status !== ProposalStatus::Negotiating) {
+            return false;
         }
 
-        return ProposalParty::query()
-            ->where('proposal_id', $proposal->id)
-            ->where('actor_id', $actor->id)
-            ->first();
+        // The creator, or whoever may currently act for the party the creator proposed as (first party row).
+        $creatorParty = ProposalParty::query()->where('proposal_id', $current->id)->orderBy('id')->first();
+
+        return (int) $current->created_by_actor_id === (int) $actor->id
+            || ($creatorParty instanceof ProposalParty
+                && DealParties::representedBy([$creatorParty], RequestMemo::user($user))->isNotEmpty());
+    }
+
+    /** The party this person may act for, by current PartyAuthority on the principal (never by stored actor_id). */
+    private function party(User $user, Proposal $proposal): ?ProposalParty
+    {
+        $parties = $this->represented($user, $proposal);
+
+        return $parties->count() === 1 ? $parties->first() : null;
+    }
+
+    /** @return Collection<int, ProposalParty> */
+    private function represented(User $user, Proposal $proposal): Collection
+    {
+        if (! $this->currentActor($user) instanceof Actor) {
+            return collect();
+        }
+
+        return DealParties::representedBy(ProposalParty::query()->where('proposal_id', $proposal->id)->get(), RequestMemo::user($user));
     }
 
     private function currentActor(User $user): ?Actor

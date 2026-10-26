@@ -56,6 +56,7 @@ class ProposeContractAmendment
         $partySpecs = $active->parties
             ->map(fn (ContractVersionParty $party): array => [
                 'actor' => $party->actor,
+                'party' => $party->principal(),
                 'role' => $party->role,
                 'required' => $party->required,
                 'source_proposal_party' => $party->sourceProposalParty,

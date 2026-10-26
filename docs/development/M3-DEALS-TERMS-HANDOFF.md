@@ -9,7 +9,8 @@ Rules: one agent per branch; additive reversible migrations; tests on in-memory 
 |---|---|
 | C1 audit + architecture + contracts | **Done** (docs + `tests/Feature/M3DealAuthorityBaselineTest.php`, 3 passing) |
 | C2 structured Terms + G1 | **Engineering-complete** (see below) |
-| C3a single Agree (structured Terms) | **Engineering-complete**; C3b principals (Business/Group parties) not started |
+| C3a single Agree (structured Terms) | **Engineering-complete** |
+| C3b Business/Group principals | **Engineering-complete** (see below) |
 | C4–C5 | Not started |
 
 ### C2 delivered
@@ -20,6 +21,23 @@ Rules: one agent per branch; additive reversible migrations; tests on in-memory 
 - **C3a:** when the last required party accepts a *structured* version, `RespondToProposal` calls `CreateContractFromProposal(..., deriveAcceptances: true)` in the same transaction: Contract + ContractVersion on the same sealed revision, one `ContractAcceptance` per accepting party with `source_proposal_decision_id` (signer and time copied from the decision), then the existing idempotent finalize/activate. Effective = `terms.effective` (`at` is clamped to now if already past). Free-text Proposals and pre-M3 accepted ones keep the explicit Contract form. Accepted Terms create no commitments (tested). Migration `2026_11_14_000000`. No UI authors structured Terms yet (C4).
 - Party identity corrected in C1 doc §2.4a (principal key, signer ≠ principal); implemented in C3.
 - Not duplicated for Codex: `DealTermsFromIntent` (T-A) and `DealTermsDiff` (T-B) are still unassigned/unstarted; they depend only on `DealTerms::normalize` output (T-A should return a value that passes `DealTerms::normalize`).
+
+### C3b delivered (principals)
+- Migration `2026_11_15_000000`: `business_id`, `group_id`, `principal_key` on `proposal_parties` and `contract_version_parties`; legacy rows backfilled `actor:<actor_id>`; `unique(scope, principal_key)` replaces `unique(scope, actor_id)` (plain index kept on `actor_id`). `actor_id` is now only the representative/contact.
+- `App\Models\Concerns\IsDealParty` (both party models): `principal(): Party`, sets `principal_key` on create, refuses Business+Group together.
+- `App\Support\Deals\DealParties`: `representedBy` (current `PartyAuthority::canActFor` on the principal), `sole` (fresh read via `RequestMemo::flush()`; 403 if none, 422 if the person could sign for 2 parties), `assertSingleSide` (creation guard).
+- `CreateProposal(..., ?Party $creatorParty)`; invitee spec accepts `party` (representative `actor` must be able to act for it). `ProposeTermsVersion`, `RespondToProposal`, `AcceptContractVersion` resolve the party by principal authority **inside the locked transaction, before any state-dependent answer** (a revoked or outside user gets a bare 403). `CreateContractVersion`/`CreateContractFromProposal`/`ProposeContractAmendment` carry the principal; derived acceptances keep the real signer (`accepted_by_user_id`) and the decision link.
+- `ProposalPolicy`/`ContractPolicy` use principal authority; `cancel` = creator or anyone who may act for the creator's party. `Livewire\Proposals\Show` finds the viewer's party by authority.
+- Tests: `tests/Feature/DealPartyPrincipalsTest.php` (11): owner/manager/Group editor sign, two managers → one acceptance, both-sides refusal at creation and response, outsiders/non-managers/privacy (no title/terms in 403), revoked authority with a warm memo, duplicate principals (app + DB unique, same representative for two principals), Business+Group refused, explicit Contract acceptance by principal, legacy Actor-only compatibility. Baseline G3 test flipped.
+- MySQL 8.4 rehearsal on disposable `c3b_rehearsal` (dropped): full migrate, rollback with rows, re-migrate backfills `actor:<id>`, duplicate principal rejected with 1062.
+
+### C3b known limits (carry into C4/C5)
+- Platform admins pass `BusinessAccess::canManage`, so they can sign for a Business (shared M2 rule, not changed).
+- Business/Group rows still show the *representative's* name in `proposals/show`, and Commitments/service terms still key on `actor_id`; both are C4/M4 work.
+- `down()` re-adds `unique(scope, actor_id)`: it fails if two principals share a representative, and Business/Group identity is lost on rollback (rows revert to the representative's `actor:`).
+- DB does not forbid Business+Group together (model guard only); the unique key still protects identity.
+- Two different principals represented by one person are blocked in code (both sides), not by a DB constraint.
+- Amendments need the stored representative's account to stay active+verified (existing party validation).
 
 ## C2–C5 execution plan (Claude, this branch, in order)
 
@@ -58,3 +76,11 @@ Common rules: branch from `feat/m3-deals-terms` at the commit named in the final
 | Migrations, actions, policies, Livewire, lang | **own** | never | never | never |
 
 Merge order for integration: T-A, T-B, T-C branches are merged into `feat/m3-deals-terms` by the owner/Claude after review (no conflicts expected: disjoint files).
+
+### C3b evidence
+- Full suite (sqlite in-memory): 1194 tests; the only failures after the fix are 4 `PlannerKernelTest`/`PlannerRemindersTest` cases (Windows OpenSSL key / date) that fail identically with C3b stashed (pre-existing, unrelated).
+- C3a migration `down()` failed on sqlite (`dropConstrainedForeignId` with a unique index), which broke `RegistrationTest`/`ComposerMigrationTest` rollbacks; fixed (drop FK, unique, column) and those pass.
+- Deal suites (`DealPartyPrincipals`, `ProposalNegotiationKernel`, `ProposalExperience`, `ContractKernel`, `ContractExperience`, `CanonicalDealPipeline`, `StructuredDealTerms`, `M3DealAuthorityBaseline`): 43/43.
+
+### C4 starting point
+Deal page: show party display name by principal (`business`/`group` name, representative as "signed by"), let the responder pick "as myself / as Business / as Group" from `PartyAuthority::partiesFor` and pass `creatorParty` / invitee `party`; prefill the counterparty from the intent's `publisher_business_id/group_id`; surface the 403/409/422 messages from `DealParties` and `RespondToProposal` in the four languages.

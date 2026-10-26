@@ -8,6 +8,7 @@ use App\Actions\Proposals\RespondToProposal;
 use App\Models\Actor;
 use App\Models\Proposal;
 use App\Models\ProposalParty;
+use App\Support\Deals\DealParties;
 use App\Models\ProposalVersion;
 use App\Models\User;
 use App\ProposalDecisionKind;
@@ -129,7 +130,7 @@ class Show extends Component
         $actor = $user->actor;
         abort_unless($actor instanceof Actor, 403);
 
-        $party = $this->proposal->parties->firstWhere('actor_id', $actor->id);
+        $party = DealParties::representedBy($this->proposal->parties, $user)->first();
         abort_unless($party instanceof ProposalParty, 403);
 
         $currentVersion = $this->proposal->versions->sortByDesc('version')->first();

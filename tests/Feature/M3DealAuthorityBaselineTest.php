@@ -68,12 +68,13 @@ class M3DealAuthorityBaselineTest extends TestCase
         $this->assertNotSame(ContractVersionStatus::Proposed, $version->fresh()->status);
     }
 
-    /** G3: parties are Actors only. C3 adds business_id/group_id to both party tables. */
-    public function test_party_tables_have_no_business_or_group_reference_yet(): void
+    /** G3 (closed in C3b): party tables identify a principal (person, Business or Group). */
+    public function test_party_tables_carry_principal_identity(): void
     {
         foreach (['proposal_parties', 'contract_version_parties'] as $table) {
-            $this->assertFalse(Schema::hasColumn($table, 'business_id'), $table);
-            $this->assertFalse(Schema::hasColumn($table, 'group_id'), $table);
+            foreach (['business_id', 'group_id', 'principal_key'] as $column) {
+                $this->assertTrue(Schema::hasColumn($table, $column), $table.'.'.$column);
+            }
         }
     }
 }

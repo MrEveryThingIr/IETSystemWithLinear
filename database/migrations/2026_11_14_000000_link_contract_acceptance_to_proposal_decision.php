@@ -18,7 +18,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('contract_acceptances', function (Blueprint $table): void {
-            $table->dropConstrainedForeignId('source_proposal_decision_id');
+            $table->dropForeign(['source_proposal_decision_id']);
+            $table->dropUnique(['source_proposal_decision_id']);
+            $table->dropColumn('source_proposal_decision_id');
         });
     }
 };

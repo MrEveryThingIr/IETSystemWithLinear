@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\IsDealParty;
 use Database\Factories\ProposalPartyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,11 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['uuid', 'proposal_id', 'actor_id', 'role', 'required', 'added_by_actor_id'])]
+#[Fillable(['uuid', 'proposal_id', 'actor_id', 'business_id', 'group_id', 'principal_key', 'role', 'required', 'added_by_actor_id'])]
 class ProposalParty extends Model
 {
     /** @use HasFactory<ProposalPartyFactory> */
     use HasFactory;
+    use IsDealParty;
 
     protected $attributes = ['required' => true];
 

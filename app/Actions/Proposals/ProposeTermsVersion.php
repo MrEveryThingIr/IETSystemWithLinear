@@ -12,6 +12,7 @@ use App\Models\User;
 use App\ProposalDecisionKind;
 use App\ProposalEventType;
 use App\ProposalStatus;
+use App\Support\Deals\DealParties;
 use App\Support\Deals\DealTerms;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -66,11 +67,10 @@ class ProposeTermsVersion
 
             abort_unless($locked->status === ProposalStatus::Negotiating, 422, 'Only a negotiating Proposal can receive a new version.');
 
-            $party = ProposalParty::query()
-                ->where('proposal_id', $locked->id)
-                ->where('actor_id', $current->actor->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $party = DealParties::sole(
+                ProposalParty::query()->where('proposal_id', $locked->id)->lockForUpdate()->get(),
+                $current,
+            );
 
             $pinned = $locked->relationship?->originating_intent_version_id;
             abort_if(
