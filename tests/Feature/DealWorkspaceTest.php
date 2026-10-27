@@ -397,7 +397,8 @@ class DealWorkspaceTest extends TestCase
         foreach (['conversation', 'agreement', 'work', 'money'] as $tab) {
             $this->assertStringContainsString('data-tab="'.$tab.'"', $html);
         }
-        $this->assertStringContainsString('Nothing is tracked in this Deal yet', $html);
+        $this->assertStringContainsString('data-work-panel', $html);
+        $this->assertStringContainsString('Work can be set up once an agreement is in force', $html);
         $this->assertStringContainsString('no balances, payments or ledger entries', $html);
         $this->assertSame(0, preg_match('/<section[^>]*wire:poll/', $html), 'no page-wide poll: it used to reset open sections');
         $this->assertMatchesRegularExpression('/<details[^>]*x-data="\{ open: false \}"[^>]*x-bind:open="open"[^>]*data-deal-details/', $html);

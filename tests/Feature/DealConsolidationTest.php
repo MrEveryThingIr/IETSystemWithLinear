@@ -245,7 +245,7 @@ class DealConsolidationTest extends TestCase
         // The Agreement tab has no second "open agreement" page; it offers the printable document and Work/Money in their own tabs.
         $page = $this->actingAs($bob->user)->get(DealLinks::workspace($deal, 'agreement', 1))->assertOk();
         $page->assertSee('data-agreement-final', false)->assertSee(route('relationships.agreement.print', $deal), false)->assertSee('data-panel="work"', false)->assertSee('data-panel="money"', false)
-            ->assertSee('data-work-commitments', false)->assertDontSee(__('deals.open_contract'));
+            ->assertSee('data-work-panel', false)->assertDontSee(__('deals.open_contract'));
         $this->assertStringNotContainsString('href="'.route('contracts.show', $contract).'"', $page->getContent());
 
         $this->assertStringNotContainsString('contracts/create', $page->getContent());
