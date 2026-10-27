@@ -24,6 +24,7 @@ use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use App\Support\CommitmentProgress;
+use App\Support\Deals\DealLinks;
 use App\Support\Parties\Party;
 use App\Support\Parties\PartyAuthority;
 use App\Support\QuantityAmount;
@@ -91,15 +92,24 @@ class Show extends Component
     /** @var array<int, string> */
     public array $resolutionNotes = [];
 
-    public function mount(Commitment $commitment): void
+    public function mount(Commitment $commitment): mixed
     {
         Gate::forUser($this->user())->authorize('view', $commitment);
+
+        // Work that belongs to a Deal is done in the Deal's Work tab, the single workspace for contractual execution.
+        $deal = $commitment->contractVersion->contract->relationship;
+        if ($deal !== null) {
+            return $this->redirect(DealLinks::workspace($deal, 'work'), navigate: false);
+        }
+
         $commitment->loadMissing(['serviceTerm.monetaryUnit']);
         $this->commitment = $commitment;
 
         $timezone = TemporalPreferences::timezoneFor($this->user());
         $this->planStartsOn = CarbonImmutable::now($timezone)->format('Y-m-d');
         $this->fulfillmentQuantity = $this->suggestedFulfillmentQuantity();
+
+        return null;
     }
 
     public function createPlan(CreateCommitmentPlan $create): void

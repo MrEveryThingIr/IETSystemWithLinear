@@ -46,9 +46,10 @@ class CreateCommitmentPlan
         array $reminderOffsets = [],
         PlanTimingMode $timingMode = PlanTimingMode::Fixed,
         ?int $monthDay = null,
+        bool $asDealParty = false,
     ): Plan {
         $current = $this->currentUser($user);
-        Gate::forUser($current)->authorize('manage', $commitment);
+        Gate::forUser($current)->authorize($asDealParty ? 'manageAsParty' : 'manage', $commitment);
 
         return DB::transaction(function () use (
             $commitment,
@@ -67,6 +68,7 @@ class CreateCommitmentPlan
             $reminderOffsets,
             $timingMode,
             $monthDay,
+            $asDealParty,
         ): Plan {
             $locked = Commitment::query()
                 ->with([
@@ -79,7 +81,7 @@ class CreateCommitmentPlan
                 ->lockForUpdate()
                 ->findOrFail($commitment->id);
 
-            Gate::forUser($current)->authorize('manage', $locked);
+            Gate::forUser($current)->authorize($asDealParty ? 'manageAsParty' : 'manage', $locked);
             abort_if(
                 $locked->planBinding instanceof CommitmentPlanBinding,
                 422,

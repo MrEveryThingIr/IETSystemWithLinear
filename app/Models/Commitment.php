@@ -18,6 +18,7 @@ use LogicException;
     'uuid',
     'contract_version_id',
     'contract_service_term_id',
+    'derivation_key',
     'created_by_actor_id',
     'obligor_actor_id',
     'beneficiary_actor_id',

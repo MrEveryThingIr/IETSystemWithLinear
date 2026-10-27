@@ -37,9 +37,11 @@ class CreateCommitment
         ?CarbonInterface $dueStartAt = null,
         ?CarbonInterface $dueEndAt = null,
         ?ContractServiceTerm $serviceTerm = null,
+        ?string $derivationKey = null,
+        bool $asDealParty = false,
     ): Commitment {
         $current = $this->currentUser($user);
-        Gate::forUser($current)->authorize('create', [Commitment::class, $contract]);
+        Gate::forUser($current)->authorize($asDealParty ? 'createAsParty' : 'create', [Commitment::class, $contract]);
 
         $title = Str::squish($title);
         abort_if($title === '' || mb_strlen($title) > 180, 422, 'Commitment title must be between 1 and 180 characters.');
@@ -77,6 +79,7 @@ class CreateCommitment
             $dueStartAt,
             $dueEndAt,
             $serviceTerm,
+            $derivationKey,
         ): Commitment {
             $locked = Contract::query()
                 ->with('versions')
@@ -143,6 +146,7 @@ class CreateCommitment
             $commitment = Commitment::query()->create([
                 'contract_version_id' => $version->id,
                 'contract_service_term_id' => $lockedServiceTerm?->id,
+                'derivation_key' => $derivationKey,
                 'created_by_actor_id' => $creator->id,
                 'obligor_actor_id' => $obligor->id,
                 'beneficiary_actor_id' => $beneficiary->id,

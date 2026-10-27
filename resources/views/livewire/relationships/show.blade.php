@@ -280,34 +280,19 @@
             @endif
         </div>
 
-        {{-- Work: the connection point for planning and confirmed delivery (M4). Nothing is tracked here yet. --}}
+        {{-- Work: the one place where the Agreement's duties are set up, performed, reported and confirmed (M4). --}}
         <div x-show="tab === 'work'" x-cloak data-panel="work" class="space-y-3">
-            <flux:card class="space-y-2">
-                <flux:heading>{{ __('deals.tabs.work') }}</flux:heading>
-                <p class="text-sm text-zinc-500">{{ __('deals.work_not_yet') }}</p>
-                @if ($latestContract)
-                    <div class="space-y-2" data-work-commitments>
-                        @if ($commitments->isNotEmpty())<div class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('deals.recorded_obligations') }}</div>@endif
-                        @foreach ($commitments as $commitment)
-                            <a href="{{ route('commitments.show', $commitment) }}" wire:key="commitment-{{ $commitment->id }}" class="block rounded-xl border border-zinc-200 p-3 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900">
-                                <div class="flex flex-wrap items-start justify-between gap-2">
-                                    <span class="font-medium" dir="auto">{{ $commitment->title }}</span>
-                                    <flux:badge size="sm" color="zinc">{{ __('commitments.kind.'.$commitment->kind->value) }}</flux:badge>
-                                </div>
-                                <div class="mt-1 text-xs text-zinc-500">{{ $commitment->quantity }} {{ $commitment->unit }} · {{ $commitment->obligor->user?->username }} → {{ $commitment->beneficiary->user?->username }}</div>
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
-                @if ($agreed && $terms)
+            @if ($agreed && $terms)
+                <flux:card class="space-y-1">
                     <dl class="space-y-1 text-sm" data-work-hooks>
                         @foreach (['time' => __('deals.doc.sections.time'), 'recurrence' => __('deals.doc.sections.recurrence'), 'completion' => __('deals.doc.sections.completion')] as $id => $label)
                             @php($sec = collect($doc)->firstWhere('id', $id))
                             @if ($sec)<div class="flex flex-wrap gap-x-2"><dt class="text-zinc-500">{{ $label }}</dt><dd class="font-medium" dir="auto">{{ collect($sec['lines'])->pluck('value')->implode(' · ') }}</dd></div>@endif
                         @endforeach
                     </dl>
-                @endif
-            </flux:card>
+                </flux:card>
+            @endif
+            <livewire:deals.work-panel :relationship="$relationship" :key="'work-'.$relationship->id" />
         </div>
 
         {{-- Money: the connection point for bookkeeping and settlement (M5). No balances exist here. --}}

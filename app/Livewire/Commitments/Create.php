@@ -10,6 +10,7 @@ use App\Models\Contract;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\User;
+use App\Support\Deals\DealLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -42,10 +43,16 @@ class Create extends Component
 
     public string $dueEnd = '';
 
-    public function mount(Contract $contract): void
+    public function mount(Contract $contract): mixed
     {
         $user = $this->user();
         Gate::forUser($user)->authorize('create', [Commitment::class, $contract]);
+
+        // A Deal's duties are set up in its Work tab (propose, then the receiver confirms).
+        if ($contract->relationship !== null) {
+            return $this->redirect(DealLinks::workspace($contract->relationship, 'work'), navigate: false);
+        }
+
         $this->contract = $contract;
 
         $version = $contract->activeVersionRecord();
@@ -60,6 +67,8 @@ class Create extends Component
             $this->obligorUsername = (string) $other->actor->user?->username;
             $this->beneficiaryUsername = (string) $user->username;
         }
+
+        return null;
     }
 
     public function save(CreateCommitment $create): mixed
