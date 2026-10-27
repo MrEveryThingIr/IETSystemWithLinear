@@ -247,7 +247,11 @@
             <p class="text-xs text-zinc-500">{{ __('deals.composer.send_note') }}</p>
 
             <div class="flex flex-wrap items-center gap-2">
-                <flux:button wire:click="send" variant="primary" wire:loading.attr="disabled" wire:target="send">{{ $mode === 'amend' ? __('deals.composer.send_amendment') : __('deals.composer.send_review') }}</flux:button>
+                @if ($mode === 'amend')
+                    <flux:button wire:key="send-amendment" wire:click="send" variant="primary" wire:loading.attr="disabled" wire:target="send">{{ __('deals.composer.send_amendment') }}</flux:button>
+                @else
+                    <flux:button wire:key="send-review" wire:click="send" variant="primary" wire:loading.attr="disabled" wire:target="send">{{ __('deals.composer.send_review') }}</flux:button>
+                @endif
                 @if ($mode === 'propose')<flux:button wire:click="saveDraft" wire:loading.attr="disabled" wire:target="saveDraft">{{ __('deals.composer.save_draft') }}</flux:button>@endif
                 <flux:button wire:click="close" variant="ghost">{{ __('studio.cancel') }}</flux:button>
                 @if ($savedAt !== '')

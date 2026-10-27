@@ -273,7 +273,7 @@ class DealConsolidationTest extends TestCase
         $this->assertSame(1, $contract->versions()->count());
 
         // Alice amends from the version in force; the amendment is a new ContractVersion with its own typed Terms.
-        $c = Livewire::actingAs($alice->user)->test(AgreementComposer::class, ['relationship' => $deal])->call('startAmendment')->assertSeeHtml('data-amend-effective')->assertSet('mode', 'amend');
+        $c = Livewire::actingAs($alice->user)->test(AgreementComposer::class, ['relationship' => $deal])->call('startAmendment')->assertSeeHtml('data-amend-effective')->assertSet('mode', 'amend')->assertSee(__('deals.composer.send_amendment'))->assertDontSee(__('deals.composer.send_review'));
         $c->call('addItem', 'place')->set('draft.core.place', 'Karaj')->call('send')->assertHasNoErrors();
         $v2 = $contract->versions()->where('version', 2)->sole();
         $this->assertSame(ContractVersionStatus::Proposed, $v2->status);

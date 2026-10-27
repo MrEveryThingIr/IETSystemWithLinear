@@ -207,7 +207,8 @@ final class DealTermsDraft
 
         $clauses = [];
         foreach ($d['clauses'] ?? [] as $clause) {
-            if (! $has('clause:'.$clause['key'])) {
+            // A clause nobody wrote anything in is not part of the Terms (and so not of their order either).
+            if (! $has('clause:'.$clause['key']) || (trim((string) ($clause['title'] ?? '')) === '' && trim((string) ($clause['text'] ?? '')) === '')) {
                 continue;
             }
             $clauses[] = array_filter([
