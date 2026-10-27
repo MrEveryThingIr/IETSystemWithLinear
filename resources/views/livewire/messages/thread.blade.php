@@ -111,8 +111,10 @@
                     @php $lastDay = $day; @endphp
                 @endif
                 @if ($message->kind === 'deal')
-                    @php($area = $message->meta['area'] ?? 'agreement')
-                    @php($tone = ['agreement' => 'border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100', 'work' => 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100', 'money' => 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-100'][$area] ?? '')
+                    @php
+                        $area = $message->meta['area'] ?? 'agreement';
+                        $tone = ['agreement' => 'border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100', 'work' => 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100', 'money' => 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-100'][$area] ?? '';
+                    @endphp
                     <li wire:key="m-{{ $message->id }}" class="my-2 flex justify-center" data-deal-event data-area="{{ $area }}">
                         <a @if (! empty($message->meta['url'])) href="{{ $message->meta['url'] }}" @endif class="flex max-w-[92%] flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border px-3 py-1.5 text-xs {{ $tone }}">
                             <span class="rounded-full bg-white/70 px-2 py-0.5 font-semibold dark:bg-black/30">{{ __('deals.timeline_area.'.$area) }}</span>
