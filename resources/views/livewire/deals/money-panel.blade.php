@@ -35,7 +35,7 @@
                             <span class="font-medium" dir="auto">{{ $c->title }}@if ($item['fulfillment']?->occurrence?->scheduled_start_at) · <x-app.local-datetime :value="$item['fulfillment']->occurrence->scheduled_start_at" />@endif</span>
                             <flux:badge size="sm" :color="in_array($item['state'], ['settled'], true) ? 'green' : (in_array($item['state'], ['disputed', 'disagreed'], true) ? 'red' : 'zinc')">{{ __('deals.money.state.'.$item['state']) }}</flux:badge>
                         </div>
-                        <div class="mt-1 text-xs text-zinc-500" dir="auto">
+                        <div class="mt-1 text-xs text-zinc-500">
                             {{ __('deals.money.who_pays', ['payer' => $c->beneficiary->user?->username, 'payee' => $c->obligor->user?->username]) }}
                             · @if ($item['derived'] !== null){{ __('deals.money.from_agreement', ['amount' => $fmt($item['derived'])]) }}@elseif ($o){{ __('deals.money.asked', ['amount' => $fmt($item['requested'])]) }}@else{{ __('deals.money.no_amount') }}@endif
                             @if ($item['received'] > 0 || $item['reported'] > 0) · {{ __('deals.money.progress', ['received' => $fmt($item['received']), 'reported' => $fmt($item['reported'])]) }}@endif
@@ -59,7 +59,7 @@
                                 </div>
                             </div>
                         @endif
-                        @if ($o && Gate::forUser(auth()->user())->allows('withdraw', $o))
+                        @if ($o && $item['reported'] === 0 && $item['received'] === 0 && Gate::forUser(auth()->user())->allows('withdraw', $o))
                             <flux:button class="mt-2" size="sm" variant="ghost" wire:click="takeBack('{{ $o->uuid }}')">{{ __('deals.money.take_back') }}</flux:button>
                         @endif
                     </li>
@@ -80,7 +80,7 @@
             <p class="text-xs text-zinc-500">{{ __('deals.money.report_note') }}</p>
             @foreach ($payable as $item)
                 @php($left = max(0, $item['outstanding'] - $item['reported']))
-                <div wire:key="pay-{{ $item['obligation']->uuid }}" class="flex flex-wrap items-end gap-3">
+                <div wire:key="pay-{{ $item['obligation']->uuid }}-{{ $payToken }}" class="flex flex-wrap items-end gap-3">
                     <span class="min-w-0 flex-1 text-sm" dir="auto">{{ $item['commitment']->title }} <span class="text-xs text-zinc-500">({{ __('deals.money.open', ['amount' => $fmt($left)]) }})</span></span>
                     <flux:input size="sm" inputmode="numeric" wire:model="pay.{{ $item['obligation']->uuid }}" :placeholder="(string) $left" :label="__('deals.money.amount')" class="max-w-40" />
                 </div>
@@ -98,7 +98,7 @@
                 @php($t = $row['entry'])
                 <div wire:key="payment-{{ $t->uuid }}" class="rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-700" data-money-payment data-status="{{ $t->status->value }}">
                     <div class="flex flex-wrap items-start justify-between gap-2">
-                        <span class="font-medium" dir="auto">{{ __('deals.money.paid_by', ['payer' => $t->fromParty->label(), 'payee' => $t->toParty->label(), 'amount' => $fmt((int) $t->amount)]) }}</span>
+                        <span class="font-medium">{{ __('deals.money.paid_by', ['payer' => $t->fromParty->label(), 'payee' => $t->toParty->label(), 'amount' => $fmt((int) $t->amount)]) }}</span>
                         <flux:badge size="sm" :color="$t->status === \App\Enums\Bookkeeping\TransactionStatus::Confirmed ? 'green' : (in_array($t->status, [\App\Enums\Bookkeeping\TransactionStatus::Rejected, \App\Enums\Bookkeeping\TransactionStatus::Disputed], true) ? 'red' : 'zinc')">{{ __('deals.money.pay_status.'.$t->status->value) }}</flux:badge>
                     </div>
                     <div class="text-xs text-zinc-500" dir="auto"><x-app.local-date :value="$t->occurred_on" />@if ($t->description) · {{ $t->description }}@endif</div>

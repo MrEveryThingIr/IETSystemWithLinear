@@ -165,7 +165,7 @@ class ManageDealMoney
 
             return $this->record->execute(
                 $ledger, $user, TransactionType::Payment, $payer, $payee, array_sum($allocations),
-                $this->today($user), $note !== null && trim($note) !== '' ? trim($note) : (string) __('deals.money.payment_description'), null, $allocations,
+                $this->today($user), $note !== null && trim($note) !== '' ? trim($note) : null, null, $allocations,
                 idempotencyKey: $key, source: $source,
             );
         }, 3);

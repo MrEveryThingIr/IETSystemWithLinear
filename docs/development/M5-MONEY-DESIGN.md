@@ -1,6 +1,6 @@
 # M5 design — Money inside the Deal (draft, not started)
 
-Status: **design only**. Not committed; M5 must be cut from `integration/v2` *after* M4 (PR #89) is merged. Inputs read: [M4-M5-AGREEMENT-OPERATIONS-MAPPING.md](M4-M5-AGREEMENT-OPERATIONS-MAPPING.md), [M4-WORK-HANDOFF.md](M4-WORK-HANDOFF.md), [BOOKKEEPING.md](../BOOKKEEPING.md), `ProposeWorkBookkeepingEntry`, `RecordSharedEntry` (allocations), `Transaction` (source columns, optimistic `version`, idempotency), `EntrySource`.
+Status: **implemented** on `feat/m5-deal-money`; see [M5-MONEY-HANDOFF.md](M5-MONEY-HANDOFF.md) for what was built and where it differs from this draft (no "Pay" shortcut; derived amounts are owed per the Agreement, typed amounts only after the payer agrees). Inputs read: [M4-M5-AGREEMENT-OPERATIONS-MAPPING.md](M4-M5-AGREEMENT-OPERATIONS-MAPPING.md), [M4-WORK-HANDOFF.md](M4-WORK-HANDOFF.md), [BOOKKEEPING.md](../BOOKKEEPING.md), `ProposeWorkBookkeepingEntry`, `RecordSharedEntry` (allocations), `Transaction` (source columns, optimistic `version`, idempotency), `EntrySource`.
 
 ## The circuit, in the Deal's words
 
