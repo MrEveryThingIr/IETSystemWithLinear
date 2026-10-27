@@ -131,7 +131,8 @@
                     @foreach ($labels as $id => $name)<flux:select.option value="{{ $id }}">{{ $name }}</flux:select.option>@endforeach
                 </flux:select>
                 <flux:input inputmode="decimal" wire:model="form.quantity" :label="__('deals.work.quantity_each')" />
-                <flux:input wire:model="form.unit" :label="__('deals.work.unit')" maxlength="40" />
+                <flux:input wire:model="form.unit" :label="__('deals.work.unit')" maxlength="40" list="deal-price-units" />
+                <datalist id="deal-price-units">@foreach (\App\Support\Deals\DealMoney::UNITS as $u)<option value="{{ $u }}">@endforeach</datalist>
                 <flux:select wire:model="form.kind" :label="__('deals.work.kind')">
                     @foreach ($kinds as $kind)<flux:select.option value="{{ $kind->value }}">{{ __('commitments.kind.'.$kind->value) }}</flux:select.option>@endforeach
                 </flux:select>
