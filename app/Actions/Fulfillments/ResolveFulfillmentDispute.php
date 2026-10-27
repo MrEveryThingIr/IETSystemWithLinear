@@ -52,7 +52,7 @@ class ResolveFulfillmentDispute
 
                 abort_if(
                     QuantityAmount::compare(
-                        QuantityAmount::add($accepted, $fulfillment->quantity),
+                        QuantityAmount::add($accepted, $fulfillment->confirmedQuantity()),
                         $fulfillment->commitment->quantity,
                     ) > 0,
                     422,

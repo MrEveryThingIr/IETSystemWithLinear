@@ -58,12 +58,12 @@ class ManageDealMoney
             }
 
             $version = $locked->contracts()->latest('id')->first()?->activeVersionRecord();
-            abort_if($version === null, 422, 'There is no agreement in force.');
+            abort_if($version === null, 422, (string) __('deals.errors.no_agreement'));
             $version->loadMissing('parties.actor.user');
             $mine = $this->actor($user);
             $other = $version->parties->map->actor->first(fn (Actor $a) => (int) $a->id !== (int) $mine->id);
             abort_unless($version->parties->contains(fn ($p) => (int) $p->actor_id === (int) $mine->id), 403);
-            abort_unless($other instanceof Actor && filled($other->user?->username), 422, 'The other person needs an account to share a book.');
+            abort_unless($other instanceof Actor && filled($other->user?->username), 422, (string) __('deals.errors.money_no_account'));
 
             $ledger = $this->createLedger->execute($user, LedgerKind::Shared, (string) __('deals.money.book_name'));
             $this->addParty->execute($ledger, $user, (string) $other->user->username, null);
@@ -84,7 +84,7 @@ class ManageDealMoney
     public function request(Relationship $deal, User $user, array $keys, array $typed = []): array
     {
         $actor = $this->actor($user);
-        abort_if($keys === [], 422, 'Choose what to ask payment for.');
+        abort_if($keys === [], 422, (string) __('deals.errors.money_choose'));
         $ledger = $this->ledger($deal, $user);
 
         return DB::transaction(function () use ($deal, $user, $actor, $keys, $typed, $ledger): array {
@@ -96,15 +96,15 @@ class ManageDealMoney
                 abort_if($source === null, 404);
 
                 $item = $this->money->items($deal)->firstWhere('key', $key);
-                abort_if($item === null, 422, 'That is not payable yet.');
+                abort_if($item === null, 422, (string) __('deals.errors.money_not_payable'));
                 abort_unless((int) $item['commitment']->obligor_actor_id === (int) $actor->id, 403);
-                abort_unless(in_array($item['state'], ['eligible', 'disagreed'], true), 422, 'Payment has already been asked for.');
+                abort_unless(in_array($item['state'], ['eligible', 'disagreed'], true), 422, (string) __('deals.errors.money_already_asked'));
 
                 $amount = $item['derived'] ?? Toman::parse($typed[$key] ?? null, 'amount');
                 $commitment = $item['commitment'];
                 $creditor = $ledger->partyFor($commitment->obligor_actor_id);
                 $debtor = $ledger->partyFor($commitment->beneficiary_actor_id);
-                abort_unless($creditor !== null && $debtor !== null, 422, 'Both people must be in the Deal\'s book.');
+                abort_unless($creditor !== null && $debtor !== null, 422, (string) __('deals.errors.money_book_parties'));
 
                 $attempt = Transaction::query()->where('ledger_id', $ledger->id)->where('source_type', $item['source_type'])->where('source_uuid', $item['source_uuid'])->count() + 1;
                 $entrySource = new EntrySource(EntryOrigin::IetWorkflow, $item['source_type'], $item['source_uuid'], (int) $commitment->contractVersion->version);
@@ -128,7 +128,7 @@ class ManageDealMoney
     {
         $actor = $this->actor($user);
         $ledger = $this->money->ledger($deal);
-        abort_if($ledger === null, 422, 'Nothing has been asked for yet.');
+        abort_if($ledger === null, 422, (string) __('deals.errors.money_nothing_asked'));
         abort_if(trim($token) === '', 422);
         $payer = $ledger->partyFor($actor);
         abort_if($payer === null, 403);
@@ -147,18 +147,18 @@ class ManageDealMoney
                 $allocations[(string) $uuid] = Toman::parse($value, 'allocations.'.$uuid);
             }
         }
-        abort_if($allocations === [], 422, 'Enter an amount to report.');
+        abort_if($allocations === [], 422, (string) __('deals.errors.money_enter_amount'));
 
         $transaction = DB::transaction(function () use ($deal, $user, $actor, $ledger, $payer, $allocations, $key, $note): Transaction {
             $items = $this->money->items($deal);
             $payee = null;
             foreach ($allocations as $uuid => $value) {
                 $item = $items->first(fn ($i) => $i['obligation']?->uuid === $uuid);
-                abort_if($item === null, 422, 'That request is not part of this Deal.');
+                abort_if($item === null, 422, (string) __('deals.errors.money_not_in_deal'));
                 abort_unless((int) $item['commitment']->beneficiary_actor_id === (int) $actor->id, 403);
-                abort_unless($item['payable'], 422, 'That amount is not established yet.');
+                abort_unless($item['payable'], 422, (string) __('deals.errors.money_not_established'));
                 $creditor = $ledger->partyFor($item['commitment']->obligor_actor_id);
-                abort_if($payee !== null && $payee->id !== $creditor?->id, 422, 'A payment goes to one person.');
+                abort_if($payee !== null && $payee->id !== $creditor?->id, 422, (string) __('deals.errors.money_one_payee'));
                 $payee = $creditor;
             }
 

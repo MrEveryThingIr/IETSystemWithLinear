@@ -40,13 +40,13 @@ final class DealsOverview
         return Commitment::query()
             ->where('status', 'active')
             ->where(fn ($query) => $query->where('obligor_actor_id', $actorId)->orWhere('beneficiary_actor_id', $actorId))
-            ->with(['planBinding', 'fulfillments:id,commitment_id,quantity,status'])
+            ->with(['planBinding', 'fulfillments:id,commitment_id,quantity,status', 'fulfillments.review'])
             ->latest('updated_at')
             ->limit(6)
             ->get()
             ->map(function (Commitment $commitment) use ($actorId): array {
                 $accepted = $commitment->fulfillments->where('status', FulfillmentStatus::Accepted)
-                    ->reduce(fn (string $sum, $fulfillment): string => QuantityAmount::add($sum, (string) $fulfillment->quantity), QuantityAmount::normalize('0'));
+                    ->reduce(fn (string $sum, $fulfillment): string => QuantityAmount::add($sum, $fulfillment->confirmedQuantity()), QuantityAmount::normalize('0'));
                 $waiting = $commitment->fulfillments->whereIn('status', [FulfillmentStatus::Submitted, FulfillmentStatus::ClarificationRequested])->count();
 
                 return [

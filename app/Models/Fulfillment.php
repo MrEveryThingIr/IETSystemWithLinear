@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\FulfillmentStatus;
+use App\Support\QuantityAmount;
 use Carbon\CarbonInterface;
 use Database\Factories\FulfillmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -127,6 +128,26 @@ class Fulfillment extends Model
         )
             ->withPivot(['uuid', 'added_by_actor_id'])
             ->withTimestamps();
+    }
+
+    /**
+     * The quantity that counts once this report is accepted: what the reviewer confirmed, or everything reported when
+     * they did not narrow it. Only meaningful for an accepted report.
+     */
+    public function confirmedQuantity(): string
+    {
+        $this->loadMissing('review');
+
+        return $this->review?->accepted_quantity !== null
+            ? QuantityAmount::normalize((string) $this->review->accepted_quantity)
+            : QuantityAmount::normalize((string) $this->quantity);
+    }
+
+    /** True when the reviewer accepted part of what was reported. */
+    public function isPartlyAccepted(): bool
+    {
+        return $this->status === FulfillmentStatus::Accepted
+            && QuantityAmount::compare($this->confirmedQuantity(), (string) $this->quantity) < 0;
     }
 
     /** @return HasOne<FulfillmentReview, $this> */

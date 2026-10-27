@@ -143,6 +143,15 @@ class DealWorkTest extends TestCase
     {
         $c = $this->panel($who, $deal);
         foreach ($form as $key => $value) {
+            if ($key === 'unit') {
+                $known = in_array($value, WorkPanel::UNITS, true);
+                $c->set('form.unit_choice', $known ? $value : '__other')->set('form.unit_custom', $known ? '' : $value);
+
+                continue;
+            }
+            if (in_array($key, ['kind', 'beneficiary'], true)) {
+                continue; // the receiver is the other party; every duty here is plain work
+            }
             $c->set('form.'.$key, $value);
         }
 
@@ -198,7 +207,7 @@ class DealWorkTest extends TestCase
         $this->panel($alice, $deal)->call('report', $clean->id, $occurrences[1]->uuid, '1')->assertHasNoErrors();
         $f2 = Fulfillment::query()->where('plan_occurrence_id', $occurrences[1]->id)->sole();
         $this->panel($bob, $deal)->call('review', $f2->id, 'accepted');
-        $this->panel($bob, $deal)->assertSee('data-cycle-state="partly"', false);
+        $this->panel($bob, $deal)->assertSee('data-cycle-state="accepted"', false); // what was reported was fully accepted; the cycle's shortfall shows as 1 of 2
 
         // Cycle 3: Bob asks a question, Alice corrects, Bob rejects the correction, Alice disputes, Bob resolves.
         $this->travelTo($occurrences[2]->scheduled_start_at->copy()->addMinutes(30));
@@ -269,9 +278,12 @@ class DealWorkTest extends TestCase
         $base = ['title' => 'Task', 'kind' => 'work', 'quantity' => '1', 'unit' => 'item', 'cycles' => 1, 'obligor' => $p[$alice->id], 'beneficiary' => $p[$bob->id]];
 
         // Money is not set up here, the same person cannot be both sides, repeated work needs a start, a stranger cannot propose.
-        $this->panel($alice, $deal)->set('form', ['kind' => 'payment'] + $base + $this->blankSchedule())->call('propose')->assertHasErrors('work');
-        $this->panel($alice, $deal)->set('form', ['beneficiary' => $p[$alice->id]] + $base + $this->blankSchedule())->call('propose')->assertHasErrors('work');
-        $this->panel($alice, $deal)->set('form', ['cycles' => 3] + $base + $this->blankSchedule())->call('propose')->assertHasErrors('work');
+        $form = ['title' => 'Task', 'quantity' => '1', 'unit_choice' => 'item', 'cycles' => 1, 'obligor' => $p[$alice->id]] + $this->blankSchedule();
+        $this->assertSame(422, $this->http(fn () => app(ManageDealWork::class)->propose($deal, $alice->user, $this->duty(['kind' => 'payment', 'obligor_party' => $p[$alice->id], 'beneficiary_party' => $p[$bob->id]]))));
+        $this->assertSame(422, $this->http(fn () => app(ManageDealWork::class)->propose($deal, $alice->user, $this->duty(['obligor_party' => $p[$alice->id], 'beneficiary_party' => $p[$alice->id]]))));
+        // In the Work tab each problem shows under its own field, in the person's language.
+        $this->panel($alice, $deal)->set('form', ['title' => '', 'obligor' => '', 'quantity' => 'x', 'unit_choice' => ''] + $form)->call('propose')->assertHasErrors(['form.title', 'form.obligor', 'form.quantity', 'form.unit_choice']);
+        $this->panel($alice, $deal)->set('form', ['cycles' => 3] + $form)->call('propose')->assertHasErrors(['form.starts_on']);
         $this->assertSame([], app(ManageDealWork::class)->pending($deal->fresh()));
         $this->assertSame(403, $this->http(fn () => app(ManageDealWork::class)->propose($deal, $this->account()->user, $this->duty(['obligor_party' => $p[$alice->id], 'beneficiary_party' => $p[$bob->id]]))));
 

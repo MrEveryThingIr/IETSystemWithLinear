@@ -2,13 +2,14 @@
 
 namespace App\Livewire\Deals;
 
+use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Deals\ManageDealWork;
 use App\Actions\Fulfillments\OpenFulfillmentDispute;
 use App\Actions\Fulfillments\ResolveFulfillmentDispute;
 use App\Actions\Fulfillments\ReviewFulfillment;
 use App\Actions\Fulfillments\SubmitFulfillment;
 use App\Actions\Planner\TransitionPlanOccurrence;
-use App\CommitmentKind;
+use App\FulfillmentDisputeStatus;
 use App\FulfillmentReviewDecision;
 use App\FulfillmentStatus;
 use App\Models\Commitment;
@@ -22,49 +23,94 @@ use App\Models\User;
 use App\PlanOccurrenceStatus;
 use App\Support\CommitmentProgress;
 use App\Support\Deals\AgreementTerms;
+use App\Support\Deals\DealErrors;
 use App\Support\Deals\DealParties;
+use App\Support\Deals\DealTerms;
+use App\Support\LocalizedNumber;
 use App\Support\QuantityAmount;
+use App\Support\TemporalPreferences;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use InvalidArgumentException;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * The Work tab of a Deal: the one place where an Agreement's duties are set up, performed, reported and confirmed.
- * It only drives the existing Commitment, Planner and Fulfillment actions; it owns no records of its own.
+ * The Work tab of a Deal: where the Agreement's duties are set up, work is reported and the receiver confirms it.
+ * It only drives the existing Commitment, Planner and Fulfillment actions; it owns no records of its own. Day-to-day
+ * talk, files and photos belong in the Deal's conversation; here only what is measured is tracked.
  */
 class WorkPanel extends Component
 {
+    use WithFileUploads;
+
+    /** Units a duty can be measured in: the same list the Agreement's price uses, so a price per unit matches its work. */
+    public const UNITS = ['item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer', 'square_metre', 'metre', 'cubic_metre', 'kilogram'];
+
     public Relationship $relationship;
 
-    /** @var array<string, mixed> */
+    /** @var array<string, mixed> setting up a duty */
     public array $form = [];
 
-    /** @var array<string, string> keyed by "<kind>-<id>" */
+    /** @var array<string, string> reporting measured work */
+    public array $report = [];
+
+    /** @var array<string, string> keyed by "<purpose>-<id>" */
     public array $text = [];
+
+    /** @var array<int, mixed> evidence files for the report being written */
+    public array $evidence = [];
 
     public function mount(Relationship $relationship): void
     {
         $this->relationship = $relationship;
         $this->resetForm();
+        $this->resetReport();
     }
 
     public function propose(ManageDealWork $work): void
     {
-        $this->guarded(function () use ($work): void {
-            $f = $this->form;
+        $this->resetErrorBag();
+        $f = $this->form;
+        $quantity = self::quantity((string) ($f['quantity'] ?? ''));
+        $unit = ($f['unit_choice'] ?? '') === '__other' ? trim((string) ($f['unit_custom'] ?? '')) : trim((string) ($f['unit_choice'] ?? ''));
+
+        if (trim((string) ($f['title'] ?? '')) === '' || mb_strlen((string) $f['title']) > 180) {
+            $this->addError('form.title', (string) __('deals.errors.work_title'));
+        }
+        if (($f['obligor'] ?? '') === '') {
+            $this->addError('form.obligor', (string) __('deals.work.choose_doer'));
+        }
+        if ($quantity === null) {
+            $this->addError('form.quantity', (string) __('deals.errors.report_quantity'));
+        }
+        if ($unit === '') {
+            $this->addError(($f['unit_choice'] ?? '') === '__other' ? 'form.unit_custom' : 'form.unit_choice', (string) __('deals.errors.work_unit'));
+        }
+        $cycles = max(1, (int) LocalizedNumber::digits((string) ($f['cycles'] ?? '1')));
+        if (($f['starts_on'] ?? '') === '' && $cycles > 1) {
+            $this->addError('form.starts_on', (string) __('deals.errors.work_start_required'));
+        }
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        $this->guarded(function () use ($work, $f, $quantity, $unit, $cycles): void {
+            $beneficiary = collect(array_keys($this->partyLabels()))->first(fn ($id) => (int) $id !== (int) $f['obligor']);
             $work->propose($this->relationship, $this->user(), [
-                'title' => (string) ($f['title'] ?? ''),
-                'kind' => (string) ($f['kind'] ?? 'work'),
-                'quantity' => (string) ($f['quantity'] ?? ''),
-                'unit' => (string) ($f['unit'] ?? ''),
-                'cycles' => (int) ($f['cycles'] ?? 1),
-                'obligor_party' => (int) ($f['obligor'] ?? 0),
-                'beneficiary_party' => (int) ($f['beneficiary'] ?? 0),
+                'title' => (string) $f['title'],
+                'kind' => 'work',
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'cycles' => $cycles,
+                'obligor_party' => (int) $f['obligor'],
+                'beneficiary_party' => (int) $beneficiary,
                 'starts_on' => (string) ($f['starts_on'] ?? ''),
-                'start_time' => (string) ($f['start_time'] ?? ''),
-                'duration' => (int) ($f['duration'] ?? 0),
+                'start_time' => (string) ($f['start_time'] ?? '09:00'),
+                'duration' => (int) ($f['duration'] ?? 60),
                 'every' => (int) ($f['every'] ?? 1),
                 'period' => (string) ($f['period'] ?? 'day'),
             ]);
@@ -82,7 +128,7 @@ class WorkPanel extends Component
         $this->guarded(fn () => $work->withdraw($this->relationship, $this->user(), $id));
     }
 
-    /** "I did this": the performer reports one cycle (or the whole one-time duty). Marking it done in the Planner is not enough on its own. */
+    /** Planned days: the performer reports one day. Marking it done in the Planner is not enough on its own. */
     public function report(int $commitmentId, ?string $occurrenceUuid, string $quantity, SubmitFulfillment $submit, TransitionPlanOccurrence $planner): void
     {
         $this->guarded(function () use ($commitmentId, $occurrenceUuid, $quantity, $submit, $planner): void {
@@ -103,22 +149,76 @@ class WorkPanel extends Component
         });
     }
 
+    /** Measured work: how much was done, in which period, with optional note and evidence. Nothing counts until the receiver confirms it. */
+    public function submitReport(SubmitFulfillment $submit, CreateContextAsset $assets, CommitmentProgress $progress): void
+    {
+        $this->resetErrorBag();
+        $r = $this->report;
+        $quantity = self::quantity((string) ($r['quantity'] ?? ''));
+        $commitment = ($r['commitment'] ?? '') !== '' ? $this->commitments()->find((int) $r['commitment']) : null;
+
+        if (! $commitment instanceof Commitment) {
+            $this->addError('report.commitment', (string) __('deals.errors.report_duty'));
+        }
+        if ($quantity === null) {
+            $this->addError('report.quantity', (string) __('deals.errors.report_quantity'));
+        }
+        $from = trim((string) ($r['from'] ?? ''));
+        $to = trim((string) ($r['to'] ?? '')) ?: $from;
+        if ($from !== '' && $to < $from) {
+            $this->addError('report.to', (string) __('deals.errors.report_period'));
+        }
+        // Reports waiting for a decision still use up the agreed quantity; the kernel only counts confirmed work.
+        if ($commitment instanceof Commitment && $quantity !== null && QuantityAmount::compare($quantity, $this->openQuantity($commitment, $progress)) > 0) {
+            $this->addError('report.quantity', (string) __('deals.errors.quantity_exceeds'));
+        }
+        if (count($this->evidence) > 5) {
+            $this->addError('evidence', (string) __('deals.errors.report_files'));
+        }
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        $this->guarded(function () use ($submit, $assets, $commitment, $quantity, $from, $to, $r): void {
+            Gate::forUser($this->user())->authorize('submit', $commitment);
+            $zone = TemporalPreferences::timezoneFor($this->user());
+            $start = $from !== '' ? CarbonImmutable::parse($from, $zone)->startOfDay() : null;
+            $end = $from !== '' ? CarbonImmutable::parse($to, $zone)->endOfDay() : null;
+
+            DB::transaction(function () use ($submit, $assets, $commitment, $quantity, $start, $end, $r): void {
+                $context = $commitment->contractVersion->contract->contextBinding?->context;
+                $assetIds = collect($this->evidence)->map(fn ($file) => $assets->execute($context, $this->user(), $file, 'owned')->id)->all();
+                $note = trim((string) ($r['note'] ?? ''));
+                $submit->execute($commitment, $this->user(), $quantity, actualStartAt: $start, actualEndAt: $end, notes: $note !== '' ? $note : null, assetIds: $assetIds);
+            });
+            $this->resetReport();
+        });
+    }
+
+    /** The receiver answers a report: confirm all of it, confirm part of it, ask a question, or not accept it. */
     public function review(int $fulfillmentId, string $decision, ReviewFulfillment $review): void
     {
         $this->guarded(function () use ($fulfillmentId, $decision, $review): void {
             $fulfillment = $this->fulfillment($fulfillmentId);
             $note = trim($this->text['review-'.$fulfillmentId] ?? '');
-            $review->execute($fulfillment, $this->user(), FulfillmentReviewDecision::from($decision), $note !== '' ? $note : null);
+            $confirmed = trim($this->text['confirm-'.$fulfillmentId] ?? '');
+            $parsed = $confirmed === '' ? null : self::quantity($confirmed);
+            if ($confirmed !== '' && $parsed === null) {
+                $this->addError('text.confirm-'.$fulfillmentId, (string) __('deals.errors.report_quantity'));
+
+                return;
+            }
+            $review->execute($fulfillment, $this->user(), FulfillmentReviewDecision::from($decision), $note !== '' ? $note : null, $decision === 'accepted' ? $parsed : null);
         });
     }
 
-    /** After "ask for clarification" or "not accepted", the performer sends a corrected report for the same cycle. */
+    /** After a question or a refusal, the performer sends a corrected report for the same work. */
     public function correct(int $fulfillmentId, string $quantity, SubmitFulfillment $submit): void
     {
         $this->guarded(function () use ($fulfillmentId, $quantity, $submit): void {
             $fulfillment = $this->fulfillment($fulfillmentId);
             $note = trim($this->text['notes-fix-'.$fulfillmentId] ?? '');
-            $submit->execute($fulfillment->commitment, $this->user(), $quantity, occurrence: $fulfillment->occurrence, notes: $note !== '' ? $note : null, corrects: $fulfillment);
+            $submit->execute($fulfillment->commitment, $this->user(), $quantity, occurrence: $fulfillment->occurrence, actualStartAt: $fulfillment->occurrence === null ? $fulfillment->actual_start_at : null, actualEndAt: $fulfillment->occurrence === null ? $fulfillment->actual_end_at : null, notes: $note !== '' ? $note : null, corrects: $fulfillment);
         });
     }
 
@@ -140,9 +240,7 @@ class WorkPanel extends Component
         $this->relationship->refresh(); // actions work on their own locked copy
         $version = $this->version();
         $mine = $version instanceof ContractVersion ? DealParties::representedBy($version->parties, $this->user())->pluck('id')->all() : [];
-        $actorOf = fn (ContractVersionParty $party): string => $party->business->name ?? $party->group->name ?? $party->actor->user->username ?? '';
-        $labels = $version instanceof ContractVersion ? $version->parties->mapWithKeys(fn ($p) => [$p->id => $actorOf($p)])->all() : [];
-
+        $labels = $this->partyLabels();
         $activeId = $version instanceof ContractVersion ? (int) $version->id : null;
 
         $pending = collect($work->pending($this->relationship))->map(fn (array $i) => $i + [
@@ -153,7 +251,7 @@ class WorkPanel extends Component
             'stale' => $activeId !== $i['version_id'],
         ]);
 
-        $duties = $this->commitments()->with(['obligor.user', 'beneficiary.user', 'contractVersion.contract.sourceProposalVersion', 'planBinding.plan.occurrences', 'fulfillments.review', 'fulfillments.dispute', 'fulfillments.occurrence'])->orderBy('id')->get()
+        $duties = $this->commitments()->with(['obligor.user', 'beneficiary.user', 'contractVersion.contract.contextBinding.context', 'contractVersion.contract.sourceProposalVersion', 'planBinding.plan.occurrences', 'fulfillments.review', 'fulfillments.dispute', 'fulfillments.occurrence', 'fulfillments.assets'])->orderBy('id')->get()
             ->map(fn (Commitment $c) => $this->duty($c, $progress));
 
         return view('livewire.deals.work-panel', [
@@ -162,7 +260,8 @@ class WorkPanel extends Component
             'mine' => $mine,
             'pending' => $pending,
             'duties' => $duties,
-            'kinds' => array_values(array_filter(CommitmentKind::cases(), fn ($k) => $k !== CommitmentKind::Payment)),
+            'reportable' => $duties->filter(fn ($d) => $d['isObligor'] && ! $d['planned'] && QuantityAmount::compare($d['remaining'], '0') > 0)->values(),
+            'units' => self::UNITS,
             'user' => $this->user(),
         ]);
     }
@@ -174,22 +273,79 @@ class WorkPanel extends Component
         $terms = AgreementTerms::of($c->contractVersion);
         $verifier = $terms['completion']['confirmed_by'] ?? 'beneficiary';
         $occurrences = $c->planBinding?->plan->occurrences->sortBy('scheduled_start_at')->values() ?? collect();
-        $perCycle = $occurrences->isNotEmpty() ? QuantityAmount::fromScaledInt(intdiv(QuantityAmount::toScaledInt($c->quantity), $occurrences->count())) : QuantityAmount::subtractFloorZero($c->quantity, $progress->acceptedQuantity($c));
+        $accepted = $progress->acceptedQuantity($c);
+        $perCycle = $occurrences->isNotEmpty() ? QuantityAmount::fromScaledInt(intdiv(QuantityAmount::toScaledInt($c->quantity), $occurrences->count())) : QuantityAmount::subtractFloorZero($c->quantity, $accepted);
         $live = fn (?int $occId) => $c->fulfillments->where('plan_occurrence_id', $occId)->where('status', '!=', FulfillmentStatus::Corrected)->sortByDesc('id')->first();
+        $planned = $occurrences->isNotEmpty();
 
-        $rows = $occurrences->isNotEmpty()
+        $rows = $planned
             ? $occurrences->map(fn (PlanOccurrence $o) => ['occurrence' => $o, 'fulfillment' => $live($o->id)])
-            : collect([['occurrence' => null, 'fulfillment' => $c->fulfillments->where('status', '!=', FulfillmentStatus::Corrected)->sortByDesc('id')->first()]]);
+            : collect();
 
         return [
             'commitment' => $c,
             'verifier' => $verifier,
             'perCycle' => $perCycle,
-            'accepted' => $progress->acceptedQuantity($c),
+            'accepted' => $accepted,
+            'remaining' => $this->openQuantity($c, $progress),
+            'planned' => $planned,
             'rows' => $rows,
+            'reports' => $planned ? collect() : $c->fulfillments->where('status', '!=', FulfillmentStatus::Corrected)->sortByDesc('id')->values(),
             'isObligor' => Gate::forUser($user)->allows('submit', $c),
-            'verified_by_receiver' => $verifier !== 'none',
+            'unit' => DealTerms::basisLabel($c->unit) ?? $c->unit,
         ];
+    }
+
+    /** Quantity still open to report: what is agreed, less what is confirmed and what is waiting for the receiver. */
+    private function openQuantity(Commitment $c, CommitmentProgress $progress): string
+    {
+        $waiting = $c->fulfillments()->whereIn('status', [FulfillmentStatus::Submitted->value, FulfillmentStatus::ClarificationRequested->value])->get(['quantity'])
+            ->reduce(fn (string $sum, Fulfillment $f) => QuantityAmount::add($sum, (string) $f->quantity), QuantityAmount::normalize('0'));
+
+        return QuantityAmount::subtractFloorZero(QuantityAmount::subtractFloorZero($c->quantity, $progress->acceptedQuantity($c)), $waiting);
+    }
+
+    /** What a report is called: reported, partly accepted, accepted, questioned, not accepted or in dispute. */
+    public static function stateOf(?Fulfillment $f, string $verifier): string
+    {
+        if ($f === null) {
+            return 'open';
+        }
+        if ($f->dispute !== null && $f->dispute->status === FulfillmentDisputeStatus::Open) {
+            return 'disputed';
+        }
+
+        return match ($f->status) {
+            FulfillmentStatus::Accepted => $f->isPartlyAccepted() ? 'partly_accepted' : 'accepted',
+            FulfillmentStatus::ClarificationRequested => 'questioned',
+            FulfillmentStatus::Rejected => 'not_accepted',
+            FulfillmentStatus::Submitted => $verifier === 'none' ? 'reported_final' : 'reported',
+            default => $f->status->value,
+        };
+    }
+
+    /** Whole or decimal quantity in any digits and separators, or null when it is not a positive number. */
+    private static function quantity(string $value): ?string
+    {
+        $clean = (string) preg_replace('/[\s,٬،]/u', '', LocalizedNumber::digits(trim($value)));
+        if (preg_match('/^\d{1,14}(?:\.\d{1,4})?$/', $clean) !== 1) {
+            return null;
+        }
+        try {
+            return QuantityAmount::positive($clean);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
+    }
+
+    /** @return array<int, string> party row id => name, for the Agreement in force */
+    private function partyLabels(): array
+    {
+        $version = $this->version();
+
+        return $version instanceof ContractVersion
+            ? $version->parties->mapWithKeys(fn ($p) => [$p->id => $p->business->name ?? $p->group->name ?? $p->actor->user->username ?? ''])->all()
+            : [];
     }
 
     /** Party names of a proposal made under an earlier version come from that version's own party rows. */
@@ -227,7 +383,21 @@ class WorkPanel extends Component
 
     private function resetForm(): void
     {
-        $this->form = ['title' => '', 'kind' => 'work', 'quantity' => '1', 'unit' => '', 'cycles' => 1, 'obligor' => '', 'beneficiary' => '', 'starts_on' => '', 'start_time' => '09:00', 'duration' => 60, 'every' => 1, 'period' => 'day'];
+        // Start from what the Agreement already says about quantity and unit, so people confirm instead of retyping.
+        $terms = ($version = $this->version()) instanceof ContractVersion ? AgreementTerms::of($version) : null;
+        $unit = (string) ($terms['quantity']['unit'] ?? ($terms['price']['basis'] ?? ''));
+        $known = in_array($unit, self::UNITS, true);
+        $this->form = [
+            'title' => '', 'obligor' => '', 'quantity' => (string) ($terms['quantity']['value'] ?? '1'),
+            'unit_choice' => $known ? $unit : ($unit !== '' && $unit !== 'total' ? '__other' : ''), 'unit_custom' => $known || $unit === 'total' ? '' : $unit,
+            'cycles' => 1, 'starts_on' => '', 'start_time' => '09:00', 'duration' => 60, 'every' => 1, 'period' => 'day',
+        ];
+    }
+
+    private function resetReport(): void
+    {
+        $this->report = ['commitment' => '', 'quantity' => '', 'from' => '', 'to' => '', 'note' => ''];
+        $this->evidence = [];
     }
 
     private function guarded(callable $call): void
@@ -237,9 +407,11 @@ class WorkPanel extends Component
             $call();
         } catch (HttpException $e) {
             abort_if(in_array($e->getStatusCode(), [403, 404], true), $e->getStatusCode());
-            $this->addError('work', $e->getMessage() !== '' ? $e->getMessage() : __('deals.work.failed'));
-        } catch (\InvalidArgumentException $e) {
-            $this->addError('work', $e->getMessage());
+            report($e);
+            $this->addError('work', DealErrors::localize($e->getMessage()));
+        } catch (InvalidArgumentException $e) {
+            report($e);
+            $this->addError('work', (string) __('deals.errors.generic'));
         }
     }
 

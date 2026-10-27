@@ -1,3 +1,4 @@
+@php($tz = \App\Support\TemporalPreferences::timezoneFor($user))
 <div class="space-y-3" data-work-panel>
     <flux:card class="space-y-3">
         <flux:heading>{{ __('deals.tabs.work') }}</flux:heading>
@@ -11,7 +12,7 @@
                 @foreach ($pending as $item)
                     <div wire:key="pending-{{ $item['id'] }}" class="rounded-xl border border-dashed border-zinc-300 p-3 text-sm dark:border-zinc-600">
                         <div class="font-medium" dir="auto">{{ $item['title'] }}</div>
-                        <div class="text-xs text-zinc-500" dir="auto">{{ __('deals.work.who_for', ['obligor' => $item['obligor_name'], 'beneficiary' => $item['beneficiary_name']]) }} · {{ $item['quantity'] + 0 }} {{ $item['unit'] }}@if ($item['cycles'] > 1) × {{ $item['cycles'] }}@endif</div>
+                        <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $item['obligor_name'], 'beneficiary' => $item['beneficiary_name']]) }} · {{ $item['quantity'] + 0 }} {{ \App\Support\Deals\DealTerms::basisLabel($item['unit']) ?? $item['unit'] }}@if ($item['cycles'] > 1) × {{ $item['cycles'] }}@endif</div>
                         @if ($item['stale'])<p class="mt-1 text-xs text-amber-600">{{ __('deals.work.stale') }}</p>@endif
                         <div class="mt-2 flex flex-wrap gap-2">
                             @if ($item['can_confirm'])<flux:button size="sm" variant="primary" wire:click="confirm('{{ $item['id'] }}')" wire:loading.attr="disabled" wire:target="confirm">{{ __('deals.work.confirm') }}</flux:button>@endif
@@ -31,83 +32,56 @@
                     <span class="font-medium" dir="auto">{{ $c->title }}</span>
                     <flux:badge size="sm" color="zinc">{{ __('deals.work.confirmed_by.'.$d['verifier']) }}</flux:badge>
                 </div>
-                <div class="text-xs text-zinc-500" dir="auto">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · {{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $c->unit]) }}</div>
-                <ul class="space-y-2">
-                    @foreach ($d['rows'] as $row)
-                        @php($o = $row['occurrence'])
-                        @php($f = $row['fulfillment'])
-                        @php($key = $c->id.'-'.($o?->uuid ?? 'once'))
-                        @php($occArg = $o ? "'".$o->uuid."'" : 'null')
-                        <li wire:key="cycle-{{ $key }}" class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900" data-cycle>
+                <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · {{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $d['unit']]) }}</div>
+
+                {{-- Planned days (an optional schedule): one row per day --}}
+                @if ($d['planned'])
+                    <ul class="space-y-2">
+                        @foreach ($d['rows'] as $row)
+                            @php($o = $row['occurrence'])
+                            @php($f = $row['fulfillment'])
+                            @php($key = $c->id.'-'.$o->uuid)
+                            @php($state = \App\Livewire\Deals\WorkPanel::stateOf($f, $d['verifier']))
+                            <li wire:key="cycle-{{ $key }}" class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900" data-cycle>
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span>@if ($o->scheduled_start_at)<x-app.local-datetime :value="$o->scheduled_start_at" />@endif</span>
+                                    <flux:badge size="sm" :color="in_array($state, ['accepted', 'reported_final'], true) ? 'green' : (in_array($state, ['disputed', 'not_accepted'], true) ? 'red' : 'zinc')" data-cycle-state="{{ $state }}">{{ __('deals.work.state.'.$state) }}</flux:badge>
+                                </div>
+                                @if ($f)
+                                    <div class="mt-1 text-xs text-zinc-500" dir="auto">{{ __('deals.work.reported', ['qty' => $f->quantity + 0, 'unit' => $d['unit']]) }}@if ($f->isPartlyAccepted()) · {{ __('deals.work.confirmed_part', ['qty' => $f->confirmedQuantity() + 0]) }}@endif @if ($f->notes) — {{ $f->notes }}@endif @if ($f->review?->note) · {{ $f->review->note }}@endif</div>
+                                @endif
+                                @if ($f === null && $d['isObligor'])
+                                    <div class="mt-2 flex flex-wrap items-end gap-2">
+                                        <flux:input size="sm" inputmode="decimal" wire:model="text.qty-{{ $key }}" :label="__('deals.work.quantity')" placeholder="{{ $d['perCycle'] + 0 }}" class="max-w-28" />
+                                        <flux:input size="sm" wire:model="text.notes-{{ $key }}" :label="__('deals.work.notes')" maxlength="500" />
+                                        <flux:button size="sm" variant="primary" wire:click="report({{ $c->id }}, '{{ $o->uuid }}', $wire.text['qty-{{ $key }}'] || '{{ $d['perCycle'] + 0 }}')" wire:loading.attr="disabled" wire:target="report">{{ __('deals.work.report_day') }}</flux:button>
+                                    </div>
+                                @endif
+                                @if ($f)@include('livewire.deals.partials.report-actions', ['f' => $f, 'verifier' => $d['verifier']])@endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    {{-- Measured work: each report is one entry; the receiver decides each --}}
+                    @forelse ($d['reports'] as $f)
+                        @php($state = \App\Livewire\Deals\WorkPanel::stateOf($f, $d['verifier']))
+                        <div wire:key="report-{{ $f->id }}" class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900" data-report>
                             <div class="flex flex-wrap items-center justify-between gap-2">
-                                <span>@if ($o && $o->scheduled_start_at)<x-app.local-datetime :value="$o->scheduled_start_at" />@elseif ($o){{ __('deals.work.whole_duty') }}@else{{ __('deals.work.whole_duty') }}@endif</span>
-                                @php($state = match (true) {
-                                    $f === null => 'open',
-                                    $f->dispute && $f->dispute->status === \App\FulfillmentDisputeStatus::Open => 'disputed',
-                                    $f->status === \App\FulfillmentStatus::Accepted && \App\Support\QuantityAmount::compare($f->quantity, $d['perCycle']) < 0 && $o => 'partly',
-                                    $f->status === \App\FulfillmentStatus::Accepted => 'confirmed',
-                                    $f->status === \App\FulfillmentStatus::Submitted && $d['verifier'] === 'none' => 'reported_final',
-                                    default => $f->status->value,
-                                })
-                                <flux:badge size="sm" :color="in_array($state, ['confirmed', 'reported_final'], true) ? 'green' : (in_array($state, ['disputed', 'rejected'], true) ? 'red' : 'zinc')" data-cycle-state="{{ $state }}">{{ __('deals.work.state.'.$state) }}</flux:badge>
+                                <span class="font-medium">{{ __('deals.work.reported', ['qty' => $f->quantity + 0, 'unit' => $d['unit']]) }}</span>
+                                <flux:badge size="sm" :color="in_array($state, ['accepted', 'partly_accepted', 'reported_final'], true) ? 'green' : (in_array($state, ['disputed', 'not_accepted'], true) ? 'red' : 'zinc')" data-cycle-state="{{ $state }}">{{ __('deals.work.state.'.$state) }}</flux:badge>
                             </div>
-
-                            @if ($f)
-                                <div class="mt-1 text-xs text-zinc-500" dir="auto">{{ __('deals.work.reported', ['qty' => $f->quantity + 0, 'unit' => $f->unit]) }}@if ($f->notes) — {{ $f->notes }}@endif @if ($f->review?->note) · {{ $f->review->note }}@endif</div>
-                            @endif
-
-                            {{-- The performer reports. Marking it done in the Planner alone never counts. --}}
-                            @if (($f === null) && $d['isObligor'])
-                                <div class="mt-2 flex flex-wrap items-end gap-2">
-                                    <flux:input size="sm" inputmode="decimal" wire:model="text.qty-{{ $key }}" :label="__('deals.work.quantity')" placeholder="{{ $d['perCycle'] + 0 }}" class="max-w-28" />
-                                    <flux:input size="sm" wire:model="text.notes-{{ $key }}" :label="__('deals.work.notes')" maxlength="500" />
-                                    <flux:button size="sm" variant="primary" wire:click="report({{ $c->id }}, {!! $occArg !!}, $wire.text['qty-{{ $key }}'] || '{{ $d['perCycle'] + 0 }}')" wire:loading.attr="disabled" wire:target="report">{{ __('deals.work.report') }}</flux:button>
-                                </div>
-                            @endif
-
-                            {{-- The receiver (verifier) answers --}}
-                            @if ($f && $f->status === \App\FulfillmentStatus::Submitted && Gate::forUser($user)->allows('review', $f))
-                                <div class="mt-2 space-y-2">
-                                    <flux:input size="sm" wire:model="text.review-{{ $f->id }}" :label="__('deals.work.review_note')" maxlength="500" />
-                                    <div class="flex flex-wrap gap-2">
-                                        <flux:button size="sm" variant="primary" wire:click="review({{ $f->id }}, 'accepted')">{{ __('deals.work.accept') }}</flux:button>
-                                        <flux:button size="sm" wire:click="review({{ $f->id }}, 'clarification_requested')">{{ __('deals.work.ask') }}</flux:button>
-                                        <flux:button size="sm" variant="danger" wire:click="review({{ $f->id }}, 'rejected')">{{ __('deals.work.reject') }}</flux:button>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- The performer corrects after a question or a rejection --}}
-                            @if ($f && Gate::forUser($user)->allows('correct', $f))
-                                <div class="mt-2 flex flex-wrap items-end gap-2">
-                                    <flux:input size="sm" inputmode="decimal" wire:model="text.qty-fix-{{ $f->id }}" :label="__('deals.work.quantity')" placeholder="{{ $f->quantity + 0 }}" class="max-w-28" />
-                                    <flux:input size="sm" wire:model="text.notes-fix-{{ $f->id }}" :label="__('deals.work.notes')" maxlength="500" />
-                                    <flux:button size="sm" wire:click="correct({{ $f->id }}, $wire.text['qty-fix-{{ $f->id }}'] || '{{ $f->quantity + 0 }}')">{{ __('deals.work.send_correction') }}</flux:button>
-                                </div>
-                            @endif
-
-                            {{-- Either side may dispute a decided report; the other side resolves --}}
-                            @if ($f && Gate::forUser($user)->allows('openDispute', $f))
-                                <details class="mt-2"><summary class="cursor-pointer text-xs text-zinc-500">{{ __('deals.work.dispute') }}</summary>
-                                    <div class="mt-1 flex flex-wrap items-end gap-2">
-                                        <flux:input size="sm" wire:model="text.dispute-{{ $f->id }}" :label="__('deals.work.dispute_reason')" maxlength="500" />
-                                        <flux:button size="sm" variant="danger" wire:click="dispute({{ $f->id }})">{{ __('deals.work.dispute_open') }}</flux:button>
-                                    </div>
-                                </details>
-                            @endif
-                            @if ($f?->dispute && Gate::forUser($user)->allows('resolve', $f->dispute))
-                                <div class="mt-2 space-y-2">
-                                    <p class="text-xs" dir="auto">{{ $f->dispute->reason }}</p>
-                                    <flux:input size="sm" wire:model="text.resolve-{{ $f->dispute->id }}" :label="__('deals.work.review_note')" maxlength="500" />
-                                    <div class="flex flex-wrap gap-2">
-                                        <flux:button size="sm" wire:click="resolve({{ $f->dispute->id }}, 'accepted')">{{ __('deals.work.resolve_accept') }}</flux:button>
-                                        <flux:button size="sm" wire:click="resolve({{ $f->dispute->id }}, 'rejected')">{{ __('deals.work.resolve_reject') }}</flux:button>
-                                    </div>
-                                </div>
-                            @endif
-                        </li>
-                    @endforeach
-                </ul>
+                            <div class="mt-1 text-xs text-zinc-500" dir="auto">
+                                @if ($f->actual_start_at){{ \App\Support\TemporalCalendar::dateLabel($f->actual_start_at, $user, $tz) }}@if ($f->actual_end_at && \App\Support\TemporalCalendar::dateLabel($f->actual_end_at, $user, $tz) !== \App\Support\TemporalCalendar::dateLabel($f->actual_start_at, $user, $tz)) – {{ \App\Support\TemporalCalendar::dateLabel($f->actual_end_at, $user, $tz) }}@endif · @endif
+                                @if ($f->isPartlyAccepted()){{ __('deals.work.confirmed_part', ['qty' => $f->confirmedQuantity() + 0]) }} · @endif
+                                @if ($f->notes){{ $f->notes }}@endif @if ($f->review?->note) · {{ $f->review->note }}@endif
+                                @if ($f->assets->isNotEmpty()) · {{ trans_choice('deals.work.files', $f->assets->count(), ['count' => $f->assets->count()]) }}: {{ $f->assets->pluck('original_filename')->implode(', ') }}@endif
+                            </div>
+                            @include('livewire.deals.partials.report-actions', ['f' => $f, 'verifier' => $d['verifier']])
+                        </div>
+                    @empty
+                        <p class="text-xs text-zinc-500">{{ __('deals.work.no_reports') }}</p>
+                    @endforelse
+                @endif
             </div>
         @endforeach
 
@@ -116,6 +90,34 @@
         @endif
     </flux:card>
 
+    {{-- Report measured work --}}
+    @if ($reportable->isNotEmpty())
+        <flux:card class="space-y-3" data-work-report-form>
+            <flux:heading size="sm">{{ __('deals.work.report_title') }}</flux:heading>
+            <p class="text-xs text-zinc-500">{{ __('deals.work.report_hint') }}</p>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <flux:select wire:model="report.commitment" :label="__('deals.work.which_duty')" data-report-duty>
+                    <option value="">—</option>
+                    @foreach ($reportable as $d)<option value="{{ $d['commitment']->id }}">{{ $d['commitment']->title }} ({{ __('deals.work.open_quantity', ['qty' => $d['remaining'] + 0, 'unit' => $d['unit']]) }})</option>@endforeach
+                </flux:select>
+                <flux:input inputmode="decimal" wire:model="report.quantity" :label="__('deals.work.quantity_reported')" data-report-quantity />
+                <x-app.calendar-date-input model="report.from" :label="__('deals.work.period_from')" />
+                <x-app.calendar-date-input model="report.to" :label="__('deals.work.period_to')" />
+            </div>
+            <flux:input wire:model="report.note" :label="__('deals.work.notes')" maxlength="500" />
+            <div>
+                <flux:input type="file" wire:model="evidence" multiple accept="image/*,application/pdf" :label="__('deals.work.evidence')" />
+                <div wire:loading wire:target="evidence" class="text-xs text-zinc-500">{{ __('deals.work.uploading') }}</div>
+                @error('evidence')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+                <p class="text-xs text-zinc-500">{{ __('deals.work.evidence_hint') }}</p>
+            </div>
+            <flux:button variant="primary" wire:click="submitReport" wire:loading.attr="disabled" wire:target="submitReport,evidence" data-report-submit>
+                <span wire:loading.remove wire:target="submitReport">{{ __('deals.work.report') }}</span>
+                <span wire:loading wire:target="submitReport">{{ __('deals.work.sending') }}</span>
+            </flux:button>
+        </flux:card>
+    @endif
+
     {{-- Set up a duty from the Agreement in force --}}
     @if ($version && count($mine) > 0)
         <flux:card class="space-y-3" data-work-form>
@@ -123,30 +125,27 @@
             <flux:input wire:model="form.title" :label="__('deals.work.title')" maxlength="180" />
             <div class="grid gap-3 sm:grid-cols-2">
                 <flux:select wire:model="form.obligor" :label="__('deals.work.doer')">
-                    <flux:select.option value="">—</flux:select.option>
-                    @foreach ($labels as $id => $name)<flux:select.option value="{{ $id }}">{{ $name }}</flux:select.option>@endforeach
+                    <option value="">—</option>
+                    @foreach ($labels as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach
                 </flux:select>
-                <flux:select wire:model="form.beneficiary" :label="__('deals.work.receiver')">
-                    <flux:select.option value="">—</flux:select.option>
-                    @foreach ($labels as $id => $name)<flux:select.option value="{{ $id }}">{{ $name }}</flux:select.option>@endforeach
+                <flux:input inputmode="decimal" wire:model="form.quantity" :label="__('deals.work.agreed_quantity')" />
+                <flux:select wire:model.live="form.unit_choice" :label="__('deals.work.unit')">
+                    <option value="">—</option>
+                    @foreach ($units as $u)<option value="{{ $u }}">{{ __('deals.bases.'.$u) }}</option>@endforeach
+                    <option value="__other">{{ __('deals.bases.other') }}</option>
                 </flux:select>
-                <flux:input inputmode="decimal" wire:model="form.quantity" :label="__('deals.work.quantity_each')" />
-                <flux:input wire:model="form.unit" :label="__('deals.work.unit')" maxlength="40" list="deal-price-units" />
-                <datalist id="deal-price-units">@foreach (\App\Support\Deals\DealMoney::UNITS as $u)<option value="{{ $u }}">@endforeach</datalist>
-                <flux:select wire:model="form.kind" :label="__('deals.work.kind')">
-                    @foreach ($kinds as $kind)<flux:select.option value="{{ $kind->value }}">{{ __('commitments.kind.'.$kind->value) }}</flux:select.option>@endforeach
-                </flux:select>
-                <flux:input type="number" min="1" max="366" wire:model="form.cycles" :label="__('deals.work.cycles')" />
+                @if (($form['unit_choice'] ?? '') === '__other')<flux:input wire:model="form.unit_custom" :label="__('deals.work.unit_custom')" maxlength="40" />@endif
             </div>
             <details>
                 <summary class="cursor-pointer text-sm text-zinc-500">{{ __('deals.work.schedule') }}</summary>
                 <div class="mt-2 grid gap-3 sm:grid-cols-2">
+                    <flux:input inputmode="numeric" wire:model="form.cycles" :label="__('deals.work.cycles')" />
                     <x-app.calendar-date-input model="form.starts_on" :label="__('deals.work.starts_on')" />
                     <flux:input type="time" wire:model="form.start_time" :label="__('deals.work.start_time')" />
-                    <flux:input type="number" min="1" wire:model="form.duration" :label="__('deals.work.duration')" />
-                    <flux:input type="number" min="1" wire:model="form.every" :label="__('deals.work.every')" />
+                    <flux:input inputmode="numeric" wire:model="form.duration" :label="__('deals.work.duration')" />
+                    <flux:input inputmode="numeric" wire:model="form.every" :label="__('deals.work.every')" />
                     <flux:select wire:model="form.period" :label="__('deals.work.period')">
-                        @foreach (['day', 'week', 'month'] as $p)<flux:select.option value="{{ $p }}">{{ __('deals.work.periods.'.$p) }}</flux:select.option>@endforeach
+                        @foreach (['day', 'week', 'month'] as $p)<option value="{{ $p }}">{{ __('deals.work.periods.'.$p) }}</option>@endforeach
                     </flux:select>
                 </div>
             </details>

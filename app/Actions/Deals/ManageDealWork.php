@@ -41,28 +41,28 @@ class ManageDealWork
             $obligor = $this->party($version, (int) $input['obligor_party']);
             $beneficiary = $this->party($version, (int) $input['beneficiary_party']);
 
-            abort_if($obligor->is($beneficiary), 422, 'The person doing the work and the person receiving it must be different.');
+            abort_if($obligor->is($beneficiary), 422, (string) __('deals.errors.work_same_party'));
             $mine = DealParties::representedBy($version->parties, $user, fresh: true);
             abort_unless($mine->contains(fn ($p) => $p->is($obligor) || $p->is($beneficiary)), 403);
 
             $title = Str::squish((string) $input['title']);
-            abort_if($title === '' || mb_strlen($title) > 180, 422, 'The duty needs a short title.');
+            abort_if($title === '' || mb_strlen($title) > 180, 422, (string) __('deals.errors.work_title'));
             $kind = CommitmentKind::from((string) $input['kind']);
-            abort_if($kind === CommitmentKind::Payment, 422, 'Money is not set up here.');
+            abort_if($kind === CommitmentKind::Payment, 422, (string) __('deals.errors.work_kind'));
             $cycles = (int) $input['cycles'];
-            abort_unless($cycles >= 1 && $cycles <= 366, 422, 'Cycles must be between 1 and 366.');
+            abort_unless($cycles >= 1 && $cycles <= 366, 422, (string) __('deals.errors.work_cycles'));
             $unit = Str::squish((string) $input['unit']);
-            abort_if($unit === '' || mb_strlen($unit) > 40, 422, 'The duty needs a unit.');
+            abort_if($unit === '' || mb_strlen($unit) > 40, 422, (string) __('deals.errors.work_unit'));
             $perCycle = QuantityAmount::positive($input['quantity']);
             $startsOn = ($input['starts_on'] ?? '') !== '' ? (string) $input['starts_on'] : null;
-            abort_if($cycles > 1 && $startsOn === null, 422, 'Repeated work needs a start date.');
+            abort_if($cycles > 1 && $startsOn === null, 422, (string) __('deals.errors.work_start_required'));
             if ($startsOn !== null) {
-                abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $startsOn) === 1 && strtotime($startsOn) !== false, 422, 'The start date is not valid.');
-                abort_unless(preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) ($input['start_time'] ?? '')) === 1, 422, 'The start time is not valid.');
-                abort_unless((int) ($input['duration'] ?? 0) >= 1 && (int) $input['duration'] <= 10080, 422, 'The duration is not valid.');
+                abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $startsOn) === 1 && strtotime($startsOn) !== false, 422, (string) __('deals.errors.work_start_invalid'));
+                abort_unless(preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) ($input['start_time'] ?? '')) === 1, 422, (string) __('deals.errors.work_time_invalid'));
+                abort_unless((int) ($input['duration'] ?? 0) >= 1 && (int) $input['duration'] <= 10080, 422, (string) __('deals.errors.work_duration_invalid'));
             }
             $period = (string) ($input['period'] ?? 'day');
-            abort_unless(in_array($period, ['day', 'week', 'month'], true), 422, 'Work can repeat daily, weekly or monthly.');
+            abort_unless(in_array($period, ['day', 'week', 'month'], true), 422, (string) __('deals.errors.work_period'));
 
             $item = [
                 'id' => (string) Str::uuid(),
@@ -199,8 +199,8 @@ class ManageDealWork
     {
         $contract = $deal->contracts()->latest('id')->first();
         $version = $contract?->activeVersionRecord();
-        abort_if($version === null, 422, 'There is no agreement in force to plan work from.');
-        abort_if($expected !== null && $expected !== (int) $version->id, 422, 'The agreement changed after this was proposed. Propose the work again.');
+        abort_if($version === null, 422, (string) __('deals.errors.no_agreement'));
+        abort_if($expected !== null && $expected !== (int) $version->id, 422, (string) __('deals.errors.work_stale'));
         $version->loadMissing('contract', 'parties.actor.user');
 
         return $version;
@@ -209,7 +209,7 @@ class ManageDealWork
     private function party(ContractVersion $version, int $id): ContractVersionParty
     {
         $party = $version->parties->firstWhere('id', $id);
-        abort_if($party === null, 422, 'That party is not part of this agreement.');
+        abort_if($party === null, 422, (string) __('deals.errors.work_party'));
 
         return $party;
     }
