@@ -40,7 +40,7 @@
                         @php($occArg = $o ? "'".$o->uuid."'" : 'null')
                         <li wire:key="cycle-{{ $key }}" class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900" data-cycle>
                             <div class="flex flex-wrap items-center justify-between gap-2">
-                                <span>@if ($o){{ $o->scheduled_start_at?->timezone(\App\Support\TemporalPreferences::timezoneFor($user))->format('Y-m-d H:i') }}@else{{ __('deals.work.whole_duty') }}@endif</span>
+                                <span>@if ($o && $o->scheduled_start_at)<x-app.local-datetime :value="$o->scheduled_start_at" />@elseif ($o){{ __('deals.work.whole_duty') }}@else{{ __('deals.work.whole_duty') }}@endif</span>
                                 @php($state = match (true) {
                                     $f === null => 'open',
                                     $f->dispute && $f->dispute->status === \App\FulfillmentDisputeStatus::Open => 'disputed',
@@ -140,7 +140,7 @@
             <details>
                 <summary class="cursor-pointer text-sm text-zinc-500">{{ __('deals.work.schedule') }}</summary>
                 <div class="mt-2 grid gap-3 sm:grid-cols-2">
-                    <flux:input type="date" wire:model="form.starts_on" :label="__('deals.work.starts_on')" />
+                    <x-app.calendar-date-input model="form.starts_on" :label="__('deals.work.starts_on')" />
                     <flux:input type="time" wire:model="form.start_time" :label="__('deals.work.start_time')" />
                     <flux:input type="number" min="1" wire:model="form.duration" :label="__('deals.work.duration')" />
                     <flux:input type="number" min="1" wire:model="form.every" :label="__('deals.work.every')" />
