@@ -11,9 +11,11 @@ use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Relationship;
 use App\Models\User;
+use App\Support\Bookkeeping\Toman;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementDrafter;
 use App\Support\Deals\AgreementTerms;
+use App\Support\Deals\DealDraftValidator;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealPrincipals;
 use App\Support\Deals\DealTerms;
@@ -25,6 +27,7 @@ use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -249,6 +252,21 @@ class AgreementComposer extends Component
         $this->draft['fields'] = array_values($this->draft['fields']);
     }
 
+    /** The price as it will be read ("3,000,000 Toman / square metre"), so the amount typed is never ambiguous. */
+    public function priceHint(): string
+    {
+        $core = $this->draft['core'] ?? [];
+        try {
+            $min = trim((string) ($core['price_min'] ?? '')) === '' ? null : (string) Toman::parse($core['price_min']);
+            $max = ($core['price_mode'] ?? 'fixed') === 'range' && trim((string) ($core['price_max'] ?? '')) !== '' ? (string) Toman::parse($core['price_max']) : $min;
+        } catch (ValidationException) {
+            return '';
+        }
+        $basis = ($core['basis_choice'] ?? '') === '__other' ? ($core['basis_custom'] ?? '') : ($core['basis_choice'] ?? '');
+
+        return $min === null ? '' : DealTerms::priceLabel(['min' => $min, 'max' => $max, 'currency' => 'IRT', 'basis' => $basis]);
+    }
+
     /** Creates the next immutable version for review. The drafter's own acceptance is recorded by the existing action. */
     public function send(ProposeDealTerms $propose): void
     {
@@ -258,23 +276,17 @@ class AgreementComposer extends Component
             return;
         }
 
-        if (in_array('payment', $this->draft['items'], true) && ($this->draft['payment']['mode'] ?? '') === '') {
-            $this->addError('draft', __('deals.composer.choose_payment'));
-
-            return;
-        }
-        if (in_array('completion', $this->draft['items'], true) && ($this->draft['completion']['confirmed_by'] ?? '') === '') {
-            $this->addError('draft', __('deals.composer.choose_completion'));
+        // Each problem is shown under its own field, in the person's language.
+        $problems = DealDraftValidator::check($this->draft);
+        if ($problems !== []) {
+            foreach ($problems as $field => $message) {
+                $this->addError($field, $message);
+            }
 
             return;
         }
 
         $terms = DealTermsDraft::toTerms($this->draft);
-        if (isset($terms['price']['currency']) && ! in_array(strtoupper($terms['price']['currency']), DealTerms::SUPPORTED_CURRENCIES, true)) {
-            $this->addError('draft', __('deals.composer.toman_only'));
-
-            return;
-        }
         if (array_intersect(array_keys($terms), ['price', 'payment', 'place', 'time', 'quantity', 'route', 'fields', 'recurrence', 'completion', 'clauses', 'notes']) === []) {
             $this->addError('draft', __('deals.terms_empty'));
 
@@ -293,7 +305,8 @@ class AgreementComposer extends Component
             if ($e->getStatusCode() !== 422) {
                 throw $e;
             }
-            $this->addError('draft', __('deals.terms_invalid').' '.$e->getMessage());
+            report($e); // the English reason is for developers; people get the localized message
+            $this->addError('draft', __('deals.terms_invalid'));
 
             return;
         }
@@ -331,7 +344,8 @@ class AgreementComposer extends Component
             if ($e->getStatusCode() !== 422) {
                 throw $e;
             }
-            $this->addError('draft', __('deals.terms_invalid').' '.$e->getMessage());
+            report($e);
+            $this->addError('draft', __('deals.terms_invalid'));
 
             return;
         }

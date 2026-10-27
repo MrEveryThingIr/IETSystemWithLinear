@@ -132,8 +132,7 @@ final class AgreementDocument
                 if ($p === null) {
                     return null;
                 }
-                $range = isset($p['min'], $p['max']) && $p['min'] !== $p['max'] ? $p['min'].' – '.$p['max'] : ($p['min'] ?? $p['max'] ?? null);
-                $row(null, trim(($range ?? '').' '.($p['currency'] ?? '').(isset($p['basis']) ? ' / '.DealTerms::basisLabel($p['basis']) : '')));
+                $row(null, DealTerms::priceLabel($p));
                 break;
             case 'payment':
                 $p = $t['payment'] ?? null;

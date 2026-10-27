@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  */
 final class DealTermsDraft
 {
-    public const CORE = ['price_min', 'price_max', 'currency', 'basis', 'place', 'starts_on', 'ends_on', 'daily_from', 'daily_to', 'timezone', 'quantity', 'unit', 'from', 'to', 'basis_choice', 'basis_custom'];
+    public const CORE = ['price_min', 'price_max', 'currency', 'basis', 'place', 'starts_on', 'ends_on', 'daily_from', 'daily_to', 'timezone', 'quantity', 'unit', 'from', 'to', 'basis_choice', 'basis_custom', 'price_mode'];
 
     /** @return array<string, mixed> */
     public static function blank(): array
@@ -56,6 +56,7 @@ final class DealTermsDraft
             'from' => $t['route']['from'] ?? null, 'to' => $t['route']['to'] ?? null,
         ], fn ($v) => $v !== null)));
         self::splitBasis($d);
+        $d['core']['price_mode'] = isset($t['price']['min'], $t['price']['max']) && $t['price']['min'] !== $t['price']['max'] ? 'range' : 'fixed';
         foreach ($t['fields'] ?? [] as $f) {
             $d['fields'][] = ['key' => $f['key'], 'label' => $f['label'], 'type' => $f['type'] ?? 'text', 'unit' => $f['unit'] ?? '', 'value' => $f['value']];
         }
@@ -92,6 +93,7 @@ final class DealTermsDraft
         ], fn ($v) => $v !== null && $v !== '')));
 
         self::splitBasis($d);
+        $d['core']['price_mode'] = $min !== null && $max !== null && $min !== $max ? 'range' : 'fixed';
 
         $catalog = IntentDetailCatalog::all();
         $topic = $deal->originatingIntent?->metadata['composer_topic'] ?? null;
@@ -220,13 +222,15 @@ final class DealTermsDraft
         $r = $d['recurrence'] ?? [];
         $p = $d['payment'] ?? [];
         $basis = $c('basis_choice') === '__other' ? $c('basis_custom') : ($c('basis_choice') ?: $c('basis'));
+        // One price by default: the amount is both ends. A range is written only when the person chose one.
+        $priceMax = ($c('price_mode') ?: 'fixed') === 'fixed' ? $c('price_min') : $c('price_max');
         $present = array_filter($items, fn ($id) => str_starts_with($id, 'clause:') ? collect($clauses)->contains(fn ($cl) => 'clause:'.$cl['key'] === $id) : true);
 
         return array_filter([
             'schema' => DealTerms::SCHEMA,
             'title' => trim((string) ($d['title'] ?? '')) ?: null,
             'summary' => trim((string) ($d['summary'] ?? '')) ?: null,
-            'price' => $has('price') && ($c('price_min') || $c('price_max') || $basis) ? ['min' => $c('price_min'), 'max' => $c('price_max'), 'currency' => $c('currency'), 'basis' => $basis] : null,
+            'price' => $has('price') && ($c('price_min') || $c('price_max') || $basis) ? ['min' => $c('price_min'), 'max' => $priceMax, 'currency' => $c('currency'), 'basis' => $basis] : null,
             'payment' => $has('payment') && trim((string) ($p['mode'] ?? '')) !== ''
                 ? ['mode' => $p['mode'], 'period' => trim((string) ($p['period'] ?? '')) ?: null, 'note' => trim((string) ($p['note'] ?? '')) ?: null]
                 : null,

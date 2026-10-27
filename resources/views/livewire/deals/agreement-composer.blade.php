@@ -59,13 +59,10 @@
                                     @if ($legacyPrice !== '')
                                         <flux:callout variant="warning" data-legacy-currency>{{ __('deals.composer.legacy_currency', ['price' => $legacyPrice]) }}</flux:callout>
                                     @endif
-                                    <div class="grid gap-2 sm:grid-cols-4">
-                                        <flux:input inputmode="decimal" wire:model="draft.core.price_min" :label="__('deals.change.price_min')" />
-                                        <flux:input inputmode="decimal" wire:model="draft.core.price_max" :label="__('deals.change.price_max')" />
-                                        <flux:select wire:model="draft.core.currency" :label="__('deals.change.price_currency')" data-currency>
-                                            @foreach ($currencies as $code)
-                                                <option value="{{ $code }}">{{ $code }} · {{ __('deals.currencies.'.$code) }}</option>
-                                            @endforeach
+                                    <div class="grid gap-2 sm:grid-cols-2">
+                                        <flux:select wire:model.live="draft.core.price_mode" :label="__('deals.composer.price_kind')" data-price-mode>
+                                            <option value="fixed">{{ __('deals.composer.price_fixed') }}</option>
+                                            <option value="range">{{ __('deals.composer.price_range') }}</option>
                                         </flux:select>
                                         <flux:select wire:model.live="draft.core.basis_choice" :label="__('deals.change.price_basis')" data-basis>
                                             <option value="">—</option>
@@ -78,6 +75,18 @@
                                     @if (($draft['core']['basis_choice'] ?? '') === '__other')
                                         <flux:input wire:model="draft.core.basis_custom" :label="__('deals.composer.basis_custom')" maxlength="40" />
                                     @endif
+                                    <div class="grid gap-2 sm:grid-cols-3">
+                                        <flux:input inputmode="numeric" wire:model="draft.core.price_min" :label="($draft['core']['price_mode'] ?? 'fixed') === 'range' ? __('deals.composer.price_from') : __('deals.composer.price_amount')" data-price-min />
+                                        @if (($draft['core']['price_mode'] ?? 'fixed') === 'range')
+                                            <flux:input inputmode="numeric" wire:model="draft.core.price_max" :label="__('deals.composer.price_to')" data-price-max />
+                                        @endif
+                                        <flux:select wire:model="draft.core.currency" :label="__('deals.change.price_currency')" data-currency>
+                                            @foreach ($currencies as $code)
+                                                <option value="{{ $code }}">{{ $code }} · {{ __('deals.currencies.'.$code) }}</option>
+                                            @endforeach
+                                        </flux:select>
+                                    </div>
+                                    @if ($this->priceHint() !== '')<p class="text-xs text-zinc-500" data-price-hint>{{ $this->priceHint() }}</p>@endif
                                     @break
                                 @case('payment')
                                     <div class="grid gap-2 sm:grid-cols-2">

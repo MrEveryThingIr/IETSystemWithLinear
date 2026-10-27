@@ -177,8 +177,8 @@ class DealConsolidationTest extends TestCase
         [$alice, $bob, $deal] = $this->activeDeal();
         $c = $this->compose($alice, $deal)->call('addItem', 'price')->set('draft.core.price_min', '40')->set('draft.core.price_max', '')->set('draft.core.currency', 'IRT')->set('draft.core.basis_choice', 'hour');
         $c->assertSee('IRT')->assertSee(__('deals.bases.milestone'))->call('send')->assertHasNoErrors();
-        $this->assertSame(['min' => '40', 'currency' => 'IRT', 'basis' => 'hour'], ProposalVersion::query()->latest('id')->first()->terms_data['price']);
-        $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertSee('40 IRT / '.__('deals.bases.hour'));
+        $this->assertSame(['min' => '40', 'max' => '40', 'currency' => 'IRT', 'basis' => 'hour'], ProposalVersion::query()->latest('id')->first()->terms_data['price']);
+        $this->actingAs($bob->user)->get(route('relationships.show', $deal))->assertSee('40 '.__('composer.toman').' / '.__('deals.bases.hour'));
 
         $this->compose($alice, $deal)->set('draft.core.basis_choice', '__other')->set('draft.core.basis_custom', 'per bedroom')->call('send')->assertHasNoErrors();
         $this->assertSame('per bedroom', ProposalVersion::query()->latest('id')->first()->terms_data['price']['basis']);
@@ -201,7 +201,7 @@ class DealConsolidationTest extends TestCase
 
         // Tampering with the composer state (a select cannot be trusted) is refused with a message and stores nothing.
         $before = ProposalVersion::query()->count();
-        $this->compose($alice, $deal)->set('draft.core.currency', 'EUR')->call('send')->assertHasErrors('draft')->assertSee(__('deals.composer.toman_only'));
+        $this->compose($alice, $deal)->set('draft.core.currency', 'EUR')->call('send')->assertHasErrors('draft.core.currency')->assertSee(__('deals.composer.toman_only'));
         $this->assertSame($before, ProposalVersion::query()->count());
         $this->compose($alice, $deal)->assertSeeHtml('data-currency')->assertDontSee('USD')->assertDontSee('EUR');
     }
@@ -228,7 +228,7 @@ class DealConsolidationTest extends TestCase
         // Writing a new version over it: the old amount is shown for reference, not carried over or converted.
         $c = $this->compose($alice, $deal)->assertSeeHtml('data-legacy-currency')->assertSet('draft.core.currency', 'IRT')->assertSet('draft.core.price_min', '')->assertSee('40 EUR');
         $c->set('draft.core.price_min', '2000000')->call('send')->assertHasNoErrors();
-        $this->assertSame(['min' => '2000000', 'currency' => 'IRT', 'basis' => 'hour'], ProposalVersion::query()->latest('id')->first()->terms_data['price']);
+        $this->assertSame(['min' => '2000000', 'max' => '2000000', 'currency' => 'IRT', 'basis' => 'hour'], ProposalVersion::query()->latest('id')->first()->terms_data['price']);
     }
 
     public function test_the_contract_address_opens_the_deal_and_historical_contracts_without_a_deal_keep_their_page(): void
@@ -305,7 +305,7 @@ class DealConsolidationTest extends TestCase
         $this->agreed($alice, $bob, $deal);
         $make = fn () => Livewire::actingAs($alice->user)->test(AgreementComposer::class, ['relationship' => $deal])->call('startAmendment');
 
-        $make()->call('addItem', 'price')->set('draft.core.price_min', '10')->set('draft.core.currency', 'USD')->call('send')->assertHasErrors('draft');
+        $make()->call('addItem', 'price')->set('draft.core.price_min', '10')->set('draft.core.currency', 'USD')->call('send')->assertHasErrors('draft.core.currency');
         $make()->call('addItem', 'place')->set('draft.core.place', 'Rasht')->set('effectiveAt', now()->subDay()->format('Y-m-d\\TH:i'))->call('send')->assertHasErrors('draft')->assertSee(__('deals.composer.future_only'));
         $this->assertSame(1, Contract::query()->sole()->versions()->count());
     }

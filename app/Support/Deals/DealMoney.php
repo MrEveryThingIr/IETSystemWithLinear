@@ -26,7 +26,7 @@ final class DealMoney
     public const MODES = ['on_acceptance', 'after_confirmed_delivery', 'per_period'];
 
     /** Price units the Agreement composer offers; a duty priced "per hour" must use the unit "hour". */
-    public const UNITS = ['item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometre'];
+    public const UNITS = ['item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer', 'square_metre', 'metre', 'cubic_metre', 'kilogram'];
 
     public function __construct(private readonly BalanceCalculator $balances) {}
 

@@ -3,6 +3,7 @@
 namespace App\Support\Deals;
 
 use App\Support\Market\IntentDetailCatalog;
+use App\Support\Market\MarketMoney;
 use DateTimeZone;
 use Exception;
 
@@ -29,7 +30,7 @@ final class DealTerms
     public const SUPPORTED_CURRENCIES = ['IRT'];
 
     /** Units a price is quoted per. A basis outside this list is a custom text and is kept as written. */
-    public const PAYMENT_BASES = ['total', 'item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer'];
+    public const PAYMENT_BASES = ['total', 'item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer', 'square_metre', 'metre', 'cubic_metre', 'kilogram'];
 
     public const PAYMENT_MODES = ['none', 'on_acceptance', 'after_confirmed_delivery', 'per_period'];
 
@@ -229,8 +230,7 @@ final class DealTerms
         };
 
         $price = $terms['price'] ?? [];
-        $priceText = $range($price['min'] ?? null, $price['max'] ?? null);
-        $priceText = $priceText === null ? null : trim($priceText.' '.($price['currency'] ?? '').(isset($price['basis']) ? ' / '.$price['basis'] : ''));
+        $priceText = isset($price['min']) || isset($price['max']) ? self::priceLabel($price) : null;
         $time = $terms['time'] ?? [];
         $quantity = $terms['quantity'] ?? [];
         $route = $terms['route'] ?? [];
@@ -267,6 +267,24 @@ final class DealTerms
         $lines[] = $line('notes', $terms['notes'] ?? null);
 
         return implode("\n", array_filter($lines, fn (?string $l): bool => $l !== null));
+    }
+
+    /**
+     * A price as people read it: whole Toman with separators and the unit ("3,000,000 Toman / square metre"); a price an
+     * older Agreement wrote in another currency is shown exactly as written, never converted.
+     *
+     * @param  array{min?: ?string, max?: ?string, currency?: ?string, basis?: ?string}  $price
+     */
+    public static function priceLabel(array $price): string
+    {
+        $show = fn (?string $amount): ?string => $amount === null || $amount === '' ? null
+            : (strtoupper((string) ($price['currency'] ?? '')) === 'IRT' ? MarketMoney::format($amount) : trim($amount.' '.($price['currency'] ?? '')));
+        $min = $show($price['min'] ?? null);
+        $max = $show($price['max'] ?? null);
+        $amount = $min !== null && $max !== null && $min !== $max ? $min.' – '.$max : ($min ?? $max);
+        $basis = self::basisLabel($price['basis'] ?? null);
+
+        return trim(($amount ?? '').($basis !== null ? ' / '.$basis : ''));
     }
 
     /** The unit a price is quoted per, in words: a known unit is translated, a custom one is shown as written. */

@@ -80,7 +80,7 @@ class StructuredDealTermsTest extends TestCase
     {
         $text = DealTerms::render(DealTerms::normalize($this->terms()));
 
-        $this->assertStringContainsString('Price: 100.5 – 120 IRT / per day', $text);
+        $this->assertStringContainsString('Price: 100.5 Toman – 120 Toman / per day', $text);
         $this->assertStringContainsString('Time: 2026-11-20 – 2026-11-22', $text);
         $this->assertStringContainsString('Insurance: Yes', $text);
         $this->assertStringContainsString('Takes effect: when everyone has agreed', $text);
