@@ -25,6 +25,7 @@ use App\PlanOccurrenceStatus;
 use App\Support\CommitmentProgress;
 use App\Support\Deals\AgreementTerms;
 use App\Support\Deals\DealErrors;
+use App\Support\Deals\DealNote;
 use App\Support\Deals\DealParties;
 use App\Support\Deals\DealTerms;
 use App\Support\Deals\WorkLog;
@@ -121,13 +122,17 @@ class WorkPanel extends Component
                 'every' => (int) ($f['every'] ?? 1),
                 'period' => (string) ($f['period'] ?? 'day'),
             ]);
+            $this->note('work_proposed', ['title' => (string) $f['title']]);
             $this->resetForm();
         });
     }
 
     public function confirm(string $id, ManageDealWork $work): void
     {
-        $this->guarded(fn () => $work->confirm($this->relationship, $this->user(), $id));
+        $this->guarded(function () use ($work, $id): void {
+            $commitment = $work->confirm($this->relationship, $this->user(), $id);
+            $this->note('work_confirmed', ['title' => (string) $commitment->title]);
+        });
     }
 
     public function withdraw(string $id, ManageDealWork $work): void
@@ -183,6 +188,7 @@ class WorkPanel extends Component
 
         $this->guarded(function () use ($logger, $commitment, $l, $estimate): void {
             $logger->execute($commitment, $this->user(), (string) $l['date'], (string) $l['from'], (string) $l['to'], (string) ($l['note'] ?? ''), $estimate, $this->logEvidence);
+            $this->note('work_logged', ['title' => (string) $commitment->title, 'date' => (string) $l['date']]);
             $this->resetLog();
         });
     }
@@ -221,6 +227,7 @@ class WorkPanel extends Component
                 $note = trim((string) ($r['note'] ?? ''));
                 $submit->execute($commitment, $this->user(), $quantity, notes: $note !== '' ? $note : null, assetIds: $assetIds);
             });
+            $this->note('inspection_requested', ['title' => (string) $commitment->title, 'qty' => $quantity + 0, 'unit' => (string) (DealTerms::basisLabel($commitment->unit) ?? $commitment->unit)]);
             $this->resetReport();
         });
     }
@@ -239,6 +246,13 @@ class WorkPanel extends Component
                 return;
             }
             $review->execute($fulfillment, $this->user(), FulfillmentReviewDecision::from($decision), $note !== '' ? $note : null, $decision === 'accepted' ? $parsed : null);
+            $fresh = $fulfillment->fresh(['review']);
+            $this->note(match (true) {
+                $decision === 'accepted' && $fresh->isPartlyAccepted() => 'inspection_partly',
+                $decision === 'accepted' => 'inspection_accepted',
+                $decision === 'rejected' => 'inspection_rejected',
+                default => 'inspection_questioned',
+            }, ['title' => (string) $fulfillment->commitment->title, 'qty' => $fresh->confirmedQuantity() + 0, 'unit' => (string) (DealTerms::basisLabel($fulfillment->commitment->unit) ?? $fulfillment->commitment->unit)]);
         });
     }
 
@@ -254,7 +268,11 @@ class WorkPanel extends Component
 
     public function dispute(int $fulfillmentId, OpenFulfillmentDispute $open): void
     {
-        $this->guarded(fn () => $open->execute($this->fulfillment($fulfillmentId), $this->user(), trim($this->text['dispute-'.$fulfillmentId] ?? '')));
+        $this->guarded(function () use ($open, $fulfillmentId): void {
+            $fulfillment = $this->fulfillment($fulfillmentId);
+            $open->execute($fulfillment, $this->user(), trim($this->text['dispute-'.$fulfillmentId] ?? ''));
+            $this->note('work_disputed', ['title' => (string) $fulfillment->commitment->title]);
+        });
     }
 
     public function resolve(int $disputeId, string $resolution, ResolveFulfillmentDispute $resolve): void
@@ -411,6 +429,12 @@ class WorkPanel extends Component
         abort_unless($this->commitments()->whereKey($fulfillment->commitment_id)->exists(), 404);
 
         return $fulfillment;
+    }
+
+    /** A labelled step line in the Deal's one conversation. It never decides or blocks anything. @param array<string, mixed> $meta */
+    private function note(string $type, array $meta = []): void
+    {
+        DealNote::forDeal($this->relationship, $this->user(), $type, $meta);
     }
 
     private function resetForm(): void

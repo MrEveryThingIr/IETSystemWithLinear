@@ -9,6 +9,7 @@ use App\Models\Bookkeeping\Transaction;
 use App\Models\Relationship;
 use App\Models\User;
 use App\Support\Deals\DealMoney;
+use App\Support\Deals\DealNote;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -58,7 +59,8 @@ class MoneyPanel extends Component
     {
         $this->guarded(function () use ($money): void {
             $keys = array_keys(array_filter($this->selected));
-            $money->request($this->relationship, $this->user(), $keys, $this->typed);
+            $entries = $money->request($this->relationship, $this->user(), $keys, $this->typed);
+            $this->note('money_requested', ['amount' => collect($entries)->sum('amount')]);
             $this->selected = [];
             $this->typed = [];
         });
@@ -66,19 +68,26 @@ class MoneyPanel extends Component
 
     public function agree(string $uuid, ManageDealMoney $money): void
     {
-        $this->guarded(fn () => $money->approve($this->relationship, $this->user(), $uuid));
+        $this->guarded(function () use ($money, $uuid): void {
+            $entry = $money->approve($this->relationship, $this->user(), $uuid);
+            $this->note('money_amount_agreed', ['amount' => $entry->amount]);
+        });
     }
 
     public function disagree(string $uuid, ManageDealMoney $money): void
     {
-        $this->guarded(fn () => $money->reject($this->relationship, $this->user(), $uuid, (string) ($this->text['no-'.$uuid] ?? '')));
+        $this->guarded(function () use ($money, $uuid): void {
+            $money->reject($this->relationship, $this->user(), $uuid, (string) ($this->text['no-'.$uuid] ?? ''));
+            $this->note('money_amount_disagreed');
+        });
     }
 
     /** Report a payment that was actually made; the recipient still has to confirm receiving it. */
     public function report(ManageDealMoney $money): void
     {
         $this->guarded(function () use ($money): void {
-            $money->report($this->relationship, $this->user(), $this->pay, $this->payToken, $this->receipt, $this->text['note'] ?? null, $this->purpose);
+            $payment = $money->report($this->relationship, $this->user(), $this->pay, $this->payToken, $this->receipt, $this->text['note'] ?? null, $this->purpose);
+            $this->note('money_payment_reported', ['amount' => $payment->amount]);
             $this->pay = [];
             $this->receipt = null;
             $this->purpose = '';
@@ -89,17 +98,26 @@ class MoneyPanel extends Component
 
     public function received(string $uuid, ManageDealMoney $money): void
     {
-        $this->guarded(fn () => $money->approve($this->relationship, $this->user(), $uuid));
+        $this->guarded(function () use ($money, $uuid): void {
+            $entry = $money->approve($this->relationship, $this->user(), $uuid);
+            $this->note('money_receipt_confirmed', ['amount' => $entry->amount]);
+        });
     }
 
     public function notReceived(string $uuid, ManageDealMoney $money): void
     {
-        $this->guarded(fn () => $money->reject($this->relationship, $this->user(), $uuid, (string) ($this->text['no-'.$uuid] ?? '')));
+        $this->guarded(function () use ($money, $uuid): void {
+            $entry = $money->reject($this->relationship, $this->user(), $uuid, (string) ($this->text['no-'.$uuid] ?? ''));
+            $this->note('money_receipt_rejected', ['amount' => $entry->amount]);
+        });
     }
 
     public function dispute(string $uuid, ManageDealMoney $money): void
     {
-        $this->guarded(fn () => $money->dispute($this->relationship, $this->user(), $uuid, (string) ($this->text['dispute-'.$uuid] ?? '')));
+        $this->guarded(function () use ($money, $uuid): void {
+            $money->dispute($this->relationship, $this->user(), $uuid, (string) ($this->text['dispute-'.$uuid] ?? ''));
+            $this->note('money_disputed');
+        });
     }
 
     public function takeBack(string $uuid, ManageDealMoney $money): void
@@ -135,6 +153,12 @@ class MoneyPanel extends Component
             'me' => $me,
             'unitsHint' => DealMoney::UNITS,
         ]);
+    }
+
+    /** A labelled step line in the Deal's one conversation. It never decides or blocks anything. @param array<string, mixed> $meta */
+    private function note(string $type, array $meta = []): void
+    {
+        DealNote::forDeal($this->relationship, $this->user(), $type, $meta);
     }
 
     private function guarded(callable $call): void

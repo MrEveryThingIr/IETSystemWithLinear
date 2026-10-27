@@ -72,6 +72,15 @@
         </form>
     @endif
 
+    {{-- In a Deal there is one conversation; steps of the Agreement, Work and Money are labelled cards in it, and these chips filter them --}}
+    @if ($embedded)
+        <div class="flex flex-wrap gap-1 border-b border-zinc-200 px-2 py-1.5 text-xs dark:border-zinc-700" data-thread-filter>
+            @foreach (['all', 'chat', 'agreement', 'work', 'money'] as $chip)
+                <button type="button" wire:click="setFilter('{{ $chip }}')" @class(['rounded-full px-2.5 py-1', 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' => $filter === $chip, 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300' => $filter !== $chip]) aria-pressed="{{ $filter === $chip ? 'true' : 'false' }}">{{ __('deals.timeline_filter.'.$chip) }}</button>
+            @endforeach
+        </div>
+    @endif
+
     {{-- History --}}
     <div x-ref="scroller" class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-4" aria-live="polite" data-message-list>
         @if ($hasOlder)
@@ -102,7 +111,14 @@
                     @php $lastDay = $day; @endphp
                 @endif
                 @if ($message->kind === 'deal')
-                    <li wire:key="m-{{ $message->id }}" class="my-2 flex justify-center"><span class="rounded-full bg-sky-50 px-3 py-1 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200">{{ __('deals.timeline.'.($message->meta['type'] ?? 'terms_proposed'), ['version' => $message->meta['version'] ?? '']) }} · {{ $message->author?->user?->username }}</span></li>
+                    @php($area = $message->meta['area'] ?? 'agreement')
+                    @php($tone = ['agreement' => 'border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100', 'work' => 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100', 'money' => 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-100'][$area] ?? '')
+                    <li wire:key="m-{{ $message->id }}" class="my-2 flex justify-center" data-deal-event data-area="{{ $area }}">
+                        <a @if (! empty($message->meta['url'])) href="{{ $message->meta['url'] }}" @endif class="flex max-w-[92%] flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border px-3 py-1.5 text-xs {{ $tone }}">
+                            <span class="rounded-full bg-white/70 px-2 py-0.5 font-semibold dark:bg-black/30">{{ __('deals.timeline_area.'.$area) }}</span>
+                            <span dir="auto">{{ $message->author?->user?->username }} {{ __('deals.timeline.'.($message->meta['type'] ?? 'terms_proposed'), \App\Support\Deals\DealNote::params($message->meta ?? [])) }}</span>
+                        </a>
+                    </li>
                     @continue
                 @endif
                 <li wire:key="m-{{ $message->id }}" id="message-{{ $message->uuid }}" @class(['group flex min-w-0', 'justify-end' => $mine, 'justify-start' => ! $mine])>
