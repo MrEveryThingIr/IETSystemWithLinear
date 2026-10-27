@@ -204,6 +204,8 @@ class DealMoneyTest extends TestCase
         $this->assertSame('settled', $items[0]['state']);
         $this->assertSame(1, $this->tx('payment')->count());
         $this->assertSame(1, $this->tx('obligation')->count());
+        // MySQL enforces the 80-character column that SQLite ignores.
+        $this->assertSame(0, Transaction::query()->whereRaw('length(idempotency_key) > 80')->count());
     }
 
     public function test_recurring_work_is_requested_for_two_days_and_paid_in_instalments_across_cycles(): void

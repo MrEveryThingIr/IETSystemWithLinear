@@ -134,7 +134,8 @@ class ManageDealMoney
         abort_if($payer === null, 403);
 
         // The same form submitted twice is one payment: answer with the first before re-checking what is still open.
-        $key = 'deal-pay:'.$deal->uuid.':'.trim($token);
+        // bk_transactions.idempotency_key holds 80 characters: hash the (deal, form token) pair to stay well inside it.
+        $key = 'deal-pay:'.substr(hash('sha256', $deal->uuid.':'.trim($token)), 0, 40);
         $first = Transaction::query()->where('ledger_id', $ledger->id)->where('recorded_by_actor_id', $actor->id)->where('idempotency_key', $key)->first();
         if ($first instanceof Transaction) {
             return $first;
