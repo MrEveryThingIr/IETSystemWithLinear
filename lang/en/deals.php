@@ -534,6 +534,12 @@ return [
         'clause_title_long' => 'This heading is too long (120 characters at most).',
     ],
     'warnings' => [
+        'generic' => [
+            'duties' => 'A duty term',
+            'deliverables' => 'A deliverables term',
+            'evidence' => 'An evidence term',
+            'materials' => 'A materials term',
+        ],
         'title' => 'Worth clarifying together',
         'note' => 'These are only reminders. Nothing is changed or blocked, and the text you agree on stays exactly as written.',
         'price_is_a_range' => 'The price is a range, so no payable amount can be worked out automatically. Money will ask for each amount to be typed and agreed. State the exact price if you can.',

@@ -56,7 +56,7 @@ final class DealTermsWarnings
 
         foreach ($terms['clauses'] ?? [] as $clause) {
             if (in_array($clause['kind'], DealTerms::RESPONSIBLE_KINDS, true) && empty($clause['responsible'])) {
-                $add($clause['kind'] === 'materials' ? 'materials_unassigned' : 'duty_unassigned', ['title' => (string) ($clause['title'] ?? __('deals.clauses.'.$clause['kind'].'.title'))]);
+                $add($clause['kind'] === 'materials' ? 'materials_unassigned' : 'duty_unassigned', ['title' => (string) ($clause['title'] ?? __('deals.warnings.generic.'.$clause['kind']))]);
             }
         }
 
