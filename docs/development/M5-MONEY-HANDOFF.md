@@ -72,6 +72,10 @@ What changed, in the owner's own terms (Agreement → Work → Money, one conver
 - New suites: `DealAgreementValidationTest`, `DealAgreementClarityTest`, `DealMeasuredWorkTest`, `DealTaskTest`, `DealConstructionScenarioTest` (builder paid per square metre: irregular daily log, partial acceptance, rejected piece, weekly due, instalment + final, request refused before due, earned = received + due + not yet due), `DealConversationAreasTest`, `DealPerformanceBudgetTest` (Work screen grows by about one query per report, Money screen is flat).
 - MySQL 8.4 rehearsal of `2026_11_18` (`tools/m5-mysql-rehearsal.php`, disposable database, dropped): historical review rows unchanged, rollback keeps rows, re-apply works.
 
+### Gate results for this pass
+- Full suite (SQLite, Windows OpenSSL setting): **1248 / 1248 passed**, 14,968 assertions. Pint clean, PHPStan 0 errors, `npm run build` clean.
+- Money, work, task, construction, conversation and validation suites on a **disposable MySQL 8.4 database** (dropped): 22 tests, 21 passed on the first run; the one failure was a test comparing JSON keys in a fixed order (MySQL reorders JSON keys), made order-independent and re-run green. Idempotency keys are asserted to be at most 80 characters.
+
 ### Not done / open (owner to decide)
 - **Payments on account against the rough estimate** are not offered: the estimate is shown as a guide, and requests exist only for confirmed (inspected) work. If wanted, the safest route is a typed "advance" request the payer must agree, reconciled at the inspection.
 - Recording a **voice note** inside the task form uses the phone's file picker (audio/video capture); the Conversation's own recorder is not embedded.

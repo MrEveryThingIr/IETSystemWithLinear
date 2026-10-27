@@ -120,7 +120,7 @@ class DealAgreementValidationTest extends TestCase
         $c->assertSee(DealTerms::priceLabel(['min' => '3000000', 'max' => '3000000', 'currency' => 'IRT', 'basis' => 'square_metre']), false);
         $c->call('send')->assertHasNoErrors();
         $price = ProposalVersion::query()->latest('id')->firstOrFail()->terms_data['price'];
-        $this->assertSame(['min' => '3000000', 'max' => '3000000', 'currency' => 'IRT', 'basis' => 'square_metre'], $price);
+        $this->assertEqualsCanonicalizing(['min' => '3000000', 'max' => '3000000', 'currency' => 'IRT', 'basis' => 'square_metre'], $price); // MySQL JSON reorders keys
     }
 
     public function test_dates_hours_quantities_and_choices_each_report_under_their_own_field(): void
