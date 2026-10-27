@@ -3,6 +3,7 @@
 namespace App\Livewire\Deals;
 
 use App\Actions\Assets\CreateContextAsset;
+use App\Actions\Commitments\BindExistingPlan;
 use App\Actions\Deals\LogWorkDay;
 use App\Actions\Deals\ManageDealWork;
 use App\Actions\Fulfillments\OpenFulfillmentDispute;
@@ -10,10 +11,13 @@ use App\Actions\Fulfillments\ResolveFulfillmentDispute;
 use App\Actions\Fulfillments\ReviewFulfillment;
 use App\Actions\Fulfillments\SubmitFulfillment;
 use App\Actions\Planner\TransitionPlanOccurrence;
+use App\CommitmentEventType;
 use App\FulfillmentDisputeStatus;
 use App\FulfillmentReviewDecision;
 use App\FulfillmentStatus;
+use App\Models\Asset;
 use App\Models\Commitment;
+use App\Models\CommitmentEvent;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\Fulfillment;
@@ -53,8 +57,11 @@ class WorkPanel extends Component
 
     public Relationship $relationship;
 
-    /** @var array<string, mixed> setting up a duty */
+    /** @var array<string, mixed> a new task: title and description only */
     public array $form = [];
+
+    /** @var array<int, mixed> images, video or voice for the task being written */
+    public array $taskMedia = [];
 
     /** @var array<string, string> asking for an inspection of finished work (a milestone or the end) */
     public array $report = [];
@@ -79,6 +86,29 @@ class WorkPanel extends Component
         $this->resetLog();
     }
 
+    /** The receiver of the work defines a task: a title to mention in reports, a description and optional media. */
+    public function addTask(ManageDealWork $work): void
+    {
+        $this->resetErrorBag();
+        $f = $this->form;
+        if (trim((string) ($f['title'] ?? '')) === '' || mb_strlen((string) $f['title']) > 180) {
+            $this->addError('form.title', (string) __('deals.errors.work_title'));
+        }
+        if (count($this->taskMedia) > 5) {
+            $this->addError('taskMedia', (string) __('deals.errors.report_files'));
+        }
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        $this->guarded(function () use ($work, $f): void {
+            $task = $work->createTask($this->relationship, $this->user(), (string) $f['title'], (string) ($f['description'] ?? ''), $this->taskMedia);
+            $this->note('work_proposed', ['title' => (string) $task->title]);
+            $this->resetForm();
+        });
+    }
+
+    /** Legacy two-step setup (a pending proposal the receiver confirms): kept for work proposed that way before tasks. */
     public function propose(ManageDealWork $work): void
     {
         $this->resetErrorBag();
@@ -266,6 +296,17 @@ class WorkPanel extends Component
         });
     }
 
+    /** Schedule a task with the Planner itself: connect one of the Deal's existing plans (created in the Planner) to it. */
+    public function linkPlan(int $commitmentId, string $planUuid, BindExistingPlan $bind): void
+    {
+        $this->guarded(function () use ($commitmentId, $planUuid, $bind): void {
+            $commitment = $this->commitments()->findOrFail($commitmentId);
+            $plan = $bind->candidates($this->user(), $commitment)->firstWhere('uuid', $planUuid);
+            abort_if($plan === null, 422, (string) __('deals.errors.generic'));
+            $bind->execute($this->user(), $commitment, $plan);
+        });
+    }
+
     public function dispute(int $fulfillmentId, OpenFulfillmentDispute $open): void
     {
         $this->guarded(function () use ($open, $fulfillmentId): void {
@@ -340,6 +381,8 @@ class WorkPanel extends Component
             'planned' => $planned,
             'rows' => $rows,
             'log' => $planned ? null : WorkLog::for($c),
+            'media' => $this->taskMedia($c),
+            'plans' => $planned || ! Gate::forUser($user)->allows('manage', $c) ? collect() : app(BindExistingPlan::class)->candidates($user, $c),
             'reports' => $planned ? collect() : $c->fulfillments->where('status', '!=', FulfillmentStatus::Corrected)->sortByDesc('id')->values(),
             'isObligor' => Gate::forUser($user)->allows('submit', $c),
             'unit' => DealTerms::basisLabel($c->unit) ?? $c->unit,
@@ -353,6 +396,15 @@ class WorkPanel extends Component
             ->reduce(fn (string $sum, Fulfillment $f) => QuantityAmount::add($sum, (string) $f->quantity), QuantityAmount::normalize('0'));
 
         return QuantityAmount::subtractFloorZero(QuantityAmount::subtractFloorZero($c->quantity, $progress->acceptedQuantity($c)), $waiting);
+    }
+
+    /** File names of the media the receiver attached to the task. @return list<string> */
+    private function taskMedia(Commitment $c): array
+    {
+        $ids = CommitmentEvent::query()->where('commitment_id', $c->id)->where('event_type', CommitmentEventType::TaskMedia->value)->get()
+            ->flatMap(fn ($e) => $e->payload['asset_ids'] ?? [])->all();
+
+        return $ids === [] ? [] : Asset::query()->whereIn('id', $ids)->pluck('original_filename')->all();
     }
 
     /** What a report is called: reported, partly accepted, accepted, questioned, not accepted or in dispute. */
@@ -439,15 +491,8 @@ class WorkPanel extends Component
 
     private function resetForm(): void
     {
-        // Start from what the Agreement already says about quantity and unit, so people confirm instead of retyping.
-        $terms = ($version = $this->version()) instanceof ContractVersion ? AgreementTerms::of($version) : null;
-        $unit = (string) ($terms['quantity']['unit'] ?? ($terms['price']['basis'] ?? ''));
-        $known = in_array($unit, self::UNITS, true);
-        $this->form = [
-            'title' => '', 'obligor' => '', 'quantity' => (string) ($terms['quantity']['value'] ?? '1'),
-            'unit_choice' => $known ? $unit : ($unit !== '' && $unit !== 'total' ? '__other' : ''), 'unit_custom' => $known || $unit === 'total' ? '' : $unit,
-            'cycles' => 1, 'starts_on' => '', 'start_time' => '09:00', 'duration' => 60, 'every' => 1, 'period' => 'day',
-        ];
+        $this->form = ['title' => '', 'description' => ''];
+        $this->taskMedia = [];
     }
 
     private function resetReport(): void

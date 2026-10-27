@@ -2,18 +2,24 @@
 
 namespace App\Actions\Deals;
 
+use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Commitments\CreateCommitment;
 use App\Actions\Commitments\CreateCommitmentPlan;
+use App\CommitmentEventType;
 use App\CommitmentKind;
 use App\Models\Commitment;
+use App\Models\CommitmentEvent;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\Relationship;
 use App\Models\User;
 use App\PlanScheduleFrequency;
+use App\Support\Deals\AgreementTerms;
+use App\Support\Deals\DealMoney;
 use App\Support\Deals\DealParties;
 use App\Support\QuantityAmount;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -27,7 +33,57 @@ class ManageDealWork
     public function __construct(
         private readonly CreateCommitment $createCommitment,
         private readonly CreateCommitmentPlan $createPlan,
+        private readonly CreateContextAsset $assets,
     ) {}
+
+    /**
+     * A task is defined by the person who receives the work (the employer, for that task); the other party is the doer.
+     * It is only what the receiver wants done: a title, a description and optional images, video or voice. The agreed
+     * quantity and unit come from the accepted Agreement, so there is nothing else to fill in. Scheduling, when wanted,
+     * is the Planner's own (see BindExistingPlan and CreateCommitmentPlan).
+     *
+     * @param  list<UploadedFile>  $media
+     */
+    public function createTask(Relationship $deal, User $user, string $title, ?string $description = null, array $media = []): Commitment
+    {
+        return DB::transaction(function () use ($deal, $user, $title, $description, $media): Commitment {
+            $locked = Relationship::query()->lockForUpdate()->findOrFail($deal->id);
+            $version = $this->version($locked);
+            $receiver = DealParties::sole($version->parties, $user);
+            $doer = $version->parties->first(fn ($p) => ! $p->is($receiver));
+            abort_if($doer === null, 422, (string) __('deals.errors.work_party'));
+
+            $title = Str::squish($title);
+            abort_if($title === '' || mb_strlen($title) > 180, 422, (string) __('deals.errors.work_title'));
+            $description = trim((string) $description);
+            abort_if(mb_strlen($description) > 10000, 422, (string) __('deals.errors.work_log_note'));
+            abort_if(count($media) > 5, 422, (string) __('deals.errors.report_files'));
+
+            // What is agreed to measure comes from the Agreement; a task never restates it.
+            $terms = AgreementTerms::of($version);
+            $unit = (string) ($terms['quantity']['unit'] ?? '');
+            $basis = (string) ($terms['price']['basis'] ?? '');
+            $unit = $unit !== '' ? $unit : (in_array($basis, DealMoney::UNITS, true) ? $basis : 'project');
+            $quantity = QuantityAmount::positive((string) ($terms['quantity']['value'] ?? '1'));
+
+            $commitment = $this->createCommitment->execute(
+                $version->contract, $user, $doer->actor, $receiver->actor, CommitmentKind::Work, $title, $quantity, $unit,
+                description: $description !== '' ? $description : null, derivationKey: 'task:'.Str::uuid(), asDealParty: true,
+            );
+
+            if ($media !== []) {
+                $context = $version->contract->contextBinding?->context;
+                CommitmentEvent::query()->create([
+                    'commitment_id' => $commitment->id,
+                    'actor_id' => $user->actor->id,
+                    'event_type' => CommitmentEventType::TaskMedia,
+                    'payload' => ['asset_ids' => array_map(fn (UploadedFile $f) => $this->assets->execute($context, $user, $f, 'owned')->id, $media)],
+                ]);
+            }
+
+            return $commitment;
+        });
+    }
 
     /**
      * @param  array<string, mixed>  $input  title, kind, quantity (per cycle), unit, cycles, obligor_party, beneficiary_party, starts_on, start_time, duration, every, period

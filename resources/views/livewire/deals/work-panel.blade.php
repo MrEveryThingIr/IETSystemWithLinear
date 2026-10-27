@@ -34,6 +34,19 @@
                 </div>
                 <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · {{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $d['unit']]) }}</div>
 
+                @if ($c->description)<p class="whitespace-pre-wrap text-sm" dir="auto" data-task-description>{{ $c->description }}</p>@endif
+                @if ($d['media'])<div class="text-xs text-zinc-500" data-task-media>{{ implode(', ', $d['media']) }}</div>@endif
+                @if (! $d['planned'] && $d['plans']->isNotEmpty())
+                    <div class="flex flex-wrap items-end gap-2" data-task-plan>
+                        <flux:select size="sm" wire:model="text.plan-{{ $c->id }}" :label="__('deals.work.use_plan')">
+                            <option value="">—</option>
+                            @foreach ($d['plans'] as $plan)<option value="{{ $plan->uuid }}">{{ $plan->title }}</option>@endforeach
+                        </flux:select>
+                        <flux:button size="sm" wire:click="linkPlan({{ $c->id }}, $wire.text['plan-{{ $c->id }}'] || '')">{{ __('deals.work.link_plan') }}</flux:button>
+                    </div>
+                @endif
+                @if (! $d['planned'] && $d['isObligor'] === false)<a class="text-xs underline" href="{{ route('planner.create') }}">{{ __('deals.work.plan_in_planner') }}</a>@endif
+
                 {{-- Planned days (an optional schedule): one row per day --}}
                 @if ($d['planned'])
                     <ul class="space-y-2">
@@ -168,39 +181,20 @@
         </flux:card>
     @endif
 
-    {{-- Set up a duty from the Agreement in force --}}
+    {{-- A new task: written by the person who receives the work. Title, description, optional media. Nothing else. --}}
     @if ($version && count($mine) > 0)
         <flux:card class="space-y-3" data-work-form>
-            <flux:heading size="sm">{{ __('deals.work.set_up') }}</flux:heading>
-            <flux:input wire:model="form.title" :label="__('deals.work.title')" maxlength="180" />
-            <div class="grid gap-3 sm:grid-cols-2">
-                <flux:select wire:model="form.obligor" :label="__('deals.work.doer')">
-                    <option value="">—</option>
-                    @foreach ($labels as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach
-                </flux:select>
-                <flux:input inputmode="decimal" wire:model="form.quantity" :label="__('deals.work.agreed_quantity')" />
-                <flux:select wire:model.live="form.unit_choice" :label="__('deals.work.unit')">
-                    <option value="">—</option>
-                    @foreach ($units as $u)<option value="{{ $u }}">{{ __('deals.bases.'.$u) }}</option>@endforeach
-                    <option value="__other">{{ __('deals.bases.other') }}</option>
-                </flux:select>
-                @if (($form['unit_choice'] ?? '') === '__other')<flux:input wire:model="form.unit_custom" :label="__('deals.work.unit_custom')" maxlength="40" />@endif
+            <flux:heading size="sm">{{ __('deals.work.task_title') }}</flux:heading>
+            <p class="text-xs text-zinc-500">{{ __('deals.work.task_hint') }}</p>
+            <flux:input wire:model="form.title" :label="__('deals.work.task_name')" :description="__('deals.work.task_name_hint')" maxlength="180" />
+            <flux:textarea wire:model="form.description" rows="4" :label="__('deals.work.task_description')" :placeholder="__('deals.work.task_description_hint')" />
+            <div>
+                <flux:input type="file" wire:model="taskMedia" multiple accept="image/*,video/*,audio/*" :label="__('deals.work.task_media')" />
+                <div wire:loading wire:target="taskMedia" class="text-xs text-zinc-500">{{ __('deals.work.uploading') }}</div>
+                @error('taskMedia')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+                <p class="text-xs text-zinc-500">{{ __('deals.work.task_media_hint') }}</p>
             </div>
-            <details>
-                <summary class="cursor-pointer text-sm text-zinc-500">{{ __('deals.work.schedule') }}</summary>
-                <div class="mt-2 grid gap-3 sm:grid-cols-2">
-                    <flux:input inputmode="numeric" wire:model="form.cycles" :label="__('deals.work.cycles')" />
-                    <x-app.calendar-date-input model="form.starts_on" :label="__('deals.work.starts_on')" />
-                    <flux:input type="time" wire:model="form.start_time" :label="__('deals.work.start_time')" />
-                    <flux:input inputmode="numeric" wire:model="form.duration" :label="__('deals.work.duration')" />
-                    <flux:input inputmode="numeric" wire:model="form.every" :label="__('deals.work.every')" />
-                    <flux:select wire:model="form.period" :label="__('deals.work.period')">
-                        @foreach (['day', 'week', 'month'] as $p)<option value="{{ $p }}">{{ __('deals.work.periods.'.$p) }}</option>@endforeach
-                    </flux:select>
-                </div>
-            </details>
-            <flux:button variant="primary" wire:click="propose" wire:loading.attr="disabled" wire:target="propose">{{ __('deals.work.propose') }}</flux:button>
-            <p class="text-xs text-zinc-500">{{ __('deals.work.propose_note') }}</p>
+            <flux:button variant="primary" wire:click="addTask" wire:loading.attr="disabled" wire:target="addTask,taskMedia" data-task-add>{{ __('deals.work.task_add') }}</flux:button>
         </flux:card>
     @endif
 </div>
