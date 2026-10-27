@@ -32,7 +32,7 @@
                     <span class="font-medium" dir="auto">{{ $c->title }}</span>
                     <flux:badge size="sm" color="zinc">{{ __('deals.work.confirmed_by.'.$d['verifier']) }}</flux:badge>
                 </div>
-                <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · {{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $d['unit']]) }}</div>
+                <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · @if ($d['share']){{ __('deals.work.progress_share', ['done' => round((float) $d['accepted'] * 100)]) }}@elseif ($d['open_ended']){{ __('deals.work.progress_open', ['done' => $d['accepted'] + 0, 'unit' => $d['unit']]) }}@else{{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $d['unit']]) }}@endif</div>
 
                 @if ($c->description)<p class="whitespace-pre-wrap text-sm" dir="auto" data-task-description>{{ $c->description }}</p>@endif
                 @if ($d['media'])<div class="text-xs text-zinc-500" data-task-media>{{ implode(', ', $d['media']) }}</div>@endif
@@ -162,11 +162,12 @@
             <flux:heading size="sm">{{ __('deals.work.inspection_title') }}</flux:heading>
             <p class="text-xs text-zinc-500">{{ __('deals.work.inspection_hint') }}</p>
             <div class="grid gap-3 sm:grid-cols-2">
-                <flux:select wire:model="report.commitment" :label="__('deals.work.which_duty')" data-report-duty>
+                @php($sel = $reportable->first(fn ($x) => (string) $x['commitment']->id === (string) ($report['commitment'] ?? '')))
+                <flux:select wire:model.live="report.commitment" :label="__('deals.work.which_duty')" data-report-duty>
                     <option value="">—</option>
-                    @foreach ($reportable as $d)<option value="{{ $d['commitment']->id }}">{{ $d['commitment']->title }} ({{ __('deals.work.open_quantity', ['qty' => $d['remaining'] + 0, 'unit' => $d['unit']]) }})</option>@endforeach
+                    @foreach ($reportable as $d)<option value="{{ $d['commitment']->id }}">{{ $d['commitment']->title }}@if ($d['share']) ({{ __('deals.work.open_share', ['pct' => round((float) $d['remaining'] * 100)]) }})@elseif (! $d['open_ended']) ({{ __('deals.work.open_quantity', ['qty' => $d['remaining'] + 0, 'unit' => $d['unit']]) }})@endif</option>@endforeach
                 </flux:select>
-                <flux:input inputmode="decimal" wire:model="report.quantity" :label="__('deals.work.inspection_quantity')" data-report-quantity />
+                <flux:input inputmode="decimal" wire:model="report.quantity" :label="$sel && $sel['share'] ? __('deals.work.inspection_share') : ($sel ? __('deals.work.inspection_quantity_unit', ['unit' => $sel['unit']]) : __('deals.work.inspection_quantity'))" :description="$sel && $sel['share'] ? __('deals.work.inspection_share_hint') : null" data-report-quantity />
             </div>
             <flux:input wire:model="report.note" :label="__('deals.work.inspection_note')" maxlength="500" />
             <div>

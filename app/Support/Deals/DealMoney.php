@@ -67,9 +67,14 @@ final class DealMoney
     /** Money runs only when the accepted Agreement names a payment rule; otherwise the Deal is nonmonetary. */
     public static function mode(Commitment $commitment): ?string
     {
-        $mode = self::terms($commitment)['payment']['mode'] ?? null;
+        $terms = self::terms($commitment);
+        $mode = $terms['payment']['mode'] ?? null;
+        if (in_array($mode, self::MODES, true)) {
+            return $mode;
+        }
 
-        return in_array($mode, self::MODES, true) ? $mode : null;
+        // A priced Agreement with no payment rule still has money: work is paid for once it has been inspected and confirmed.
+        return isset($terms['price']) && ($terms['payment']['mode'] ?? null) !== 'none' ? 'after_confirmed_delivery' : null;
     }
 
     /** Money applies when the accepted Agreement names a payment rule, or work under one already exists. */
@@ -80,9 +85,39 @@ final class DealMoney
         }
 
         $version = $deal->contracts()->latest('id')->first()?->activeVersionRecord();
-        $mode = $version !== null ? (AgreementTerms::of($version)['payment']['mode'] ?? null) : null;
+        $terms = $version !== null ? AgreementTerms::of($version) : null;
+        $mode = $terms['payment']['mode'] ?? null;
 
-        return in_array($mode, self::MODES, true);
+        return in_array($mode, self::MODES, true) || (isset($terms['price']) && $mode !== 'none');
+    }
+
+    /**
+     * Money handed over on account, the way people often settle work: payments with no work attached yet. They are
+     * facts in the Deal's book (confirmed only when the recipient says so) and offset what is earned when it is.
+     *
+     * @return array{confirmed: int, pending: int}
+     */
+    public function onAccount(Relationship $deal): array
+    {
+        $ledger = $this->ledger($deal);
+        if (! $ledger instanceof Ledger) {
+            return ['confirmed' => 0, 'pending' => 0];
+        }
+        $payments = Transaction::query()->where('ledger_id', $ledger->id)->where('type', TransactionType::Payment->value)
+            ->whereIn('status', [TransactionStatus::Confirmed->value, TransactionStatus::Pending->value])->withSum('allocations', 'amount')->get();
+        $sum = ['confirmed' => 0, 'pending' => 0];
+        foreach ($payments as $payment) {
+            $free = max(0, (int) $payment->amount - (int) ($payment->allocations_sum_amount ?? 0));
+            $sum[$payment->status === TransactionStatus::Confirmed ? 'confirmed' : 'pending'] += $free;
+        }
+
+        return $sum;
+    }
+
+    /** Amounts the doer asked for on account that nobody has paid yet. @return list<array<string, mixed>> */
+    public function asks(Relationship $deal): array
+    {
+        return array_values(array_filter(Relationship::query()->find($deal->id)?->metadata['money_asks'] ?? [], fn ($a) => ($a['status'] ?? 'open') === 'open'));
     }
 
     /**
@@ -297,9 +332,11 @@ final class DealMoney
     }
 
     /**
-     * Each figure counts once. Per piece of work earned = received + still due + not yet due:
+     * Each figure counts once. Earned = received + credit applied from money on account + still due + not yet due:
      *  - estimated: the doer's rough daily progress not yet taken to inspection, at the agreed price (a guide; never owed)
      *  - reported_value: work submitted for inspection that the receiver has not decided on yet (not owed)
+     *  - on_account: money the recipient confirmed receiving with no work attached (offsets earned work, due first)
+     *  - roughly_owed / paid_ahead: rough progress + earned work, less everything confirmed received (a guide until the inspection)
      *  - earned: confirmed work at the accepted price
      *  - payable: the part of earned whose due day has come, whatever has been paid
      *  - outstanding_due: payable less what is confirmed received
@@ -310,18 +347,33 @@ final class DealMoney
      * @param  Collection<int, array<string, mixed>>  $items
      * @return array<string, int>
      */
-    public function summary(Collection $items, int $reportedValue = 0, int $estimatedValue = 0): array
+    public function summary(Collection $items, int $reportedValue = 0, int $estimatedValue = 0, array $account = ['confirmed' => 0, 'pending' => 0]): array
     {
         $dueItems = $items->filter(fn ($i) => $i['is_due']);
         $settled = $items->filter(fn ($i) => $i['state'] === 'settled');
+
+        // Money on account offsets earned work, what is due first. What the work still needs is net of it.
+        $due = (int) $items->sum('due_unpaid');
+        $future = (int) $items->sum('future');
+        $credit = $account['confirmed'];
+        $onDue = min($credit, $due);
+        $onFuture = min($credit - $onDue, $future);
+        $earned = (int) $items->sum('earned');
+        $received = (int) $items->sum('received');
+        $position = $estimatedValue + $earned - $received - $credit;
 
         return [
             'estimated' => $estimatedValue,
             'reported_value' => $reportedValue,
             'earned' => (int) $items->sum('earned'),
             'payable' => (int) $dueItems->sum('earned'),
-            'outstanding_due' => (int) $items->sum('due_unpaid'),
-            'not_yet_due' => (int) $items->sum('future'),
+            'outstanding_due' => $due - $onDue,
+            'not_yet_due' => $future - $onFuture,
+            'on_account' => $credit,
+            'on_account_pending' => $account['pending'],
+            'credit_applied' => $onDue + $onFuture,
+            'roughly_owed' => max(0, $position),
+            'paid_ahead' => max(0, -$position),
             'requested' => (int) $items->sum('requested'),
             'reported' => (int) $items->sum('reported'),
             'received' => (int) $items->sum('received'),

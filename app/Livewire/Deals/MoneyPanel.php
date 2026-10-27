@@ -6,6 +6,7 @@ use App\Actions\Deals\ManageDealMoney;
 use App\Enums\Bookkeeping\TransactionType;
 use App\Models\Bookkeeping\Ledger;
 use App\Models\Bookkeeping\Transaction;
+use App\Models\Commitment;
 use App\Models\Relationship;
 use App\Models\User;
 use App\Support\Deals\DealMoney;
@@ -46,6 +47,12 @@ class MoneyPanel extends Component
     /** Advance, instalment or final payment: each is its own event, named in the payment's description. */
     public string $purpose = '';
 
+    /** @var array<string, string> asking for money on account */
+    public array $ask = ['amount' => '', 'note' => ''];
+
+    /** @var array<string, string> paying on account */
+    public array $account = ['amount' => '', 'ask' => '', 'purpose' => 'advance'];
+
     /** One token per form: submitting it twice records one payment. */
     public string $payToken = '';
 
@@ -63,6 +70,38 @@ class MoneyPanel extends Component
             $this->note('money_requested', ['amount' => collect($entries)->sum('amount')]);
             $this->selected = [];
             $this->typed = [];
+        });
+    }
+
+    /** The doer asks for some money on account. A note both can see, not a debt. */
+    public function askMoney(ManageDealMoney $money): void
+    {
+        $this->guarded(function () use ($money): void {
+            $ask = $money->askOnAccount($this->relationship, $this->user(), (string) $this->ask['amount'], $this->ask['note']);
+            $this->note('money_asked', ['amount' => $ask['amount']]);
+            $this->ask = ['amount' => '', 'note' => ''];
+        });
+    }
+
+    /** Fill the payment form from an amount that was asked for. */
+    public function useAsk(string $id, DealMoney $money): void
+    {
+        $ask = collect($money->asks($this->relationship))->firstWhere('id', $id);
+        if ($ask !== null) {
+            $this->account = ['amount' => (string) $ask['amount'], 'ask' => $id, 'purpose' => 'instalment'];
+        }
+    }
+
+    /** The payer hands over money on account. Reported, not proof of receipt; the recipient confirms. */
+    public function payOnAccount(ManageDealMoney $money): void
+    {
+        $this->guarded(function () use ($money): void {
+            $payment = $money->payOnAccount($this->relationship, $this->user(), (string) $this->account['amount'], $this->payToken, $this->receipt, $this->text['note'] ?? null, $this->account['purpose'] ?: null, $this->account['ask'] ?: null);
+            $this->note('money_payment_reported', ['amount' => $payment->amount]);
+            $this->account = ['amount' => '', 'ask' => '', 'purpose' => 'advance'];
+            $this->receipt = null;
+            unset($this->text['note']);
+            $this->payToken = (string) Str::uuid();
         });
     }
 
@@ -147,12 +186,25 @@ class MoneyPanel extends Component
         return view('livewire.deals.money-panel', [
             'enabled' => $money->enabled($this->relationship, $items),
             'items' => $items,
-            'summary' => $money->summary($items, $money->reportedValue($this->relationship), $money->estimatedValue($this->relationship)),
+            'summary' => $money->summary($items, $money->reportedValue($this->relationship), $money->estimatedValue($this->relationship), $money->onAccount($this->relationship)),
+            'asks' => $money->asks($this->relationship),
+            'asProvider' => $this->roleIn($this->relationship, 'obligor'),
+            'asPayer' => $this->roleIn($this->relationship, 'beneficiary'),
             'ledger' => $ledger,
             'payments' => $payments,
             'me' => $me,
             'unitsHint' => DealMoney::UNITS,
         ]);
+    }
+
+    /** Whether this person does (obligor) or receives (beneficiary) work in the Deal that falls under a payment rule. */
+    private function roleIn(Relationship $deal, string $role): bool
+    {
+        $actorId = (int) $this->user()->actor?->id;
+
+        return Commitment::query()->whereHas('contractVersion.contract', fn ($q) => $q->where('relationship_id', $deal->id))
+            ->when($role === 'obligor', fn ($q) => $q->where('obligor_actor_id', $actorId), fn ($q) => $q->where('beneficiary_actor_id', $actorId))->with('contractVersion.contract.sourceProposalVersion')->get()
+            ->contains(fn ($c) => DealMoney::mode($c) !== null);
     }
 
     /** A labelled step line in the Deal's one conversation. It never decides or blocks anything. @param array<string, mixed> $meta */

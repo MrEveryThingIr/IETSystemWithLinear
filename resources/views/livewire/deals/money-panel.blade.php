@@ -13,15 +13,32 @@
             <p class="text-sm text-zinc-500">{{ __('deals.money.intro') }}</p>
 
             {{-- One summary; every figure comes from the accepted terms, confirmed work or the shared book --}}
-            <dl class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3" data-money-summary>
-                @foreach (['estimated', 'reported_value', 'earned', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'received', 'settled'] as $k)
-                    <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.sum.'.$k) }}</dt><dd class="font-medium" data-sum="{{ $k }}">{{ $fmt($summary[$k]) }}@if ($k === 'settled' && $summary['items'] > 0) <span class="text-xs font-normal text-zinc-500">({{ $summary['settled_count'] }}/{{ $summary['items'] }})</span>@endif</dd></div>
+            {{-- Where we are, in plain terms; every other figure is one tap away --}}
+            <dl class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4" data-money-summary>
+                @foreach (['estimated', 'earned', 'on_account', 'received'] as $k)
+                    <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.sum.'.$k) }}</dt><dd class="font-medium" data-sum="{{ $k }}">{{ $fmt($summary[$k]) }}</dd></div>
                 @endforeach
+                <div class="col-span-2 rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800 sm:col-span-4" data-money-position>
+                    @if ($summary['paid_ahead'] > 0)
+                        <dt class="text-xs text-zinc-500">{{ __('deals.money.sum.paid_ahead') }}</dt><dd class="font-semibold" data-sum="paid_ahead">{{ $fmt($summary['paid_ahead']) }}</dd>
+                    @else
+                        <dt class="text-xs text-zinc-500">{{ __('deals.money.sum.roughly_owed') }}</dt><dd class="font-semibold" data-sum="roughly_owed">{{ $fmt($summary['roughly_owed']) }}</dd>
+                    @endif
+                    <p class="text-xs text-zinc-500">{{ __('deals.money.position_hint') }}</p>
+                </div>
             </dl>
+            <details class="text-xs" data-money-more>
+                <summary class="cursor-pointer text-zinc-500">{{ __('deals.money.more_figures') }}</summary>
+                <dl class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    @foreach (['reported_value', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'settled'] as $k)
+                        <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.sum.'.$k) }}</dt><dd class="font-medium" data-sum="{{ $k }}">{{ $fmt($summary[$k]) }}@if ($k === 'settled' && $summary['items'] > 0) <span class="text-xs font-normal text-zinc-500">({{ $summary['settled_count'] }}/{{ $summary['items'] }})</span>@endif</dd></div>
+                    @endforeach
+                </dl>
+            </details>
             <details class="text-xs text-zinc-500" data-money-legend>
                 <summary class="cursor-pointer">{{ __('deals.money.legend.title') }}</summary>
                 <ul class="mt-1 list-disc space-y-1 ps-5">
-                    @foreach (['estimated', 'reported_value', 'earned', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'received', 'settled'] as $k)<li><span class="font-medium">{{ __('deals.money.sum.'.$k) }}:</span> {{ __('deals.money.legend.'.$k) }}</li>@endforeach
+                    @foreach (['estimated', 'earned', 'on_account', 'received', 'reported_value', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'settled'] as $k)<li><span class="font-medium">{{ __('deals.money.sum.'.$k) }}:</span> {{ __('deals.money.legend.'.$k) }}</li>@endforeach
                 </ul>
                 <p class="mt-1 font-medium">{{ __('deals.money.legend.identity') }}</p>
             </details>
@@ -93,6 +110,41 @@
             @endif
         @endif
     </flux:card>
+
+    {{-- Money on account: how work is often settled while it goes on. Ask, hand over, confirm; the exact accounts are settled at an inspection or at the end. --}}
+    @if ($enabled && ($asProvider || $asPayer))
+        <flux:card class="space-y-3" data-money-account>
+            <flux:heading size="sm">{{ __('deals.money.account_title') }}</flux:heading>
+            <p class="text-xs text-zinc-500">{{ __('deals.money.account_hint') }}</p>
+            @foreach ($asks as $a)
+                <div wire:key="ask-{{ $a['id'] }}" class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-zinc-50 p-2 text-sm dark:bg-zinc-900" data-money-ask>
+                    <span>{{ __('deals.money.asked_line', ['amount' => $fmt((int) $a['amount'])]) }}@if (! empty($a['note'])) — <span dir="auto">{{ $a['note'] }}</span>@endif</span>
+                    @if ($asPayer)<flux:button size="sm" wire:click="useAsk('{{ $a['id'] }}')">{{ __('deals.money.pay_this') }}</flux:button>@endif
+                </div>
+            @endforeach
+            @if ($asProvider)
+                <div class="grid gap-2 sm:grid-cols-2">
+                    <flux:input inputmode="numeric" wire:model="ask.amount" :label="__('deals.money.ask_amount')" data-ask-amount />
+                    <flux:input wire:model="ask.note" :label="__('deals.money.note')" maxlength="300" />
+                </div>
+                <flux:button size="sm" wire:click="askMoney" wire:loading.attr="disabled" wire:target="askMoney" data-ask-send>{{ __('deals.money.ask_send') }}</flux:button>
+            @endif
+            @if ($asPayer)
+                <div class="space-y-2 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        <flux:input inputmode="numeric" wire:model="account.amount" :label="__('deals.money.pay_amount')" data-account-amount />
+                        <flux:select wire:model="account.purpose" :label="__('deals.money.purpose_label')">
+                            @foreach (['advance', 'instalment', 'final'] as $kind)<option value="{{ $kind }}">{{ __('deals.money.purpose.'.$kind) }}</option>@endforeach
+                        </flux:select>
+                    </div>
+                    <flux:input wire:model="text.note" :label="__('deals.money.note')" maxlength="300" />
+                    <flux:input type="file" wire:model="receipt" :label="__('deals.money.receipt')" accept="image/*,application/pdf" />
+                    <flux:button size="sm" variant="primary" wire:click="payOnAccount" wire:loading.attr="disabled" wire:target="payOnAccount,receipt" data-account-pay>{{ __('deals.money.pay_on_account') }}</flux:button>
+                    <p class="text-xs text-zinc-500">{{ __('deals.money.report_note') }}</p>
+                </div>
+            @endif
+        </flux:card>
+    @endif
 
     {{-- Reporting a payment that was really made. It proves nothing until the recipient confirms. --}}
     @if ($payable->isNotEmpty())

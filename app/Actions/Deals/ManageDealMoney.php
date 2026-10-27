@@ -27,6 +27,7 @@ use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -179,6 +180,78 @@ class ManageDealMoney
         }
 
         return $transaction;
+    }
+
+    /**
+     * The doer asks for some money on account, as people do while work goes on ("send me something for the days so far").
+     * It is a note both can see; it is not a debt and not a claim on any particular piece of work.
+     *
+     * @return array<string, mixed>
+     */
+    public function askOnAccount(Relationship $deal, User $user, string $amount, ?string $note = null): array
+    {
+        $actor = $this->actor($user);
+        abort_unless($this->owedWork($deal)->contains(fn ($c) => (int) $c->obligor_actor_id === (int) $actor->id), 403);
+        $value = Toman::parse($amount, 'amount');
+
+        return DB::transaction(function () use ($deal, $actor, $value, $note): array {
+            $locked = Relationship::query()->lockForUpdate()->findOrFail($deal->id);
+            $ask = ['id' => (string) Str::uuid(), 'amount' => $value, 'note' => Str::limit(trim((string) $note), 300, ''), 'by_actor_id' => $actor->id, 'at' => now()->toIso8601String(), 'status' => 'open'];
+            $locked->forceFill(['metadata' => [...($locked->metadata ?? []), 'money_asks' => [...($locked->metadata['money_asks'] ?? []), $ask]]])->save();
+
+            return $ask;
+        });
+    }
+
+    /**
+     * The payer hands over money on account (an advance, an instalment or a final payment) with no work attached yet.
+     * It is reported, never proof of receipt: it counts when the recipient confirms. Any difference from what is earned
+     * is settled at the next inspection or at the end.
+     */
+    public function payOnAccount(Relationship $deal, User $user, string $amount, string $token, ?UploadedFile $receipt = null, ?string $note = null, ?string $purpose = null, ?string $askId = null): Transaction
+    {
+        $actor = $this->actor($user);
+        $mine = $this->owedWork($deal)->filter(fn ($c) => (int) $c->beneficiary_actor_id === (int) $actor->id);
+        abort_if($mine->isEmpty(), 403);
+        abort_if(trim($token) === '', 422);
+        $value = Toman::parse($amount, 'amount');
+        $ledger = $this->ledger($deal, $user);
+        $payer = $ledger->partyFor($actor);
+        $payee = $ledger->partyFor((int) $mine->first()->obligor_actor_id);
+        abort_if($payer === null || $payee === null, 422, (string) __('deals.errors.money_book_parties'));
+
+        $key = 'deal-acct:'.substr(hash('sha256', $deal->uuid.':'.trim($token)), 0, 40);
+        $first = Transaction::query()->where('ledger_id', $ledger->id)->where('recorded_by_actor_id', $actor->id)->where('idempotency_key', $key)->first();
+        if ($first instanceof Transaction) {
+            return $first;
+        }
+
+        $transaction = DB::transaction(function () use ($deal, $user, $ledger, $payer, $payee, $value, $key, $note, $purpose, $askId): Transaction {
+            $entry = $this->record->execute(
+                $ledger, $user, TransactionType::Payment, $payer, $payee, $value, $this->today($user), $this->description($note, $purpose ?: 'advance'), null, [],
+                idempotencyKey: $key, source: new EntrySource(EntryOrigin::IetWorkflow, 'deal_account', (string) $deal->uuid),
+            );
+            if ($askId !== null && $askId !== '') {
+                $locked = Relationship::query()->lockForUpdate()->findOrFail($deal->id);
+                $asks = array_map(fn ($a) => ($a['id'] ?? null) === $askId ? [...$a, 'status' => 'paid', 'payment' => $entry->uuid] : $a, $locked->metadata['money_asks'] ?? []);
+                $locked->forceFill(['metadata' => [...($locked->metadata ?? []), 'money_asks' => $asks]])->save();
+            }
+
+            return $entry;
+        }, 3);
+
+        if ($receipt instanceof UploadedFile) {
+            $this->attach->execute($transaction, $user, $receipt);
+        }
+
+        return $transaction;
+    }
+
+    /** @return Collection<int, Commitment> the Deal's work that falls under a payment rule */
+    private function owedWork(Relationship $deal): Collection
+    {
+        return Commitment::query()->whereHas('contractVersion.contract', fn ($q) => $q->where('relationship_id', $deal->id))
+            ->with('contractVersion.contract.sourceProposalVersion')->get()->filter(fn (Commitment $c) => DealMoney::mode($c) !== null)->values();
     }
 
     /** Agree to a request or confirm a reported payment was received. Only the person still asked to decide can. */

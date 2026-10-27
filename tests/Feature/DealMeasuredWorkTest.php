@@ -206,7 +206,7 @@ class DealMeasuredWorkTest extends TestCase
 
         // 121 of 120 square metres: refused in the person's language, never in English.
         $c = $this->panel($alice, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '121')->call('submitReport');
-        $c->assertHasErrors('report.quantity')->assertSee(__('deals.errors.quantity_exceeds'))->assertDontSee('exceeds the remaining');
+        $c->assertHasErrors('report.quantity')->assertSee(__('deals.errors.quantity_exceeds', ['open' => '120 '.__('deals.bases.square_metre')]))->assertDontSee('exceeds the remaining');
         $this->assertSame(0, Fulfillment::query()->count());
 
         // Quantity waiting for a decision still counts against what can be reported.

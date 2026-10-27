@@ -63,8 +63,10 @@ class ManageDealWork
             $terms = AgreementTerms::of($version);
             $unit = (string) ($terms['quantity']['unit'] ?? '');
             $basis = (string) ($terms['price']['basis'] ?? '');
-            $unit = $unit !== '' ? $unit : (in_array($basis, DealMoney::UNITS, true) ? $basis : 'project');
-            $quantity = QuantityAmount::positive((string) ($terms['quantity']['value'] ?? '1'));
+            $measurable = in_array($basis, DealMoney::UNITS, true) && ! in_array($basis, ['project', 'milestone', 'session'], true);
+            $unit = $unit !== '' ? $unit : ($measurable ? $basis : 'project');
+            // A price per unit with no total agreed leaves the quantity open; a whole-job task is reported as a share of the job.
+            $quantity = QuantityAmount::positive((string) ($terms['quantity']['value'] ?? ($measurable ? '100000' : '1')));
 
             $commitment = $this->createCommitment->execute(
                 $version->contract, $user, $doer->actor, $receiver->actor, CommitmentKind::Work, $title, $quantity, $unit,

@@ -237,9 +237,18 @@ class WorkPanel extends Component
         if ($quantity === null) {
             $this->addError('report.quantity', (string) __('deals.errors.report_quantity'));
         }
+        // A whole-job task is reported as a share of the job (percent); anything else in its own unit.
+        if ($commitment instanceof Commitment && $quantity !== null && self::isShare($commitment)) {
+            if ((float) $quantity > 100) {
+                $this->addError('report.quantity', (string) __('deals.errors.share_over'));
+            } else {
+                $quantity = QuantityAmount::fromScaledInt((int) round(((float) $quantity / 100) * 10000));
+            }
+        }
         // Reports waiting for a decision still use up the agreed quantity; the kernel only counts confirmed work.
-        if ($commitment instanceof Commitment && $quantity !== null && QuantityAmount::compare($quantity, $this->openQuantity($commitment, $progress)) > 0) {
-            $this->addError('report.quantity', (string) __('deals.errors.quantity_exceeds'));
+        if ($commitment instanceof Commitment && $quantity !== null && ! $this->getErrorBag()->has('report.quantity') && QuantityAmount::compare($quantity, $this->openQuantity($commitment, $progress)) > 0) {
+            $open = self::isShare($commitment) ? round((float) $this->openQuantity($commitment, $progress) * 100).' %' : self::trimQty($this->openQuantity($commitment, $progress)).' '.(DealTerms::basisLabel($commitment->unit) ?? $commitment->unit);
+            $this->addError('report.quantity', (string) __('deals.errors.quantity_exceeds', ['open' => $open]));
         }
         if (count($this->evidence) > 5) {
             $this->addError('evidence', (string) __('deals.errors.report_files'));
@@ -386,6 +395,8 @@ class WorkPanel extends Component
             'reports' => $planned ? collect() : $c->fulfillments->where('status', '!=', FulfillmentStatus::Corrected)->sortByDesc('id')->values(),
             'isObligor' => Gate::forUser($user)->allows('submit', $c),
             'unit' => DealTerms::basisLabel($c->unit) ?? $c->unit,
+            'share' => self::isShare($c),
+            'open_ended' => self::isOpen($c),
         ];
     }
 
@@ -429,6 +440,18 @@ class WorkPanel extends Component
     private static function trimQty(string $quantity): string
     {
         return str_contains($quantity, '.') ? rtrim(rtrim($quantity, '0'), '.') : $quantity;
+    }
+
+    /** A task for the whole job (no measurable unit) is reported as a share of the job. */
+    public static function isShare(Commitment $c): bool
+    {
+        return in_array(strtolower((string) $c->unit), ['project', 'total'], true) && QuantityAmount::compare((string) $c->quantity, '1') === 0;
+    }
+
+    /** No fixed total was agreed (a price per unit only): the quantity is open-ended. */
+    public static function isOpen(Commitment $c): bool
+    {
+        return QuantityAmount::compare((string) $c->quantity, '100000') >= 0;
     }
 
     /** Whole or decimal quantity in any digits and separators, or null when it is not a positive number. */
