@@ -14,10 +14,17 @@
 
             {{-- One summary; every figure comes from the accepted terms, confirmed work or the shared book --}}
             <dl class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3" data-money-summary>
-                @foreach (['owed', 'unrequested', 'requested', 'reported', 'received', 'outstanding'] as $k)
-                    <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.sum.'.$k) }}</dt><dd class="font-medium" data-sum="{{ $k }}">{{ $fmt($summary[$k]) }}</dd></div>
+                @foreach (['estimated', 'reported_value', 'earned', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'received', 'settled'] as $k)
+                    <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.sum.'.$k) }}</dt><dd class="font-medium" data-sum="{{ $k }}">{{ $fmt($summary[$k]) }}@if ($k === 'settled' && $summary['items'] > 0) <span class="text-xs font-normal text-zinc-500">({{ $summary['settled_count'] }}/{{ $summary['items'] }})</span>@endif</dd></div>
                 @endforeach
             </dl>
+            <details class="text-xs text-zinc-500" data-money-legend>
+                <summary class="cursor-pointer">{{ __('deals.money.legend.title') }}</summary>
+                <ul class="mt-1 list-disc space-y-1 ps-5">
+                    @foreach (['estimated', 'reported_value', 'earned', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'received', 'settled'] as $k)<li><span class="font-medium">{{ __('deals.money.sum.'.$k) }}:</span> {{ __('deals.money.legend.'.$k) }}</li>@endforeach
+                </ul>
+                <p class="mt-1 font-medium">{{ __('deals.money.legend.identity') }}</p>
+            </details>
             @if ($summary['attention'] > 0)<p class="text-sm text-amber-600" data-money-attention>{{ __('deals.money.attention', ['count' => $summary['attention']]) }}</p>@endif
 
             @if ($items->isEmpty())
@@ -40,6 +47,20 @@
                             · @if ($item['derived'] !== null){{ __('deals.money.from_agreement', ['amount' => $fmt($item['derived'])]) }}@elseif ($o){{ __('deals.money.asked', ['amount' => $fmt($item['requested'])]) }}@else{{ __('deals.money.no_amount') }}@endif
                             @if ($item['received'] > 0 || $item['reported'] > 0) · {{ __('deals.money.progress', ['received' => $fmt($item['received']), 'reported' => $fmt($item['reported'])]) }}@endif
                         </div>
+
+                        <details class="mt-1 text-xs text-zinc-600 dark:text-zinc-300" data-item-details>
+                            <summary class="cursor-pointer text-zinc-500">{{ __('deals.money.item_details') }}</summary>
+                            <dl class="mt-1 space-y-1">
+                                <div><dt class="inline text-zinc-500">{{ __('deals.money.d.version') }}:</dt> <dd class="inline">{{ __('deals.agreement_version', ['version' => $c->contractVersion->version]) }}</dd></div>
+                                @if ($item['fulfillment'])
+                                    <div><dt class="inline text-zinc-500">{{ __('deals.money.d.work') }}:</dt> <dd class="inline" dir="auto">{{ __('deals.money.d.work_line', ['confirmed' => $item['quantity'] + 0, 'reported' => $item['fulfillment']->quantity + 0, 'unit' => \App\Support\Deals\DealTerms::basisLabel($c->unit) ?? $c->unit]) }}@if ($item['fulfillment']->actual_start_at) · {{ \App\Support\TemporalCalendar::dateLabel($item['fulfillment']->actual_start_at, auth()->user()) }}@endif</dd></div>
+                                @endif
+                                @if ($item['due_on'])<div><dt class="inline text-zinc-500">{{ __('deals.money.d.due') }}:</dt> <dd class="inline">{{ __('deals.money.due.'.$item['due_rule']['rule'].(isset($item['due_rule']['period']) ? '_'.$item['due_rule']['period'] : '')) }} · {{ \App\Support\TemporalCalendar::dateLabel($item['due_on'], auth()->user()) }}</dd></div>@endif
+                                <div><dt class="inline text-zinc-500">{{ __('deals.money.d.outstanding') }}:</dt> <dd class="inline">{{ $fmt($item['outstanding']) }}</dd></div>
+                                <div><dt class="text-zinc-500">{{ __('deals.money.d.allocations') }}:</dt>
+                                    <dd>@forelse ($item['allocations'] as $alloc)<div>{{ $fmt((int) $alloc->amount) }} · {{ __('deals.money.pay_status.'.$alloc->status) }} · <x-app.local-date :value="$alloc->occurred_on" /></div>@empty<span class="text-zinc-500">{{ __('deals.money.d.none') }}</span>@endforelse</dd></div>
+                            </dl>
+                        </details>
 
                         {{-- The doer asks; the amount is fixed by the terms, or typed and then agreed by the payer --}}
                         @if ($askable->contains(fn ($a) => $a['key'] === $item['key']))
@@ -85,6 +106,10 @@
                     <flux:input size="sm" inputmode="numeric" wire:model="pay.{{ $item['obligation']->uuid }}" :placeholder="(string) $left" :label="__('deals.money.amount')" class="max-w-40" />
                 </div>
             @endforeach
+            <flux:select wire:model="purpose" :label="__('deals.money.purpose_label')" data-pay-purpose>
+                <option value="">{{ __('deals.money.purpose.other') }}</option>
+                @foreach (['advance', 'instalment', 'final'] as $kind)<option value="{{ $kind }}">{{ __('deals.money.purpose.'.$kind) }}</option>@endforeach
+            </flux:select>
             <flux:input type="file" wire:model="receipt" :label="__('deals.money.receipt')" accept="image/*,application/pdf" />
             <flux:input wire:model="text.note" :label="__('deals.money.note')" maxlength="300" />
             <flux:button variant="primary" wire:click="report" wire:loading.attr="disabled" wire:target="report,receipt" data-money-report>{{ __('deals.money.report') }}</flux:button>

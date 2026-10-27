@@ -3,6 +3,7 @@
 namespace App\Livewire\Deals;
 
 use App\Actions\Assets\CreateContextAsset;
+use App\Actions\Deals\LogWorkDay;
 use App\Actions\Deals\ManageDealWork;
 use App\Actions\Fulfillments\OpenFulfillmentDispute;
 use App\Actions\Fulfillments\ResolveFulfillmentDispute;
@@ -26,10 +27,9 @@ use App\Support\Deals\AgreementTerms;
 use App\Support\Deals\DealErrors;
 use App\Support\Deals\DealParties;
 use App\Support\Deals\DealTerms;
+use App\Support\Deals\WorkLog;
 use App\Support\LocalizedNumber;
 use App\Support\QuantityAmount;
-use App\Support\TemporalPreferences;
-use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -55,8 +55,14 @@ class WorkPanel extends Component
     /** @var array<string, mixed> setting up a duty */
     public array $form = [];
 
-    /** @var array<string, string> reporting measured work */
+    /** @var array<string, string> asking for an inspection of finished work (a milestone or the end) */
     public array $report = [];
+
+    /** @var array<string, string> one day's entry in the work log */
+    public array $log = [];
+
+    /** @var array<int, mixed> evidence files for the day being logged */
+    public array $logEvidence = [];
 
     /** @var array<string, string> keyed by "<purpose>-<id>" */
     public array $text = [];
@@ -69,6 +75,7 @@ class WorkPanel extends Component
         $this->relationship = $relationship;
         $this->resetForm();
         $this->resetReport();
+        $this->resetLog();
     }
 
     public function propose(ManageDealWork $work): void
@@ -149,7 +156,38 @@ class WorkPanel extends Component
         });
     }
 
-    /** Measured work: how much was done, in which period, with optional note and evidence. Nothing counts until the receiver confirms it. */
+    /** One day's entry: when work started and ended, what happened, a rough progress figure and evidence. History only: nothing is confirmed or owed. */
+    public function logDay(LogWorkDay $logger): void
+    {
+        $this->resetErrorBag();
+        $l = $this->log;
+        $commitment = ($l['commitment'] ?? '') !== '' ? $this->commitments()->find((int) $l['commitment']) : null;
+        if (! $commitment instanceof Commitment) {
+            $this->addError('log.commitment', (string) __('deals.errors.report_duty'));
+        }
+        foreach (['date' => 'work_log_date', 'from' => 'work_log_times', 'to' => 'work_log_times'] as $field => $message) {
+            if (trim((string) ($l[$field] ?? '')) === '') {
+                $this->addError('log.'.$field, (string) __('deals.errors.'.$message));
+            }
+        }
+        $estimate = trim((string) ($l['estimate'] ?? '')) === '' ? null : self::quantity((string) $l['estimate']);
+        if (trim((string) ($l['estimate'] ?? '')) !== '' && $estimate === null) {
+            $this->addError('log.estimate', (string) __('deals.errors.report_quantity'));
+        }
+        if (count($this->logEvidence) > 5) {
+            $this->addError('logEvidence', (string) __('deals.errors.report_files'));
+        }
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        $this->guarded(function () use ($logger, $commitment, $l, $estimate): void {
+            $logger->execute($commitment, $this->user(), (string) $l['date'], (string) $l['from'], (string) $l['to'], (string) ($l['note'] ?? ''), $estimate, $this->logEvidence);
+            $this->resetLog();
+        });
+    }
+
+    /** Finished work is inspected at a milestone or at the end: the doer says how much is ready, the receiver measures and confirms. Nothing counts until then. */
     public function submitReport(SubmitFulfillment $submit, CreateContextAsset $assets, CommitmentProgress $progress): void
     {
         $this->resetErrorBag();
@@ -163,11 +201,6 @@ class WorkPanel extends Component
         if ($quantity === null) {
             $this->addError('report.quantity', (string) __('deals.errors.report_quantity'));
         }
-        $from = trim((string) ($r['from'] ?? ''));
-        $to = trim((string) ($r['to'] ?? '')) ?: $from;
-        if ($from !== '' && $to < $from) {
-            $this->addError('report.to', (string) __('deals.errors.report_period'));
-        }
         // Reports waiting for a decision still use up the agreed quantity; the kernel only counts confirmed work.
         if ($commitment instanceof Commitment && $quantity !== null && QuantityAmount::compare($quantity, $this->openQuantity($commitment, $progress)) > 0) {
             $this->addError('report.quantity', (string) __('deals.errors.quantity_exceeds'));
@@ -179,17 +212,14 @@ class WorkPanel extends Component
             return;
         }
 
-        $this->guarded(function () use ($submit, $assets, $commitment, $quantity, $from, $to, $r): void {
+        $this->guarded(function () use ($submit, $assets, $commitment, $quantity, $r): void {
             Gate::forUser($this->user())->authorize('submit', $commitment);
-            $zone = TemporalPreferences::timezoneFor($this->user());
-            $start = $from !== '' ? CarbonImmutable::parse($from, $zone)->startOfDay() : null;
-            $end = $from !== '' ? CarbonImmutable::parse($to, $zone)->endOfDay() : null;
 
-            DB::transaction(function () use ($submit, $assets, $commitment, $quantity, $start, $end, $r): void {
+            DB::transaction(function () use ($submit, $assets, $commitment, $quantity, $r): void {
                 $context = $commitment->contractVersion->contract->contextBinding?->context;
                 $assetIds = collect($this->evidence)->map(fn ($file) => $assets->execute($context, $this->user(), $file, 'owned')->id)->all();
                 $note = trim((string) ($r['note'] ?? ''));
-                $submit->execute($commitment, $this->user(), $quantity, actualStartAt: $start, actualEndAt: $end, notes: $note !== '' ? $note : null, assetIds: $assetIds);
+                $submit->execute($commitment, $this->user(), $quantity, notes: $note !== '' ? $note : null, assetIds: $assetIds);
             });
             $this->resetReport();
         });
@@ -260,6 +290,7 @@ class WorkPanel extends Component
             'mine' => $mine,
             'pending' => $pending,
             'duties' => $duties,
+            'loggable' => $duties->filter(fn ($d) => $d['isObligor'] && ! $d['planned'])->values(),
             'reportable' => $duties->filter(fn ($d) => $d['isObligor'] && ! $d['planned'] && QuantityAmount::compare($d['remaining'], '0') > 0)->values(),
             'units' => self::UNITS,
             'user' => $this->user(),
@@ -290,6 +321,7 @@ class WorkPanel extends Component
             'remaining' => $this->openQuantity($c, $progress),
             'planned' => $planned,
             'rows' => $rows,
+            'log' => $planned ? null : WorkLog::for($c),
             'reports' => $planned ? collect() : $c->fulfillments->where('status', '!=', FulfillmentStatus::Corrected)->sortByDesc('id')->values(),
             'isObligor' => Gate::forUser($user)->allows('submit', $c),
             'unit' => DealTerms::basisLabel($c->unit) ?? $c->unit,
@@ -396,8 +428,14 @@ class WorkPanel extends Component
 
     private function resetReport(): void
     {
-        $this->report = ['commitment' => '', 'quantity' => '', 'from' => '', 'to' => '', 'note' => ''];
+        $this->report = ['commitment' => '', 'quantity' => '', 'note' => ''];
         $this->evidence = [];
+    }
+
+    private function resetLog(): void
+    {
+        $this->log = ['commitment' => count($this->log) ? ($this->log['commitment'] ?? '') : '', 'date' => '', 'from' => '', 'to' => '', 'note' => '', 'estimate' => ''];
+        $this->logEvidence = [];
     }
 
     private function guarded(callable $call): void

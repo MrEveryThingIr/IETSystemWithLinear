@@ -20,6 +20,7 @@ use App\Models\Proposal;
 use App\Models\Relationship;
 use App\ProposalDecisionKind;
 use App\Support\CommitmentProgress;
+use App\Support\Deals\WorkLog;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -125,52 +126,83 @@ class DealMeasuredWorkTest extends TestCase
         return app(CommitmentProgress::class)->acceptedQuantity($c);
     }
 
-    public function test_irregular_measured_work_is_reported_with_period_note_and_photo_and_only_confirmed_quantity_counts(): void
+    private function log(Actor $who, Relationship $deal, Commitment $c, array $fields)
     {
-        [$alice, $bob, $deal, $wall] = $this->wallDeal();
+        $panel = $this->panel($who, $deal)->set('log.commitment', (string) $c->id);
+        foreach ($fields as $key => $value) {
+            $panel->set('log.'.$key, $value);
+        }
 
-        // The doer reports a few days' work with a photo; nothing counts yet.
-        $this->panel($alice, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '12.5')->set('report.from', '2026-12-01')->set('report.to', '2026-12-02')->set('report.note', 'North side')
-            ->set('evidence', [UploadedFile::fake()->image('wall.jpg', 600, 400)])->call('submitReport')->assertHasNoErrors();
-        $first = Fulfillment::query()->sole();
-        $this->assertSame(FulfillmentStatus::Submitted, $first->status);
-        $this->assertSame(1, $first->assets()->count(), 'the photo is kept with the report');
-        $this->assertNotNull($first->actual_start_at);
-        $this->assertEquals(0, (float) $this->accepted($wall));
-        $this->panel($bob, $deal)->assertSee('data-cycle-state="reported"', false)->assertSee('wall.jpg');
-
-        // Only the doer reports; only the receiver decides.
-        $this->panel($bob, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '1')->call('submitReport')->assertStatus(403);
-        $this->panel($alice, $deal)->set('text.confirm-'.$first->id, '10')->call('review', $first->id, 'accepted')->assertStatus(403);
-
-        // The receiver confirms part of it: partly accepted, and exactly that quantity counts.
-        $this->panel($bob, $deal)->set('text.confirm-'.$first->id, '13')->call('review', $first->id, 'accepted')->assertHasErrors('work');
-        $this->panel($bob, $deal)->set('text.confirm-'.$first->id, '10')->call('review', $first->id, 'accepted')->assertHasNoErrors();
-        $this->assertTrue($first->fresh()->isPartlyAccepted());
-        $this->assertEquals(10, (float) $this->accepted($wall));
-        $this->panel($alice, $deal)->assertSee('data-cycle-state="partly_accepted"', false);
-
-        // A second, irregular report: a question, a correction, then accepted in full.
-        $this->panel($alice, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '20')->set('report.from', '2026-12-05')->call('submitReport')->assertHasNoErrors();
-        $second = Fulfillment::query()->latest('id')->firstOrFail();
-        $this->panel($bob, $deal)->call('review', $second->id, 'clarification_requested')->assertHasErrors('work');
-        $this->panel($bob, $deal)->set('text.review-'.$second->id, 'Measured 18 on site')->call('review', $second->id, 'clarification_requested')->assertHasNoErrors();
-        $this->panel($alice, $deal)->set('text.notes-fix-'.$second->id, 'Re-measured: 18')->call('correct', $second->id, '18')->assertHasNoErrors();
-        $fixed = Fulfillment::query()->where('status', FulfillmentStatus::Submitted)->latest('id')->firstOrFail();
-        $this->panel($bob, $deal)->call('review', $fixed->id, 'accepted')->assertHasNoErrors();
-        $this->assertEquals(28, (float) $this->accepted($wall));
-        $this->assertFalse($fixed->fresh()->isPartlyAccepted());
+        return $panel->call('logDay');
     }
 
-    public function test_reports_cannot_exceed_the_agreed_quantity_and_each_error_is_localized_under_its_field(): void
+    public function test_a_deliverable_based_duty_keeps_a_day_by_day_log_and_is_measured_at_inspections(): void
+    {
+        // Real time on purpose: Livewire discards temporary uploads that look a day old under a frozen future clock.
+        [$d1, $d2, $d3] = [now()->subDays(3)->format('Y-m-d'), now()->subDays(2)->format('Y-m-d'), now()->subDay()->format('Y-m-d')];
+        [$alice, $bob, $deal, $wall] = $this->wallDeal();
+
+        // Irregular days: a long day with a photo and a rough figure, a short day where work stopped, another long day.
+        $first = $this->panel($alice, $deal)->set('log.commitment', (string) $wall->id)->set('log.date', $d1)->set('log.from', '08:00')->set('log.to', '16:30')
+            ->set('log.note', 'Laid the first six courses on the north side.')->set('log.estimate', '8')->set('logEvidence', [UploadedFile::fake()->image('wall.jpg', 600, 400)]);
+        $first->call('logDay');
+        $first->assertHasNoErrors();
+        $this->log($alice, $deal, $wall, ['date' => $d2, 'from' => '09:00', 'to' => '10:15', 'note' => 'Stopped: the cement had not arrived.'])->assertHasNoErrors();
+        $this->log($alice, $deal, $wall, ['date' => $d3, 'from' => '07:30', 'to' => '17:00', 'note' => 'Finished the north side; drawings missing the door opening.', 'estimate' => '12.5'])->assertHasNoErrors();
+
+        $log = WorkLog::for($wall->fresh());
+        $this->assertSame(3, $log['days']);
+        $this->assertSame(510 + 75 + 570, $log['minutes']);
+        $this->assertEquals(20.5, (float) $log['estimate']);
+        $this->assertSame(1, collect($log['entries'])->flatMap(fn ($e) => $e['files'])->count(), 'the photo stays with its day');
+        $this->assertSame(0, Fulfillment::query()->count(), 'a log is history, not a claim');
+        $this->assertEquals(0, (float) app(CommitmentProgress::class)->acceptedQuantity($wall), 'and nothing is confirmed by it');
+        $this->panel($bob, $deal)->assertSee('data-log-entry', false)->assertSee('wall.jpg')->assertSee('Stopped: the cement had not arrived.');
+
+        // Only the doer logs; a day must have a start before its finish and cannot be in the future; an entry cannot be empty.
+        $this->log($bob, $deal, $wall, ['date' => $d3, 'from' => '08:00', 'to' => '09:00', 'note' => 'x'])->assertStatus(403);
+        $this->log($alice, $deal, $wall, ['date' => $d3, 'from' => '10:00', 'to' => '09:00', 'note' => 'x'])->assertHasErrors('work');
+        $this->log($alice, $deal, $wall, ['date' => now()->addDays(5)->format('Y-m-d'), 'from' => '08:00', 'to' => '09:00', 'note' => 'x'])->assertHasErrors('work');
+        $this->log($alice, $deal, $wall, ['date' => $d3, 'from' => '08:00', 'to' => '09:00', 'note' => ''])->assertHasErrors('work');
+        $this->log($alice, $deal, $wall, ['date' => '', 'from' => '', 'to' => ''])->assertHasErrors(['log.date', 'log.from', 'log.to']);
+        $this->assertSame(3, WorkLog::for($wall->fresh())['days']);
+
+        // The first floor is finished: the doer asks for an inspection of what is ready (no dates, no hours).
+        $this->panel($alice, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '18')->set('report.note', 'First floor')->call('submitReport')->assertHasNoErrors();
+        $first = Fulfillment::query()->sole();
+        $this->assertNull($first->actual_start_at);
+        $this->assertEquals(0, (float) app(CommitmentProgress::class)->acceptedQuantity($wall));
+
+        // The receiver measures: only the doer asks; only the receiver decides; at most what was asked; part of it counts.
+        $this->panel($bob, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '1')->call('submitReport')->assertStatus(403);
+        $this->panel($alice, $deal)->set('text.confirm-'.$first->id, '10')->call('review', $first->id, 'accepted')->assertStatus(403);
+        $this->panel($bob, $deal)->set('text.confirm-'.$first->id, '19')->call('review', $first->id, 'accepted')->assertHasErrors('work');
+        $this->panel($bob, $deal)->set('text.confirm-'.$first->id, '15')->call('review', $first->id, 'accepted')->assertHasNoErrors();
+        $this->assertTrue($first->fresh()->isPartlyAccepted());
+        $this->assertEquals(15, (float) app(CommitmentProgress::class)->acceptedQuantity($wall));
+        $this->panel($alice, $deal)->assertSee('data-cycle-state="partly_accepted"', false);
+
+        // The final inspection: a question, a correction, accepted in full.
+        $this->panel($alice, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '104')->set('report.note', 'Whole wall')->call('submitReport')->assertHasNoErrors();
+        $final = Fulfillment::query()->latest('id')->firstOrFail();
+        $this->panel($bob, $deal)->call('review', $final->id, 'clarification_requested')->assertHasErrors('work');
+        $this->panel($bob, $deal)->set('text.review-'.$final->id, 'Measured 100 on site')->call('review', $final->id, 'clarification_requested')->assertHasNoErrors();
+        $this->panel($alice, $deal)->set('text.notes-fix-'.$final->id, 'Re-measured: 100')->call('correct', $final->id, '100')->assertHasNoErrors();
+        $fixed = Fulfillment::query()->where('status', FulfillmentStatus::Submitted)->latest('id')->firstOrFail();
+        $this->panel($bob, $deal)->call('review', $fixed->id, 'accepted')->assertHasNoErrors();
+        $this->assertEquals(115, (float) app(CommitmentProgress::class)->acceptedQuantity($wall));
+    }
+
+    public function test_inspections_cannot_exceed_the_agreed_quantity_and_each_error_is_localized_under_its_field(): void
     {
         [$alice, $bob, $deal, $wall] = $this->wallDeal();
 
         app()->setLocale('fa');
         $c = $this->panel($alice, $deal)->set('report.commitment', '')->set('report.quantity', 'abc')->call('submitReport');
         $c->assertHasErrors(['report.commitment', 'report.quantity'])->assertSee(__('deals.errors.report_quantity'))->assertDontSee('Commitment')->assertDontSee('Fulfillment');
-        $c = $this->panel($alice, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '5')->set('report.from', '2026-12-10')->set('report.to', '2026-12-01')->call('submitReport');
-        $c->assertHasErrors(['report.to'])->assertSee(__('deals.errors.report_period'));
+
+        // The rough figure of a day cannot exceed the agreed quantity either, in the person's language.
+        $this->log($alice, $deal, $wall, ['date' => '2026-01-05', 'from' => '08:00', 'to' => '09:00', 'note' => 'x', 'estimate' => '500'])->assertHasErrors('work')->assertSee(__('deals.errors.estimate_exceeds'));
 
         // 121 of 120 square metres: refused in the person's language, never in English.
         $c = $this->panel($alice, $deal)->set('report.commitment', (string) $wall->id)->set('report.quantity', '121')->call('submitReport');

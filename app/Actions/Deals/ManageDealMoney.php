@@ -23,10 +23,12 @@ use App\Models\User;
 use App\Support\Bookkeeping\EntrySource;
 use App\Support\Bookkeeping\Toman;
 use App\Support\Deals\DealMoney;
+use App\Support\TemporalCalendar;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The Deal's Money step, as thin as possible: every fact is recorded by the existing Bookkeeping actions in one shared
@@ -65,7 +67,7 @@ class ManageDealMoney
             abort_unless($version->parties->contains(fn ($p) => (int) $p->actor_id === (int) $mine->id), 403);
             abort_unless($other instanceof Actor && filled($other->user?->username), 422, (string) __('deals.errors.money_no_account'));
 
-            $ledger = $this->createLedger->execute($user, LedgerKind::Shared, (string) __('deals.money.book_name'));
+            $ledger = $this->createLedger->execute($user, LedgerKind::Shared, Str::limit((string) __('deals.money.book_name', ['title' => $this->money->dealTitle($locked), 'names' => $mine->user->username.' & '.$other->user->username]), 150, ''));
             $this->addParty->execute($ledger, $user, (string) $other->user->username, null);
             $locked->forceFill(['metadata' => [...($locked->metadata ?? []), 'money_ledger' => $ledger->uuid]])->save();
 
@@ -98,6 +100,7 @@ class ManageDealMoney
                 $item = $this->money->items($deal)->firstWhere('key', $key);
                 abort_if($item === null, 422, (string) __('deals.errors.money_not_payable'));
                 abort_unless((int) $item['commitment']->obligor_actor_id === (int) $actor->id, 403);
+                abort_unless($item['is_due'], 422, (string) __('deals.errors.money_not_due', ['date' => $item['due_on'] !== null ? TemporalCalendar::dateLabel($item['due_on'], $user) : '']));
                 abort_unless(in_array($item['state'], ['eligible', 'disagreed'], true), 422, (string) __('deals.errors.money_already_asked'));
 
                 $amount = $item['derived'] ?? Toman::parse($typed[$key] ?? null, 'amount');
@@ -124,7 +127,7 @@ class ManageDealMoney
      *
      * @param  array<string, string>  $amounts  obligation uuid => whole toman
      */
-    public function report(Relationship $deal, User $user, array $amounts, string $token, ?UploadedFile $receipt = null, ?string $note = null): Transaction
+    public function report(Relationship $deal, User $user, array $amounts, string $token, ?UploadedFile $receipt = null, ?string $note = null, ?string $purpose = null): Transaction
     {
         $actor = $this->actor($user);
         $ledger = $this->money->ledger($deal);
@@ -149,7 +152,7 @@ class ManageDealMoney
         }
         abort_if($allocations === [], 422, (string) __('deals.errors.money_enter_amount'));
 
-        $transaction = DB::transaction(function () use ($deal, $user, $actor, $ledger, $payer, $allocations, $key, $note): Transaction {
+        $transaction = DB::transaction(function () use ($deal, $user, $actor, $ledger, $payer, $allocations, $key, $note, $purpose): Transaction {
             $items = $this->money->items($deal);
             $payee = null;
             foreach ($allocations as $uuid => $value) {
@@ -166,7 +169,7 @@ class ManageDealMoney
 
             return $this->record->execute(
                 $ledger, $user, TransactionType::Payment, $payer, $payee, array_sum($allocations),
-                $this->today($user), $note !== null && trim($note) !== '' ? trim($note) : null, null, $allocations,
+                $this->today($user), $this->description($note, $purpose), null, $allocations,
                 idempotencyKey: $key, source: $source,
             );
         }, 3);
@@ -198,6 +201,15 @@ class ManageDealMoney
     public function takeBack(Relationship $deal, User $user, string $uuid): Transaction
     {
         return $this->withdraw->execute($this->entry($deal, $uuid), $user);
+    }
+
+    /** "Advance", "Instalment" or "Final payment" (each its own event), then the person's own words. */
+    private function description(?string $note, ?string $purpose): ?string
+    {
+        $label = in_array($purpose, ['advance', 'instalment', 'final'], true) ? (string) __('deals.money.purpose.'.$purpose) : '';
+        $text = trim(($label !== '' ? $label.($note !== null && trim($note) !== '' ? ' — ' : '') : '').trim((string) $note));
+
+        return $text !== '' ? $text : null;
     }
 
     private function entry(Relationship $deal, string $uuid): Transaction

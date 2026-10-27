@@ -42,6 +42,9 @@ class MoneyPanel extends Component
 
     public $receipt = null;
 
+    /** Advance, instalment or final payment: each is its own event, named in the payment's description. */
+    public string $purpose = '';
+
     /** One token per form: submitting it twice records one payment. */
     public string $payToken = '';
 
@@ -75,9 +78,10 @@ class MoneyPanel extends Component
     public function report(ManageDealMoney $money): void
     {
         $this->guarded(function () use ($money): void {
-            $money->report($this->relationship, $this->user(), $this->pay, $this->payToken, $this->receipt, $this->text['note'] ?? null);
+            $money->report($this->relationship, $this->user(), $this->pay, $this->payToken, $this->receipt, $this->text['note'] ?? null, $this->purpose);
             $this->pay = [];
             $this->receipt = null;
+            $this->purpose = '';
             unset($this->text['note']);
             $this->payToken = (string) Str::uuid();
         });
@@ -125,7 +129,7 @@ class MoneyPanel extends Component
         return view('livewire.deals.money-panel', [
             'enabled' => $money->enabled($this->relationship, $items),
             'items' => $items,
-            'summary' => $money->summary($items),
+            'summary' => $money->summary($items, $money->reportedValue($this->relationship), $money->estimatedValue($this->relationship)),
             'ledger' => $ledger,
             'payments' => $payments,
             'me' => $me,
