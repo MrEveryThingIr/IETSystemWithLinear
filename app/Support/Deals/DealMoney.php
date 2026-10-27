@@ -198,7 +198,7 @@ final class DealMoney
 
     /**
      * @param  array{rule: string, period?: string}  $rule
-     * @param  array{obligations: Collection<string, Collection<int, Transaction>>, allocations: Collection<int, Collection<int, object>>}  $recorded
+     * @param  array{obligations: Collection<array-key, mixed>, allocations: Collection<array-key, mixed>}  $recorded
      * @return array<string, mixed>
      */
     private function item(Commitment $commitment, ?Fulfillment $fulfillment, string $sourceType, string $sourceUuid, string $quantity, ?int $derived, ?CarbonImmutable $due, array $rule, array $recorded, string $zone): array
@@ -259,7 +259,7 @@ final class DealMoney
     /**
      * Every obligation recorded for Deal work, grouped by the work it is for, with the payments allocated to each.
      *
-     * @return array{obligations: Collection<string, Collection<int, Transaction>>, allocations: Collection<int, Collection<int, object>>}
+     * @return array{obligations: Collection<array-key, mixed>, allocations: Collection<array-key, mixed>}
      */
     private function recorded(?Ledger $ledger): array
     {
@@ -272,7 +272,7 @@ final class DealMoney
             ->whereIn('a.obligation_id', $obligations->pluck('id'))->orderBy('t.id')
             ->get(['a.obligation_id', 'a.amount', 't.uuid', 't.status', 't.occurred_on', 't.type'])->groupBy('obligation_id');
 
-        return ['obligations' => $obligations->groupBy(fn (Transaction $t) => $t->source_type.':'.$t->source_uuid), 'allocations' => $allocations];
+        return ['obligations' => $obligations->groupBy(fn (Transaction $t) => $t->source_type.':'.$t->source_uuid)->map(fn ($group) => $group->toBase())->toBase(), 'allocations' => $allocations->toBase()];
     }
 
     /**
@@ -284,7 +284,7 @@ final class DealMoney
      */
     private static function dueOn(string $mode, ?array $terms, Fulfillment $fulfillment, string $zone): array
     {
-        $confirmedAt = $fulfillment->reviewed_at ?? $fulfillment->review?->reviewed_at ?? $fulfillment->updated_at;
+        $confirmedAt = $fulfillment->reviewed_at ?? $fulfillment->review->reviewed_at ?? $fulfillment->updated_at;
         if ($mode === 'per_period') {
             $period = (string) ($terms['payment']['period'] ?? 'week');
             $worked = CarbonImmutable::parse($fulfillment->actual_end_at ?? $confirmedAt)->setTimezone($zone);

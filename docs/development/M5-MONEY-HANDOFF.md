@@ -56,3 +56,26 @@ The duty form now offers the price units as suggestions so "per day" prices and 
 - A payer who disagrees with an Agreement-derived request can only record *Disagree* (shown as needing attention); the amount stays owed under the Agreement and the doer must ask again.
 - Adjustments (correcting an amount) and refunds exist in Bookkeeping but are not offered in the Deal's Money tab.
 - Receipt attachments use `AttachEvidence` (book people only, up to 10 files).
+
+## Consolidation pass (four-tab refinement, after the owner's browser testing)
+
+What changed, in the owner's own terms (Agreement → Work → Money, one conversation):
+
+- **Agreement clarity.** One price by default (a range only when chosen); Toman amounts accepted in any digits/separators and shown as "3,000,000 Toman / square metre" (composer, document, sealed text); area/length/weight units; each duty/deliverable/evidence/**materials** clause can name its **responsible party** (shown in the composer, the document and the print page); `DealTermsWarnings` points out, without changing or blocking anything, price ranges, attendance days that do not earn measured-work wages, unit mismatches, unassigned duties/materials and conflicting payment/confirmation rules. Accepted versions stay immutable.
+- **Validation.** Every Agreement, Work and Money message is localized and appears under its own field (`DealDraftValidator`, `DealErrors`, `deals.errors.*`); the English tail that mixed languages is gone.
+- **Tasks (Work).** The person who **receives** the work defines a task: **title, description, optional images/video/voice**. The other party is the doer; the agreed quantity/unit come from the Agreement (no fields). A task is a Commitment, so reports, inspections and money are unchanged. Scheduling reuses the **Planner**: link one of the Deal's existing plans (`BindExistingPlan`); there is no bespoke schedule form any more. Older pending proposals remain confirmable.
+- **Reports.** The doer keeps a **work log**: date, start and end time, what happened (problems, why work stopped, what was missing), a *rough* progress figure, evidence; stored as immutable `CommitmentEvent`s (`work_logged`), no new table. Exact quantities are agreed at an **inspection** (milestone or end): the doer says how much is ready, the receiver confirms **all, part (partly accepted), asks or refuses**; only the confirmed quantity counts (migration `2026_11_18`: `fulfillment_reviews.accepted_quantity`, null = everything).
+- **Money.** `reported (inspection)`, `estimated (rough log figure, a guide, never owed)`, `earned (confirmed quantity at the accepted price)`, `payable`, `outstanding due`, `not yet due`, `requested`, `reported paid`, `received`, `settled`; earned = received + still due + not yet due (tested). Due day comes from the Agreement version's rule (on acceptance; day of confirmation; end of the calendar week Mon-Sun or month of confirmation); requests only once due. Each item shows version, work, due rule and allocations; the book is named after the Deal; advance/instalment/final payments are separate events.
+- **One conversation.** Work and Money steps are labelled, colour-coded **cards** in the same Deal conversation (linking to their tab), with chips All / Messages / Agreement / Work / Money.
+
+### Evidence for this pass
+- New suites: `DealAgreementValidationTest`, `DealAgreementClarityTest`, `DealMeasuredWorkTest`, `DealTaskTest`, `DealConstructionScenarioTest` (builder paid per square metre: irregular daily log, partial acceptance, rejected piece, weekly due, instalment + final, request refused before due, earned = received + due + not yet due), `DealConversationAreasTest`, `DealPerformanceBudgetTest` (Work screen grows by about one query per report, Money screen is flat).
+- MySQL 8.4 rehearsal of `2026_11_18` (`tools/m5-mysql-rehearsal.php`, disposable database, dropped): historical review rows unchanged, rollback keeps rows, re-apply works.
+
+### Not done / open (owner to decide)
+- **Payments on account against the rough estimate** are not offered: the estimate is shown as a guide, and requests exist only for confirmed (inspected) work. If wanted, the safest route is a typed "advance" request the payer must agree, reconciled at the inspection.
+- Recording a **voice note** inside the task form uses the phone's file picker (audio/video capture); the Conversation's own recorder is not embedded.
+- Slow paths were audited at query level only (no N+1 left; evidence uploads are still processed inside the request: hashing, storing, MP4 faststart). Real-device timings and a progress bar for very large videos are not done; no queue/async was added (the shared host has no worker).
+- Several tasks under one measured agreement each carry the agreement quantity as their cap; the cap is not shared between them.
+- A weekly/monthly due day follows the confirmation date, not the working days (no attendance-to-wage inference). Week boundaries are Monday-Sunday.
+- The legacy Commitment page is still reachable for planning (`commitments.show` redirects Deal work to the Work tab).

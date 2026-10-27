@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 final class WorkLog
 {
     /**
-     * @return array{entries: Collection<int, array<string, mixed>>, days: int, minutes: int, estimate: string}
+     * @return array{entries: Collection<int, mixed>, days: int, minutes: int, estimate: string}
      */
     public static function for(Commitment $commitment): array
     {

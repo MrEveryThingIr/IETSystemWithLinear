@@ -257,7 +257,7 @@ class WorkPanel extends Component
                 $note = trim((string) ($r['note'] ?? ''));
                 $submit->execute($commitment, $this->user(), $quantity, notes: $note !== '' ? $note : null, assetIds: $assetIds);
             });
-            $this->note('inspection_requested', ['title' => (string) $commitment->title, 'qty' => $quantity + 0, 'unit' => (string) (DealTerms::basisLabel($commitment->unit) ?? $commitment->unit)]);
+            $this->note('inspection_requested', ['title' => (string) $commitment->title, 'qty' => self::trimQty((string) $quantity), 'unit' => (string) (DealTerms::basisLabel($commitment->unit) ?? $commitment->unit)]);
             $this->resetReport();
         });
     }
@@ -282,7 +282,7 @@ class WorkPanel extends Component
                 $decision === 'accepted' => 'inspection_accepted',
                 $decision === 'rejected' => 'inspection_rejected',
                 default => 'inspection_questioned',
-            }, ['title' => (string) $fulfillment->commitment->title, 'qty' => $fresh->confirmedQuantity() + 0, 'unit' => (string) (DealTerms::basisLabel($fulfillment->commitment->unit) ?? $fulfillment->commitment->unit)]);
+            }, ['title' => (string) $fulfillment->commitment->title, 'qty' => self::trimQty($fresh->confirmedQuantity()), 'unit' => (string) (DealTerms::basisLabel($fulfillment->commitment->unit) ?? $fulfillment->commitment->unit)]);
         });
     }
 
@@ -340,7 +340,7 @@ class WorkPanel extends Component
             'stale' => $activeId !== $i['version_id'],
         ]);
 
-        $duties = $this->commitments()->with(['obligor.user', 'beneficiary.user', 'contractVersion.contract.contextBinding.context', 'contractVersion.contract.sourceProposalVersion', 'planBinding.plan.occurrences', 'fulfillments.review', 'fulfillments.dispute', 'fulfillments.occurrence', 'fulfillments.assets'])->orderBy('id')->get()
+        $duties = $this->commitments()->with(['obligor.user', 'beneficiary.user', 'contractVersion.contract.contextBinding.context', 'contractVersion.contract.sourceProposalVersion', 'planBinding.plan.occurrences', 'fulfillments.review', 'fulfillments.dispute', 'fulfillments.occurrence', 'fulfillments.assets', 'fulfillments.commitment'])->orderBy('id')->get()
             ->map(fn (Commitment $c) => $this->duty($c, $progress));
 
         return view('livewire.deals.work-panel', [
@@ -424,6 +424,11 @@ class WorkPanel extends Component
             FulfillmentStatus::Submitted => $verifier === 'none' ? 'reported_final' : 'reported',
             default => $f->status->value,
         };
+    }
+
+    private static function trimQty(string $quantity): string
+    {
+        return str_contains($quantity, '.') ? rtrim(rtrim($quantity, '0'), '.') : $quantity;
     }
 
     /** Whole or decimal quantity in any digits and separators, or null when it is not a positive number. */
