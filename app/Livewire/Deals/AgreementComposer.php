@@ -21,6 +21,7 @@ use App\Support\Deals\DealPrincipals;
 use App\Support\Deals\DealTerms;
 use App\Support\Deals\DealTermsDiff;
 use App\Support\Deals\DealTermsDraft;
+use App\Support\Deals\DealTermsWarnings;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentProfiles;
 use App\Support\TemporalPreferences;
@@ -44,7 +45,7 @@ class AgreementComposer extends Component
     /** Library, grouped the way people think about an agreement: [category => [item ids]]. Narrative clauses use "clause:<kind>". */
     public const LIBRARY = [
         'subject' => ['clause:scope', 'clause:deliverables', 'fields', 'quantity'],
-        'duties' => ['clause:duties'],
+        'duties' => ['clause:duties', 'clause:materials'],
         'money' => ['price', 'payment'],
         'time' => ['time', 'place', 'route', 'recurrence'],
         'completion' => ['completion', 'clause:evidence'],
@@ -167,7 +168,7 @@ class AgreementComposer extends Component
             for ($n = 2; in_array($key, array_column($this->draft['clauses'], 'key'), true); $n++) {
                 $key = $kind.'-'.$n;
             }
-            $this->draft['clauses'][] = ['key' => $key, 'kind' => $kind, 'title' => '', 'text' => ''];
+            $this->draft['clauses'][] = ['key' => $key, 'kind' => $kind, 'title' => '', 'text' => '', 'responsible' => ''];
             $this->draft['items'][] = 'clause:'.$key;
             $this->regroup();
         } elseif (! in_array($id, $this->draft['items'], true)) {
@@ -365,6 +366,8 @@ class AgreementComposer extends Component
             'fromOrigin' => $this->open && $latest === null && $this->mode === 'propose',
             'library' => $this->open && $this->picking ? $this->fieldLibrary() : [],
             'partyNames' => $this->open ? $this->partyNames() : [],
+            'partyOptions' => $this->open ? DealPrincipals::labels($this->relationship->fresh()) : [],
+            'warnings' => $this->open ? DealTermsWarnings::for(DealTermsDraft::toTerms($this->draft)) : [],
             'categories' => self::LIBRARY,
             'present' => $this->draft['items'] ?? [],
             'numbers' => AgreementDocument::numbering($this->draft['items'] ?? [], $this->clauseKinds()),

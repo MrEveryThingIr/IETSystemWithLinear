@@ -53,6 +53,12 @@
                         @if ($isClause)
                             <flux:input wire:model="draft.clauses.{{ $ci }}.title" :placeholder="$heading" aria-label="{{ __('deals.composer.clause_title') }}" maxlength="120" />
                             <flux:textarea wire:model="draft.clauses.{{ $ci }}.text" rows="3" :placeholder="__('deals.clauses.'.$clause['kind'].'.hint')" aria-label="{{ $heading }}" />
+                            @if (in_array($clause['kind'], \App\Support\Deals\DealTerms::RESPONSIBLE_KINDS, true))
+                                <flux:select wire:model="draft.clauses.{{ $ci }}.responsible" :label="__('deals.composer.responsible')" data-clause-party>
+                                    <option value="">{{ __('deals.composer.responsible_none') }}</option>
+                                    @foreach ($partyOptions as $partyKey => $partyName)<option value="{{ $partyKey }}">{{ $partyName }}</option>@endforeach
+                                </flux:select>
+                            @endif
                         @else
                             @switch($id)
                                 @case('price')
@@ -250,6 +256,14 @@
                 </div>
             @else
                 <flux:button wire:click="$set('libraryOpen', true)" size="sm">+ {{ __('deals.composer.add_term') }}</flux:button>
+            @endif
+
+            @if ($warnings)
+                <div class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-700 dark:bg-amber-950/30" data-composer-warnings>
+                    <div class="font-medium">{{ __('deals.warnings.title') }}</div>
+                    <ul class="mt-1 list-disc space-y-1 ps-5">@foreach ($warnings as $w)<li data-warning="{{ $w['code'] }}" dir="auto">{{ __('deals.warnings.'.$w['code'], $w['params']) }}</li>@endforeach</ul>
+                    <p class="mt-1 text-zinc-500">{{ __('deals.warnings.note') }}</p>
+                </div>
             @endif
 
             <flux:input wire:model="versionNote" :label="__('deals.composer.version_note')" maxlength="1000" />

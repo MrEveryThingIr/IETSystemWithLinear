@@ -64,7 +64,7 @@ final class DealTermsDraft
         $d['payment'] = array_replace($d['payment'], array_map('strval', array_filter($t['payment'] ?? [], fn ($v) => $v !== null)));
         $d['completion'] = array_replace($d['completion'], array_map('strval', $t['completion'] ?? []));
         foreach ($t['clauses'] ?? [] as $c) {
-            $d['clauses'][] = ['key' => $c['key'], 'kind' => $c['kind'], 'title' => $c['title'] ?? '', 'text' => $c['text'] ?? ''];
+            $d['clauses'][] = ['key' => $c['key'], 'kind' => $c['kind'], 'title' => $c['title'] ?? '', 'text' => $c['text'] ?? '', 'responsible' => $c['responsible'] ?? ''];
         }
         $d['notes'] = (string) ($t['notes'] ?? '');
         $d['items'] = $t['order'] ?? self::defaultItems($d);
@@ -216,6 +216,7 @@ final class DealTermsDraft
             $clauses[] = array_filter([
                 'key' => $clause['key'], 'kind' => $clause['kind'],
                 'title' => trim((string) ($clause['title'] ?? '')) ?: null, 'text' => trim((string) ($clause['text'] ?? '')) ?: null,
+                'responsible' => trim((string) ($clause['responsible'] ?? '')) ?: null,
             ], fn ($v) => $v !== null);
         }
 

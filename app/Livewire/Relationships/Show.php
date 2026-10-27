@@ -28,6 +28,7 @@ use App\Support\Deals\AgreementDrafter;
 use App\Support\Deals\AgreementTerms;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealOrigin;
+use App\Support\Deals\DealPrincipals;
 use App\Support\Deals\DealTermsDiff;
 use App\Support\Messaging\ThreadFor;
 use Illuminate\Contracts\View\View;
@@ -230,6 +231,7 @@ class Show extends Component
             ? DealOrigin::card($relationship->originatingIntent, IntentVersion::query()->find($relationship->originating_intent_version_id), $user)
             : null;
 
+        $partyLabels = DealPrincipals::labels($relationship);
         $tc = $this->termsView($latestProposal, $user);
         $this->viewedVersion = $tc['version']?->version;
 
@@ -249,7 +251,7 @@ class Show extends Component
             'introAuthor' => $relationship->participants->firstWhere('actor_id', $relationship->created_by_actor_id)?->actor,
             'origin' => $origin,
             'tc' => $tc,
-            'doc' => $tc['version']?->terms_data !== null ? AgreementDocument::sections($tc['version']->terms_data) : [],
+            'doc' => $tc['version']?->terms_data !== null ? AgreementDocument::sections($tc['version']->terms_data, $partyLabels) : [],
             'canDraft' => AgreementDrafter::canDraft($relationship, $user) && $relationship->status === RelationshipStatus::Active,
             'isOwnerSide' => AgreementDrafter::isOwnerSide($relationship, $user),
             'drafterActorId' => AgreementDrafter::delegateActorId($relationship) ?? AgreementDrafter::ownerActorId($relationship),
@@ -261,9 +263,9 @@ class Show extends Component
             'activeVersion' => $activeContractVersion,
             'pendingVersion' => $pendingContractVersion,
             'agreementTerms' => $agreementTerms,
-            'agreementDoc' => $agreementTerms !== null ? AgreementDocument::sections($agreementTerms) : [],
+            'agreementDoc' => $agreementTerms !== null ? AgreementDocument::sections($agreementTerms, $partyLabels) : [],
             'pendingTerms' => $pendingTerms,
-            'pendingDoc' => $pendingTerms !== null ? AgreementDocument::sections($pendingTerms) : [],
+            'pendingDoc' => $pendingTerms !== null ? AgreementDocument::sections($pendingTerms, $partyLabels) : [],
             'canAmend' => $activeContractVersion instanceof ContractVersion && ! $pendingContractVersion && $activeContractVersion->serviceTerm === null
                 && Gate::forUser($user)->allows('amend', $latestContract) && AgreementDrafter::canDraft($relationship, $user),
             'canAcceptContract' => $pendingContractVersion instanceof ContractVersion && Gate::forUser($user)->allows('accept', [$latestContract, $pendingContractVersion]),

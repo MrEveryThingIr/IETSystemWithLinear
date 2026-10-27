@@ -11,9 +11,10 @@ final class AgreementDocument
 {
     /**
      * @param  array<string, mixed>  $terms  normalized Terms
-     * @return list<array{n: int, id: string, title: string, lines: list<array{label: ?string, value: string, date?: bool}>, text: ?string, typed: bool, clauses: list<array{n: string, title: ?string, text: ?string}>}>
+     * @param  array<string, string>  $labels  principal key => name, to show who a duty concerns
+     * @return list<array{n: int, id: string, title: string, lines: list<array{label: ?string, value: string, date?: bool}>, text: ?string, typed: bool, clauses: list<array{n: string, title: ?string, text: ?string, who?: ?string}>, who?: ?string}>
      */
-    public static function sections(array $terms): array
+    public static function sections(array $terms, array $labels = []): array
     {
         $clauses = collect($terms['clauses'] ?? [])->keyBy('key');
         $kinds = $clauses->map(fn ($c) => $c['kind'])->all();
@@ -31,9 +32,9 @@ final class AgreementDocument
                 $group = $clauses->filter(fn ($c) => $c['kind'] === $kind)->values();
                 $n = count($out) + 1;
                 $out[] = $group->count() === 1
-                    ? ['n' => $n, 'id' => 'clause:'.$group[0]['key'], 'title' => (string) ($group[0]['title'] ?? __('deals.clauses.'.$kind.'.title')), 'lines' => [], 'text' => $group[0]['text'] ?? null, 'typed' => false, 'clauses' => []]
+                    ? ['n' => $n, 'id' => 'clause:'.$group[0]['key'], 'title' => (string) ($group[0]['title'] ?? __('deals.clauses.'.$kind.'.title')), 'lines' => [], 'text' => $group[0]['text'] ?? null, 'typed' => false, 'clauses' => [], 'who' => $labels[$group[0]['responsible'] ?? ''] ?? null]
                     : ['n' => $n, 'id' => 'group:'.$kind, 'title' => (string) __('deals.clauses.'.$kind.'.title'), 'lines' => [], 'text' => null, 'typed' => false,
-                        'clauses' => $group->map(fn ($c, $i) => ['n' => $n.'.'.($i + 1), 'title' => $c['title'] ?? null, 'text' => $c['text'] ?? null])->all()];
+                        'clauses' => $group->map(fn ($c, $i) => ['n' => $n.'.'.($i + 1), 'title' => $c['title'] ?? null, 'text' => $c['text'] ?? null, 'who' => $labels[$c['responsible'] ?? ''] ?? null])->all()];
 
                 continue;
             }

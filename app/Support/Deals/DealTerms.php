@@ -18,7 +18,10 @@ final class DealTerms
     private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes', 'title', 'summary', 'clauses', 'payment', 'completion', 'order'];
 
     /** Narrative clause kinds of the small clause library. Narrative clauses are text: they never become automation. */
-    public const CLAUSE_KINDS = ['scope', 'deliverables', 'duties', 'evidence', 'cancellation', 'disputes', 'confidentiality', 'special', 'custom'];
+    public const CLAUSE_KINDS = ['scope', 'deliverables', 'duties', 'evidence', 'cancellation', 'disputes', 'confidentiality', 'special', 'custom', 'materials'];
+
+    /** Clauses that describe what someone must do or provide: each can name the party responsible. */
+    public const RESPONSIBLE_KINDS = ['duties', 'deliverables', 'evidence', 'materials'];
 
     /** Typed sections a document may list in its order. */
     public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes'];
@@ -155,7 +158,9 @@ final class DealTerms
                 if ($title === null && $text === null) {
                     continue;
                 }
-                $clauses[$key] = array_filter(['key' => $key, 'kind' => $kind, 'title' => $title, 'text' => $text], fn ($v) => $v !== null);
+                $responsible = self::text($clause['responsible'] ?? null, 40, 'clause party');
+                abort_if($responsible !== null && preg_match('/^(actor|business|group):\d+$/', $responsible) !== 1, 422, 'Deal Terms clause party is invalid.');
+                $clauses[$key] = array_filter(['key' => $key, 'kind' => $kind, 'title' => $title, 'text' => $text, 'responsible' => in_array($kind, self::RESPONSIBLE_KINDS, true) ? $responsible : null], fn ($v) => $v !== null);
             }
             $out['clauses'] = array_values($clauses);
         }

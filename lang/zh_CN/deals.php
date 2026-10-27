@@ -150,6 +150,8 @@ return [
         'year' => '年',
     ],
     'composer' => [
+        'responsible' => '谁负责',
+        'responsible_none' => '未指定',
         'price_kind' => '价格类型',
         'price_fixed' => '单一价格',
         'price_range' => '价格区间',
@@ -253,6 +255,7 @@ return [
     'money_agreed' => '已在上方协议中约定。这是规则，不是付款。',
     'money_proposed' => '已提议，尚未约定。',
     'doc' => [
+        'responsible' => '负责人：:name',
         'between' => '当事方',
         'sections' => [
             'price' => '价格与报酬',
@@ -279,6 +282,10 @@ return [
         'none' => '无需确认',
     ],
     'clauses' => [
+        'materials' => [
+            'title' => '材料与支持',
+            'hint' => '由谁提供材料、工具、通行条件以及完成工作所需的其他东西。',
+        ],
         'scope' => [
             'title' => '范围',
             'hint' => '本协议涉及什么，不包括什么？',
@@ -525,5 +532,17 @@ return [
         'period' => '请选择周或月。',
         'clause_long' => '文本过长（最多 4000 个字符）。',
         'clause_title_long' => '标题过长（最多 120 个字符）。',
+    ],
+    'warnings' => [
+        'title' => '值得一起澄清',
+        'note' => '这些只是提醒。不会更改或阻止任何内容，你们同意的文字将保持原样。',
+        'price_is_a_range' => '价格是一个区间，因此无法自动算出应付金额。资金页会要求逐笔输入并达成一致。如可能请写明确切价格。',
+        'unit_differs' => '价格按每 :basis 计，但数量以 :unit 计。请确认两者是同一回事。',
+        'days_do_not_earn' => '这里写了工作日或工作时间，但报酬按每 :basis 计。工作天数不会产生工资：报酬取决于已报告并确认的 :basis。',
+        'period_follows_measured' => '付款每 :period 到期，但价格按每 :basis 计。每个周期的金额为该周期内已确认的 :basis 乘以单价。',
+        'acceptance_with_unit_price' => '付款在接受时到期，但价格按每 :basis 计。工作确认前无法得知金额；金额将在资金页商定。',
+        'payment_waits_for_unrequired_confirmation' => '付款取决于已确认的交付，但协议写明无需确认。请选择由谁确认，或更改付款规则。',
+        'duty_unassigned' => ':title 未说明由谁负责。请选择一个人或组织。',
+        'materials_unassigned' => ':title 未说明由谁提供材料和支持。请选择一个人或组织。',
     ],
 ];

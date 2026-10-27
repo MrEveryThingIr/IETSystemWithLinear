@@ -150,6 +150,8 @@ return [
         'year' => 'year(s)',
     ],
     'composer' => [
+        'responsible' => 'Who is responsible',
+        'responsible_none' => 'Not assigned',
         'price_kind' => 'Price type',
         'price_fixed' => 'One price',
         'price_range' => 'A range',
@@ -253,6 +255,7 @@ return [
     'money_agreed' => 'Agreed in the Agreement above. This is the rule, not a payment.',
     'money_proposed' => 'Proposed, not yet agreed.',
     'doc' => [
+        'responsible' => 'Responsible: :name',
         'between' => 'Between',
         'sections' => [
             'price' => 'Price and compensation',
@@ -279,6 +282,10 @@ return [
         'none' => 'No confirmation needed',
     ],
     'clauses' => [
+        'materials' => [
+            'title' => 'Materials and support',
+            'hint' => 'Who provides materials, tools, access and anything else needed to do the work.',
+        ],
         'scope' => [
             'title' => 'Scope',
             'hint' => 'What is this agreement about, and what is not included?',
@@ -525,5 +532,17 @@ return [
         'period' => 'Choose week or month.',
         'clause_long' => 'This text is too long (4,000 characters at most).',
         'clause_title_long' => 'This heading is too long (120 characters at most).',
+    ],
+    'warnings' => [
+        'title' => 'Worth clarifying together',
+        'note' => 'These are only reminders. Nothing is changed or blocked, and the text you agree on stays exactly as written.',
+        'price_is_a_range' => 'The price is a range, so no payable amount can be worked out automatically. Money will ask for each amount to be typed and agreed. State the exact price if you can.',
+        'unit_differs' => 'The price is per :basis but the quantity is counted in :unit. Check they mean the same thing.',
+        'days_do_not_earn' => 'Working days or hours are written here, but pay is per :basis. Days worked will not create wages: pay follows the :basis that is reported and confirmed.',
+        'period_follows_measured' => 'Payment is due every :period, but the price is per :basis. Each period\'s amount is the confirmed :basis in that period times the price.',
+        'acceptance_with_unit_price' => 'Payment is due on acceptance, but the price is per :basis. No amount can be known before work is confirmed; the amount will be agreed in Money.',
+        'payment_waits_for_unrequired_confirmation' => 'Payment follows confirmed delivery, but the Agreement says no confirmation is needed. Choose who confirms, or change the payment rule.',
+        'duty_unassigned' => ':title does not say who is responsible. Choose a person or organisation.',
+        'materials_unassigned' => ':title does not say who provides the materials and support. Choose a person or organisation.',
     ],
 ];

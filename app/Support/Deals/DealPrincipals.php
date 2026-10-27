@@ -13,6 +13,24 @@ use App\Support\Parties\Party;
  */
 final class DealPrincipals
 {
+    /**
+     * Who each principal is called in this Deal, by principal key ("actor:3", "business:5"), for showing who a term concerns.
+     *
+     * @return array<string, string>
+     */
+    public static function labels(Relationship $relationship): array
+    {
+        $relationship->loadMissing(['originatingIntent.profile', 'matchedIntent.profile', 'participants.actor.user']);
+        $out = [];
+        foreach ($relationship->participants as $participant) {
+            $party = self::forActor($relationship, $participant->actor);
+            $model = $party->model();
+            $out[$party->key()] = $model instanceof Actor ? (string) ($model->user->username ?? '') : (string) ($model->name ?? '');
+        }
+
+        return array_filter($out);
+    }
+
     public static function forActor(Relationship $relationship, Actor $actor): Party
     {
         foreach ([$relationship->originatingIntent, $relationship->matchedIntent] as $intent) {

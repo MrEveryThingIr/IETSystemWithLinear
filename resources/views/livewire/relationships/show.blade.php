@@ -124,7 +124,7 @@
                     </div>
                     <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('deals.agreement_help') }}</p>
                     @if (! empty($cur['summary']))<p class="text-sm" dir="auto">{{ $cur['summary'] }}</p>@endif
-                    <x-deals.document :sections="$curDoc" :parties="$partyNames" />
+                    <x-deals.document :sections="$curDoc" :parties="$partyNames" :terms="$agreementTerms ?? $terms" />
                     <ul class="space-y-1 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700" data-agreement-signers>
                         @foreach (($activeVersion ?? $latestContract->versions->sortBy('version')->first())->parties as $cvp)
                             <li wire:key="sig-{{ $cvp->id }}" class="flex flex-wrap justify-between gap-2">
@@ -171,7 +171,7 @@
 
                     @if ($terms)
                         @if (! empty($terms['summary']))<p class="text-sm" dir="auto">{{ $terms['summary'] }}</p>@endif
-                        <x-deals.document :sections="$doc" :parties="$partyNames" />
+                        <x-deals.document :sections="$doc" :parties="$partyNames" :terms="$terms" />
                     @else
                         <div class="whitespace-pre-wrap break-words rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900" dir="auto">{{ $version->termsRevision->payload['terms'] ?? '' }}</div>
                     @endif
