@@ -87,6 +87,9 @@ return [
         'empty_filter' => '这里没有内容。',
         'empty_offers' => '还没有提供任何东西。',
         'empty_needs' => '还没有发布需求。',
+        'resume' => '继续编辑',
+        'conversations' => '对话（:count）',
+        'matches_optional' => '查找匹配（可选）',
     ],
     'saved' => [
         'title' => '已保存的模板和分组',

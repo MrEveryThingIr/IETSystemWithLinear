@@ -71,6 +71,7 @@ return [
     ],
     'messages' => [
         'accepted' => 'Your acceptance was recorded for this exact Proposal version.',
+        'terms_changed' => 'The Terms changed since you reviewed them. Nothing was recorded; review the new version.',
         'changes_requested' => 'Your change request was recorded.',
         'rejected' => 'The Proposal was rejected.',
         'version_proposed' => 'A new sealed Proposal version was published.',

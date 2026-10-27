@@ -9,6 +9,7 @@ use App\Models\ContractEvent;
 use App\Models\ContractVersion;
 use App\Models\ContractVersionParty;
 use App\Models\User;
+use App\Support\Deals\DealParties;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -30,11 +31,11 @@ class AcceptContractVersion
                 ->lockForUpdate()
                 ->findOrFail($version->id);
 
-            $party = ContractVersionParty::query()
-                ->where('contract_version_id', $locked->id)
-                ->where('actor_id', $current->actor->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+            // Authority is re-read at decision time; the acceptance records the principal (party) and the actual signer.
+            $party = DealParties::sole(
+                ContractVersionParty::query()->where('contract_version_id', $locked->id)->lockForUpdate()->get(),
+                $current,
+            );
 
             abort_if(
                 ContractAcceptance::query()

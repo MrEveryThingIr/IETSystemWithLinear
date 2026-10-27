@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Relationships;
 
+use App\Actions\Conversations\PostContextMessage;
 use App\Actions\Relationships\CreateRelationship;
 use App\ConceptStatus;
 use App\DomainJourneyKind;
@@ -11,13 +12,19 @@ use App\Models\Concept;
 use App\Models\DomainBlueprintVersion;
 use App\Models\Relationship;
 use App\Models\User;
+use App\ProfileIntentKind;
 use App\ProfileIntentStatus;
+use App\RelationshipStatus;
+use App\Support\Deals\DealOrigin;
 use App\Support\DomainBlueprintCatalog;
 use App\Support\IntentMatchFinder;
+use App\Support\Parties\Party;
+use App\Support\Parties\PartyAuthority;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -54,6 +61,14 @@ class Create extends Component
 
     public string $originParticipantLabel = '';
 
+    /** The opening message: it introduces the person and carries the first question. */
+    public string $message = '';
+
+    /** Who is speaking: '' for the person, or business:ID / group:ID they are authorized for. */
+    public string $actingAs = '';
+
+    public string $sendUuid = '';
+
     public bool $purposeLocked = false;
 
     public bool $participantLocked = false;
@@ -83,6 +98,8 @@ class Create extends Component
         }
 
         $this->loadOriginIntent();
+        $this->sendUuid = (string) Str::uuid();
+        $this->inferRoles();
 
         if ($this->matchIntentUuid !== '') {
             $this->loadMatchedIntent();
@@ -132,6 +149,8 @@ class Create extends Component
             'intentUuid' => ['nullable', 'uuid'],
             'matchIntentUuid' => ['nullable', 'uuid'],
             'blueprintSlug' => ['nullable', 'string', 'max:120'],
+            'message' => ['nullable', 'string', 'max:4000'],
+            'actingAs' => ['nullable', 'string', 'max:40'],
         ]);
 
         $user = $this->user();
@@ -199,6 +218,13 @@ class Create extends Component
 
         abort_if((int) $participant->id === (int) $user->actor?->id, 422, 'A Relationship requires another Actor.');
 
+        $speaker = $this->speaker($user);
+        if ($existing = $this->existingDeal($user, $originIntent, $participant)) {
+            $this->say($existing, $user);
+
+            return $this->redirectRoute('relationships.show', $existing);
+        }
+
         $relationship = $create->execute(
             $user,
             $purpose,
@@ -213,6 +239,18 @@ class Create extends Component
             matchedIntent: $matchedIntent,
         );
 
+        $meta = $relationship->metadata ?? [];
+        if ($speaker !== null) {
+            $meta['responder_party'] = $speaker->key();
+        }
+        if (trim($this->message) !== '') {
+            // Nothing is posted into the conversation before the other person consents; the introduction travels with the invitation.
+            $meta['intro'] = ['text' => trim($this->message), 'at' => now()->toIso8601String()];
+        }
+        if ($meta !== ($relationship->metadata ?? [])) {
+            $relationship->update(['metadata' => $meta]);
+        }
+
         return $this->redirectRoute('relationships.show', $relationship);
     }
 
@@ -221,6 +259,8 @@ class Create extends Component
         Gate::authorize('create', Relationship::class);
 
         return view('livewire.relationships.create', [
+            'originCard' => $this->originCard(),
+            'parties' => app(PartyAuthority::class)->partiesFor($this->user()),
             'purposeOptions' => $this->purposeOptions(),
             'blueprintVersion' => $this->blueprintVersion(),
         ]);
@@ -249,6 +289,75 @@ class Create extends Component
             ->get()
             ->sortBy(fn (Concept $concept): string => mb_strtolower($concept->displayLabel()))
             ->values();
+    }
+
+    /** Descriptive labels only; they never decide who may sign. */
+    private function inferRoles(): void
+    {
+        if ($this->blueprintSlug !== '' || ! $this->participantLocked) {
+            return;
+        }
+
+        $origin = ActorProfileIntent::query()->where('uuid', $this->intentUuid)->first();
+        if (! $origin instanceof ActorProfileIntent) {
+            return;
+        }
+
+        $mine = (int) $origin->profile->actor_id === (int) $this->user()->actor?->id;
+        $publisherRole = $origin->kind === ProfileIntentKind::Offer ? 'provider' : 'client';
+        $otherRole = $publisherRole === 'provider' ? 'client' : 'provider';
+        $this->creatorRole = (string) __('deals.roles.'.($mine ? $publisherRole : $otherRole));
+        $this->participantRole = (string) __('deals.roles.'.($mine ? $otherRole : $publisherRole));
+    }
+
+    /** @return array<string, mixed>|null */
+    private function originCard(): ?array
+    {
+        $intent = ActorProfileIntent::query()->with('publishedVersion')->where('uuid', $this->intentUuid)->first();
+
+        return $intent instanceof ActorProfileIntent ? DealOrigin::card($intent, null, $this->user()) : null;
+    }
+
+    private function speaker(User $user): ?Party
+    {
+        if ($this->actingAs === '') {
+            return null;
+        }
+
+        $match = app(PartyAuthority::class)->partiesFor($user)->first(fn (array $row): bool => $row['party']->key() === $this->actingAs);
+        abort_unless($match !== null, 403);
+
+        return $match['party']->kind === Party::ACTOR ? null : $match['party'];
+    }
+
+    private function existingDeal(User $user, ?ActorProfileIntent $origin, Actor $other): ?Relationship
+    {
+        if (! $origin instanceof ActorProfileIntent) {
+            return null;
+        }
+
+        return Relationship::query()
+            ->where('originating_intent_id', $origin->id)
+            ->whereIn('status', [RelationshipStatus::Proposed->value, RelationshipStatus::Active->value])
+            ->whereHas('participants', fn (Builder $q) => $q->where('actor_id', $user->actor->id)->where('status', '!=', 'declined'))
+            ->whereHas('participants', fn (Builder $q) => $q->where('actor_id', $other->id)->where('status', '!=', 'declined'))
+            ->first();
+    }
+
+    /** Into an already open conversation a message is ordinary talk; while the invitation is pending the first introduction stands. */
+    private function say(Relationship $relationship, User $user): void
+    {
+        $text = trim($this->message);
+        $context = $relationship->load('contextBinding.context')->contextBinding->context;
+        if ($text === '' || $relationship->status !== RelationshipStatus::Active) {
+            return;
+        }
+
+        try {
+            app(PostContextMessage::class)->execute($context, $user, $text, clientUuid: $this->sendUuid);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     private function applyBlueprintDefaults(): void

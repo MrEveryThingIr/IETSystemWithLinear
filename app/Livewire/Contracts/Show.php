@@ -10,6 +10,7 @@ use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\ContractVersion;
 use App\Models\User;
+use App\Support\Deals\DealLinks;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -39,17 +40,23 @@ class Show extends Component
 
     public string $timezone = 'UTC';
 
-    public function mount(Contract $contract): void
+    public function mount(Contract $contract): mixed
     {
         Gate::forUser($this->user())->authorize('view', $contract);
         $this->contract = $contract;
         $this->reconcileDueActivation();
+
+        if (request()->routeIs('contracts.show') && $this->contract->relationship_id !== null) {
+            return $this->redirect(DealLinks::contract($this->contract), navigate: false);
+        }
 
         $user = $this->user();
         $this->timezone = TemporalPreferences::timezoneFor($user);
         $now = CarbonImmutable::now($this->timezone);
 
         $this->effectiveAt = $now->addDay()->format('Y-m-d\TH:i');
+
+        return null;
     }
 
     public function hydrate(): void

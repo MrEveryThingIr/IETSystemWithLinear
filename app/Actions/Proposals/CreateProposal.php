@@ -16,6 +16,9 @@ use App\ProposalEventType;
 use App\ProposalStatus;
 use App\RelationshipParticipantStatus;
 use App\RelationshipStatus;
+use App\Support\Deals\DealParties;
+use App\Support\Parties\Party;
+use App\Support\Parties\PartyAuthority;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -25,7 +28,7 @@ class CreateProposal
     public function __construct(private readonly ProposeTermsVersion $versions) {}
 
     /**
-     * @param  list<array{actor: Actor, role?: string, required?: bool}>  $invitees
+     * @param  list<array{actor: Actor, party?: Party, role?: string, required?: bool}>  $invitees  actor is the representative; party (default: the actor) is who is bound
      */
     public function execute(
         User $user,
@@ -36,6 +39,8 @@ class CreateProposal
         ?string $notes = null,
         string $creatorRole = 'proposer',
         ?Relationship $relationship = null,
+        ?array $termsData = null,
+        ?Party $creatorParty = null,
     ): Proposal {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('create', Proposal::class);
@@ -53,6 +58,8 @@ class CreateProposal
             $notes,
             $creatorRole,
             $relationship,
+            $termsData,
+            $creatorParty,
         ): Proposal {
             $creator = Actor::query()->with('user')->lockForUpdate()->findOrFail($current->actor->id);
             $lockedRelationship = null;
@@ -67,14 +74,19 @@ class CreateProposal
                 );
             }
 
+            $creatorParty ??= Party::of($creator);
+            abort_unless((new PartyAuthority)->canActFor($current, $creatorParty), 403);
+
             $partySpecs = [];
-            $seen = [$creator->id => true];
+            $seen = [$creatorParty->key() => true];
+            $signers = [$current];
 
             foreach ($invitees as $spec) {
                 $actor = $spec['actor'];
 
                 $party = Actor::query()->with('user')->lockForUpdate()->findOrFail($actor->id);
-                abort_if(isset($seen[$party->id]), 422, 'A Proposal cannot contain the same Actor twice.');
+                $principal = $spec['party'] ?? Party::of($party);
+                abort_if(isset($seen[$principal->key()]), 422, 'A Proposal cannot contain the same party twice.');
                 abort_unless(
                     $party->status === 'active'
                     && $party->user instanceof User
@@ -96,13 +108,23 @@ class CreateProposal
                     );
                 }
 
-                $seen[$party->id] = true;
+                abort_unless(
+                    $principal->model() !== null && (new PartyAuthority)->canActFor($party->user, $principal),
+                    422,
+                    'The representative cannot act for that party.',
+                );
+
+                $seen[$principal->key()] = true;
+                $signers[] = $party->user;
                 $partySpecs[] = [
                     'actor' => $party,
+                    'party' => $principal,
                     'role' => $this->normalizeRole((string) ($spec['role'] ?? 'party')),
                     'required' => (bool) ($spec['required'] ?? true),
                 ];
             }
+
+            DealParties::assertSingleSide($signers, array_map(fn (string $key): Party => Party::make(...explode(':', $key)), array_keys($seen)));
 
             $proposal = Proposal::query()->create([
                 'title' => $title,
@@ -114,6 +136,8 @@ class CreateProposal
             ProposalParty::query()->create([
                 'proposal_id' => $proposal->id,
                 'actor_id' => $creator->id,
+                'business_id' => $creatorParty->kind === Party::BUSINESS ? $creatorParty->id : null,
+                'group_id' => $creatorParty->kind === Party::GROUP ? $creatorParty->id : null,
                 'role' => $this->normalizeRole($creatorRole),
                 'required' => true,
                 'added_by_actor_id' => $creator->id,
@@ -123,6 +147,8 @@ class CreateProposal
                 ProposalParty::query()->create([
                     'proposal_id' => $proposal->id,
                     'actor_id' => $spec['actor']->id,
+                    'business_id' => $spec['party']->kind === Party::BUSINESS ? $spec['party']->id : null,
+                    'group_id' => $spec['party']->kind === Party::GROUP ? $spec['party']->id : null,
                     'role' => $spec['role'],
                     'required' => $spec['required'],
                     'added_by_actor_id' => $creator->id,
@@ -155,6 +181,7 @@ class CreateProposal
                 $summary,
                 $notes,
                 'Initial proposal terms',
+                $termsData,
             );
 
             return $proposal->fresh([

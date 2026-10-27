@@ -87,6 +87,9 @@ return [
         'empty_filter' => 'Nothing here.',
         'empty_offers' => 'Nothing offered yet.',
         'empty_needs' => 'No needs published.',
+        'resume' => 'Resume editing',
+        'conversations' => 'Conversations (:count)',
+        'matches_optional' => 'Find matches (optional)',
     ],
     'saved' => [
         'title' => 'Saved templates and groups',

@@ -71,6 +71,7 @@ return [
     ],
     'messages' => [
         'accepted' => '您对当前提案版本的接受已记录。',
+        'terms_changed' => '条款在您查看后已更改。未记录任何内容，请查看新版本。',
         'changes_requested' => '修改请求已记录。',
         'rejected' => '提案已拒绝。',
         'version_proposed' => '新的固定提案版本已发布。',

@@ -26,6 +26,8 @@ use LogicException;
     'effective_timezone',
     'effective_until',
     'note',
+    'terms_data',
+    'terms_hash',
     'proposed_at',
     'accepted_at',
     'activated_at',
@@ -164,6 +166,7 @@ class ContractVersion extends Model
         return [
             'version' => 'integer',
             'status' => ContractVersionStatus::class,
+            'terms_data' => 'array',
             'effective_from' => 'datetime',
             'effective_until' => 'datetime',
             'proposed_at' => 'datetime',

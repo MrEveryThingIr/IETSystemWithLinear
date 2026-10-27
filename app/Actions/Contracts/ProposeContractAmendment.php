@@ -26,6 +26,7 @@ class ProposeContractAmendment
         ?string $summary = null,
         ?string $notes = null,
         ?string $versionNote = null,
+        ?array $termsData = null,
     ): ContractVersion {
         Gate::forUser($user)->authorize('amend', $contract);
 
@@ -56,6 +57,7 @@ class ProposeContractAmendment
         $partySpecs = $active->parties
             ->map(fn (ContractVersionParty $party): array => [
                 'actor' => $party->actor,
+                'party' => $party->principal(),
                 'role' => $party->role,
                 'required' => $party->required,
                 'source_proposal_party' => $party->sourceProposalParty,
@@ -71,6 +73,7 @@ class ProposeContractAmendment
             $effectiveFrom,
             $effectiveTimezone,
             $versionNote,
+            termsData: $termsData,
         );
     }
 }

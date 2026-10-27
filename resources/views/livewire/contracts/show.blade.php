@@ -4,6 +4,10 @@
     <x-app.page-header :title="$contract->title" :description="__('contracts.show.help')">
         <x-slot:actions>
             <flux:badge>{{ __('contracts.status.'.$contract->status->value) }}</flux:badge>
+            @if ($contract->relationship)
+                <flux:button :href="\App\Support\Deals\DealLinks::workspace($contract->relationship, 'agreement')" size="sm" variant="primary">{{ __('deals.back_to_deal') }}</flux:button>
+                <flux:button :href="route('relationships.agreement.print', $contract->relationship)" size="sm" icon="printer" target="_blank">{{ __('deals.print.open') }}</flux:button>
+            @endif
         </x-slot:actions>
     </x-app.page-header>
 
@@ -286,7 +290,7 @@
             @if ($contract->sourceProposalVersion)
                 <flux:card class="space-y-2">
                     <flux:heading>{{ __('contracts.source_proposal') }}</flux:heading>
-                    <flux:button :href="route('proposals.show', $contract->sourceProposalVersion->proposal)" variant="ghost" class="w-full">
+                    <flux:button :href="\App\Support\Deals\DealLinks::proposal($contract->sourceProposalVersion->proposal)" variant="ghost" class="w-full">
                         {{ $contract->sourceProposalVersion->proposal->title }}
                     </flux:button>
                 </flux:card>

@@ -11,7 +11,7 @@ class ContextualWorkflowShellTest extends TestCase
     public function test_c3_primary_workflows_use_the_shared_page_contract(): void
     {
         $views = [
-            'livewire/relationships/show.blade.php',
+            // The Deal workspace (M3-C4) is deliberately conversation-first and does not use the explanatory shell.
             'businesses/show.blade.php',
             'livewire/groups/show.blade.php',
             // The Content Studio (v2) is a single authoring workspace with its

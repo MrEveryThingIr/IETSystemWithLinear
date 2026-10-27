@@ -260,6 +260,9 @@ class PlannerKernelTest extends TestCase
 
     public function test_occurrence_materialization_is_idempotent_and_plan_cancellation_preserves_history(): void
     {
+        // The rule starts on a fixed 2026 date; without a fixed clock the first occurrences fall in the past once real time passes them.
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-24 08:00 UTC'));
+
         $bob = Actor::factory()->create();
         $context = app(EnsurePersonalContext::class)->execute($bob->user);
         $plan = app(CreatePlan::class)->execute($context, $bob->user, 'Repeat study', timezone: 'UTC');
@@ -290,6 +293,8 @@ class PlannerKernelTest extends TestCase
         $this->assertSame(PlanScheduleRuleStatus::Cancelled, $rule->fresh()->status);
         $this->assertSame(3, $plan->occurrences()->where('status', PlanOccurrenceStatus::Cancelled)->count());
         $this->assertGreaterThanOrEqual(2, $plan->events()->count());
+
+        CarbonImmutable::setTestNow();
     }
 
     private function activeRelationship(Actor $creator, Actor $invitee): Relationship

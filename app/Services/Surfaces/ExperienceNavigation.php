@@ -88,7 +88,7 @@ class ExperienceNavigation
         // a personal plan never sits under deals or work.
         $primary = array_values(array_filter([
             $destination('messages', 'experience.navigation.messages', 'chat-bubble-left-right', 'messages.index', ['messages']),
-            $destination('market', 'experience.navigation.market', 'magnifying-glass', 'experience.needs-offers', ['market']),
+            $destination('market', 'experience.navigation.market', 'magnifying-glass', 'intents.index', ['market']),
             $destination('deals', 'experience.navigation.deals', 'arrows-right-left', 'deals.index', ['deals']),
             $destination('planner', 'experience.navigation.planner', 'calendar-days', 'planner.index', ['planner']),
             $destination('money', 'experience.navigation.money', 'wallet', 'bookkeeping.index', ['money']),

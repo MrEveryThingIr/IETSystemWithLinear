@@ -308,6 +308,17 @@ No refinement PR exists. Draft PR to open: head `feat/m2-category-aware-composer
 and merge; 3) retarget the refinement PR to `integration/v2` and merge; 4) on `integration/v2` run the full suite and the
 Laragon walkthrough; 5) never auto-merge or deploy; Living Planner v2 merges separately.
 
+## M2 integration result (Oct 25)
+
+Owner merged with merge commits (the repository convention): PR #85 → `2b438857`, PR #86 → `c5ea9afe`, PR #87 → `a90cb92d`
+(8 checks passing). `origin/integration/v2` = `a90cb92d`; all three branches are contained in it and its tree is
+identical to the previously tested refinement head `f41da3a2`. Verified on that head: full suite 1170 tests / 13988 assertions
+passed (Windows OpenSSL config set), Pint and PHPStan clean, frontend build OK, `migrate:status` against the owner's Laragon
+database shows 0 pending (read-only; data untouched). Smoke journeys (My Items, Composer, templates, Need/Offer edit, published
+versions, legacy redirects) are covered by the suite and were browser-run on the identical tree (Persian RTL phone layout checked).
+Remaining known limitations: community choice text is not translated per option; Arabic/Chinese covered by parity tests, not
+screenshots; admin review page not browser-run; no production release.
+
 ## Continuation
 
 1. Fetch origin and inspect status/worktrees before switching; preserve local work.

@@ -125,14 +125,9 @@
                     <div class="flex flex-wrap gap-2">
                     @unless (config('release.profile') === 'office_alpha')
                         @can('update', $intent)
-                            <flux:button
-                                :href="route('intents.matches', $intent)"
-                                size="sm"
-                                variant="ghost"
-                            >
-                                {{ __('intents.matches.find') }}
-                            </flux:button>
-                            <flux:button :href="route('intents.compose.edit', $intent)" size="sm" variant="ghost">{{ __('composer.edit_post') }}</flux:button>
+                            <flux:button :href="route('intents.show', $intent)" size="sm" variant="ghost" data-own-view>{{ __('items.offers_needs.view') }}</flux:button>
+                            <flux:button :href="route('intents.compose.edit', $intent)" size="sm" variant="primary" data-own-edit>{{ __('composer.edit_post') }}</flux:button>
+                            <flux:button :href="route('intents.matches', $intent)" size="sm" variant="ghost">{{ __('items.offers_needs.matches_optional') }}</flux:button>
                         @else
                             <flux:button
                                 :href="route('relationships.create', ['intent' => $intent->uuid])"

@@ -11,11 +11,14 @@ use App\Models\ProposalParty;
 use App\Models\ProposalVersion;
 use App\Models\User;
 use App\ProposalDecisionKind;
+use App\Support\Deals\DealLinks;
+use App\Support\Deals\DealParties;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Layout('layouts.app')]
 #[Title('Proposal')]
@@ -24,6 +27,9 @@ class Show extends Component
     public Proposal $proposal;
 
     public string $responseNote = '';
+
+    /** The Terms version number last shown to this person; every decision is bound to it. */
+    public ?int $viewedVersion = null;
 
     public string $revisionTitle = '';
 
@@ -35,54 +41,61 @@ class Show extends Component
 
     public string $versionNote = '';
 
-    public function mount(Proposal $proposal): void
+    public function mount(Proposal $proposal): mixed
     {
         Gate::forUser($this->user())->authorize('view', $proposal);
         $this->proposal = $proposal;
+
+        // The Deal workspace is the one home of a negotiation. Opening the old address (links, bookmarks, emails) lands
+        // on its Agreement tab at this version; a Proposal that never belonged to a Deal keeps this page.
+        if (request()->routeIs('proposals.show') && $proposal->relationship_id !== null) {
+            return $this->redirect(DealLinks::proposal($proposal->loadMissing('relationship')), navigate: false);
+        }
+
+        return null;
     }
 
     public function accept(RespondToProposal $respond): void
     {
-        $respond->execute(
-            $this->proposal,
-            $this->user(),
-            ProposalDecisionKind::Accepted,
-            $this->responseNote !== '' ? $this->responseNote : null,
-        );
-
-        $this->responseNote = '';
-        $this->refreshProposal();
-        session()->flash('status', __('proposals.messages.accepted'));
+        $this->respondWith($respond, ProposalDecisionKind::Accepted, 'accepted');
     }
 
     public function requestChanges(RespondToProposal $respond): void
     {
         $this->validate(['responseNote' => ['required', 'string', 'max:2000']]);
 
-        $respond->execute(
-            $this->proposal,
-            $this->user(),
-            ProposalDecisionKind::ChangesRequested,
-            $this->responseNote,
-        );
-
-        $this->responseNote = '';
-        $this->refreshProposal();
-        session()->flash('status', __('proposals.messages.changes_requested'));
+        $this->respondWith($respond, ProposalDecisionKind::ChangesRequested, 'changes_requested');
     }
 
     public function reject(RespondToProposal $respond): void
     {
-        $respond->execute(
-            $this->proposal,
-            $this->user(),
-            ProposalDecisionKind::Rejected,
-            $this->responseNote !== '' ? $this->responseNote : null,
-        );
+        $this->respondWith($respond, ProposalDecisionKind::Rejected, 'rejected');
+    }
+
+    /** Always answers for the version that was on screen; if Terms moved on meanwhile, nothing is recorded. */
+    private function respondWith(RespondToProposal $respond, ProposalDecisionKind $kind, string $message): void
+    {
+        try {
+            $respond->execute(
+                $this->proposal,
+                $this->user(),
+                $kind,
+                $this->responseNote !== '' ? $this->responseNote : null,
+                $this->viewedVersion,
+            );
+        } catch (HttpException $e) {
+            if ($e->getStatusCode() !== 409) {
+                throw $e;
+            }
+            $this->refreshProposal();
+            session()->flash('status', __('proposals.messages.terms_changed'));
+
+            return;
+        }
 
         $this->responseNote = '';
         $this->refreshProposal();
-        session()->flash('status', __('proposals.messages.rejected'));
+        session()->flash('status', __('proposals.messages.'.$message));
     }
 
     public function proposeVersion(ProposeTermsVersion $propose): void
@@ -126,11 +139,12 @@ class Show extends Component
         $actor = $user->actor;
         abort_unless($actor instanceof Actor, 403);
 
-        $party = $this->proposal->parties->firstWhere('actor_id', $actor->id);
+        $party = DealParties::representedBy($this->proposal->parties, $user)->first();
         abort_unless($party instanceof ProposalParty, 403);
 
         $currentVersion = $this->proposal->versions->sortByDesc('version')->first();
         abort_unless($currentVersion instanceof ProposalVersion, 500);
+        $this->viewedVersion = $currentVersion->version;
 
         $canRespond = Gate::forUser($user)->allows('respond', $this->proposal);
         $canParticipate = Gate::forUser($user)->allows('participate', $this->proposal);

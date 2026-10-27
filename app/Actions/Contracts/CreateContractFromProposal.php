@@ -8,12 +8,16 @@ use App\ContractStatus;
 use App\Models\Actor;
 use App\Models\Context;
 use App\Models\Contract;
+use App\Models\ContractAcceptance;
 use App\Models\ContractContext;
 use App\Models\ContractEvent;
+use App\Models\ContractVersion;
 use App\Models\Proposal;
+use App\Models\ProposalDecision;
 use App\Models\ProposalParty;
 use App\Models\ProposalVersion;
 use App\Models\User;
+use App\ProposalDecisionKind;
 use App\ProposalStatus;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +29,7 @@ class CreateContractFromProposal
         private readonly CreateContractVersion $versions,
         private readonly ConfigureContractServiceTerms $serviceTerms,
         private readonly AcceptContractVersion $acceptVersions,
+        private readonly FinalizeContractVersionAcceptance $finalize,
     ) {}
 
     public function execute(
@@ -33,6 +38,7 @@ class CreateContractFromProposal
         CarbonInterface $effectiveFrom,
         string $effectiveTimezone,
         ?array $serviceTerms = null,
+        bool $deriveAcceptances = false,
     ): Contract {
         $current = $this->currentUser($user);
 
@@ -45,6 +51,7 @@ class CreateContractFromProposal
             $effectiveFrom,
             $effectiveTimezone,
             $serviceTerms,
+            $deriveAcceptances,
         ): Contract {
             $lockedProposal = Proposal::query()
                 ->with([
@@ -103,6 +110,7 @@ class CreateContractFromProposal
             $partySpecs = $lockedProposal->parties
                 ->map(fn (ProposalParty $party): array => [
                     'actor' => $party->actor,
+                    'party' => $party->principal(),
                     'role' => $party->role,
                     'required' => $party->required,
                     'source_proposal_party' => $party,
@@ -118,8 +126,12 @@ class CreateContractFromProposal
                 $effectiveFrom,
                 $effectiveTimezone,
                 'Created explicitly from accepted ProposalVersion '.$sourceVersion->version,
-                acceptProposer: $serviceTerms === null,
+                acceptProposer: $serviceTerms === null && ! $deriveAcceptances,
             );
+
+            if ($deriveAcceptances) {
+                $this->deriveAcceptances($version, $sourceVersion);
+            }
 
             if ($serviceTerms !== null) {
                 $this->serviceTerms->executeFromInput($version, $current, $serviceTerms);
@@ -140,6 +152,49 @@ class CreateContractFromProposal
                 'events.actor.user',
             ]);
         }, attempts: 3);
+    }
+
+    /**
+     * Single Agree step: each party's agreement to the exact Terms was already recorded as a ProposalDecision.
+     * The ContractVersion carries the very same sealed revision, so its acceptance is derived from that decision
+     * (same signer, same time) instead of asking again, then the version is finalized as usual.
+     */
+    private function deriveAcceptances(ContractVersion $version, ProposalVersion $source): void
+    {
+        $version->loadMissing('parties');
+
+        foreach ($version->parties as $party) {
+            $decision = ProposalDecision::query()
+                ->where('proposal_version_id', $source->id)
+                ->where('proposal_party_id', $party->source_proposal_party_id)
+                ->where('decision', ProposalDecisionKind::Accepted->value)
+                ->first();
+
+            if (! $decision instanceof ProposalDecision) {
+                continue;
+            }
+
+            $acceptance = ContractAcceptance::query()->create([
+                'contract_version_party_id' => $party->id,
+                'source_proposal_decision_id' => $decision->id,
+                'accepted_by_user_id' => $decision->decided_by_user_id,
+                'accepted_at' => $decision->decided_at,
+            ]);
+
+            ContractEvent::query()->create([
+                'contract_id' => $version->contract_id,
+                'contract_version_id' => $version->id,
+                'actor_id' => $party->actor_id,
+                'event_type' => ContractEventType::PartyAccepted,
+                'payload' => [
+                    'contract_version_party_uuid' => $party->uuid,
+                    'acceptance_uuid' => $acceptance->uuid,
+                    'source_proposal_decision_uuid' => $decision->uuid,
+                ],
+            ]);
+        }
+
+        $this->finalize->execute($version, null);
     }
 
     private function currentUser(User $user): User

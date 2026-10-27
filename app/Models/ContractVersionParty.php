@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\IsDealParty;
 use Database\Factories\ContractVersionPartyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,14 +16,24 @@ use LogicException;
     'uuid',
     'contract_version_id',
     'actor_id',
+    'business_id',
+    'group_id',
+    'principal_key',
     'role',
     'required',
     'source_proposal_party_id',
 ])]
+/**
+ * @property int|null $business_id
+ * @property int|null $group_id
+ * @property string $principal_key
+ */
 class ContractVersionParty extends Model
 {
     /** @use HasFactory<ContractVersionPartyFactory> */
     use HasFactory;
+
+    use IsDealParty;
 
     protected $attributes = ['required' => true];
 

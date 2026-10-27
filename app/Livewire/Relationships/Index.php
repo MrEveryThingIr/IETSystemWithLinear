@@ -4,7 +4,9 @@ namespace App\Livewire\Relationships;
 
 use App\Models\Relationship;
 use App\Models\User;
+use App\RelationshipStatus;
 use App\Support\DealPipeline;
+use App\Support\Deals\AgreementDrafter;
 use App\Support\Work\DealsOverview;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -45,7 +47,15 @@ class Index extends Component
         $relationships = $query->limit(100)->get();
         $overview = app(DealsOverview::class);
 
+        // Agreements I started writing and have not sent: a working copy only I (and anyone allowed to draft) can see.
+        $drafts = $relationships
+            ->filter(fn (Relationship $deal): bool => $deal->status === RelationshipStatus::Active
+                && isset($deal->metadata['agreement_draft'])
+                && AgreementDrafter::canDraft($deal->loadMissing('originatingIntent.profile'), $user))
+            ->values();
+
         return view('livewire.relationships.index', [
+            'drafts' => $drafts,
             'relationships' => $relationships,
             'pipeline' => $pipeline,
             'attention' => $overview->attention($user),

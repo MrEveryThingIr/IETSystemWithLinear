@@ -3,6 +3,7 @@
 namespace App\Livewire\Notifications;
 
 use App\Models\User;
+use App\Support\NotificationOutboxDispatcher;
 use Illuminate\Contracts\View\View;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
@@ -57,6 +58,8 @@ class Index extends Component
         if (! in_array($this->filter, ['unread', 'all'], true)) {
             $this->filter = 'unread';
         }
+
+        app(NotificationOutboxDispatcher::class)->deliverPendingFor($this->user());
 
         $query = $this->filter === 'unread'
             ? $this->user()->unreadNotifications()

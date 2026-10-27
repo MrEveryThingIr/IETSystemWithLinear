@@ -28,7 +28,7 @@ class ConversationMessage extends Model
     /** @use HasFactory<ConversationMessageFactory> */
     use HasFactory;
 
-    public const KINDS = ['text', 'voice', 'location', 'contact'];
+    public const KINDS = ['text', 'voice', 'location', 'contact', 'deal'];
 
     protected $table = 'conversation_messages';
 

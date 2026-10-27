@@ -1,9 +1,12 @@
 <div
     class="flex h-full min-h-0 flex-col"
-    x-data="messageThread({ stateUrl: {{ \Illuminate\Support\Js::from(route('messages.state', $conversation)) }}, version: {{ \Illuminate\Support\Js::from($version) }} })"
+    x-data="messageThread"
+    data-state-url="{{ route('messages.state', $conversation) }}"
+    data-version="{{ $version }}"
     data-message-thread="{{ $conversation->uuid }}"
 >
     {{-- Header --}}
+    @unless ($embedded)
     <header class="flex min-w-0 items-center gap-2 border-b border-zinc-200 px-2 py-2 sm:px-4 dark:border-zinc-700">
         <flux:button :href="route('messages.index')" wire:navigate variant="ghost" size="sm" icon="arrow-left" class="lg:hidden rtl:[&_svg]:rotate-180" :aria-label="__('messages.back')" />
         @if ($other)
@@ -50,6 +53,7 @@
             </flux:menu>
         </flux:dropdown>
     </header>
+    @endunless
 
     @if ($reporting)
         <form wire:submit="submitReport" class="space-y-3 border-b border-zinc-200 bg-amber-50 p-3 sm:px-4 dark:border-zinc-700 dark:bg-amber-950/30" data-report-panel>
@@ -96,6 +100,10 @@
                 @if ($day !== $lastDay)
                     <li class="my-3 flex justify-center" aria-hidden="true"><span class="rounded-full bg-zinc-100 px-3 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800"><x-app.local-date :value="$message->created_at" /></span></li>
                     @php $lastDay = $day; @endphp
+                @endif
+                @if ($message->kind === 'deal')
+                    <li wire:key="m-{{ $message->id }}" class="my-2 flex justify-center"><span class="rounded-full bg-sky-50 px-3 py-1 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200">{{ __('deals.timeline.'.($message->meta['type'] ?? 'terms_proposed'), ['version' => $message->meta['version'] ?? '']) }} · {{ $message->author?->user?->username }}</span></li>
+                    @continue
                 @endif
                 <li wire:key="m-{{ $message->id }}" id="message-{{ $message->uuid }}" @class(['group flex min-w-0', 'justify-end' => $mine, 'justify-start' => ! $mine])>
                     <div @class(['flex min-w-0 max-w-[85%] flex-col gap-1 sm:max-w-[75%]', 'items-end' => $mine, 'items-start' => ! $mine])>
@@ -167,6 +175,12 @@
                                             <span class="min-w-0 truncate" dir="auto">{{ $asset->original_filename }}</span>
                                         </a>
                                     @endif
+                                @endforeach
+                                @foreach ($message->evidenceReferences as $reference)
+                                    <a href="{{ route('content-evidence.show', $reference) }}" class="mt-1 flex min-w-0 items-center gap-2 rounded-lg bg-black/5 px-2 py-1.5 text-sm underline-offset-2 hover:underline dark:bg-white/10" data-evidence-reference>
+                                        <flux:icon.document-text class="size-4 shrink-0" />
+                                        <span class="min-w-0 truncate" dir="auto">{{ $reference->revision?->title ?: $reference->content?->activeRevision?->title ?: __('ui.content.untitled') }}</span>
+                                    </a>
                                 @endforeach
                             @endif
                         </div>
@@ -261,6 +275,11 @@
                     <flux:button type="button" size="sm" variant="primary" x-on:click="finishRecording()">{{ __('messages.composer.send_voice') }}</flux:button>
                 </div>
             </template>
+
+            <div x-show="busy" x-cloak class="mb-1 flex items-center gap-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm dark:bg-zinc-800" role="status" data-voice-busy>
+                <span class="size-2 animate-pulse rounded-full bg-zinc-500"></span>
+                <span>{{ __('messages.composer.uploading') }}</span>
+            </div>
 
             <div x-show="!recording" class="flex items-end gap-1 sm:gap-2">
                 <flux:dropdown position="top" align="start">

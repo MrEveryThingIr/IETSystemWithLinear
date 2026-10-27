@@ -11,7 +11,7 @@ use App\Actions\Groups\PostGroupSpaceMessage;
 use App\Actions\Groups\PublishSpaceContent;
 use App\Actions\Relationships\CreateRelationship;
 use App\Actions\Relationships\RespondToRelationship;
-use App\Livewire\Contexts\Conversation as ContextConversation;
+use App\Livewire\Messages\Thread;
 use App\Models\Actor;
 use App\Models\Admission;
 use App\Models\Asset;
@@ -22,8 +22,10 @@ use App\Models\SpaceContentDefinition;
 use App\Models\SpaceContentDefinitionVersion;
 use App\RelationshipStatus;
 use App\Support\ContextTimeline;
+use App\Support\Messaging\ThreadFor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\Concerns\PublishesFeatureSurfaces;
@@ -43,10 +45,11 @@ class ConversationTimelineExperienceTest extends TestCase
         $context = $relationship->contextBinding->context;
         $relationshipEventCount = $relationship->events()->count();
 
+        $conversation = ThreadFor::conversation($context, $alice->user);
         Livewire::actingAs($alice->user)
-            ->test(ContextConversation::class, ['context' => $context])
-            ->set('message', 'I agree to everything in this chat.')
-            ->call('send')
+            ->test(Thread::class, ['conversation' => $conversation, 'embedded' => true])
+            ->set('body', 'I agree to everything in this chat.')
+            ->call('send', (string) Str::uuid())
             ->assertHasNoErrors()
             ->assertSee('I agree to everything in this chat.');
 
@@ -122,13 +125,10 @@ class ConversationTimelineExperienceTest extends TestCase
             'original_filename' => 'riverside-photo.jpg',
         ]);
 
+        app(PostContextMessage::class)->execute($context, $alice->user, 'Use these exact references.', null, [$asset->id], [$reference->id]);
         Livewire::actingAs($alice->user)
-            ->test(ContextConversation::class, ['context' => $context])
-            ->set('message', 'Use these exact references.')
-            ->set('assetIds', [$asset->id])
-            ->set('evidenceReferenceIds', [$reference->id])
-            ->call('send')
-            ->assertHasNoErrors()
+            ->test(Thread::class, ['conversation' => ThreadFor::conversation($context, $alice->user), 'embedded' => true])
+            ->assertSee('Use these exact references.')
             ->assertSee('riverside-photo.jpg')
             ->assertSee('Riverside evidence note');
 

@@ -14,6 +14,10 @@ use App\Models\ContractVersionParty;
 use App\Models\ProposalParty;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\Deals\DealParties;
+use App\Support\Deals\DealTerms;
+use App\Support\Parties\Party;
+use App\Support\Parties\PartyAuthority;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use DateTimeZone;
@@ -27,7 +31,7 @@ class CreateContractVersion
     public function __construct(private readonly FinalizeContractVersionAcceptance $finalize) {}
 
     /**
-     * @param  list<array{actor: Actor, role: string, required?: bool, source_proposal_party?: ?ProposalParty}>  $parties
+     * @param  list<array{actor: Actor, party?: Party, role: string, required?: bool, source_proposal_party?: ?ProposalParty}>  $parties
      */
     public function execute(
         Contract $contract,
@@ -38,6 +42,7 @@ class CreateContractVersion
         string $effectiveTimezone,
         ?string $note = null,
         bool $acceptProposer = true,
+        ?array $termsData = null,
     ): ContractVersion {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('participate', $contract);
@@ -72,6 +77,7 @@ class CreateContractVersion
             $effectiveTimezone,
             $note,
             $acceptProposer,
+            $termsData,
         ): ContractVersion {
             $locked = Contract::query()
                 ->with(['contextBinding.context', 'sourceProposalVersion.proposal'])
@@ -131,7 +137,7 @@ class CreateContractVersion
                 );
             }
 
-            $normalizedParties = $this->normalizeParties($locked, $parties, $current->actor);
+            $normalizedParties = $this->normalizeParties($locked, $parties, $current);
             $nextVersion = ((int) $existingVersions->max('version')) + 1;
 
             $version = ContractVersion::query()->create([
@@ -144,21 +150,26 @@ class CreateContractVersion
                 'effective_from' => $effectiveAt,
                 'effective_timezone' => $effectiveTimezone,
                 'note' => $note !== '' ? $note : null,
+                'terms_data' => $termsData,
+                'terms_hash' => $termsData !== null ? DealTerms::hash($termsData) : null,
                 'proposed_at' => now(),
             ]);
 
             $proposerParty = null;
+            $authority = new PartyAuthority;
 
             foreach ($normalizedParties as $spec) {
                 $party = ContractVersionParty::query()->create([
                     'contract_version_id' => $version->id,
                     'actor_id' => $spec['actor']->id,
+                    'business_id' => $spec['party']->kind === Party::BUSINESS ? $spec['party']->id : null,
+                    'group_id' => $spec['party']->kind === Party::GROUP ? $spec['party']->id : null,
                     'role' => $spec['role'],
                     'required' => $spec['required'],
                     'source_proposal_party_id' => $spec['source_proposal_party']?->id,
                 ]);
 
-                if ((int) $spec['actor']->id === (int) $current->actor->id) {
+                if ($authority->canActFor($current, $spec['party'])) {
                     $proposerParty = $party;
                 }
             }
@@ -213,10 +224,10 @@ class CreateContractVersion
     }
 
     /**
-     * @param  list<array{actor: Actor, role: string, required?: bool, source_proposal_party?: ?ProposalParty}>  $parties
-     * @return list<array{actor: Actor, role: string, required: bool, source_proposal_party: ?ProposalParty}>
+     * @param  list<array{actor: Actor, party?: Party, role: string, required?: bool, source_proposal_party?: ?ProposalParty}>  $parties
+     * @return list<array{actor: Actor, party: Party, role: string, required: bool, source_proposal_party: ?ProposalParty}>
      */
-    private function normalizeParties(Contract $contract, array $parties, Actor $proposer): array
+    private function normalizeParties(Contract $contract, array $parties, User $proposer): array
     {
         abort_if($parties === [] || count($parties) > 20, 422, 'A ContractVersion requires between one and twenty parties.');
 
@@ -228,7 +239,8 @@ class CreateContractVersion
         foreach ($parties as $spec) {
             $party = Actor::query()->with('user')->lockForUpdate()->findOrFail($spec['actor']->id);
 
-            abort_if(isset($seen[$party->id]), 422, 'A ContractVersion cannot contain the same Actor twice.');
+            $principal = $spec['party'] ?? Party::of($party);
+            abort_if(isset($seen[$principal->key()]), 422, 'A ContractVersion cannot contain the same party twice.');
             abort_unless(
                 $party->status === 'active'
                 && $party->user instanceof User
@@ -248,23 +260,28 @@ class CreateContractVersion
                 abort_unless(
                     $contract->sourceProposalVersion !== null
                     && (int) $sourceProposalParty->proposal_id === (int) $contract->sourceProposalVersion->proposal_id
-                    && (int) $sourceProposalParty->actor_id === (int) $party->id,
+                    && $sourceProposalParty->principal_key === $principal->key(),
                     422,
                     'Contract party Proposal provenance is invalid.',
                 );
             }
 
-            $seen[$party->id] = true;
+            abort_unless($principal->model() !== null, 422, 'Contract party is missing.');
+
+            $seen[$principal->key()] = true;
             $hasRequired = $hasRequired || $required;
-            $hasProposer = $hasProposer || (int) $party->id === (int) $proposer->id;
+            $hasProposer = $hasProposer || (new PartyAuthority)->canActFor($proposer, $principal);
 
             $normalized[] = [
                 'actor' => $party,
+                'party' => $principal,
                 'role' => $role,
                 'required' => $required,
                 'source_proposal_party' => $sourceProposalParty,
             ];
         }
+
+        DealParties::assertSingleSide([$proposer], array_map(fn (array $spec): Party => $spec['party'], $normalized));
 
         abort_unless($hasRequired, 422, 'A ContractVersion requires at least one required party.');
         abort_unless($hasProposer, 422, 'ContractVersion proposer must be included as a party.');

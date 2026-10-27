@@ -8,16 +8,16 @@ Lifecycle: Planned → In progress → Engineering-complete → Awaiting owner a
 
 | Milestone | Scope | Current evidence-backed status | Dependency |
 |---|---|---|---|
-| M1 | Navigation, Interests, Abilities, My Items | Engineering-complete reported; PR #85 open. Owner acceptance not established | None |
-| M2 | Adaptive Composer, Needs and Offers | **Engineering:** complete on `feat/m2-adaptive-intention-composer` (PR #86) plus the refinement branch `feat/m2-category-aware-composer` (field library, typed constraints, suggestions, taxonomy, groups/templates, published cards, Composer as the only Need/Offer editor). **Owner acceptance:** in progress — both M2 migrations executed on the owner's Laragon `EveryThing-system` and saved templates verified present (Oct 25). **Merge:** none; refinement PR not yet open. **Release:** none | Unmerged M1 |
-| M3 | Deals, negotiation, Terms and agreement | Planned. Domain audit done ([M3 plan](M3-DEALS-TERMS-PLAN.md)); implementation waits for explicit M2 acceptance and integration | M2 prefilling |
+| M1 | Navigation, Interests, Abilities, My Items | **Engineering:** complete. **Owner acceptance:** accepted. **Merge:** merged to `integration/v2` via PR #85 (merge commit `2b438857`). **Release:** not released | None |
+| M2 | Adaptive Composer, Needs and Offers | **Engineering:** complete (foundation + category-aware refinement). **Owner acceptance:** UX-approved by the owner; both M2 migrations ran on the owner's Laragon database. **Merge:** merged to `integration/v2` via PR #86 (`c5ea9afe`) and PR #87 (`a90cb92d`); integration verified (see handoff). **Release:** not released | M1 |
+| M3 | Deals, negotiation, Terms and agreement | **Engineering:** complete on `feat/m3-deals-terms`, final gate passed: one Deal workspace (Conversation | Agreement | Work | Money), Contract and Proposal addresses open it, Toman-only new Terms, printable executed Agreement, voice fix proven in a real Chrome; full suite 1219/1219 with the Windows OpenSSL setting, Pint and PHPStan clean, build clean, amendments now live in the Agreement tab (no separate contract tools; one new migration `2026_11_16` for the owner to run), commitment creation removed from the ordinary Deal (records kept), clause-to-work/money mapping in [M4-M5 mapping](M4-M5-AGREEMENT-OPERATIONS-MAPPING.md), path and release scope in [M4-M8 plan](M4-M8-PLAN-AND-RELEASE.md). See [handoff](M3-DEALS-TERMS-HANDOFF.md). **Owner acceptance:** awaiting. **Merge / release:** none | M2 prefilling |
 | M4 | Deal-linked Planner execution and Deliveries | Planned | M3; preserve independent Planner workstream |
 | M5 | Deal accounts, obligations, settlement | Planned | M4 |
 | M6 | Unified Business integration | Planned | M5 |
 | M7 | Evidence-based Proven Records | Planned | M5 |
 | M8 | Introductions/referrals/incentives | Planned; monetary incentives need legal approval | M5 and later approvals |
 
-Living Planner v2 remains independent: draft PR #80; its presence is not inferred
+Living Planner v2 remains independent: draft PR #80 (not merged here); its presence is not inferred
 from M1's navigation. Production releases are separate owner decisions.
 
 Each milestone tracks four separate statuses: engineering, owner acceptance, merge, release.

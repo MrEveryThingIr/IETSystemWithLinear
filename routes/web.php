@@ -12,6 +12,7 @@ use App\Http\Controllers\BookkeepingEvidenceController;
 use App\Http\Controllers\ContentEvidenceReferenceController;
 use App\Http\Controllers\ContentRevisionController;
 use App\Http\Controllers\ContextConversationAssetController;
+use App\Http\Controllers\Deals\AgreementPrintController;
 use App\Http\Controllers\ExperienceHubController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\GuestContentController;
@@ -217,6 +218,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::livewire('/relationships', RelationshipIndex::class)->can('viewAny', Relationship::class)->name('relationships.index');
     Route::livewire('/relationships/create', RelationshipCreate::class)->can('create', Relationship::class)->name('relationships.create');
     Route::livewire('/relationships/{relationship}', RelationshipShow::class)->can('view', 'relationship')->name('relationships.show');
+    Route::get('/relationships/{relationship}/agreement/print', AgreementPrintController::class)->can('view', 'relationship')->name('relationships.agreement.print');
     Route::livewire('/proposals', ProposalIndex::class)->can('viewAny', Proposal::class)->name('proposals.index');
     Route::livewire('/proposals/create', ProposalCreate::class)->can('create', Proposal::class)->name('proposals.create');
     Route::livewire('/proposals/{proposal}', ProposalShow::class)->can('view', 'proposal')->name('proposals.show');

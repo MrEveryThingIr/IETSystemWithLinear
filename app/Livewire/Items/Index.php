@@ -4,7 +4,9 @@ namespace App\Livewire\Items;
 
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
+use App\Models\Relationship;
 use App\Models\User;
+use App\RelationshipStatus;
 use App\Services\Surfaces\FeatureSurfaceAccess;
 use App\Support\RequestMemo;
 use Illuminate\Contracts\View\View;
@@ -57,6 +59,7 @@ class Index extends Component
             'counts' => $counts,
             'offers' => $intents->where('kind.value', 'offer')->values(),
             'needs' => $intents->where('kind.value', 'need')->values(),
+            'conversations' => $market ? $this->conversations($intents) : [],
         ])->title(__('items.title'));
     }
 
@@ -70,6 +73,20 @@ class Index extends Component
             ->latest('updated_at')
             ->limit(50)
             ->get();
+    }
+
+    /** Open conversations per post of mine, so a post shows who is talking about it. @return array<int, int> */
+    private function conversations(Collection $intents): array
+    {
+        if ($intents->isEmpty()) {
+            return [];
+        }
+
+        return Relationship::query()
+            ->whereIn('originating_intent_id', $intents->pluck('id'))
+            ->whereIn('status', [RelationshipStatus::Proposed->value, RelationshipStatus::Active->value])
+            ->selectRaw('originating_intent_id, count(*) as total')->groupBy('originating_intent_id')
+            ->pluck('total', 'originating_intent_id')->map(fn ($n) => (int) $n)->all();
     }
 
     /** @return array<string, int> */

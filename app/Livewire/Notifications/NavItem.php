@@ -3,6 +3,7 @@
 namespace App\Livewire\Notifications;
 
 use App\Models\User;
+use App\Support\NotificationOutboxDispatcher;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -19,6 +20,8 @@ class NavItem extends Component
     {
         $user = request()->user();
         abort_unless($user instanceof User, 403);
+
+        app(NotificationOutboxDispatcher::class)->deliverPendingFor($user);
 
         return view('livewire.notifications.nav-item', [
             'unreadCount' => $user->unreadNotifications()->count(),
