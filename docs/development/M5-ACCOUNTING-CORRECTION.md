@@ -73,3 +73,7 @@ A safe operational rollback disables the new writing paths while retaining the c
 ## Verification
 
 Final gate results are recorded in the M5 handoff. The tooling and tests are reproducible from this branch. Browser/mobile visual acceptance and the later Money simplification remain separate work; bilingual component rendering and source controls are covered by regression tests.
+
+### Final verification results
+
+The final disposable MySQL matrix passed **54 tests / 862 assertions**. All three parallel scenarios passed with **two concurrent MySQL ledger-lock waiters** demonstrated per scenario and deliberately stale outer snapshots. The harness dropped its captured disposable database. The later noncash guide correction passed its focused Deal regression (1 / 6 on SQLite); its backend cash/noncash partition is covered by the MySQL matrix. Full Pint passed, PHPStan found zero errors, frontend build passed, and localization parity passed (7 / 360). The complete financial correction is in `22196392`; the noncash guide follow-up is in `3f61d0dd`. See the handoff for scope and query-budget evidence.

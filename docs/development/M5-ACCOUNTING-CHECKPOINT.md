@@ -57,3 +57,7 @@ Reproduced through the real `CreateLedger`, `AddLedgerParty`, `RecordSharedEntry
 | Recipient returns 400,000 using confirmed unallocated Refund | Pair net zero | 600,000 still unpaid | Remaining credit zero; work paid by the earlier advance |
 
 Payment payer/payee identities were correct throughout. Refund had null `related_transaction_id`, zero allocations and only `source: manual` metadata. The pair balance can therefore be zero while its accepted obligation remains fully unpaid. This reproduces the cross-view inconsistency as well as the reversed debt. These are observed failures, not passing assertions of the requested behavior.
+
+## Follow-up authorization and implementation
+
+The owner accepted the diagnosis above and subsequently authorized a bounded correction to the existing Bookkeeping model. The original diagnostic stop is superseded by that authorization. See [the correction record](M5-ACCOUNTING-CORRECTION.md) and the latest [M5 handoff](M5-MONEY-HANDOFF.md). The original reproduction and source-record inventory above remain historical evidence, not a statement that the later correction is still blocked.
