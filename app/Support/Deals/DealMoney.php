@@ -359,7 +359,7 @@ final class DealMoney
         $credit = $account['confirmed'];
         $earned = (int) $items->sum('earned');
         $received = (int) $items->sum('received');
-        $position = $estimatedValue + $earned - $received - $credit;
+        $position = $estimatedValue + $earned - $received - $credit - (int) $items->sum('noncash_settled');
 
         return [
             'estimated' => $estimatedValue,

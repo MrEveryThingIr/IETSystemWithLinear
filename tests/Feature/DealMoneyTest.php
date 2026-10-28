@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Bookkeeping\DecideOnEntry;
+use App\Actions\Bookkeeping\RecordSharedEntry;
 use App\Actions\Contracts\AcceptContractVersion;
 use App\Actions\Contracts\ActivateDueContractVersions;
 use App\Actions\Deals\AmendAgreement;
@@ -14,6 +16,7 @@ use App\Actions\Planner\TransitionPlanOccurrence;
 use App\Actions\Proposals\RespondToProposal;
 use App\Actions\Relationships\RespondToRelationship;
 use App\Enums\Bookkeeping\TransactionStatus;
+use App\Enums\Bookkeeping\TransactionType;
 use App\FulfillmentReviewDecision;
 use App\Livewire\Deals\AgreementComposer;
 use App\Livewire\Deals\MoneyPanel;
@@ -384,5 +387,27 @@ class DealMoneyTest extends TestCase
         $this->assertSame(500000, $sum['owed']);
         $this->assertSame(500000, $items[0]['derived']);
         $this->assertSame(1, $this->tx('obligation')->count());
+    }
+
+    public function test_noncash_settlement_is_not_received_cash_and_does_not_leave_a_false_remaining_position(): void
+    {
+        [$alice, $bob, $deal] = $this->activeDeal();
+        $this->agree($alice, $bob, $deal, $this->terms('1000000', 'total'));
+        $duty = $this->duty($alice, $bob, $deal, 'Repair with waiver', '1', 'item');
+        $this->done($alice, $bob, $duty, '1');
+        $money = app(ManageDealMoney::class);
+        $obligation = $money->request($deal, $alice->user, [$this->money($deal)[0][0]['key']])[0];
+        $money->approve($deal, $bob->user, $obligation->uuid);
+        $book = app(DealMoney::class)->ledger($deal);
+        $waiver = app(RecordSharedEntry::class)->execute($book, $alice->user, TransactionType::WriteOff, $book->partyFor($bob), $book->partyFor($alice), 400_000, now()->toDateString(), 'Agreed waiver');
+        app(DecideOnEntry::class)->approve($waiver, $bob->user);
+        $payment = $money->report($deal, $bob->user, [$obligation->uuid => '600000'], 'cash-after-waiver');
+        $money->approve($deal, $alice->user, $payment->uuid);
+        [$items, $sum] = $this->money($deal);
+        $this->assertSame(600_000, $sum['received']);
+        $this->assertSame(400_000, $sum['noncash_settled']);
+        $this->assertSame(0, $sum['outstanding']);
+        $this->assertSame(0, $sum['roughly_owed']);
+        $this->assertSame('settled', $items[0]['state']);
     }
 }
