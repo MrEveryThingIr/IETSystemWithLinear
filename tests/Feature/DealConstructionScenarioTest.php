@@ -190,7 +190,7 @@ class DealConstructionScenarioTest extends TestCase
         $this->assertSame(4000000, $sum['reported_value'], 'work awaiting inspection is shown, but it is not owed');
         $this->assertSame(1000000, $sum['estimated'], 'rough daily progress (40) less what went to inspection (10 + 20 + 8) is a guide only');
         $this->assertSame(0, $sum['payable']);
-        $this->assertSame(15000000, $sum['not_yet_due']);
+        $this->assertSame(0, $sum['not_yet_due'], 'No ledger obligation is accepted yet.');
         $this->assertSame(0, $sum['outstanding_due']);
         $this->assertSame('2026-12-13', $items[0]['due_on']->toDateString());
         $this->assertSame('not_due', $items[0]['state']);
@@ -200,9 +200,12 @@ class DealConstructionScenarioTest extends TestCase
         // The week ends: both confirmed pieces fall due; the doer asks for them.
         $this->travelTo(CarbonImmutable::parse('2026-12-13 12:00:00', 'UTC'));
         [$items, $sum] = $this->snapshot($deal);
-        $this->assertSame(15000000, $sum['payable']);
-        $this->assertSame(15000000, $sum['outstanding_due']);
-        $money->request($deal, $alice->user, [$items[0]['key'], $items[1]['key']]);
+        $this->assertSame(0, $sum['payable']);
+        $this->assertSame(0, $sum['outstanding_due']);
+        $requests = $money->request($deal, $alice->user, [$items[0]['key'], $items[1]['key']]);
+        foreach ($requests as $request) {
+            $money->approve($deal, $bob->user, $request->uuid);
+        }
         [$items, $sum] = $this->snapshot($deal);
         $this->assertSame(15000000, $sum['requested']);
         $this->assertSame(15000000, $sum['earned'], 'asking never adds to what is earned');
@@ -234,16 +237,17 @@ class DealConstructionScenarioTest extends TestCase
         $this->assertSame(0, $sum['outstanding_due']);
         $this->assertSame(2, $sum['settled_count']);
         // Nothing is counted twice: earned = received + still due + not yet due.
-        $this->assertSame($sum['earned'], $sum['received'] + $sum['outstanding_due'] + $sum['not_yet_due']);
+        $this->assertSame($sum['earned'], $sum['received'] + $sum['outstanding_due'] + $sum['not_yet_due'] + $sum['unrecorded_earnings']);
 
         // Later the waiting inspection is confirmed (the following Monday): it is earned, but not yet due, and the Agreement stays open.
         $this->travelTo(CarbonImmutable::parse('2026-12-14 09:00:00', 'UTC'));
         $this->review($bob, $deal, $r3->fresh(), 'accepted');
         [$items, $sum] = $this->snapshot($deal);
         $this->assertSame(19000000, $sum['earned']);
-        $this->assertSame(4000000, $sum['not_yet_due']);
+        $this->assertSame(0, $sum['not_yet_due']);
+        $this->assertSame(4000000, $sum['unrecorded_earnings']);
         $this->assertSame(0, $sum['reported_value']);
-        $this->assertSame($sum['earned'], $sum['received'] + $sum['outstanding_due'] + $sum['not_yet_due']);
+        $this->assertSame($sum['earned'], $sum['received'] + $sum['outstanding_due'] + $sum['not_yet_due'] + $sum['unrecorded_earnings']);
         $this->assertSame('2026-12-20', $items->last()['due_on']->toDateString());
         $this->assertSame(ContractStatus::Active, Contract::query()->sole()->status);
         $this->assertSame(2, Transaction::query()->where('type', 'payment')->count());

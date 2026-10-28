@@ -9,6 +9,7 @@ use App\Models\Bookkeeping\Transaction;
 use App\Models\Commitment;
 use App\Models\Relationship;
 use App\Models\User;
+use App\Support\Bookkeeping\BalanceCalculator;
 use App\Support\Deals\DealMoney;
 use App\Support\Deals\DealNote;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -191,6 +192,7 @@ class MoneyPanel extends Component
             'asProvider' => $this->roleIn($this->relationship, 'obligor'),
             'asPayer' => $this->roleIn($this->relationship, 'beneficiary'),
             'ledger' => $ledger,
+            'creditSnapshot' => $ledger instanceof Ledger ? app(BalanceCalculator::class)->credit($ledger) : ['payments' => []],
             'payments' => $payments,
             'me' => $me,
             'unitsHint' => DealMoney::UNITS,

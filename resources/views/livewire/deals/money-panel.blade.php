@@ -33,14 +33,17 @@
                     @foreach (['reported_value', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'settled'] as $k)
                         <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.sum.'.$k) }}</dt><dd class="font-medium" data-sum="{{ $k }}">{{ $fmt($summary[$k]) }}@if ($k === 'settled' && $summary['items'] > 0) <span class="text-xs font-normal text-zinc-500">({{ $summary['settled_count'] }}/{{ $summary['items'] }})</span>@endif</dd></div>
                     @endforeach
+                    @if ($summary['unrecorded_earnings'] > 0)
+                        <div><dt>{{ __('credit.unrecorded') }}</dt><dd>{{ $fmt($summary['unrecorded_earnings']) }}</dd></div>
+                    @endif
                 </dl>
             </details>
             <details class="text-xs text-zinc-500" data-money-legend>
                 <summary class="cursor-pointer">{{ __('deals.money.legend.title') }}</summary>
                 <ul class="mt-1 list-disc space-y-1 ps-5">
-                    @foreach (['estimated', 'earned', 'on_account', 'received', 'reported_value', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'settled'] as $k)<li><span class="font-medium">{{ __('deals.money.sum.'.$k) }}:</span> {{ __('deals.money.legend.'.$k) }}</li>@endforeach
+                    @foreach (['estimated', 'earned', 'on_account', 'received', 'reported_value', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'settled'] as $k)<li><span class="font-medium">{{ __('deals.money.sum.'.$k) }}:</span> {{ $k === 'on_account' ? __('credit.legend_on_account') : __('deals.money.legend.'.$k) }}</li>@endforeach
                 </ul>
-                <p class="mt-1 font-medium">{{ __('deals.money.legend.identity') }}</p>
+                <p class="mt-1 font-medium">{{ __('credit.identity') }}</p>
             </details>
             @if ($summary['attention'] > 0)<p class="text-sm text-amber-600" data-money-attention>{{ __('deals.money.attention', ['count' => $summary['attention']]) }}</p>@endif
 
@@ -173,6 +176,7 @@
             <flux:heading size="sm">{{ __('deals.money.payments') }}</flux:heading>
             @foreach ($payments as $row)
                 @php($t = $row['entry'])
+                <x-bookkeeping.credit-history :position="$creditSnapshot['payments'][$t->id] ?? null" />
                 <div wire:key="payment-{{ $t->uuid }}" class="rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-700" data-money-payment data-status="{{ $t->status->value }}">
                     <div class="flex flex-wrap items-start justify-between gap-2">
                         <span class="font-medium">{{ __('deals.money.paid_by', ['payer' => $t->fromParty->label(), 'payee' => $t->toParty->label(), 'amount' => $fmt((int) $t->amount)]) }}</span>

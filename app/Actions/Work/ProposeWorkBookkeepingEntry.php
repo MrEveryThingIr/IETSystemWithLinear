@@ -134,6 +134,7 @@ class ProposeWorkBookkeepingEntry
         }
 
         return DB::transaction(function () use ($user, $fulfillment, $commitment, $ledger, $amount): Transaction {
+            Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
             // Serialise proposals for the same work, from either side.
             Fulfillment::query()->lockForUpdate()->findOrFail($fulfillment->id);
             $existing = $this->existing($fulfillment);

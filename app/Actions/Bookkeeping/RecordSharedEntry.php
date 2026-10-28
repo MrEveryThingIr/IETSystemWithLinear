@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Support\Bookkeeping\BalanceCalculator;
 use App\Support\Bookkeeping\BookkeepingRecorder;
 use App\Support\Bookkeeping\ConfirmationRules;
+use App\Support\Bookkeeping\CreditAudit;
 use App\Support\Bookkeeping\EntryDate;
 use App\Support\Bookkeeping\EntrySource;
 use App\Support\Bookkeeping\Toman;
@@ -62,6 +63,9 @@ class RecordSharedEntry
         ?Wallet $wallet = null,
         ?string $idempotencyKey = null,
         ?EntrySource $source = null,
+        ?Transaction $refundPayment = null,
+        string $returnMode = 'unused',
+        ?Transaction $refundObligation = null,
     ): Transaction {
         abort_unless(in_array($type, TransactionType::shared(), true) && $type !== TransactionType::Adjustment, 422, 'Use the adjustment action to correct a debt.');
         abort_if($ledger->kind === LedgerKind::Personal, 422, 'Personal books record income and expenses.');
@@ -82,8 +86,14 @@ class RecordSharedEntry
             $this->assertOwnWallet($wallet, $actor);
         }
 
-        return DB::transaction(function () use ($ledger, $actor, $type, $from, $to, $amount, $occurred, $due, $description, $allocations, $wallet, $idempotencyKey, $source): Transaction {
+        return DB::transaction(function () use ($ledger, $actor, $type, $from, $to, $amount, $occurred, $due, $description, $allocations, $wallet, $idempotencyKey, $source, $refundPayment, $returnMode, $refundObligation): Transaction {
             $locked = Ledger::query()->lockForUpdate()->findOrFail($ledger->id);
+            if ($idempotencyKey !== null && ($existing = $this->existing($actor, $idempotencyKey, $locked, true)) instanceof Transaction) {
+                return $existing;
+            }
+            if ($type === TransactionType::Refund) {
+                app(ValidateCreditReturn::class)->execute($locked, $from, $to, $amount, $description, $refundPayment, $returnMode, $refundObligation);
+            }
             abort_unless($locked->status === LedgerStatus::Active, 422, 'This book is archived.');
 
             $transaction = Transaction::query()->create([
@@ -99,11 +109,14 @@ class RecordSharedEntry
                 'wallet_id' => $wallet?->id,
                 'recorded_by_actor_id' => $actor->id,
                 'idempotency_key' => $idempotencyKey,
-                'meta' => ['source' => $source?->origin->value ?? 'manual'],
+                'meta' => ['source' => $source?->origin->value ?? 'manual', 'credit_policy' => 'fifo_v1', ...($type === TransactionType::Refund ? ['return_mode' => $returnMode] : [])],
+                'related_transaction_id' => $type === TransactionType::Refund ? $refundPayment?->id : null,
                 ...($source?->columns() ?? []),
             ]);
 
-            if ($type->settlesObligations()) {
+            if ($type === TransactionType::Refund && $returnMode === 'applied') {
+                Allocation::query()->create(['transaction_id' => $transaction->id, 'obligation_id' => $refundObligation->id, 'amount' => $amount]);
+            } elseif ($type->settlesObligations() && $type !== TransactionType::Refund) {
                 $this->allocate($locked, $transaction, $from, $to, $amount, $allocations);
             }
 
@@ -125,6 +138,8 @@ class RecordSharedEntry
                 );
             }
 
+            app(CreditAudit::class)->record($transaction, $actor);
+
             return $transaction->refresh();
         }, 3);
     }
@@ -132,25 +147,8 @@ class RecordSharedEntry
     /** @param  array<string, int|string>|null  $requested */
     private function allocate(Ledger $ledger, Transaction $transaction, LedgerParty $from, LedgerParty $to, int $amount, ?array $requested): void
     {
-        // A payment from the debtor settles debts "from → to"; a refund flows
-        // back, so it reduces what was paid on debts "to → from".
-        [$debtor, $creditor] = $transaction->type === TransactionType::Refund ? [$to, $from] : [$from, $to];
-        $open = $this->balances->openObligations($ledger, $debtor, $creditor)
+        $open = $this->balances->openObligations($ledger, $from, $to, currentRead: true)
             ->keyBy(fn (array $row): string => $row['obligation']->uuid);
-
-        if ($transaction->type === TransactionType::Refund) {
-            // Refunds apply only where something was paid.
-            $open = Transaction::query()
-                ->where('ledger_id', $ledger->id)
-                ->where('type', TransactionType::Obligation->value)
-                ->where('from_party_id', $debtor->id)
-                ->where('to_party_id', $creditor->id)
-                ->where('status', TransactionStatus::Confirmed->value)
-                ->get()
-                ->map(fn (Transaction $obligation): array => ['obligation' => $obligation, 'open' => $this->balances->obligation($obligation)['paid']])
-                ->filter(fn (array $row): bool => $row['open'] > 0)
-                ->keyBy(fn (array $row): string => $row['obligation']->uuid);
-        }
 
         $plan = [];
         if ($requested === null) {
@@ -225,12 +223,12 @@ class RecordSharedEntry
         );
     }
 
-    private function existing(Actor $actor, string $key, Ledger $ledger): ?Transaction
+    private function existing(Actor $actor, string $key, Ledger $ledger, bool $currentRead = false): ?Transaction
     {
         $existing = Transaction::query()
             ->where('recorded_by_actor_id', $actor->id)
             ->where('idempotency_key', $key)
-            ->first();
+            ->when($currentRead, fn ($q) => $q->lockForUpdate())->first();
 
         abort_if($existing instanceof Transaction && (int) $existing->ledger_id !== (int) $ledger->id, 409, 'This request key was already used in another book.');
 

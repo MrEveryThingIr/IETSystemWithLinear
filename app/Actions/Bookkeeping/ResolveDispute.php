@@ -5,10 +5,13 @@ namespace App\Actions\Bookkeeping;
 use App\Enums\Bookkeeping\DisputeOutcome;
 use App\Enums\Bookkeeping\DisputeStatus;
 use App\Enums\Bookkeeping\TransactionStatus;
+use App\Enums\Bookkeeping\TransactionType;
 use App\Models\Bookkeeping\Dispute;
+use App\Models\Bookkeeping\Ledger;
 use App\Models\Bookkeeping\Transaction;
 use App\Models\User;
 use App\Support\Bookkeeping\BookkeepingRecorder;
+use App\Support\Bookkeeping\CreditAudit;
 use App\Support\Bookkeeping\Toman;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -29,6 +32,7 @@ class ResolveDispute
         $note = $note !== null ? Str::limit(Str::squish($note), 1000, '') : null;
 
         return DB::transaction(function () use ($dispute, $user, $actor, $outcome, $note): Dispute {
+            Ledger::query()->whereKey($dispute->transaction->ledger_id)->lockForUpdate()->firstOrFail();
             $locked = Dispute::query()->lockForUpdate()->findOrFail($dispute->id);
             Gate::forUser($user)->authorize('resolve', $locked);
 
@@ -42,6 +46,12 @@ class ResolveDispute
             // can erase the other side's entry on their own.
             abort_if($outcome === DisputeOutcome::Voided && $raisedByMe, 403);
 
+            if ($outcome === DisputeOutcome::Upheld && $transaction->type === TransactionType::Refund) {
+                app(ValidateCreditReturn::class)->existing($transaction);
+            }
+            if ($outcome === DisputeOutcome::Upheld) {
+                app(ValidateAdjustment::class)->execute($transaction);
+            }
             $before = BookkeepingRecorder::snapshot($transaction);
             $outcome === DisputeOutcome::Upheld
                 ? $transaction->transitionTo(TransactionStatus::Confirmed)
@@ -63,6 +73,8 @@ class ResolveDispute
                 ['who' => $actor->user->username ?? '', 'amount' => Toman::format((int) $transaction->amount), 'book' => $transaction->ledger->name],
                 $actor,
             );
+
+            app(CreditAudit::class)->record($transaction, $actor);
 
             return $locked->refresh();
         }, 3);

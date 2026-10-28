@@ -95,7 +95,7 @@ final class DealMoney
      * Money handed over on account, the way people often settle work: payments with no work attached yet. They are
      * facts in the Deal's book (confirmed only when the recipient says so) and offset what is earned when it is.
      *
-     * @return array{confirmed: int, pending: int}
+     * @return array<string, int>
      */
     public function onAccount(Relationship $deal): array
     {
@@ -103,12 +103,17 @@ final class DealMoney
         if (! $ledger instanceof Ledger) {
             return ['confirmed' => 0, 'pending' => 0];
         }
-        $payments = Transaction::query()->where('ledger_id', $ledger->id)->where('type', TransactionType::Payment->value)
-            ->whereIn('status', [TransactionStatus::Confirmed->value, TransactionStatus::Pending->value])->withSum('allocations', 'amount')->get();
-        $sum = ['confirmed' => 0, 'pending' => 0];
-        foreach ($payments as $payment) {
-            $free = max(0, (int) $payment->amount - (int) ($payment->allocations_sum_amount ?? 0));
-            $sum[$payment->status === TransactionStatus::Confirmed ? 'confirmed' : 'pending'] += $free;
+        $snapshot = $this->balances->credit($ledger);
+        $sum = ['confirmed' => 0, 'pending' => 0, 'returned' => 0, 'applications' => 0, 'net_received' => 0];
+        foreach ($snapshot['payments'] as $payment) {
+            if ($payment['status'] === 'confirmed') {
+                $sum['confirmed'] += $payment['available'] + $payment['reserved'];
+                $sum['returned'] += $payment['returned'];
+                $sum['net_received'] += $payment['amount'] - $payment['returned'];
+                $sum['applications'] += $payment['applied'];
+            } elseif ($payment['status'] === 'pending') {
+                $sum['pending'] += $payment['amount'];
+            }
         }
 
         return $sum;
@@ -233,7 +238,7 @@ final class DealMoney
 
     /**
      * @param  array{rule: string, period?: string}  $rule
-     * @param  array{obligations: Collection<array-key, mixed>, allocations: Collection<array-key, mixed>}  $recorded
+     * @param  array{obligations: Collection<array-key, mixed>, allocations: Collection<array-key, mixed>, credit: array<string, mixed>}  $recorded
      * @return array<string, mixed>
      */
     private function item(Commitment $commitment, ?Fulfillment $fulfillment, string $sourceType, string $sourceUuid, string $quantity, ?int $derived, ?CarbonImmutable $due, array $rule, array $recorded, string $zone): array
@@ -241,21 +246,21 @@ final class DealMoney
         $live = $recorded['obligations']->get($sourceType.':'.$sourceUuid, collect());
         $obligation = $live->first(fn (Transaction $t) => in_array($t->status, [TransactionStatus::Pending, TransactionStatus::Confirmed, TransactionStatus::Disputed], true));
         $rejected = $obligation === null ? $live->first(fn (Transaction $t) => $t->status === TransactionStatus::Rejected) : null;
-        $progress = $obligation instanceof Transaction ? $this->balances->obligation($obligation) : null;
+        $progress = $obligation instanceof Transaction ? ($recorded['credit']['obligations'][$obligation->id] ?? null) : null;
 
         // Earned = what the accepted terms entitle (computed), or what the payer has confirmed when terms cannot say.
         $confirmed = $obligation?->status === TransactionStatus::Confirmed;
         $earned = $confirmed ? (int) $progress['amount'] : ($derived ?? 0);
-        $received = min($earned, (int) ($progress['paid'] ?? 0));
+        $received = min($earned, (int) ($progress['cash_paid'] ?? 0));
         $isDue = $due !== null && $due->lte(CarbonImmutable::now($zone)->startOfDay());
-        $unpaid = max(0, $earned - $received);
+        $unpaid = $confirmed ? (int) $progress['outstanding'] : 0;
 
         $state = match (true) {
             $obligation === null && $rejected !== null => 'disagreed',
             $obligation === null && $earned > 0 && ! $isDue => 'not_due',
             $obligation === null => 'eligible',
             $obligation->status === TransactionStatus::Disputed || ($progress['disputed'] ?? 0) > 0 => 'disputed',
-            $earned > 0 && $unpaid === 0 && $received > 0 => 'settled',
+            $confirmed && $earned > 0 && $unpaid === 0 => 'settled',
             $received > 0 => 'part_paid',
             $obligation->status === TransactionStatus::Confirmed => 'agreed',
             default => 'requested',
@@ -275,11 +280,13 @@ final class DealMoney
             'obligation' => $obligation,
             'rejected' => $rejected,
             'allocations' => $obligation instanceof Transaction ? $recorded['allocations']->get($obligation->id, collect()) : collect(),
-            'owed' => $earned,
+            'owed' => $confirmed ? (int) $progress['amount'] : 0,
+            'unrecorded_earnings' => $confirmed ? 0 : $earned,
             'earned' => $earned,
             'requested' => $obligation instanceof Transaction ? (int) $progress['amount'] : 0,
             'reported' => (int) ($progress['pending'] ?? 0),
             'received' => $received,
+            'noncash_settled' => max(0, (int) ($progress['paid'] ?? 0) - $received),
             'disputed' => (int) ($progress['disputed'] ?? 0),
             'outstanding' => $unpaid,
             'due_unpaid' => $isDue ? $unpaid : 0,
@@ -287,19 +294,19 @@ final class DealMoney
             'state' => $state,
             // A payment can be reported against it once the amount is established (terms or payer's agreement).
             'payable' => $obligation instanceof Transaction && $unpaid - (int) ($progress['pending'] ?? 0) > 0
-                && ($confirmed || ($derived !== null && $obligation->status === TransactionStatus::Pending)),
+                && $confirmed,
         ];
     }
 
     /**
      * Every obligation recorded for Deal work, grouped by the work it is for, with the payments allocated to each.
      *
-     * @return array{obligations: Collection<array-key, mixed>, allocations: Collection<array-key, mixed>}
+     * @return array{obligations: Collection<array-key, mixed>, allocations: Collection<array-key, mixed>, credit: array<string, mixed>}
      */
     private function recorded(?Ledger $ledger): array
     {
         if (! $ledger instanceof Ledger) {
-            return ['obligations' => collect(), 'allocations' => collect()];
+            return ['obligations' => collect(), 'allocations' => collect(), 'credit' => ['obligations' => []]];
         }
         $obligations = Transaction::query()->where('ledger_id', $ledger->id)->where('type', TransactionType::Obligation->value)
             ->whereIn('source_type', [ProposeWorkBookkeepingEntry::SOURCE_TYPE, 'commitment'])->orderByDesc('id')->get();
@@ -307,7 +314,7 @@ final class DealMoney
             ->whereIn('a.obligation_id', $obligations->pluck('id'))->orderBy('t.id')
             ->get(['a.obligation_id', 'a.amount', 't.uuid', 't.status', 't.occurred_on', 't.type'])->groupBy('obligation_id');
 
-        return ['obligations' => $obligations->groupBy(fn (Transaction $t) => $t->source_type.':'.$t->source_uuid)->map(fn ($group) => $group->toBase())->toBase(), 'allocations' => $allocations->toBase()];
+        return ['credit' => $this->balances->credit($ledger), 'obligations' => $obligations->groupBy(fn (Transaction $t) => $t->source_type.':'.$t->source_uuid)->map(fn ($group) => $group->toBase())->toBase(), 'allocations' => $allocations->toBase()];
     }
 
     /**
@@ -332,17 +339,11 @@ final class DealMoney
     }
 
     /**
-     * Each figure counts once. Earned = received + credit applied from money on account + still due + not yet due:
-     *  - estimated: the doer's rough daily progress not yet taken to inspection, at the agreed price (a guide; never owed)
-     *  - reported_value: work submitted for inspection that the receiver has not decided on yet (not owed)
-     *  - on_account: money the recipient confirmed receiving with no work attached (offsets earned work, due first)
-     *  - roughly_owed / paid_ahead: rough progress + earned work, less everything confirmed received (a guide until the inspection)
-     *  - earned: confirmed work at the accepted price
-     *  - payable: the part of earned whose due day has come, whatever has been paid
-     *  - outstanding_due: payable less what is confirmed received
-     *  - not_yet_due: earned work whose due day is still ahead
-     *  - requested / reported_paid / received: what has been asked, reported paid, and confirmed received
-     *  - settled: earned value of work fully paid, and how many pieces
+     * Ledger debt/settlement numbers come from CreditAccounting through items.
+     * Confirmed work value may precede an accepted ledger obligation: keep that
+     * value in unrecorded_earnings, never apply credit to it in this summary.
+     * Cash applications are already in received; credit_applied is retained as
+     * zero for callers of the old summary-only advance offset API.
      *
      * @param  Collection<int, array<string, mixed>>  $items
      * @return array<string, int>
@@ -352,12 +353,10 @@ final class DealMoney
         $dueItems = $items->filter(fn ($i) => $i['is_due']);
         $settled = $items->filter(fn ($i) => $i['state'] === 'settled');
 
-        // Money on account offsets earned work, what is due first. What the work still needs is net of it.
+        // This summary never creates or allocates credit.
         $due = (int) $items->sum('due_unpaid');
         $future = (int) $items->sum('future');
         $credit = $account['confirmed'];
-        $onDue = min($credit, $due);
-        $onFuture = min($credit - $onDue, $future);
         $earned = (int) $items->sum('earned');
         $received = (int) $items->sum('received');
         $position = $estimatedValue + $earned - $received - $credit;
@@ -366,12 +365,15 @@ final class DealMoney
             'estimated' => $estimatedValue,
             'reported_value' => $reportedValue,
             'earned' => (int) $items->sum('earned'),
-            'payable' => (int) $dueItems->sum('earned'),
-            'outstanding_due' => $due - $onDue,
-            'not_yet_due' => $future - $onFuture,
+            'payable' => (int) $dueItems->sum('owed'),
+            'outstanding_due' => $due,
+            'not_yet_due' => $future,
             'on_account' => $credit,
             'on_account_pending' => $account['pending'],
-            'credit_applied' => $onDue + $onFuture,
+            'received_total' => $account['net_received'] ?? ($received + $credit),
+            'returned_total' => $account['returned'] ?? 0,
+            'credit_applied' => 0,
+            'noncash_settled' => (int) $items->sum('noncash_settled'),
             'roughly_owed' => max(0, $position),
             'paid_ahead' => max(0, -$position),
             'requested' => (int) $items->sum('requested'),
@@ -381,7 +383,9 @@ final class DealMoney
             'settled_count' => $settled->count(),
             'items' => $items->count(),
             // kept for existing callers
-            'owed' => (int) $items->sum('earned'),
+            'owed' => (int) $items->sum('owed'),
+            'unrecorded_earnings' => (int) $items->sum('unrecorded_earnings'),
+            'eligible' => (int) $items->filter(fn ($i) => $i['obligation'] === null)->sum(fn ($i) => $i['derived'] ?? 0),
             'unrequested' => (int) $items->filter(fn ($i) => $i['obligation'] === null && $i['is_due'])->sum(fn ($i) => $i['derived'] ?? 0),
             'outstanding' => (int) $items->sum('outstanding'),
             'attention' => $items->filter(fn ($i) => in_array($i['state'], ['disputed', 'disagreed'], true))->count(),

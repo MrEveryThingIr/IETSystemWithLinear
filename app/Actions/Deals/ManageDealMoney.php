@@ -91,6 +91,7 @@ class ManageDealMoney
         $ledger = $this->ledger($deal, $user);
 
         return DB::transaction(function () use ($deal, $user, $actor, $keys, $typed, $ledger): array {
+            Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
             $entries = [];
             foreach (array_values(array_unique($keys)) as $key) {
                 [$type, $uuid] = array_pad(explode(':', $key, 2), 2, '');
@@ -154,6 +155,7 @@ class ManageDealMoney
         abort_if($allocations === [], 422, (string) __('deals.errors.money_enter_amount'));
 
         $transaction = DB::transaction(function () use ($deal, $user, $actor, $ledger, $payer, $allocations, $key, $note, $purpose): Transaction {
+            Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
             $items = $this->money->items($deal);
             $payee = null;
             foreach ($allocations as $uuid => $value) {
@@ -227,6 +229,7 @@ class ManageDealMoney
         }
 
         $transaction = DB::transaction(function () use ($deal, $user, $ledger, $payer, $payee, $value, $key, $note, $purpose, $askId): Transaction {
+            Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
             $entry = $this->record->execute(
                 $ledger, $user, TransactionType::Payment, $payer, $payee, $value, $this->today($user), $this->description($note, $purpose ?: 'advance'), null, [],
                 idempotencyKey: $key, source: new EntrySource(EntryOrigin::IetWorkflow, 'deal_account', (string) $deal->uuid),

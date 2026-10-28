@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Deals\ManageDealMoney;
 use App\Actions\Deals\ManageDealWork;
 use App\Actions\Deals\ProposeDealTerms;
 use App\Actions\Proposals\RespondToProposal;
@@ -182,6 +183,13 @@ class DealOnAccountTest extends TestCase
         // At a substantial milestone the work is inspected; what was paid on account offsets what is earned, nothing twice.
         $this->panel($alice, $deal)->set('report.commitment', (string) $task->id)->set('report.quantity', '50')->set('report.note', 'Walls done')->call('submitReport')->assertHasNoErrors();
         $this->panel($bob, $deal)->set('text.confirm-'.Fulfillment::query()->sole()->id, '45')->call('review', Fulfillment::query()->sole()->id, 'accepted')->assertHasNoErrors();
+        $sum = $this->money($deal);
+        $this->assertSame(0, $sum['owed'], 'Inspection value alone is not an accepted ledger debt.');
+        $moneyAction = app(ManageDealMoney::class);
+        $items = app(DealMoney::class)->items($deal);
+        foreach ($moneyAction->request($deal, $alice->user, [$items[0]['key']]) as $request) {
+            $moneyAction->approve($deal, $bob->user, $request->uuid);
+        }
         $sum = $this->money($deal);
         $this->assertSame(22500000, $sum['earned']);
         $this->assertSame(0, $sum['estimated'], 'the rough figure has gone to inspection');

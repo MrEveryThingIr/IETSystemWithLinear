@@ -169,7 +169,7 @@ class DealMoneyTest extends TestCase
 
         // Confirmed work makes the agreed amount owed, but still no request, no entry.
         [$items, $sum] = $this->money($deal);
-        $this->assertSame(3000000, $sum['owed']);
+        $this->assertSame(0, $sum['owed'], 'Confirmed work value is separate from an accepted ledger obligation.');
         $this->assertSame(0, $sum['requested']);
         $this->assertSame(0, Transaction::query()->count());
 
@@ -179,11 +179,12 @@ class DealMoneyTest extends TestCase
         $this->assertSame(403, $this->http(fn () => $money->request($deal, $bob->user, [$items[0]['key']])));
         $this->assertSame(422, $this->http(fn () => $money->request($deal, $alice->user, [$items[0]['key']])), 'asking twice does not create a second entry');
         [$items, $sum] = $this->money($deal);
-        $this->assertEquals(['owed' => 3000000, 'requested' => 3000000, 'reported' => 0, 'received' => 0, 'outstanding' => 3000000], array_intersect_key($sum, array_flip(['owed', 'requested', 'reported', 'received', 'outstanding'])));
+        $this->assertEquals(['owed' => 0, 'requested' => 3000000, 'reported' => 0, 'received' => 0, 'outstanding' => 0], array_intersect_key($sum, array_flip(['owed', 'requested', 'reported', 'received', 'outstanding'])));
         $this->assertSame(1, $this->tx('obligation')->count());
 
         // The payer reports a payment: reported, not received. The payer cannot confirm their own report.
         $obligation = $items[0]['obligation'];
+        $money->approve($deal, $bob->user, $obligation->uuid);
         $payment = $money->report($deal, $bob->user, [$obligation->uuid => '3000000'], 'tok-1');
         $this->assertSame(TransactionStatus::Pending, $payment->status);
         [$items, $sum] = $this->money($deal);
@@ -223,15 +224,17 @@ class DealMoneyTest extends TestCase
 
         [$items, $sum] = $this->money($deal);
         $this->assertCount(4, $items);
-        $this->assertSame(2000000, $sum['owed']);
-        $this->assertSame(2000000, $sum['outstanding']);
+        $this->assertSame(0, $sum['owed']);
+        $this->assertSame(0, $sum['outstanding']);
 
         // Ask for the first two days only: the other two stay owed per the Agreement but are not requested.
         $money->request($deal, $alice->user, [$items[0]['key'], $items[1]['key']]);
         [$items, $sum] = $this->money($deal);
         $this->assertSame(1000000, $sum['requested']);
         $this->assertSame(1000000, $sum['unrequested']);
-        $this->assertSame(2000000, $sum['owed'], 'a request never adds to what is owed');
+        $this->assertSame(0, $sum['owed'], 'a pending request never creates accepted debt');
+        $money->approve($deal, $bob->user, $items[0]['obligation']->uuid);
+        $money->approve($deal, $bob->user, $items[1]['obligation']->uuid);
 
         // Instalment 1 covers day 1 and part of day 2; the amount cannot exceed what each request leaves open.
         [$a, $b] = [$items[0]['obligation']->uuid, $items[1]['obligation']->uuid];
@@ -244,14 +247,14 @@ class DealMoneyTest extends TestCase
         $this->assertSame(700000, $sum['received']);
         $this->assertSame('settled', $items[0]['state']);
         $this->assertSame('part_paid', $items[1]['state']);
-        $this->assertSame(1300000, $sum['outstanding']);
+        $this->assertSame(300000, $sum['outstanding'], 'unrequested work value is not accepted ledger debt');
 
         // Instalment 2 settles day 2; the rest of the Agreement stays open and nothing is double counted.
         $p2 = $money->report($deal, $bob->user, [$b => '300000'], 'i-2');
         $money->approve($deal, $alice->user, $p2->uuid);
         [$items, $sum] = $this->money($deal);
         $this->assertSame(1000000, $sum['received']);
-        $this->assertSame(1000000, $sum['outstanding']);
+        $this->assertSame(0, $sum['outstanding']);
         $this->assertSame(['settled', 'settled', 'eligible', 'eligible'], $items->pluck('state')->all());
         $this->assertSame(2, $this->tx('payment')->count());
         $this->assertSame(2, $this->tx('obligation')->count());
@@ -266,6 +269,7 @@ class DealMoneyTest extends TestCase
         $money = app(ManageDealMoney::class);
         $money->request($deal, $alice->user, [$this->money($deal)[0][0]['key']]);
         $obligation = $this->money($deal)[0][0]['obligation'];
+        $money->approve($deal, $bob->user, $obligation->uuid);
 
         // Not received: the payee refuses, with a reason; the claim stays in history and nothing is received.
         $first = $money->report($deal, $bob->user, [$obligation->uuid => '1000000'], 'p1');
@@ -337,8 +341,9 @@ class DealMoneyTest extends TestCase
 
         // The doer sees the amount from the agreed price and asks; the payer sees a request but no debt beyond the Agreement.
         $panel($alice)->assertSee('data-money-request', false)->set('selected.'.$key, true)->call('request')->assertHasNoErrors();
-        $panel($bob)->assertSee('data-money-pay', false)->assertDontSee('data-money-request', false);
         $obligation = $this->money($deal)[0][0]['obligation'];
+        $panel($bob)->call('agree', $obligation->uuid)->assertHasNoErrors();
+        $panel($bob)->assertSee('data-money-pay', false)->assertDontSee('data-money-request', false);
 
         // Reporting needs an amount; the recipient cannot report on the payer's behalf.
         $panel($bob)->call('report')->assertHasErrors('money');
@@ -364,7 +369,8 @@ class DealMoneyTest extends TestCase
         $this->agree($alice, $bob, $deal, $this->terms('500000', 'day'));
         $c = $this->duty($alice, $bob, $deal, 'Day of work', '1', 'day');
         $this->done($alice, $bob, $c, '1');
-        app(ManageDealMoney::class)->request($deal, $alice->user, [$this->money($deal)[0][0]['key']]);
+        $requests = app(ManageDealMoney::class)->request($deal, $alice->user, [$this->money($deal)[0][0]['key']]);
+        app(ManageDealMoney::class)->approve($deal, $bob->user, $requests[0]->uuid);
         $this->assertSame(500000, $this->money($deal)[1]['owed']);
 
         // The Agreement is amended to a higher day rate and the amendment takes effect.

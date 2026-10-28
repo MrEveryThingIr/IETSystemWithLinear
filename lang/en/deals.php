@@ -621,7 +621,7 @@ return [
             'reported' => 'Payments the payer says they made, still waiting for the recipient to confirm.',
             'received' => 'Payments the recipient confirmed, counted once against the work they cover.',
             'settled' => 'Earned work that confirmed payments fully cover (and how many pieces).',
-            'identity' => 'Earned = confirmed received + still to pay now + not yet due. Nothing is counted twice.',
+            'identity' => 'Accepted debt = cash applied + noncash settlement + remaining debt. Confirmed work not yet accepted in the book is separate.',
         ],
         'item_details' => 'Where this comes from',
         'd' => [
