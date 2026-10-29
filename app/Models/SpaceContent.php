@@ -39,8 +39,11 @@ class SpaceContent extends Model
 
     public const ACCESS_PUBLIC = 'public';
 
+    /** Readable by the author's accepted contacts (see ContactAudience); never by guests. */
+    public const ACCESS_CONTACTS = 'contacts';
+
     /** @var list<string> */
-    public const PUBLIC_ACCESS_VALUES = [self::ACCESS_PRIVATE, self::ACCESS_PUBLIC];
+    public const PUBLIC_ACCESS_VALUES = [self::ACCESS_PRIVATE, self::ACCESS_CONTACTS, self::ACCESS_PUBLIC];
 
     private bool $applyingLifecycle = false;
 

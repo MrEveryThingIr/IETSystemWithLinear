@@ -16,6 +16,7 @@ return [
         'published' => 'المنشور',
         'shared' => 'مشترك معي',
         'learning' => 'الدورات والتعلم',
+        'contacts' => 'من جهات اتصالي',
         'archived' => 'المؤرشف',
     ],
     'empty_filtered' => 'لا يوجد ما يطابق هذه المرشحات.',
