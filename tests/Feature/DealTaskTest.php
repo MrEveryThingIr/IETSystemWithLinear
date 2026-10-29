@@ -12,6 +12,7 @@ use App\Livewire\Intents\Composer;
 use App\Livewire\Relationships\Create as DealStart;
 use App\Models\Actor;
 use App\Models\ActorProfileIntent;
+use App\Models\Asset;
 use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\Fulfillment;
@@ -139,7 +140,10 @@ class DealTaskTest extends TestCase
         $this->assertSame('square_metre', $task->unit, 'the unit and quantity come from the Agreement, not from a form');
         $this->assertTrue(WorkPanel::isOpen($task), 'the agreed 120 m² is an estimate, never a cap');
 
-        $this->panel($alice, $deal)->assertSee('data-task-description', false)->assertSee('Leave a 90 cm opening')->assertSee('note.mp3');
+        $this->panel($alice, $deal)->assertSee('data-task-description', false)->assertSee('Leave a 90 cm opening')->assertSeeHtml('data-asset-preview="audio"');
+        $asset = Asset::query()->where('original_filename', 'note.mp3')->firstOrFail();
+        $this->actingAs($alice->user)->get(route('deals.assets.show', $asset))->assertOk();
+        $this->actingAs($this->account()->user)->get(route('deals.assets.show', $asset))->assertForbidden();
 
         // The doer does not define tasks for work they do themselves; a stranger cannot; a task needs a title (under its field).
         $this->panel($alice, $deal)->set('form.title', 'Mine')->call('addTask')->assertHasNoErrors();

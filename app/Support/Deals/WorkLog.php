@@ -29,7 +29,7 @@ final class WorkLog
             'minutes' => (int) ($e->payload['minutes'] ?? 0),
             'note' => $e->payload['note'] ?? null,
             'estimate' => $e->payload['estimate'] ?? null,
-            'files' => collect($e->payload['asset_ids'] ?? [])->map(fn ($id) => $assets[$id]->original_filename ?? null)->filter()->values()->all(),
+            'files' => collect($e->payload['asset_ids'] ?? [])->map(fn ($id) => $assets[$id] ?? null)->filter()->values()->all(),
         ])->sortByDesc(fn ($e) => $e['started_at'])->values();
 
         return [

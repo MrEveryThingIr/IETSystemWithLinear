@@ -454,13 +454,13 @@ class WorkPanel extends Component
         return QuantityAmount::subtractFloorZero(QuantityAmount::subtractFloorZero($c->quantity, $progress->acceptedQuantity($c)), $waiting);
     }
 
-    /** File names of the media the receiver attached to the task. @return list<string> */
+    /** The media the receiver attached to the task. @return list<Asset> */
     private function taskMedia(Commitment $c): array
     {
         $ids = CommitmentEvent::query()->where('commitment_id', $c->id)->where('event_type', CommitmentEventType::TaskMedia->value)->get()
             ->flatMap(fn ($e) => $e->payload['asset_ids'] ?? [])->all();
 
-        return $ids === [] ? [] : Asset::query()->whereIn('id', $ids)->pluck('original_filename')->all();
+        return $ids === [] ? [] : Asset::query()->whereIn('id', $ids)->get()->all();
     }
 
     /** What a report is called: reported, partly accepted, accepted, questioned, not accepted or in dispute. */

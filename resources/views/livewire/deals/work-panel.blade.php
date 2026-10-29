@@ -35,7 +35,7 @@
                 <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · @if ($d['share']){{ __('deals.work.progress_share', ['done' => round((float) $d['accepted'] * 100)]) }}@elseif ($d['open_ended'] && (float) $d['estimate'] > 0){{ __('deals.work.progress_estimate', ['done' => $d['accepted'] + 0, 'total' => $d['estimate'] + 0, 'unit' => $d['unit'], 'pct' => round((float) $d['accepted'] / (float) $d['estimate'] * 100)]) }}@elseif ($d['open_ended']){{ __('deals.work.progress_open', ['done' => $d['accepted'] + 0, 'unit' => $d['unit']]) }}@else{{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $d['unit']]) }}@endif</div>
 
                 @if ($c->description)<p class="whitespace-pre-wrap text-sm" dir="auto" data-task-description>{{ $c->description }}</p>@endif
-                @if ($d['media'])<div class="text-xs text-zinc-500" data-task-media>{{ implode(', ', $d['media']) }}</div>@endif
+                @if ($d['media'])<div class="grid gap-2 sm:grid-cols-2" data-task-media>@foreach ($d['media'] as $asset)<x-media.asset-preview :asset="$asset" :inline-url="route('deals.assets.show', $asset)" compact />@endforeach</div>@endif
                 @if (! $d['planned'] && $d['plans']->isNotEmpty())
                     <div class="flex flex-wrap items-end gap-2" data-task-plan>
                         <flux:select size="sm" wire:model="text.plan-{{ $c->id }}" :label="__('deals.work.use_plan')">
@@ -89,7 +89,7 @@
                                         <li wire:key="log-{{ $entry['id'] }}" class="rounded bg-zinc-50 p-2 dark:bg-zinc-900" data-log-entry>
                                             <div class="font-medium">{{ \App\Support\TemporalCalendar::dateLabel($sAt, $user, $tz) }} · {{ \App\Support\TemporalCalendar::timeLabel($sAt, $user, $tz) }} – {{ \App\Support\TemporalCalendar::timeLabel($eAt, $user, $tz) }}@if ($entry['estimate'] !== null) · {{ __('deals.work.log_about', ['qty' => $entry['estimate'] + 0, 'unit' => $d['unit']]) }}@endif</div>
                                             @if ($entry['note'])<p class="whitespace-pre-wrap" dir="auto">{{ $entry['note'] }}</p>@endif
-                                            @if ($entry['files'])<div class="text-zinc-500">{{ implode(', ', $entry['files']) }}</div>@endif
+                                            @if ($entry['files'])<div class="grid gap-2 sm:grid-cols-2">@foreach ($entry['files'] as $asset)<x-media.asset-preview :asset="$asset" :inline-url="route('deals.assets.show', $asset)" compact />@endforeach</div>@endif
                                         </li>
                                     @endforeach
                                 </ul>
@@ -111,8 +111,8 @@
                                 @if ($f->actual_start_at){{ \App\Support\TemporalCalendar::dateLabel($f->actual_start_at, $user, $tz) }}@if ($f->actual_end_at && \App\Support\TemporalCalendar::dateLabel($f->actual_end_at, $user, $tz) !== \App\Support\TemporalCalendar::dateLabel($f->actual_start_at, $user, $tz)) – {{ \App\Support\TemporalCalendar::dateLabel($f->actual_end_at, $user, $tz) }}@endif · @endif
                                 @if ($f->isPartlyAccepted()){{ __('deals.work.confirmed_part', ['qty' => $f->confirmedQuantity() + 0]) }} · @endif
                                 @if ($f->notes){{ $f->notes }}@endif @if ($f->review?->note) · {{ $f->review->note }}@endif
-                                @if ($f->assets->isNotEmpty()) · {{ trans_choice('deals.work.files', $f->assets->count(), ['count' => $f->assets->count()]) }}: {{ $f->assets->pluck('original_filename')->implode(', ') }}@endif
                             </div>
+                            @if ($f->assets->isNotEmpty())<div class="mt-2 grid gap-2 sm:grid-cols-2" data-report-media>@foreach ($f->assets as $asset)<x-media.asset-preview :asset="$asset" :inline-url="route('deals.assets.show', $asset)" compact />@endforeach</div>@endif
                             @include('livewire.deals.partials.report-actions', ['f' => $f, 'verifier' => $d['verifier']])
                         </div>
                     @empty
