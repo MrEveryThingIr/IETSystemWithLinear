@@ -46,7 +46,7 @@ class AgreementComposer extends Component
     public const LIBRARY = [
         'subject' => ['clause:scope', 'clause:deliverables', 'fields', 'quantity'],
         'duties' => ['clause:duties', 'clause:materials'],
-        'money' => ['price', 'payment'],
+        'money' => ['price', 'rates', 'payment'],
         'time' => ['time', 'place', 'route', 'recurrence'],
         'completion' => ['completion', 'clause:evidence'],
         'ending' => ['clause:cancellation', 'clause:disputes'],
@@ -247,6 +247,24 @@ class AgreementComposer extends Component
         $this->reset('picking', 'search');
     }
 
+    /** One agreed kind of work with its unit and rate (for example masonry, per square metre). */
+    public function addRate(): void
+    {
+        abort_if(count($this->draft['rates']) >= 30, 422);
+        $n = count($this->draft['rates']) + 1;
+        while (in_array('r'.$n, array_column($this->draft['rates'], 'key'), true)) {
+            $n++;
+        }
+        $this->draft['rates'][] = ['key' => 'r'.$n, 'label' => '', 'unit' => 'square_metre', 'rate' => '', 'estimate' => ''];
+        $this->ensureItem('rates');
+    }
+
+    public function removeRate(int $index): void
+    {
+        unset($this->draft['rates'][$index]);
+        $this->draft['rates'] = array_values($this->draft['rates']);
+    }
+
     public function removeField(int $index): void
     {
         unset($this->draft['fields'][$index]);
@@ -288,7 +306,7 @@ class AgreementComposer extends Component
         }
 
         $terms = DealTermsDraft::toTerms($this->draft);
-        if (array_intersect(array_keys($terms), ['price', 'payment', 'place', 'time', 'quantity', 'route', 'fields', 'recurrence', 'completion', 'clauses', 'notes']) === []) {
+        if (array_intersect(array_keys($terms), ['price', 'rates', 'payment', 'place', 'time', 'quantity', 'route', 'fields', 'recurrence', 'completion', 'clauses', 'notes']) === []) {
             $this->addError('draft', __('deals.terms_empty'));
 
             return;
@@ -428,6 +446,7 @@ class AgreementComposer extends Component
         match ($id) {
             'price' => $this->draft['core']['currency'] = $this->draft['core']['currency'] ?: 'IRT',
             'recurrence' => $this->draft['recurrence'] = ['every' => '1', 'unit' => 'month', 'count' => ''],
+            'rates' => $this->draft['rates'] === [] ? $this->addRate() : null,
             default => null,
         };
     }

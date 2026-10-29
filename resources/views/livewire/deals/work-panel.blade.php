@@ -128,7 +128,7 @@
     </flux:card>
 
     {{-- One daily report: the day, the measured quantity, optional times, a note and media. The receiver confirms the quantity; only that is earned. --}}
-    @if ($reportable->isNotEmpty())
+    @if ($reportable->isNotEmpty() || $rateOptions->isNotEmpty() && count($mine) > 0)
         <flux:card class="space-y-3" data-work-report-form>
             <flux:heading size="sm">{{ __('deals.work.inspection_title') }}</flux:heading>
             <p class="text-xs text-zinc-500">{{ __('deals.work.inspection_hint') }}</p>
@@ -136,6 +136,7 @@
                 @php($sel = $reportable->first(fn ($x) => (string) $x['commitment']->id === (string) ($report['commitment'] ?? '')))
                 <flux:select wire:model.live="report.commitment" :label="__('deals.work.which_duty')" data-report-duty>
                     <option value="">—</option>
+                    @foreach ($rateOptions as $rate)<option value="rate:{{ $rate['key'] }}">{{ $rate['label'] }} ({{ \App\Support\Bookkeeping\Toman::format((int) $rate['rate']) }} / {{ \App\Support\Deals\DealTerms::basisLabel($rate['unit']) ?? $rate['unit'] }})</option>@endforeach
                     @foreach ($reportable as $d)<option value="{{ $d['commitment']->id }}">{{ $d['commitment']->title }}@if ($d['share']) ({{ __('deals.work.open_share', ['pct' => round((float) $d['remaining'] * 100)]) }})@elseif (! $d['open_ended']) ({{ __('deals.work.open_quantity', ['qty' => $d['remaining'] + 0, 'unit' => $d['unit']]) }})@endif</option>@endforeach
                 </flux:select>
                 <flux:input inputmode="decimal" wire:model="report.quantity" :label="$sel && $sel['share'] ? __('deals.work.inspection_share') : ($sel ? __('deals.work.inspection_quantity_unit', ['unit' => $sel['unit']]) : __('deals.work.inspection_quantity'))" :description="$sel && $sel['share'] ? __('deals.work.inspection_share_hint') : null" data-report-quantity />

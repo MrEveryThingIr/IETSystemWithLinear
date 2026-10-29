@@ -27,6 +27,7 @@ final class DealTermsDraft
             'title' => '', 'summary' => '', 'items' => [],
             'core' => array_fill_keys(self::CORE, ''),
             'fields' => [],
+            'rates' => [],
             'recurrence' => ['every' => '', 'unit' => '', 'count' => ''],
             'payment' => ['mode' => '', 'period' => '', 'note' => ''],
             'completion' => ['confirmed_by' => ''],
@@ -59,6 +60,9 @@ final class DealTermsDraft
         $d['core']['price_mode'] = isset($t['price']['min'], $t['price']['max']) && $t['price']['min'] !== $t['price']['max'] ? 'range' : 'fixed';
         foreach ($t['fields'] ?? [] as $f) {
             $d['fields'][] = ['key' => $f['key'], 'label' => $f['label'], 'type' => $f['type'] ?? 'text', 'unit' => $f['unit'] ?? '', 'value' => $f['value']];
+        }
+        foreach ($t['rates'] ?? [] as $r) {
+            $d['rates'][] = ['key' => $r['key'], 'label' => $r['label'], 'unit' => $r['unit'], 'rate' => $r['rate'], 'estimate' => $r['estimate'] ?? ''];
         }
         $d['recurrence'] = array_replace($d['recurrence'], array_map('strval', array_filter($t['recurrence'] ?? [], fn ($v) => $v !== null)));
         $d['payment'] = array_replace($d['payment'], array_map('strval', array_filter($t['payment'] ?? [], fn ($v) => $v !== null)));
@@ -167,6 +171,7 @@ final class DealTermsDraft
             'recurrence' => ($d['recurrence']['unit'] ?? '') !== '',
             'completion' => ($d['completion']['confirmed_by'] ?? '') !== '',
             'fields' => ($d['fields'] ?? []) !== [],
+            'rates' => ($d['rates'] ?? []) !== [],
             'notes' => trim((string) ($d['notes'] ?? '')) !== '',
         ];
         foreach (DealTerms::SECTION_IDS as $id) {
@@ -220,6 +225,10 @@ final class DealTermsDraft
             ], fn ($v) => $v !== null);
         }
 
+        $rates = [];
+        foreach ($d['rates'] ?? [] as $row) {
+            $rates[] = ['key' => $row['key'], 'label' => trim((string) ($row['label'] ?? '')), 'unit' => trim((string) ($row['unit'] ?? '')), 'rate' => trim((string) ($row['rate'] ?? '')), 'estimate' => trim((string) ($row['estimate'] ?? '')) ?: null];
+        }
         $r = $d['recurrence'] ?? [];
         $p = $d['payment'] ?? [];
         $basis = $c('basis_choice') === '__other' ? $c('basis_custom') : ($c('basis_choice') ?: $c('basis'));
@@ -240,6 +249,7 @@ final class DealTermsDraft
             'quantity' => $has('quantity') && ($c('quantity') || $c('unit')) ? ['value' => $c('quantity'), 'unit' => $c('unit')] : null,
             'route' => $has('route') && ($c('from') || $c('to')) ? ['from' => $c('from'), 'to' => $c('to')] : null,
             'fields' => $fields ?: null,
+            'rates' => $has('rates') && $rates !== [] ? $rates : null,
             'recurrence' => $has('recurrence') && trim((string) ($r['unit'] ?? '')) !== ''
                 ? ['every' => trim((string) ($r['every'] ?? '')) ?: 1, 'unit' => $r['unit'], 'count' => trim((string) ($r['count'] ?? '')) ?: null]
                 : null,

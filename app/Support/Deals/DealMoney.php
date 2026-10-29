@@ -74,7 +74,7 @@ final class DealMoney
         }
 
         // A priced Agreement with no payment rule still has money: work is paid for once it has been inspected and confirmed.
-        return isset($terms['price']) && ($terms['payment']['mode'] ?? null) !== 'none' ? 'after_confirmed_delivery' : null;
+        return (isset($terms['price']) || ! empty($terms['rates'])) && ($terms['payment']['mode'] ?? null) !== 'none' ? 'after_confirmed_delivery' : null;
     }
 
     /** Money applies when the accepted Agreement names a payment rule, or work under one already exists. */
@@ -88,7 +88,7 @@ final class DealMoney
         $terms = $version !== null ? AgreementTerms::of($version) : null;
         $mode = $terms['payment']['mode'] ?? null;
 
-        return in_array($mode, self::MODES, true) || (isset($terms['price']) && $mode !== 'none');
+        return in_array($mode, self::MODES, true) || ((isset($terms['price']) || ! empty($terms['rates'])) && $mode !== 'none');
     }
 
     /**
@@ -150,7 +150,7 @@ final class DealMoney
             }
             $terms = self::terms($commitment);
             $sole = ($dutiesPerVersion[$commitment->contract_version_id] ?? 0) === 1;
-            $price = self::unitPrice($terms);
+            $price = self::priceFor($commitment, $terms);
             $zone = (string) ($terms['time']['timezone'] ?? config('app.timezone'));
 
             if ($mode === 'on_acceptance') {
@@ -191,7 +191,7 @@ final class DealMoney
             if (self::mode($commitment) === null) {
                 continue;
             }
-            $price = self::unitPrice(self::terms($commitment));
+            $price = self::priceFor($commitment, self::terms($commitment));
             $sole = ($dutiesPerVersion[$commitment->contract_version_id] ?? 0) === 1;
             $verifier = self::terms($commitment)['completion']['confirmed_by'] ?? 'beneficiary';
             foreach ($commitment->fulfillments as $fulfillment) {
@@ -229,7 +229,7 @@ final class DealMoney
             }, QuantityAmount::normalize('0'));
             $rough = QuantityAmount::subtractFloorZero(WorkLog::for($commitment)['estimate'], $inspected);
             if (QuantityAmount::compare($rough, '0') > 0) {
-                $total += self::amount(self::unitPrice(self::terms($commitment)), $commitment, $rough, $commitment->quantity, ($dutiesPerVersion[$commitment->contract_version_id] ?? 0) === 1) ?? 0;
+                $total += self::amount(self::priceFor($commitment, self::terms($commitment)), $commitment, $rough, $commitment->quantity, ($dutiesPerVersion[$commitment->contract_version_id] ?? 0) === 1) ?? 0;
             }
         }
 
@@ -390,6 +390,26 @@ final class DealMoney
             'outstanding' => (int) $items->sum('outstanding'),
             'attention' => $items->filter(fn ($i) => in_array($i['state'], ['disputed', 'disagreed'], true))->count(),
         ];
+    }
+
+    /**
+     * The price of one commitment: the agreed rate of its kind of work when it was reported against one (the rate of the
+     * Agreement version it was set up under), otherwise the Agreement's single price.
+     *
+     * @return array{amount: int, basis: string}|null
+     */
+    private static function priceFor(Commitment $commitment, ?array $terms): ?array
+    {
+        if (preg_match('/^rate:\d+:([A-Za-z0-9_-]+):\d+$/', (string) $commitment->derivation_key, $m) === 1) {
+            $rate = collect($terms['rates'] ?? [])->firstWhere('key', $m[1]);
+            if ($rate !== null && preg_match('/^\d{1,12}(?:\.0+)?$/', (string) $rate['rate']) === 1) {
+                return ['amount' => (int) $rate['rate'], 'basis' => strtolower(trim((string) $rate['unit']))];
+            }
+
+            return null;
+        }
+
+        return self::unitPrice($terms);
     }
 
     /** Whole-toman price when the accepted terms fix one number in Toman; anything looser (a range, another currency) says nothing. */

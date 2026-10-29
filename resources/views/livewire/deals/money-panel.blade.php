@@ -1,5 +1,7 @@
 @php
     $fmt = fn (int $n) => \App\Support\Bookkeeping\Toman::format($n).' '.__('deals.money.toman');
+    // The same records, in each person's own words: the one who is paid for work, the one who pays, or (both ways) neutral.
+    $role = $asProvider && ! $asPayer ? 'payee_' : ($asPayer && ! $asProvider ? 'payer_' : '');
     $paid = (int) $summary['received'] + (int) $summary['noncash_settled'];
     $remaining = max(0, (int) $summary['earned'] - $paid);
     $waiting = $items->filter(fn ($i) => $i['obligation'] && $i['obligation']->status === \App\Enums\Bookkeeping\TransactionStatus::Pending && (int) $i['obligation']->recorded_by_actor_id !== $me && Gate::forUser(auth()->user())->allows('confirm', $i['obligation']));
@@ -16,9 +18,9 @@
         @else
             {{-- Three figures: what the accepted work comes to, what has been paid (and confirmed), what is left --}}
             <dl class="grid grid-cols-3 gap-2 text-sm" data-money-summary>
-                <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.simple_owed') }}</dt><dd class="font-medium" data-sum="owed">{{ $fmt((int) $summary['earned']) }}</dd></div>
-                <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.simple_paid') }}</dt><dd class="font-medium" data-sum="paid">{{ $fmt($paid) }}</dd></div>
-                <div class="rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800"><dt class="text-xs text-zinc-500">{{ __('deals.money.simple_remaining') }}</dt><dd class="font-semibold" data-sum="remaining">{{ $fmt($remaining) }}</dd></div>
+                <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.simple_'.$role.'owed') }}</dt><dd class="font-medium" data-sum="owed">{{ $fmt((int) $summary['earned']) }}</dd></div>
+                <div class="rounded-lg bg-zinc-50 p-2 dark:bg-zinc-900"><dt class="text-xs text-zinc-500">{{ __('deals.money.simple_'.$role.'paid') }}</dt><dd class="font-medium" data-sum="paid">{{ $fmt($paid) }}</dd></div>
+                <div class="rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800"><dt class="text-xs text-zinc-500">{{ __('deals.money.simple_'.$role.'remaining') }}</dt><dd class="font-semibold" data-sum="remaining">{{ $fmt($remaining) }}</dd></div>
             </dl>
             @if ((int) $summary['outstanding_due'] > 0)<p class="text-xs text-zinc-500" data-money-due>{{ __('deals.money.simple_due_now', ['amount' => $fmt((int) $summary['outstanding_due'])]) }}</p>@endif
             @if ((int) $summary['on_account'] > 0)<p class="text-xs text-zinc-500" data-money-ahead>{{ __('deals.money.simple_paid_ahead', ['amount' => $fmt((int) $summary['on_account'])]) }}</p>@endif

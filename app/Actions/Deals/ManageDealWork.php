@@ -89,6 +89,36 @@ class ManageDealWork
     }
 
     /**
+     * The agreed kind of work (a rate of the Agreement in force) a person reports against, with no task needed. The
+     * reporter is the doer and the other party the receiver. One open-ended duty per kind, doer and Agreement version
+     * stands behind all daily reports; asking again returns it.
+     */
+    public function forRate(Relationship $deal, User $user, string $rateKey): Commitment
+    {
+        return DB::transaction(function () use ($deal, $user, $rateKey): Commitment {
+            $locked = Relationship::query()->lockForUpdate()->findOrFail($deal->id);
+            $version = $this->version($locked);
+            $doer = DealParties::sole($version->parties, $user);
+            $receiver = $version->parties->first(fn ($p) => ! $p->is($doer));
+            abort_if($receiver === null, 422, (string) __('deals.errors.work_party'));
+            $rate = collect(AgreementTerms::of($version)['rates'] ?? [])->firstWhere('key', $rateKey);
+            abort_if($rate === null, 422, (string) __('deals.errors.report_duty'));
+
+            $key = 'rate:'.$version->id.':'.$rateKey.':'.$doer->actor_id;
+            $existing = Commitment::query()->where('derivation_key', $key)->first();
+            if ($existing instanceof Commitment) {
+                return $existing;
+            }
+
+            // The Agreement's estimate (if any) only tracks progress: reported work is never capped by it.
+            return $this->createCommitment->execute(
+                $version->contract, $user, $doer->actor, $receiver->actor, CommitmentKind::Work, (string) $rate['label'],
+                '100000', (string) $rate['unit'], derivationKey: $key, asDealParty: true,
+            );
+        });
+    }
+
+    /**
      * @param  array<string, mixed>  $input  title, kind, quantity (per cycle), unit, cycles, obligor_party, beneficiary_party, starts_on, start_time, duration, every, period
      * @return array<string, mixed> the pending proposal
      */
@@ -146,6 +176,14 @@ class ManageDealWork
 
             return $item;
         });
+    }
+
+    /** @return list<array<string, mixed>> the agreed kinds of work (rates) of the Agreement in force */
+    public function rates(Relationship $deal): array
+    {
+        $version = $deal->contracts()->latest('id')->first()?->activeVersionRecord();
+
+        return $version !== null ? array_values(AgreementTerms::of($version)['rates'] ?? []) : [];
     }
 
     /** Either side may take a proposal back or decline it; nothing existed, so nothing is undone. */

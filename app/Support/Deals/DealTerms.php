@@ -15,7 +15,7 @@ final class DealTerms
 {
     public const SCHEMA = 1;
 
-    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes', 'title', 'summary', 'clauses', 'payment', 'completion', 'order'];
+    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes', 'title', 'summary', 'clauses', 'payment', 'completion', 'order', 'rates'];
 
     /** Narrative clause kinds of the small clause library. Narrative clauses are text: they never become automation. */
     public const CLAUSE_KINDS = ['scope', 'deliverables', 'duties', 'evidence', 'cancellation', 'disputes', 'confidentiality', 'special', 'custom', 'materials'];
@@ -24,7 +24,7 @@ final class DealTerms
     public const RESPONSIBLE_KINDS = ['duties', 'deliverables', 'evidence', 'materials'];
 
     /** Typed sections a document may list in its order. */
-    public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes'];
+    public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes', 'rates'];
 
     /**
      * Currencies a NEW Agreement may be written in. Toman only for now; later exchange and valuation features widen this list.
@@ -99,6 +99,27 @@ final class DealTerms
 
         if ($quantity = self::section($terms, 'quantity', ['value', 'unit'])) {
             $out['quantity'] = ['value' => self::decimal($quantity['value'] ?? null, 'quantity'), 'unit' => self::text($quantity['unit'] ?? null, 40, 'quantity unit')];
+        }
+
+        if (isset($terms['rates'])) {
+            abort_unless(is_array($terms['rates']) && array_is_list($terms['rates']) && count($terms['rates']) <= 30, 422, 'Deal Terms rates must be a list of at most 30.');
+            $rates = [];
+            foreach ($terms['rates'] as $rate) {
+                abort_unless(is_array($rate), 422, 'Deal Terms rate is invalid.');
+                $label = self::text($rate['label'] ?? null, 120, 'rate label');
+                $unit = self::text($rate['unit'] ?? null, 40, 'rate unit');
+                $amount = self::decimal($rate['rate'] ?? null, 'rate');
+                if ($label === null && $unit === null && $amount === null) {
+                    continue;
+                }
+                abort_if($label === null || $unit === null || $amount === null || (float) $amount <= 0, 422, 'Deal Terms rate needs a name, a unit and a rate.');
+                $key = self::text($rate['key'] ?? null, 60, 'rate key');
+                abort_if($key === null || preg_match('/^[A-Za-z0-9_-]+$/', $key) !== 1 || isset($rates[$key]), 422, 'Deal Terms rate key is invalid or repeated.');
+                $rates[$key] = array_filter(['key' => $key, 'label' => $label, 'unit' => $unit, 'rate' => $amount, 'estimate' => self::decimal($rate['estimate'] ?? null, 'rate estimate')], fn ($v) => $v !== null);
+            }
+            if ($rates !== []) {
+                $out['rates'] = array_values($rates);
+            }
         }
 
         if ($route = self::section($terms, 'route', ['from', 'to'])) {

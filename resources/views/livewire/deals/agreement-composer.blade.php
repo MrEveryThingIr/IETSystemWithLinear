@@ -143,6 +143,23 @@
                                         <flux:input wire:model="draft.core.to" :label="__('deals.change.route_to')" />
                                     </div>
                                     @break
+                                @case('rates')
+                                    <div class="space-y-3" data-rates>
+                                        @foreach ($draft['rates'] as $i => $r)
+                                            <div wire:key="rate-{{ $r['key'] }}" class="grid items-end gap-2 sm:grid-cols-5">
+                                                <flux:input class="sm:col-span-2" wire:model="draft.rates.{{ $i }}.label" :label="__('deals.rates.label')" maxlength="120" />
+                                                <flux:select wire:model="draft.rates.{{ $i }}.unit" :label="__('deals.rates.unit')">
+                                                    @foreach (\App\Support\Deals\DealTerms::PAYMENT_BASES as $unit)@if ($unit !== 'total')<option value="{{ $unit }}">{{ \App\Support\Deals\DealTerms::basisLabel($unit) ?? $unit }}</option>@endif @endforeach
+                                                </flux:select>
+                                                <flux:input inputmode="numeric" wire:model="draft.rates.{{ $i }}.rate" :label="__('deals.rates.rate')" />
+                                                <flux:input inputmode="decimal" wire:model="draft.rates.{{ $i }}.estimate" :label="__('deals.rates.estimate')" />
+                                                <flux:button class="sm:col-span-5 justify-self-start" size="sm" variant="ghost" wire:click="removeRate({{ $i }})">{{ __('deals.rates.remove') }}</flux:button>
+                                            </div>
+                                        @endforeach
+                                        <flux:button size="sm" wire:click="addRate">{{ __('deals.rates.add') }}</flux:button>
+                                        <p class="text-xs text-zinc-500">{{ __('deals.rates.hint') }}</p>
+                                    </div>
+                                    @break
                                 @case('recurrence')
                                     <div class="grid gap-2 sm:grid-cols-3">
                                         <flux:input inputmode="numeric" wire:model="draft.recurrence.every" :label="__('deals.composer.every')" />

@@ -91,6 +91,30 @@ final class DealDraftValidator
             }
         }
 
+        if (in_array('rates', $items, true)) {
+            foreach ($draft['rates'] ?? [] as $i => $row) {
+                $label = trim((string) ($row['label'] ?? ''));
+                $rate = (string) preg_replace('/[\s,٬،]/u', '', LocalizedNumber::digits(trim((string) ($row['rate'] ?? ''))));
+                $estimate = (string) preg_replace('/[\s,٬،]/u', '', LocalizedNumber::digits(trim((string) ($row['estimate'] ?? ''))));
+                if ($label === '' && $rate === '' && $estimate === '') {
+                    continue;
+                }
+                if ($label === '') {
+                    $errors['draft.rates.'.$i.'.label'] = (string) __('deals.rates.need_label');
+                }
+                if (preg_match('/^\d{1,12}$/', $rate) !== 1 || (int) $rate <= 0) {
+                    $errors['draft.rates.'.$i.'.rate'] = (string) __('deals.rates.need_rate');
+                } else {
+                    $draft['rates'][$i]['rate'] = $rate;
+                }
+                if ($estimate !== '' && (preg_match('/^\d{1,14}(?:\.\d{1,4})?$/', $estimate) !== 1 || (float) $estimate <= 0)) {
+                    $errors['draft.rates.'.$i.'.estimate'] = (string) __('deals.validation.quantity');
+                } else {
+                    $draft['rates'][$i]['estimate'] = $estimate;
+                }
+            }
+        }
+
         if (in_array('payment', $items, true)) {
             if (($draft['payment']['mode'] ?? '') === '') {
                 $errors['draft.payment.mode'] = (string) __('deals.composer.choose_payment');

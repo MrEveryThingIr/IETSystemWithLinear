@@ -2,6 +2,8 @@
 
 namespace App\Support\Deals;
 
+use App\Support\Bookkeeping\Toman;
+
 /**
  * The Agreement as a readable, numbered document built from the stored Terms of one version. Pure.
  * Typed sections are shown from their canonical values; narrative clauses are shown as written and mean nothing more.
@@ -172,6 +174,14 @@ final class AgreementDocument
                 }
                 $row(__('deals.change.route_from'), $r['from'] ?? null);
                 $row(__('deals.change.route_to'), $r['to'] ?? null);
+                break;
+            case 'rates':
+                if (empty($t['rates'])) {
+                    return null;
+                }
+                foreach ($t['rates'] as $rate) {
+                    $row($rate['label'], Toman::format((int) $rate['rate']).' / '.(DealTerms::basisLabel($rate['unit']) ?? $rate['unit']).(isset($rate['estimate']) ? ' · ≈ '.$rate['estimate'] : ''));
+                }
                 break;
             case 'recurrence':
                 $r = $t['recurrence'] ?? null;

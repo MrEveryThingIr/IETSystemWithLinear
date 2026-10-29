@@ -232,7 +232,14 @@ class WorkPanel extends Component
         $this->resetErrorBag();
         $r = $this->report;
         $quantity = self::quantity((string) ($r['quantity'] ?? ''));
-        $commitment = ($r['commitment'] ?? '') !== '' ? $this->commitments()->find((int) $r['commitment']) : null;
+        $commitment = null;
+        if (str_starts_with((string) ($r['commitment'] ?? ''), 'rate:')) {
+            $this->guarded(function () use (&$commitment, $r): void {
+                $commitment = app(ManageDealWork::class)->forRate($this->relationship, $this->user(), substr((string) $r['commitment'], 5));
+            });
+        } elseif (($r['commitment'] ?? '') !== '') {
+            $commitment = $this->commitments()->find((int) $r['commitment']);
+        }
 
         if (! $commitment instanceof Commitment) {
             $this->addError('report.commitment', (string) __('deals.errors.report_duty'));
@@ -396,6 +403,7 @@ class WorkPanel extends Component
             'duties' => $duties,
             'loggable' => $duties->filter(fn ($d) => $d['isObligor'] && ! $d['planned'])->values(),
             'reportable' => $duties->filter(fn ($d) => $d['isObligor'] && ! $d['planned'] && QuantityAmount::compare($d['remaining'], '0') > 0)->values(),
+            'rateOptions' => collect($work->rates($this->relationship)),
             'units' => self::UNITS,
             'user' => $this->user(),
         ]);
@@ -433,7 +441,7 @@ class WorkPanel extends Component
             'unit' => DealTerms::basisLabel($c->unit) ?? $c->unit,
             'share' => self::isShare($c),
             'open_ended' => self::isOpen($c),
-            'estimate' => (string) ($terms['quantity']['value'] ?? ''),
+            'estimate' => (string) (preg_match('/^rate:\d+:([A-Za-z0-9_-]+):\d+$/', (string) $c->derivation_key, $rm) === 1 ? (collect($terms['rates'] ?? [])->firstWhere('key', $rm[1])['estimate'] ?? '') : ($terms['quantity']['value'] ?? '')),
         ];
     }
 
