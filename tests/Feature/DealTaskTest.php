@@ -137,7 +137,7 @@ class DealTaskTest extends TestCase
         $this->assertSame($bob->id, (int) $task->beneficiary_actor_id);
         $this->assertSame('Leave a 90 cm opening on the east side.', $task->description);
         $this->assertSame('square_metre', $task->unit, 'the unit and quantity come from the Agreement, not from a form');
-        $this->assertEquals(120, (float) $task->quantity);
+        $this->assertTrue(WorkPanel::isOpen($task), 'the agreed 120 m² is an estimate, never a cap');
 
         $this->panel($alice, $deal)->assertSee('data-task-description', false)->assertSee('Leave a 90 cm opening')->assertSee('note.mp3');
 

@@ -55,7 +55,7 @@ $pdo->exec('CREATE DATABASE `'.$target.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_
 $env = [...getenv(), 'APP_ENV' => 'testing', 'DB_CONNECTION' => 'mysql', 'DB_DATABASE' => $target, 'DB_HOST' => $c['host'], 'DB_PORT' => (string) $c['port'], 'DB_USERNAME' => $c['username'], 'DB_PASSWORD' => $c['password'], 'DB_URL' => '', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync', 'MAIL_MAILER' => 'array', 'BROADCAST_CONNECTION' => 'null'];
 try {
     echo 'Disposable database: '.$target.PHP_EOL;
-    $cmd = [PHP_BINARY, 'vendor/bin/phpunit', '--no-progress', 'tests/Feature/Bookkeeping', 'tests/Feature/DealMoneyTest.php', 'tests/Feature/DealOnAccountTest.php', 'tests/Feature/DealConstructionScenarioTest.php', 'tests/Feature/DealMeasuredWorkTest.php', 'tests/Feature/DealWorkTest.php', 'tests/Feature/DealPerformanceBudgetTest.php'];
+    $cmd = [PHP_BINARY, 'vendor/bin/phpunit', '--no-progress', 'tests/Feature/Bookkeeping', 'tests/Feature/DealMoneyTest.php', 'tests/Feature/DealOnAccountTest.php', 'tests/Feature/DealConstructionScenarioTest.php', 'tests/Feature/DealMeasuredWorkTest.php', 'tests/Feature/DealWorkTest.php', 'tests/Feature/DealPerformanceBudgetTest.php', 'tests/Feature/DealDailyWorkMoneyTest.php'];
     $test = proc_open($cmd, [0 => STDIN, 1 => STDOUT, 2 => STDERR], $pipes, dirname(__DIR__), $env);
     $testExit = proc_close($test);
     // The PHPUnit schema remains; its test fixture transactions have rolled back.

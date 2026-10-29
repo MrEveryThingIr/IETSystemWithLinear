@@ -5,6 +5,7 @@ namespace App\Livewire\Deals;
 use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Commitments\BindExistingPlan;
 use App\Actions\Deals\LogWorkDay;
+use App\Actions\Deals\ManageDealMoney;
 use App\Actions\Deals\ManageDealWork;
 use App\Actions\Fulfillments\OpenFulfillmentDispute;
 use App\Actions\Fulfillments\ResolveFulfillmentDispute;
@@ -35,6 +36,8 @@ use App\Support\Deals\DealTerms;
 use App\Support\Deals\WorkLog;
 use App\Support\LocalizedNumber;
 use App\Support\QuantityAmount;
+use App\Support\TemporalPreferences;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -253,18 +256,37 @@ class WorkPanel extends Component
         if (count($this->evidence) > 5) {
             $this->addError('evidence', (string) __('deals.errors.report_files'));
         }
+        // The day worked (today when left empty) and, when given, the start and end of work: both or neither.
+        $zone = TemporalPreferences::timezoneFor($this->user());
+        $date = trim((string) ($r['date'] ?? '')) !== '' ? trim((string) $r['date']) : CarbonImmutable::now($zone)->toDateString();
+        $from = trim((string) ($r['from'] ?? ''));
+        $to = trim((string) ($r['to'] ?? ''));
+        $start = $end = null;
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1 || strtotime($date) === false) {
+            $this->addError('report.date', (string) __('deals.errors.work_log_date'));
+        } elseif ($from !== '' || $to !== '') {
+            if (preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $from) !== 1 || preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $to) !== 1) {
+                $this->addError('report.from', (string) __('deals.errors.work_log_times'));
+            } else {
+                [$start, $end] = [CarbonImmutable::parse($date.' '.$from, $zone), CarbonImmutable::parse($date.' '.$to, $zone)];
+                if ($end->lte($start)) {
+                    $this->addError('report.from', (string) __('deals.errors.work_log_times'));
+                }
+            }
+        }
         if ($this->getErrorBag()->isNotEmpty()) {
             return;
         }
 
-        $this->guarded(function () use ($submit, $assets, $commitment, $quantity, $r): void {
+        $this->guarded(function () use ($submit, $assets, $commitment, $quantity, $r, $date, $start, $end): void {
             Gate::forUser($this->user())->authorize('submit', $commitment);
 
-            DB::transaction(function () use ($submit, $assets, $commitment, $quantity, $r): void {
+            DB::transaction(function () use ($submit, $assets, $commitment, $quantity, $r, $date, $start, $end): void {
                 $context = $commitment->contractVersion->contract->contextBinding?->context;
                 $assetIds = collect($this->evidence)->map(fn ($file) => $assets->execute($context, $this->user(), $file, 'owned')->id)->all();
                 $note = trim((string) ($r['note'] ?? ''));
-                $submit->execute($commitment, $this->user(), $quantity, notes: $note !== '' ? $note : null, assetIds: $assetIds);
+                $note = trim(($start === null ? $date.($note !== '' ? ' — ' : '') : '').$note);
+                $submit->execute($commitment, $this->user(), $quantity, actualStartAt: $start, actualEndAt: $end, notes: $note !== '' ? $note : null, assetIds: $assetIds);
             });
             $this->note('inspection_requested', ['title' => (string) $commitment->title, 'qty' => self::trimQty((string) $quantity), 'unit' => (string) (DealTerms::basisLabel($commitment->unit) ?? $commitment->unit)]);
             $this->resetReport();
@@ -286,6 +308,9 @@ class WorkPanel extends Component
             }
             $review->execute($fulfillment, $this->user(), FulfillmentReviewDecision::from($decision), $note !== '' ? $note : null, $decision === 'accepted' ? $parsed : null);
             $fresh = $fulfillment->fresh(['review']);
+            if ($decision === 'accepted') {
+                $this->recordAccepted($fresh);
+            }
             $this->note(match (true) {
                 $decision === 'accepted' && $fresh->isPartlyAccepted() => 'inspection_partly',
                 $decision === 'accepted' => 'inspection_accepted',
@@ -293,6 +318,17 @@ class WorkPanel extends Component
                 default => 'inspection_questioned',
             }, ['title' => (string) $fulfillment->commitment->title, 'qty' => self::trimQty($fresh->confirmedQuantity()), 'unit' => (string) (DealTerms::basisLabel($fulfillment->commitment->unit) ?? $fulfillment->commitment->unit)]);
         });
+    }
+
+    /** Accepted work with a fixed price is recorded once as an obligation in the Deal's book. Where it cannot be (no shared account yet, no fixed price) the doer can still ask in Money. */
+    private function recordAccepted(Fulfillment $fulfillment): void
+    {
+        try {
+            app(ManageDealMoney::class)->recordAccepted($this->relationship, $this->user(), $fulfillment);
+        } catch (HttpException $e) {
+            abort_if(in_array($e->getStatusCode(), [403, 404], true), $e->getStatusCode());
+            report($e);
+        }
     }
 
     /** After a question or a refusal, the performer sends a corrected report for the same work. */
@@ -397,6 +433,7 @@ class WorkPanel extends Component
             'unit' => DealTerms::basisLabel($c->unit) ?? $c->unit,
             'share' => self::isShare($c),
             'open_ended' => self::isOpen($c),
+            'estimate' => (string) ($terms['quantity']['value'] ?? ''),
         ];
     }
 
@@ -525,7 +562,7 @@ class WorkPanel extends Component
 
     private function resetReport(): void
     {
-        $this->report = ['commitment' => '', 'quantity' => '', 'note' => ''];
+        $this->report = ['commitment' => count($this->report) ? ($this->report['commitment'] ?? '') : '', 'quantity' => '', 'note' => '', 'date' => '', 'from' => '', 'to' => ''];
         $this->evidence = [];
     }
 

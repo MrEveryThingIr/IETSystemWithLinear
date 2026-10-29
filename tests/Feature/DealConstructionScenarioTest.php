@@ -193,18 +193,16 @@ class DealConstructionScenarioTest extends TestCase
         $this->assertSame(0, $sum['not_yet_due'], 'No ledger obligation is accepted yet.');
         $this->assertSame(0, $sum['outstanding_due']);
         $this->assertSame('2026-12-13', $items[0]['due_on']->toDateString());
-        $this->assertSame('not_due', $items[0]['state']);
-        $this->assertSame(422, $this->http(fn () => $money->request($deal, $alice->user, [$items[0]['key']])), 'wages cannot be asked for before they fall due');
-        $this->assertSame(0, Transaction::query()->count());
+        $this->assertSame('requested', $items[0]['state'], 'the employer acceptance recorded the amount once; the doer has yet to confirm it');
+        $this->assertSame(2, Transaction::query()->count());
 
         // The week ends: both confirmed pieces fall due; the doer asks for them.
         $this->travelTo(CarbonImmutable::parse('2026-12-13 12:00:00', 'UTC'));
         [$items, $sum] = $this->snapshot($deal);
         $this->assertSame(0, $sum['payable']);
         $this->assertSame(0, $sum['outstanding_due']);
-        $requests = $money->request($deal, $alice->user, [$items[0]['key'], $items[1]['key']]);
-        foreach ($requests as $request) {
-            $money->approve($deal, $bob->user, $request->uuid);
+        foreach (Transaction::query()->where('type', 'obligation')->get() as $entry) {
+            $money->approve($deal, $alice->user, $entry->uuid);
         }
         [$items, $sum] = $this->snapshot($deal);
         $this->assertSame(15000000, $sum['requested']);
@@ -251,11 +249,11 @@ class DealConstructionScenarioTest extends TestCase
         $this->assertSame('2026-12-20', $items->last()['due_on']->toDateString());
         $this->assertSame(ContractStatus::Active, Contract::query()->sole()->status);
         $this->assertSame(2, Transaction::query()->where('type', 'payment')->count());
-        $this->assertSame(2, Transaction::query()->where('type', 'obligation')->count());
+        $this->assertSame(3, Transaction::query()->where('type', 'obligation')->count(), 'every accepted piece of work was recorded exactly once');
         $this->assertSame(0, Transaction::query()->whereRaw('length(idempotency_key) > 80')->count());
     }
 
-    public function test_the_money_tab_defines_each_figure_and_shows_where_it_comes_from(): void
+    public function test_the_money_tab_shows_three_figures_and_keeps_the_detail_collapsed(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-12-07 10:00:00', 'UTC'));
         [$alice, $bob, $deal] = $this->activeDeal();
@@ -266,13 +264,12 @@ class DealConstructionScenarioTest extends TestCase
         $wall = $work->confirm($deal->fresh(), $bob->user, $item['id']);
         $r1 = $this->report($alice, $deal, $wall, '4', '2026-12-07');
         $this->review($bob, $deal, $r1, 'accepted');
-        app(ManageDealMoney::class)->request($deal, $alice->user, [$this->snapshot($deal)[0][0]['key']]);
 
         $page = Livewire::actingAs($bob->user)->test(MoneyPanel::class, ['relationship' => $deal]);
-        foreach (['reported_value', 'earned', 'payable', 'outstanding_due', 'not_yet_due', 'requested', 'reported', 'received', 'settled'] as $k) {
+        foreach (['owed', 'paid', 'remaining'] as $k) {
             $page->assertSeeHtml('data-sum="'.$k.'"');
         }
-        $page->assertSeeHtml('data-money-legend')->assertSee(__('deals.money.legend.identity'))->assertSeeHtml('data-item-details')
-            ->assertSee(__('deals.money.due.after_confirmed_delivery'))->assertSee(__('deals.agreement_version', ['version' => 1]));
+        $page->assertSeeHtml('data-money-details')->assertSeeHtml('data-money-item')->assertSee(__('deals.agreement_version', ['version' => 1]))
+            ->assertDontSeeHtml('data-money-legend')->assertDontSeeHtml('data-sum="reported_value"');
     }
 }

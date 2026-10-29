@@ -154,7 +154,7 @@ class DealOnAccountTest extends TestCase
         $this->assertSame(0, $sum['earned'], 'nothing is inspected, so nothing is earned');
 
         $page = Livewire::actingAs($bob->user)->test(MoneyPanel::class, ['relationship' => $deal]);
-        $page->assertSeeHtml('data-money-account')->assertSeeHtml('data-sum="roughly_owed"')->assertDontSee(__('deals.money.none'));
+        $page->assertSeeHtml('data-money-account')->assertSeeHtml('data-sum="remaining"')->assertDontSee(__('deals.money.none'));
 
         // The doer asks for something on account; the payer hands over less; the doer confirms receiving it.
         $money = fn (Actor $who) => Livewire::actingAs($who->user)->test(MoneyPanel::class, ['relationship' => $deal]);
@@ -162,7 +162,7 @@ class DealOnAccountTest extends TestCase
         $money($alice)->set('ask.amount', '5,000,000')->set('ask.note', 'for materials')->call('askMoney')->assertHasNoErrors();
         $ask = app(DealMoney::class)->asks($deal)[0];
         $money($bob)->assertSee('for materials')->call('useAsk', $ask['id'])->set('account.amount', '4000000')->call('payOnAccount')->assertHasNoErrors();
-        $this->assertSame([], app(DealMoney::class)->asks($deal), 'a paid ask is closed');
+        $this->assertSame(1000000, (int) app(DealMoney::class)->asks($deal)[0]['amount'] - (int) app(DealMoney::class)->asks($deal)[0]['paid'], 'a part-paid ask stays open for its remainder');
         $payment = Transaction::query()->where('type', 'payment')->sole();
         $this->assertSame(0, $payment->allocations()->count(), 'on account: no work is attached');
         $this->assertSame(0, $this->money($deal)['on_account'], 'reported, not received');
@@ -186,10 +186,8 @@ class DealOnAccountTest extends TestCase
         $sum = $this->money($deal);
         $this->assertSame(0, $sum['owed'], 'Inspection value alone is not an accepted ledger debt.');
         $moneyAction = app(ManageDealMoney::class);
-        $items = app(DealMoney::class)->items($deal);
-        foreach ($moneyAction->request($deal, $alice->user, [$items[0]['key']]) as $request) {
-            $moneyAction->approve($deal, $bob->user, $request->uuid);
-        }
+        // The employer's acceptance recorded the earned amount; the doer confirms it.
+        $moneyAction->approve($deal, $alice->user, Transaction::query()->where('type', 'obligation')->sole()->uuid);
         $sum = $this->money($deal);
         $this->assertSame(22500000, $sum['earned']);
         $this->assertSame(0, $sum['estimated'], 'the rough figure has gone to inspection');

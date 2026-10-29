@@ -309,7 +309,7 @@ final class DealMoney
             return ['obligations' => collect(), 'allocations' => collect(), 'credit' => ['obligations' => []]];
         }
         $obligations = Transaction::query()->where('ledger_id', $ledger->id)->where('type', TransactionType::Obligation->value)
-            ->whereIn('source_type', [ProposeWorkBookkeepingEntry::SOURCE_TYPE, 'commitment'])->orderByDesc('id')->get();
+            ->whereIn('source_type', [ProposeWorkBookkeepingEntry::SOURCE_TYPE, 'commitment'])->with(['fromParty.actor.user', 'toParty.actor.user'])->orderByDesc('id')->get();
         $allocations = DB::table('bk_allocations as a')->join('bk_transactions as t', 't.id', '=', 'a.transaction_id')
             ->whereIn('a.obligation_id', $obligations->pluck('id'))->orderBy('t.id')
             ->get(['a.obligation_id', 'a.amount', 't.uuid', 't.status', 't.occurred_on', 't.type'])->groupBy('obligation_id');

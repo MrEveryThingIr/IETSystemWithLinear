@@ -9,6 +9,7 @@ use App\Actions\Bookkeeping\DecideOnEntry;
 use App\Actions\Bookkeeping\RaiseDispute;
 use App\Actions\Bookkeeping\RecordSharedEntry;
 use App\Actions\Bookkeeping\WithdrawEntry;
+use App\Actions\Work\ProposeWorkBookkeepingEntry;
 use App\Enums\Bookkeeping\EntryOrigin;
 use App\Enums\Bookkeeping\LedgerKind;
 use App\Enums\Bookkeeping\TransactionType;
@@ -125,6 +126,49 @@ class ManageDealMoney
     }
 
     /**
+     * The employer has just accepted measured work: record what it earned as an obligation in the Deal's book, once.
+     * The employer is the payer, so their acceptance is the payer's side of it; the doer still confirms it like any
+     * other entry (nothing is confirmed on anyone's behalf). Does nothing when the price is not fixed by the Agreement,
+     * or when the work already has a live entry, so repeating it never records a second debt.
+     */
+    public function recordAccepted(Relationship $deal, User $user, Fulfillment $fulfillment): ?Transaction
+    {
+        $actor = $this->actor($user);
+        $key = ProposeWorkBookkeepingEntry::SOURCE_TYPE.':'.$fulfillment->uuid;
+        $fulfillment->loadMissing('commitment');
+        abort_unless((int) $fulfillment->commitment->beneficiary_actor_id === (int) $actor->id, 403);
+        // Work with no fixed price (or no money in the Deal) never opens a book.
+        $priced = $this->money->items($deal)->firstWhere('key', $key);
+        if ($priced === null || $priced['derived'] === null) {
+            return null;
+        }
+        $ledger = $this->ledger($deal, $user);
+
+        return DB::transaction(function () use ($deal, $user, $ledger, $fulfillment, $key): ?Transaction {
+            Ledger::query()->whereKey($ledger->id)->lockForUpdate()->firstOrFail();
+            Fulfillment::query()->whereKey($fulfillment->id)->lockForUpdate()->firstOrFail();
+            $item = $this->money->items($deal)->firstWhere('key', $key);
+            if ($item === null || $item['derived'] === null || $item['obligation'] !== null) {
+                return $item['obligation'] ?? null;
+            }
+
+            $commitment = $item['commitment'];
+            $creditor = $ledger->partyFor($commitment->obligor_actor_id);
+            $debtor = $ledger->partyFor($commitment->beneficiary_actor_id);
+            abort_unless($creditor !== null && $debtor !== null, 422, (string) __('deals.errors.money_book_parties'));
+
+            $attempt = Transaction::query()->where('ledger_id', $ledger->id)->where('source_type', $item['source_type'])->where('source_uuid', $item['source_uuid'])->count() + 1;
+            $source = new EntrySource(EntryOrigin::IetWorkflow, $item['source_type'], $item['source_uuid'], (int) $commitment->contractVersion->version);
+
+            return $this->record->execute(
+                $ledger, $user, TransactionType::Obligation, $debtor, $creditor, $item['derived'],
+                $this->today($user), (string) $commitment->title, $item['due_on']?->toDateString(),
+                idempotencyKey: $source->idempotencyKey().':a'.$attempt, source: $source,
+            );
+        }, 3);
+    }
+
+    /**
      * The payer reports an actual payment (never proof of receipt) against the obligations it covers.
      *
      * @param  array<string, string>  $amounts  obligation uuid => whole toman
@@ -206,6 +250,24 @@ class ManageDealMoney
     }
 
     /**
+     * The doer asks for a share (1-100 %) of what is accepted and still unpaid, instead of typing an amount.
+     * The base is the accepted obligations' remaining balance minus what earlier open requests already cover.
+     *
+     * @return array<string, mixed>
+     */
+    public function askShare(Relationship $deal, User $user, int $percent, ?string $note = null): array
+    {
+        abort_unless($percent >= 1 && $percent <= 100, 422, (string) __('deals.errors.money_enter_amount'));
+        $actor = $this->actor($user);
+        $eligible = (int) $this->money->items($deal)->filter(fn ($i) => (int) $i['commitment']->obligor_actor_id === (int) $actor->id)->sum('outstanding');
+        $open = array_sum(array_map(fn ($a) => max(0, (int) $a['amount'] - (int) ($a['paid'] ?? 0)), array_filter($this->money->asks($deal), fn ($a) => (int) $a['by_actor_id'] === (int) $actor->id)));
+        $amount = intdiv(max(0, $eligible - $open) * $percent, 100);
+        abort_if($amount < 1, 422, (string) __('deals.errors.money_nothing_to_ask'));
+
+        return $this->askOnAccount($deal, $user, (string) $amount, $note);
+    }
+
+    /**
      * The payer hands over money on account (an advance, an instalment or a final payment) with no work attached yet.
      * It is reported, never proof of receipt: it counts when the recipient confirms. Any difference from what is earned
      * is settled at the next inspection or at the end.
@@ -236,7 +298,14 @@ class ManageDealMoney
             );
             if ($askId !== null && $askId !== '') {
                 $locked = Relationship::query()->lockForUpdate()->findOrFail($deal->id);
-                $asks = array_map(fn ($a) => ($a['id'] ?? null) === $askId ? [...$a, 'status' => 'paid', 'payment' => $entry->uuid] : $a, $locked->metadata['money_asks'] ?? []);
+                $asks = array_map(function ($a) use ($askId, $entry, $value) {
+                    if (($a['id'] ?? null) !== $askId) {
+                        return $a;
+                    }
+                    $paid = (int) ($a['paid'] ?? 0) + $value;
+
+                    return [...$a, 'paid' => $paid, 'status' => $paid >= (int) $a['amount'] ? 'paid' : 'open', 'payment' => $entry->uuid];
+                }, $locked->metadata['money_asks'] ?? []);
                 $locked->forceFill(['metadata' => [...($locked->metadata ?? []), 'money_asks' => $asks]])->save();
             }
 

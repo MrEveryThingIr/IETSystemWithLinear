@@ -32,7 +32,7 @@
                     <span class="font-medium" dir="auto">{{ $c->title }}</span>
                     <flux:badge size="sm" color="zinc">{{ __('deals.work.confirmed_by.'.$d['verifier']) }}</flux:badge>
                 </div>
-                <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · @if ($d['share']){{ __('deals.work.progress_share', ['done' => round((float) $d['accepted'] * 100)]) }}@elseif ($d['open_ended']){{ __('deals.work.progress_open', ['done' => $d['accepted'] + 0, 'unit' => $d['unit']]) }}@else{{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $d['unit']]) }}@endif</div>
+                <div class="text-xs text-zinc-500">{{ __('deals.work.who_for', ['obligor' => $c->obligor->user?->username, 'beneficiary' => $c->beneficiary->user?->username]) }} · @if ($d['share']){{ __('deals.work.progress_share', ['done' => round((float) $d['accepted'] * 100)]) }}@elseif ($d['open_ended'] && (float) $d['estimate'] > 0){{ __('deals.work.progress_estimate', ['done' => $d['accepted'] + 0, 'total' => $d['estimate'] + 0, 'unit' => $d['unit'], 'pct' => round((float) $d['accepted'] / (float) $d['estimate'] * 100)]) }}@elseif ($d['open_ended']){{ __('deals.work.progress_open', ['done' => $d['accepted'] + 0, 'unit' => $d['unit']]) }}@else{{ __('deals.work.progress', ['done' => $d['accepted'] + 0, 'total' => $c->quantity + 0, 'unit' => $d['unit']]) }}@endif</div>
 
                 @if ($c->description)<p class="whitespace-pre-wrap text-sm" dir="auto" data-task-description>{{ $c->description }}</p>@endif
                 @if ($d['media'])<div class="text-xs text-zinc-500" data-task-media>{{ implode(', ', $d['media']) }}</div>@endif
@@ -127,36 +127,7 @@
         @endif
     </flux:card>
 
-    {{-- Log a work day: when, what happened, a rough progress figure, evidence --}}
-    @if ($loggable->isNotEmpty())
-        <flux:card class="space-y-3" data-work-log-form>
-            <flux:heading size="sm">{{ __('deals.work.log_title') }}</flux:heading>
-            <p class="text-xs text-zinc-500">{{ __('deals.work.log_hint') }}</p>
-            <div class="grid gap-3 sm:grid-cols-2">
-                <flux:select wire:model="log.commitment" :label="__('deals.work.which_duty')" data-log-duty>
-                    <option value="">—</option>
-                    @foreach ($loggable as $d)<option value="{{ $d['commitment']->id }}">{{ $d['commitment']->title }}</option>@endforeach
-                </flux:select>
-                <x-app.calendar-date-input model="log.date" :label="__('deals.work.log_date')" />
-                <flux:input type="time" wire:model="log.from" :label="__('deals.work.log_from')" data-log-from />
-                <flux:input type="time" wire:model="log.to" :label="__('deals.work.log_to')" data-log-to />
-            </div>
-            <flux:textarea wire:model="log.note" rows="4" :label="__('deals.work.log_note')" :placeholder="__('deals.work.log_note_hint')" />
-            <flux:input inputmode="decimal" wire:model="log.estimate" :label="__('deals.work.log_estimate')" :description="__('deals.work.log_estimate_hint')" data-log-estimate />
-            <div>
-                <flux:input type="file" wire:model="logEvidence" multiple accept="image/*,application/pdf" :label="__('deals.work.evidence')" />
-                <div wire:loading wire:target="logEvidence" class="text-xs text-zinc-500">{{ __('deals.work.uploading') }}</div>
-                @error('logEvidence')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
-                <p class="text-xs text-zinc-500">{{ __('deals.work.evidence_hint') }}</p>
-            </div>
-            <flux:button variant="primary" wire:click="logDay" wire:loading.attr="disabled" wire:target="logDay,logEvidence" data-log-submit>
-                <span wire:loading.remove wire:target="logDay">{{ __('deals.work.log_save') }}</span>
-                <span wire:loading wire:target="logDay">{{ __('deals.work.sending') }}</span>
-            </flux:button>
-        </flux:card>
-    @endif
-
-    {{-- Ask for an inspection: finished work at a milestone or at the end. The receiver measures and confirms the exact quantity. --}}
+    {{-- One daily report: the day, the measured quantity, optional times, a note and media. The receiver confirms the quantity; only that is earned. --}}
     @if ($reportable->isNotEmpty())
         <flux:card class="space-y-3" data-work-report-form>
             <flux:heading size="sm">{{ __('deals.work.inspection_title') }}</flux:heading>
@@ -169,6 +140,13 @@
                 </flux:select>
                 <flux:input inputmode="decimal" wire:model="report.quantity" :label="$sel && $sel['share'] ? __('deals.work.inspection_share') : ($sel ? __('deals.work.inspection_quantity_unit', ['unit' => $sel['unit']]) : __('deals.work.inspection_quantity'))" :description="$sel && $sel['share'] ? __('deals.work.inspection_share_hint') : null" data-report-quantity />
             </div>
+            <div class="grid gap-3 sm:grid-cols-3">
+                <x-app.calendar-date-input model="report.date" :label="__('deals.work.log_date')" />
+                <flux:input type="time" wire:model="report.from" :label="__('deals.work.log_from')" data-report-from />
+                <flux:input type="time" wire:model="report.to" :label="__('deals.work.log_to')" data-report-to />
+            </div>
+            @error('report.date')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+            @error('report.from')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <flux:input wire:model="report.note" :label="__('deals.work.inspection_note')" maxlength="500" />
             <div>
                 <flux:input type="file" wire:model="evidence" multiple accept="image/*,application/pdf" :label="__('deals.work.evidence')" />

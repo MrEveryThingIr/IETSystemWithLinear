@@ -84,6 +84,15 @@ class MoneyPanel extends Component
         });
     }
 
+    /** The doer asks for a share of what is accepted and still unpaid. */
+    public function askPercent(int $percent, ManageDealMoney $money): void
+    {
+        $this->guarded(function () use ($money, $percent): void {
+            $ask = $money->askShare($this->relationship, $this->user(), $percent);
+            $this->note('money_asked', ['amount' => $ask['amount']]);
+        });
+    }
+
     /** Fill the payment form from an amount that was asked for. */
     public function useAsk(string $id, DealMoney $money): void
     {

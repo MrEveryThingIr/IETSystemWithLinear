@@ -142,9 +142,8 @@ class DealConversationAreasTest extends TestCase
         $work($bob)->set('text.confirm-'.$inspection->id, '8')->call('review', $inspection->id, 'accepted')->assertHasNoErrors();
 
         $this->travelTo(now()->addDays(10)); // the week the work was confirmed in has ended, so it is due
-        $key = app(DealMoney::class)->items($deal->fresh())->first()['key'];
-        $money($alice)->set('selected.'.$key, true)->call('request')->assertHasNoErrors();
-        $obligation = app(DealMoney::class)->items($deal->fresh())->first()['obligation'];
+        $obligation = app(DealMoney::class)->items($deal->fresh())->first()['obligation']; // recorded when Bob accepted the work
+        $money($alice)->call('agree', $obligation->uuid)->assertHasNoErrors();
         $money($bob)->set('pay.'.$obligation->uuid, '4000000')->call('report')->assertHasNoErrors();
         $payment = Transaction::query()->where('type', 'payment')->sole();
         $money($alice)->call('received', $payment->uuid)->assertHasNoErrors();
@@ -153,7 +152,7 @@ class DealConversationAreasTest extends TestCase
         $cards = ConversationMessage::query()->where('kind', 'deal')->get();
         $byArea = $cards->groupBy(fn ($m) => $m->meta['area']);
         $this->assertSame(['inspection_partly', 'inspection_requested', 'work_logged'], $byArea['work']->pluck('meta.type')->sort()->values()->all());
-        $this->assertSame(['money_payment_reported', 'money_receipt_confirmed', 'money_requested'], $byArea['money']->pluck('meta.type')->sort()->values()->all());
+        $this->assertSame(['money_amount_agreed', 'money_payment_reported', 'money_receipt_confirmed'], $byArea['money']->pluck('meta.type')->sort()->values()->all());
         $this->assertTrue($byArea['work']->every(fn ($m) => str_contains($m->meta['url'], 'tab=work')));
         $this->assertTrue($byArea['money']->every(fn ($m) => str_contains($m->meta['url'], 'tab=money')));
 

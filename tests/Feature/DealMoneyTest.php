@@ -346,12 +346,12 @@ class DealMoneyTest extends TestCase
         $panel($alice)->assertSee('data-money-request', false)->set('selected.'.$key, true)->call('request')->assertHasNoErrors();
         $obligation = $this->money($deal)[0][0]['obligation'];
         $panel($bob)->call('agree', $obligation->uuid)->assertHasNoErrors();
-        $panel($bob)->assertSee('data-money-pay', false)->assertDontSee('data-money-request', false);
+        $panel($bob)->assertSee('data-account-pay', false)->assertDontSee('data-money-request', false);
 
         // Reporting needs an amount; the recipient cannot report on the payer's behalf.
         $panel($bob)->call('report')->assertHasErrors('money');
         $panel($bob)->set('pay.'.$obligation->uuid, '3000000')->call('report')->assertHasNoErrors();
-        $panel($alice)->assertSee('data-money-payment', false)->assertDontSee('data-money-pay"', false);
+        $panel($alice)->assertSee('data-money-payment', false)->assertDontSee('data-account-pay', false);
         $this->assertSame(0, $this->money($deal)[1]['received']);
 
         // The recipient confirms receipt: settled, and the tab says so.
