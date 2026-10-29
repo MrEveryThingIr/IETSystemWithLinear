@@ -1,6 +1,6 @@
 # M5 masonry experience — isolated local acceptance demo
 
-**Status: implementation candidate, NOT run or validated on MySQL by ChatGPT.** The seeder was written against actual M5 action signatures and existing journey tests, but CI merely running PHP tests does not prove that the seeder executes. It must pass a disposable database run before being used on a refreshed personal database.
+**Status: verified on disposable MySQL on 2026-10-29.** The original seeder and corrected chronological replay both executed through the real domain actions. The regression test verifies both username logins, Deal page access, scenario quantities, history order, financial direction and duplicate rejection. The targeted M5 suite passed: 14 tests, 295 assertions.
 
 ## Scope
 
@@ -9,7 +9,9 @@
   * Four days of preparatory labor at **1,800,000 Toman/day**.
   * Seven masonry reports at **300,000 Toman/square metre**, estimated overall work **650 square metres**.
 * One partially accepted day (17 reported, 15 accepted); one day awaiting inspection (9 reported).
-* Two confirmed payments on account (2,500,000 and 3,000,000 Toman) and an open payment request.
+* Two confirmed payments on account (2,500,000 and 3,000,000 Toman), applied by the normal FIFO credit rules. The 4,000,000 Toman request is linked to its 3,000,000 payment and remains open for 1,000,000.
+* Confirmed earnings: 4 × 1,800,000 + 81 × 300,000 = **31,500,000 Toman**. Received: **5,500,000**. Remaining: **26,000,000**. Pending 9 m² is **2,700,000** of reported work, excluded from earnings and debt. Employer and mason ledger positions are -26,000,000 and +26,000,000.
+* Both accounts receive Market, Deals, Bookkeeping and Messages access through the normal feature-surface service, with Persian locale and Tehran timezone. Enter the username in the login identifier field; both use the supplied password. Use separate browser profiles/private windows.
 * All records are simulated, beginning approximately 14 days prior to execution. There are no real receipt files, photographs, recorded voices, conversations or genuine events. After seeding, add your own through the application so those workflows can be exercised.
 * The daily wage and measured masonry phases share **one** accepted Agreement containing separate rate categories; they are not two separately signed Contracts.
 
@@ -20,7 +22,7 @@
 * Refuses duplicate reserved usernames or Deal title before writing any records.
 * Uses Laravel domain actions rather than inserts of fake acceptance/transaction states.
 * Wraps domain operations in a DB transaction; unexpected exceptions should rollback the scenario's database writes. Media and external side effects of domain actions are not guaranteed transactional.
-* **Do not run `migrate:fresh`, `db:wipe`, or `migrate:reset` against the user's normal database.** The user intends a clean DB, but destructive refresh should require an independently checked export, correct DB connection and explicit consent.
+* A normal development database refresh requires explicit owner authorization and a checked effective connection immediately before destruction. For this acceptance run the owner explicitly authorized refreshing all disposable development data in `C:\laragon\www\EveryThing`; the checked target is `EveryThing-system` on `127.0.0.1:3306`. This authorization does not extend to any other database or environment.
 
 ## First validate on a disposable database
 
@@ -49,3 +51,9 @@ D. As mason: confirm receipt; verify Bookkeeping balance and advance application
 E. Check Persian RTL, English LTR, desktop/mobile, accessibility and visible load times. Report any contradictory labels, unexplained actions, missing media previews, spinner timeouts, and misleading balances.
 
 The seeder is intentionally separate from the default bootstrapping process so it can be reviewed or removed without affecting production.
+
+## Verification evidence
+
+Disposable target: `iet_masonry_acceptance_disposable_20261029`, MySQL at `127.0.0.1:3306`. Verified the pinned original Need, two active verified accounts, two exact-version Contract acceptances, 11 reports (4 daily + 7 measured), 10 reviews, 17 → 15 m² partial acceptance, one pending 9 m² report, ten confirmed obligations, two confirmed payments, complementary ledger balances, chronological financial history and repeat refusal with unchanged record counts. No policy, authentication or financial state was bypassed. Pint and `git diff --check` passed.
+
+Run the regression test with `php artisan test --compact --filter=MasonryExperienceSeederTest`. The normal test configuration uses in-memory SQLite; MySQL was independently exercised against the disposable database. This is execution and HTTP/component coverage; visual browser acceptance remains the walkthrough below.

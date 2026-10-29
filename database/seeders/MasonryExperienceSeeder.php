@@ -13,7 +13,7 @@ use App\Actions\Proposals\RespondToProposal;
 use App\Actions\Relationships\CreateRelationship;
 use App\Actions\Relationships\RespondToRelationship;
 use App\FulfillmentReviewDecision;
-use App\Models\ActorProfileIntent;
+use App\Models\Bookkeeping\Transaction;
 use App\Models\Proposal;
 use App\Models\Relationship;
 use App\Models\User;
@@ -22,11 +22,12 @@ use App\ProfileIntentKind;
 use App\ProfileIntentScheduleKind;
 use App\ProfileItemVisibility;
 use App\ProposalDecisionKind;
+use App\Services\Surfaces\FeatureSurfaceGrantService;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -66,12 +67,12 @@ class MasonryExperienceSeeder extends Seeder
         }
 
         $actualNow = CarbonImmutable::now();
-        $start = $actualNow->startOfDay()->subDays(14);
-        $previousClock = \Carbon\Carbon::getTestNow();
+        $start = $actualNow->setTimezone('Asia/Tehran')->startOfDay()->subDays(14);
+        $previousClock = Carbon::getTestNow();
         try {
             // Entire demo is all-or-nothing. Domain actions still execute their normal policies and audit writes.
             DB::transaction(function () use ($title, $password, $start): void {
-                \Carbon\Carbon::setTestNow($start->setTime(9, 0));
+                Carbon::setTestNow($start->setTime(9, 0));
                 $employer = $this->user('iet-demo-employer', 'iet-demo-employer@example.invalid', $password);
                 $mason = $this->user('iet-demo-mason', 'iet-demo-mason@example.invalid', $password);
 
@@ -139,11 +140,28 @@ class MasonryExperienceSeeder extends Seeder
                     ['offset' => 13, 'rate' => 'walls', 'qty' => '9', 'accepted' => null, 'note' => 'گزارش امروز؛ منتظر بازدید و تأیید کارفرما.'],
                 ];
 
-                foreach ($days as $row) {
+                // Replay in order: policies, balances and history share the same clock.
+                for ($offset = 1; $offset <= 13; $offset++) {
+                    if (in_array($offset, [5, 12], true)) {
+                        Carbon::setTestNow($start->addDays($offset)->setTime(19, 0));
+                        if ($offset === 5) {
+                            $payment = $money->payOnAccount($deal->fresh(), $employer, '2500000', 'masonry-demo-advance-v1', note: 'علی‌الحساب برای شروع کار');
+                        } else {
+                            $ask = $money->askOnAccount($deal->fresh(), $mason, '4000000', 'درخواست بخشی از طلب، باقی پس از متره');
+                            $payment = $money->payOnAccount($deal->fresh(), $employer, '3000000', 'masonry-demo-partial-v1', note: 'قسط دوم برای دیوارچینی', purpose: 'instalment', askId: $ask['id']);
+                        }
+                        $money->approve($deal->fresh(), $mason, $payment->uuid);
+
+                        continue;
+                    }
+                    $row = collect($days)->firstWhere('offset', $offset);
+                    if ($row === null) {
+                        continue;
+                    }
                     $day = $start->addDays($row['offset'])->setTime(17, 30);
-                    \Carbon\Carbon::setTestNow($day);
+                    Carbon::setTestNow($day);
                     $duty = $work->forRate($deal->fresh(), $mason, $row['rate']);
-                    $fulfillment = app(\App\Actions\Fulfillments\SubmitFulfillment::class)->execute(
+                    $fulfillment = app(SubmitFulfillment::class)->execute(
                         $duty, $mason, $row['qty'],
                         actualStartAt: $day->setTime(8, 0),
                         actualEndAt: $day->setTime(17, 0),
@@ -156,31 +174,20 @@ class MasonryExperienceSeeder extends Seeder
                         );
                         $money->recordAccepted($deal->fresh(), $employer, $fulfillment->fresh());
                         // Recipient of the proposed obligation explicitly acknowledges the entry.
-                        $entry = \App\Models\Bookkeeping\Transaction::query()
+                        $entry = Transaction::query()
                             ->where('source_uuid', $fulfillment->uuid)
                             ->where('type', 'obligation')->latest('id')->firstOrFail();
                         $money->approve($deal->fresh(), $mason, $entry->uuid);
                     }
                 }
 
-                // Traditional intermittent payments, including an advance and a later partial payment.
-                // For correct chronology, this second pass only changes simulation timestamps, not sealed work values.
-                \Carbon\Carbon::setTestNow($start->addDays(5)->setTime(19, 0));
-                $first = $money->payOnAccount($deal->fresh(), $employer, '2500000', 'masonry-demo-advance-v1', note: 'علی‌الحساب برای شروع کار');
-                $money->approve($deal->fresh(), $mason, $first->uuid);
-
-                \Carbon\Carbon::setTestNow($start->addDays(12)->setTime(19, 0));
-                $money->askOnAccount($deal->fresh(), $mason, '4000000', 'درخواست بخشی از طلب، باقی پس از متره');
-                $second = $money->payOnAccount($deal->fresh(), $employer, '3000000', 'masonry-demo-partial-v1', note: 'قسط دوم برای دیوارچینی');
-                $money->approve($deal->fresh(), $mason, $second->uuid);
-
-                \Carbon\Carbon::setTestNow($start->addDays(14)->setTime(9, 0));
+                Carbon::setTestNow($start->addDays(14)->setTime(9, 0));
                 $this->command?->info('Masonry demo created. Log in as iet-demo-employer or iet-demo-mason with IET_MASONRY_DEMO_PASSWORD.');
                 $this->command?->info('Deal: /relationships/'.$deal->uuid.'?tab=work');
                 $this->command?->info('Open the Money tab and examine the distinct payer/payee perspectives, accepted days and pending inspection.');
             }, 1);
         } finally {
-            \Carbon\Carbon::setTestNow($previousClock);
+            Carbon::setTestNow($previousClock);
         }
     }
 
@@ -192,8 +199,12 @@ class MasonryExperienceSeeder extends Seeder
             'password' => Hash::make($password),
             'email_verified_at' => now(),
             'status' => 'active',
+            'locale' => 'fa',
+            'timezone' => 'Asia/Tehran',
         ]);
         $user->actor()->firstOrCreate([], ['status' => 'active']);
+
+        app(FeatureSurfaceGrantService::class)->sync($user, ['market', 'deals', 'messages'], null);
 
         return $user->fresh('actor');
     }
