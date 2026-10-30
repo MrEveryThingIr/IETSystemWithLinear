@@ -1,3 +1,5 @@
+@props(['viewport' => false])
+
 @php
     $bottomNavigation = app(\App\Services\Surfaces\ExperienceNavigation::class)->for(auth()->user());
     $bottomPrimary = collect($bottomNavigation['primary'])->keyBy('key');
@@ -7,11 +9,11 @@
         $bottomPrimary->get('planner'),
         $bottomPrimary->get('messages'),
     ])->filter()->values();
-    $hasLauncher = app(\App\Support\IntentionLauncher::class)->choicesFor(auth()->user()) !== [];
+    $hasLauncher = app(\App\Support\IntentionLauncher::class)->visibleFor(auth()->user());
 @endphp
 
 {{-- Phone navigation: four daily destinations and "More" (the full menu). The + floats above it. --}}
-<nav class="fixed inset-x-0 bottom-0 z-[15] border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden dark:border-zinc-800 dark:bg-zinc-900/95"
+<nav @class(['z-[15] border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden dark:border-zinc-800 dark:bg-zinc-900/95', 'relative [grid-area:footer] shrink-0' => $viewport, 'fixed inset-x-0 bottom-0' => ! $viewport])
      aria-label="{{ __('ui.navigation.bottom') }}" data-bottom-bar>
     <ul class="mx-auto grid max-w-lg" style="grid-template-columns: repeat({{ $bottomItems->count() + 1 }}, minmax(0, 1fr));">
         @foreach ($bottomItems as $item)

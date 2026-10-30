@@ -15,6 +15,21 @@ const uuid = () => (window.crypto && window.crypto.randomUUID)
         return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
     })
 
+// Keep viewport sizing outside Alpine scopes used by Livewire's message composer.
+// These listeners belong to the document; navigation selects the current Messages body.
+const syncMessagingViewport = () => {
+    const body = document.body
+    if (!body?.hasAttribute('data-messaging-layout')) return
+    const height = window.visualViewport?.height ?? window.innerHeight
+    body.style.height = height + 'px'
+    body.style.setProperty('--messaging-viewport-height', height + 'px')
+}
+window.visualViewport?.addEventListener('resize', syncMessagingViewport)
+window.addEventListener('resize', syncMessagingViewport)
+document.addEventListener('livewire:navigated', syncMessagingViewport)
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncMessagingViewport, { once: true })
+else syncMessagingViewport()
+
 document.addEventListener('alpine:init', () => {
     // Everything that changes between renders (the thread version) is read from data-* attributes once, never
     // from the x-data expression: a changed x-data expression makes Alpine rebuild the component, which used to

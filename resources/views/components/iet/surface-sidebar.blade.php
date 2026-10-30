@@ -4,7 +4,7 @@
     $notificationsVisible = $legacyItems->contains(fn (array $item): bool => $item['key'] === 'notifications');
 @endphp
 
-@if (app(\App\Support\IntentionLauncher::class)->choicesFor(auth()->user()) !== [])
+@if (app(\App\Support\IntentionLauncher::class)->visibleFor(auth()->user()))
     <div class="mb-2 px-1">
         <flux:modal.trigger name="intention-launcher">
             <flux:button variant="primary" icon="plus" class="w-full justify-start" data-launcher-open>{{ __('launcher.button') }}</flux:button>
