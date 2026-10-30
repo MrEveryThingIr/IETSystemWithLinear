@@ -82,6 +82,12 @@ class ContentStudio extends Component
 
     public mixed $assetUpload = null;
 
+    /** Several images chosen together; each becomes its own placement and block. @var array<int, mixed> */
+    public array $assetUploads = [];
+
+    /** New media placed in the document is marked as an exercise, so readers can respond to each item separately. */
+    public bool $assetAnswerable = false;
+
     public string $assetRightsStatus = 'owned';
 
     public string $assetCaption = '';
@@ -244,14 +250,14 @@ class ContentStudio extends Component
         abort_unless(in_array($kind, ['', 'image', 'video', 'audio', 'file'], true), 422);
         $this->insertKind = $kind;
         $this->mediaDialogOpen = true;
-        $this->reset('assetUpload', 'assetCaption');
+        $this->reset('assetUpload', 'assetUploads', 'assetCaption', 'assetAnswerable');
         $this->resetErrorBag(['assetUpload', 'assetCaption', 'assetRightsStatus']);
     }
 
     public function closeMediaDialog(): void
     {
         $this->mediaDialogOpen = false;
-        $this->reset('assetUpload', 'assetCaption', 'insertKind');
+        $this->reset('assetUpload', 'assetUploads', 'assetCaption', 'insertKind', 'assetAnswerable');
         $this->resetErrorBag(['assetUpload', 'assetCaption', 'assetRightsStatus']);
     }
 
@@ -295,9 +301,54 @@ class ContentStudio extends Component
 
             if ($asset instanceof Asset) {
                 $this->ensureBlockDocument();
-                $this->blocks[] = $this->mediaBlock($asset, $caption);
+                $this->blocks[] = $this->mediaBlock($asset, $caption, $this->assetAnswerable);
                 $this->persistDraft($revise, $updateBlocks);
             }
+        }
+
+        $this->closeMediaDialog();
+        $this->resetErrorBag('publish');
+        session()->flash('status', __('media.attached'));
+    }
+
+    /**
+     * Several images chosen in one go. Each file is attached on its own and gets its own placement and its own block, so
+     * every picture can be captioned, moved, answered and discussed separately from the others.
+     */
+    public function attachAssets(
+        AttachAssetToSpaceContent $attach,
+        ReviseSpaceContent $revise,
+        UpdateSpaceContentBlocks $updateBlocks,
+    ): void {
+        $this->validate([
+            'assetUploads' => ['required', 'array', 'min:1', 'max:20'],
+            'assetRightsStatus' => ['required', 'string', Rule::in(Asset::RIGHTS_STATUSES)],
+        ]);
+        foreach ($this->assetUploads as $i => $upload) {
+            abort_unless($upload instanceof UploadedFile, 422);
+            $mime = (string) $upload->getMimeType();
+            if (! Asset::supportsMime($mime) || ! str_starts_with($mime, 'image/')) {
+                throw ValidationException::withMessages(['assetUploads.'.$i => __('studio_ui.upload.unsupported_type')]);
+            }
+            $this->validate(['assetUploads.'.$i => ['file', MediaLimits::rule(MediaLimits::contentKindForMime($mime))]]);
+        }
+
+        $this->persistDraft($revise, $updateBlocks);
+        $count = count($this->assetUploads);
+        foreach ($this->assetUploads as $upload) {
+            $this->content = $attach->execute($this->content, $this->user(), $upload, $this->assetRightsStatus, null);
+        }
+
+        $placeInDocument = $this->insertKind !== '' || $this->compositionMode === SpaceContentRevision::COMPOSITION_BLOCKS;
+        $this->reloadFromDraft();
+        if ($placeInDocument) {
+            // The newest files, back in the order they were chosen (assets are created one after another).
+            $assets = $this->editableRevision()->assets()->get()->sortByDesc('id')->take($count)->sortBy('id')->values();
+            $this->ensureBlockDocument();
+            foreach ($assets as $asset) {
+                $this->blocks[] = $this->mediaBlock($asset, '', $this->assetAnswerable);
+            }
+            $this->persistDraft($revise, $updateBlocks);
         }
 
         $this->closeMediaDialog();
@@ -330,7 +381,7 @@ class ContentStudio extends Component
                 ->where('asset_id', $asset->id)
                 ->value('caption');
             $this->ensureBlockDocument();
-            $this->blocks[] = $this->mediaBlock($asset, $caption);
+            $this->blocks[] = $this->mediaBlock($asset, $caption, $this->assetAnswerable);
         }
 
         $this->persistDraft($revise, $updateBlocks);
@@ -779,7 +830,7 @@ class ContentStudio extends Component
     }
 
     /** @return array<string, mixed> */
-    private function mediaBlock(Asset $asset, string $caption): array
+    private function mediaBlock(Asset $asset, string $caption, bool $answerable = false): array
     {
         $type = match ($asset->mediaKind()) {
             'image' => SpaceContentBlock::TYPE_IMAGE,
@@ -795,6 +846,7 @@ class ContentStudio extends Component
                 'asset_uuid' => $asset->uuid,
                 'filename' => $asset->original_filename,
                 'caption' => $caption,
+                ...($answerable ? ['semantics' => ['role' => 'exercise', 'tags_text' => '']] : []),
             ],
             'style' => [],
         ];

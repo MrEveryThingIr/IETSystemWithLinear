@@ -62,4 +62,10 @@ return [
         'captions_off' => 'Captions off',
         'keyboard_help' => 'Space play/pause · ←/→ 5 s · J/L 10 s · F fullscreen · C captions',
     ],
+    'reference' => [
+        'image' => 'Image :n',
+        'audio' => 'Audio :n',
+        'video' => 'Video :n',
+        'file' => 'File :n',
+    ],
 ];

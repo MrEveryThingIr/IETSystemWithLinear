@@ -29,6 +29,8 @@
         labels: {
             tooLarge: @js(__('studio_ui.upload.too_large', ['size' => ':size', 'limit' => ':limit'])),
             failed: @js(__('studio_ui.upload.failed')),
+            imagesCount: @js(__('studio_ui.upload.images_count', ['count' => ':count'])),
+            manyImagesOnly: @js(__('studio_ui.upload.many_images_only')),
             tooLargeImage: @js(__('studio_ui.upload.too_large_image', ['size' => ':size', 'limit' => ':limit'])),
             failedResumable: @js(__('studio_ui.upload.failed_resumable')),
             resuming: @js(__('studio_ui.upload.resuming')),
@@ -65,13 +67,18 @@
         <flux:input wire:model.live.debounce.300ms="assetCaption" :label="__('media.caption')" maxlength="1000" />
     </div>
 
+    @if ($insertKind !== 'file')
+        {{-- Each placed item can then be answered on its own by readers (an exercise section per item). --}}
+        <flux:checkbox wire:model="assetAnswerable" :label="__('studio_ui.upload.answerable_each')" :description="__('studio_ui.upload.answerable_each_help')" data-upload-answerable />
+    @endif
+
     <label
         x-show="state === 'idle' || state === 'too_large' || state === 'failed'"
         class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 px-4 py-8 text-center hover:border-zinc-400 dark:border-zinc-700"
     >
         <flux:icon name="arrow-up-tray" class="size-6 text-zinc-400" />
         <span class="text-sm font-medium" x-text="state === 'failed' ? @js(__('studio_ui.upload.choose_again')) : @js(__('studio_ui.upload.choose'))"></span>
-        <input type="file" class="sr-only" accept="{{ $accept }}" x-on:change="choose($event)" data-upload-input />
+        <input type="file" class="sr-only" accept="{{ $accept }}" @if (in_array($insertKind, ['', 'image'], true)) multiple @endif x-on:change="choose($event)" data-upload-input />
     </label>
 
     {{-- On phones and tablets: open the camera directly. The result goes through exactly the same steps as a gallery file
@@ -163,7 +170,7 @@
         <flux:button type="button" x-show="state === 'idle' || state === 'too_large'" variant="primary" disabled>{{ __('studio_ui.upload.select_first') }}</flux:button>
         <flux:button
             type="button"
-            x-show="state === 'ready'"
+            x-show="state === 'ready' && mode !== 'batch'"
             wire:click="attachAsset"
             wire:loading.attr="disabled"
             wire:target="attachAsset"
@@ -172,6 +179,18 @@
         >
             <span wire:loading.remove wire:target="attachAsset">{{ $insertKind !== '' ? __('studio_ui.upload.add_to_document') : __('studio_ui.upload.add_to_media') }}</span>
             <span wire:loading wire:target="attachAsset">{{ __('studio_ui.upload.processing') }}</span>
+        </flux:button>
+        <flux:button
+            type="button"
+            x-show="state === 'ready' && mode === 'batch'"
+            wire:click="attachAssets"
+            wire:loading.attr="disabled"
+            wire:target="attachAssets"
+            variant="primary"
+            data-upload-submit-many
+        >
+            <span wire:loading.remove wire:target="attachAssets">{{ __('studio_ui.upload.add_each') }}</span>
+            <span wire:loading wire:target="attachAssets">{{ __('studio_ui.upload.processing') }}</span>
         </flux:button>
     </div>
 </div>
