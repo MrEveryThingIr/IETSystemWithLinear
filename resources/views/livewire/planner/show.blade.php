@@ -123,10 +123,36 @@
                 @endif
             </flux:card>
 
+            @if ($forLater)
+                <flux:card class="space-y-3" data-for-later>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <flux:badge color="zinc" icon="bookmark">{{ __('planner.later.title') }}</flux:badge>
+                        <span class="text-xs text-zinc-500">{{ __('planner.later.not_scheduled') }}</span>
+                    </div>
+                    @if ($editingLater)
+                        <flux:input wire:model="laterTitle" :label="__('planner.later.title_label')" maxlength="180" data-for-later-title />
+                        <flux:textarea wire:model="laterNotes" rows="4" :label="__('planner.later.notes')" maxlength="10000" />
+                        @error('laterTitle')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+                        <div class="flex gap-2">
+                            <flux:button size="sm" variant="primary" wire:click="saveLater" data-for-later-save>{{ __('planner.later.save') }}</flux:button>
+                            <flux:button size="sm" variant="ghost" wire:click="$set('editingLater', false)">{{ __('studio.cancel') }}</flux:button>
+                        </div>
+                    @else
+                        @if ($plan->description)<p class="whitespace-pre-wrap text-sm" dir="auto">{{ $plan->description }}</p>@endif
+                        <div class="flex flex-wrap gap-2">
+                            @if ($canManage)
+                                <flux:button size="sm" variant="primary" :href="route('planner.create', ['schedule' => $plan->uuid])" wire:navigate data-for-later-schedule>{{ __('planner.later.schedule') }}</flux:button>
+                                <flux:button size="sm" variant="ghost" wire:click="editLater" data-for-later-edit>{{ __('planner.later.edit') }}</flux:button>
+                            @endif
+                        </div>
+                    @endif
+                </flux:card>
+            @endif
+
             <livewire:planner.related-content :plan="$plan" :key="'related-content-'.$plan->uuid" />
             <livewire:content.create-content :key="'plan-content-create-'.$plan->uuid" />
 
-            @if (! ($replaces && $plan->occurrences->isEmpty()))
+            @if (! $forLater && ! ($replaces && $plan->occurrences->isEmpty()))
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('planner.plan.occurrences') }}</flux:heading>
 

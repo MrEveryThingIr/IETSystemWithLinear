@@ -307,7 +307,24 @@ return [
             'reminders' => '何时提醒你，可多选。',
         ],
     ],
+    'later' => [
+        'title' => '稍后',
+        'help' => '需要记住的事项。这里的内容没有日期、提醒，也不占用日历。',
+        'not_scheduled' => '未安排',
+        'schedule' => '安排时间',
+        'edit' => '编辑',
+        'save' => '保存',
+        'notes' => '备注',
+        'title_label' => '内容',
+        'no_date' => '没有日期和时间。随时可以安排。',
+        'already_scheduled' => '此事项已有日程。',
+    ],
     'kinds' => [
+        'later' => [
+            'name' => '稍后',
+            'help' => '先记下来，之后再决定时间',
+            'example' => '改进内容媒体处理',
+        ],
         'event' => [
             'name' => '活动',
             'help' => '固定时间的约定',

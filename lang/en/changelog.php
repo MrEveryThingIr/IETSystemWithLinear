@@ -11,6 +11,7 @@ return [
                 'Messages now fit phone screens with a reachable composer, and the global add button stays out of focused conversations.',
                 'Content images can be cropped before upload, phone camera capture is available, and multiple uploaded images remain individually addressable and answerable.',
                 'Planner Content-link occurrence dates now follow the user’s calendar, locale, timezone and Gregorian-equivalent preferences.',
+                'Planner has a new For later list for things you want to remember without choosing a date or time; schedule one whenever you are ready.',
             ],
         ],
         '1_12_0' => [

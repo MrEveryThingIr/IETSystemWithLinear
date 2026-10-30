@@ -387,7 +387,13 @@ class Index extends Component
             ->sort()
             ->values();
 
+        // "For later" items are remembered, not scheduled: they have their own list and stay out of the scheduled ones.
+        $forLater = $allPlans
+            ->filter(fn (Plan $plan): bool => $plan->isForLater() && $this->matchesPlanText($plan))
+            ->values();
+
         $plans = $allPlans
+            ->reject(fn (Plan $plan): bool => $plan->isForLater())
             ->filter(fn (Plan $plan): bool => $this->matchesPlanFilters($plan))
             ->take(150)
             ->values();
@@ -545,6 +551,7 @@ class Index extends Component
 
         return view($viewName, [
             'plans' => $plans,
+            'forLater' => $forLater,
             'occurrences' => $occurrences,
             'calendarDays' => $calendarDays,
             'calendarOccurrences' => $calendarOccurrences,

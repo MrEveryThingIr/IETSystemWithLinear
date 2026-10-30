@@ -270,6 +270,7 @@
                 </div>
                 <x-app.device-notifications />
 
+                @if ($kind !== 'later')
                 <details class="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" @if ($prerequisites !== [] || $expenseEstimates !== []) open @endif>
                     <summary class="cursor-pointer text-sm font-medium">{{ __('planner.wizard.more_options') }}</summary>
                     <div class="mt-4 space-y-5">
@@ -319,6 +320,7 @@
                         </div>
                     </div>
                 </details>
+                @endif
             </flux:card>
         @endif
 
@@ -333,6 +335,8 @@
                         <div class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('planner.kinds.'.$kind.'.name') }} · <span dir="auto">{{ $contextLabel }}</span></div>
                         @if ($kind === 'meeting')
                             <div class="text-sm">{{ trans_choice('planner.meetings.options_count', count($meetingSlots), ['count' => count($meetingSlots)]) }} · {{ trans_choice('planner.meetings.invitee_count', count($invitees), ['count' => count($invitees)]) }}</div>
+                        @elseif ($kind === 'later')
+                            <div class="text-sm text-zinc-600 dark:text-zinc-300" data-later-review>{{ __('planner.later.no_date') }}</div>
                         @else
                             <div class="text-sm">
                                 <x-app.local-date :value="$startsOn" /> · {{ $startTime }} · {{ trans_choice('planner.wizard.minutes', $durationMinutes, ['count' => $durationMinutes]) }}
@@ -362,7 +366,7 @@
                 @endif
             </div>
             <div class="flex flex-col-reverse gap-2 sm:flex-row">
-                @if ($step !== 'review' && in_array($step, ['when', 'details'], true) && $kind !== 'meeting')
+                @if ($step !== 'review' && (in_array($step, ['when', 'details'], true) || ($step === 'what' && $kind === 'later')) && $kind !== 'meeting')
                     <flux:button type="button" wire:click="save" variant="ghost" class="w-full sm:w-auto" data-wizard-create-now>{{ __('planner.wizard.create_now') }}</flux:button>
                 @endif
                 @if ($step === 'review')
