@@ -10,6 +10,7 @@ use App\Actions\Groups\PublishSpaceContent;
 use App\Actions\Planner\CreatePlan;
 use App\Actions\Planner\CreatePlanScheduleRule;
 use App\Actions\Planner\ManagePlanContent;
+use App\CalendarSystem;
 use App\Livewire\Content\CreateContent;
 use App\Livewire\Planner\RelatedContent;
 use App\Models\Actor;
@@ -24,8 +25,11 @@ use App\PlanOccurrenceStatus;
 use App\PlanScheduleFrequency;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\Concerns\PublishesFeatureSurfaces;
 use Tests\TestCase;
@@ -67,6 +71,75 @@ class PlanContentLinksTest extends TestCase
         $version = ContentBlueprint::query()->where('slug', 'note-diary')->firstOrFail()->activeVersionRecord();
 
         return app(CreateContentFromBlueprint::class)->execute($context, $version, $a->user, $title, ['body' => 'Today I read five pages.']);
+    }
+
+    /** @return array<string, array{string, CalendarSystem, string, string, string, string, string}> */
+    public static function temporalProfiles(): array
+    {
+        return [
+            'Gregorian numeric' => ['en', CalendarSystem::Gregorian, 'UTC', 'numeric', 'hidden', '2026/11/01', '2026-11-01'],
+            'Persian Jalali' => ['fa', CalendarSystem::Persian, 'Asia/Tehran', 'numeric', 'hidden', '۱۴۰۵/۰۸/۱۰', '2026-11-01'],
+            'English Jalali' => ['en', CalendarSystem::Persian, 'UTC', 'numeric', 'hidden', '1405/08/10', '2026-11-01'],
+            'Persian Gregorian' => ['fa', CalendarSystem::Gregorian, 'UTC', 'numeric', 'hidden', '۲۰۲۶/۱۱/۰۱', '2026-11-01'],
+            'Timezone crosses midnight' => ['en', CalendarSystem::Gregorian, 'Pacific/Kiritimati', 'medium', 'hidden', '2 Nov 2026', '2026-11-02'],
+            'Long format' => ['en', CalendarSystem::Gregorian, 'Asia/Tehran', 'long', 'hidden', '1 November 2026', '2026-11-01'],
+            'Inline equivalent' => ['fa', CalendarSystem::Persian, 'Pacific/Kiritimati', 'numeric', 'inline', '۱۴۰۵/۰۸/۱۱', '2026-11-02'],
+            'Hover equivalent' => ['fa', CalendarSystem::Persian, 'Asia/Tehran', 'numeric', 'hover', '۱۴۰۵/۰۸/۱۰', '2026-11-01'],
+            'System timezone fallback' => ['en', CalendarSystem::Gregorian, '', 'numeric', 'hidden', '2026/11/02', '2026-11-02'],
+        ];
+    }
+
+    #[DataProvider('temporalProfiles')]
+    public function test_content_occurrence_labels_follow_temporal_preferences_without_changing_identity_or_schedule(
+        string $locale, CalendarSystem $calendar, string $timezone, string $format, string $equivalent,
+        string $primary, string $displayDate,
+    ): void {
+        config(['app.timezone' => 'Pacific/Kiritimati']);
+        $actor = $this->person();
+        $user = $actor->user;
+        $user->forceFill(['locale' => $locale, 'calendar' => $calendar, 'timezone' => $timezone,
+            'date_display_format' => $format, 'gregorian_equivalent_mode' => $equivalent,
+            'show_gregorian_equivalent' => $equivalent !== 'hidden'])->save();
+        app()->setLocale($locale);
+        $plan = $this->readingPlan($actor);
+        $day = $plan->occurrences()->orderBy('scheduled_start_at')->firstOrFail();
+        $this->assertSame('2026-11-01', $day->local_date->toDateString());
+        $this->assertSame('2026-11-01 17:30:00', $day->scheduled_start_at->format('Y-m-d H:i:s'));
+        $snapshot = fn (): array => [
+            DB::table('plan_occurrences')->where('plan_id', $plan->id)->orderBy('id')->get()->toJson(),
+            DB::table('plan_schedule_rules')->where('plan_id', $plan->id)->orderBy('id')->get()->toJson(),
+        ];
+        $before = $snapshot();
+        $content = $this->entry($actor, 'Temporal content');
+        $panel = Livewire::actingAs($user)->test(RelatedContent::class, ['plan' => $plan]);
+        $html = $panel->html();
+        $document = new \DOMDocument;
+        $document->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOERROR | LIBXML_NOWARNING);
+        $options = (new \DOMXPath($document))->query('//*[@data-plan-content-day]//option[@value="'.$day->uuid.'"]');
+        $this->assertSame(1, $options->length);
+        $expected = $equivalent === 'inline'
+            ? $primary.' · '.__('ui.profile.temporal.gregorian_equivalent').' · ۲۰۲۶/۱۱/۰۲'
+            : $primary;
+        $this->assertSame($expected, trim($options->item(0)->textContent));
+        $panel->set('occurrence', $day->uuid)->set('attach', $content->uuid)->call('attachExisting')->assertHasNoErrors();
+        $this->assertSame($day->uuid, $panel->get('occurrence'));
+        $link = PlanContentLink::query()->sole();
+        $this->assertSame($day->id, $link->plan_occurrence_id);
+        $this->assertSame($content->id, $link->space_content_id);
+        $panel->assertSeeHtml('data-profile-date="'.$displayDate.'"')->assertSee($primary);
+        $backlink = Blade::render('<x-content.plan-links :content="$content" />', ['content' => $content]);
+        $this->assertStringContainsString('data-profile-date="'.$displayDate.'"', $backlink);
+        $this->assertStringContainsString($primary, $backlink);
+        $this->assertStringContainsString('#occurrence-'.$day->uuid, $backlink);
+        foreach ([$panel->html(), $backlink] as $rendered) {
+            if ($equivalent === 'hidden') {
+                $this->assertStringNotContainsString('data-temporal-equivalent', $rendered);
+            } else {
+                $this->assertStringContainsString('data-equivalent-mode="'.$equivalent.'"', $rendered);
+                $this->assertStringContainsString('data-temporal-equivalent', $rendered);
+            }
+        }
+        $this->assertSame($before, $snapshot(), 'Presentation and linking must not mutate or regenerate occurrences or rules.');
     }
 
     public function test_a_recurring_plan_collects_one_entry_per_day_without_duplicating_the_plan_or_completing_anything(): void

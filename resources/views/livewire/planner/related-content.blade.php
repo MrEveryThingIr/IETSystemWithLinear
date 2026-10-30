@@ -10,7 +10,7 @@
                 <a href="{{ $e['url'] }}" class="block truncate font-medium hover:underline" dir="auto">{{ $e['title'] }}</a>
                 <div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                     @if ($link->occurrence)
-                        <a class="underline-offset-2 hover:underline" href="{{ route('planner.show', $plan) }}#occurrence-{{ $link->occurrence->uuid }}"><x-app.local-date :value="$e['date']" /></a>
+                        <a class="underline-offset-2 hover:underline" href="{{ route('planner.show', $plan) }}#occurrence-{{ $link->occurrence->uuid }}"><x-app.local-date :value="$link->occurrence->scheduled_start_at->setTimezone($displayTimezone)" /></a>
                     @else
                         <span>{{ __('plan_content.whole_plan') }}</span>
                     @endif
@@ -30,7 +30,7 @@
         <div class="space-y-2 border-t border-zinc-200 pt-3 dark:border-zinc-700">
             <flux:select wire:model.live="occurrence" :label="__('plan_content.belongs_to')" data-plan-content-day>
                 <option value="">{{ __('plan_content.whole_plan') }}</option>
-                @foreach ($occurrences as $o)<option value="{{ $o->uuid }}">{{ $o->local_date?->toDateString() }}</option>@endforeach
+                @foreach ($occurrences as $o)<option value="{{ $o->uuid }}">{{ \App\Support\TemporalCalendar::dateLabelWithEquivalent($o->scheduled_start_at, $viewer, $displayTimezone) }}</option>@endforeach
             </flux:select>
             <div class="flex flex-wrap items-end gap-2">
                 <flux:button size="sm" variant="primary" icon="plus" x-on:click="$dispatch('open-content-create', { kind: 'note', plan: '{{ $plan->uuid }}', occurrence: $wire.occurrence })" data-plan-content-add>{{ __('plan_content.add') }}</flux:button>

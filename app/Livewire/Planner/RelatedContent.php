@@ -9,6 +9,7 @@ use App\Models\PlanContentLink;
 use App\Models\PlanOccurrence;
 use App\Models\SpaceContent;
 use App\Models\User;
+use App\Support\TemporalPreferences;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
@@ -89,10 +90,12 @@ class RelatedContent extends Component
 
         return view('livewire.planner.related-content', [
             'plan' => $plan,
+            'viewer' => $user,
+            'displayTimezone' => TemporalPreferences::timezoneFor($user),
             'entries' => $entries,
             'canWrite' => $canWrite,
             'attachable' => $attachable,
-            'occurrences' => $canWrite ? $plan->occurrences()->orderBy('scheduled_start_at')->limit(400)->get(['id', 'uuid', 'local_date']) : collect(),
+            'occurrences' => $canWrite ? $plan->occurrences()->orderBy('scheduled_start_at')->limit(400)->get(['id', 'uuid', 'local_date', 'scheduled_start_at']) : collect(),
         ]);
     }
 
