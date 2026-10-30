@@ -274,6 +274,58 @@ class DealDailyWorkMoneyTest extends TestCase
         $this->assertSame(1, Plan::query()->count());
     }
 
+    public function test_progress_adds_up_across_agreement_versions_against_the_current_estimate(): void
+    {
+        [$alice, $bob, $deal] = $this->masonry(false, $this->rateTerms());
+        $this->accept($bob, $deal, $this->report($alice, $deal, 'rate:masonry', '10'));
+
+        $newTerms = $this->rateTerms('400000');
+        $newTerms['rates'][0]['estimate'] = '700';
+        app(AmendAgreement::class)->execute(Contract::query()->sole(), $alice->user, ['schema' => 1] + $newTerms, now()->addDay(), 'Asia/Tehran');
+        app(AcceptContractVersion::class)->execute(Contract::query()->sole()->pendingVersionRecord(), $bob->user);
+        $this->travel(3)->days();
+        app(ActivateDueContractVersions::class)->executeForContract(Contract::query()->sole());
+        $this->accept($bob, $deal->fresh(), $this->report($alice, $deal->fresh(), 'rate:masonry', '5'));
+
+        Livewire::actingAs($bob->user)->test(WorkPanel::class, ['relationship' => $deal->fresh()])->assertSee('15')->assertSee('700')->assertSee('(2%)');
+    }
+
+    public function test_a_monthly_salary_with_overtime_and_an_advance_is_simple_to_track(): void
+    {
+        $terms = ['title' => 'Employment', 'rates' => [
+            ['key' => 'salary', 'label' => 'Monthly salary', 'unit' => 'month', 'rate' => '30000000', 'estimate' => '12'],
+            ['key' => 'overtime', 'label' => 'Overtime', 'unit' => 'hour', 'rate' => '400000'],
+        ], 'payment' => ['mode' => 'per_period', 'period' => 'month'], 'completion' => ['confirmed_by' => 'beneficiary']];
+        [$alice, $bob, $deal] = $this->masonry(false, $terms);
+        $money = app(ManageDealMoney::class);
+
+        // From day one, before any work is reported, the Money tab offers to pay or ask.
+        Livewire::actingAs($bob->user)->test(MoneyPanel::class, ['relationship' => $deal])->assertSeeHtml('data-account-pay');
+        Livewire::actingAs($alice->user)->test(MoneyPanel::class, ['relationship' => $deal])->assertSeeHtml('data-ask-send');
+
+        // The employer pays 5,000,000 before the month is over: an advance, never a debt of the employee.
+        $advance = $money->payOnAccount($deal, $bob->user, '5000000', 'adv');
+        $money->approve($deal, $alice->user, $advance->uuid);
+        $this->assertSame(0, $this->summary($deal)['outstanding']);
+
+        // The month is worked in full, plus six hours of overtime; the employer confirms both.
+        $this->accept($bob, $deal, $this->report($alice, $deal, 'rate:salary', '1'));
+        $this->accept($bob, $deal, $this->report($alice, $deal, 'rate:overtime', '6'));
+        foreach (Transaction::query()->where('type', 'obligation')->get() as $entry) {
+            $money->approve($deal, $alice->user, $entry->uuid);
+        }
+
+        $sum = $this->summary($deal);
+        $this->assertSame(32400000, $sum['earned']);
+        $this->assertSame(27400000, $sum['outstanding'], '5,000,000 advance applied once');
+        $this->assertSame(0, $sum['on_account']);
+
+        // Month end: the rest is paid and confirmed.
+        $pay = $money->payOnAccount($deal->fresh(), $bob->user, '27400000', 'final');
+        $money->approve($deal->fresh(), $alice->user, $pay->uuid);
+        $this->assertSame(0, $this->summary($deal)['outstanding']);
+    }
+
     public function test_the_same_acceptance_submitted_twice_records_one_debt(): void
     {
         [$alice, $bob, $deal] = $this->masonry(false, $this->rateTerms());

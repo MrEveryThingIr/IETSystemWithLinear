@@ -41,6 +41,7 @@ use App\Support\QuantityAmount;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
@@ -439,8 +440,9 @@ class WorkPanel extends Component
             'stale' => $activeId !== $i['version_id'],
         ]);
 
-        $duties = $this->commitments()->with(['obligor.user', 'beneficiary.user', 'contractVersion.contract.contextBinding.context', 'contractVersion.contract.sourceProposalVersion', 'planBinding.plan.occurrences', 'fulfillments.review', 'fulfillments.dispute', 'fulfillments.occurrence', 'fulfillments.assets', 'fulfillments.commitment'])->orderBy('id')->get()
-            ->map(fn (Commitment $c) => $this->duty($c, $progress));
+        $all = $this->commitments()->with(['obligor.user', 'beneficiary.user', 'contractVersion.contract.contextBinding.context', 'contractVersion.contract.sourceProposalVersion', 'planBinding.plan.occurrences', 'fulfillments.review', 'fulfillments.dispute', 'fulfillments.occurrence', 'fulfillments.assets', 'fulfillments.commitment'])->orderBy('id')->get();
+        $this->totals = $this->progressTotals($all, $progress, $version);
+        $duties = $all->map(fn (Commitment $c) => $this->duty($c, $progress));
 
         return view('livewire.deals.work-panel', [
             'version' => $version,
@@ -454,6 +456,43 @@ class WorkPanel extends Component
             'units' => self::UNITS,
             'user' => $this->user(),
         ]);
+    }
+
+    /** @var array<int, array{accepted: string, estimate: string}> confirmed quantity and current estimate, per duty */
+    private array $totals = [];
+
+    /**
+     * Progress follows the work, not the Agreement version it happened to be set up under: confirmed quantity is added up
+     * across every version for the same agreed kind of work (or, for plain tasks, the same unit and doer) and set against
+     * the estimate of the Agreement in force. The estimate only measures progress; it never limits or prices anything.
+     *
+     * @param  Collection<int, Commitment>  $commitments
+     * @return array<int, array{accepted: string, estimate: string}>
+     */
+    private function progressTotals($commitments, CommitmentProgress $progress, ?ContractVersion $active): array
+    {
+        $current = $active instanceof ContractVersion ? (AgreementTerms::of($active) ?? []) : [];
+        $groups = [];
+        foreach ($commitments as $c) {
+            $rate = preg_match('/^rate:\d+:([A-Za-z0-9_-]+):(\d+)$/', (string) $c->derivation_key, $m) === 1 ? $m : null;
+            $key = $rate !== null ? 'rate:'.$rate[1].':'.$rate[2] : (self::isOpen($c) ? 'task:'.strtolower((string) $c->unit).':'.$c->obligor_actor_id : 'own:'.$c->id);
+            $estimate = match (true) {
+                $rate !== null => (string) (collect($current['rates'] ?? [])->firstWhere('key', $rate[1])['estimate'] ?? ''),
+                self::isOpen($c) => strtolower((string) ($current['quantity']['unit'] ?? '')) === strtolower((string) $c->unit) ? (string) ($current['quantity']['value'] ?? '') : '',
+                default => '',
+            };
+            $groups[$key]['ids'][] = $c->id;
+            $groups[$key]['estimate'] = $estimate;
+            $groups[$key]['accepted'] = QuantityAmount::add($groups[$key]['accepted'] ?? QuantityAmount::normalize('0'), $progress->acceptedQuantity($c));
+        }
+        $out = [];
+        foreach ($groups as $group) {
+            foreach ($group['ids'] as $id) {
+                $out[$id] = ['accepted' => $group['accepted'], 'estimate' => $group['estimate']];
+            }
+        }
+
+        return $out;
     }
 
     /** @return array<string, mixed> */
@@ -488,7 +527,8 @@ class WorkPanel extends Component
             'unit' => DealTerms::basisLabel($c->unit) ?? $c->unit,
             'share' => self::isShare($c),
             'open_ended' => self::isOpen($c),
-            'estimate' => (string) (preg_match('/^rate:\d+:([A-Za-z0-9_-]+):\d+$/', (string) $c->derivation_key, $rm) === 1 ? (collect($terms['rates'] ?? [])->firstWhere('key', $rm[1])['estimate'] ?? '') : ($terms['quantity']['value'] ?? '')),
+            'estimate' => $this->totals[$c->id]['estimate'] ?? '',
+            'accepted_total' => $this->totals[$c->id]['accepted'] ?? $accepted,
         ];
     }
 

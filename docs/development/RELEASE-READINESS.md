@@ -17,7 +17,12 @@ Branch `feat/planner-content-contacts` already contains `feat/m5-deal-money` and
 4. Restart queue workers.
 5. Smoke test with two accounts: Agreement with work rates, daily report, acceptance, payment, confirmation; schedule a task; share an entry with contacts.
 
+## Full-suite result (2026-10-30)
+1289 of 1293 tests pass on SQLite. The 3 failures are `PlannerRemindersTest` push-encryption tests: `openssl_pkey_new` returns false on this Windows PHP (missing `openssl.cnf`), an environment issue unrelated to the code. Check on the server: `php -r "var_dump(openssl_pkey_new(['curve_name'=>'prime256v1','private_key_type'=>OPENSSL_KEYTYPE_EC]));"` must not print `false`, or device push reminders will not work.
+
+## Employment and real jobs
+Agreement work rates cover monthly salary, daily or hourly pay, overtime and piece work in one Agreement. Advances can be paid or asked for before the first report and are applied once to accepted work. Progress adds up across Agreement versions.
+
 ## Known gaps (not blockers)
 - Audio books and podcasts (chapters, RSS, loudness processing) are not built; they need ffmpeg on the server.
 - Browser walkthrough (Persian RTL, mobile, dark mode) of the newest screens is still to do by a person.
-- Progress against an Agreement estimate is per duty, not summed across Agreement versions.

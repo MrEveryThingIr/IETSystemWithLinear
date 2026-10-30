@@ -213,9 +213,14 @@ class MoneyPanel extends Component
     {
         $actorId = (int) $this->user()->actor?->id;
 
-        return Commitment::query()->whereHas('contractVersion.contract', fn ($q) => $q->where('relationship_id', $deal->id))
-            ->when($role === 'obligor', fn ($q) => $q->where('obligor_actor_id', $actorId), fn ($q) => $q->where('beneficiary_actor_id', $actorId))->with('contractVersion.contract.sourceProposalVersion')->get()
-            ->contains(fn ($c) => DealMoney::mode($c) !== null);
+        $work = Commitment::query()->whereHas('contractVersion.contract', fn ($q) => $q->where('relationship_id', $deal->id))->with('contractVersion.contract.sourceProposalVersion')->get()
+            ->filter(fn ($c) => DealMoney::mode($c) !== null);
+        if ($work->isEmpty()) {
+            // Nobody has reported work yet (an Agreement of work rates): either person may pay or ask from day one.
+            return $actorId !== 0 && app(ManageDealMoney::class)->beforeAnyWork($deal, $this->user()->actor) !== null;
+        }
+
+        return $work->contains(fn ($c) => (int) ($role === 'obligor' ? $c->obligor_actor_id : $c->beneficiary_actor_id) === $actorId);
     }
 
     /** A labelled step line in the Deal's one conversation. It never decides or blocks anything. @param array<string, mixed> $meta */

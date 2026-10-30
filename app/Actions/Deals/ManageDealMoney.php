@@ -237,7 +237,7 @@ class ManageDealMoney
     public function askOnAccount(Relationship $deal, User $user, string $amount, ?string $note = null): array
     {
         $actor = $this->actor($user);
-        abort_unless($this->owedWork($deal)->contains(fn ($c) => (int) $c->obligor_actor_id === (int) $actor->id), 403);
+        abort_unless($this->owedWork($deal)->contains(fn ($c) => (int) $c->obligor_actor_id === (int) $actor->id) || $this->beforeAnyWork($deal, $actor), 403);
         $value = Toman::parse($amount, 'amount');
 
         return DB::transaction(function () use ($deal, $actor, $value, $note): array {
@@ -276,12 +276,13 @@ class ManageDealMoney
     {
         $actor = $this->actor($user);
         $mine = $this->owedWork($deal)->filter(fn ($c) => (int) $c->beneficiary_actor_id === (int) $actor->id);
-        abort_if($mine->isEmpty(), 403);
+        $other = $mine->isEmpty() ? $this->beforeAnyWork($deal, $actor) : null;
+        abort_if($mine->isEmpty() && $other === null, 403);
         abort_if(trim($token) === '', 422);
         $value = Toman::parse($amount, 'amount');
         $ledger = $this->ledger($deal, $user);
         $payer = $ledger->partyFor($actor);
-        $payee = $ledger->partyFor((int) $mine->first()->obligor_actor_id);
+        $payee = $ledger->partyFor($mine->isNotEmpty() ? (int) $mine->first()->obligor_actor_id : (int) $other->id);
         abort_if($payer === null || $payee === null, 422, (string) __('deals.errors.money_book_parties'));
 
         $key = 'deal-acct:'.substr(hash('sha256', $deal->uuid.':'.trim($token)), 0, 40);
@@ -317,6 +318,25 @@ class ManageDealMoney
         }
 
         return $transaction;
+    }
+
+    /**
+     * An Agreement with work rates has no duty until the first day is reported, yet an employer may pay an advance (or the
+     * worker ask for one) from day one. While the Deal has no paid work at all, either party may pay or ask the other.
+     * Returns the other party when that applies.
+     */
+    public function beforeAnyWork(Relationship $deal, Actor $actor): ?Actor
+    {
+        if ($this->owedWork($deal)->isNotEmpty() || ! $this->money->enabled($deal, collect())) {
+            return null;
+        }
+        $version = $deal->contracts()->latest('id')->first()?->activeVersionRecord();
+        $version?->loadMissing('parties.actor');
+        if ($version === null || ! $version->parties->contains(fn ($p) => (int) $p->actor_id === (int) $actor->id)) {
+            return null;
+        }
+
+        return $version->parties->map->actor->first(fn (Actor $a) => (int) $a->id !== (int) $actor->id);
     }
 
     /** @return Collection<int, Commitment> the Deal's work that falls under a payment rule */
