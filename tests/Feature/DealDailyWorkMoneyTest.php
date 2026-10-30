@@ -21,6 +21,7 @@ use App\Models\Bookkeeping\Transaction;
 use App\Models\Commitment;
 use App\Models\Contract;
 use App\Models\Fulfillment;
+use App\Models\Plan;
 use App\Models\Proposal;
 use App\Models\Relationship;
 use App\ProposalDecisionKind;
@@ -247,6 +248,30 @@ class DealDailyWorkMoneyTest extends TestCase
         $rates = Proposal::query()->latest('id')->firstOrFail()->versions()->latest('id')->firstOrFail()->terms_data['rates'];
         $this->assertSame(['Masonry', '300000', '650'], [$rates[0]['label'], $rates[0]['rate'], $rates[0]['estimate']]);
         $this->assertSame('150000', $rates[1]['rate']);
+    }
+
+    public function test_work_is_scheduled_from_the_deal_and_the_plan_is_linked_to_it_for_both_people(): void
+    {
+        [$alice, $bob, $deal, $task] = $this->masonry();
+        $date = now()->addDay()->format('Y-m-d');
+
+        Livewire::actingAs($bob->user)->test(WorkPanel::class, ['relationship' => $deal])
+            ->set('sched.'.$task->id.'.date', $date)->set('sched.'.$task->id.'.time', '08:00')->set('sched.'.$task->id.'.hours', '4')
+            ->set('sched.'.$task->id.'.repeat', 'daily')->set('sched.'.$task->id.'.times', '5')
+            ->call('schedule', $task->id)->assertHasNoErrors();
+
+        $plan = $task->fresh()->planBinding->plan;
+        $this->assertSame(5, $plan->occurrences()->count());
+        $this->assertSame('commitment', $plan->origin_type);
+        $this->assertSame($task->uuid, $plan->origin_uuid);
+        foreach ([$alice, $bob] as $who) {
+            Livewire::actingAs($who->user)->test(WorkPanel::class, ['relationship' => $deal])->assertSeeHtml('data-task-plan-link')->assertSeeHtml('data-cycle');
+        }
+
+        // Scheduling again is refused and never makes a second plan.
+        Livewire::actingAs($bob->user)->test(WorkPanel::class, ['relationship' => $deal])
+            ->set('sched.'.$task->id.'.date', $date)->call('schedule', $task->id)->assertHasErrors('work');
+        $this->assertSame(1, Plan::query()->count());
     }
 
     public function test_the_same_acceptance_submitted_twice_records_one_debt(): void

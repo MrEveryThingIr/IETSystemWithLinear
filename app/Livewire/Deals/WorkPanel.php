@@ -4,6 +4,7 @@ namespace App\Livewire\Deals;
 
 use App\Actions\Assets\CreateContextAsset;
 use App\Actions\Commitments\BindExistingPlan;
+use App\Actions\Commitments\CreateCommitmentPlan;
 use App\Actions\Deals\LogWorkDay;
 use App\Actions\Deals\ManageDealMoney;
 use App\Actions\Deals\ManageDealWork;
@@ -27,6 +28,7 @@ use App\Models\PlanOccurrence;
 use App\Models\Relationship;
 use App\Models\User;
 use App\PlanOccurrenceStatus;
+use App\PlanScheduleFrequency;
 use App\Support\CommitmentProgress;
 use App\Support\Deals\AgreementTerms;
 use App\Support\Deals\DealErrors;
@@ -356,6 +358,51 @@ class WorkPanel extends Component
             $plan = $bind->candidates($this->user(), $commitment)->firstWhere('uuid', $planUuid);
             abort_if($plan === null, 422, (string) __('deals.errors.generic'));
             $bind->execute($this->user(), $commitment, $plan);
+        });
+    }
+
+    /** @var array<int, array<string, string>> the schedule being written, per piece of work */
+    public array $sched = [];
+
+    /** Schedule a piece of work with the Planner without leaving the Deal: the plan is created already linked to it. */
+    public function schedule(int $commitmentId, CreateCommitmentPlan $create): void
+    {
+        $this->resetErrorBag('sched');
+        $s = $this->sched[$commitmentId] ?? [];
+        $date = trim((string) ($s['date'] ?? ''));
+        $time = trim((string) ($s['time'] ?? '')) ?: '09:00';
+        $hours = LocalizedNumber::digits(trim((string) ($s['hours'] ?? '')) ?: '8');
+        $times = (int) (LocalizedNumber::digits(trim((string) ($s['times'] ?? '')) ?: '1'));
+        $repeat = (string) ($s['repeat'] ?? 'once');
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1 || strtotime($date) === false) {
+            $this->addError('sched.'.$commitmentId.'.date', (string) __('deals.errors.work_start_invalid'));
+        }
+        if (preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $time) !== 1) {
+            $this->addError('sched.'.$commitmentId.'.time', (string) __('deals.errors.work_time_invalid'));
+        }
+        if (preg_match('/^\d{1,2}(\.\d)?$/', $hours) !== 1 || (float) $hours <= 0 || (float) $hours > 24) {
+            $this->addError('sched.'.$commitmentId.'.hours', (string) __('deals.errors.work_duration_invalid'));
+        }
+        if (! in_array($repeat, ['once', 'daily', 'weekly', 'monthly'], true) || $times < 1 || $times > 366) {
+            $this->addError('sched.'.$commitmentId.'.times', (string) __('deals.errors.work_cycles'));
+        }
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        $this->guarded(function () use ($create, $commitmentId, $date, $time, $hours, $times, $repeat): void {
+            $commitment = $this->commitments()->findOrFail($commitmentId);
+            abort_if($commitment->planBinding()->exists(), 422, (string) __('deals.errors.generic'));
+            $start = CarbonImmutable::parse($date);
+            $once = $repeat === 'once' || $times === 1;
+            [$frequency, $weekdays, $monthDay] = match (true) {
+                $once => [PlanScheduleFrequency::Once, [], null],
+                $repeat === 'weekly' => [PlanScheduleFrequency::Weekly, [$start->dayOfWeekIso], null],
+                $repeat === 'monthly' => [PlanScheduleFrequency::Monthly, [], $start->day],
+                default => [PlanScheduleFrequency::Daily, [], null],
+            };
+            $create->execute($commitment, $this->user(), $frequency, $date, $time, (int) round((float) $hours * 60), weekdays: $weekdays, occurrenceLimit: $once ? null : $times, monthDay: $monthDay, asDealParty: true);
+            unset($this->sched[$commitmentId]);
         });
     }
 

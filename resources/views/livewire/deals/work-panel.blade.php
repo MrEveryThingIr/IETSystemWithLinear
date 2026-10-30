@@ -45,7 +45,27 @@
                         <flux:button size="sm" wire:click="linkPlan({{ $c->id }}, $wire.text['plan-{{ $c->id }}'] || '')">{{ __('deals.work.link_plan') }}</flux:button>
                     </div>
                 @endif
-                @if (! $d['planned'] && $d['isObligor'] === false)<a class="text-xs underline" href="{{ route('planner.create') }}">{{ __('deals.work.plan_in_planner') }}</a>@endif
+                {{-- Schedule from here: the plan is created already linked to this work --}}
+                @if (! $d['planned'] && Gate::forUser($user)->allows('manageAsParty', $c))
+                    <details class="rounded-lg border border-zinc-200 p-2 dark:border-zinc-700" data-task-schedule>
+                        <summary class="cursor-pointer text-sm font-medium">{{ __('deals.work.schedule_title') }}</summary>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                            <x-app.calendar-date-input model="sched.{{ $c->id }}.date" :label="__('deals.work.schedule_date')" />
+                            <flux:input type="time" wire:model="sched.{{ $c->id }}.time" :label="__('deals.work.schedule_time')" />
+                            <flux:input inputmode="decimal" wire:model="sched.{{ $c->id }}.hours" placeholder="8" :label="__('deals.work.schedule_hours')" />
+                            <flux:select wire:model="sched.{{ $c->id }}.repeat" :label="__('deals.work.schedule_repeat')">
+                                @foreach (['once', 'daily', 'weekly', 'monthly'] as $r)<option value="{{ $r }}">{{ __('deals.work.repeat_'.$r) }}</option>@endforeach
+                            </flux:select>
+                            <flux:input inputmode="numeric" wire:model="sched.{{ $c->id }}.times" placeholder="1" :label="__('deals.work.schedule_times')" />
+                        </div>
+                        @foreach (['date', 'time', 'hours', 'times'] as $f)@error('sched.'.$c->id.'.'.$f)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror @endforeach
+                        <flux:button class="mt-2" size="sm" variant="primary" wire:click="schedule({{ $c->id }})" wire:loading.attr="disabled" wire:target="schedule">{{ __('deals.work.schedule_save') }}</flux:button>
+                        <p class="mt-1 text-xs text-zinc-500">{{ __('deals.work.schedule_hint') }}</p>
+                    </details>
+                @endif
+                @if ($d['planned'] && $c->planBinding?->plan && Gate::forUser($user)->allows('view', $c->planBinding->plan))
+                    <a class="text-xs underline" href="{{ route('planner.show', $c->planBinding->plan) }}" data-task-plan-link>{{ __('deals.work.open_plan') }}</a>
+                @endif
 
                 {{-- Planned days (an optional schedule): one row per day --}}
                 @if ($d['planned'])

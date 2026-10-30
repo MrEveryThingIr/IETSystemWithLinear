@@ -184,8 +184,6 @@ class DealConstructionScenarioTest extends TestCase
 
         // Mid-week: 30 square metres earned (10 + 20), 4,000,000 reported and waiting; nothing due before the week ends.
         [$items, $sum] = $this->snapshot($deal);
-        fwrite(STDERR, 'DBG '.json_encode(Fulfillment::query()->get(['id', 'quantity', 'status'])->toArray()).' rv='.app(DealMoney::class)->reportedValue($deal->fresh()).'
-');
         $this->assertSame(15000000, $sum['earned']);
         $this->assertSame(4000000, $sum['reported_value'], 'work awaiting inspection is shown, but it is not owed');
         $this->assertSame(1000000, $sum['estimated'], 'rough daily progress (40) less what went to inspection (10 + 20 + 8) is a guide only');
