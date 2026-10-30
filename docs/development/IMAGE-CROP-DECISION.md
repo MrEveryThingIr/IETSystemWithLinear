@@ -27,3 +27,6 @@ The cropped picture **becomes the uploaded original** of the Content asset. The 
 - `npm run test:js` — crop geometry: no upscaling, long-edge cap, portrait, clamping, handles, formats, names.
 - `tests/Feature/ImageCropUploadTest.php` — uncropped upload, cropped portrait dimensions and caption, no derivative, double attach, published reader, dialog markup.
 - Not covered by automation: real pointer/touch dragging and EXIF decoding in a browser. These need a manual check on a phone and a desktop.
+
+## Camera capture (mobile)
+On touch devices the media dialog also shows "Take a photo" and "Record a video" (`<input capture="environment">`, shown only for `pointer: coarse` devices; desktop browsers ignore it). The camera result is handed to the same `choose()` handler as a gallery file: a photo gets the preview and optional crop, a video uses the resumable upload. No separate pipeline. Whether the phone opens its camera app or a chooser is up to the browser/OS; this needs a manual check on iOS Safari and Android Chrome.

@@ -131,4 +131,15 @@ class ImageCropUploadTest extends TestCase
             ->assertSeeHtml('data-image-preview')->assertSeeHtml('data-crop-start')->assertSeeHtml('data-crop-apply')
             ->assertSeeHtml('data-use-image')->assertSeeHtml('data-crop-handle="se"')->assertSeeHtml('data-upload-input');
     }
+    public function test_phones_can_take_a_photo_or_record_a_video_straight_from_the_camera_in_the_same_dialog(): void
+    {
+        [$actor, $context, $content] = $this->lesson();
+        $open = fn (string $kind) => Livewire::actingAs($actor->user)->test(ContentStudio::class, ['context' => $context, 'content' => $content])->call('openMediaDialog', $kind);
+
+        // Both camera inputs feed the very same handler as the gallery picker, so previews, crop and resumable upload apply.
+        $open('image')->assertSeeHtml('data-capture-photo')->assertSeeHtml('capture="environment"')->assertDontSeeHtml('data-capture-video');
+        $open('video')->assertSeeHtml('data-capture-video')->assertDontSeeHtml('data-capture-photo');
+        $open('audio')->assertDontSeeHtml('data-camera-capture');
+        $open('')->assertSeeHtml('data-capture-photo')->assertSeeHtml('data-capture-video')->assertSeeHtml('data-upload-input');
+    }
 }

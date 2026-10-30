@@ -84,6 +84,8 @@ return [
         'remove' => 'Remove',
         'retry' => 'Retry upload',
         'select_first' => 'Select a file',
+        'take_photo' => 'Take a photo',
+        'record_video' => 'Record a video',
         'crop' => 'Crop / edit image',
         'crop_apply' => 'Apply crop',
         'crop_cancel' => 'Cancel',
