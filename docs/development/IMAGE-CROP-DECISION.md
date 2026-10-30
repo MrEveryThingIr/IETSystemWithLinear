@@ -30,3 +30,12 @@ The cropped picture **becomes the uploaded original** of the Content asset. The 
 
 ## Camera capture (mobile)
 On touch devices the media dialog also shows "Take a photo" and "Record a video" (`<input capture="environment">`, shown only for `pointer: coarse` devices; desktop browsers ignore it). The camera result is handed to the same `choose()` handler as a gallery file: a photo gets the preview and optional crop, a video uses the resumable upload. No separate pipeline. Whether the phone opens its camera app or a chooser is up to the browser/OS; this needs a manual check on iOS Safari and Android Chrome.
+
+## Per-item actions and responses (placement-level)
+- **Vocabulary:** Asset = the uploaded file. Placement = one occurrence of it in this Content (its revision-asset row, referenced by exactly one block). Response = an ordinary annotation anchored to that block. Nothing here is new storage.
+- **Reused:** the existing section semantics (`exercise`/`question` roles make a block answerable), the existing annotation + anchor model, the existing ··· `annotation-target-menu`, and the existing Studio role/move/remove controls. The server rule is unchanged: answers anchor to an answerable **block**.
+- **Menu target:** for an answerable media item the reader's ··· menu (and its Answer button) targets that item's block, so an answer belongs to exactly that image. For other media it targets the placement (asset anchor) as before. A reused file in two placements stays two items, because each has its own block.
+- **Caption vs answer:** the caption is block data owned by the author; an answer is an annotation owned by the reader. They never share a field.
+- **Human reference:** "Image 1…n" (per media type, in reading order) is only a label for people (menu title, answer label, composer header). The identity is the block and placement UUID.
+- **Touch:** the menu is always visible on `hover: none` devices and on narrow screens; pointer devices reveal it on hover/focus. The panel is the existing bottom sheet on phones.
+- **Several images at once:** the media dialog accepts a multi-selection of images; each becomes its own placement and block, in the chosen order. "Readers can answer each item separately" marks each new item as an exercise section.

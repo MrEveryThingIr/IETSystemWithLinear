@@ -98,6 +98,7 @@ document.addEventListener('alpine:init', () => {
         session: null,
         cancelled: false,
         originalFile: null,
+        files: [],
         previewUrl: null,
         canCropImage: false,
         cropped: false,
@@ -111,8 +112,13 @@ document.addEventListener('alpine:init', () => {
         },
 
         choose(event) {
-            const file = event.target.files[0];
+            const chosen = Array.from(event.target.files || []);
             event.target.value = '';
+            if (chosen.length > 1) {
+                this.chooseMany(chosen);
+                return;
+            }
+            const file = chosen[0];
             if (!file) return;
 
             this.file = file;
@@ -135,6 +141,38 @@ document.addEventListener('alpine:init', () => {
 
             this.mode = resumable ? 'resumable' : 'direct';
             resumable ? this.uploadResumable() : this.uploadDirect();
+        },
+
+        /** Several images in one selection: each is uploaded and then becomes its own placement and block. */
+        chooseMany(files) {
+            this.message = '';
+            this.note = '';
+            this.file = { name: config.labels.imagesCount.replace(':count', files.length), size: files.reduce((sum, f) => sum + f.size, 0) };
+            const tooBig = files.find((f) => kindOf(f) === 'image' && f.size > config.limits.image);
+            if (!files.every((f) => kindOf(f) === 'image')) {
+                this.state = 'too_large';
+                this.message = config.labels.manyImagesOnly;
+                return;
+            }
+            if (tooBig) {
+                this.state = 'too_large';
+                this.message = config.labels.tooLarge.replace(':size', formatBytes(tooBig.size)).replace(':limit', formatBytes(config.limits.image));
+                return;
+            }
+            this.mode = 'batch';
+            this.files = files;
+            this.uploadBatch();
+        },
+
+        uploadBatch() {
+            this.state = 'uploading';
+            this.progress = 0;
+            this.$wire.uploadMultiple('assetUploads', this.files,
+                () => { this.state = 'ready'; },
+                () => { this.state = 'failed'; this.message = config.labels.failed; },
+                (event) => { this.progress = event.detail.progress; },
+                () => { this.state = 'idle'; this.file = null; this.files = []; },
+            );
         },
 
         // ---- Images: preview, optional crop, then the normal direct upload -----------------------------------------
@@ -271,6 +309,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         retry() {
+            if (this.mode === 'batch') return this.uploadBatch();
             this.mode === 'resumable' ? this.uploadResumable() : this.uploadDirect();
         },
 
@@ -398,7 +437,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         async cancel() {
-            if (this.mode === 'direct') {
+            if (this.mode === 'batch') {
+                this.$wire.cancelUpload('assetUploads');
+            } else if (this.mode === 'direct') {
                 this.$wire.cancelUpload('assetUpload');
             } else {
                 this.cancelled = true;
@@ -416,7 +457,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         clear() {
-            if (this.state === 'ready') this.$wire.set('assetUpload', null);
+            if (this.state === 'ready') {
+                this.$wire.set('assetUpload', null);
+                this.$wire.set('assetUploads', []);
+            }
+            this.files = [];
             this.releasePreview();
             this.state = 'idle';
             this.file = null;
