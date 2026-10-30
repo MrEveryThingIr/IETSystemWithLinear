@@ -20,7 +20,13 @@ final class PlanKinds
         'focus' => ['icon' => 'bolt', 'color' => '#ef4444', 'duration' => 90, 'frequency' => 'once', 'reminder' => 5],
         'reminder' => ['icon' => 'bell', 'color' => '#ec4899', 'duration' => 5, 'frequency' => 'once', 'reminder' => 0],
         'due' => ['icon' => 'banknotes', 'color' => '#0ea5e9', 'duration' => 15, 'frequency' => 'once', 'reminder' => 1440],
+        // Not a timing at all: something to remember for later. It has no schedule rule, no occurrence and no reminder
+        // (the numbers here are never used) until the person schedules it.
+        'later' => ['icon' => 'bookmark', 'color' => '#64748b', 'duration' => 30, 'frequency' => 'once', 'reminder' => 0],
     ];
+
+    /** The kind of a plan that has not been scheduled ("For later"). */
+    public const LATER = 'later';
 
     /**
      * Kinds that are about not forgetting: they start as "important" with

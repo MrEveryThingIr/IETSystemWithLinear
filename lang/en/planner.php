@@ -307,7 +307,24 @@ return [
             'reminders' => 'When to remind you. Choose as many as you like.',
         ],
     ],
+    'later' => [
+        'title' => 'For later',
+        'help' => 'Things to remember. Nothing here has a date, a reminder or a place in your calendar.',
+        'not_scheduled' => 'Not scheduled',
+        'schedule' => 'Schedule',
+        'edit' => 'Edit',
+        'save' => 'Save',
+        'notes' => 'Notes',
+        'title_label' => 'What',
+        'no_date' => 'No date or time. You can schedule it whenever you want.',
+        'already_scheduled' => 'This item already has a schedule.',
+    ],
     'kinds' => [
+        'later' => [
+            'name' => 'For later',
+            'help' => 'Remember it now, decide when later',
+            'example' => 'Improve Content media handling',
+        ],
         'event' => [
             'name' => 'Event',
             'help' => 'An appointment at a set time',
