@@ -29,6 +29,7 @@
         labels: {
             tooLarge: @js(__('studio_ui.upload.too_large', ['size' => ':size', 'limit' => ':limit'])),
             failed: @js(__('studio_ui.upload.failed')),
+            tooLargeImage: @js(__('studio_ui.upload.too_large_image', ['size' => ':size', 'limit' => ':limit'])),
             failedResumable: @js(__('studio_ui.upload.failed_resumable')),
             resuming: @js(__('studio_ui.upload.resuming')),
         },
@@ -72,6 +73,36 @@
         <span class="text-sm font-medium" x-text="state === 'failed' ? @js(__('studio_ui.upload.choose_again')) : @js(__('studio_ui.upload.choose'))"></span>
         <input type="file" class="sr-only" accept="{{ $accept }}" x-on:change="choose($event)" data-upload-input />
     </label>
+
+    {{-- Image preview: crop is optional; the cropped picture, not the full photo, is what gets uploaded --}}
+    <div x-show="state === 'preview'" x-cloak class="space-y-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" data-image-preview>
+        <div x-ref="stage" class="relative mx-auto block w-fit max-w-full select-none overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="touch-action: none" x-on:pointermove="dragMove($event)" x-on:pointerup="dragEnd()" x-on:pointercancel="dragEnd()">
+            <img :src="previewUrl" alt="" class="block max-h-80 max-w-full" draggable="false" data-preview-image />
+            <div x-show="cropping" class="absolute border-2 border-white" :style="cropStyle() + ';box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move;touch-action:none'" x-on:pointerdown="dragStart($event, 'move')" data-crop-box>
+                @foreach (['nw' => 'left-0 top-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize', 'ne' => 'right-0 top-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize', 'sw' => 'left-0 bottom-0 -translate-x-1/2 translate-y-1/2 cursor-nesw-resize', 'se' => 'right-0 bottom-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize'] as $handle => $position)
+                    <span class="absolute size-6 rounded-full border-2 border-white bg-zinc-900/80 {{ $position }}" style="touch-action:none" x-on:pointerdown.stop="dragStart($event, '{{ $handle }}')" data-crop-handle="{{ $handle }}"></span>
+                @endforeach
+            </div>
+        </div>
+        <p x-show="cropping" class="text-center text-xs text-zinc-500">{{ __('studio_ui.upload.crop_hint') }}</p>
+        <p x-show="cropped && dimensions" class="text-center text-xs text-zinc-500" x-text="`{{ __('studio_ui.upload.crop_result') }} ${dimensions}`"></p>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+            <template x-if="canCropImage && !cropping">
+                <flux:button type="button" size="sm" x-on:click="startCrop()" data-crop-start>{{ __('studio_ui.upload.crop') }}</flux:button>
+            </template>
+            <template x-if="cropping">
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    <flux:button type="button" size="sm" variant="primary" x-on:click="applyCrop()" data-crop-apply>{{ __('studio_ui.upload.crop_apply') }}</flux:button>
+                    <flux:button type="button" size="sm" variant="ghost" x-on:click="cancelCrop()">{{ __('studio_ui.upload.crop_cancel') }}</flux:button>
+                </div>
+            </template>
+            <flux:button type="button" size="sm" variant="ghost" x-show="cropped && !cropping" x-on:click="undoCrop()" data-crop-undo>{{ __('studio_ui.upload.crop_undo') }}</flux:button>
+        </div>
+        <div class="flex items-center justify-between gap-2" x-show="!cropping">
+            <button type="button" x-on:click="clear()" class="text-xs text-zinc-500 underline-offset-4 hover:underline">{{ __('studio_ui.upload.remove') }}</button>
+            <flux:button type="button" variant="primary" x-on:click="useImage()" data-use-image>{{ __('studio_ui.upload.use_image') }}</flux:button>
+        </div>
+    </div>
 
     <template x-if="file && state !== 'idle'">
         <div class="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" data-upload-file>

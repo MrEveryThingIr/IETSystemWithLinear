@@ -4,6 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
+        "test:js": "node --test resources/js/tests/image-crop.test.mjs",
         "dev": "vite"
     },
     "engines": {
