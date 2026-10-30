@@ -131,6 +131,7 @@ class ImageCropUploadTest extends TestCase
             ->assertSeeHtml('data-image-preview')->assertSeeHtml('data-crop-start')->assertSeeHtml('data-crop-apply')
             ->assertSeeHtml('data-use-image')->assertSeeHtml('data-crop-handle="se"')->assertSeeHtml('data-upload-input');
     }
+
     public function test_phones_can_take_a_photo_or_record_a_video_straight_from_the_camera_in_the_same_dialog(): void
     {
         [$actor, $context, $content] = $this->lesson();
