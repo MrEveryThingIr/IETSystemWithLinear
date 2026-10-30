@@ -1,4 +1,5 @@
 @php
+    $messagingLayout = request()->routeIs('messages.index');
     $pageTitle = $title ?? trim($__env->yieldContent('title', __('ui.dashboard.title')));
     $contentStudioRoute = request()->routeIs(
         'groups.spaces.contents.studio',
@@ -15,7 +16,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ \App\Support\Localization::direction() }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0{{ $messagingLayout ? ', viewport-fit=cover, interactive-widget=resizes-content' : '' }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         @auth
             <meta name="authenticated-user-id" content="{{ auth()->id() }}">
@@ -25,11 +26,12 @@
         @livewireStyles
         @fluxAppearance
     </head>
-    <body class="min-h-dvh bg-zinc-50 text-zinc-950 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    <body @class(['bg-zinc-50 text-zinc-950 antialiased dark:bg-zinc-950 dark:text-zinc-100', 'min-h-dvh' => ! $messagingLayout, 'flex h-dvh min-h-0 flex-col' => $messagingLayout])
+          @if ($messagingLayout) style="padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right)" data-messaging-layout @endif>
         @persist('time-bar')
-            <x-app.time-bar />
+            <x-app.time-bar class="shrink-0" />
         @endpersist
-        <x-app.shell :title="$pageTitle">
+        <x-app.shell :title="$pageTitle" :viewport="$messagingLayout">
             @if ($contentStudioRoute)
                 <nav class="mb-5 flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-950/50" :aria-label="__('studio.navigation_label')">
                     <flux:button :href="route('groups.spaces.contents.studio', $contentStudioParams)" size="sm" :variant="request()->routeIs('groups.spaces.contents.studio') ? 'primary' : 'ghost'">

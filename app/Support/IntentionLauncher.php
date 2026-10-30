@@ -31,6 +31,29 @@ final class IntentionLauncher
         'profile.*' => ['interest', 'ability'],
     ];
 
+    /** Focused composers already provide primary actions. Keep this route policy in one place. */
+    private const FOCUSED_ROUTES = [
+        'messages.*', 'contexts.conversation',
+        'intents.compose*', 'intents.create*', 'planner.create', 'planner.edit', 'planner.habits.create',
+        'relationships.create', 'proposals.create', 'contracts.create', 'commitments.create',
+        'contexts.contents.studio', 'contexts.contents.ai', 'contexts.contents.blocks',
+        'contexts.contents.appearance', 'contexts.contents.outline',
+        'groups.spaces.contents.studio', 'groups.spaces.contents.blocks',
+        'groups.spaces.contents.appearance', 'groups.spaces.contents.outline', 'groups.spaces.contents.structure',
+    ];
+
+    public function visibleFor(?User $user, ?string $routeName = null): bool
+    {
+        $routeName ??= request()->route()?->getName();
+        foreach (self::FOCUSED_ROUTES as $pattern) {
+            if ($routeName !== null && str($routeName)->is($pattern)) {
+                return false;
+            }
+        }
+
+        return $this->choicesFor($user, $routeName) !== [];
+    }
+
     public function __construct(private readonly FeatureSurfaceAccess $access) {}
 
     /** @return list<array{key: string, label: string, hint: string, icon: string, href: string}> */

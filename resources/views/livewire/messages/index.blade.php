@@ -1,5 +1,5 @@
-<div class="-mx-2 sm:mx-0" data-messages>
-    <div class="grid h-[calc(100dvh-7.5rem)] min-h-[26rem] overflow-hidden rounded-none border-y border-zinc-200 bg-white sm:rounded-xl sm:border dark:border-zinc-700 dark:bg-zinc-900 lg:h-[calc(100dvh-8.5rem)] lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+<div class="flex min-h-0 min-w-0 flex-1 flex-col" data-messages>
+    <div class="grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)] overflow-hidden rounded-none border-y border-zinc-200 bg-white sm:rounded-xl sm:border dark:border-zinc-700 dark:bg-zinc-900 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         {{-- Conversation list --}}
         <aside @class(['min-h-0 min-w-0 flex-col border-zinc-200 lg:flex lg:border-e dark:border-zinc-700', 'hidden' => $conversation, 'flex' => ! $conversation]) wire:poll.20s data-inbox>
             <div class="space-y-2 border-b border-zinc-200 p-3 dark:border-zinc-700">
