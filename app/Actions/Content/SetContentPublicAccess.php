@@ -2,6 +2,7 @@
 
 namespace App\Actions\Content;
 
+use App\ContextKind;
 use App\Models\Actor;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentLifecycleEvent;
@@ -28,7 +29,10 @@ class SetContentPublicAccess
 
         return DB::transaction(function () use ($content, $user, $access): SpaceContent {
             $current = SpaceContent::query()->lockForUpdate()->findOrFail($content->id);
-            Gate::forUser($user)->authorize($access === SpaceContent::ACCESS_PUBLIC ? 'share' : 'manageSharing', $current);
+            Gate::forUser($user)->authorize($access === SpaceContent::ACCESS_PRIVATE ? 'manageSharing' : 'share', $current);
+            if ($access === SpaceContent::ACCESS_CONTACTS && $current->context->kind !== ContextKind::Personal) {
+                throw ValidationException::withMessages(['publicAccess' => __('public_content.errors.contacts_personal_only')]);
+            }
 
             if ($current->public_access === $access) {
                 return $current;
@@ -46,12 +50,18 @@ class SetContentPublicAccess
             SpaceContentLifecycleEvent::query()->create([
                 'space_content_id' => $current->id,
                 'actor_id' => $actor->id,
-                'event_type' => $access === SpaceContent::ACCESS_PUBLIC ? 'opened_to_public' : 'closed_to_public',
+                'event_type' => match ($access) {
+                    SpaceContent::ACCESS_PUBLIC => 'opened_to_public',
+                    SpaceContent::ACCESS_CONTACTS => 'opened_to_contacts',
+                    default => 'closed_to_public',
+                },
                 'from_status' => $from,
                 'to_status' => $access,
-                'reason' => $access === SpaceContent::ACCESS_PUBLIC
-                    ? 'Author made the published edition readable by anyone.'
-                    : 'Public access closed.',
+                'reason' => match ($access) {
+                    SpaceContent::ACCESS_PUBLIC => 'Author made the published edition readable by anyone.',
+                    SpaceContent::ACCESS_CONTACTS => 'Author made the published edition readable by accepted contacts.',
+                    default => 'Public access closed.',
+                },
                 'metadata' => ['active_revision_id' => $current->active_revision_id],
             ]);
 

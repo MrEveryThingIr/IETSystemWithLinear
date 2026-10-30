@@ -124,7 +124,7 @@
                     </div>
                     <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('deals.agreement_help') }}</p>
                     @if (! empty($cur['summary']))<p class="text-sm" dir="auto">{{ $cur['summary'] }}</p>@endif
-                    <x-deals.document :sections="$curDoc" :parties="$partyNames" />
+                    <x-deals.document :sections="$curDoc" :parties="$partyNames" :terms="$agreementTerms ?? $terms" />
                     <ul class="space-y-1 border-t border-zinc-200 pt-3 text-xs dark:border-zinc-700" data-agreement-signers>
                         @foreach (($activeVersion ?? $latestContract->versions->sortBy('version')->first())->parties as $cvp)
                             <li wire:key="sig-{{ $cvp->id }}" class="flex flex-wrap justify-between gap-2">
@@ -171,7 +171,7 @@
 
                     @if ($terms)
                         @if (! empty($terms['summary']))<p class="text-sm" dir="auto">{{ $terms['summary'] }}</p>@endif
-                        <x-deals.document :sections="$doc" :parties="$partyNames" />
+                        <x-deals.document :sections="$doc" :parties="$partyNames" :terms="$terms" />
                     @else
                         <div class="whitespace-pre-wrap break-words rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900" dir="auto">{{ $version->termsRevision->payload['terms'] ?? '' }}</div>
                     @endif
@@ -295,12 +295,10 @@
             <livewire:deals.work-panel :relationship="$relationship" :key="'work-'.$relationship->id" />
         </div>
 
-        {{-- Money: the connection point for bookkeeping and settlement (M5). No balances exist here. --}}
+        {{-- Money: asking for, reporting and confirming payment, recorded in the Deal's shared book (M5). --}}
         <div x-show="tab === 'money'" x-cloak data-panel="money" class="space-y-3">
-            <flux:card class="space-y-2">
-                <flux:heading>{{ __('deals.tabs.money') }}</flux:heading>
-                <p class="text-sm text-zinc-500">{{ __('deals.money_not_yet') }}</p>
-                @if ($terms && ($terms['price'] ?? $terms['payment'] ?? false))
+            @if ($terms && ($terms['price'] ?? $terms['payment'] ?? false))
+                <flux:card class="space-y-1">
                     <dl class="space-y-1 text-sm" data-money-hooks>
                         @foreach (['price', 'payment'] as $id)
                             @php($sec = collect($doc)->firstWhere('id', $id))
@@ -308,8 +306,13 @@
                         @endforeach
                     </dl>
                     <p class="text-xs text-zinc-500">{{ $agreed ? __('deals.money_agreed') : __('deals.money_proposed') }}</p>
-                @endif
-            </flux:card>
+                </flux:card>
+            @endif
+            @if ($agreed)
+                <livewire:deals.money-panel :relationship="$relationship" :key="'money-'.$relationship->id" />
+            @else
+                <flux:card><p class="text-sm text-zinc-500">{{ __('deals.money_not_yet') }}</p></flux:card>
+            @endif
         </div>
     </div>
 

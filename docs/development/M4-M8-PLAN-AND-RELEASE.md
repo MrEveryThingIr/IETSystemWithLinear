@@ -5,8 +5,11 @@ Based on the code in `feat/m3-deals-terms` (real inventory, not assumptions). De
 ## What already exists (so M4/M5 are integration, not new domains)
 Commitments, Planner plans/occurrences/evidence, Fulfillment submit/review/dispute, Bookkeeping ledgers with shared entries, counterpart decision and disputes, `ProposeWorkBookkeepingEntry`, and the historical `ContractServiceTerm` workflow. What is **missing** is the connection from the *structured Agreement* to them, one Deal-workspace home for it, and scenario tests across the whole chain. M3 intentionally removed the manual "new commitment" control, so a release of M1-M3 alone would lose the way to start work from a Deal. M4 minimum is therefore required before any release.
 
+## M5 status
+Engineering-complete on `feat/m5-deal-money` (see [M5-MONEY-HANDOFF.md](M5-MONEY-HANDOFF.md)); awaiting owner acceptance. M6 has not started.
+
 ## M4 status
-Engineering-complete on `feat/m4-agreement-work` (see [M4-WORK-HANDOFF.md](M4-WORK-HANDOFF.md)): set up, receiver confirmation, cycles, reports, decisions, corrections, disputes, amendment protection, all in the Work tab. Open before acceptance: browser walkthrough (RTL/mobile/dark), evidence picker, prefilling the schedule from the Agreement's typed terms, a notification when a proposal needs confirmation, principal-keyed (not Actor-keyed) commitments. M5 has not started.
+Engineering-complete on `feat/m4-agreement-work` (see [M4-WORK-HANDOFF.md](M4-WORK-HANDOFF.md)): set up, receiver confirmation, cycles, reports, decisions, corrections, disputes, amendment protection, all in the Work tab. Open before acceptance: browser walkthrough (RTL/mobile/dark), evidence picker, prefilling the schedule from the Agreement's typed terms, a notification when a proposal needs confirmation, principal-keyed (not Actor-keyed) commitments. Merged via PR #89 (`8d7d838c`).
 
 ## M4 (Work) in four small checkpoints (as designed; delivered together as one slice)
 1. **M4-a Set up the work.** Work tab action "Plan the work": preview derived commitments/cycles from the accepted version (`quantity`, `time`, `recurrence`, chosen duties), then create Commitment + Plan through the existing actions; idempotent per `(version, term, cycle)`. Tests: single exchange, repair, recurring attendance, non-monetary, Business manager.

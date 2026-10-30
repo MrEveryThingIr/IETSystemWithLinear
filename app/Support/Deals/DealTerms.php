@@ -3,6 +3,7 @@
 namespace App\Support\Deals;
 
 use App\Support\Market\IntentDetailCatalog;
+use App\Support\Market\MarketMoney;
 use DateTimeZone;
 use Exception;
 
@@ -14,13 +15,16 @@ final class DealTerms
 {
     public const SCHEMA = 1;
 
-    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes', 'title', 'summary', 'clauses', 'payment', 'completion', 'order'];
+    private const KEYS = ['schema', 'origin', 'price', 'place', 'time', 'quantity', 'route', 'category', 'fields', 'recurrence', 'effective', 'notes', 'title', 'summary', 'clauses', 'payment', 'completion', 'order', 'rates'];
 
     /** Narrative clause kinds of the small clause library. Narrative clauses are text: they never become automation. */
-    public const CLAUSE_KINDS = ['scope', 'deliverables', 'duties', 'evidence', 'cancellation', 'disputes', 'confidentiality', 'special', 'custom'];
+    public const CLAUSE_KINDS = ['scope', 'deliverables', 'duties', 'evidence', 'cancellation', 'disputes', 'confidentiality', 'special', 'custom', 'materials'];
+
+    /** Clauses that describe what someone must do or provide: each can name the party responsible. */
+    public const RESPONSIBLE_KINDS = ['duties', 'deliverables', 'evidence', 'materials'];
 
     /** Typed sections a document may list in its order. */
-    public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes'];
+    public const SECTION_IDS = ['price', 'payment', 'time', 'place', 'quantity', 'route', 'recurrence', 'completion', 'fields', 'notes', 'rates'];
 
     /**
      * Currencies a NEW Agreement may be written in. Toman only for now; later exchange and valuation features widen this list.
@@ -29,7 +33,7 @@ final class DealTerms
     public const SUPPORTED_CURRENCIES = ['IRT'];
 
     /** Units a price is quoted per. A basis outside this list is a custom text and is kept as written. */
-    public const PAYMENT_BASES = ['total', 'item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer'];
+    public const PAYMENT_BASES = ['total', 'item', 'hour', 'day', 'week', 'month', 'project', 'milestone', 'session', 'kilometer', 'square_metre', 'metre', 'cubic_metre', 'kilogram'];
 
     public const PAYMENT_MODES = ['none', 'on_acceptance', 'after_confirmed_delivery', 'per_period'];
 
@@ -97,6 +101,27 @@ final class DealTerms
             $out['quantity'] = ['value' => self::decimal($quantity['value'] ?? null, 'quantity'), 'unit' => self::text($quantity['unit'] ?? null, 40, 'quantity unit')];
         }
 
+        if (isset($terms['rates'])) {
+            abort_unless(is_array($terms['rates']) && array_is_list($terms['rates']) && count($terms['rates']) <= 30, 422, 'Deal Terms rates must be a list of at most 30.');
+            $rates = [];
+            foreach ($terms['rates'] as $rate) {
+                abort_unless(is_array($rate), 422, 'Deal Terms rate is invalid.');
+                $label = self::text($rate['label'] ?? null, 120, 'rate label');
+                $unit = self::text($rate['unit'] ?? null, 40, 'rate unit');
+                $amount = self::decimal($rate['rate'] ?? null, 'rate');
+                if ($label === null && $unit === null && $amount === null) {
+                    continue;
+                }
+                abort_if($label === null || $unit === null || $amount === null || (float) $amount <= 0, 422, 'Deal Terms rate needs a name, a unit and a rate.');
+                $key = self::text($rate['key'] ?? null, 60, 'rate key');
+                abort_if($key === null || preg_match('/^[A-Za-z0-9_-]+$/', $key) !== 1 || isset($rates[$key]), 422, 'Deal Terms rate key is invalid or repeated.');
+                $rates[$key] = array_filter(['key' => $key, 'label' => $label, 'unit' => $unit, 'rate' => $amount, 'estimate' => self::decimal($rate['estimate'] ?? null, 'rate estimate')], fn ($v) => $v !== null);
+            }
+            if ($rates !== []) {
+                $out['rates'] = array_values($rates);
+            }
+        }
+
         if ($route = self::section($terms, 'route', ['from', 'to'])) {
             $out['route'] = ['from' => self::text($route['from'] ?? null, 255, 'route start'), 'to' => self::text($route['to'] ?? null, 255, 'route end')];
         }
@@ -154,7 +179,9 @@ final class DealTerms
                 if ($title === null && $text === null) {
                     continue;
                 }
-                $clauses[$key] = array_filter(['key' => $key, 'kind' => $kind, 'title' => $title, 'text' => $text], fn ($v) => $v !== null);
+                $responsible = self::text($clause['responsible'] ?? null, 40, 'clause party');
+                abort_if($responsible !== null && preg_match('/^(actor|business|group):\d+$/', $responsible) !== 1, 422, 'Deal Terms clause party is invalid.');
+                $clauses[$key] = array_filter(['key' => $key, 'kind' => $kind, 'title' => $title, 'text' => $text, 'responsible' => in_array($kind, self::RESPONSIBLE_KINDS, true) ? $responsible : null], fn ($v) => $v !== null);
             }
             $out['clauses'] = array_values($clauses);
         }
@@ -229,8 +256,7 @@ final class DealTerms
         };
 
         $price = $terms['price'] ?? [];
-        $priceText = $range($price['min'] ?? null, $price['max'] ?? null);
-        $priceText = $priceText === null ? null : trim($priceText.' '.($price['currency'] ?? '').(isset($price['basis']) ? ' / '.$price['basis'] : ''));
+        $priceText = isset($price['min']) || isset($price['max']) ? self::priceLabel($price) : null;
         $time = $terms['time'] ?? [];
         $quantity = $terms['quantity'] ?? [];
         $route = $terms['route'] ?? [];
@@ -267,6 +293,24 @@ final class DealTerms
         $lines[] = $line('notes', $terms['notes'] ?? null);
 
         return implode("\n", array_filter($lines, fn (?string $l): bool => $l !== null));
+    }
+
+    /**
+     * A price as people read it: whole Toman with separators and the unit ("3,000,000 Toman / square metre"); a price an
+     * older Agreement wrote in another currency is shown exactly as written, never converted.
+     *
+     * @param  array{min?: ?string, max?: ?string, currency?: ?string, basis?: ?string}  $price
+     */
+    public static function priceLabel(array $price): string
+    {
+        $show = fn (?string $amount): ?string => $amount === null || $amount === '' ? null
+            : (strtoupper((string) ($price['currency'] ?? '')) === 'IRT' ? MarketMoney::format($amount) : trim($amount.' '.($price['currency'] ?? '')));
+        $min = $show($price['min'] ?? null);
+        $max = $show($price['max'] ?? null);
+        $amount = $min !== null && $max !== null && $min !== $max ? $min.' – '.$max : ($min ?? $max);
+        $basis = self::basisLabel($price['basis'] ?? null);
+
+        return trim(($amount ?? '').($basis !== null ? ' / '.$basis : ''));
     }
 
     /** The unit a price is quoted per, in words: a known unit is translated, a custom one is shown as written. */

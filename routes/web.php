@@ -12,6 +12,7 @@ use App\Http\Controllers\BookkeepingEvidenceController;
 use App\Http\Controllers\ContentEvidenceReferenceController;
 use App\Http\Controllers\ContentRevisionController;
 use App\Http\Controllers\ContextConversationAssetController;
+use App\Http\Controllers\DealAssetController;
 use App\Http\Controllers\Deals\AgreementPrintController;
 use App\Http\Controllers\ExperienceHubController;
 use App\Http\Controllers\GroupInvitationController;
@@ -258,6 +259,7 @@ Route::middleware(['auth', 'account.active', 'verified'])->group(function (): vo
     Route::get('/admissions/{admission}/timeline', [AdmissionContextCollaborationController::class, 'timeline'])->name('admissions.context.timeline');
     Route::livewire('/contexts/{context}/conversation', ContextConversation::class)->can('view', 'context')->name('contexts.conversation');
     Route::livewire('/contexts/{context}/timeline', ContextTimeline::class)->can('view', 'context')->name('contexts.timeline');
+    Route::get('/deal-assets/{asset}', [DealAssetController::class, 'show'])->name('deals.assets.show');
     Route::get('/contexts/{context}/conversation/{message}/assets/{asset}', [ContextConversationAssetController::class, 'show'])
         ->name('contexts.conversation.assets.show');
     Route::get('/contexts/{context}/conversation/{message}/assets/{asset}/download', [ContextConversationAssetController::class, 'download'])

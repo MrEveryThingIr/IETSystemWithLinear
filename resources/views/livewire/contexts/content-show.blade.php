@@ -138,6 +138,7 @@
                 @endif
 
                 <h1 class="text-3xl sm:text-4xl {{ $headingClass }}" dir="auto">{{ $revision->title }}</h1>
+                <x-content.plan-links :content="$content" />
 
                 <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" style="color: var(--content-muted)">
                     <x-app.actor-identity :actor="$content->author" size="xs" />

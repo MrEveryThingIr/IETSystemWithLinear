@@ -123,6 +123,9 @@
                 @endif
             </flux:card>
 
+            <livewire:planner.related-content :plan="$plan" :key="'related-content-'.$plan->uuid" />
+            <livewire:content.create-content :key="'plan-content-create-'.$plan->uuid" />
+
             @if (! ($replaces && $plan->occurrences->isEmpty()))
             <flux:card class="space-y-4">
                 <flux:heading size="lg">{{ __('planner.plan.occurrences') }}</flux:heading>

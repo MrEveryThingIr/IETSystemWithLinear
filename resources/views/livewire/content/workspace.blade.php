@@ -35,7 +35,7 @@
     @endif
 
     <nav class="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1" aria-label="{{ __('content_workspace.views_label') }}">
-        @foreach (['all', 'drafts', 'published', 'shared', 'learning'] as $tab)
+        @foreach (['all', 'drafts', 'published', 'shared', 'learning', 'contacts'] as $tab)
             <button
                 type="button"
                 wire:click="setView('{{ $tab }}')"

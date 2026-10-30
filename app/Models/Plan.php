@@ -136,6 +136,12 @@ class Plan extends Model
         return $this->hasMany(PlanScheduleRule::class);
     }
 
+    /** @return HasMany<PlanContentLink, $this> */
+    public function contentLinks(): HasMany
+    {
+        return $this->hasMany(PlanContentLink::class);
+    }
+
     /** @return HasMany<PlanOccurrence, $this> */
     public function occurrences(): HasMany
     {

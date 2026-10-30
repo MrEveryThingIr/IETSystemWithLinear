@@ -11,4 +11,6 @@ enum CommitmentEventType: string
     case FulfillmentCorrected = 'fulfillment_corrected';
     case FulfillmentDisputed = 'fulfillment_disputed';
     case DisputeResolved = 'dispute_resolved';
+    case WorkLogged = 'work_logged';
+    case TaskMedia = 'task_media';
 }

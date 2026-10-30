@@ -10,6 +10,7 @@ use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
 use App\Services\Surfaces\FeatureSurfaceAccess;
+use App\Support\Content\ContactAudience;
 use App\Support\ContentKinds;
 use App\Support\ContentWorkspaceContexts;
 use App\Support\ContextPresenter;
@@ -34,7 +35,7 @@ class Workspace extends Component
     use ManagesContentLifecycle;
 
     /** @var list<string> */
-    public const VIEWS = ['all', 'drafts', 'published', 'shared', 'learning', 'archived'];
+    public const VIEWS = ['all', 'drafts', 'published', 'shared', 'learning', 'contacts', 'archived'];
 
     #[Url(as: 'view', except: 'all')]
     public string $view = 'all';
@@ -106,14 +107,15 @@ class Workspace extends Component
             ->pluck('id')
             ->flip();
 
+        $feed = $this->contactFeed($user, $actor);
         $counts = [];
         foreach (self::VIEWS as $view) {
-            $counts[$view] = $visible->filter(fn (SpaceContent $content): bool => $this->inView($content, $view, $actor, $editable))->count();
+            $counts[$view] = $view === 'contacts' ? $feed->count() : $visible->filter(fn (SpaceContent $content): bool => $this->inView($content, $view, $actor, $editable))->count();
         }
 
         $needle = mb_strtolower(trim($this->search));
-        $items = $visible
-            ->filter(fn (SpaceContent $content): bool => $this->inView($content, $this->view, $actor, $editable))
+        $items = ($this->view === 'contacts' ? $feed : $visible)
+            ->filter(fn (SpaceContent $content): bool => $this->view === 'contacts' || $this->inView($content, $this->view, $actor, $editable))
             ->filter(function (SpaceContent $content) use ($needle): bool {
                 if ($needle === '') {
                     return true;
@@ -181,7 +183,7 @@ class Workspace extends Component
             'uuid' => $content->uuid,
             'title' => $revision?->title ?: __('ui.content.untitled'),
             'type' => $kind !== null ? __('content_workspace.kinds.'.$kind.'.name') : ($blueprint->name ?? $content->definition->name),
-            'place' => $context instanceof Context ? $presenter->label($context) : null,
+            'place' => $context instanceof Context && $this->view !== 'contacts' ? $presenter->label($context) : null,
             'state' => $state,
             'is_public' => $content->public_access === SpaceContent::ACCESS_PUBLIC && $content->status === 'published',
             'updated_at' => $content->updated_at?->copy()->setTimezone(TemporalPreferences::timezoneFor($this->user())),
@@ -199,6 +201,33 @@ class Workspace extends Component
             'can_rename' => $canEdit && $content->status !== 'archived',
             'can_delete' => Gate::forUser($this->user())->allows('delete', $content),
         ];
+    }
+
+    /**
+     * "From my contacts": published, contacts-only Content of the people who are my accepted contacts, newest first.
+     * Reading is still decided by the Content policy for every card; this only finds candidates.
+     *
+     * @return Collection<int, SpaceContent>
+     */
+    private function contactFeed(User $user, Actor $actor): Collection
+    {
+        $ids = ContactAudience::contactIds((int) $actor->id);
+        if ($ids === []) {
+            return collect();
+        }
+
+        return SpaceContent::query()
+            ->whereIn('author_actor_id', $ids)
+            ->where('public_access', SpaceContent::ACCESS_CONTACTS)
+            ->where('status', 'published')
+            ->whereNotNull('active_revision_id')
+            ->whereHas('context', fn ($q) => $q->where('kind', ContextKind::Personal->value))
+            ->with(['author.user', 'author.profile', 'context', 'activeRevision.assets', 'blueprintVersion.blueprint', 'definition'])
+            ->orderByDesc('published_at')->orderByDesc('id')
+            ->limit(300)
+            ->get()
+            ->filter(fn (SpaceContent $content): bool => Gate::forUser($user)->allows('view', $content))
+            ->values();
     }
 
     private function workingRevision(SpaceContent $content): ?SpaceContentRevision

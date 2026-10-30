@@ -9,6 +9,29 @@
         <flux:callout variant="info">{{ __('public_content.share.not_allowed') }}</flux:callout>
     @endif
 
+    {{-- My contacts: accepted mutual contacts only --}}
+    @if ($canContacts || $isContacts)
+        <section class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700" data-share-contacts>
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex min-w-0 items-start gap-3">
+                    <flux:icon name="users" class="mt-0.5 size-5 shrink-0 text-zinc-500" />
+                    <div class="min-w-0">
+                        <h3 class="font-medium">{{ __('public_content.share.contacts_title') }}</h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('public_content.share.contacts_help') }}</p>
+                    </div>
+                </div>
+                <flux:badge size="sm" :color="$isContacts ? 'green' : 'zinc'" data-share-contacts-state="{{ $isContacts ? 'contacts' : 'off' }}">{{ $isContacts ? __('public_content.share.contacts_on') : __('public_content.share.contacts_off') }}</flux:badge>
+            </div>
+            <div class="flex justify-end">
+                @if ($isContacts && $canManage)
+                    <flux:button size="sm" variant="ghost" wire:click="setContacts(false)" data-share-contacts-off>{{ __('public_content.share.make_private') }}</flux:button>
+                @elseif (! $isContacts && $canContacts)
+                    <flux:button size="sm" variant="primary" wire:click="setContacts(true)" data-share-contacts-on>{{ __('public_content.share.make_contacts') }}</flux:button>
+                @endif
+            </div>
+        </section>
+    @endif
+
     {{-- Anyone on the web --}}
     <section class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700" data-share-public>
         <div class="flex items-start justify-between gap-3">

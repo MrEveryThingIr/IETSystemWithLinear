@@ -84,6 +84,12 @@ class BookShow extends Component
     /** @var array<string, string> */
     public array $allocations = [];
 
+    public string $refundPayment = '';
+
+    public string $returnMode = 'unused';
+
+    public string $refundObligation = '';
+
     public string $walletUuid = '';
 
     /** @var TemporaryUploadedFile|null */
@@ -139,7 +145,7 @@ class BookShow extends Component
         $ledger = $this->ledger();
         Gate::forUser($this->user())->authorize('record', $ledger);
         $this->resetErrorBag();
-        $this->reset('amount', 'dueOn', 'description', 'allocations', 'chooseAllocations', 'walletUuid', 'evidence');
+        $this->reset('amount', 'dueOn', 'description', 'allocations', 'chooseAllocations', 'walletUuid', 'evidence', 'refundPayment', 'refundObligation', 'returnMode');
         $this->entryType = in_array($type, ['obligation', 'payment', 'refund', 'write_off', 'settlement_in_kind'], true) ? $type : 'obligation';
         $this->occurredOn = CarbonImmutable::now(TemporalPreferences::timezoneFor($this->user()))->toDateString();
         $this->formKey = (string) Str::uuid();
@@ -196,6 +202,9 @@ class BookShow extends Component
             $type->settlesObligations() && $this->chooseAllocations ? $this->allocations : null,
             $wallet,
             'book:'.$this->formKey,
+            refundPayment: $this->refundPayment !== '' ? Transaction::query()->where('ledger_id', $ledger->id)->where('uuid', $this->refundPayment)->firstOrFail() : null,
+            returnMode: $this->returnMode,
+            refundObligation: $this->refundObligation !== '' ? Transaction::query()->where('ledger_id', $ledger->id)->where('uuid', $this->refundObligation)->firstOrFail() : null,
         );
 
         if ($this->evidence !== null) {
@@ -384,6 +393,9 @@ class BookShow extends Component
             'activeParties' => $activeParties,
             'pairs' => $balances->pairs($ledger),
             'myPosition' => $me instanceof LedgerParty ? $balances->forParty($ledger, $me) : null,
+            'creditSnapshot' => $balances->credit($ledger),
+            'returnSources' => Transaction::query()->where('ledger_id', $ledger->id)->where('type', 'payment')->where('status', 'confirmed')->with('fromParty', 'toParty')->get(),
+            'returnObligations' => Transaction::query()->where('ledger_id', $ledger->id)->where('type', 'obligation')->where('status', 'confirmed')->get(),
             'entries' => $entries,
             'debts' => $debts,
             'awaiting' => $awaiting,

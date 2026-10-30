@@ -2,6 +2,8 @@
 
 namespace App\Support\Deals;
 
+use App\Support\Bookkeeping\Toman;
+
 /** Reads Terms as label/value rows and shows what changed between two versions. Pure. */
 final class DealTermsDiff
 {
@@ -37,6 +39,9 @@ final class DealTermsDiff
         $add('route_to', $terms['route']['to'] ?? null);
         foreach ($terms['fields'] ?? [] as $field) {
             $add('fields.'.$field['key'], DealTerms::displayValue($field), $field['label']);
+        }
+        foreach ($terms['rates'] ?? [] as $rate) {
+            $add('rates.'.$rate['key'], Toman::format((int) $rate['rate']).' / '.(DealTerms::basisLabel($rate['unit']) ?? $rate['unit']).(isset($rate['estimate']) ? ' · ≈ '.$rate['estimate'] : ''), $rate['label']);
         }
         if (isset($terms['recurrence'])) {
             $r = $terms['recurrence'];

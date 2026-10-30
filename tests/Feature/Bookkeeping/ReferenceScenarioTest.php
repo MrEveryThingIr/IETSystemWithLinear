@@ -109,7 +109,7 @@ class ReferenceScenarioTest extends TestCase
         $this->assertSame(20_000_000, $pairs[0]['confirmed']);
 
         // The activity trail tells the story in order.
-        $actions = AuditLog::query()->where('ledger_id', $book->id)->orderBy('id')->pluck('action')->all();
+        $actions = AuditLog::query()->where('ledger_id', $book->id)->orderBy('id')->where('action', '!=', 'credit.projected')->pluck('action')->all();
         $this->assertSame([
             'ledger.created', 'party.added',
             'entry.recorded', 'entry.confirmed',

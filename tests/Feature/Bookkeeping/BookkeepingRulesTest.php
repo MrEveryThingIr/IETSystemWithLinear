@@ -80,10 +80,12 @@ class BookkeepingRulesTest extends TestCase
         $this->assertSame(1_250_000, $calc->forParty($book, $ownerParty)['owed_to_me']);
 
         // Refund: the creditor returns part of an overpayment.
-        $this->confirmed($book, $worker, $owner, TransactionType::Payment, $workerParty, $ownerParty, 1_500_000);
+        $overpayment = $this->confirmed($book, $worker, $owner, TransactionType::Payment, $workerParty, $ownerParty, 1_500_000);
         $this->assertSame(0, $calc->forParty($book, $ownerParty)['owed_to_me']);
-        $this->assertSame(250_000, $calc->forParty($book, $workerParty)['owed_to_me']);
-        $this->confirmed($book, $owner, $worker, TransactionType::Refund, $ownerParty, $workerParty, 250_000);
+        $this->assertSame(0, $calc->forParty($book, $workerParty)['owed_to_me']);
+        $this->assertSame(250_000, $calc->forParty($book, $workerParty)['advance_paid']);
+        $refund = app(RecordSharedEntry::class)->execute($book, $owner->user, TransactionType::Refund, $ownerParty, $workerParty, 250_000, '2026-10-01', 'Return unused overpayment', refundPayment: $overpayment);
+        app(DecideOnEntry::class)->approve($refund, $worker->user);
         $this->assertSame(0, $calc->forParty($book, $workerParty)['owed_to_me']);
         $this->assertSame(0, $calc->forParty($book, $ownerParty)['owed_to_me']);
     }
@@ -127,7 +129,8 @@ class BookkeepingRulesTest extends TestCase
 
         $paid = app(RecordSharedEntry::class)->execute($book, $owner->user, TransactionType::Payment, $ownerParty, $ali, 2_000_000, '2026-10-05', 'Daily wage');
         $this->assertSame(TransactionStatus::Confirmed, $paid->status);
-        $this->assertSame(2_000_000, app(BalanceCalculator::class)->forParty($book, $ownerParty)['owed_to_me']);
+        $this->assertSame(0, app(BalanceCalculator::class)->forParty($book, $ownerParty)['owed_to_me']);
+        $this->assertSame(2_000_000, app(BalanceCalculator::class)->forParty($book, $ownerParty)['advance_paid']);
     }
 
     public function test_privacy_roles_and_validation(): void

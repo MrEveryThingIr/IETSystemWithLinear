@@ -12,9 +12,10 @@ final class CommitmentProgress
     {
         return $commitment->fulfillments()
             ->where('status', FulfillmentStatus::Accepted->value)
-            ->get(['quantity'])
+            ->with('review')
+            ->get()
             ->reduce(
-                fn (string $sum, Fulfillment $fulfillment): string => QuantityAmount::add($sum, $fulfillment->quantity),
+                fn (string $sum, Fulfillment $fulfillment): string => QuantityAmount::add($sum, $fulfillment->confirmedQuantity()),
                 QuantityAmount::normalize('0'),
             );
     }

@@ -16,6 +16,7 @@ return [
         'published' => '已发布',
         'shared' => '与我共享',
         'learning' => '课程与学习',
+        'contacts' => '来自联系人',
         'archived' => '已归档',
     ],
     'empty_filtered' => '没有符合这些筛选条件的内容。',

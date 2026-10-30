@@ -130,6 +130,12 @@ class Transaction extends Model
      */
     public function transitionTo(TransactionStatus $next, array $attributes = []): void
     {
+        if (DB::transactionLevel() === 0) {
+            DB::transaction(fn () => $this->transitionTo($next, $attributes), 3);
+
+            return;
+        }
+        Ledger::query()->whereKey($this->ledger_id)->lockForUpdate()->firstOrFail();
         if (! $this->status->canTransitionTo($next)) {
             throw new LogicException("An entry cannot go from {$this->status->value} to {$next->value}.");
         }

@@ -57,7 +57,7 @@
         @if ($legacyText !== null)
             <div class="whitespace-pre-wrap" dir="auto">{{ $legacyText }}</div>
         @else
-            <x-deals.document :sections="$sections" />
+            <x-deals.document :sections="$sections" :terms="$terms" />
         @endif
     </section>
 

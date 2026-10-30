@@ -218,7 +218,7 @@ class DealWorkspaceTest extends TestCase
         $this->show($bob, $deal)->assertSee('Two keys are included.')->assertSee('data-agreement-document', false);
 
         // A payment term without a rule, or an unfinished typed term, is refused with a message, not stored.
-        $this->compose($alice, $deal)->call('addItem', 'payment')->call('send')->assertHasErrors('draft');
+        $this->compose($alice, $deal)->call('addItem', 'payment')->call('send')->assertHasErrors('draft.payment.mode');
         $this->assertSame(1, ProposalVersion::query()->count());
     }
 

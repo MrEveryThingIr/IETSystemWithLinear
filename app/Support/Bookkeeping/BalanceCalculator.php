@@ -11,19 +11,10 @@ use App\Models\Bookkeeping\Transaction;
 use App\Models\Bookkeeping\Wallet;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
-/**
- * The single source of truth for every number in Bookkeeping. Nothing else
- * adds or subtracts money.
- *
- * Between two people A and B, "A owes B" is:
- *     debts A→B (+ increases, − decreases)
- *   − payments, write-offs, in-kind settlements and refunds A→B
- *   − (the same B→A, mirrored)
- * Only confirmed entries count. Entries waiting for confirmation and entries
- * under dispute are reported separately, so a person always sees
- * "confirmed / waiting / disputed" side by side.
+/** Shared balances derive from CreditAccounting's directed obligation and credit
+ * projection. Cash movement never establishes an opposite-direction debt.
+ * Personal wallet and period calculations remain separate cash-flow views.
  */
 final class BalanceCalculator
 {
@@ -40,147 +31,77 @@ final class BalanceCalculator
         };
     }
 
-    /**
-     * Net positions between every pair of people in a shared or project book.
-     *
+    /** @return array<string, mixed> */
+    public function credit(Ledger $ledger, bool $currentRead = false): array
+    {
+        return app(CreditAccounting::class)->snapshot($ledger, currentRead: $currentRead);
+    }
+
+    /** Outstanding obligations remain directional, including reciprocal debts.
+     * @param  array<string, mixed>|null  $snapshot
      * @return list<array{debtor: LedgerParty, creditor: LedgerParty, confirmed: int, pending: int, disputed: int}>
      */
-    public function pairs(Ledger $ledger): array
+    public function pairs(Ledger $ledger, ?array $snapshot = null): array
     {
-        $net = $this->netByPair($ledger);
         $parties = $ledger->parties()->with('actor.user', 'actor.profile')->get()->keyBy('id');
         $rows = [];
-
-        foreach ($net as $key => $values) {
-            [$low, $high] = array_map('intval', explode(':', $key));
-            // values are "low owes high"; flip when negative.
-            $confirmed = $values[TransactionStatus::Confirmed->value] ?? 0;
-            $pending = $values[TransactionStatus::Pending->value] ?? 0;
-            $disputed = $values[TransactionStatus::Disputed->value] ?? 0;
-
-            if ($confirmed === 0 && $pending === 0 && $disputed === 0) {
+        foreach (($snapshot ?? $this->credit($ledger))['obligations'] as $obligation) {
+            $key = $obligation['from'].':'.$obligation['to'];
+            if (! isset($parties[$obligation['from']], $parties[$obligation['to']])) {
                 continue;
             }
-
-            $lowOwes = $confirmed > 0 || ($confirmed === 0 && $pending + $disputed >= 0);
-            $debtor = $parties->get($lowOwes ? $low : $high);
-            $creditor = $parties->get($lowOwes ? $high : $low);
-
-            if (! $debtor instanceof LedgerParty || ! $creditor instanceof LedgerParty) {
-                continue;
+            $rows[$key] ??= ['debtor' => $parties[$obligation['from']], 'creditor' => $parties[$obligation['to']], 'confirmed' => 0, 'pending' => 0, 'disputed' => 0];
+            $rows[$key]['confirmed'] += $obligation['outstanding'];
+            if ($obligation['status'] === 'pending') {
+                $rows[$key]['pending'] += $obligation['amount'];
+            } elseif ($obligation['status'] === 'disputed') {
+                $rows[$key]['disputed'] += $obligation['amount'];
             }
-
-            $factor = $lowOwes ? 1 : -1;
-            $rows[] = [
-                'debtor' => $debtor,
-                'creditor' => $creditor,
-                'confirmed' => $confirmed * $factor,
-                'pending' => $pending * $factor,
-                'disputed' => $disputed * $factor,
-            ];
+            $rows[$key]['pending'] -= $obligation['pending'];
+            $rows[$key]['disputed'] += $obligation['disputed'];
         }
 
-        usort($rows, fn (array $a, array $b): int => $b['confirmed'] <=> $a['confirmed']);
-
-        return $rows;
+        return array_values(array_filter($rows, fn (array $row): bool => $row['confirmed'] !== 0 || $row['pending'] !== 0 || $row['disputed'] !== 0));
     }
 
-    /**
-     * What a person is owed and owes in one book, from their side.
-     * `pending_change` is how their net position would move if everything
-     * waiting for confirmation were confirmed (positive = in their favour).
-     *
-     * @return array{owed_to_me: int, i_owe: int, net: int, pending_change: int, disputed: int}
-     */
+    /** @return array{owed_to_me: int, i_owe: int, net: int, pending_change: int, disputed: int, advance_paid: int, advance_received: int} */
     public function forParty(Ledger $ledger, LedgerParty $party): array
     {
-        $owedToMe = 0;
-        $iOwe = 0;
-        $pendingChange = 0;
-        $disputed = 0;
-
-        foreach ($this->netByPair($ledger) as $key => $values) {
-            [$low, $high] = array_map('intval', explode(':', $key));
-
-            if ($low !== $party->id && $high !== $party->id) {
-                continue;
-            }
-
-            // Positive = this party owes the other one.
-            $factor = $low === $party->id ? 1 : -1;
-            $confirmed = ($values[TransactionStatus::Confirmed->value] ?? 0) * $factor;
-
-            $confirmed > 0 ? $iOwe += $confirmed : $owedToMe += -$confirmed;
-            $pendingChange -= ($values[TransactionStatus::Pending->value] ?? 0) * $factor;
-            $disputed += abs($values[TransactionStatus::Disputed->value] ?? 0);
-        }
-
-        return [
-            'owed_to_me' => $owedToMe,
-            'i_owe' => $iOwe,
-            'net' => $owedToMe - $iOwe,
-            'pending_change' => $pendingChange,
-            'disputed' => $disputed,
-        ];
-    }
-
-    /**
-     * One debt: its current amount after adjustments, how much has been paid
-     * (confirmed), what is waiting for confirmation, and what is left.
-     *
-     * @return array{amount: int, paid: int, pending: int, disputed: int, outstanding: int, state: string}
-     */
-    public function obligation(Transaction $obligation): array
-    {
-        $adjustments = Transaction::query()
-            ->where('related_transaction_id', $obligation->id)
-            ->where('type', TransactionType::Adjustment->value)
-            ->where('status', TransactionStatus::Confirmed->value)
-            ->get(['amount', 'direction']);
-
-        $amount = (int) $obligation->amount;
-        foreach ($adjustments as $adjustment) {
-            $amount += $adjustment->direction === AdjustmentDirection::Decrease ? -(int) $adjustment->amount : (int) $adjustment->amount;
-        }
-        $amount = max(0, $amount);
-
-        $rows = DB::table('bk_allocations as allocation')
-            ->join('bk_transactions as entry', 'entry.id', '=', 'allocation.transaction_id')
-            ->where('allocation.obligation_id', $obligation->id)
-            ->groupBy('entry.type', 'entry.status')
-            ->selectRaw('entry.type as type, entry.status as status, SUM(allocation.amount) as total')
-            ->get();
-
-        $paid = 0;
+        $snapshot = $this->credit($ledger);
+        $owed = 0;
+        $owe = 0;
         $pending = 0;
         $disputed = 0;
-        foreach ($rows as $row) {
-            $value = (int) $row->total * ((string) $row->type === TransactionType::Refund->value ? -1 : 1);
-            match ((string) $row->status) {
-                TransactionStatus::Confirmed->value => $paid += $value,
-                TransactionStatus::Pending->value => $pending += $value,
-                TransactionStatus::Disputed->value => $disputed += $value,
-                default => null,
-            };
+        foreach ($this->pairs($ledger, $snapshot) as $pair) {
+            if ($pair['debtor']->id === $party->id) {
+                $owe += $pair['confirmed'];
+                $pending -= $pair['pending'];
+                $disputed += abs($pair['disputed']);
+            } elseif ($pair['creditor']->id === $party->id) {
+                $owed += $pair['confirmed'];
+                $pending += $pair['pending'];
+                $disputed += abs($pair['disputed']);
+            }
+        }
+        $paid = 0;
+        $received = 0;
+        foreach ($snapshot['payments'] as $payment) {
+            if ($payment['from'] === $party->id) {
+                $paid += $payment['available'] + ($payment['status'] === 'confirmed' ? $payment['reserved'] : 0);
+            } elseif ($payment['to'] === $party->id) {
+                $received += $payment['available'] + ($payment['status'] === 'confirmed' ? $payment['reserved'] : 0);
+            }
         }
 
-        $paid = max(0, $paid);
-        $outstanding = max(0, $amount - $paid);
-        $state = match (true) {
-            $obligation->status !== TransactionStatus::Confirmed => $obligation->status->value,
-            $amount === 0 || $outstanding === 0 => 'paid',
-            $paid > 0 => 'partially_paid',
-            default => 'unpaid',
-        };
+        return ['owed_to_me' => $owed, 'i_owe' => $owe, 'net' => $owed - $owe, 'pending_change' => $pending, 'disputed' => $disputed, 'advance_paid' => $paid, 'advance_received' => $received];
+    }
 
-        return [
-            'amount' => $amount,
-            'paid' => $paid,
-            'pending' => $pending,
-            'disputed' => $disputed,
-            'outstanding' => $outstanding,
-            'state' => $state,
-        ];
+    /** @return array{amount: int, paid: int, pending: int, disputed: int, outstanding: int, state: string} */
+    public function obligation(Transaction $obligation, bool $currentRead = false): array
+    {
+        $row = $this->credit($obligation->ledger, $currentRead)['obligations'][$obligation->id];
+
+        return array_intersect_key($row, array_flip(['amount', 'paid', 'pending', 'disputed', 'outstanding', 'state']));
     }
 
     /**
@@ -188,10 +109,11 @@ final class BalanceCalculator
      *
      * @return Collection<int, array{obligation: Transaction, open: int<1, max>}>
      */
-    public function openObligations(Ledger $ledger, LedgerParty $debtor, LedgerParty $creditor): Collection
+    public function openObligations(Ledger $ledger, LedgerParty $debtor, LedgerParty $creditor, bool $currentRead = false): Collection
     {
         return Transaction::query()
             ->where('ledger_id', $ledger->id)
+            ->when($currentRead, fn ($q) => $q->lockForUpdate())
             ->where('type', TransactionType::Obligation->value)
             ->whereIn('status', [TransactionStatus::Confirmed->value, TransactionStatus::Pending->value])
             ->where('from_party_id', $debtor->id)
@@ -199,8 +121,8 @@ final class BalanceCalculator
             ->orderBy('occurred_on')
             ->orderBy('id')
             ->get()
-            ->map(function (Transaction $obligation): array {
-                $progress = $this->obligation($obligation);
+            ->map(function (Transaction $obligation) use ($currentRead): array {
+                $progress = $this->obligation($obligation, $currentRead);
                 $amount = $obligation->status === TransactionStatus::Pending ? (int) $obligation->amount : $progress['amount'];
 
                 return ['obligation' => $obligation, 'open' => max(0, $amount - $progress['paid'] - max(0, $progress['pending']))];
@@ -299,44 +221,6 @@ final class BalanceCalculator
         usort($byCategory, fn (array $a, array $b): int => $b['total'] <=> $a['total']);
 
         return ['income' => $income, 'expense' => $expense, 'net' => $income - $expense, 'by_category' => $byCategory];
-    }
-
-    /**
-     * Sums of "low owes high" per pair and status, from SQL aggregates.
-     *
-     * @return array<string, array<string, int>>
-     */
-    private function netByPair(Ledger $ledger): array
-    {
-        $rows = DB::table('bk_transactions')
-            ->where('ledger_id', $ledger->id)
-            ->whereIn('type', array_map(fn (TransactionType $type): string => $type->value, TransactionType::shared()))
-            ->whereIn('status', [TransactionStatus::Confirmed->value, TransactionStatus::Pending->value, TransactionStatus::Disputed->value])
-            ->whereNotNull('from_party_id')
-            ->whereNotNull('to_party_id')
-            ->groupBy('type', 'direction', 'status', 'from_party_id', 'to_party_id')
-            ->selectRaw('type, direction, status, from_party_id, to_party_id, SUM(amount) as total')
-            ->get();
-
-        $net = [];
-        foreach ($rows as $row) {
-            $from = (int) $row->from_party_id;
-            $to = (int) $row->to_party_id;
-            if ($from === $to) {
-                continue;
-            }
-
-            $sign = self::sign(
-                TransactionType::from((string) $row->type),
-                $row->direction !== null ? AdjustmentDirection::from((string) $row->direction) : null,
-            );
-            // Normalize to "low owes high".
-            [$low, $high, $orientation] = $from < $to ? [$from, $to, 1] : [$to, $from, -1];
-            $key = $low.':'.$high;
-            $net[$key][(string) $row->status] = ($net[$key][(string) $row->status] ?? 0) + $sign * $orientation * (int) $row->total;
-        }
-
-        return $net;
     }
 
     /** @param  array<int, int>  $delta */

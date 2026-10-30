@@ -9,6 +9,7 @@ use App\Models\GroupSpace;
 use App\Models\SpaceContent;
 use App\Models\SpaceContentRevision;
 use App\Models\User;
+use App\Support\Content\ContactAudience;
 use App\Support\RequestMemo;
 
 class SpaceContentPolicy
@@ -31,10 +32,10 @@ class SpaceContentPolicy
             }
 
             if ($revision->hasVerifiableManifest()) {
-                return $sourceVisible || $this->canReadThroughPlacement($user, $content);
+                return $sourceVisible || $this->canReadThroughPlacement($user, $content) || $this->readsAsContact($user, $content);
             }
 
-            return $sourceVisible && $this->canReadPrivate($user, $content);
+            return ($sourceVisible && $this->canReadPrivate($user, $content)) || $this->readsAsContact($user, $content);
         }
 
         return $sourceVisible && $this->canReadPrivate($user, $content);
@@ -137,6 +138,12 @@ class SpaceContentPolicy
         }
 
         return $this->isAuthor($user, $content) || $this->contexts->manageContent($user, $content->context);
+    }
+
+    /** Contacts-only Content of a personal place: its published edition is readable by the author's accepted contacts. */
+    private function readsAsContact(User $user, SpaceContent $content): bool
+    {
+        return $content->context?->kind === ContextKind::Personal && ContactAudience::mayRead($user, $content);
     }
 
     private function isAuthor(User $user, SpaceContent $content): bool

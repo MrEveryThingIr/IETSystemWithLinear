@@ -4,12 +4,15 @@ namespace App\Actions\Bookkeeping;
 
 use App\Enums\Bookkeeping\ConfirmationDecision;
 use App\Enums\Bookkeeping\TransactionStatus;
+use App\Enums\Bookkeeping\TransactionType;
 use App\Models\Bookkeeping\Confirmation;
+use App\Models\Bookkeeping\Ledger;
 use App\Models\Bookkeeping\LedgerParty;
 use App\Models\Bookkeeping\Transaction;
 use App\Models\User;
 use App\Support\Bookkeeping\BookkeepingRecorder;
 use App\Support\Bookkeeping\ConfirmationRules;
+use App\Support\Bookkeeping\CreditAudit;
 use App\Support\Bookkeeping\Toman;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -48,8 +51,19 @@ class DecideOnEntry
         $actor = $this->recorder->actor($user);
 
         return DB::transaction(function () use ($transaction, $user, $actor, $decision, $note): Transaction {
+            Ledger::query()->whereKey($transaction->ledger_id)->lockForUpdate()->firstOrFail();
             $locked = Transaction::query()->with('ledger')->lockForUpdate()->findOrFail($transaction->id);
+            Gate::forUser($user)->authorize('view', $locked);
+            if ($decision === ConfirmationDecision::Approved && $locked->status === TransactionStatus::Confirmed && $locked->confirmations()->where('actor_id', $actor->id)->where('decision', 'approved')->lockForUpdate()->first() !== null) {
+                return $locked;
+            }
             Gate::forUser($user)->authorize('confirm', $locked);
+            if ($decision === ConfirmationDecision::Approved) {
+                app(ValidateAdjustment::class)->execute($locked);
+            }
+            if ($decision === ConfirmationDecision::Approved && $locked->type === TransactionType::Refund) {
+                app(ValidateCreditReturn::class)->existing($locked);
+            }
 
             $party = $this->rules->awaiting($locked)
                 ->first(fn ($candidate): bool => (int) $candidate->actor_id === (int) $actor->id);
@@ -86,6 +100,8 @@ class DecideOnEntry
             } else {
                 $this->recorder->audit($locked->ledger, $actor, 'entry.approved', $locked, $before);
             }
+
+            app(CreditAudit::class)->record($locked, $actor);
 
             return $locked->refresh();
         }, 3);

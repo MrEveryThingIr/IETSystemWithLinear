@@ -16,6 +16,7 @@ use LogicException;
     'fulfillment_id',
     'reviewer_actor_id',
     'decision',
+    'accepted_quantity',
     'note',
     'reviewed_at',
 ])]
