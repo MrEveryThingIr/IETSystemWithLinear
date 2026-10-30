@@ -84,6 +84,8 @@ return [
         'remove' => '移除',
         'retry' => '重新上传',
         'select_first' => '请选择文件',
+        'take_photo' => '拍照',
+        'record_video' => '录制视频',
         'crop' => '裁剪 / 编辑图片',
         'crop_apply' => '应用裁剪',
         'crop_cancel' => '取消',

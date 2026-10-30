@@ -74,6 +74,27 @@
         <input type="file" class="sr-only" accept="{{ $accept }}" x-on:change="choose($event)" data-upload-input />
     </label>
 
+    {{-- On phones and tablets: open the camera directly. The result goes through exactly the same steps as a gallery file
+         (image: preview and optional crop; video: resumable upload). Desktop browsers ignore this row. --}}
+    @if (in_array($insertKind, ['', 'image', 'video'], true))
+        <div x-show="state === 'idle' || state === 'too_large' || state === 'failed'" class="hidden gap-2 [@media(pointer:coarse)]:flex" data-camera-capture>
+            @if (in_array($insertKind, ['', 'image'], true))
+                <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-300 px-3 py-3 text-sm font-medium hover:border-zinc-400 dark:border-zinc-700">
+                    <flux:icon name="camera" class="size-5 text-zinc-500" />
+                    <span>{{ __('studio_ui.upload.take_photo') }}</span>
+                    <input type="file" class="sr-only" accept="image/*" capture="environment" x-on:change="choose($event)" data-capture-photo />
+                </label>
+            @endif
+            @if (in_array($insertKind, ['', 'video'], true))
+                <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-300 px-3 py-3 text-sm font-medium hover:border-zinc-400 dark:border-zinc-700">
+                    <flux:icon name="video-camera" class="size-5 text-zinc-500" />
+                    <span>{{ __('studio_ui.upload.record_video') }}</span>
+                    <input type="file" class="sr-only" accept="video/*" capture="environment" x-on:change="choose($event)" data-capture-video />
+                </label>
+            @endif
+        </div>
+    @endif
+
     {{-- Image preview: crop is optional; the cropped picture, not the full photo, is what gets uploaded --}}
     <div x-show="state === 'preview'" x-cloak class="space-y-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" data-image-preview>
         <div x-ref="stage" class="relative mx-auto block w-fit max-w-full select-none overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="touch-action: none" x-on:pointermove="dragMove($event)" x-on:pointerup="dragEnd()" x-on:pointercancel="dragEnd()">

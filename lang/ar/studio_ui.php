@@ -84,6 +84,8 @@ return [
         'remove' => 'إزالة',
         'retry' => 'إعادة المحاولة',
         'select_first' => 'اختر ملفًا',
+        'take_photo' => 'التقاط صورة',
+        'record_video' => 'تسجيل فيديو',
         'crop' => 'اقتصاص / تحرير الصورة',
         'crop_apply' => 'تطبيق الاقتصاص',
         'crop_cancel' => 'إلغاء',

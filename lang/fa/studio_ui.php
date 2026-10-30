@@ -84,6 +84,8 @@ return [
         'remove' => 'حذف',
         'retry' => 'تلاش دوباره',
         'select_first' => 'یک فایل انتخاب کنید',
+        'take_photo' => 'گرفتن عکس',
+        'record_video' => 'ضبط ویدیو',
         'crop' => 'برش / ویرایش تصویر',
         'crop_apply' => 'اعمال برش',
         'crop_cancel' => 'انصراف',
