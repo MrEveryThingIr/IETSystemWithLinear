@@ -6,11 +6,13 @@ use App\Enums\Bookkeeping\AdjustmentDirection;
 use App\Enums\Bookkeeping\EntryOrigin;
 use App\Enums\Bookkeeping\TransactionStatus;
 use App\Enums\Bookkeeping\TransactionType;
+use App\Models\Bookkeeping\Ledger;
 use App\Models\Bookkeeping\Transaction;
 use App\Models\User;
 use App\Support\Bookkeeping\BalanceCalculator;
 use App\Support\Bookkeeping\BookkeepingRecorder;
 use App\Support\Bookkeeping\ConfirmationRules;
+use App\Support\Bookkeeping\CreditAudit;
 use App\Support\Bookkeeping\Toman;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -43,6 +45,8 @@ class RecordAdjustment
         if ($idempotencyKey !== null) {
             $existing = Transaction::query()->where('recorded_by_actor_id', $actor->id)->where('idempotency_key', $idempotencyKey)->first();
             if ($existing instanceof Transaction) {
+                abort_unless($existing->ledger_id === $obligation->ledger_id, 409);
+
                 return $existing;
             }
         }
@@ -55,6 +59,15 @@ class RecordAdjustment
         }
 
         return DB::transaction(function () use ($obligation, $actor, $direction, $amount, $reason, $idempotencyKey): Transaction {
+            Ledger::query()->whereKey($obligation->ledger_id)->lockForUpdate()->firstOrFail();
+            if ($idempotencyKey !== null) {
+                $existing = Transaction::query()->where('recorded_by_actor_id', $actor->id)->where('idempotency_key', $idempotencyKey)->lockForUpdate()->first();
+                if ($existing instanceof Transaction) {
+                    abort_unless($existing->ledger_id === $obligation->ledger_id, 409);
+
+                    return $existing;
+                }
+            }
             $locked = Transaction::query()->with('ledger')->lockForUpdate()->findOrFail($obligation->id);
             abort_unless($locked->type === TransactionType::Obligation && $locked->status === TransactionStatus::Confirmed, 422);
 
@@ -88,6 +101,8 @@ class RecordAdjustment
                     $actor,
                 );
             }
+
+            app(CreditAudit::class)->record($adjustment, $actor);
 
             return $adjustment->refresh();
         }, 3);

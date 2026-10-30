@@ -1,4 +1,4 @@
-@props(['sections', 'parties' => []])
+@props(['sections', 'parties' => [], 'terms' => null])
 
 {{-- The Agreement as a numbered document. Typed terms are canonical values; narrative clauses are text and nothing more. --}}
 <article class="space-y-4 text-sm" data-agreement-document>
@@ -18,6 +18,7 @@
                         <span class="font-medium" dir="auto">@if (! empty($line['date']))<x-app.local-date :value="$line['value']" />@else{{ $line['value'] }}@endif</span>
                     </div>
                 @endforeach
+                @if (! empty($section['who']))<div class="ps-5 text-xs text-zinc-500" data-clause-responsible>{{ __('deals.doc.responsible', ['name' => $section['who']]) }}</div>@endif
                 @if ($section['text'])
                     <p class="whitespace-pre-wrap break-words ps-5" dir="auto">{{ $section['text'] }}</p>
                 @endif
@@ -25,10 +26,20 @@
                     <div class="ps-5" data-agreement-clause="{{ $sub['n'] }}">
                         <span class="text-zinc-400">{{ $sub['n'] }}</span>
                         @if ($sub['title'])<span class="font-medium" dir="auto">{{ $sub['title'] }}</span>@endif
+                        @if (! empty($sub['who']))<span class="text-xs text-zinc-500" data-clause-responsible>· {{ __('deals.doc.responsible', ['name' => $sub['who']]) }}</span>@endif
                         @if ($sub['text'])<p class="whitespace-pre-wrap break-words ps-8" dir="auto">{{ $sub['text'] }}</p>@endif
                     </div>
                 @endforeach
             </li>
         @endforeach
     </ol>
+    @if ($terms)
+        @php($warnings = \App\Support\Deals\DealTermsWarnings::for($terms))
+        @if ($warnings)
+            <div class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-700 dark:bg-amber-950/30" data-agreement-warnings>
+                <div class="font-medium">{{ __('deals.warnings.title') }}</div>
+                <ul class="mt-1 list-disc space-y-1 ps-5">@foreach ($warnings as $w)<li data-warning="{{ $w['code'] }}" dir="auto">{{ __('deals.warnings.'.$w['code'], $w['params']) }}</li>@endforeach</ul>
+            </div>
+        @endif
+    @endif
 </article>

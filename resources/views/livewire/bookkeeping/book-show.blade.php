@@ -72,6 +72,10 @@
         <flux:callout variant="success">{{ session('status') }}</flux:callout>
     @endif
 
+    @if ($creditSnapshot['issues'] !== [])
+        <flux:callout variant="warning">{{ __('credit.validation.review') }}</flux:callout>
+    @endif
+
     {{-- Balances --}}
     <div class="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
         @if ($myPosition)
@@ -83,10 +87,17 @@
                     <div class="text-sm text-red-700 dark:text-red-400">{{ __('bookkeeping.balances.you_owe') }}</div>
                     <div class="mt-1 text-3xl font-semibold tabular-nums" data-position-amount>{{ $toman(-$myPosition['net']) }}</div>
                 @else
-                    <div class="text-sm text-zinc-500">{{ __('bookkeeping.balances.settled') }}</div>
+                    <div class="text-sm text-zinc-500">{{ __('credit.no_net_debt') }}</div>
                     <div class="mt-1 text-3xl font-semibold tabular-nums" data-position-amount>0</div>
                 @endif
                 <div class="text-xs text-zinc-500">{{ __('bookkeeping.toman') }} · {{ __('bookkeeping.balances.confirmed_only') }}</div>
+                @if ($myPosition['advance_paid'] > 0 || $myPosition['advance_received'] > 0)
+                    <div class="mt-3 text-sm" data-advance-position>
+                        <div>{{ __('credit.advance_paid') }}: {{ $toman($myPosition['advance_paid']) }}</div>
+                        <div>{{ __('credit.advance_received') }}: {{ $toman($myPosition['advance_received']) }}</div>
+                        <div class="text-xs text-zinc-500">{{ __('credit.not_debt') }}</div>
+                    </div>
+                @endif
                 @if ($myPosition['pending_change'] !== 0)
                     <div class="mt-3 rounded-lg bg-amber-50 p-2 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200" data-pending-change>
                         {{ __('bookkeeping.balances.after_confirmation', ['amount' => $toman(abs($myPosition['net'] + $myPosition['pending_change']))]) }}
@@ -230,6 +241,11 @@
                                     · {{ __('bookkeeping.book_show.from_my_wallet', ['wallet' => $entry->wallet->name]) }}
                                 @endif
                             </div>
+                            @if ($entry->type === \App\Enums\Bookkeeping\TransactionType::Payment)
+                                <x-bookkeeping.credit-history :position="$creditSnapshot['payments'][$entry->id] ?? null" />
+                            @elseif ($entry->type === \App\Enums\Bookkeeping\TransactionType::Refund)
+                                <div class="text-xs" data-credit-return>{{ __('credit.source') }}: {{ $entry->related?->uuid ?? __('credit.review') }} · {{ $entry->description }}</div>
+                            @endif
                             @if ($entry->allocations->isNotEmpty())
                                 <div class="mt-1 text-xs text-zinc-500" dir="auto">
                                     {{ __('bookkeeping.book_show.applied_to') }}
@@ -344,7 +360,30 @@
                 <x-app.calendar-date-input model="dueOn" :label="__('bookkeeping.fields.due_date')" />
             @endif
 
-            <flux:input wire:model="description" :label="$entryType === 'settlement_in_kind' ? __('bookkeeping.fields.what_was_given') : __('bookkeeping.fields.description')" maxlength="500" :required="$entryType === 'settlement_in_kind'" />
+            @if ($entryType === 'refund')
+                <flux:select wire:model="refundPayment" :label="__('credit.source')" required>
+                    <option value="">—</option>
+                    @foreach ($returnSources as $source)
+                        <option value="{{ $source->uuid }}">{{ $label($source->fromParty) }} → {{ $label($source->toParty) }} · {{ $toman((int) $source->amount) }} · {{ $source->uuid }}</option>
+                    @endforeach
+                </flux:select>
+                @error('refundPayment')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+                <flux:select wire:model.live="returnMode" :label="__('credit.return_mode')">
+                    <option value="unused">{{ __('credit.unused') }}</option>
+                    <option value="applied">{{ __('credit.applied_return') }}</option>
+                </flux:select>
+                @if ($returnMode === 'applied')
+                    <flux:select wire:model="refundObligation" :label="__('credit.obligation')" required>
+                        <option value="">—</option>
+                        @foreach ($returnObligations as $obligation)
+                            <option value="{{ $obligation->uuid }}">{{ $obligation->description }} · {{ $obligation->uuid }}</option>
+                        @endforeach
+                    </flux:select>
+                    @error('refundObligation')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+                @endif
+            @endif
+
+            <flux:input wire:model="description" :label="$entryType === 'settlement_in_kind' ? __('bookkeeping.fields.what_was_given') : __('bookkeeping.fields.description')" maxlength="500" :required="in_array($entryType, ['settlement_in_kind', 'refund'], true)" />
 
             @if (in_array($entryType, ['payment', 'write_off', 'settlement_in_kind'], true) && $openForAllocation->isNotEmpty())
                 <div class="space-y-2 rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/60" data-allocation>

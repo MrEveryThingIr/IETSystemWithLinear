@@ -16,6 +16,7 @@ return [
         'published' => 'Published',
         'shared' => 'Shared with me',
         'learning' => 'Courses & learning',
+        'contacts' => 'From my contacts',
         'archived' => 'Archived',
     ],
     'empty_filtered' => 'Nothing matches these filters.',

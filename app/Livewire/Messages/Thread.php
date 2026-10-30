@@ -63,6 +63,9 @@ class Thread extends Component
     #[Locked]
     public bool $embedded = false;
 
+    /** In a Deal's one conversation: everything, only the people's messages, or only one area's steps. */
+    public string $filter = 'all';
+
     public string $notice = '';
 
     public bool $reporting = false;
@@ -267,6 +270,11 @@ class Thread extends Component
         $this->notice = __('messages.report.sent');
     }
 
+    public function setFilter(string $filter): void
+    {
+        $this->filter = in_array($filter, ['all', 'chat', 'agreement', 'work', 'money'], true) ? $filter : 'all';
+    }
+
     public function render(): View
     {
         $user = $this->user();
@@ -276,6 +284,9 @@ class Thread extends Component
 
         $messages = ConversationMessage::query()
             ->where('conversation_id', $this->conversation->id)
+            ->when($this->embedded && $this->filter === 'chat', fn ($q) => $q->where('kind', '!=', 'deal'))
+            ->when($this->embedded && in_array($this->filter, ['agreement', 'work', 'money'], true), fn ($q) => $q->where('kind', 'deal')
+                ->where(fn ($w) => $this->filter === 'agreement' ? $w->whereNull('meta->area')->orWhere('meta->area', 'agreement') : $w->where('meta->area', $this->filter)))
             ->with(['author.user', 'author.profile', 'latestRevision', 'replyTo.author.user', 'replyTo.latestRevision', 'assets', 'reactions', 'evidenceReferences.content.activeRevision', 'evidenceReferences.revision'])
             ->latest('id')
             ->limit($this->limit + 1)

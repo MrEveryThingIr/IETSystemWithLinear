@@ -50,6 +50,12 @@ return [
         'public_off' => '私密',
         'make_public' => '设为公开',
         'make_private' => '设为私密',
+        'contacts_title' => '我的联系人',
+        'contacts_help' => '只有你已接受的联系人可以阅读已发布的版本。草稿保持私密。',
+        'contacts_on' => '联系人',
+        'contacts_off' => '未分享',
+        'make_contacts' => '分享给我的联系人',
+        'made_contacts' => '你的联系人现在可以阅读。',
         'public_link' => '公开链接',
         'copy' => '复制',
         'copied' => '已复制',
@@ -95,6 +101,7 @@ return [
 
     'errors' => [
         'unknown_access' => '请选择公开或私密。',
+        'contacts_personal_only' => '联系人分享仅限你自己的个人内容。',
         'too_many_invitations' => '此内容已有 :max 个有效链接，请先关闭一些。',
     ],
 ];

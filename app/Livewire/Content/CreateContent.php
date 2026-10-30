@@ -3,9 +3,12 @@
 namespace App\Livewire\Content;
 
 use App\Actions\Content\CreateContentFromBlueprint;
+use App\Actions\Planner\ManagePlanContent;
 use App\Models\ContentBlueprint;
 use App\Models\ContentBlueprintVersion;
 use App\Models\Context;
+use App\Models\Plan;
+use App\Models\PlanOccurrence;
 use App\Models\User;
 use App\Support\ContentBlueprintCatalog;
 use App\Support\ContentKinds;
@@ -26,6 +29,11 @@ class CreateContent extends Component
     /** When set, new Content is always created in this Context. */
     public ?string $fixedContextUuid = null;
 
+    /** Set when Content is created from a Plan (and optionally one of its days); it is linked once created. */
+    public ?string $planUuid = null;
+
+    public ?string $occurrenceUuid = null;
+
     public bool $open = false;
 
     public string $kind = '';
@@ -38,10 +46,12 @@ class CreateContent extends Component
     public array $payload = [];
 
     #[On('open-content-create')]
-    public function openDialog(?string $kind = null): void
+    public function openDialog(?string $kind = null, ?string $plan = null, ?string $occurrence = null): void
     {
         $this->resetErrorBag();
         $this->reset('kind', 'title', 'payload');
+        $this->planUuid = $plan ?: null;
+        $this->occurrenceUuid = $occurrence ?: null;
         $this->open = true;
         $this->contextUuid = $this->fixedContextUuid ?? ($this->creatableContexts()->first()->uuid ?? '');
 
@@ -107,6 +117,11 @@ class CreateContent extends Component
         }
 
         $content = $create->execute($context, $version, $this->user(), $this->title, $this->payload);
+        if ($this->planUuid !== null) {
+            $plan = Plan::query()->where('uuid', $this->planUuid)->firstOrFail();
+            $day = $this->occurrenceUuid !== null ? PlanOccurrence::query()->where('plan_id', $plan->id)->where('uuid', $this->occurrenceUuid)->first() : null;
+            app(ManagePlanContent::class)->link($this->user(), $plan, $content, $day);
+        }
 
         return $this->redirectRoute('contexts.contents.studio', [$context, $content]);
     }

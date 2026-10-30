@@ -5,6 +5,7 @@ namespace App\Livewire\Content;
 use App\Actions\Content\CreateContentInvitation;
 use App\Actions\Content\RevokeContentInvitation;
 use App\Actions\Content\SetContentPublicAccess;
+use App\ContextKind;
 use App\Models\ContentInvitation;
 use App\Models\SpaceContent;
 use App\Models\User;
@@ -57,6 +58,16 @@ class SharePanel extends Component
         $this->createdInvitationUuid = null;
     }
 
+    /** Only me / My contacts: who may read the published edition besides the author's place. */
+    public function setContacts(bool $on, SetContentPublicAccess $action): void
+    {
+        $content = $action->execute($this->content(), $this->user(), $on ? SpaceContent::ACCESS_CONTACTS : SpaceContent::ACCESS_PRIVATE);
+        $this->status = $content->public_access === SpaceContent::ACCESS_CONTACTS
+            ? __('public_content.share.made_contacts')
+            : __('public_content.share.made_private');
+        $this->createdInvitationUuid = null;
+    }
+
     public function createInvitation(CreateContentInvitation $action): void
     {
         $invitation = $action->execute($this->content(), $this->user(), $this->inviteeName, $this->inviteMessage !== '' ? $this->inviteMessage : null, $this->expiresInDays);
@@ -96,6 +107,8 @@ class SharePanel extends Component
             'canManage' => $canManage,
             'isPublished' => $content->status === 'published' && $content->active_revision_id !== null,
             'isPublic' => $content->public_access === SpaceContent::ACCESS_PUBLIC,
+            'isContacts' => $content->public_access === SpaceContent::ACCESS_CONTACTS,
+            'canContacts' => $canShare && $content->context->kind === ContextKind::Personal,
             'publicUrl' => route('public-content.show', $content),
             'indexEnabled' => (bool) config('public_content.index'),
             'invitations' => $invitations,

@@ -11,6 +11,7 @@ final class Changelog
 {
     /** Newest first. Add a line (and its texts) with every release. */
     public const RELEASES = [
+        '1.12.1' => '2026-10-31',
         '1.12.0' => '2026-10-22',
         '1.11.0' => '2026-10-22',
         '1.10.0' => '2026-10-22',

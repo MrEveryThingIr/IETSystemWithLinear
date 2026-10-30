@@ -26,6 +26,7 @@ class ReviewFulfillment
         User $user,
         FulfillmentReviewDecision $decision,
         ?string $note = null,
+        ?string $acceptedQuantity = null,
     ): FulfillmentReview {
         $current = $this->currentUser($user);
         Gate::forUser($current)->authorize('review', $fulfillment);
@@ -38,7 +39,9 @@ class ReviewFulfillment
             'Rejecting or requesting clarification requires a review note.',
         );
 
-        return DB::transaction(function () use ($fulfillment, $current, $decision, $note): FulfillmentReview {
+        abort_if($acceptedQuantity !== null && $decision !== FulfillmentReviewDecision::Accepted, 422, 'Only an acceptance can confirm a quantity.');
+
+        return DB::transaction(function () use ($fulfillment, $current, $decision, $note, $acceptedQuantity): FulfillmentReview {
             $locked = Fulfillment::query()
                 ->with(['commitment', 'review'])
                 ->lockForUpdate()
@@ -53,12 +56,23 @@ class ReviewFulfillment
                 FulfillmentReviewDecision::ClarificationRequested => FulfillmentStatus::ClarificationRequested,
             };
 
+            // Partly accepted: the reviewer confirms less than was reported. Equal to the report means everything.
+            $confirmed = $locked->quantity;
+            if ($acceptedQuantity !== null && trim($acceptedQuantity) !== '') {
+                try {
+                    $confirmed = QuantityAmount::positive($acceptedQuantity);
+                } catch (\InvalidArgumentException $exception) {
+                    abort(422, $exception->getMessage());
+                }
+                abort_if(QuantityAmount::compare($confirmed, $locked->quantity) > 0, 422, 'The confirmed quantity cannot exceed what was reported.');
+            }
+
             if ($status === FulfillmentStatus::Accepted) {
                 $accepted = $this->progress->acceptedQuantity($locked->commitment);
 
                 abort_if(
                     QuantityAmount::compare(
-                        QuantityAmount::add($accepted, $locked->quantity),
+                        QuantityAmount::add($accepted, $confirmed),
                         $locked->commitment->quantity,
                     ) > 0,
                     422,
@@ -73,6 +87,7 @@ class ReviewFulfillment
                 'fulfillment_id' => $locked->id,
                 'reviewer_actor_id' => $actor->id,
                 'decision' => $decision,
+                'accepted_quantity' => $status === FulfillmentStatus::Accepted && QuantityAmount::compare($confirmed, $locked->quantity) < 0 ? $confirmed : null,
                 'note' => $note !== '' ? $note : null,
                 'reviewed_at' => $reviewedAt,
             ]);

@@ -29,6 +29,9 @@
         labels: {
             tooLarge: @js(__('studio_ui.upload.too_large', ['size' => ':size', 'limit' => ':limit'])),
             failed: @js(__('studio_ui.upload.failed')),
+            imagesCount: @js(__('studio_ui.upload.images_count', ['count' => ':count'])),
+            manyImagesOnly: @js(__('studio_ui.upload.many_images_only')),
+            tooLargeImage: @js(__('studio_ui.upload.too_large_image', ['size' => ':size', 'limit' => ':limit'])),
             failedResumable: @js(__('studio_ui.upload.failed_resumable')),
             resuming: @js(__('studio_ui.upload.resuming')),
         },
@@ -64,14 +67,70 @@
         <flux:input wire:model.live.debounce.300ms="assetCaption" :label="__('media.caption')" maxlength="1000" />
     </div>
 
+    @if ($insertKind !== 'file')
+        {{-- Each placed item can then be answered on its own by readers (an exercise section per item). --}}
+        <flux:checkbox wire:model="assetAnswerable" :label="__('studio_ui.upload.answerable_each')" :description="__('studio_ui.upload.answerable_each_help')" data-upload-answerable />
+    @endif
+
     <label
         x-show="state === 'idle' || state === 'too_large' || state === 'failed'"
         class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 px-4 py-8 text-center hover:border-zinc-400 dark:border-zinc-700"
     >
         <flux:icon name="arrow-up-tray" class="size-6 text-zinc-400" />
         <span class="text-sm font-medium" x-text="state === 'failed' ? @js(__('studio_ui.upload.choose_again')) : @js(__('studio_ui.upload.choose'))"></span>
-        <input type="file" class="sr-only" accept="{{ $accept }}" x-on:change="choose($event)" data-upload-input />
+        <input type="file" class="sr-only" accept="{{ $accept }}" @if (in_array($insertKind, ['', 'image'], true)) multiple @endif x-on:change="choose($event)" data-upload-input />
     </label>
+
+    {{-- On phones and tablets: open the camera directly. The result goes through exactly the same steps as a gallery file
+         (image: preview and optional crop; video: resumable upload). Desktop browsers ignore this row. --}}
+    @if (in_array($insertKind, ['', 'image', 'video'], true))
+        <div x-show="state === 'idle' || state === 'too_large' || state === 'failed'" class="hidden gap-2 [@media(pointer:coarse)]:flex" data-camera-capture>
+            @if (in_array($insertKind, ['', 'image'], true))
+                <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-300 px-3 py-3 text-sm font-medium hover:border-zinc-400 dark:border-zinc-700">
+                    <flux:icon name="camera" class="size-5 text-zinc-500" />
+                    <span>{{ __('studio_ui.upload.take_photo') }}</span>
+                    <input type="file" class="sr-only" accept="image/*" capture="environment" x-on:change="choose($event)" data-capture-photo />
+                </label>
+            @endif
+            @if (in_array($insertKind, ['', 'video'], true))
+                <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-300 px-3 py-3 text-sm font-medium hover:border-zinc-400 dark:border-zinc-700">
+                    <flux:icon name="video-camera" class="size-5 text-zinc-500" />
+                    <span>{{ __('studio_ui.upload.record_video') }}</span>
+                    <input type="file" class="sr-only" accept="video/*" capture="environment" x-on:change="choose($event)" data-capture-video />
+                </label>
+            @endif
+        </div>
+    @endif
+
+    {{-- Image preview: crop is optional; the cropped picture, not the full photo, is what gets uploaded --}}
+    <div x-show="state === 'preview'" x-cloak class="space-y-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" data-image-preview>
+        <div x-ref="stage" class="relative mx-auto block w-fit max-w-full select-none overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800" style="touch-action: none" x-on:pointermove="dragMove($event)" x-on:pointerup="dragEnd()" x-on:pointercancel="dragEnd()">
+            <img :src="previewUrl" alt="" class="block max-h-80 max-w-full" draggable="false" data-preview-image />
+            <div x-show="cropping" class="absolute border-2 border-white" :style="cropStyle() + ';box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move;touch-action:none'" x-on:pointerdown="dragStart($event, 'move')" data-crop-box>
+                @foreach (['nw' => 'left-0 top-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize', 'ne' => 'right-0 top-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize', 'sw' => 'left-0 bottom-0 -translate-x-1/2 translate-y-1/2 cursor-nesw-resize', 'se' => 'right-0 bottom-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize'] as $handle => $position)
+                    <span class="absolute size-6 rounded-full border-2 border-white bg-zinc-900/80 {{ $position }}" style="touch-action:none" x-on:pointerdown.stop="dragStart($event, '{{ $handle }}')" data-crop-handle="{{ $handle }}"></span>
+                @endforeach
+            </div>
+        </div>
+        <p x-show="cropping" class="text-center text-xs text-zinc-500">{{ __('studio_ui.upload.crop_hint') }}</p>
+        <p x-show="cropped && dimensions" class="text-center text-xs text-zinc-500" x-text="`{{ __('studio_ui.upload.crop_result') }} ${dimensions}`"></p>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+            <template x-if="canCropImage && !cropping">
+                <flux:button type="button" size="sm" x-on:click="startCrop()" data-crop-start>{{ __('studio_ui.upload.crop') }}</flux:button>
+            </template>
+            <template x-if="cropping">
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    <flux:button type="button" size="sm" variant="primary" x-on:click="applyCrop()" data-crop-apply>{{ __('studio_ui.upload.crop_apply') }}</flux:button>
+                    <flux:button type="button" size="sm" variant="ghost" x-on:click="cancelCrop()">{{ __('studio_ui.upload.crop_cancel') }}</flux:button>
+                </div>
+            </template>
+            <flux:button type="button" size="sm" variant="ghost" x-show="cropped && !cropping" x-on:click="undoCrop()" data-crop-undo>{{ __('studio_ui.upload.crop_undo') }}</flux:button>
+        </div>
+        <div class="flex items-center justify-between gap-2" x-show="!cropping">
+            <button type="button" x-on:click="clear()" class="text-xs text-zinc-500 underline-offset-4 hover:underline">{{ __('studio_ui.upload.remove') }}</button>
+            <flux:button type="button" variant="primary" x-on:click="useImage()" data-use-image>{{ __('studio_ui.upload.use_image') }}</flux:button>
+        </div>
+    </div>
 
     <template x-if="file && state !== 'idle'">
         <div class="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700" data-upload-file>
@@ -111,7 +170,7 @@
         <flux:button type="button" x-show="state === 'idle' || state === 'too_large'" variant="primary" disabled>{{ __('studio_ui.upload.select_first') }}</flux:button>
         <flux:button
             type="button"
-            x-show="state === 'ready'"
+            x-show="state === 'ready' && mode !== 'batch'"
             wire:click="attachAsset"
             wire:loading.attr="disabled"
             wire:target="attachAsset"
@@ -120,6 +179,18 @@
         >
             <span wire:loading.remove wire:target="attachAsset">{{ $insertKind !== '' ? __('studio_ui.upload.add_to_document') : __('studio_ui.upload.add_to_media') }}</span>
             <span wire:loading wire:target="attachAsset">{{ __('studio_ui.upload.processing') }}</span>
+        </flux:button>
+        <flux:button
+            type="button"
+            x-show="state === 'ready' && mode === 'batch'"
+            wire:click="attachAssets"
+            wire:loading.attr="disabled"
+            wire:target="attachAssets"
+            variant="primary"
+            data-upload-submit-many
+        >
+            <span wire:loading.remove wire:target="attachAssets">{{ __('studio_ui.upload.add_each') }}</span>
+            <span wire:loading wire:target="attachAssets">{{ __('studio_ui.upload.processing') }}</span>
         </flux:button>
     </div>
 </div>

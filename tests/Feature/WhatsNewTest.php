@@ -48,7 +48,7 @@ class WhatsNewTest extends TestCase
     public function test_source_version_templates_and_release_notes_stay_in_sync(): void
     {
         $version = trim(file_get_contents(base_path('VERSION')));
-        $this->assertSame('1.12.0', $version);
+        $this->assertSame('1.12.1', $version);
         $this->assertSame($version, config('app.version'));
         $this->assertSame($version, array_key_first(Changelog::RELEASES));
         foreach (['.env.example', 'deploy/production.env.example'] as $template) {

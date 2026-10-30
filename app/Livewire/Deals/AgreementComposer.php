@@ -11,20 +11,24 @@ use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Relationship;
 use App\Models\User;
+use App\Support\Bookkeeping\Toman;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementDrafter;
 use App\Support\Deals\AgreementTerms;
+use App\Support\Deals\DealDraftValidator;
 use App\Support\Deals\DealNote;
 use App\Support\Deals\DealPrincipals;
 use App\Support\Deals\DealTerms;
 use App\Support\Deals\DealTermsDiff;
 use App\Support\Deals\DealTermsDraft;
+use App\Support\Deals\DealTermsWarnings;
 use App\Support\Market\IntentDetailCatalog;
 use App\Support\Market\IntentProfiles;
 use App\Support\TemporalPreferences;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -41,8 +45,8 @@ class AgreementComposer extends Component
     /** Library, grouped the way people think about an agreement: [category => [item ids]]. Narrative clauses use "clause:<kind>". */
     public const LIBRARY = [
         'subject' => ['clause:scope', 'clause:deliverables', 'fields', 'quantity'],
-        'duties' => ['clause:duties'],
-        'money' => ['price', 'payment'],
+        'duties' => ['clause:duties', 'clause:materials'],
+        'money' => ['price', 'rates', 'payment'],
         'time' => ['time', 'place', 'route', 'recurrence'],
         'completion' => ['completion', 'clause:evidence'],
         'ending' => ['clause:cancellation', 'clause:disputes'],
@@ -164,7 +168,7 @@ class AgreementComposer extends Component
             for ($n = 2; in_array($key, array_column($this->draft['clauses'], 'key'), true); $n++) {
                 $key = $kind.'-'.$n;
             }
-            $this->draft['clauses'][] = ['key' => $key, 'kind' => $kind, 'title' => '', 'text' => ''];
+            $this->draft['clauses'][] = ['key' => $key, 'kind' => $kind, 'title' => '', 'text' => '', 'responsible' => ''];
             $this->draft['items'][] = 'clause:'.$key;
             $this->regroup();
         } elseif (! in_array($id, $this->draft['items'], true)) {
@@ -243,10 +247,43 @@ class AgreementComposer extends Component
         $this->reset('picking', 'search');
     }
 
+    /** One agreed kind of work with its unit and rate (for example masonry, per square metre). */
+    public function addRate(): void
+    {
+        abort_if(count($this->draft['rates']) >= 30, 422);
+        $n = count($this->draft['rates']) + 1;
+        while (in_array('r'.$n, array_column($this->draft['rates'], 'key'), true)) {
+            $n++;
+        }
+        $this->draft['rates'][] = ['key' => 'r'.$n, 'label' => '', 'unit' => 'square_metre', 'rate' => '', 'estimate' => ''];
+        $this->ensureItem('rates');
+    }
+
+    public function removeRate(int $index): void
+    {
+        unset($this->draft['rates'][$index]);
+        $this->draft['rates'] = array_values($this->draft['rates']);
+    }
+
     public function removeField(int $index): void
     {
         unset($this->draft['fields'][$index]);
         $this->draft['fields'] = array_values($this->draft['fields']);
+    }
+
+    /** The price as it will be read ("3,000,000 Toman / square metre"), so the amount typed is never ambiguous. */
+    public function priceHint(): string
+    {
+        $core = $this->draft['core'] ?? [];
+        try {
+            $min = trim((string) ($core['price_min'] ?? '')) === '' ? null : (string) Toman::parse($core['price_min']);
+            $max = ($core['price_mode'] ?? 'fixed') === 'range' && trim((string) ($core['price_max'] ?? '')) !== '' ? (string) Toman::parse($core['price_max']) : $min;
+        } catch (ValidationException) {
+            return '';
+        }
+        $basis = ($core['basis_choice'] ?? '') === '__other' ? ($core['basis_custom'] ?? '') : ($core['basis_choice'] ?? '');
+
+        return $min === null ? '' : DealTerms::priceLabel(['min' => $min, 'max' => $max, 'currency' => 'IRT', 'basis' => $basis]);
     }
 
     /** Creates the next immutable version for review. The drafter's own acceptance is recorded by the existing action. */
@@ -258,24 +295,18 @@ class AgreementComposer extends Component
             return;
         }
 
-        if (in_array('payment', $this->draft['items'], true) && ($this->draft['payment']['mode'] ?? '') === '') {
-            $this->addError('draft', __('deals.composer.choose_payment'));
-
-            return;
-        }
-        if (in_array('completion', $this->draft['items'], true) && ($this->draft['completion']['confirmed_by'] ?? '') === '') {
-            $this->addError('draft', __('deals.composer.choose_completion'));
+        // Each problem is shown under its own field, in the person's language.
+        $problems = DealDraftValidator::check($this->draft);
+        if ($problems !== []) {
+            foreach ($problems as $field => $message) {
+                $this->addError($field, $message);
+            }
 
             return;
         }
 
         $terms = DealTermsDraft::toTerms($this->draft);
-        if (isset($terms['price']['currency']) && ! in_array(strtoupper($terms['price']['currency']), DealTerms::SUPPORTED_CURRENCIES, true)) {
-            $this->addError('draft', __('deals.composer.toman_only'));
-
-            return;
-        }
-        if (array_intersect(array_keys($terms), ['price', 'payment', 'place', 'time', 'quantity', 'route', 'fields', 'recurrence', 'completion', 'clauses', 'notes']) === []) {
+        if (array_intersect(array_keys($terms), ['price', 'rates', 'payment', 'place', 'time', 'quantity', 'route', 'fields', 'recurrence', 'completion', 'clauses', 'notes']) === []) {
             $this->addError('draft', __('deals.terms_empty'));
 
             return;
@@ -293,7 +324,8 @@ class AgreementComposer extends Component
             if ($e->getStatusCode() !== 422) {
                 throw $e;
             }
-            $this->addError('draft', __('deals.terms_invalid').' '.$e->getMessage());
+            report($e); // the English reason is for developers; people get the localized message
+            $this->addError('draft', __('deals.terms_invalid'));
 
             return;
         }
@@ -331,7 +363,8 @@ class AgreementComposer extends Component
             if ($e->getStatusCode() !== 422) {
                 throw $e;
             }
-            $this->addError('draft', __('deals.terms_invalid').' '.$e->getMessage());
+            report($e);
+            $this->addError('draft', __('deals.terms_invalid'));
 
             return;
         }
@@ -351,6 +384,8 @@ class AgreementComposer extends Component
             'fromOrigin' => $this->open && $latest === null && $this->mode === 'propose',
             'library' => $this->open && $this->picking ? $this->fieldLibrary() : [],
             'partyNames' => $this->open ? $this->partyNames() : [],
+            'partyOptions' => $this->open ? DealPrincipals::labels($this->relationship->fresh()) : [],
+            'warnings' => $this->open ? DealTermsWarnings::for(DealTermsDraft::toTerms($this->draft)) : [],
             'categories' => self::LIBRARY,
             'present' => $this->draft['items'] ?? [],
             'numbers' => AgreementDocument::numbering($this->draft['items'] ?? [], $this->clauseKinds()),
@@ -411,6 +446,7 @@ class AgreementComposer extends Component
         match ($id) {
             'price' => $this->draft['core']['currency'] = $this->draft['core']['currency'] ?: 'IRT',
             'recurrence' => $this->draft['recurrence'] = ['every' => '1', 'unit' => 'month', 'count' => ''],
+            'rates' => $this->draft['rates'] === [] ? $this->addRate() : null,
             default => null,
         };
     }

@@ -50,6 +50,12 @@ return [
         'public_off' => 'Private',
         'make_public' => 'Make public',
         'make_private' => 'Make private',
+        'contacts_title' => 'My contacts',
+        'contacts_help' => 'Only people you have accepted as contacts can read the published edition. Drafts stay private.',
+        'contacts_on' => 'Contacts',
+        'contacts_off' => 'Not shared',
+        'make_contacts' => 'Share with my contacts',
+        'made_contacts' => 'Now readable by your contacts.',
         'public_link' => 'Public link',
         'copy' => 'Copy',
         'copied' => 'Copied',
@@ -95,6 +101,7 @@ return [
 
     'errors' => [
         'unknown_access' => 'Choose public or private.',
+        'contacts_personal_only' => 'Contacts sharing is for your own personal content.',
         'too_many_invitations' => 'This already has :max active links. Turn some off first.',
     ],
 ];

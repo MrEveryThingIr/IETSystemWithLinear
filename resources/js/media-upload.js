@@ -7,7 +7,12 @@
  * after a refresh — the same file just needs to be chosen again.
  * When the bytes are in, the browser measures duration/size and captures a
  * poster frame, so the shared host never needs FFmpeg.
+ *
+ * Images are shown in a preview first. Cropping is optional (see image-crop.js): the cropped picture, not the full photo,
+ * is what gets uploaded, through the same direct upload and the same attach step.
  */
+
+import { canCrop, initialRect, isFullRect, moveRect, outputFormat, outputGeometry, outputName, resizeRect } from './image-crop';
 
 const EXTENSION_TYPES = {
     mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
@@ -92,20 +97,39 @@ document.addEventListener('alpine:init', () => {
         note: '',
         session: null,
         cancelled: false,
+        originalFile: null,
+        files: [],
+        previewUrl: null,
+        canCropImage: false,
+        cropped: false,
+        cropping: false,
+        crop: initialRect(),
+        drag: null,
+        dimensions: '',
 
         size(bytes) {
             return formatBytes(bytes);
         },
 
         choose(event) {
-            const file = event.target.files[0];
+            const chosen = Array.from(event.target.files || []);
             event.target.value = '';
+            if (chosen.length > 1) {
+                this.chooseMany(chosen);
+                return;
+            }
+            const file = chosen[0];
             if (!file) return;
 
             this.file = file;
             this.message = '';
             this.note = '';
             const kind = kindOf(file);
+            if (kind === 'image') {
+                this.originalFile = file;
+                this.showPreview();
+                return;
+            }
             const resumable = (kind === 'video' || kind === 'audio') && config.resumableLimits[kind] > 0;
             const limit = resumable ? config.resumableLimits[kind] : config.limits[kind];
 
@@ -119,7 +143,173 @@ document.addEventListener('alpine:init', () => {
             resumable ? this.uploadResumable() : this.uploadDirect();
         },
 
+        /** Several images in one selection: each is uploaded and then becomes its own placement and block. */
+        chooseMany(files) {
+            this.message = '';
+            this.note = '';
+            this.file = { name: config.labels.imagesCount.replace(':count', files.length), size: files.reduce((sum, f) => sum + f.size, 0) };
+            const tooBig = files.find((f) => kindOf(f) === 'image' && f.size > config.limits.image);
+            if (!files.every((f) => kindOf(f) === 'image')) {
+                this.state = 'too_large';
+                this.message = config.labels.manyImagesOnly;
+                return;
+            }
+            if (tooBig) {
+                this.state = 'too_large';
+                this.message = config.labels.tooLarge.replace(':size', formatBytes(tooBig.size)).replace(':limit', formatBytes(config.limits.image));
+                return;
+            }
+            this.mode = 'batch';
+            this.files = files;
+            this.uploadBatch();
+        },
+
+        uploadBatch() {
+            this.state = 'uploading';
+            this.progress = 0;
+            this.$wire.uploadMultiple('assetUploads', this.files,
+                () => { this.state = 'ready'; },
+                () => { this.state = 'failed'; this.message = config.labels.failed; },
+                (event) => { this.progress = event.detail.progress; },
+                () => { this.state = 'idle'; this.file = null; this.files = []; },
+            );
+        },
+
+        // ---- Images: preview, optional crop, then the normal direct upload -----------------------------------------
+
+        showPreview() {
+            this.mode = 'direct';
+            this.cropped = false;
+            this.cropping = false;
+            this.dimensions = '';
+            this.canCropImage = canCrop(typeOf(this.file));
+            this.setPreview(this.file);
+            this.state = 'preview';
+            this.warnIfTooLarge();
+        },
+
+        setPreview(file) {
+            this.releasePreview();
+            this.previewUrl = URL.createObjectURL(file);
+        },
+
+        releasePreview() {
+            if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+            this.previewUrl = null;
+        },
+
+        warnIfTooLarge() {
+            const limit = config.limits.image;
+            this.message = this.file.size > limit
+                ? config.labels.tooLargeImage.replace(':size', formatBytes(this.file.size)).replace(':limit', formatBytes(limit))
+                : '';
+        },
+
+        startCrop() {
+            this.crop = initialRect();
+            this.cropping = true;
+        },
+
+        cancelCrop() {
+            this.cropping = false;
+        },
+
+        cropStyle() {
+            const c = this.crop;
+            return `left:${c.x * 100}%;top:${c.y * 100}%;width:${c.w * 100}%;height:${c.h * 100}%`;
+        },
+
+        dragStart(event, handle) {
+            event.preventDefault();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            this.drag = { handle, x: event.clientX, y: event.clientY, start: { ...this.crop } };
+        },
+
+        dragMove(event) {
+            if (!this.drag) return;
+            const box = this.$refs.stage.getBoundingClientRect();
+            if (!box.width || !box.height) return;
+            const dx = (event.clientX - this.drag.x) / box.width;
+            const dy = (event.clientY - this.drag.y) / box.height;
+            this.crop = this.drag.handle === 'move'
+                ? moveRect(this.drag.start, dx, dy)
+                : resizeRect(this.drag.start, this.drag.handle, dx, dy);
+        },
+
+        dragEnd() {
+            this.drag = null;
+        },
+
+        /** The picture as the browser shows it, rotated upright by its EXIF orientation. */
+        async decodeUpright() {
+            try {
+                const bitmap = await createImageBitmap(this.originalFile, { imageOrientation: 'from-image' });
+                return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+            } catch (error) {
+                const image = new Image();
+                image.src = URL.createObjectURL(this.originalFile);
+                await image.decode();
+                return { source: image, width: image.naturalWidth, height: image.naturalHeight, close: () => URL.revokeObjectURL(image.src) };
+            }
+        },
+
+        async applyCrop() {
+            try {
+                const decoded = await this.decodeUpright();
+                const geometry = outputGeometry(decoded.width, decoded.height, this.crop);
+                const format = outputFormat(typeOf(this.originalFile));
+                const canvas = document.createElement('canvas');
+                canvas.width = geometry.dw;
+                canvas.height = geometry.dh;
+                const context = canvas.getContext('2d');
+                context.imageSmoothingQuality = 'high';
+                if (format.type === 'image/jpeg') {
+                    context.fillStyle = '#ffffff';
+                    context.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                context.drawImage(decoded.source, geometry.sx, geometry.sy, geometry.sw, geometry.sh, 0, 0, geometry.dw, geometry.dh);
+                decoded.close();
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, format.type, format.quality));
+                if (!blob) throw new Error('encode');
+
+                this.cropping = false;
+                // The whole picture "cropped" only to shrink it: keep the original when that would not make it smaller.
+                if (isFullRect(this.crop) && blob.size >= this.originalFile.size) {
+                    this.undoCrop();
+                    return;
+                }
+                this.file = new File([blob], outputName(this.originalFile.name, format.extension), { type: format.type, lastModified: Date.now() });
+                this.cropped = true;
+                this.dimensions = `${geometry.dw} × ${geometry.dh}`;
+                this.setPreview(this.file);
+                this.warnIfTooLarge();
+            } catch (error) {
+                this.cropping = false;
+                this.message = config.labels.failed;
+            }
+        },
+
+        undoCrop() {
+            this.file = this.originalFile;
+            this.cropped = false;
+            this.cropping = false;
+            this.dimensions = '';
+            this.setPreview(this.file);
+            this.warnIfTooLarge();
+        },
+
+        useImage() {
+            if (this.file.size > config.limits.image) {
+                this.warnIfTooLarge();
+                return;
+            }
+            this.message = '';
+            this.releasePreview();
+            this.uploadDirect();
+        },
+
         retry() {
+            if (this.mode === 'batch') return this.uploadBatch();
             this.mode === 'resumable' ? this.uploadResumable() : this.uploadDirect();
         },
 
@@ -247,7 +437,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         async cancel() {
-            if (this.mode === 'direct') {
+            if (this.mode === 'batch') {
+                this.$wire.cancelUpload('assetUploads');
+            } else if (this.mode === 'direct') {
                 this.$wire.cancelUpload('assetUpload');
             } else {
                 this.cancelled = true;
@@ -256,16 +448,24 @@ document.addEventListener('alpine:init', () => {
                 }
                 try { window.localStorage.removeItem(this.storageKey()); } catch (error) { /* ignore */ }
             }
+            this.releasePreview();
             this.state = 'idle';
             this.file = null;
+            this.originalFile = null;
             this.session = null;
             this.progress = 0;
         },
 
         clear() {
-            if (this.state === 'ready') this.$wire.set('assetUpload', null);
+            if (this.state === 'ready') {
+                this.$wire.set('assetUpload', null);
+                this.$wire.set('assetUploads', []);
+            }
+            this.files = [];
+            this.releasePreview();
             this.state = 'idle';
             this.file = null;
+            this.originalFile = null;
             this.message = '';
         },
     }));

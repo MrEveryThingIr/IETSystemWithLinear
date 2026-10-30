@@ -62,4 +62,10 @@ return [
         'captions_off' => '字幕关',
         'keyboard_help' => '空格 播放/暂停 · ←/→ 5 秒 · J/L 10 秒 · F 全屏 · C 字幕',
     ],
+    'reference' => [
+        'image' => '图片 :n',
+        'audio' => '音频 :n',
+        'video' => '视频 :n',
+        'file' => '文件 :n',
+    ],
 ];

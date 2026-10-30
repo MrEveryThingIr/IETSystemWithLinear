@@ -53,19 +53,22 @@
                         @if ($isClause)
                             <flux:input wire:model="draft.clauses.{{ $ci }}.title" :placeholder="$heading" aria-label="{{ __('deals.composer.clause_title') }}" maxlength="120" />
                             <flux:textarea wire:model="draft.clauses.{{ $ci }}.text" rows="3" :placeholder="__('deals.clauses.'.$clause['kind'].'.hint')" aria-label="{{ $heading }}" />
+                            @if (in_array($clause['kind'], \App\Support\Deals\DealTerms::RESPONSIBLE_KINDS, true))
+                                <flux:select wire:model="draft.clauses.{{ $ci }}.responsible" :label="__('deals.composer.responsible')" data-clause-party>
+                                    <option value="">{{ __('deals.composer.responsible_none') }}</option>
+                                    @foreach ($partyOptions as $partyKey => $partyName)<option value="{{ $partyKey }}">{{ $partyName }}</option>@endforeach
+                                </flux:select>
+                            @endif
                         @else
                             @switch($id)
                                 @case('price')
                                     @if ($legacyPrice !== '')
                                         <flux:callout variant="warning" data-legacy-currency>{{ __('deals.composer.legacy_currency', ['price' => $legacyPrice]) }}</flux:callout>
                                     @endif
-                                    <div class="grid gap-2 sm:grid-cols-4">
-                                        <flux:input inputmode="decimal" wire:model="draft.core.price_min" :label="__('deals.change.price_min')" />
-                                        <flux:input inputmode="decimal" wire:model="draft.core.price_max" :label="__('deals.change.price_max')" />
-                                        <flux:select wire:model="draft.core.currency" :label="__('deals.change.price_currency')" data-currency>
-                                            @foreach ($currencies as $code)
-                                                <option value="{{ $code }}">{{ $code }} · {{ __('deals.currencies.'.$code) }}</option>
-                                            @endforeach
+                                    <div class="grid gap-2 sm:grid-cols-2">
+                                        <flux:select wire:model.live="draft.core.price_mode" :label="__('deals.composer.price_kind')" data-price-mode>
+                                            <option value="fixed">{{ __('deals.composer.price_fixed') }}</option>
+                                            <option value="range">{{ __('deals.composer.price_range') }}</option>
                                         </flux:select>
                                         <flux:select wire:model.live="draft.core.basis_choice" :label="__('deals.change.price_basis')" data-basis>
                                             <option value="">—</option>
@@ -78,6 +81,18 @@
                                     @if (($draft['core']['basis_choice'] ?? '') === '__other')
                                         <flux:input wire:model="draft.core.basis_custom" :label="__('deals.composer.basis_custom')" maxlength="40" />
                                     @endif
+                                    <div class="grid gap-2 sm:grid-cols-3">
+                                        <flux:input inputmode="numeric" wire:model="draft.core.price_min" :label="($draft['core']['price_mode'] ?? 'fixed') === 'range' ? __('deals.composer.price_from') : __('deals.composer.price_amount')" data-price-min />
+                                        @if (($draft['core']['price_mode'] ?? 'fixed') === 'range')
+                                            <flux:input inputmode="numeric" wire:model="draft.core.price_max" :label="__('deals.composer.price_to')" data-price-max />
+                                        @endif
+                                        <flux:select wire:model="draft.core.currency" :label="__('deals.change.price_currency')" data-currency>
+                                            @foreach ($currencies as $code)
+                                                <option value="{{ $code }}">{{ $code }} · {{ __('deals.currencies.'.$code) }}</option>
+                                            @endforeach
+                                        </flux:select>
+                                    </div>
+                                    @if ($this->priceHint() !== '')<p class="text-xs text-zinc-500" data-price-hint>{{ $this->priceHint() }}</p>@endif
                                     @break
                                 @case('payment')
                                     <div class="grid gap-2 sm:grid-cols-2">
@@ -126,6 +141,23 @@
                                     <div class="grid gap-2 sm:grid-cols-2">
                                         <flux:input wire:model="draft.core.from" :label="__('deals.change.route_from')" />
                                         <flux:input wire:model="draft.core.to" :label="__('deals.change.route_to')" />
+                                    </div>
+                                    @break
+                                @case('rates')
+                                    <div class="space-y-3" data-rates>
+                                        @foreach ($draft['rates'] as $i => $r)
+                                            <div wire:key="rate-{{ $r['key'] }}" class="grid items-end gap-2 sm:grid-cols-5">
+                                                <flux:input class="sm:col-span-2" wire:model="draft.rates.{{ $i }}.label" :label="__('deals.rates.label')" maxlength="120" />
+                                                <flux:select wire:model="draft.rates.{{ $i }}.unit" :label="__('deals.rates.unit')">
+                                                    @foreach (\App\Support\Deals\DealTerms::PAYMENT_BASES as $unit)@if ($unit !== 'total')<option value="{{ $unit }}">{{ \App\Support\Deals\DealTerms::basisLabel($unit) ?? $unit }}</option>@endif @endforeach
+                                                </flux:select>
+                                                <flux:input inputmode="numeric" wire:model="draft.rates.{{ $i }}.rate" :label="__('deals.rates.rate')" />
+                                                <flux:input inputmode="decimal" wire:model="draft.rates.{{ $i }}.estimate" :label="__('deals.rates.estimate')" />
+                                                <flux:button class="sm:col-span-5 justify-self-start" size="sm" variant="ghost" wire:click="removeRate({{ $i }})">{{ __('deals.rates.remove') }}</flux:button>
+                                            </div>
+                                        @endforeach
+                                        <flux:button size="sm" wire:click="addRate">{{ __('deals.rates.add') }}</flux:button>
+                                        <p class="text-xs text-zinc-500">{{ __('deals.rates.hint') }}</p>
                                     </div>
                                     @break
                                 @case('recurrence')
@@ -241,6 +273,14 @@
                 </div>
             @else
                 <flux:button wire:click="$set('libraryOpen', true)" size="sm">+ {{ __('deals.composer.add_term') }}</flux:button>
+            @endif
+
+            @if ($warnings)
+                <div class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-700 dark:bg-amber-950/30" data-composer-warnings>
+                    <div class="font-medium">{{ __('deals.warnings.title') }}</div>
+                    <ul class="mt-1 list-disc space-y-1 ps-5">@foreach ($warnings as $w)<li data-warning="{{ $w['code'] }}" dir="auto">{{ __('deals.warnings.'.$w['code'], $w['params']) }}</li>@endforeach</ul>
+                    <p class="mt-1 text-zinc-500">{{ __('deals.warnings.note') }}</p>
+                </div>
             @endif
 
             <flux:input wire:model="versionNote" :label="__('deals.composer.version_note')" maxlength="1000" />

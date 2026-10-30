@@ -5,9 +5,11 @@ namespace App\Actions\Bookkeeping;
 use App\Enums\Bookkeeping\DisputeStatus;
 use App\Enums\Bookkeeping\TransactionStatus;
 use App\Models\Bookkeeping\Dispute;
+use App\Models\Bookkeeping\Ledger;
 use App\Models\Bookkeeping\Transaction;
 use App\Models\User;
 use App\Support\Bookkeeping\BookkeepingRecorder;
+use App\Support\Bookkeeping\CreditAudit;
 use App\Support\Bookkeeping\Toman;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +34,7 @@ class RaiseDispute
         $actor = $this->recorder->actor($user);
 
         return DB::transaction(function () use ($transaction, $user, $actor, $reason): Dispute {
+            Ledger::query()->whereKey($transaction->ledger_id)->lockForUpdate()->firstOrFail();
             $locked = Transaction::query()->with('ledger.activeParties')->lockForUpdate()->findOrFail($transaction->id);
             Gate::forUser($user)->authorize('dispute', $locked);
 
@@ -54,6 +57,8 @@ class RaiseDispute
                 ['who' => $actor->user->username ?? '', 'amount' => Toman::format((int) $locked->amount), 'book' => $locked->ledger->name],
                 $actor,
             );
+
+            app(CreditAudit::class)->record($locked, $actor);
 
             return $dispute->refresh();
         }, 3);

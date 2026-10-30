@@ -6,6 +6,7 @@ use App\Enums\Bookkeeping\ConfirmationDecision;
 use App\Models\Bookkeeping\LedgerParty;
 use App\Models\Bookkeeping\Transaction;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Who must agree before an entry counts.
@@ -38,7 +39,7 @@ final class ConfirmationRules
     /** @return Collection<int, LedgerParty> */
     public function awaiting(Transaction $transaction): Collection
     {
-        $decided = $transaction->confirmations()->pluck('party_id')->map(fn ($id): int => (int) $id)->all();
+        $decided = $transaction->confirmations()->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())->pluck('party_id')->map(fn ($id): int => (int) $id)->all();
 
         return $this->required($transaction)
             ->reject(fn (LedgerParty $party): bool => in_array((int) $party->id, $decided, true))
@@ -49,6 +50,7 @@ final class ConfirmationRules
     {
         $approved = $transaction->confirmations()
             ->where('decision', ConfirmationDecision::Approved->value)
+            ->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())
             ->pluck('party_id')
             ->map(fn ($id): int => (int) $id)
             ->all();

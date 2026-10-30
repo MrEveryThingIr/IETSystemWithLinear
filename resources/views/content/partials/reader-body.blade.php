@@ -6,6 +6,17 @@
     $assetUrlFor / $downloadUrlFor (closures), $canAnnotate and the marker maps.
 --}}
 @if ($revision->composition_mode === \App\Models\SpaceContentRevision::COMPOSITION_BLOCKS && $blocks->isNotEmpty())
+    @php
+        // "Image 1", "Image 2" ... are only a human reference in reading order; the identity of an item is its block and placement.
+        $mediaRefs = [];
+        $mediaCounts = [];
+        foreach ($blocks as $candidate) {
+            if (in_array($candidate->type, ['image', 'audio', 'video', 'file'], true)) {
+                $mediaCounts[$candidate->type] = ($mediaCounts[$candidate->type] ?? 0) + 1;
+                $mediaRefs[$candidate->uuid] = __('media.reference.'.$candidate->type, ['n' => $mediaCounts[$candidate->type]]);
+            }
+        }
+    @endphp
     @foreach ($blocks as $block)
         @php
             $blockStyle = is_array($block->style) ? $block->style : [];
@@ -164,10 +175,21 @@
                             $assetUrl = $assetUrlFor($asset);
                             $downloadUrl = $downloadUrlFor($asset);
                         @endphp
-                        <figure class="group/media relative space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-target-type="asset" data-target-uuid="{{ $placementUuid }}" data-target-label="{{ $blockData['caption'] ?? $asset->original_filename }}">
-                            <div class="absolute end-2 top-2 z-10 opacity-0 transition group-hover/media:opacity-100 group-focus-within/media:opacity-100">
+                        @php
+                            $mediaRef = $mediaRefs[$block->uuid] ?? null;
+                            $mediaAnswerable = \App\Support\Content\SectionSemantics::isAnswerable($sectionRole);
+                            $mediaLabel = trim(($mediaRef ?? '').(! empty($blockData['caption']) ? ' · '.$blockData['caption'] : ''), ' ·') ?: $asset->original_filename;
+                        @endphp
+                        <figure class="group/media relative space-y-3 {{ $mediaStyle === 'card' ? 'border p-3 '.$radiusClass : '' }}" style="border-color: var(--content-border)" data-annotation-target="asset" data-target-type="asset" data-target-uuid="{{ $placementUuid }}" data-target-label="{{ $mediaLabel }}" data-media-item data-media-block="{{ $block->uuid }}" data-media-ref="{{ $mediaRef }}">
+                            {{-- Always visible on touch screens (no hover there); revealed on hover/focus with a pointer. --}}
+                            <div class="absolute end-2 top-2 z-10 transition max-sm:opacity-100 [@media(hover:none)]:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/media:opacity-100 [@media(hover:hover)]:group-focus-within/media:opacity-100" data-media-menu>
                                 @if ($canAnnotate)
-                                    <x-app.annotation-target-menu target-type="asset" :target-uuid="$placementUuid" :label="$blockData['caption'] ?? $asset->original_filename" :marker-uuids="$assetMarkers" />
+                                    {{-- An answerable item is its own section: its menu answers that block. Otherwise it targets this placement. --}}
+                                    @if ($mediaAnswerable)
+                                        <x-app.annotation-target-menu target-type="block" :target-uuid="$block->uuid" :label="$mediaLabel" :marker-uuids="array_values(array_unique(array_merge($assetMarkers, $blockMarkers)))" :role="$sectionRole" />
+                                    @else
+                                        <x-app.annotation-target-menu target-type="asset" :target-uuid="$placementUuid" :label="$mediaLabel" :marker-uuids="$assetMarkers" />
+                                    @endif
                                 @endif
                             </div>
                             @if ($block->type === 'image')
@@ -178,6 +200,9 @@
                                 <x-media.video-player :src="$assetUrl" :poster="$mediaExtras[$asset->id]['poster'] ?? null" :tracks="$mediaExtras[$asset->id]['tracks'] ?? []" :duration-ms="$mediaExtras[$asset->id]['duration_ms'] ?? null" :media-class="'max-h-[42rem] w-full '.$radiusClass.' bg-black'" />
                             @else
                                 <a href="{{ $downloadUrl }}" class="block p-4 font-medium" dir="auto">{{ __('reader.download') }} · {{ $asset->original_filename }}</a>
+                            @endif
+                            @if ($mediaAnswerable && $mediaRef)
+                                <div class="text-xs font-semibold" style="color: var(--content-muted)" dir="auto" data-media-ref-label>{{ $mediaRef }}</div>
                             @endif
                             @if (! empty($blockData['caption']))
                                 <figcaption class="text-sm" style="color: var(--content-muted)" dir="auto" data-annotation-text data-anchor-target="block" data-target-uuid="{{ $block->uuid }}" data-anchor-base="0">{{ $blockData['caption'] }}</figcaption>
@@ -194,7 +219,7 @@
                     data-annotation-target-menu
                     data-target-type="block"
                     data-target-uuid="{{ $block->uuid }}"
-                    data-target-label="{{ __('sections.roles.'.$sectionRole.'.name') }}"
+                    data-target-label="{{ ($mediaRefs[$block->uuid] ?? null) ?: __('sections.roles.'.$sectionRole.'.name') }}"
                 >
                     @if ($canAnswerSections ?? false)
                         <button type="button" data-context-purpose="answer" class="inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2" style="background: var(--content-accent)" data-section-answer>

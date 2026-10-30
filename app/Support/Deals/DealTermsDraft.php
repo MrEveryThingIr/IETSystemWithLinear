@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  */
 final class DealTermsDraft
 {
-    public const CORE = ['price_min', 'price_max', 'currency', 'basis', 'place', 'starts_on', 'ends_on', 'daily_from', 'daily_to', 'timezone', 'quantity', 'unit', 'from', 'to', 'basis_choice', 'basis_custom'];
+    public const CORE = ['price_min', 'price_max', 'currency', 'basis', 'place', 'starts_on', 'ends_on', 'daily_from', 'daily_to', 'timezone', 'quantity', 'unit', 'from', 'to', 'basis_choice', 'basis_custom', 'price_mode'];
 
     /** @return array<string, mixed> */
     public static function blank(): array
@@ -27,6 +27,7 @@ final class DealTermsDraft
             'title' => '', 'summary' => '', 'items' => [],
             'core' => array_fill_keys(self::CORE, ''),
             'fields' => [],
+            'rates' => [],
             'recurrence' => ['every' => '', 'unit' => '', 'count' => ''],
             'payment' => ['mode' => '', 'period' => '', 'note' => ''],
             'completion' => ['confirmed_by' => ''],
@@ -56,14 +57,18 @@ final class DealTermsDraft
             'from' => $t['route']['from'] ?? null, 'to' => $t['route']['to'] ?? null,
         ], fn ($v) => $v !== null)));
         self::splitBasis($d);
+        $d['core']['price_mode'] = isset($t['price']['min'], $t['price']['max']) && $t['price']['min'] !== $t['price']['max'] ? 'range' : 'fixed';
         foreach ($t['fields'] ?? [] as $f) {
             $d['fields'][] = ['key' => $f['key'], 'label' => $f['label'], 'type' => $f['type'] ?? 'text', 'unit' => $f['unit'] ?? '', 'value' => $f['value']];
+        }
+        foreach ($t['rates'] ?? [] as $r) {
+            $d['rates'][] = ['key' => $r['key'], 'label' => $r['label'], 'unit' => $r['unit'], 'rate' => $r['rate'], 'estimate' => $r['estimate'] ?? ''];
         }
         $d['recurrence'] = array_replace($d['recurrence'], array_map('strval', array_filter($t['recurrence'] ?? [], fn ($v) => $v !== null)));
         $d['payment'] = array_replace($d['payment'], array_map('strval', array_filter($t['payment'] ?? [], fn ($v) => $v !== null)));
         $d['completion'] = array_replace($d['completion'], array_map('strval', $t['completion'] ?? []));
         foreach ($t['clauses'] ?? [] as $c) {
-            $d['clauses'][] = ['key' => $c['key'], 'kind' => $c['kind'], 'title' => $c['title'] ?? '', 'text' => $c['text'] ?? ''];
+            $d['clauses'][] = ['key' => $c['key'], 'kind' => $c['kind'], 'title' => $c['title'] ?? '', 'text' => $c['text'] ?? '', 'responsible' => $c['responsible'] ?? ''];
         }
         $d['notes'] = (string) ($t['notes'] ?? '');
         $d['items'] = $t['order'] ?? self::defaultItems($d);
@@ -92,6 +97,7 @@ final class DealTermsDraft
         ], fn ($v) => $v !== null && $v !== '')));
 
         self::splitBasis($d);
+        $d['core']['price_mode'] = $min !== null && $max !== null && $min !== $max ? 'range' : 'fixed';
 
         $catalog = IntentDetailCatalog::all();
         $topic = $deal->originatingIntent?->metadata['composer_topic'] ?? null;
@@ -165,6 +171,7 @@ final class DealTermsDraft
             'recurrence' => ($d['recurrence']['unit'] ?? '') !== '',
             'completion' => ($d['completion']['confirmed_by'] ?? '') !== '',
             'fields' => ($d['fields'] ?? []) !== [],
+            'rates' => ($d['rates'] ?? []) !== [],
             'notes' => trim((string) ($d['notes'] ?? '')) !== '',
         ];
         foreach (DealTerms::SECTION_IDS as $id) {
@@ -214,19 +221,26 @@ final class DealTermsDraft
             $clauses[] = array_filter([
                 'key' => $clause['key'], 'kind' => $clause['kind'],
                 'title' => trim((string) ($clause['title'] ?? '')) ?: null, 'text' => trim((string) ($clause['text'] ?? '')) ?: null,
+                'responsible' => trim((string) ($clause['responsible'] ?? '')) ?: null,
             ], fn ($v) => $v !== null);
         }
 
+        $rates = [];
+        foreach ($d['rates'] ?? [] as $row) {
+            $rates[] = ['key' => $row['key'], 'label' => trim((string) ($row['label'] ?? '')), 'unit' => trim((string) ($row['unit'] ?? '')), 'rate' => trim((string) ($row['rate'] ?? '')), 'estimate' => trim((string) ($row['estimate'] ?? '')) ?: null];
+        }
         $r = $d['recurrence'] ?? [];
         $p = $d['payment'] ?? [];
         $basis = $c('basis_choice') === '__other' ? $c('basis_custom') : ($c('basis_choice') ?: $c('basis'));
+        // One price by default: the amount is both ends. A range is written only when the person chose one.
+        $priceMax = ($c('price_mode') ?: 'fixed') === 'fixed' ? $c('price_min') : $c('price_max');
         $present = array_filter($items, fn ($id) => str_starts_with($id, 'clause:') ? collect($clauses)->contains(fn ($cl) => 'clause:'.$cl['key'] === $id) : true);
 
         return array_filter([
             'schema' => DealTerms::SCHEMA,
             'title' => trim((string) ($d['title'] ?? '')) ?: null,
             'summary' => trim((string) ($d['summary'] ?? '')) ?: null,
-            'price' => $has('price') && ($c('price_min') || $c('price_max') || $basis) ? ['min' => $c('price_min'), 'max' => $c('price_max'), 'currency' => $c('currency'), 'basis' => $basis] : null,
+            'price' => $has('price') && ($c('price_min') || $c('price_max') || $basis) ? ['min' => $c('price_min'), 'max' => $priceMax, 'currency' => $c('currency'), 'basis' => $basis] : null,
             'payment' => $has('payment') && trim((string) ($p['mode'] ?? '')) !== ''
                 ? ['mode' => $p['mode'], 'period' => trim((string) ($p['period'] ?? '')) ?: null, 'note' => trim((string) ($p['note'] ?? '')) ?: null]
                 : null,
@@ -235,6 +249,7 @@ final class DealTermsDraft
             'quantity' => $has('quantity') && ($c('quantity') || $c('unit')) ? ['value' => $c('quantity'), 'unit' => $c('unit')] : null,
             'route' => $has('route') && ($c('from') || $c('to')) ? ['from' => $c('from'), 'to' => $c('to')] : null,
             'fields' => $fields ?: null,
+            'rates' => $has('rates') && $rates !== [] ? $rates : null,
             'recurrence' => $has('recurrence') && trim((string) ($r['unit'] ?? '')) !== ''
                 ? ['every' => trim((string) ($r['every'] ?? '')) ?: 1, 'unit' => $r['unit'], 'count' => trim((string) ($r['count'] ?? '')) ?: null]
                 : null,

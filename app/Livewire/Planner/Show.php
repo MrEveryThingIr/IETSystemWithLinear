@@ -35,6 +35,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -121,6 +122,37 @@ class Show extends Component
         $this->expenseUnitCode = array_key_exists($code, MonetaryUnitCatalog::all())
             ? $code
             : (string) array_key_first(MonetaryUnitCatalog::all());
+    }
+
+    public bool $editingLater = false;
+
+    public string $laterTitle = '';
+
+    public string $laterNotes = '';
+
+    public function editLater(): void
+    {
+        $this->assertOwner();
+        abort_unless($this->plan->isForLater(), 404);
+        $this->laterTitle = $this->plan->title;
+        $this->laterNotes = (string) $this->plan->description;
+        $this->editingLater = true;
+    }
+
+    /** A "For later" item stays editable: title and notes, nothing about time. */
+    public function saveLater(): void
+    {
+        $this->assertOwner();
+        abort_unless($this->plan->isForLater(), 404);
+        $data = $this->validate([
+            'laterTitle' => ['required', 'string', 'max:180'],
+            'laterNotes' => ['nullable', 'string', 'max:10000'],
+        ]);
+        $this->plan->forceFill([
+            'title' => Str::squish($data['laterTitle']),
+            'description' => trim((string) $data['laterNotes']) !== '' ? trim((string) $data['laterNotes']) : null,
+        ])->save();
+        $this->editingLater = false;
     }
 
     public function pause(TransitionPlan $transition): void
@@ -633,6 +665,7 @@ class Show extends Component
 
         return view('livewire.planner.show', [
             ...$this->habitData($plan, $user),
+            'forLater' => $plan->isForLater(),
             'look' => $appearance->of($plan),
             'labels' => $appearance->labels(),
             'canManage' => $canManage,

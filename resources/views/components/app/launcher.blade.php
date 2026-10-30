@@ -3,7 +3,7 @@
 @endphp
 
 {{-- The + launcher: a few plain sentences, each opening one form. Rendered once per page. --}}
-@if ($launcherChoices !== [])
+@if (app(\App\Support\IntentionLauncher::class)->visibleFor(auth()->user()))
     <flux:modal name="intention-launcher" class="w-full max-w-md" data-launcher>
         <div class="space-y-4">
             <div>

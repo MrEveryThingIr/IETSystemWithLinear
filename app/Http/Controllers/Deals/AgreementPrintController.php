@@ -9,6 +9,7 @@ use App\Models\Relationship;
 use App\ProposalStatus;
 use App\Support\Deals\AgreementDocument;
 use App\Support\Deals\AgreementTerms;
+use App\Support\Deals\DealPrincipals;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -45,7 +46,7 @@ class AgreementPrintController extends Controller
             'version' => $version,
             'source' => $source,
             'terms' => $terms,
-            'sections' => $terms !== null ? AgreementDocument::sections($terms) : [],
+            'sections' => $terms !== null ? AgreementDocument::sections($terms, DealPrincipals::labels($relationship)) : [],
             'legacyText' => $terms === null ? (string) ($version->termsRevision->payload['terms'] ?? '') : null,
             'agreementVersions' => $contract->versions->sortBy('version'),
             'parties' => $version->parties,

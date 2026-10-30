@@ -174,6 +174,16 @@
                         @endforeach
                     </div>
                 @else
+                    @php
+                        $studioMediaCounts = [];
+                        $studioMediaRefs = [];
+                        foreach ($blocks as $candidate) {
+                            if (in_array($candidate['type'], ['image', 'audio', 'video', 'file'], true)) {
+                                $studioMediaCounts[$candidate['type']] = ($studioMediaCounts[$candidate['type']] ?? 0) + 1;
+                                $studioMediaRefs[$candidate['logical_uuid']] = __('media.reference.'.$candidate['type'], ['n' => $studioMediaCounts[$candidate['type']]]);
+                            }
+                        }
+                    @endphp
                     <div class="space-y-3" data-studio-blocks>
                         @foreach ($blocks as $index => $block)
                             <div id="block-{{ $block['logical_uuid'] }}" wire:key="studio-block-{{ $block['logical_uuid'] }}" class="group relative scroll-mt-28 rounded-xl border border-transparent p-2 hover:border-zinc-200 focus-within:border-zinc-200 dark:hover:border-zinc-800 dark:focus-within:border-zinc-800" data-studio-block="{{ $block['type'] }}">
@@ -182,7 +192,7 @@
                                         $sectionRole = (string) ($block['data']['semantics']['role'] ?? '');
                                     @endphp
                                     <div class="flex min-w-0 items-center gap-2">
-                                        <span class="text-[0.7rem] font-medium uppercase tracking-wide text-zinc-400">{{ __('blocks.type.'.$block['type']) }}</span>
+                                        <span class="text-[0.7rem] font-medium uppercase tracking-wide text-zinc-400" @if (isset($studioMediaRefs[$block['logical_uuid']])) data-studio-media-ref="{{ $studioMediaRefs[$block['logical_uuid']] }}" @endif>{{ $studioMediaRefs[$block['logical_uuid']] ?? __('blocks.type.'.$block['type']) }}</span>
                                         @if (\App\Support\Content\SectionSemantics::supports($block['type']))
                                             <flux:dropdown position="bottom" align="start">
                                                 @if ($sectionRole !== '')

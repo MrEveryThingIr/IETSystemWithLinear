@@ -1,5 +1,5 @@
 <div
-    class="flex h-full min-h-0 flex-col"
+    class="flex h-full min-h-0 min-w-0 flex-col"
     x-data="messageThread"
     data-state-url="{{ route('messages.state', $conversation) }}"
     data-version="{{ $version }}"
@@ -7,7 +7,7 @@
 >
     {{-- Header --}}
     @unless ($embedded)
-    <header class="flex min-w-0 items-center gap-2 border-b border-zinc-200 px-2 py-2 sm:px-4 dark:border-zinc-700">
+    <header class="flex min-w-0 shrink-0 items-center gap-2 border-b border-zinc-200 px-2 py-2 sm:px-4 dark:border-zinc-700">
         <flux:button :href="route('messages.index')" wire:navigate variant="ghost" size="sm" icon="arrow-left" class="lg:hidden rtl:[&_svg]:rotate-180" :aria-label="__('messages.back')" />
         @if ($other)
             <x-app.actor-avatar :actor="$other" size="sm" />
@@ -56,7 +56,7 @@
     @endunless
 
     @if ($reporting)
-        <form wire:submit="submitReport" class="space-y-3 border-b border-zinc-200 bg-amber-50 p-3 sm:px-4 dark:border-zinc-700 dark:bg-amber-950/30" data-report-panel>
+        <form wire:submit="submitReport" class="min-h-0 max-h-[50%] space-y-3 overflow-y-auto border-b border-zinc-200 bg-amber-50 p-3 sm:px-4 dark:border-zinc-700 dark:bg-amber-950/30" data-report-panel>
             <flux:heading size="sm">{{ $reportMessage ? __('messages.report.message') : __('messages.report.person') }}</flux:heading>
             <flux:select wire:model="reportReason" :label="__('messages.report.reason')">
                 @foreach (\App\Models\MessageReport::REASONS as $reason)
@@ -72,8 +72,17 @@
         </form>
     @endif
 
+    {{-- In a Deal there is one conversation; steps of the Agreement, Work and Money are labelled cards in it, and these chips filter them --}}
+    @if ($embedded)
+        <div class="flex flex-wrap gap-1 border-b border-zinc-200 px-2 py-1.5 text-xs dark:border-zinc-700" data-thread-filter>
+            @foreach (['all', 'chat', 'agreement', 'work', 'money'] as $chip)
+                <button type="button" wire:click="setFilter('{{ $chip }}')" @class(['rounded-full px-2.5 py-1', 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' => $filter === $chip, 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300' => $filter !== $chip]) aria-pressed="{{ $filter === $chip ? 'true' : 'false' }}">{{ __('deals.timeline_filter.'.$chip) }}</button>
+            @endforeach
+        </div>
+    @endif
+
     {{-- History --}}
-    <div x-ref="scroller" class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-4" aria-live="polite" data-message-list>
+    <div x-ref="scroller" class="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-4" aria-live="polite" data-message-list>
         @if ($hasOlder)
             <div class="mb-3 text-center">
                 <flux:button wire:click="loadOlder" size="xs" variant="ghost">{{ __('messages.load_older') }}</flux:button>
@@ -102,7 +111,16 @@
                     @php $lastDay = $day; @endphp
                 @endif
                 @if ($message->kind === 'deal')
-                    <li wire:key="m-{{ $message->id }}" class="my-2 flex justify-center"><span class="rounded-full bg-sky-50 px-3 py-1 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200">{{ __('deals.timeline.'.($message->meta['type'] ?? 'terms_proposed'), ['version' => $message->meta['version'] ?? '']) }} · {{ $message->author?->user?->username }}</span></li>
+                    @php
+                        $area = $message->meta['area'] ?? 'agreement';
+                        $tone = ['agreement' => 'border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100', 'work' => 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100', 'money' => 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-100'][$area] ?? '';
+                    @endphp
+                    <li wire:key="m-{{ $message->id }}" class="my-2 flex justify-center" data-deal-event data-area="{{ $area }}">
+                        <a @if (! empty($message->meta['url'])) href="{{ $message->meta['url'] }}" @endif class="flex max-w-[92%] flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border px-3 py-1.5 text-xs {{ $tone }}">
+                            <span class="rounded-full bg-white/70 px-2 py-0.5 font-semibold dark:bg-black/30">{{ __('deals.timeline_area.'.$area) }}</span>
+                            <span dir="auto">{{ $message->author?->user?->username }} {{ __('deals.timeline.'.($message->meta['type'] ?? 'terms_proposed'), \App\Support\Deals\DealNote::params($message->meta ?? [])) }}</span>
+                        </a>
+                    </li>
                     @continue
                 @endif
                 <li wire:key="m-{{ $message->id }}" id="message-{{ $message->uuid }}" @class(['group flex min-w-0', 'justify-end' => $mine, 'justify-start' => ! $mine])>
@@ -111,7 +129,7 @@
                             <span class="px-1 text-xs font-medium text-zinc-500" dir="auto">{{ $message->author?->user?->username }}</span>
                         @endif
                         <div @class([
-                            'min-w-0 max-w-full rounded-2xl text-[15px] leading-6 shadow-xs',
+                            'min-w-0 max-w-full [overflow-wrap:anywhere] rounded-2xl text-[15px] leading-6 shadow-xs',
                             'px-3 py-2' => ! $mediaOnly,
                             'overflow-hidden p-0.5 [&_img]:mt-0 [&_video]:mt-0' => $mediaOnly,
                             'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' => $mine && ! $deleted,
@@ -130,7 +148,7 @@
 
                                 @if ($editing === $message->id)
                                     <form wire:submit="saveEdit" class="space-y-2">
-                                        <textarea wire:model="editBody" rows="3" class="block w-full min-w-[12rem] rounded-lg border border-zinc-300 bg-white p-2 text-base text-zinc-900 sm:text-sm"></textarea>
+                                        <textarea wire:model="editBody" rows="3" class="block w-full min-w-0 rounded-lg border border-zinc-300 bg-white p-2 text-base text-zinc-900 sm:text-sm"></textarea>
                                         <div class="flex gap-2"><flux:button type="submit" size="xs" variant="primary">{{ __('messages.save') }}</flux:button><flux:button type="button" size="xs" variant="ghost" wire:click="cancelEdit">{{ __('messages.cancel') }}</flux:button></div>
                                     </form>
                                 @elseif ($message->kind === 'location' && is_array($message->meta))
@@ -162,7 +180,7 @@
                                     @if ($message->kind === 'voice' || str_starts_with((string) $asset->mime_type, 'audio/'))
                                         <div class="mt-1 flex items-center gap-2" data-voice>
                                             <flux:icon.microphone class="size-4 shrink-0" />
-                                            <audio controls preload="none" src="{{ $src }}" class="h-9 w-56 max-w-full"></audio>
+                                            <audio controls preload="none" src="{{ $src }}" class="h-9 w-56 min-w-0 max-w-full flex-1"></audio>
                                             @if (($message->meta['seconds'] ?? 0) > 0)<span class="text-xs opacity-80">{{ gmdate($message->meta['seconds'] >= 3600 ? 'H:i:s' : 'i:s', (int) $message->meta['seconds']) }}</span>@endif
                                         </div>
                                     @elseif (str_starts_with((string) $asset->mime_type, 'image/'))
@@ -229,7 +247,7 @@
     </div>
 
     {{-- Composer --}}
-    <div class="border-t border-zinc-200 p-2 sm:p-3 dark:border-zinc-700">
+    <div class="max-h-[50%] min-w-0 shrink-0 overflow-y-auto border-t border-zinc-200 p-2 sm:p-3 dark:border-zinc-700" data-message-composer>
         @if ($notice)
             <div class="mb-2 rounded-lg bg-zinc-100 px-3 py-2 text-sm dark:bg-zinc-800" role="status">{{ $notice }}</div>
         @endif
@@ -268,7 +286,7 @@
             @endif
 
             <template x-if="recording">
-                <div class="flex items-center gap-3 rounded-xl bg-red-50 px-3 py-2 dark:bg-red-950/40" data-recording>
+                <div class="flex flex-wrap items-center gap-3 rounded-xl bg-red-50 px-3 py-2 dark:bg-red-950/40" data-recording>
                     <span class="size-2.5 animate-pulse rounded-full bg-red-600"></span>
                     <span class="flex-1 text-sm">{{ __('messages.composer.recording') }} <span x-text="String(Math.floor(recordSeconds/60)).padStart(2,'0')+':'+String(recordSeconds%60).padStart(2,'0')"></span></span>
                     <flux:button type="button" size="sm" variant="ghost" x-on:click="stopRecording(true)">{{ __('messages.cancel') }}</flux:button>
@@ -302,7 +320,7 @@
                     maxlength="4000"
                     dir="auto"
                     placeholder="{{ __('messages.composer.placeholder') }}"
-                    class="block max-h-40 min-h-11 min-w-0 flex-1 resize-none rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-base leading-6 text-zinc-900 focus:border-zinc-500 focus:outline-none sm:text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
+                    class="block max-h-[min(10rem,calc(var(--messaging-viewport-height,100dvh)/5))] min-h-11 w-0 min-w-0 flex-1 resize-none rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-base leading-6 text-zinc-900 focus:border-zinc-500 focus:outline-none sm:text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
                     x-init="$el.addEventListener('input', () => { $el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 160) + 'px' })"
                     data-composer
                 ></textarea>

@@ -14,6 +14,7 @@ use App\Models\Actor;
 use App\Models\Business;
 use App\Models\Context;
 use App\Models\DomainBlueprintVersion;
+use App\Models\Plan;
 use App\Models\Planner\PlannerLabel;
 use App\Models\Relationship;
 use App\Models\User;
@@ -51,6 +52,9 @@ class Create extends Component
     public const STEPS = ['what', 'when', 'who', 'details', 'review'];
 
     public string $step = 'what';
+
+    /** Set when a "For later" item is being given a schedule: the same Plan receives it, nothing is duplicated. */
+    public ?string $schedulePlan = null;
 
     public string $kind = 'event';
 
@@ -170,6 +174,19 @@ class Create extends Component
         $requestedKind = trim((string) request()->query('kind', ''));
         if (PlanKinds::valid($requestedKind)) {
             $this->chooseKind($requestedKind);
+        }
+
+        $laterUuid = trim((string) request()->query('schedule', ''));
+        if ($laterUuid !== '') {
+            $later = Plan::query()->with('context')->where('uuid', $laterUuid)->firstOrFail();
+            Gate::forUser($user)->authorize('manage', $later);
+            abort_unless($later->isForLater(), 404);
+            $this->schedulePlan = $later->uuid;
+            $this->contextUuid = $later->context->uuid;
+            $this->title = $later->title;
+            $this->description = (string) $later->description;
+            $this->chooseKind('task');
+            $this->step = 'when';
         }
         $this->selectedDays = [$this->startsOn];
 
@@ -425,6 +442,9 @@ class Create extends Component
         if ($this->kind === 'meeting') {
             return $this->saveMeeting(app(MeetingScheduler::class));
         }
+        if ($this->kind === PlanKinds::LATER && $this->schedulePlan === null) {
+            return $this->saveLater($createPlan);
+        }
 
         // Several days picked on the timeline without repeating: those dates.
         if ($this->frequency === 'once' && count($this->selectedDays) > 1) {
@@ -469,6 +489,10 @@ class Create extends Component
         $user = $this->user();
         $context = $this->context();
         Gate::forUser($user)->authorize('interactContent', $context);
+
+        if ($this->schedulePlan !== null) {
+            return $this->scheduleExisting($data, $configureReadiness, $createRule);
+        }
 
         [$participants, $originType, $originUuid] = $this->provenance($context, $user);
 
@@ -568,6 +592,13 @@ class Create extends Component
     /** @return list<string> */
     public function steps(): array
     {
+        if ($this->schedulePlan !== null) {
+            return ['when', 'details', 'review'];
+        }
+        if ($this->kind === PlanKinds::LATER) {
+            return ['what', 'details', 'review'];
+        }
+
         return $this->kind === 'meeting'
             ? self::STEPS
             : array_values(array_diff(self::STEPS, ['who']));
@@ -607,6 +638,73 @@ class Create extends Component
             'label_uuid' => $label?->uuid,
             'color' => PlanKinds::normalizeColor($this->color),
         ]);
+    }
+
+    /** "For later": a title, optional notes and the usual appearance. No date, no time, no rule, no reminder. */
+    private function saveLater(CreatePlan $createPlan): mixed
+    {
+        $data = $this->validate([
+            'title' => ['required', 'string', 'max:180'],
+            'description' => ['nullable', 'string', 'max:10000'],
+        ]);
+        $user = $this->user();
+        $context = $this->context();
+        Gate::forUser($user)->authorize('interactContent', $context);
+
+        $plan = $createPlan->execute(
+            $context,
+            $user,
+            $data['title'],
+            ($data['description'] ?? '') !== '' ? $data['description'] : null,
+            metadata: [...$this->appearanceMetadata(), 'kind' => PlanKinds::LATER],
+        );
+
+        return $this->redirectRoute('planner.show', $plan, navigate: true);
+    }
+
+    /**
+     * Gives a "For later" Plan its schedule. The Plan stays the same record (title, notes, labels, Content links, evidence);
+     * it simply gains a schedule rule and an ordinary kind, after which the normal timing engine governs it.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function scheduleExisting(array $data, ConfigurePlanReadiness $configureReadiness, CreatePlanScheduleRule $createRule): mixed
+    {
+        $user = $this->user();
+
+        return DB::transaction(function () use ($data, $configureReadiness, $createRule, $user): mixed {
+            $plan = Plan::query()->where('uuid', $this->schedulePlan)->lockForUpdate()->firstOrFail();
+            Gate::forUser($user)->authorize('manage', $plan);
+            abort_unless($plan->isForLater(), 422, (string) __('planner.later.already_scheduled'));
+
+            $plan->forceFill([
+                'timezone' => $data['timezone'],
+                'metadata' => array_replace($plan->metadata ?? [], $this->appearanceMetadata()),
+            ])->save();
+
+            if ($data['prerequisites'] !== [] || $data['expenseEstimates'] !== []) {
+                $configureReadiness->execute($plan, $user, $data['prerequisites'], $data['expenseEstimates']);
+            }
+
+            $createRule->execute(
+                $plan,
+                $user,
+                PlanScheduleFrequency::from($data['frequency']),
+                $data['startsOn'],
+                $data['startTime'],
+                $data['durationMinutes'],
+                $data['interval'],
+                $data['weekdays'],
+                $this->dates($data['selectedDates']),
+                $data['endsOn'] !== '' ? $data['endsOn'] : null,
+                $data['occurrenceLimit'] !== '' ? (int) $data['occurrenceLimit'] : null,
+                $data['windowBeforeMinutes'],
+                $data['windowAfterMinutes'],
+                $this->integers($data['reminderOffsets']),
+            );
+
+            return $this->redirectRoute('planner.show', $plan, navigate: true);
+        });
     }
 
     private function saveMeeting(MeetingScheduler $meetings): mixed

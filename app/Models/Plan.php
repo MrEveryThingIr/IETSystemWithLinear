@@ -136,6 +136,26 @@ class Plan extends Model
         return $this->hasMany(PlanScheduleRule::class);
     }
 
+    /**
+     * "For later": remembered, deliberately not scheduled. It is a Plan of kind `later` with no schedule rule, so the timing
+     * engine (which only works on occurrences) never sees it: nothing materializes, starts, expires or reminds. It stays this
+     * way until a schedule rule is added, which also moves it to an ordinary kind.
+     */
+    public function isForLater(): bool
+    {
+        if ($this->status !== PlanStatus::Active || data_get($this->metadata, 'kind') !== 'later') {
+            return false;
+        }
+
+        return $this->relationLoaded('scheduleRules') ? $this->scheduleRules->isEmpty() : ! $this->scheduleRules()->exists();
+    }
+
+    /** @return HasMany<PlanContentLink, $this> */
+    public function contentLinks(): HasMany
+    {
+        return $this->hasMany(PlanContentLink::class);
+    }
+
     /** @return HasMany<PlanOccurrence, $this> */
     public function occurrences(): HasMany
     {

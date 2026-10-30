@@ -7,6 +7,7 @@
                 <x-slot:trigger><flux:button variant="ghost" icon="tag" data-labels-button>{{ __('planner.labels.manage') }}</flux:button></x-slot:trigger>
                 <livewire:planner.labels-manager />
             </x-app.popover>
+            <flux:button :href="route('planner.create', array_filter(['kind' => 'later', 'context' => $context?->uuid]))" variant="ghost" icon="bookmark" data-planner-for-later>{{ __('planner.later.title') }}</flux:button>
             <flux:button
                 :href="route('planner.create', $context ? ['context' => $context->uuid] : [])"
                 variant="primary"
@@ -348,6 +349,29 @@
                         <div class="font-semibold" dir="auto">{{ $organized->title }}</div>
                         <div class="text-xs text-zinc-500">{{ $organized->answered_count }}/{{ $organized->invitees_count }} {{ __('planner.meetings.answers_title') }}</div>
                     </a>
+                @endforeach
+            </div>
+        </flux:card>
+    @endif
+
+    @if ($forLater->isNotEmpty())
+        <flux:card class="space-y-3" data-for-later-list>
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <flux:heading size="lg">{{ __('planner.later.title') }}</flux:heading>
+                    <p class="text-sm text-zinc-500">{{ __('planner.later.help') }}</p>
+                </div>
+                <span class="text-sm text-zinc-500">{{ $forLater->count() }}</span>
+            </div>
+            <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                @foreach ($forLater as $item)
+                    <div wire:key="planner-later-{{ $item->uuid }}" class="flex items-start justify-between gap-3 rounded-xl border border-dashed border-zinc-300 p-3 dark:border-zinc-600" data-for-later-item>
+                        <a href="{{ route('planner.show', $item) }}" wire:navigate class="min-w-0 hover:underline">
+                            <span class="block truncate font-medium" dir="auto">{{ $item->title }}</span>
+                            @if ($item->description)<span class="line-clamp-2 text-xs text-zinc-500" dir="auto">{{ $item->description }}</span>@endif
+                        </a>
+                        <flux:button size="xs" :href="route('planner.create', ['schedule' => $item->uuid])" wire:navigate data-for-later-schedule>{{ __('planner.later.schedule') }}</flux:button>
+                    </div>
                 @endforeach
             </div>
         </flux:card>
