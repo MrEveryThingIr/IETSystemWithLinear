@@ -18,10 +18,10 @@ return new class extends Migration
             $table->uuid('uuid')->unique();
             $table->string('label', 120);
             $table->string('token_hash', 64)->unique();
-            $table->timestamp('expires_at')->nullable();
+            $table->dateTime('expires_at')->nullable();
             $table->unsignedInteger('max_uses')->nullable();
             $table->unsignedInteger('uses_count')->default(0);
-            $table->timestamp('revoked_at')->nullable();
+            $table->dateTime('revoked_at')->nullable();
             $table->foreignId('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
