@@ -14,6 +14,7 @@ use App\Http\Controllers\ContentRevisionController;
 use App\Http\Controllers\ContextConversationAssetController;
 use App\Http\Controllers\DealAssetController;
 use App\Http\Controllers\Deals\AgreementPrintController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\ExperienceHubController;
 use App\Http\Controllers\GroupInvitationController;
 use App\Http\Controllers\GuestContentController;
@@ -123,6 +124,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class);
 Route::get('/join/{token}', [AccessInvitationController::class, 'show'])->name('access-invitations.show');
 Route::post('/locale', LocaleController::class)->name('locale.update');
+// Public documentation: repository-owned files, deliberately separate from Content.
+Route::middleware('throttle:120,1')->prefix('docs')->group(function (): void {
+    Route::get('/', [DocsController::class, 'index'])->name('docs.index');
+    Route::get('/join/{token}', [DocsController::class, 'join'])->where('token', '[A-Za-z0-9]{48}')->name('docs.join');
+    Route::get('/collaborate', [DocsController::class, 'contribute'])->name('docs.contribute');
+    Route::post('/collaborate', [DocsController::class, 'submit'])->middleware('throttle:6,60')->name('docs.contribute.submit');
+    Route::get('/{slug}', [DocsController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('docs.show');
+});
 Route::get('/people/{actor}', ActorProfileReferenceController::class)->name('actors.profile.reference');
 Route::get('/people/{actor}/avatar', ActorAvatarController::class)->name('actors.avatar');
 Route::get('/intents/{intent}', [IntentPresentationController::class, 'show'])
