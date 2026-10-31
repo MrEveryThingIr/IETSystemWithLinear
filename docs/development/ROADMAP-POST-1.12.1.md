@@ -118,3 +118,31 @@ Design principles worth keeping from the repo's M8 note and from standard incent
 
 ## 9. Order of operations in one line
 R0 accept → R1 clean branches → R2 Planner → R3 structure (Projects, subcontracts, Space consolidation) → R4 Business catalog → R5 Proven Records → R6 economics design → R7 economics build (fee dark → referrals → in-kind → token) → R8 hardening.
+
+## 10. Review refinements (second opinion, 31 Oct 2026)
+
+A second review of this roadmap agreed with R0–R8 as the canonical plan and asked for four refinements. They are adopted here rather than starting another planning file.
+
+1. **A Project is a read model, not a new authority.** It is a workspace over a root Deal and its descendant Deals plus existing project-ledger facts. Parent/child links must be acyclic; each Deal keeps its own versions, commitments, fulfillments and settlements; money is never transferred up or down the hierarchy automatically; a contractor's margin and supplier prices stay private; project expenses and reimbursable expenses are different things (reimbursement needs an agreement term).
+2. **Reuse Context; add no Space table.** "Space" is a shared presentation and authorization experience over Context and the existing Business, Group and Deal records. The Deal's Agreement, Work, Money and Conversation tabs stay: they carry real responsibilities. Remove duplicate entry points, duplicate editors and inconsistent membership operations, not tabs.
+3. **Proven Records (M7) is not a second fulfillment system.** It stays a read-only, per-record-consent projection of confirmed Fulfillments. Consent never replaces source authorization: a public record needs both.
+4. **Separate ordinary Deal–Money correctness from new economics.** Refunds, reversals, applied/unused credit, project expenses, reimbursement, in-kind settlement and per-party statements are existing-domain requirements and belong to R3. Fees, rewards, vouchers and any token stay in R6–R7.
+
+Two technical notes for R6/R7: the zero-rate fee must be stored as an explicit fee-assessment record unless the Bookkeeping schema is proven to accept zero-amount postings without weakening its invariants; and a growing treasury balance gives token holders nothing by itself, so any value-sharing needs specified legal rights, redemption or distribution rules, funding and risk disclosure.
+
+Branch note: leave `main` untouched until the canonical-line strategy and any branch-protection dependencies are verified.
+
+## 11. The end-to-end baseline (smaller milestones, B0–B5)
+
+The goal of this slice is a baseline that works end to end and can be shown to people, with the economics experiments left as clearly labelled research. Each milestone is small enough to ship alone and reuses an authority listed above.
+
+| # | Milestone | Scope | Done when |
+|---|---|---|---|
+| B0 | Public documentation and invitation to collaborate | Repository-owned bilingual (Persian/English) documentation at `/docs`, separate from Content; expert contribution intake; invite-only mode with links managed by an administrator; contextual Help points to it | Docs readable without an account in both languages; a contribution can be submitted by a guest or a member; tests green |
+| B1 | Accept and align (R0 + R1) | v1.12.1 browser acceptance; one canonical integration line; branch-disposition matrix | Signed-off checklist; matrix committed |
+| B2 | Subcontract link | Additive parent Deal link (and optional parent task link); one "Assign to someone" action; contractor Project overview as a read model | A contractor can employ a person under a project and see the whole chain; the client cannot see the contractor's margin |
+| B3 | Money correctness for projects | Project expenses and reimbursement term; refunds and unused credit; in-kind settlement with an agreed value and date; one statement per party | Acceptance scenario with a purchase, a wage and a barter settlement balances for every party |
+| B4 | Fee and referral foundations, dark | Fee schedule stored at 0 with an assessment record per confirmed settlement; invitation attribution; read-only "people you invited and what they did" view; no payouts | Switching a schedule from 0 changes nothing else; no money moves on a referral |
+| B5 | Baseline journey and release (R2 decision + R8 slice) | Planner v1.13 adopt/defer decision; one scripted journey from invitation to settlement in fa and en, mobile and desktop | Journey passes in a browser; release notes and docs updated |
+
+Order: B0 now (it is also the invitation that brings in the experts who should shape B3 and B4), then B1, B2, B3, B4, B5. R6 (economics design) runs in parallel as discussion, informed by contributions received through B0.
